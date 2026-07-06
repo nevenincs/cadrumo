@@ -1,4 +1,4 @@
-"""Behaviour tests for :class:`~aeat.core.telemetry.HttpTelemetrySink`.
+"""Behaviour tests for :class:`~core.telemetry.HttpTelemetrySink`.
 
 Every send-path assertion here runs against a real loopback
 ``ThreadingHTTPServer`` (mirroring the pattern in
@@ -6,9 +6,25 @@ Every send-path assertion here runs against a real loopback
 port for the transport-failure case -- never a mocked ``httpx`` client. This
 proves the default-inert and consent-gated invariants: no configured endpoint
 means no send, a refused consent gate never reaches the sink at all (composed
-through :func:`emit_telemetry_event`), a fully permitted invocation POSTs
-exactly the allowlisted payload, and a transport failure never escapes to the
-caller.
+through :func:`~core.telemetry.emit_telemetry_event`), a fully permitted
+invocation POSTs exactly the allowlisted payload, and a transport failure never
+escapes to the caller.
+
+See Also:
+    :class:`~core.telemetry.HttpTelemetrySink`
+        Optional network sink whose default-inert behavior is asserted here.
+    :class:`~core.telemetry.TelemetrySink`
+        Sink protocol implemented by the HTTP transport.
+    :func:`~core.telemetry.emit_telemetry_event`
+        Consent-gated dispatch function used to prove refused sends stay local.
+    :func:`~core.telemetry.build_telemetry_payload`
+        Payload builder used to construct allowlisted wire bodies.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed schema whose JSON representation is posted by the sink.
+    :class:`~core.telemetry.TelemetryTier`
+        Consent tier enum used by the permitted and refused settings cases.
+    :func:`~core.telemetry.telemetry_emit_permitted`
+        Gate whose false result prevents the HTTP sink from being touched.
 """
 
 from __future__ import annotations
@@ -155,7 +171,7 @@ def test_fully_permitted_invocation_posts_the_allowlisted_payload() -> None:
 
 
 def test_transport_error_is_swallowed_and_returns_none() -> None:
-    """A closed-port connection failure must never escape :meth:`HttpTelemetrySink.send`."""
+    """A closed-port connection failure must never escape :meth:`~core.telemetry.HttpTelemetrySink.send`."""
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
         unused_port = probe.getsockname()[1]

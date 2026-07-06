@@ -60,9 +60,12 @@ class TransactionCatalogueRepositoryProtocol(Protocol):
         Implementations MAY use a non-sensitive routing index to decide the
         split without decrypting the out-of-window half, but MUST always
         return the same in-window transaction set :meth:`load` filtered by
-        filing date would return, and MUST report every remaining catalogue
-        transaction (regardless of any other field) as an out-of-window
-        stub -- never silently omit one from either half.
+        filing date would return. They MUST also represent every remaining
+        catalogue transaction (regardless of any other field) either as
+        row-level out-of-window stubs during migration or as the compact
+        count/date-span summary authorized by the latency ADR -- never
+        silently omit one from either half. Summary payloads must carry only
+        plaintext date-index facts, never decrypted transaction fields.
 
         Args:
             start: Inclusive lower bound of the filing-date window.

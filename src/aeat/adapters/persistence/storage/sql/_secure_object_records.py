@@ -76,7 +76,9 @@ class SecureObjectUnreadable(BaseModel):
     reason: str = Field(min_length=1)
 
 
-SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
+# Shared readable/unreadable outcome for namespace scans and targeted batch reads.
+SecureObjectBatchLoadItem = SecureObjectRecord | SecureObjectUnreadable
+SecureObjectListItem = SecureObjectBatchLoadItem
 
 
 class SecureObjectRawRow(BaseModel):

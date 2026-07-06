@@ -29,6 +29,7 @@ from .....domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
+    derive_transaction_id,
 )
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import SensitivityClass
@@ -84,6 +85,20 @@ def _transaction(
     return Transaction.model_validate(payload)
 
 
+def _transaction_secure_row(repository: object, *, bucket_id: str, transaction_id: str) -> object:
+    from ...storage.crypto import secure_object_key_digest
+    from ..transactions import TX_BUCKET_NAMESPACE, transaction_object_key
+
+    object_digest = secure_object_key_digest(transaction_object_key(bucket_id, transaction_id))
+    rows = [
+        row
+        for row in repository.iter_all_records_raw()
+        if row.namespace == TX_BUCKET_NAMESPACE and row.object_key == object_digest
+    ]
+    assert len(rows) == 1
+    return rows[0]
+
+
 def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
@@ -127,6 +142,123 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
     assert loaded_mixed.raw.provenance.source_row_index == 7
     assert (tmp_path / "aeat-storage" / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
+
+
+def test_transaction_catalogue_load_uses_json_mode_for_derived_id_roundtrip(
+    tmp_path: Path,
+) -> None:
+    import json as _json
+
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+
+    created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+    modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
+    transaction = Transaction.model_validate(
+        {
+            "raw": _raw("provider-json-mode", Decimal("121.00"), "Consulting invoice"),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.50"),
+            "source_jurisdiction": "ES",
+            "group_label": "Client A",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+            "created_at": created,
+            "modified_at": modified,
+        },
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        repo.save(TransactionCatalogue.from_transactions([transaction]))
+
+        object_key = transaction_object_key(profile.bucket_id, transaction.transaction_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        persisted = envelope["payload"]
+        assert persisted["transaction_id"] == transaction.transaction_id
+        assert isinstance(persisted["raw"]["booked_date"], str)
+        assert isinstance(persisted["business_pct"], str)
+        assert isinstance(persisted["created_at"], str)
+
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    loaded_transaction = loaded.transactions[transaction.transaction_id]
+    assert loaded_transaction == transaction
+    assert loaded_transaction.transaction_id == derive_transaction_id(loaded_transaction.raw)
+    assert loaded_transaction.business_pct == Decimal("0.50")
+    assert loaded_transaction.iva_rate == Decimal("0.21")
+    assert loaded_transaction.created_at == created
+    assert loaded_transaction.modified_at == modified
+
+
+def test_transaction_catalogue_save_skips_unchanged_secure_object_rows(
+    tmp_path: Path,
+) -> None:
+    """Saving one changed transaction does not re-upsert unchanged transaction rows."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        changed = _transaction(
+            provider_id="provider-row-changed",
+            amount=Decimal("100.00"),
+            description="Internet provider",
+            classification=BusinessClassification.BUSINESS,
+        )
+        unchanged = _transaction(
+            provider_id="provider-row-unchanged",
+            amount=Decimal("25.50"),
+            description="Personal lunch",
+            classification=BusinessClassification.PERSONAL,
+        )
+        repo.save(TransactionCatalogue.from_transactions([changed, unchanged]))
+
+        before_changed = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=changed.transaction_id,
+        )
+        before_unchanged = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=unchanged.transaction_id,
+        )
+
+        updated_changed = changed.model_copy(
+            update={
+                "group_label": "internet",
+                "modified_at": datetime(2024, 4, 15, 12, 0, tzinfo=UTC),
+            },
+        )
+        assert updated_changed.transaction_id == changed.transaction_id
+
+        repo.save(TransactionCatalogue.from_transactions([updated_changed, unchanged]))
+
+        after_changed = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=changed.transaction_id,
+        )
+        after_unchanged = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=unchanged.transaction_id,
+        )
+
+    assert after_unchanged.revision_id == before_unchanged.revision_id
+    assert after_unchanged.payload_hash == before_unchanged.payload_hash
+    assert after_unchanged.ciphertext_hash == before_unchanged.ciphertext_hash
+    assert after_changed.revision_id != before_changed.revision_id
+    assert after_changed.payload_hash != before_changed.payload_hash
+    assert after_changed.previous_revision_id == before_changed.revision_id
+    assert after_changed.previous_payload_hash == before_changed.payload_hash
 
 
 def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
@@ -629,6 +761,75 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
         assert isinstance(exc_info.value.original_exception, ValidationError)
         assert exc_info.value.translated_message == "errors.storage.stored_data_validation_boundary"
+
+
+def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_row(
+    tmp_path: Path,
+) -> None:
+    """The timestamp witness rejects decoded-row drift before legacy defaults can apply."""
+
+    import json as _json
+
+    from ..transactions import (
+        _TX_CATALOGUE_VERSION,
+        TX_BUCKET_NAMESPACE,
+        _decode_persisted_transaction_row,
+        _validate_persisted_transaction_timestamps,
+        transaction_object_key,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+        modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
+        stamped = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-ts-modified", Decimal("77.00"), "Compra material oficina"),
+                "direction": TransactionDirection.OUTGOING,
+                "group_label": None,
+                "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
+                "created_at": created,
+                "modified_at": modified,
+            },
+        )
+        repo.save(TransactionCatalogue.from_transactions([stamped]))
+
+        object_key = transaction_object_key(profile.bucket_id, stamped.transaction_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        decoded = _decode_persisted_transaction_row(record.payload)
+        assert decoded is not None
+        txn_dict = decoded["payload"]
+        assert isinstance(txn_dict, dict)
+        assert txn_dict.get("modified_at") is not None, (
+            "fixture must serialise modified_at into the envelope for the missing-key proof to be meaningful"
+        )
+        del txn_dict["modified_at"]
+
+        with pytest.raises(ValidationError) as witness_exc:
+            _validate_persisted_transaction_timestamps(decoded)
+        assert "modified_at" in str(witness_exc.value)
+
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(decoded).encode("utf-8"),
+        )
+
+        with pytest.raises(StoredTransactionDriftError) as exc_info:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+        assert isinstance(exc_info.value.original_exception, ValidationError)
+        assert "modified_at" in str(exc_info.value.original_exception)
 
 
 def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
