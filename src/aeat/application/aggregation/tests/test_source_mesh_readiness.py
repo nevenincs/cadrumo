@@ -24,18 +24,19 @@ that neither ``fincas`` nor ``inventory`` is a member of the closed
 :class:`~aeat.core.BindingSourceKind` taxonomy — so neither can appear in the
 enrolled, deferred, or reserved source sets (all ``frozenset[BindingSourceKind]``),
 the structural guarantee that they are not enrolled in the live mesh — while the
-live novel-source boundary gate (``assert_no_novel_source_kinds``) stays green on a
-real revision, unaffected by the provisioned-but-blocked readiness surface.
+live novel-source boundary gate (``assert_no_novel_source_kinds``) stays green on
+a revision carrying an accepted source, unaffected by the provisioned-but-blocked
+readiness surface.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
 from ....core import BindingSourceKind, Period
-from ....core.resources import resources
+from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
 from ...modelo import ModeloAggregationBindingError, assert_no_novel_source_kinds
 from .._source_fincas import FincasSourceReadinessResolver
 from .._source_inventory import InventorySourceReadinessResolver
@@ -49,17 +50,47 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "30300000-0000-4000-8000-000000000303"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_LEGAL_REFS = ("ley-58-2003:art-93",)
+_SOURCE_REFS = ("test-source-mesh-readiness",)
+
+
+def _readiness_revision(*bindings: DataBindingDefinition) -> ModeloRevision:
+    return ModeloRevision(
+        id="source-mesh-readiness-test",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+        bindings=bindings,
+    )
+
+
+def _accepted_source_revision() -> ModeloRevision:
+    return _readiness_revision(
+        DataBindingDefinition(
+            id="source-mesh-readiness-manual-input",
+            source=BindingSourceKind.MANUAL_INPUT,
+            selector={
+                "record": "DPA",
+                "field": "readiness",
+                "offset": 1,
+                "length": 1,
+                "data_type": "integer",
+            },
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
+        ),
+    )
 
 
 def _context() -> CalculationSourceContext:
-    """Build a real calculation context; the readiness resolvers ignore it."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    """Build a calculation context; the readiness resolvers ignore its revision."""
     return CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision=snapshot.revision,
+        revision=_readiness_revision(),
         calculated_at=_T0,
     )
 
@@ -150,14 +181,13 @@ def test_readiness_resolvers_own_no_binding_source() -> None:
 
 
 def test_novel_source_boundary_gate_stays_green_with_readiness_provisioned() -> None:
-    """The live novel-source gate accepts a real revision, unaffected by the readiness surface.
+    """The live novel-source gate accepts known sources, unaffected by the readiness surface.
 
     The provisioned-but-blocked readiness resolvers introduce no registry binding
     source, so ``assert_no_novel_source_kinds`` — which rejects any binding source
-    absent from the enrolled/deferred sets — must not raise on a real revision.
+    absent from the enrolled/deferred sets — must not raise for an accepted source.
     """
-    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision
     try:
-        assert_no_novel_source_kinds(revision)
+        assert_no_novel_source_kinds(_accepted_source_revision())
     except ModeloAggregationBindingError as error:  # pragma: no cover - failure path
-        pytest.fail(f"novel-source gate unexpectedly rejected a real revision: {error}")
+        pytest.fail(f"novel-source gate unexpectedly rejected an accepted source: {error}")
