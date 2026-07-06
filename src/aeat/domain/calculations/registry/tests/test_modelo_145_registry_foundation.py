@@ -1,4 +1,22 @@
-"""Modelo 145 registry foundation tests."""
+"""Modelo 145 registry foundation tests.
+
+See Also:
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision whose communication links, casillas, source refs, and
+        export layouts are asserted here.
+    :func:`~domain.calculations.registry.resolve_export_layout`
+        Export-layout resolver checked against the official DR145 fixed-width
+        record design.
+    :func:`~domain.calculations.registry.build_support_matrix`
+        Support matrix surface that reports Modelo 145 fixed-width export
+        availability without filing semantics.
+    :mod:`~application.modelo._m145_communication`
+        Application ownership contract backed by this non-filing registry
+        foundation.
+    :mod:`~application.modelo._m145_communication_records`
+        Local communication record lifecycle that consumes the same snapshot and
+        layout authority.
+"""
 
 from __future__ import annotations
 
