@@ -110,8 +110,8 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
 
     Two in-window mueble goods: one has a supplied 2024 definitive percentage (a
     20-point drop from 80 to 60 → the art-109 quotient folds into casilla 43), the
-    other has no percentage supplied (pending the deferred prorrata-definitiva
-    input). The worked good: cuota 5.000, 80→60, efectuada 4.000 − procedente 3.000
+    other has no percentage supplied (pending the prorrata-definitiva input). The
+    worked good: cuota 5.000, 80→60, efectuada 4.000 − procedente 3.000
     = 1.000, ÷5 = 200,00 → ingreso.
     """
     computed = _record(

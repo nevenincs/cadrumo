@@ -28,7 +28,7 @@ See Also:
         Cross-period carry home for provisional and definitive prorrata
         percentages.
     :mod:`~application.calculations.tests.test_prorrata_regularizacion`
-        Focused regressions for deferred-feed and ledger-divergence behavior.
+        Focused regressions for live-feed and ledger-divergence behavior.
 """
 
 from __future__ import annotations
@@ -396,10 +396,9 @@ def project_prorrata_regularizacion_feed(
     """Project the annual regularización onto the M303 and M390 filing targets.
 
     ``prorrata_definitiva_pct`` is supplied by the registry-computed annual
-    volume casillas. This helper deliberately does not recompute that percentage
-    and does not promote the deferred source kind; it only turns the pure
-    art-105 result into the two proposed filing values that later mesh promotion
-    can consume.
+    volume casillas. This helper deliberately does not recompute that
+    percentage; it turns the pure art-105 result into the two filing values used
+    by the live resolver and the advisory surface.
 
     See Also:
         :class:`ProrrataRegularizacionFeedProjection`
@@ -904,7 +903,7 @@ def build_prorrata_regularizacion_advisory(
     operaciones_sin_derecho_deduccion: Decimal,
     regularizacion_year: int,
 ) -> tuple[RegularizacionProrrataResult, CalculationSourceDiagnostic | None]:
-    """Compute the annual regularización and build the deferred-source advisory.
+    """Compute the annual regularización and build the fallback advisory.
 
     Returns the pure :class:`RegularizacionProrrataResult` plus a non-blocking
     :class:`~application.aggregation.CalculationSourceDiagnostic` when the taxpayer

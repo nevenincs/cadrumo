@@ -95,13 +95,12 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 # Enum members that are explicitly deferred on the application mesh
 # (``DEFERRED_SOURCE_KINDS``) AND carry no registry binding yet, by design. Unlike
 # the other deferred members (M184 / M232 / M720 / M360 — sources that ARE
-# registry-declared and merely lack a live resolver), these are
-# advisory-backed feeds whose registry binding waits on a separately-deferred upstream. The
-# ``bienes_inversion_regularizacion`` capital-goods regularización source (LIVA
-# arts. 107-110) is deferred until the prorrata_regularizacion source lands; it
-# surfaces an advisory rather than resolving silently to zero. A member here
-# that later gains a registry binding must be removed from this carve-out (the
-# disjointness assertion below fails otherwise).
+# registry-declared and merely lack a live resolver), these are advisory-backed
+# feeds whose registry binding waits on a separately-deferred upstream. The set
+# is currently empty because capital-goods regularización was promoted into the
+# live registry/source-mesh path. A member here that later gains a registry
+# binding must be removed from this carve-out (the disjointness assertion below
+# fails otherwise).
 _DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset()
 
 
