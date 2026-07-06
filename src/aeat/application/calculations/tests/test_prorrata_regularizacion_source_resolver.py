@@ -7,7 +7,7 @@ encrypted prorrata register or a stamped prior Modelo 303 observation.
 
 See Also:
     :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
-        Live resolver under test for the deferred prorrata regularización source.
+        Live resolver under test for the prorrata regularización source.
     :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
         Encrypted profile-scoped carry store used by the register-backed branch.
     :class:`~domain.prorrata_register.ProrrataRegisterEntry`

@@ -164,7 +164,7 @@ def build_bienes_inversion_regularizacion_advisory(
     regularizacion_year: int,
     prorrata_definitiva_by_identifier: Mapping[str, Decimal],
 ) -> tuple[RegistroRegularizacionResult, CalculationSourceDiagnostic | None]:
-    """Project the register and build the deferred-source advisory diagnostic.
+    """Project the register and build the fallback advisory diagnostic.
 
     Returns the register projection plus a non-blocking
     :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
@@ -178,7 +178,7 @@ def build_bienes_inversion_regularizacion_advisory(
 
     The diagnostic ``message`` names the in-window count, the number of goods whose
     regularización could be computed (a definitive percentage was supplied), the
-    number still pending the deferred percentage, and the proposed casilla-43 value.
+    number still pending a definitive percentage, and the proposed casilla-43 value.
 
     Args:
         register: The persisted :class:`BienesInversionIvaRegister`.

@@ -8,19 +8,14 @@ percentage applied across the year's liquidations (art. 105.Uno — normally the
 PRIOR year's definitive percentage). The registry already computes the current
 period's definitive percentage from real operator-entered annual volumes
 (``iva.prorrata-porcentaje``, fed by ``iva.prorrata-volumen-total`` /
-``iva.prorrata-volumen-con-derecho``); what is not yet automatically available
-is the prior-year carry, which the annual regularización mechanism
-(``2026-07-01-iva-complexity-hardening-scope-adr``) will eventually supply
-through a profile-scoped store.
-
-Per that ADR's first-slice decision, the automatic feed stays
-``DEFERRED`` (``BindingSourceKind.PRORRATA_REGULARIZACION``) until the
-provisional-carry store lands. In the meantime this collector closes two
-no-silent-under-declaration gaps. First, for every period, it reads the
-profile-scoped prorrata register and raises a missing-carry advisory when
+``iva.prorrata-volumen-con-derecho``). The automatic feed is now backed by the
+live ``BindingSourceKind.PRORRATA_REGULARIZACION`` resolver when its governed
+inputs are available; this collector remains as the no-silent-under-declaration
+advisory path for missing or unresolved facts. First, for every period, it reads
+the profile-scoped prorrata register and raises a missing-carry advisory when
 prorrata applies but the provisional percentage ladder is unresolved. Second,
 at the settlement period, it reads the CURRENT year's own registry-computed
-prorrata figures (never a fabricated value) and looks up the PRIOR year's
+prorrata figures (never a fabricated value) and can look up the PRIOR year's
 persisted ``iva.prorrata-porcentaje`` observation from the local
 :class:`~application.calculations.CalculationObservationRepository` — the
 same same-modelo prior-filing lookup pattern
@@ -45,12 +40,12 @@ See Also:
         Post-calculation coordinator that calls this collector with the
         computed casilla values and the shared observation repository.
     :mod:`~application.calculations._prorrata_regularizacion`:
-        Pure advisory-projection function this collector wires to the
-        registry-computed annual prorrata figures.
+        Source resolver and advisory-projection functions this collector shares
+        with the registry-computed annual prorrata figures.
     :mod:`~application.modelo._bienes_inversion_advisory`:
-        Sibling deferred-source collector for the capital-goods IVA
-        regularización (LIVA arts. 107-110), whose settlement-period gating
-        this module mirrors.
+        Sibling advisory collector for the capital-goods IVA regularización
+        (LIVA arts. 107-110), whose settlement-period gating this module
+        mirrors.
     :mod:`~application.modelo._prior_payment_advisory`:
         Origin of the same-modelo prior-filing observation lookup pattern
         this collector reuses for the prior-year definitive-percentage carry.
