@@ -55,3 +55,24 @@ No open findings.
 
 - Continue with `W03.P05.S19` for provisional apportionment in the shared aggregation path.
 - Do not treat this narrow seed review as the campaign close honesty audit.
+
+## S19 Review
+
+Reviewed the `W03.P05.S19` implementation in the shared IVA ledger aggregation
+path. The diff adds an internal `IvaLedgerProrrataApportionment` carrier, loads
+the whole-entity active general register entry for the filing year, resolves the
+already-declared domain precedence ladder, and applies the resulting percentage
+only after `ledger_iva_aggregation` selector resolution. The binding-value
+postprocess derives its target set from revision casillas whose section includes
+`deducible` and whose binding selector fact is `iva_amount_sum`, so base bindings
+and devengado reverse-charge bindings stay unapportioned while deducible reverse
+charge and soportado/import cuota bindings are reduced. No new binding source
+kind, resolver convention, validator convention, or registry selector shape was
+introduced.
+
+Findings: no open S19 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched aggregation files,
+and the local IVA aggregation subset that does not load the full registry passed.
+The broader registry-backed IVA tests currently fail before reaching this code on
+unrelated Modelo 714 registry validation diagnostics.
