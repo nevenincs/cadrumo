@@ -1,4 +1,19 @@
-"""Missing-provisional advisory for applicable prorrata ejercicios."""
+"""Missing-provisional advisory for applicable prorrata ejercicios.
+
+See Also:
+    :func:`~application.calculations._prorrata_regularizacion.build_prorrata_missing_provisional_advisory`
+        Pure no-silent-under-declaration diagnostic builder exercised here.
+    :func:`~application.calculations._prorrata_regularizacion.derive_prorrata_applicability`
+        Applicability projection that decides when the missing carry must be
+        visible.
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataApplicabilityProjection`
+        Typed evidence carrier consumed by the missing-carry builder.
+    :class:`~domain.prorrata_register.ProrrataProvisionalResolution`
+        Resolver output whose unresolved state triggers the diagnostic.
+    :class:`~core.ProrrataRegisterRegime`
+        Register regime enum used to prove active prorrata without declared
+        volumes.
+"""
 
 from __future__ import annotations
 
