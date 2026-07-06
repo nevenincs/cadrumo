@@ -480,3 +480,24 @@ Residual gate inventory: `vault plan status` for
 missing exec records. `vault check features` and `vault check frontmatter` are
 clean for `silent-zero-base-aggregation`, and the focused prorrata regression
 slice passes sequentially with 19 tests.
+
+## S37 Review
+
+Reviewed the `W06.P09.S37` deferred especial record against the cross-period
+prorrata ADR, the W06 plan row, the register regime enum, and the IVA prorrata
+domain substrate. The register carries `ProrrataRegisterRegime.ESPECIAL` from
+birth and the domain substrate already exposes `is_especial_mandatory` plus the
+Art. 103.Dos +10 percent comparison constant. Those are schema/substrate
+capacity only: the live ledger path does not yet classify each input IVA amount
+as exclusively deductible, exclusively non-deductible, or common-use for
+prorrata especial apportionment.
+
+S37 is therefore correctly recorded as a formal deferral. The follow-up is the
+per-input especial classification/apportionment surface, followed by a
+non-blocking Art. 103.Dos.2 mandatory-especial comparison advisory. No production
+code or registry source convention changed in this step.
+
+Findings: no open S37 reconciliation findings.
+
+Residual gate inventory: the focused domain prorrata/register test slice passes
+sequentially with 51 tests.
