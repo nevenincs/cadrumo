@@ -29,6 +29,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S20]]'
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S21]]'
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S22]]'
+  - '[[2026-07-06-cross-period-prorrata-W03-P05-S23]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -73,6 +74,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W03-P05-S20` - carry the applied percentage and its provenance on the binding value provenance and the casilla observation trail (binding-values-carry-provenance)
 - `2026-07-06-cross-period-prorrata-W03-P05-S21` - add a byte-identical regression proving a non-prorrata (fully-taxable) taxpayer's deducible aggregation is unchanged from today
 - `2026-07-06-cross-period-prorrata-W03-P05-S22` - add a field-flows test proving the provisional percentage actually reduces the deducible cuotas for a prorrata taxpayer (the apportionment bites, not dead wiring)
+- `2026-07-06-cross-period-prorrata-W03-P05-S23` - add the pull==calculate parity regression proving the apportioned deducible casilla resolves identically on the calculate path and the Sheets-pull path (one-aggregation-path-pull-equals-calculate)
 
 ### plan
 
