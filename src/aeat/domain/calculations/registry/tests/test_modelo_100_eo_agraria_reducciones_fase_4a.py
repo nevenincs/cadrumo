@@ -32,6 +32,22 @@ rendimientos irregulares), so its mechanism — the 30 por 100 rate and the
 300.000 euros cap, both grounded in LIRPF art. 32.1 — is exercised
 structurally in ``TestReduccionIrregularidadAppliesThirtyPercentCappedAt300000``,
 the same pattern.
+
+See Also:
+    :func:`~domain.calculations.registry.build_snapshot`
+        Registry snapshot builder used to load the 2025 Modelo 100 revision.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Public calculation entry point exercised by the Fase 4ª/5ª cases.
+    :mod:`~domain.calculations.registry.tests.test_modelo_100_eo_agraria_indices_correctores`
+        Fase 3ª índice-corrector suite whose casilla 1548 result this test
+        continues from.
+    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0294-renta-2025-eo-agraria-reducciones-fase-4a.toml``
+        Registry-authored Fase 4ª formula chain under test.
+    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0295-renta-2025-eo-agraria-reduccion-irregularidad.toml``
+        Registry-authored Fase 5ª irregularidad reduction chain under test.
+    ``2026-07-03-y-siguientes-verification-audit`` and
+    ``2026-07-01-modelo-131-eo-modulos-engine-adr``
+        Audit and objective-estimation engine context for the reduction chain.
 """
 
 from __future__ import annotations
