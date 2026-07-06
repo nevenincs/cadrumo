@@ -190,6 +190,7 @@ Remove remaining campaign-owned test provisioning through the application adapte
 Provision capital-goods regularizacion tests from the real bienes-inversion persistence adapter instead of the test-export bundle and verify the calculation/advisory behavior.
 
 - [x] `W06.P09.S17` - Replace bienes-inversion test-export repository imports with the real persistence adapter source; `src/aeat/application/calculations/tests/test_bienes_inversion_regularizacion.py, src/aeat/application/modelo/tests/test_bienes_inversion_advisory.py`.
+- [x] `W06.P09.S18` - Replace invoice test-export repository imports with the real persistence adapter source; `src/aeat/application/invoices/tests/test_bulk_import.py, src/aeat/application/filing/tests/test_source_mesh_review.py`.
 
 ## Description
 
