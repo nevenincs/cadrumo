@@ -41,6 +41,33 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W03-P09-S32]]'
   - '[[2026-06-02-modelo-multiyear-renta-W03-P10-S33]]'
   - '[[2026-06-02-modelo-multiyear-renta-W03-P10-S34]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P11-S35]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P11-S36]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P12-S37]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P12-S38]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P13-S39]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P13-S40]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P14-S41]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P14-S42]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P14-S43]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P15-S44]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P15-S45]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P16-S46]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P16-S47]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P17-S48]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P17-S49]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P18-S50]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P18-S51]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P19-S52]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W04-P19-S53]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P20-S54]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P20-S55]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P20-S56]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P21-S57]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P21-S58]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P21-S59]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P22-S60]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W05-P22-S61]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
@@ -100,6 +127,33 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W03-P09-S32` - reconcile the M180 authorization manifest entry with renta_years matching the recorded year-set
 - `2026-06-02-modelo-multiyear-renta-W03-P10-S33` - reconcile the 123->193 two-renta reconciliation enrollment test using real capital-mobiliario feeder observations and annual manifest evidence
 - `2026-06-02-modelo-multiyear-renta-W03-P10-S34` - reconcile the M193 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P11-S35` - reconcile the M303 two-renta compensation-carry enrollment test proving 4T/2025 saldo into 1T/2026 casilla 110 via real registry calculation and relation resolver
+- `2026-06-02-modelo-multiyear-renta-W04-P11-S36` - reconcile the M303 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P12-S37` - reconcile the M390 two-renta annual reconciliation test against four M303 quarterly feeders
+- `2026-06-02-modelo-multiyear-renta-W04-P12-S38` - reconcile the M390 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P13-S39` - reconcile the M322 two-renta REGE individual calculation enrollment test for December 2025 and 2026
+- `2026-06-02-modelo-multiyear-renta-W04-P13-S40` - reconcile the M322 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P14-S41` - reconcile the 353<-322 per-member aggregation bindings using per_grupo_member grouping and sum aggregation
+- `2026-06-02-modelo-multiyear-renta-W04-P14-S42` - reconcile the M353 two-renta aggregation enrollment test summing two members real 322 calculations into 353
+- `2026-06-02-modelo-multiyear-renta-W04-P14-S43` - reconcile the M353 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P15-S44` - reconcile the M369 calculation-mode OSS Union-scheme cuota-total enrollment test across two renta years
+- `2026-06-02-modelo-multiyear-renta-W04-P15-S45` - reconcile the M369 authorization manifest entry with calculation evidence_class and renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P16-S46` - reconcile the M349 intracomunitario data-fidelity enrollment test proving encrypted observation roundtrip and year isolation
+- `2026-06-02-modelo-multiyear-renta-W04-P16-S47` - reconcile the M349 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P17-S48` - reconcile the M308 ad-hoc data-fidelity enrollment test proving two-renta encrypted observation roundtrip
+- `2026-06-02-modelo-multiyear-renta-W04-P17-S49` - reconcile the M308 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P18-S50` - reconcile the M309 calculation-mode ad-hoc cuota-total enrollment test across two renta years
+- `2026-06-02-modelo-multiyear-renta-W04-P18-S51` - reconcile the M309 authorization manifest entry with calculation evidence_class and renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W04-P19-S52` - reconcile the M360 ad-hoc refund-request data-fidelity enrollment test proving two-renta roundtrip and estado-miembro isolation
+- `2026-06-02-modelo-multiyear-renta-W04-P19-S53` - reconcile the M360 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W05-P20-S54` - reconcile the M200 BIN stock carry binding copying prior pending BIN into the current-year binding surface
+- `2026-06-02-modelo-multiyear-renta-W05-P20-S55` - reconcile the M200 two-renta BIN stock enrollment test and separate 70 percent / 1M cap guard coverage
+- `2026-06-02-modelo-multiyear-renta-W05-P20-S56` - reconcile the M200 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W05-P21-S57` - reconcile the M202 cuota-base ejercicio anterior bindings from prior Modelo 200 cuota liquida for 2P and 3P
+- `2026-06-02-modelo-multiyear-renta-W05-P21-S58` - reconcile the M202 2P two-renta enrollment test proving prior M200 cuota liquida feeds current pago fraccionado base
+- `2026-06-02-modelo-multiyear-renta-W05-P21-S59` - reconcile the M202 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W05-P22-S60` - reconcile the M232 related-party data-fidelity enrollment test proving NIF continuity, distinct importes, and threshold coverage
+- `2026-06-02-modelo-multiyear-renta-W05-P22-S61` - reconcile the M232 authorization manifest entry with renta_years matching the recorded year-set
 
 ### plan
 
