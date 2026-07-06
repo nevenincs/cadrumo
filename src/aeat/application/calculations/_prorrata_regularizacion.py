@@ -1,19 +1,17 @@
 """Advisory projection for the annual prorrata-general regularización (LIVA arts. 104-105).
 
-Builds the non-blocking source diagnostic the calculate path would surface for
-Modelo 303 casilla 44 (Regularización prorrata por porcentaje definitivo - Cuota)
-and the Modelo 390 annual regularización field when a taxpayer under prorrata
-general has exempt-without-right operations in the year and a provisional
-percentage was applied. In the first slice the ``prorrata_regularizacion`` source
-kind is DEFERRED (the automatic feed is blocked on the provisional-carry store),
-so this projection produces an advisory — never a silent zero — carrying the
-proposed casilla-44 value the operator confirms.
+Builds the projection and live source resolver for Modelo 303 casilla 44
+(Regularización prorrata por porcentaje definitivo - Cuota) and the Modelo 390
+annual regularización field when a taxpayer under prorrata general has
+exempt-without-right operations in the year and a provisional percentage was
+applied. The calculate path still keeps the advisory surface so missing
+provisional/current-year inputs never collapse into a silent zero.
 
 This is a pure function over the two prorrata percentages and the year's
-deductible input IVA; it is not yet wired into the live calculate mesh (that is
-the promotion step gated on the provisional-carry store, per ADR
-``2026-07-01-iva-complexity-hardening-scope``). The definitive percentage itself
-comes from the full-year volume rollup fed to
+deductible input IVA, plus a resolver that consumes the governed prorrata
+register or a stamped prior-year settlement observation for the provisional
+percentage. The definitive percentage itself comes from the full-year volume
+rollup fed to
 :func:`~domain.iva.compute_prorrata_definitiva_anual`; deriving it from a
 single quarter is a correctness defect (the silent-zero-base ADR).
 
@@ -35,20 +33,32 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel
 
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
     CasillaId,
+    Modelo,
     Period,
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
-from ...domain.calculations.registry import IvaLedgerObservation
+from ...domain.calculations.registry import (
+    BindingId,
+    IvaLedgerObservation,
+    LegalRefId,
+    ModeloRevision,
+    RegistrySnapshot,
+    SourceRefId,
+)
 from ...domain.iva import (
     IvaCategory,
     IvaExemptionArticle,
@@ -57,8 +67,21 @@ from ...domain.iva import (
     RegularizacionProrrataResult,
     compute_regularizacion_prorrata_anual,
 )
-from ...domain.prorrata_register import ProrrataProvisionalResolution, ProrrataRegisterEntry
-from ..aggregation import CalculationSourceDiagnostic
+from ...domain.prorrata_register import (
+    ProrrataProvisionalResolution,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    ProrrataRegisterError,
+)
+from ..aggregation import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+    storage_degradation_resolution,
+)
+from ._observations_repository import CalculationObservationRepository
+from ._revision_carry_gate import revision_carry_outcome
 
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
 #: block, "Regularización prorrata por porcentaje definitivo - Cuota"
@@ -68,7 +91,39 @@ CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
     surface="annual prorrata regularizacion Modelo 303 casilla",
 )
 
+_SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError, ProrrataRegisterError)
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
+_OUTPUT_MODELO_303_CASILLA_44: Final = "modelo_303_casilla_44"
+_OUTPUT_MODELO_390_REGULARIZACION_ANUAL: Final = "modelo_390_regularizacion_anual"
+_ZERO: Final = Decimal("0.00")
+_SETTLEMENT_PERIOD_TOKENS: Final[tuple[str, ...]] = ("4T", "0A")
+_SETTLEMENT_PERIOD_ORDER: Final[dict[str, int]] = {
+    period: index for index, period in enumerate(_SETTLEMENT_PERIOD_TOKENS)
+}
+_SOURCE_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T")
+_CUOTA_DEDUCIBLE_TOTAL_ID: Final[CasillaId] = validated_casilla_id(
+    "iva.cuota-deducible-total",
+    surface="prorrata regularizacion source casilla",
+)
+_VOLUMEN_CON_DERECHO_ID: Final[CasillaId] = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="prorrata regularizacion source casilla",
+)
+_VOLUMEN_TOTAL_ID: Final[CasillaId] = validated_casilla_id(
+    "iva.prorrata-volumen-total",
+    surface="prorrata regularizacion source casilla",
+)
+_PORCENTAJE_ID: Final[CasillaId] = validated_casilla_id(
+    "iva.prorrata-porcentaje",
+    surface="prorrata regularizacion source casilla",
+)
+_SOURCE_CASILLA_IDS: Final[tuple[CasillaId, ...]] = (
+    _CUOTA_DEDUCIBLE_TOTAL_ID,
+    _VOLUMEN_CON_DERECHO_ID,
+    _VOLUMEN_TOTAL_ID,
+    _PORCENTAJE_ID,
+)
 _CON_DERECHO_OUTPUT_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
         IvaCategory.DOMESTIC_GENERAL_21,
@@ -83,12 +138,30 @@ _CON_DERECHO_OUTPUT_CATEGORIES: frozenset[IvaCategory] = frozenset(
 _CON_DERECHO_EXEMPTION_ARTICLES: frozenset[IvaExemptionArticle] = frozenset({IvaExemptionArticle.ART_20_UNO_26})
 
 
+@dataclass(frozen=True, slots=True)
+class _PriorDefinitivaCarry:
+    percentage: Decimal
+    source_filing_year: int
+    source_period: str
+
+
+@dataclass(frozen=True, slots=True)
+class _CurrentYearSourcePeriodFeed:
+    values: Mapping[CasillaId, Decimal]
+    source_periods: tuple[str, ...]
+    missing_source_periods: tuple[str, ...] = ()
+
+    @property
+    def complete(self) -> bool:
+        return not self.missing_source_periods
+
+
 class ProrrataRegularizacionFeedProjection(BaseModel):
     """Structured proposed feeds for annual prorrata-general regularización.
 
-    The first slice keeps ``prorrata_regularizacion`` deferred, so these values
-    are proposed feeds for the operator-confirmed Modelo 303 casilla 44 and the
-    Modelo 390 annual regularización field. Both come from the same
+    These values feed the live source resolver and the operator-facing advisory
+    for Modelo 303 casilla 44 and the Modelo 390 annual regularización field.
+    Both come from the same
     :class:`RegularizacionProrrataResult`, preserving the registry's declared
     annual-volume authority for the definitive percentage.
 
@@ -351,6 +424,444 @@ def project_prorrata_regularizacion_feed(
     )
 
 
+def _binding_legal_refs(revision: ModeloRevision) -> tuple[LegalRefId, ...]:
+    refs: list[LegalRefId] = []
+    for binding in revision.bindings:
+        if binding.source != _SOURCE_KIND:
+            continue
+        for ref in getattr(binding, "legal_refs", ()):
+            if ref not in refs:
+                refs.append(ref)
+    return tuple(refs)
+
+
+def _binding_source_refs(revision: ModeloRevision) -> tuple[SourceRefId, ...]:
+    refs: list[SourceRefId] = []
+    for binding in revision.bindings:
+        if binding.source != _SOURCE_KIND:
+            continue
+        for ref in getattr(binding, "source_refs", ()):
+            if ref not in refs:
+                refs.append(ref)
+    return tuple(refs)
+
+
+def _prorrata_bindings_by_output(revision: ModeloRevision) -> dict[str, BindingId]:
+    bindings: dict[str, BindingId] = {}
+    for binding in revision.bindings:
+        if binding.source != _SOURCE_KIND:
+            continue
+        output = getattr(binding.selector, "regularizacion_output", None)
+        if isinstance(output, str):
+            bindings[output] = binding.id
+    return bindings
+
+
+def _prorrata_declared_binding_ids(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    return tuple(sorted(binding.id for binding in revision.bindings if binding.source == _SOURCE_KIND))
+
+
+def _prorrata_source_periods(revision: ModeloRevision) -> tuple[str, ...]:
+    periods: list[str] = []
+    for binding in revision.bindings:
+        if binding.source != _SOURCE_KIND:
+            continue
+        for period in getattr(binding.selector, "source_periods", ()):
+            if period not in periods:
+                periods.append(period)
+    return tuple(periods or _SOURCE_PERIODS)
+
+
+def _missing_current_year_casillas(current_year_values: Mapping[CasillaId, Decimal]) -> tuple[CasillaId, ...]:
+    return tuple(casilla_id for casilla_id in _SOURCE_CASILLA_IDS if casilla_id not in current_year_values)
+
+
+def _unresolved_binding_diagnostics(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+    message: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=_SOURCE_KIND.value,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            message=message,
+        )
+        for binding_id in binding_ids
+    )
+
+
+def _current_year_values_provenance(
+    *,
+    context: CalculationSourceContext,
+    snapshot: RegistrySnapshot,
+    source_periods: tuple[str, ...] | None = None,
+) -> CalculationSourceProvenance:
+    periods = source_periods or _prorrata_source_periods(snapshot.revision)
+    period_ref = ",".join(periods)
+    return CalculationSourceProvenance(
+        source_kind=_SOURCE_KIND.value,
+        source_ref=f"{Modelo.M303.value}:{context.filing_year}:{period_ref}:prorrata-current-year-values",
+        source_modelo=Modelo.M303.value,
+        source_filing_year=context.filing_year,
+        source_periods=periods,
+        source_casilla_ids=_SOURCE_CASILLA_IDS,
+        legal_refs=_binding_legal_refs(snapshot.revision),
+        source_refs=_binding_source_refs(snapshot.revision),
+    )
+
+
+def _entry_for_register_provenance(
+    register: ProrrataRegister,
+    *,
+    ejercicio: int,
+) -> ProrrataRegisterEntry | None:
+    entry = register.entry_for(ejercicio)
+    if entry is not None:
+        return entry
+    entries = register.entries_for_ejercicio(ejercicio)
+    return entries[0] if entries else None
+
+
+def _register_provenance(
+    *,
+    context: CalculationSourceContext,
+    entry: ProrrataRegisterEntry | None,
+    provisional_resolution: ProrrataProvisionalResolution,
+    snapshot: RegistrySnapshot,
+) -> CalculationSourceProvenance:
+    provenance = provisional_resolution.provenance
+    provenance_token = provenance.value if provenance is not None else "resolved"
+    suffix = provenance_token
+    if entry is not None and entry.source_observation_ref is not None:
+        suffix = f"{provenance_token}:{entry.source_observation_ref}"
+    elif entry is not None and entry.authorisation_reference is not None:
+        suffix = f"{provenance_token}:{entry.authorisation_reference}"
+    return CalculationSourceProvenance(
+        source_kind=_SOURCE_KIND.value,
+        source_ref=f"prorrata-register:{context.filing_year}:{suffix}",
+        source_filing_year=context.filing_year,
+        legal_refs=_binding_legal_refs(snapshot.revision),
+        source_refs=_binding_source_refs(snapshot.revision),
+    )
+
+
+def _prior_definitiva_provenance(
+    *,
+    carry: _PriorDefinitivaCarry,
+    snapshot: RegistrySnapshot,
+) -> CalculationSourceProvenance:
+    return CalculationSourceProvenance(
+        source_kind=_SOURCE_KIND.value,
+        source_ref=f"{Modelo.M303.value}:{carry.source_filing_year}:{carry.source_period}:{_PORCENTAJE_ID}",
+        source_modelo=Modelo.M303.value,
+        source_filing_year=carry.source_filing_year,
+        source_periods=(carry.source_period,),
+        source_casilla_ids=(_PORCENTAJE_ID,),
+        legal_refs=_binding_legal_refs(snapshot.revision),
+        source_refs=_binding_source_refs(snapshot.revision),
+    )
+
+
+def _stamped_prior_year_definitiva(
+    repository: CalculationObservationRepository,
+    *,
+    filing_year: int,
+) -> _PriorDefinitivaCarry | None:
+    prior_year = filing_year - 1
+    candidates: list[tuple[int, object, _PriorDefinitivaCarry]] = []
+    for payload in repository.iter_modelo(Modelo.M303.value):
+        observation = payload.observation
+        if observation.filing_year != prior_year or observation.period not in _SETTLEMENT_PERIOD_ORDER:
+            continue
+        percentage = observation.casilla_values.get(_PORCENTAJE_ID)
+        if percentage is None:
+            continue
+        refused = revision_carry_outcome(
+            payload.stamped_revision_id,
+            source_modelo=observation.modelo,
+            source_filing_year=observation.filing_year,
+            source_period=observation.period,
+        )
+        if refused:
+            continue
+        candidates.append(
+            (
+                _SETTLEMENT_PERIOD_ORDER[observation.period],
+                payload.captured_at,
+                _PriorDefinitivaCarry(
+                    percentage=percentage,
+                    source_filing_year=observation.filing_year,
+                    source_period=observation.period,
+                ),
+            )
+        )
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda item: (item[0], item[1]))[0][2]
+
+
+def _source_period_feed_from_observations(
+    repository: CalculationObservationRepository,
+    *,
+    snapshot: RegistrySnapshot,
+    filing_year: int,
+) -> _CurrentYearSourcePeriodFeed:
+    periods = _prorrata_source_periods(snapshot.revision)
+    if not periods:
+        return _CurrentYearSourcePeriodFeed(values={}, source_periods=())
+
+    observed_by_period: dict[str, Mapping[CasillaId, Decimal]] = {}
+    missing_periods: list[str] = []
+    for period in periods:
+        payload = repository.load_observation(Modelo.M303.value, Period.from_year_and_code(filing_year, period))
+        if payload is None:
+            missing_periods.append(period)
+            continue
+        observation = payload.observation
+        refused = revision_carry_outcome(
+            payload.stamped_revision_id,
+            source_modelo=observation.modelo,
+            source_filing_year=observation.filing_year,
+            source_period=observation.period,
+        )
+        if refused:
+            missing_periods.append(period)
+            continue
+        observed_by_period[period] = observation.casilla_values
+
+    values: dict[CasillaId, Decimal] = {}
+    regularised_periods = periods[:-1] if len(periods) > 1 else periods
+    cuota_values = [
+        period_values[_CUOTA_DEDUCIBLE_TOTAL_ID]
+        for period in regularised_periods
+        if (period_values := observed_by_period.get(period)) is not None
+        and _CUOTA_DEDUCIBLE_TOTAL_ID in period_values
+    ]
+    if len(cuota_values) == len(regularised_periods):
+        values[_CUOTA_DEDUCIBLE_TOTAL_ID] = sum(cuota_values, Decimal("0"))
+
+    settlement_values = observed_by_period.get(periods[-1])
+    if settlement_values is not None:
+        for casilla_id in (_VOLUMEN_CON_DERECHO_ID, _VOLUMEN_TOTAL_ID, _PORCENTAJE_ID):
+            value = settlement_values.get(casilla_id)
+            if value is not None:
+                values[casilla_id] = value
+
+    return _CurrentYearSourcePeriodFeed(
+        values=values,
+        source_periods=periods,
+        missing_source_periods=tuple(missing_periods),
+    )
+
+
+def _resolve_prorrata_regularizacion_binding_values(
+    revision: ModeloRevision,
+    *,
+    current_year_values: Mapping[CasillaId, Decimal],
+    provisional_percentage: Decimal,
+) -> dict[BindingId, Decimal]:
+    binding_by_output = _prorrata_bindings_by_output(revision)
+    if not binding_by_output:
+        return {}
+
+    volumen_total = current_year_values[_VOLUMEN_TOTAL_ID]
+    volumen_con_derecho = current_year_values[_VOLUMEN_CON_DERECHO_ID]
+    projection = project_prorrata_regularizacion_feed(
+        cuotas_soportadas_deducibles=current_year_values[_CUOTA_DEDUCIBLE_TOTAL_ID],
+        prorrata_provisional_pct=provisional_percentage,
+        prorrata_definitiva_pct=current_year_values[_PORCENTAJE_ID],
+        operaciones_sin_derecho_deduccion=volumen_total - volumen_con_derecho,
+    )
+    values_by_output = {
+        _OUTPUT_MODELO_303_CASILLA_44: projection.modelo_303_casilla_44_value or _ZERO,
+        _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: projection.modelo_390_regularizacion_anual_value or _ZERO,
+    }
+    return {
+        binding_id: values_by_output[output]
+        for output, binding_id in binding_by_output.items()
+        if output in values_by_output
+    }
+
+
+class ProrrataRegularizacionSourceResolver:
+    """Resolve annual prorrata-general regularisation bindings from governed carries."""
+
+    resolver_id = _SOURCE_KIND.value
+    owned_sources: tuple[BindingSourceKind, ...] = (_SOURCE_KIND,)
+
+    def __init__(
+        self,
+        *,
+        current_year_values: Mapping[CasillaId, Decimal] | None = None,
+        missing_current_year_casilla_ids: Iterable[CasillaId] = (),
+        unresolved_current_year_casilla_ids: Iterable[CasillaId] = (),
+        prorrata_register_repository: ProrrataRegisterRepository | None = None,
+        observation_repository: CalculationObservationRepository | None = None,
+        registry_snapshot: RegistrySnapshot | None = None,
+    ) -> None:
+        self._current_year_values = dict(current_year_values or {})
+        self._missing_current_year_casilla_ids = tuple(missing_current_year_casilla_ids)
+        self._unresolved_current_year_casilla_ids = tuple(unresolved_current_year_casilla_ids)
+        self._prorrata_register_repository = prorrata_register_repository
+        self._observation_repository = observation_repository
+        self._registry_snapshot = registry_snapshot
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        snapshot = self._registry_snapshot
+        if snapshot is None:
+            from ...core.resources import resources
+
+            snapshot = resources().modelos.authority.snapshot(
+                context.modelo,
+                filing_year=context.filing_year,
+                period=context.period.registry_token,
+            )
+        declared_binding_ids = _prorrata_declared_binding_ids(snapshot.revision)
+        if not declared_binding_ids:
+            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+
+        observation_repository = self._observation_repository or CalculationObservationRepository()
+        try:
+            source_period_feed = _source_period_feed_from_observations(
+                observation_repository,
+                snapshot=snapshot,
+                filing_year=context.filing_year,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        current_year_values = {
+            **self._current_year_values,
+            **dict(source_period_feed.values),
+        }
+        missing_current = tuple(
+            dict.fromkeys(
+                (
+                    *_missing_current_year_casillas(current_year_values),
+                    *self._missing_current_year_casilla_ids,
+                    *self._unresolved_current_year_casilla_ids,
+                )
+            )
+        )
+        if missing_current:
+            message = (
+                f"prorrata_regularizacion binding requires current-year registry casillas "
+                f"{tuple(str(casilla_id) for casilla_id in missing_current)} before it can resolve"
+            )
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=declared_binding_ids,
+                diagnostics=_unresolved_binding_diagnostics(
+                    binding_ids=declared_binding_ids,
+                    resolver_id=self.resolver_id,
+                    message=message,
+                ),
+            )
+
+        register_repository = self._prorrata_register_repository or ProrrataRegisterRepository(
+            bucket_id=context.bucket_id,
+        )
+        try:
+            register = register_repository.load()
+            prior_definitiva = _stamped_prior_year_definitiva(
+                observation_repository,
+                filing_year=context.filing_year,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+
+        current_provenance = _current_year_values_provenance(
+            context=context,
+            snapshot=snapshot,
+            source_periods=source_period_feed.source_periods,
+        )
+        register_entries = register.entries_for_ejercicio(context.filing_year)
+        applicability = derive_prorrata_applicability(
+            register_entries=register_entries,
+            declared_volume_total=current_year_values[_VOLUMEN_TOTAL_ID],
+            declared_volume_con_derecho=current_year_values[_VOLUMEN_CON_DERECHO_ID],
+        )
+        if not applicability.applies:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                binding_values={binding_id: _ZERO for binding_id in declared_binding_ids},
+                provenance=(current_provenance,),
+            )
+
+        provisional = register.resolve_provisional(context.filing_year)
+        provenance: tuple[CalculationSourceProvenance, ...]
+        if provisional.resolved:
+            register_entry = _entry_for_register_provenance(register, ejercicio=context.filing_year)
+            provenance = (
+                current_provenance,
+                _register_provenance(
+                    context=context,
+                    entry=register_entry,
+                    provisional_resolution=provisional,
+                    snapshot=snapshot,
+                ),
+            )
+            assert provisional.percentage is not None
+            provisional_percentage = provisional.percentage
+        elif prior_definitiva is not None:
+            provenance = (
+                current_provenance,
+                _prior_definitiva_provenance(carry=prior_definitiva, snapshot=snapshot),
+            )
+            provisional_percentage = prior_definitiva.percentage
+        else:
+            message = (
+                f"prorrata_regularizacion binding for {context.filing_year} requires a resolved provisional "
+                "percentage from the prorrata register or a stamped prior-year Modelo 303 settlement observation"
+            )
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=declared_binding_ids,
+                diagnostics=_unresolved_binding_diagnostics(
+                    binding_ids=declared_binding_ids,
+                    resolver_id=self.resolver_id,
+                    message=message,
+                ),
+                provenance=(current_provenance,),
+            )
+
+        binding_values = _resolve_prorrata_regularizacion_binding_values(
+            snapshot.revision,
+            current_year_values=current_year_values,
+            provisional_percentage=provisional_percentage,
+        )
+        unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
+        diagnostics = _unresolved_binding_diagnostics(
+            binding_ids=unresolved,
+            resolver_id=self.resolver_id,
+            message="prorrata_regularizacion binding selector did not map to a resolver output",
+        )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=binding_values,
+            unresolved_binding_ids=unresolved,
+            diagnostics=diagnostics,
+            provenance=provenance,
+        )
+
+
 def build_prorrata_regularizacion_advisory(
     *,
     cuotas_soportadas_deducibles: Decimal,
@@ -423,6 +934,7 @@ __all__ = [
     "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
+    "ProrrataRegularizacionSourceResolver",
     "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",

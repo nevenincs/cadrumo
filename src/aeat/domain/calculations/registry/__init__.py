@@ -259,6 +259,7 @@ from ._formula_runtime import (
     calculate_registry_snapshot,
     read_parameter,
 )
+from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
@@ -782,6 +783,7 @@ __all__ = [
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",
     "has_applicability_rule",
+    "initial_value_casilla_ids",
     "input_casilla_id_map",
     "inventory_workbook_coverage",
     "invoice_binding_requirements",

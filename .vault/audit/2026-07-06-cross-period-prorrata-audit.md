@@ -672,3 +672,116 @@ stays declared as the future `prorrata_regularizacion` selector/export grounding
 focused regression proves a nonzero operator-supplied `[522]` raises box `[64]`
 and lowers box `[65]`. Automatic value materialisation remains deferred to
 `W07.P11.S45` and `W07.P11.S46`.
+
+## S45 Review
+
+Reviewed the `W07.P11.S45` calculation-order seam against the cross-period
+prorrata ADR, the W07 plan rows, the repaired S44 audit finding, the Modelo
+303 prorrata selector contract, the registry initial-value path, and the modelo
+calculation action layer. The implementation adds a read-only, no-persist engine
+materialisation pass for staged source resolvers. It receives already-resolved
+calculation channels, builds inputs through the normal application helper, runs
+`calculate_registry_snapshot`, and returns the selected current-year values with
+missing/unresolved casilla ids. The prorrata view preserves selector order for
+deductible total, declared con-derecho volume, declared total volume, and the
+definitive percentage.
+
+The review found no formula reimplementation, no computed-casilla input
+smuggling, and no new source kind, resolver convention, or validator convention.
+The new registry helper only reports which casillas are pre-formula seeds, so
+S46 can tell declared volume values from engine-computed percentage/deductible
+values without changing the initial-value contract. The focused test uses the
+bundled AEAT Manual IVA prorrata oracle for the volume and percentage expected
+values and the manual's fourth-quarter input IVA for the deductible-total seed.
+
+Findings: no open S45 implementation findings.
+
+Residual gate inventory: ruff is clean for the changed implementation and test
+files. The prorrata source-timing/oracle/advisory slice, calculation action
+slice, source-mesh bucket slice, and registry formula slice all pass
+sequentially. Live resolver materialisation and source enrollment remain open in
+`W07.P11.S46` and `W07.P12.S47`.
+
+## S49 W07 Promotion Close Review
+
+Reviewed the W07 promotion surface at HEAD after `W07.P12.S47` and
+`W07.P12.S48`: selector contract, Modelo 303 and Modelo 390 registry bindings,
+live resolver, source-mesh enrollment, caller-override disposition, source-kind
+parity, AEAT manual oracle tests, M303 advisory behaviour, bienes-inversion
+dependency wording, feature index, frontmatter, feature checks, and plan checks.
+
+The review finds the source-kind promotion itself structurally landed:
+`prorrata_regularizacion` is no longer in the deferred source-kind target set,
+it is enrolled in the live application source mesh and calculation source
+policy, it has resolver tests and a source-mesh integration test, and the
+existing AEAT manual oracle still grounds the pure projection. No new source
+kind, resolver convention, or validator convention was introduced.
+
+The review also finds that W07 must not be represented as product-closed. The
+live binding value does not yet feed the persisted Modelo 303 form target, and
+the resolver materialisation seam is current-snapshot only rather than a
+governed source-period feed across filed Modelo 303 observations. The items
+below are formally deferred rather than silently left open.
+
+### s49-m303-casilla-44-target-consumption | high | live binding value is not consumed by the Modelo 303 form target
+
+The Modelo 303 `prorrata_regularizacion` binding now resolves through the live
+mesh, but casilla `[44]` remains `input_kind = "manual"` with no casilla binding
+in both current registry revisions, and the registry test still pins that
+status. This prevents the resolver's nonzero value from being projected into the
+persisted form/export target. Blocker: target consumption must avoid a
+calculation cycle between the pre-regularisation deductible subtotal used as a
+resolver input and the regularisation output that should later affect official
+deduction/result boxes. Formal deferral: define and execute a
+`cross-period-prorrata-m303-target-consumption` follow-up that proves the target
+binding, formula consumption, export behaviour, and unresolved-state handling
+against the AEAT oracle without recomputing formula logic.
+
+### s49-source-period-materialisation | high | selector source periods are not honoured by the live materialisation seam
+
+The selector declares `source_periods = ["1T", "2T", "3T", "4T"]`, but the
+current materialisation seam feeds the resolver from the active calculation
+snapshot and caller channels. The integration test can reproduce the oracle
+because it supplies the manual's first-three-quarter input IVA subtotal in the
+active channel; a normal fourth-quarter run still lacks a governed read of
+stamped filed observations for the earlier quarters. Formal deferral: define and
+execute a `cross-period-prorrata-source-period-feed` follow-up that materialises
+the declared Modelo 303 source casillas from filed observations with revision
+stamps, selector period ordering, and visible unresolved diagnostics when the
+observation corpus is incomplete.
+
+### s49-m390-cross-modelo-feed | high | annual Modelo 390 binding remains unresolved without a Modelo 303 feed
+
+The Modelo 390 annual binding is declared with the same `prorrata_regularizacion`
+selector, but the current live materialisation path sees the Modelo 390 snapshot
+and correctly reports the annual binding unresolved because the required Modelo
+303 source casillas are absent there. This is preferable to fabricating zero, but
+it means the annual target is not live-complete. Formal deferral: extend the
+`cross-period-prorrata-source-period-feed` follow-up so Modelo 390 consumes the
+governed Modelo 303 source-period materialisation and proves box `[522]` flows
+through annual deductions/results when the source corpus is complete.
+
+### s49-bienes-inversion-remaining-blocker | medium | capital-goods regularisation remains governed deferred work
+
+`BIENES_INVERSION_REGULARIZACION` was correctly re-ratified as deferred after
+the prorrata source-kind promotion. Its remaining blocker is independent: the
+capital-goods resolver must declare and prove the Modelo 303 casilla `[43]` and
+Modelo 390 regularisation targets, map register rows to the current-year
+definitive prorrata percentage, and handle article 110 disposal cap facts before
+that source can leave the deferred set. Formal deferral: keep the
+`bienes-inversion-regularizacion-live-resolver` follow-up separate from the
+prorrata source-kind promotion.
+
+S49 outcome: close review complete, W07 source-kind promotion reviewed, but the
+cross-period-prorrata product surface is not honest-to-close until the formally
+deferred target-consumption and source-period-feed items above are completed.
+The program freeze on new binding source kinds and resolver conventions should
+remain in force.
+
+Verification inventory: the focused ruff slice over the changed source and
+tests is clean; the focused prorrata/source-kind pytest slice passes with 36
+tests; `vault check frontmatter --feature cross-period-prorrata`,
+`vault check features --feature cross-period-prorrata`, and
+`vault plan check 2026-07-06-cross-period-prorrata-plan` are clean after
+rebuilding the feature index. `vault plan status` reports 49 of 49 steps
+complete with no missing exec records.
