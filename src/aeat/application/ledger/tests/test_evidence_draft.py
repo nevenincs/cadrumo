@@ -36,12 +36,14 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage import AttachmentStore
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.application_adapter_exports import AttachmentStore, InvoiceCatalogueRepository, SecureObjectRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (
