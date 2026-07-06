@@ -24,6 +24,10 @@ See Also:
         Bucket-scoped encrypted repository used for the real round trip.
     :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_wizard`
         CLI command handler covered by these integration tests.
+    ``2026-06-10-ledger-invoice-unification-adr``
+        Governing decision for the operator-facing ``invoice --kind`` surface.
+    ``2026-05-30-purchase-invoice-ocr-extraction-discipline-adr``
+        Extraction-discipline decision this manual fallback complements.
 """
 
 from __future__ import annotations
