@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
@@ -130,7 +131,7 @@ class InvoiceCatalogueRepository:
         if record is None:
             _log.debug("no invoice catalogue in database, returning empty")
             return InvoiceCatalogue()
-        envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             from ..storage import ClassificationError
 
@@ -177,7 +178,7 @@ class InvoiceCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
 
@@ -206,7 +207,7 @@ class InvoiceCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
 

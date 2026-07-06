@@ -117,6 +117,7 @@ from ...application.modelo import (
 )
 from ...application.workflow import workflow_state_repository
 from ...core import Period
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ._common import _emit_envelope, _profile_to_taxpayer, active_bucket_id_or_refuse
 from ._modelo_cli_support import (
@@ -467,7 +468,7 @@ def review_package_sign(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(signed.model_dump_json(indent=2), encoding="utf-8")
+    output.write_text(signed.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
 
     public_key = review_package_signing_public_key(keypair)
     result, lines = review_package_sign_result(
@@ -535,7 +536,7 @@ def review_package_verify_signature(
         )
 
     try:
-        signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding="utf-8"))
+        signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
 
@@ -619,7 +620,7 @@ def review_package_counter_sign(
         )
 
     try:
-        signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding="utf-8"))
+        signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
 
@@ -636,7 +637,7 @@ def review_package_counter_sign(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(receipt.model_dump_json(indent=2), encoding="utf-8")
+    output.write_text(receipt.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
 
     counter_public_key = review_package_signing_public_key(counter_signer_keypair)
     result, lines = review_package_counter_sign_result(
@@ -715,7 +716,7 @@ def review_package_verify_receipt(
         )
 
     try:
-        receipt = CounterSignedReceipt.model_validate_json(receipt_path.read_text(encoding="utf-8"))
+        receipt = CounterSignedReceipt.model_validate_json(receipt_path.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageCounterSigningError(str(exc))) from exc
 
@@ -849,7 +850,7 @@ def review_package_encrypt_for_recipient(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
 
     result, lines = review_package_encrypt_for_recipient_result(
         package,
@@ -911,7 +912,7 @@ def review_package_decrypt(
         )
 
     try:
-        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding="utf-8"))
+        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
 
@@ -1058,7 +1059,7 @@ def review_package_encrypt_feedback(
             )
         try:
             counter_signed_receipt = CounterSignedReceipt.model_validate_json(
-                receipt.read_text(encoding="utf-8"),
+                receipt.read_text(encoding=UTF_8_ENCODING),
             )
         except ValueError as exc:
             raise bad_parameter_from_error(ReviewPackageCounterSigningError(str(exc))) from exc
@@ -1080,7 +1081,7 @@ def review_package_encrypt_feedback(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
 
     result, lines = review_package_encrypt_feedback_result(
         output,
@@ -1178,7 +1179,7 @@ def review_package_import_feedback(
         )
 
     try:
-        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding="utf-8"))
+        envelope = RecipientEncryptedPackage.model_validate_json(envelope_path.read_text(encoding=UTF_8_ENCODING))
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
 

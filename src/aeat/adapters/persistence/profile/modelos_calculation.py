@@ -38,6 +38,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.modelos import (
@@ -160,7 +161,7 @@ class CalculationRevisionCatalogueRepository:
             )
         if record is None:
             return CalculationRevisionCatalogue()
-        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             _LOGGER.error(
                 "calculation-revision catalogue classification mismatch",
@@ -232,7 +233,7 @@ class CalculationRevisionCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_CALCULATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
@@ -259,7 +260,7 @@ class CalculationRevisionCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_CALCULATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     def save_with_secure_object_writes(

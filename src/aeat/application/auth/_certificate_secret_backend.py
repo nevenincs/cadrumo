@@ -64,6 +64,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     get_secret_store,
 )
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 
 _KEYRING_SERVICE_PREFIX = "aeat:certificate-secret"
@@ -173,7 +174,7 @@ class SecureStorageCertificateSecretBackend:
             record = store.get(key)
         except SecretNotFoundError:
             return None
-        return SecretStr(record.value.decode("utf-8"))
+        return SecretStr(record.value.decode(UTF_8_ENCODING))
 
     def set(self, name: str, secret: SecretStr) -> None:
         """Persist (or rotate) the passphrase for ``name``."""
@@ -181,7 +182,7 @@ class SecureStorageCertificateSecretBackend:
         key = _secret_store_key(bucket_id=self._bucket_id, name=name)
         record = SecretRecord(
             key=key,
-            value=secret.get_secret_value().encode("utf-8"),
+            value=secret.get_secret_value().encode(UTF_8_ENCODING),
             classification=SensitivityClass.SECRET,
             created_at=now(),
             expires_at=now() + _SECRET_ROTATION_HORIZON,

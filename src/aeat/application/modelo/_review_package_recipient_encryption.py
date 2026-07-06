@@ -130,6 +130,7 @@ from ...adapters.persistence.storage import DecryptionError, SensitivityClass
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
@@ -281,7 +282,7 @@ def ensure_recipient_encryption_keypair(
         classification=SensitivityClass.SECRET,
         schema_version=_NAMESPACE.schema_version,
         written_at=keypair.created_at,
-        payload=keypair.model_dump_json().encode("utf-8"),
+        payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
         write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
     )
     return keypair

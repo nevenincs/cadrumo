@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.modelos import (
@@ -152,7 +153,7 @@ class ModeloRecordCatalogueRepository:
             )
         if record is None:
             return ModeloRecordCatalogue()
-        envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             _LOGGER.error(
                 "filing-record catalogue classification mismatch",
@@ -225,7 +226,7 @@ class ModeloRecordCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     def save_with_secure_object_writes(
