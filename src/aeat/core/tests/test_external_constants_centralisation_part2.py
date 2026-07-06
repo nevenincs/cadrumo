@@ -1,4 +1,26 @@
-"""Centralisation contract tests (part 2): IVA rate, modelo-ID groups, and renta deduction/amortizacion constants."""
+"""Centralisation contract tests for regulatory leaf constants.
+
+This second constants sweep pins IVA rate defaults, modelo-id groups, renta
+deduction values, and amortizacion scalars to ``core.external_constants`` so
+application and domain consumers alias the central registry instead of carrying
+local literals. The AST checks catch bare Decimal/minimum literals while identity
+checks prove known consumers import the shared objects.
+
+See Also:
+    :mod:`~core.external_constants`
+        Central registry that owns the typed leaf constants under test.
+    :func:`~domain.iva.lookup_rate`
+        IVA rate registry used to prove the default general IVA rate has not
+        drifted from the dated substrate.
+    :mod:`~application.aggregation._service`
+        Aggregation service consumers that alias modelo-id group constants.
+    :mod:`~application.inventory._service`
+        Inventory service consumer of the default IVA general-rate constant.
+    Governing vault records
+        ``2026-06-14-legal-grounding-centralization-adr`` and
+        ``2026-05-06-vat-rate-shadow-sweep-audit`` govern the centralization
+        mechanism and VAT literal shadow checks covered here.
+"""
 
 from __future__ import annotations
 
@@ -317,7 +339,7 @@ def test_decimal_external_constant_values_and_types() -> None:
 def test_default_iva_general_rate_pct_matches_registry() -> None:
     """``DEFAULT_IVA_GENERAL_RATE_PCT`` equals the IVA-registry general rate for Spain on 2026-01-01.
 
-    Binds the default to the dated :func:`aeat.domain.iva.lookup_rate` registry so
+    Binds the default to the dated :func:`~domain.iva.lookup_rate` registry so
     it cannot silently drift when AEAT publishes a rate change.
     """
 
@@ -353,7 +375,7 @@ def test_inventory_movement_add_iva_rate_default_matches_core_constant() -> None
 def test_tabular_export_media_types_match_core_constants(export_format: str, expected_media_type: str) -> None:
     """Serialized tabular results expose the core MIME constants."""
 
-    from ...application.export._tabular import ExportSerializationFormat, serialize_tabular_rows
+    from ...application.export import ExportSerializationFormat, serialize_tabular_rows
     from .. import external_constants
 
     result = serialize_tabular_rows(
