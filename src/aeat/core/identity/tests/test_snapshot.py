@@ -13,19 +13,22 @@ from .. import SnapshotId
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _Holder = single_field_model("snapshot_id", SnapshotId)
+_CANONICAL_DIGEST = hashlib.sha256(b"payload").hexdigest()
 
 
-def test_snapshot_id_constraint_accepts_canonical_digest_and_rejects_invalid_values() -> None:
-    digest = hashlib.sha256(b"payload").hexdigest()
-    assert single_field_value(_Holder(snapshot_id=digest), "snapshot_id") == digest
+def test_snapshot_id_constraint_accepts_canonical_digest() -> None:
+    assert single_field_value(_Holder(snapshot_id=_CANONICAL_DIGEST), "snapshot_id") == _CANONICAL_DIGEST
 
-    cases = (
-        hashlib.sha256(b"payload").hexdigest().upper(),
-        "a" * 63,
-        "a" * 65,
-        "g" * 64,
-    )
 
-    for snapshot_id in cases:
-        with pytest.raises(ValidationError):
-            _Holder(snapshot_id=snapshot_id)
+@pytest.mark.parametrize(
+    "snapshot_id",
+    (
+        pytest.param(_CANONICAL_DIGEST.upper(), id="uppercase"),
+        pytest.param("a" * 63, id="too-short"),
+        pytest.param("a" * 65, id="too-long"),
+        pytest.param("g" * 64, id="non-hex"),
+    ),
+)
+def test_snapshot_id_constraint_rejects_invalid_values(snapshot_id: str) -> None:
+    with pytest.raises(ValidationError):
+        _Holder(snapshot_id=snapshot_id)
