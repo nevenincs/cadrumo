@@ -58,6 +58,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S205]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S208]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S250]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S251]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S252]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S253]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S254]]'
@@ -447,6 +448,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P41-S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer
 - `2026-05-26-cross-domain-continuity-W05-P24-S281` - Implement Modelo 303 cash-accounting IVA axis
 - `2026-05-26-cross-domain-continuity-W05-P24-S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer
+- `2026-05-26-cross-domain-continuity-W09-P41-S251` - Resolve Cataluna 2024 autonomic tariff discrepancy
 
 ### plan
 
