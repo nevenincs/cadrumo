@@ -102,6 +102,21 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
             return date.fromisoformat(value)
         return value
 
+    @field_validator("taxable_base", "iva_amount", "recargo_amount", mode="before")
+    @classmethod
+    def _coerce_decimal_field(cls, value: object) -> object:
+        """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``.
+
+        Without this, a ``Transaction`` carrying a populated
+        ``cash_accounting_payment_evidence`` tuple cannot round-trip through
+        ``Envelope[Transaction].model_validate_json`` at all: pydantic-core
+        strict mode rejects the JSON-decoded string for these fields even
+        though ``payment_date`` was already coerced above.
+        """
+        if isinstance(value, str):
+            return Decimal(value)
+        return value
+
     @model_validator(mode="after")
     def _require_settlement_amount(self) -> IvaCashAccountingPaymentEvidence:
         if (
