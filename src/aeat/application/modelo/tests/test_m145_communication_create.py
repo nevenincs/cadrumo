@@ -1,4 +1,17 @@
-"""Real-runtime create tests for Modelo 145 local communication records."""
+"""Real-runtime create tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend service implementing create, list, read, and object-key flows.
+    :class:`~application.modelo.M145CommunicationCreateCommand`
+        Strict command DTO accepted by the create service.
+    :class:`~application.modelo.M145CommunicationRecord`
+        Persisted bucket-local record asserted by this module.
+    :func:`~application.modelo.derive_m145_communication_record_id`
+        Deterministic record-id helper checked against persisted output.
+    :data:`~adapters.persistence.storage.M145_COMMUNICATION_RECORD_NAMESPACE`
+        Secure-object namespace that stores local communication records.
+"""
 
 from __future__ import annotations
 
