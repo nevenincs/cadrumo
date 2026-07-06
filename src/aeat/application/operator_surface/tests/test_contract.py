@@ -29,8 +29,6 @@ See Also:
 
 from __future__ import annotations
 
-import importlib
-import inspect
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -59,10 +57,6 @@ from .. import (
 from .._models import LifecycleContract, RootSurface
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _module_source(module_name: str) -> str:
-    return inspect.getsource(importlib.import_module(module_name))
 
 
 @pytest.fixture(autouse=True)
@@ -166,16 +160,39 @@ def test_contract_models_are_strict_and_immutable() -> None:
 
 
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
-    module_sources = [
-        inspect.getsource(operator_surface),
-        _module_source("aeat.application.operator_surface._contract"),
-        _module_source("aeat.application.operator_surface._help"),
-        _module_source("aeat.application.operator_surface._models"),
-    ]
-    joined = "\n".join(module_sources)
+    import subprocess
+    import sys
+    import textwrap
 
-    assert "typer" not in joined.lower()
-    assert "entrypoints.cli" not in joined
+    script = textwrap.dedent("""\
+        import importlib
+        import sys
+
+        for module_name in (
+            "aeat.application.operator_surface",
+            "aeat.application.operator_surface._contract",
+            "aeat.application.operator_surface._help",
+            "aeat.application.operator_surface._models",
+        ):
+            importlib.import_module(module_name)
+
+        leaked = sorted(
+            name
+            for name in sys.modules
+            if name == "typer" or name.startswith("typer.") or name.startswith("aeat.entrypoints.cli")
+        )
+        assert leaked == [], leaked
+    """)
+    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, (
+        f"operator surface imported a CLI-only dependency.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
 
 
 def test_log_fields_and_error_codes_are_backend_owned() -> None:
