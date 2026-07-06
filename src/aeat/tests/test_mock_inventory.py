@@ -9,7 +9,7 @@ Classification rule:
 - Any mock import under deterministic production tests is drift.
 - Any pytest-mock ``mocker`` fixture reference is drift.
 - Any imported, assigned, or locally defined ``Mock*``, ``Fake*``, ``Stub*``,
-  or ``Dummy*`` test helper is drift; tests must name helpers by the concrete
+  ``Spy*``, or ``Dummy*`` test helper is drift; tests must name helpers by the concrete
   behaviour or contract they exercise.
 
 Current inventory for durable replacement:
@@ -17,7 +17,7 @@ Current inventory for durable replacement:
   tests, test-support modules, or conftests under ``src/aeat/``.  The codebase
   uses constructor injection with inline callables for boundary-injection sites
   rather than the mock library. Zero imported, assigned, or locally defined
-  mock/fake/stub/dummy helper classes or functions.
+  mock/fake/stub/spy/dummy helper classes or functions.
 
 The tests assert that neither mock imports nor test-double definitions appear.
 """
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # Import module names that constitute banned test-control usage.
 _FORBIDDEN_TEST_CONTROL_IMPORTS = ("unittest.mock", "unittest", "mock", "pytest_mock")
-_FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "dummy")
+_FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "spy", "dummy")
 _PYTEST_MOCK_FIXTURE_NAME = "mocker"
 
 
@@ -336,6 +336,31 @@ chosen = next((item for item in rows if (dummy_value := item.value)), None)
         (4, "stub"),
         (5, "dummy_value"),
     }
+
+
+def test_test_double_name_detector_rejects_spy_named_helpers() -> None:
+    """Spy-named helpers are test doubles just like mock/fake/stub/dummy helpers."""
+    tree = ast.parse(
+        """
+from helpers import SpyClient
+
+spy_result = object()
+namespace.spy_service = object()
+
+class SpyTransport:
+    pass
+
+def spy_response_factory():
+    return object()
+"""
+    )
+
+    assert _forbidden_test_double_imports(tree) == [(2, "SpyClient")]
+    assert set(_forbidden_test_double_assignments(tree)) == {
+        (4, "spy_result"),
+        (5, "spy_service"),
+    }
+    assert _forbidden_test_double_definitions(tree) == [(7, "SpyTransport"), (10, "spy_response_factory")]
 
 
 def test_no_fake_stub_or_dummy_imports(
