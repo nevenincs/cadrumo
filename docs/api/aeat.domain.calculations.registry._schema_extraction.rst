@@ -1,0 +1,7 @@
+aeat.domain.calculations.registry._schema_extraction module
+===========================================================
+
+.. automodule:: aeat.domain.calculations.registry._schema_extraction
+   :members:
+   :show-inheritance:
+   :ignore-module-all:

@@ -646,7 +646,7 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     use. A blank or non-positive índice resolves to "not applied" (factor of
     1), never a fabricated value.
 
-    **Incompatibilidades (Orden HAC/1347/2024 Anexo II, instrucción 2.3,
+    Incompatibilidades (Orden HAC/1347/2024 Anexo II, instrucción 2.3,
     grounded in ``orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades``),
     enforced structurally rather than left to an advisory-only guard (per the
     prior b.3-only code-review HIGH finding on this same engine,

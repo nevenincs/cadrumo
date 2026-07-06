@@ -16,6 +16,7 @@ Submodules
    aeat.application.filing._calculate
    aeat.application.filing._complementaria
    aeat.application.filing._export
+   aeat.application.filing._export_xml_dictionary
    aeat.application.filing._history_models
    aeat.application.filing._history_repository
    aeat.application.filing._import

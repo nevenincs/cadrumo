@@ -30,6 +30,7 @@ Subpackages
    aeat.application.operator_surface
    aeat.application.overview
    aeat.application.portals
+   aeat.application.prorrata_register
    aeat.application.registry
    aeat.application.review
    aeat.application.setup

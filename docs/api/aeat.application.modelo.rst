@@ -29,6 +29,7 @@ Submodules
    aeat.application.modelo._calculation_aggregation_context
    aeat.application.modelo._calculation_diagnostics
    aeat.application.modelo._calculation_helpers
+   aeat.application.modelo._calculation_modelo_adjustments
    aeat.application.modelo._calculation_preparation
    aeat.application.modelo._calculation_resolution
    aeat.application.modelo._calculation_source_policy
@@ -47,6 +48,8 @@ Submodules
    aeat.application.modelo._local_observation_actions
    aeat.application.modelo._local_observation_spreadsheet
    aeat.application.modelo._m036_lifecycle
+   aeat.application.modelo._m145_communication
+   aeat.application.modelo._m145_communication_records
    aeat.application.modelo._m210_convenio_lob_advisory
    aeat.application.modelo._m210_rate
    aeat.application.modelo._m303_m349_reconcile
@@ -87,6 +90,7 @@ Submodules
    aeat.application.modelo._taxation_comparison
    aeat.application.modelo._verification_actions
    aeat.application.modelo._verification_cross_period
+   aeat.application.modelo._verification_predicates
    aeat.application.modelo._work_addressing
    aeat.application.modelo._work_create_policy
    aeat.application.modelo._work_lifecycle
