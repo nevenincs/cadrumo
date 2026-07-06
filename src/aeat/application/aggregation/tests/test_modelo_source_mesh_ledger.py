@@ -569,7 +569,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     assert resolution.diagnostics == ()
 
 
-def test_iva_source_mesh_resolver_suppresses_out_of_period_personal_source_diagnostic(
+def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic(
     secure_objects: SecureObjectRepository,
 ) -> None:
     revision = _revision("303", "2009-y-siguientes")
@@ -601,7 +601,15 @@ def test_iva_source_mesh_resolver_suppresses_out_of_period_personal_source_diagn
         ),
     )
 
-    assert resolution.diagnostics == ()
+    assert len(resolution.diagnostics) == 1
+    diagnostic = resolution.diagnostics[0]
+    assert diagnostic.reason == "source_issue"
+    assert diagnostic.source_kind == "ledger_iva_aggregation"
+    assert diagnostic.resolver_id == "ledger_iva_aggregation"
+    assert diagnostic.out_of_window_count == 1
+    assert diagnostic.out_of_window_min_filing_date == date(2026, 4, 10)
+    assert diagnostic.out_of_window_max_filing_date == date(2026, 4, 10)
+    assert "outside the requested period" in diagnostic.message
     assert personal_q2.transaction_id not in resolution.source_transaction_ids
 
 

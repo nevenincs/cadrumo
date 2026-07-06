@@ -249,15 +249,11 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
 def test_repository_backed_aggregation_reports_out_of_period_catalogue_transactions(
     tmp_path: Path,
 ) -> None:
-    """A catalogue transaction outside the requested ejercicio must surface as an issue.
+    """A catalogue transaction outside the requested ejercicio must surface as a summary.
 
     Regression test (issue #408): the repository-backed entry point must NOT
-    pre-filter the loaded catalogue by date range. ``OUTSIDE_PERIOD`` is a
-    genuine no-silent-under-declaration-class diagnostic -- an operator
-    querying 2024 needs to see that a 2025-dated catalogue transaction exists
-    and was excluded, not have it silently vanish before the classifier ever
-    runs (a pre-filtering optimisation would make this issue structurally
-    unreachable).
+    silently drop out-of-window rows. The compact summary keeps the operator
+    visibility signal without allocating one issue per plaintext index entry.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         in_period = _impatriado_transaction(
@@ -283,20 +279,22 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
 
     assert {o.transaction_id for o in result.observations} == {in_period.transaction_id}
     assert _base_total(result) == Decimal("30000.00")
-    assert len(result.issues) == 1
-    assert result.issues[0].reason is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result.issues[0].transaction_id == out_of_period.transaction_id
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2025, 1, 15)
+    assert result.out_of_window_summary.max_filing_date == date(2025, 1, 15)
 
 
-def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+def test_repository_backed_aggregation_summarizes_previously_silent_out_of_window_rows(
     tmp_path: Path,
 ) -> None:
-    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+    """Out-of-window rows surface as one compact period-exclusion summary.
 
     A wrong-direction outgoing row is ignored by the in-window classifier
     because this aggregation owns incoming rows. When that same row falls
     outside the requested ejercicio, the repository-backed partition reports
-    it as ``OUTSIDE_PERIOD`` instead of dropping it before aggregation.
+    its count and date span instead of dropping it before aggregation.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         in_year = _impatriado_transaction(
@@ -322,9 +320,11 @@ def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_
         )
 
     assert {o.transaction_id for o in result.observations} == {in_year.transaction_id}
-    assert len(result.issues) == 1
-    assert result.issues[0].transaction_id == wrong_direction_out_of_year.transaction_id
-    assert result.issues[0].reason is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2025, 2, 1)
+    assert result.out_of_window_summary.max_filing_date == date(2025, 2, 1)
 
 
 def test_repository_backed_aggregation_partition_matches_full_scan(
@@ -335,9 +335,8 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     The same multi-year catalogue is aggregated once through the
     repository-backed partition and once through the pure full-scan aggregator.
     In-window observations and casilla totals/provenance must match; only the
-    out-of-window issue taxonomy can differ. The full-scan path keeps the
-    foreign-source reason, while the partition reports it as
-    ``OUTSIDE_PERIOD``.
+    out-of-window diagnostic shape can differ. The full-scan path keeps row
+    reasons, while the partition reports a compact count and date span.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         in_year = _impatriado_transaction(
@@ -374,9 +373,11 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
     assert {o.transaction_id for o in partitioned.observations} == {in_year.transaction_id}
 
-    partitioned_issue_ids = {i.transaction_id for i in partitioned.issues}
-    assert partitioned_issue_ids == {out_of_year.transaction_id, foreign_out_of_year.transaction_id}
-    assert all(i.reason is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 2
+    assert partitioned.out_of_window_summary.min_filing_date == date(2023, 6, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2025, 1, 15)
 
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {out_of_year.transaction_id, foreign_out_of_year.transaction_id}

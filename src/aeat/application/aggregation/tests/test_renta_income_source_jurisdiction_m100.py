@@ -155,12 +155,11 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
 def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_transactions(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """A catalogue transaction outside the requested ejercicio must surface as an issue.
+    """A catalogue transaction outside the requested ejercicio must surface as a summary.
 
     Regression test (issue #408): the repository-backed M100 entry point must
-    NOT pre-filter the loaded catalogue by date range -- ``OUTSIDE_PERIOD`` is
-    a genuine no-silent-under-declaration-class diagnostic over the FULL
-    persisted catalogue, not just the pure-aggregator path above.
+    not silently drop out-of-window rows. The compact summary keeps the
+    visibility signal without allocating one issue per plaintext index entry.
     """
     jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
     jan = _income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
@@ -176,9 +175,11 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
 
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
     assert result.casilla_aggregation.casilla_values[_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == jan_amount
-    assert len(result.issues) == 1
-    assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result.issues[0].transaction_id == prior.transaction_id
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2023, 12, 31)
+    assert result.out_of_window_summary.max_filing_date == date(2023, 12, 31)
 
 
 def test_repository_backed_m100_aggregation_partition_matches_full_scan(
@@ -209,9 +210,12 @@ def test_repository_backed_m100_aggregation_partition_matches_full_scan(
     assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
     assert {o.transaction_id for o in partitioned.observations} == {in_year.transaction_id}
 
-    assert {i.transaction_id for i in partitioned.issues} == {prior_year.transaction_id}
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 1
+    assert partitioned.out_of_window_summary.min_filing_date == date(2023, 12, 31)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2023, 12, 31)
     assert {i.transaction_id for i in full_scan.issues} == {prior_year.transaction_id}
-    assert partitioned.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert full_scan.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
 
 

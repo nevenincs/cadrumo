@@ -235,7 +235,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     """Full path: persist -> load from repo -> aggregate -> correct casilla 01 value."""
     q1_tx1 = _income_transaction("q1-a", value_date=date(2024, 2, 1), amount=Decimal("2500.00"))
     q1_tx2 = _income_transaction("q1-b", value_date=date(2024, 3, 15), amount=Decimal("1500.00"))
-    # Q2-only transaction: excluded from Q1 window (outside_period issue), included in Q2 window
+    # Q2-only transaction: excluded from Q1 window summary, included in Q2 window
     q2_only = _income_transaction("q2-only", value_date=date(2024, 5, 10), amount=Decimal("3000.00"))
 
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
@@ -247,9 +247,12 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
-    # q2_only is outside Q1 window so it produces one OUTSIDE_PERIOD issue
-    assert len(result_q1.issues) == 1
-    assert result_q1.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    # q2_only is outside Q1 window so it produces one compact summary entry.
+    assert result_q1.issues == ()
+    assert result_q1.out_of_window_summary is not None
+    assert result_q1.out_of_window_summary.count == 1
+    assert result_q1.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
     assert result_q1.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2)),
         Decimal("0"),
@@ -265,6 +268,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
     assert result_q2.issues == ()
+    assert result_q2.out_of_window_summary is None
     assert result_q2.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)),
         Decimal("0"),
@@ -273,14 +277,14 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     assert observation_ids_q2 == {q1_tx1.transaction_id, q1_tx2.transaction_id, q2_only.transaction_id}
 
 
-def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+def test_repository_backed_aggregation_summarizes_previously_silent_out_of_window_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+    """Out-of-window rows surface as one compact period-exclusion summary.
 
     An archived row is ignored before the in-window income classifier runs.
     When that row falls outside the requested cumulative window, the
-    repository-backed partition reports it as ``OUTSIDE_PERIOD`` instead of
+    repository-backed partition reports its count and date span instead of
     dropping it before aggregation.
     """
     in_window = _income_transaction("row-in-window", value_date=date(2024, 2, 1), amount=Decimal("500.00"))
@@ -300,9 +304,11 @@ def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
-    assert len(result.issues) == 1
-    assert result.issues[0].transaction_id == archived_out_of_window.transaction_id
-    assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
 
 def test_repository_backed_aggregation_partition_matches_full_scan(
@@ -342,12 +348,13 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
     assert {o.transaction_id for o in partitioned.observations} == {q1_row.transaction_id}
 
-    # Permitted delta: out-of-window issue taxonomy. Full-scan silently drops
-    # the archived row (no issue); partitioned coarsens both out-of-window ids
-    # to OUTSIDE_PERIOD.
-    partitioned_issue_ids = {i.transaction_id for i in partitioned.issues}
-    assert partitioned_issue_ids == {q3_row.transaction_id, archived_q3_row.transaction_id}
-    assert all(i.reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+    # Permitted delta: repository-backed partitioning reports one compact
+    # out-of-window summary, while full-scan refines by row after decryption.
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 2
+    assert partitioned.out_of_window_summary.min_filing_date == date(2024, 8, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2024, 9, 1)
 
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {q3_row.transaction_id}
