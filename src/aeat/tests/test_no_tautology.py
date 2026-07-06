@@ -28,6 +28,7 @@ deterministic test-control surface. The test asserts this inventory stays at zer
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -184,18 +185,20 @@ def _tautological_sites(
     return hits
 
 
-def test_no_tautological_assertions() -> None:
+def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No deterministic test-control module may contain tautological assertions.
 
     Uses the shared test-control module inventory so the existing fixtures-dir
-    exclusion stays intact.
+    exclusion stays intact. The session AST cache amortises parse cost for the
+    ``src/aeat`` test-control surface; project-level test controls outside that
+    tree still fall back to per-path parsing.
     """
     modules = all_test_control_modules()
     violations: list[str] = []
 
     for module_path in modules:
         relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
         if tree is None:
             continue
         for lineno, snippet in _tautological_sites(module_path, tree):
