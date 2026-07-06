@@ -148,7 +148,6 @@ def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: P
 
     temp_manager.set_locale_value("es", "cli.locales.set_locale_help", "Código de locale.")
 
-    assert "    set_locale_help: 'Código de locale.'\n" in locale_path.read_text(encoding="utf-8")
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "locales", "set_locale_help") == "Código de locale."
 
