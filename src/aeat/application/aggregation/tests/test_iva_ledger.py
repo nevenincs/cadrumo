@@ -563,6 +563,104 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
     assert result.issues[0].transaction_id == out_of_period.transaction_id
 
 
+def test_repository_backed_projection_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+
+    Reviewed-excluded and archived rows are ignored before the in-window IVA
+    classifier runs. When those rows fall outside the requested window, the
+    repository-backed partition reports each one as ``OUTSIDE_PERIOD`` instead
+    of dropping them before aggregation.
+    """
+    in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+    excluded_out_of_period = _transaction(
+        "row-excluded-out-of-period",
+        value_date=date(2026, 7, 1),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+    archived_out_of_period = _transaction(
+        "row-archived-out-of-period",
+        value_date=date(2026, 7, 2),
+        lifecycle_state=TransactionLifecycleState.ARCHIVED,
+    )
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository.save(
+        TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
+    )
+
+    result = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+    assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
+    assert {issue.transaction_id for issue in result.issues} == {
+        excluded_out_of_period.transaction_id,
+        archived_out_of_period.transaction_id,
+    }
+    assert all(issue.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for issue in result.issues)
+
+
+def test_repository_backed_projection_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The partitioned result matches the full-scan result for declared values.
+
+    The same multi-period catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and prorrata references must match; only the
+    out-of-window issue taxonomy can differ between the two paths.
+    """
+    q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
+    q2_row_b = _transaction("row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"))
+    q1_row = _transaction("row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = _transaction("row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"))
+    excluded_q3_row = _transaction(
+        "row-q3-excluded",
+        value_date=date(2026, 9, 1),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+    catalogue = TransactionCatalogue.from_transactions(
+        (q2_row_a, q2_row_b, q1_row, q3_row, excluded_q3_row),
+    )
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository.save(catalogue)
+
+    partitioned = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+    full_scan = aggregate_iva_ledger_observations(catalogue, period=_Q2_2026)
+
+    # Declared-value invariance: observations and prorrata references are
+    # identical SETS between the two paths (order may differ: full-scan
+    # iterates catalogue insertion order, partitioned iterates sorted ids).
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert set(partitioned.prorrata_references) == set(full_scan.prorrata_references)
+    assert {o.ledger_id for o in partitioned.observations} == {q2_row_a.transaction_id, q2_row_b.transaction_id}
+
+    # Permitted delta: the out-of-window issue taxonomy. Full-scan refines by
+    # reason (REVIEWED_EXCLUDED silently drops, in-window checks run for the
+    # rest); partitioned coarsens every out-of-window id to OUTSIDE_PERIOD.
+    partitioned_out_of_window_ids = {i.transaction_id for i in partitioned.issues}
+    assert partitioned_out_of_window_ids == {
+        q1_row.transaction_id,
+        q3_row.transaction_id,
+        excluded_q3_row.transaction_id,
+    }
+    assert all(i.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+
+    full_scan_ids_with_issues = {i.transaction_id for i in full_scan.issues}
+    assert full_scan_ids_with_issues == {q1_row.transaction_id, q3_row.transaction_id}
+    assert all(i.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in full_scan.issues)
+    # excluded_q3_row is silently skipped by full-scan (no issue) but surfaces
+    # under the partitioned path.
+    assert excluded_q3_row.transaction_id not in full_scan_ids_with_issues
+
+
 def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
     transaction = _transaction(
         "row-transfer",

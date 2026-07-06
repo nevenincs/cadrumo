@@ -38,7 +38,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield objects
 
 
-# S385a: source_jurisdiction provenance pass-through (#258)
+# Source-jurisdiction provenance pass-through.
 #
 # LIRPF Art. 8 establishes the universal-base presumption for Spanish-
 # resident taxpayers: M100 / M130 actividad-económica income aggregates
@@ -179,6 +179,40 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
     assert len(result.issues) == 1
     assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert result.issues[0].transaction_id == prior.transaction_id
+
+
+def test_repository_backed_m100_aggregation_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The M100 partitioned result matches the full-scan result for declared values.
+
+    The same multi-year catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and casilla totals/provenance must match; only the
+    out-of-window issue taxonomy can differ.
+    """
+    in_year = _income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
+    prior_year = _income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
+    catalogue = TransactionCatalogue.from_transactions((in_year, prior_year))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(catalogue)
+
+    partitioned = aggregate_renta_m100_income_ledger_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+    full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
+    assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
+    assert {o.transaction_id for o in partitioned.observations} == {in_year.transaction_id}
+
+    assert {i.transaction_id for i in partitioned.issues} == {prior_year.transaction_id}
+    assert {i.transaction_id for i in full_scan.issues} == {prior_year.transaction_id}
+    assert partitioned.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert full_scan.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
 
 
 def test_m100_annual_income_rejects_non_annual_period() -> None:
