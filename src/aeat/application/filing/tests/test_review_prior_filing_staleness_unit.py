@@ -1,4 +1,19 @@
-"""Unit coverage for prior-filing approval-basis fingerprints."""
+"""Unit coverage for prior-filing approval-basis fingerprints.
+
+See Also:
+    :func:`~application.filing._review._prior_filing_observations_fingerprint`
+        Order-independent digest helper under test for bucket-local prior filed
+        observations.
+    :func:`~application.filing.empty_prior_filing_observations_fingerprint`
+        Public empty-surface sentinel compared against the prior-observation
+        digest helper.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Typed observation envelope projected into the prior-filing approval
+        basis.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Per-casilla value rows whose filed value and legal/source refs enter
+        the digest.
+"""
 
 from __future__ import annotations
 
