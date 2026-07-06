@@ -4,6 +4,19 @@ Covers the strict :class:`ProrrataRegisterEntry` field-coupling invariants, the
 :class:`ProrrataRegister` duplicate-key rejection and lookups, and the pure LIVA
 art. 105 precedence-ladder resolver (:func:`resolve_provisional_percentage`),
 including its refusal to fabricate a default percentage.
+
+See Also:
+    :mod:`~domain.prorrata_register`
+        Domain aggregate and resolver under test for the register carry home.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Strict per-ejercicio row whose provisional, referenced, and settlement
+        field groups are coupled by validators.
+    :func:`~domain.prorrata_register.resolve_provisional_percentage`
+        Pure art. 105 ladder that resolves authorised/inicio provenance before
+        the carried prior definitive.
+    :class:`~core.ProrrataProvisionalProvenance`
+        Closed provenance axis asserted by the resolver and field-coupling
+        tests.
 """
 
 from __future__ import annotations

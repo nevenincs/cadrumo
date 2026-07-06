@@ -11,6 +11,18 @@ sector id and an authorisation reference). The save-drops-field /
 load-re-defaults-field regression is caught by two probes: one corrupts a
 persisted value and asserts the strict-equality witness surfaces the drift, one
 deletes a required field and asserts the load path raises.
+
+See Also:
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+        Encrypted repository under test for save/load and upsert behaviour.
+    :class:`~domain.prorrata_register.ProrrataRegister`
+        Strict aggregate persisted as the profile-scoped secure-object payload.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Per-ejercicio register row whose defaultable fields are populated for
+        the anti-tautology roundtrip.
+    :func:`~tests.secure_sql.isolated_runtime_profile`
+        Real SQLite + encrypted runtime profile used instead of mocks or
+        shadow persistence.
 """
 
 from __future__ import annotations
