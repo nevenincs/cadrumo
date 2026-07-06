@@ -24,6 +24,20 @@ non-blocking ADVISORY findings: the índice-exceso chain feeds only the
 internal-only ``modulos-rendimiento-neto-actividad`` reference casilla, never
 the filed casilla 01, so the gate prompts a review rather than refusing the
 draft.
+
+See Also:
+    :mod:`~domain.calculations.registry._formula_runtime_m131`
+        M131 módulos runtime evaluator whose índice-exceso path this advisory
+        guards.
+    :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
+        Application verification entry point that emits the advisory finding.
+    :func:`~application.modelo._verification_actions._evaluate_advisory_predicate_fires`
+        Predicate helper exercised directly by the focused firing cases.
+    ``src/aeat/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml``
+        Registry-authored 2025 advisory predicate declarations under test.
+    ``2026-07-01-modelo-131-eo-modulos-engine-adr`` and
+    ``2026-04-27-modelo-131-calc-verify-adr``
+        Module-engine and calc/verify decisions that govern the advisory.
 """
 
 from __future__ import annotations
