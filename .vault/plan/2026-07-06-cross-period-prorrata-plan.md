@@ -134,7 +134,34 @@ Record the deferred especial / +10% / sectores diferenciados / art-104.Tres / ar
 - [x] `W06.P09.S38` - record the deferred sectores diferenciados per-sector registers, the art-104.Tres financial/inmobiliario special denominator, and the art-105.Cinco interrupted-activity three-year rule as noted follow-ups behind the from-birth sector schema slot; `.vault/exec/2026-07-06-cross-period-prorrata/`.
 - [x] `W06.P09.S39` - record the deferred automatic art-104.Tres exclusion classification in the ledger rollup as a follow-up (the rollup stays a reconciliation check until it lands); `.vault/exec/2026-07-06-cross-period-prorrata/`.
 - [x] `W06.P09.S40` - run the independent campaign-close honesty review (vaultspec-code-reviewer against the ADR, plan, and commit range), persist it as a vault audit, and track every surfaced item as a new Step with a verification gate (aeat-campaign-close-honesty-review); `.vault/audit/2026-07-06-cross-period-prorrata-audit.md`.
-- [ ] `W06.P09.S41` - promote `PRORRATA_REGULARIZACION` out of `DEFERRED_SOURCE_KIND_TARGETS` once `src/aeat/application/aggregation/_source_mesh.py` is owner-clean: enroll the resolver in the live mesh, remove the domain taxonomy deferred carve-out, and verify source-kind mesh parity plus the AEAT manual oracle and M303 prorrata advisory slices; `src/aeat/application/aggregation/_source_mesh.py`; `src/aeat/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`; `src/aeat/application/modelo/tests/test_binding_source_kind_mesh_parity.py`.
+- [x] `W06.P09.S41` - record the real-source provisioning blocker for PRORRATA_REGULARIZACION, keep the source deferred, and split the actual promotion into the W07 registry, resolver, enrollment, and close-review work schedule; `.vault/exec/2026-07-06-cross-period-prorrata/2026-07-06-cross-period-prorrata-W06-P09-S41.md; .vault/audit/2026-07-06-cross-period-prorrata-audit.md; .vault/plan/2026-07-06-cross-period-prorrata-plan.md`.
+
+## Wave `W07` - Real source provisioning and promotion
+
+Build the actual registry-declared and resolver-backed PRORRATA_REGULARIZACION source before removing any deferred carve-out: selector contract, binding targets, calculation timing, live mesh enrollment, caller-override disposition, bienes-inversion dependency reconciliation, and close-review gates.
+
+### Phase `W07.P10` - Registry and selector contract
+
+Make prorrata_regularizacion a legal registry-declared source before any mesh promotion: typed selector validation, Modelo 303 casilla 44 binding data, formula implications, and a grounded decision for the claimed Modelo 390 annual target.
+
+- [ ] `W07.P10.S42` - add a typed prorrata_regularizacion selector contract and selector-registry construction gate so the source is a legal DataBindingDefinition.source before any TOML binding is declared; `src/aeat/domain/calculations/registry/_bindings.py; src/aeat/domain/calculations/registry/tests/test_selector_shape.py`.
+- [ ] `W07.P10.S43` - provision the Modelo 303 casilla 44 prorrata_regularizacion binding rows for current registry revisions, convert the target from manual to bound only with legal/source citations and formula-consumption implications proven; `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/; src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/; src/aeat/domain/calculations/registry/tests/`.
+- [ ] `W07.P10.S44` - ground the claimed Modelo 390 annual regularizacion target and either provision a canonical prorrata_regularizacion binding target with export/legal references or record an ADR-backed exclusion before promotion; `src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/; .vault/adr/; src/aeat/domain/calculations/registry/tests/`.
+
+### Phase `W07.P11` - Resolver timing and value materialisation
+
+Solve the current pre-calculation source-resolution limitation so the live resolver can consume current-year declared/computed prorrata inputs and prior-year/register carry without fabricating values or duplicating formula logic.
+
+- [ ] `W07.P11.S45` - design and implement the calculation-order seam that exposes current-year prorrata volume, definitive percentage, and deductible-total values to the prorrata_regularizacion resolver without reimplementing formula business logic; `src/aeat/application/modelo/_calculation_actions.py; src/aeat/domain/calculations/registry/_formula_initial_values.py; src/aeat/application/modelo/tests/`.
+- [ ] `W07.P11.S46` - implement the prorrata_regularizacion live source resolver with binding values, unresolved diagnostics, and provenance from the register or stamped prior observation plus current-year registry values; `src/aeat/application/calculations/_prorrata_regularizacion.py; src/aeat/application/calculations/__init__.py; src/aeat/application/calculations/tests/`.
+
+### Phase `W07.P12` - Enrollment, dependency reconciliation, and close review
+
+Flip PRORRATA_REGULARIZACION from deferred to enrolled only after the real source path exists, then reconcile the bienes-inversion dependency trigger and run the promotion close-review gates.
+
+- [ ] `W07.P12.S47` - enroll PRORRATA_REGULARIZACION in the live application source mesh, caller-override carry disposition, and resolver-enrollment gates, then remove it from DEFERRED_SOURCE_KIND_TARGETS and the deferred undeclared taxonomy carve-out; `src/aeat/application/aggregation/_source_mesh.py; src/aeat/application/modelo/_calculation_actions.py; src/aeat/application/modelo/_calculation_source_policy.py; src/aeat/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py; src/aeat/application/modelo/tests/test_binding_source_kind_mesh_parity.py; src/aeat/application/aggregation/tests/`.
+- [ ] `W07.P12.S48` - reconcile the BIENES_INVERSION_REGULARIZACION promotion_depends_on trigger after prorrata_regularizacion lands, either promoting the casilla 43 source or re-ratifying a governed remaining blocker with tests; `src/aeat/application/aggregation/_source_mesh.py; src/aeat/application/calculations/_bienes_inversion_regularizacion.py; src/aeat/application/modelo/_bienes_inversion_advisory.py; src/aeat/application/aggregation/tests/`.
+- [ ] `W07.P12.S49` - run the W07 promotion close review against the ADR, selector and registry bindings, live resolver, source-kind parity, AEAT manual oracle, M303 advisory behavior, and vault feature/frontmatter gates; `.vault/audit/2026-07-06-cross-period-prorrata-audit.md; .vault/exec/2026-07-06-cross-period-prorrata/; src/aeat/application/calculations/tests/test_prorrata_regularizacion_oracle.py; src/aeat/application/modelo/tests/test_prorrata_regularizacion_advisory.py; src/aeat/application/modelo/tests/test_verification_m303_prorrata_advisory.py`.
 
 ## Description
 
