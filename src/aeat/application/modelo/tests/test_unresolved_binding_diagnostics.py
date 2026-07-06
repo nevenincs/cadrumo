@@ -5,7 +5,7 @@ non-blocking ``_UnresolvedFormulaDependencyError`` + a
 ``CalculationSourceDiagnostic``). These tests pin the mirrored BINDING channel:
 
 * the resolver-population discriminator
-  (:func:`_expected_but_missing_binding_ids`) fires ONLY for a casilla-bound
+  (:func:`expected_but_missing_binding_ids`) fires ONLY for a casilla-bound
   binding whose enrolled resolver RAN for a PRESENT source (the source kind is in
   ``owned_sources``) but produced no value — the silent-zero breach of
   ``no-silent-under-declaration`` — and stays silent for the legitimate
@@ -37,7 +37,7 @@ from ....domain.calculations.registry._formula_runtime import (
     _UnresolvedFormulaDependencyError,
 )
 from ...aggregation import CalculationSourceResolution, merge_source_resolutions
-from .._calculation_actions import _expected_but_missing_binding_ids
+from .._calculation_source_staging import expected_but_missing_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,7 +58,7 @@ def test_expected_but_missing_fires_when_present_source_resolved_no_value() -> N
     """
     revision = _modelo_303_revision()
 
-    missing = _expected_but_missing_binding_ids(
+    missing = expected_but_missing_binding_ids(
         revision,
         owned_sources=frozenset({_LEDGER_IVA}),
         resolved_binding_values={},
@@ -81,7 +81,7 @@ def test_expected_but_missing_stays_silent_when_source_absent() -> None:
     """
     revision = _modelo_303_revision()
 
-    missing = _expected_but_missing_binding_ids(
+    missing = expected_but_missing_binding_ids(
         revision,
         owned_sources=frozenset(),
         resolved_binding_values={},
@@ -94,7 +94,7 @@ def test_expected_but_missing_stays_silent_when_present_source_resolved_values()
     """A present source that DID resolve the binding value must NOT fire."""
     revision = _modelo_303_revision()
 
-    flagged = _expected_but_missing_binding_ids(
+    flagged = expected_but_missing_binding_ids(
         revision,
         owned_sources=frozenset({_LEDGER_IVA}),
         resolved_binding_values={},
@@ -102,7 +102,7 @@ def test_expected_but_missing_stays_silent_when_present_source_resolved_values()
     resolved_values = {binding_id: Decimal("0") for binding_id, _casilla_id, _source in flagged}
 
     assert (
-        _expected_but_missing_binding_ids(
+        expected_but_missing_binding_ids(
             revision,
             owned_sources=frozenset({_LEDGER_IVA}),
             resolved_binding_values=resolved_values,
