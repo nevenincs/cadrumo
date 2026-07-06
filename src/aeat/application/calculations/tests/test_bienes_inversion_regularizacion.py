@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import (
@@ -17,7 +18,6 @@ from ....domain.bienes_inversion import (
     BienInversionKind,
 )
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....tests.application_adapter_exports import BienesInversionIvaRegisterRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (
