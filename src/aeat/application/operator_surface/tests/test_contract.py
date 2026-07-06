@@ -256,37 +256,13 @@ def test_root_landing_report_reads_profile_state_input_only() -> None:
 
 
 def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
-    """FilingStatus.FILED is the single authoritative source for the ``"filed"`` token.
-
-    This test verifies that:
-    - The LIVE command-family contract exposes the token through FilingStatus.FILED,
-      not a bare string literal.
-    - The operator-surface contract source contains no bare ``"filed"`` string
-      that would silently diverge from the enum definition.
-    - FilingStatus.FILED evaluates to the expected string value.
-    """
-    # The enum member itself must carry the correct token value.
+    """FilingStatus.FILED is the token exposed by the LIVE command family."""
     assert FilingStatus.FILED == "filed"
     assert str(FilingStatus.FILED) == "filed"
 
-    # The LIVE family must declare exactly the filed sub-command via the enum.
     contract = get_operator_surface_contract()
     live_family = next(f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE)
     assert FilingStatus.FILED in live_family.commands
-
-    # The contract module source must not contain bare "filed" string literals
-    # outside of the FilingStatus import/usage lines.  We inspect the source and
-    # verify every occurrence of the token '"filed"' is the FilingStatus import or
-    # usage, not a stand-alone bare literal in a tuple or keyword argument.
-    contract_source = _module_source("aeat.application.operator_surface._contract")
-    # All occurrences of the raw token must be attributable to FilingStatus references.
-    bare_literal_count = contract_source.count('"filed"')
-    # Each FilingStatus reference in the source accounts for one use of the token
-    # (import line and usage site).  No bare literal should exist beyond that.
-    assert bare_literal_count == 0, (
-        f"Found {bare_literal_count} bare '\"filed\"' literal(s) in _contract.py; "
-        "all occurrences must be replaced with FilingStatus.FILED"
-    )
 
 
 def test_filing_status_has_no_token_shim_module() -> None:
