@@ -16,6 +16,8 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S07]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S08]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S09]]'
+  - '[[2026-07-06-cross-period-prorrata-W02-P03-S10]]'
+  - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
@@ -30,6 +32,10 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 
 - `2026-07-05-cross-period-prorrata-adr` - `cross-period-prorrata` adr: `Cross-period prorrata model: provisional carry, in-year apportionment, settlement regularisation` | (**status:** `accepted`)
 
+### audit
+
+- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10 seed review`
+
 ### exec
 
 - `2026-07-06-cross-period-prorrata-W01-P01-S01` - declare the closed ProrrataRegime (general | especial | none) and ProrrataProvisionalProvenance (carried_prior_definitiva | aeat_autorizada | inicio_actividad) StrEnums in core per the closed-value-set-in-core rule, Spanish stems
@@ -41,6 +47,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W01-P02-S07` - add the application service facade to declare, list, and get the per-ejercicio register entry, exposed only through the package top-level __all__
 - `2026-07-06-cross-period-prorrata-W01-P02-S08` - add the strict save/load/equality roundtrip test with every defaultable field populated non-default, using the real EphemeralMasterKeyProvider and SQLite engine (aeat-roundtrip-discipline)
 - `2026-07-06-cross-period-prorrata-W01-P02-S09` - add the anti-tautology corrupt-payload proof: mutate the on-disk register to delete a field, reload, assert ValidationError or strict inequality surfaces
+- `2026-07-06-cross-period-prorrata-W02-P03-S10` - implement the seed function: resolve the prior settlement revision via select_revision(M303, ejercicio-1, settlement period), read the iva.prorrata-porcentaje observation, and re-confirm its stamped_revision_id before seeding the carried_prior_definitiva entry
 
 ### plan
 
