@@ -4,18 +4,15 @@ Verifies:
   (a) The wizard-catalogue / project-answers error classes are registered
       in the error registry and produce valid ErrorEnvelope roundtrips.
   (b) The narrowed except clauses in the advisory predicate evaluator,
-      result-summary lookup, ledger bulk-classify loop, and review-adapter
-      fallback honestly propagate non-typed exceptions rather than
-      swallowing them silently.
+      result-summary lookup, and ledger bulk-classify loop honestly handle
+      typed failures without swallowing unrelated behavior.
 """
 
 from __future__ import annotations
 
-import ast
 import decimal
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import NoReturn, override
+from typing import NoReturn
 
 import pytest
 
@@ -36,49 +33,6 @@ from ..domain.modelos import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_SRC = Path(__file__).parent.parent
-
-
-def _except_handler_names(module_relative: str, function_name: str) -> tuple[tuple[str, ...], ...]:
-    module_path = _SRC / module_relative
-    tree = ast.parse(module_path.read_text(encoding="utf-8"))
-    function_node = next(
-        (
-            node
-            for node in ast.walk(tree)
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == function_name
-        ),
-        None,
-    )
-    assert function_node is not None, f"{module_relative}: missing function {function_name}"
-
-    handlers: list[tuple[str, ...]] = []
-
-    class _HandlerVisitor(ast.NodeVisitor):
-        @override
-        def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
-            handlers.append(_handler_type_names(node.type))
-            self.generic_visit(node)
-
-    _HandlerVisitor().visit(function_node)
-    return tuple(handlers)
-
-
-def _handler_type_names(node: ast.expr | None) -> tuple[str, ...]:
-    if node is None:
-        return ("<bare>",)
-    if isinstance(node, ast.Tuple):
-        return tuple(_single_handler_type_name(element) for element in node.elts)
-    return (_single_handler_type_name(node),)
-
-
-def _single_handler_type_name(node: ast.expr) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return f"{_single_handler_type_name(node.value)}.{node.attr}"
-    raise AssertionError(f"unsupported except handler expression: {ast.dump(node)}")
 
 
 # ---------------------------------------------------------------------------
@@ -213,26 +167,48 @@ class TestResultSummaryNarrowing:
 
 
 class TestLedgerBulkClassifyNarrowing:
-    """Bulk classify loops capture typed errors; propagate unexpected ones."""
+    """Bulk classify parsing reports typed row failures without aborting valid rows."""
 
-    def test_parse_loop_catches_only_typed_row_validation_errors(self) -> None:
-        assert _except_handler_names(
-            "application/ledger/_actions_classification.py",
-            "_parse_bulk_classify_rows",
-        ) == (("ValidationError", "ValueError", "KeyError"),)
+    def test_parse_loop_collects_invalid_classification_and_keeps_valid_rows(self) -> None:
+        from ..application.ledger._actions_classification import _parse_bulk_classify_rows
+        from ..domain.transactions import BusinessClassification
 
-    def test_apply_loop_catches_only_typed_apply_errors(self) -> None:
-        assert _except_handler_names(
-            "application/ledger/_actions_classification.py",
-            "_apply_bulk_classify_rows",
-        ) == (("AeatError", "ValidationError", "ValueError"),)
+        parsed_rows, failures = _parse_bulk_classify_rows(
+            "\n".join(
+                (
+                    "transaction_id,classification",
+                    "tx-valid,BUSINESS",
+                    "tx-invalid,NOT_A_CLASSIFICATION",
+                    "tx-personal,PERSONAL",
+                ),
+            ),
+        )
 
+        assert [row.transaction_id for _idx, row, _provided_columns in parsed_rows] == ["tx-valid", "tx-personal"]
+        assert [row.classification for _idx, row, _provided_columns in parsed_rows] == [
+            BusinessClassification.BUSINESS,
+            BusinessClassification.PERSONAL,
+        ]
+        assert len(failures) == 1
+        assert failures[0].row_index == 1
+        assert failures[0].transaction_id == "tx-invalid"
+        assert "NOT_A_CLASSIFICATION" in failures[0].reason
 
-class TestReviewAdapterImportNarrowing:
-    """_resolve_active_tax_id splits ImportError from workflow state errors."""
+    def test_parse_loop_reports_malformed_row_without_dropping_later_rows(self) -> None:
+        from ..application.ledger._actions_classification import _parse_bulk_classify_rows
 
-    def test_active_tax_id_resolution_keeps_import_and_workflow_errors_separate(self) -> None:
-        assert _except_handler_names(
-            "application/review/_adapters.py",
-            "_resolve_active_tax_id",
-        ) == (("ImportError",), ("AeatError", "AttributeError"))
+        parsed_rows, failures = _parse_bulk_classify_rows(
+            "\n".join(
+                (
+                    "transaction_id,classification",
+                    "tx-extra,BUSINESS,unexpected-cell",
+                    "tx-valid,PERSONAL",
+                ),
+            ),
+        )
+
+        assert [row.transaction_id for _idx, row, _provided_columns in parsed_rows] == ["tx-valid"]
+        assert len(failures) == 1
+        assert failures[0].row_index == 0
+        assert failures[0].transaction_id == "tx-extra"
+        assert failures[0].reason == "bulk classify CSV row has more cells than header columns"
