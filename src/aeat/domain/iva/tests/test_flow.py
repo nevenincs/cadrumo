@@ -32,56 +32,140 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     assert IvaFlowDirection.INVERSION_SUJETO_PASIVO.value == "inversion_sujeto_pasivo"
 
 
-def test_derive_flow_classifies_non_reverse_charge_categories() -> None:
-    cases: tuple[tuple[IvaCategory, InvoiceKind, IvaFlowDirection], ...] = (
-        (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.DOMESTIC_ZERO, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.DOMESTIC_EXEMPT, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED, InvoiceKind.ISSUED, IvaFlowDirection.REPERCUTIDO),
-        (IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (IvaCategory.DOMESTIC_REDUCED_10, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (IvaCategory.DOMESTIC_SUPER_REDUCED_4, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (IvaCategory.IMPORT_THIRD_COUNTRY, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-        (IvaCategory.RECARGO_EQUIVALENCIA, InvoiceKind.RECEIVED, IvaFlowDirection.SOPORTADO),
-    )
+@pytest.mark.parametrize(
+    ("category", "direction", "expected"),
+    (
+        pytest.param(
+            IvaCategory.DOMESTIC_GENERAL_21,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-general",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_REDUCED_10,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-reduced",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-super-reduced",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_ZERO,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-zero",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_EXEMPT,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-exempt",
+        ),
+        pytest.param(
+            IvaCategory.RECARGO_EQUIVALENCIA,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-recargo",
+        ),
+        pytest.param(
+            IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-intracom-supply",
+        ),
+        pytest.param(
+            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-export-third-country",
+        ),
+        pytest.param(
+            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+            InvoiceKind.ISSUED,
+            IvaFlowDirection.REPERCUTIDO,
+            id="issued-export-assimilated",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_GENERAL_21,
+            InvoiceKind.RECEIVED,
+            IvaFlowDirection.SOPORTADO,
+            id="received-general",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_REDUCED_10,
+            InvoiceKind.RECEIVED,
+            IvaFlowDirection.SOPORTADO,
+            id="received-reduced",
+        ),
+        pytest.param(
+            IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            InvoiceKind.RECEIVED,
+            IvaFlowDirection.SOPORTADO,
+            id="received-super-reduced",
+        ),
+        pytest.param(
+            IvaCategory.IMPORT_THIRD_COUNTRY,
+            InvoiceKind.RECEIVED,
+            IvaFlowDirection.SOPORTADO,
+            id="received-import-third-country",
+        ),
+        pytest.param(
+            IvaCategory.RECARGO_EQUIVALENCIA,
+            InvoiceKind.RECEIVED,
+            IvaFlowDirection.SOPORTADO,
+            id="received-recargo",
+        ),
+    ),
+)
+def test_derive_flow_classifies_non_reverse_charge_categories(
+    category: IvaCategory,
+    direction: InvoiceKind,
+    expected: IvaFlowDirection,
+) -> None:
+    assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
 
-    for category, direction, expected in cases:
-        assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected, (
-            category,
-            direction,
-        )
 
-
-def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido() -> None:
+@pytest.mark.parametrize(
+    "direction",
+    (
+        pytest.param(InvoiceKind.ISSUED, id="issued"),
+        pytest.param(InvoiceKind.RECEIVED, id="received"),
+    ),
+)
+def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido(direction: InvoiceKind) -> None:
     """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
     irrespective of invoice direction; the recipient self-assesses."""
-    for direction in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
-        assert (
-            derive_flow_for_classification(
-                category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-                invoice_direction=direction,
-            )
-            is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-        ), direction
+    assert (
+        derive_flow_for_classification(
+            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            invoice_direction=direction,
+        )
+        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+    )
 
 
-def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido() -> None:
+@pytest.mark.parametrize(
+    "direction",
+    (
+        pytest.param(InvoiceKind.ISSUED, id="issued"),
+        pytest.param(InvoiceKind.RECEIVED, id="received"),
+    ),
+)
+def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(direction: InvoiceKind) -> None:
     """Intra-community acquisition reverse-charge (LIVA art 84.Uno.2.e)
     self-assesses both the repercutido and soportado entries on the
     same operation."""
-    for direction in (InvoiceKind.ISSUED, InvoiceKind.RECEIVED):
-        assert (
-            derive_flow_for_classification(
-                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                invoice_direction=direction,
-            )
-            is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-        ), direction
+    assert (
+        derive_flow_for_classification(
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            invoice_direction=direction,
+        )
+        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+    )
 
 
 def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
