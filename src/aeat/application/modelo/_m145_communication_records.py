@@ -1,4 +1,30 @@
-"""Modelo 145 local communication record creation and read-back."""
+"""Modelo 145 local communication record creation and read-back.
+
+This module owns the bucket-local record lifecycle for the Modelo 145 payer
+communication workflow. It validates operator-provided casilla values against
+the active registry revision, persists the local record, renders the official
+export layout, and records delivery/completion transitions without creating an
+AEAT filing path.
+
+See Also:
+    :mod:`~application.modelo`
+        Public facade that re-exports these Modelo 145 record DTOs and service
+        functions.
+    :func:`~application.modelo.build_m145_communication_service_contract`
+        Registry-backed ownership contract that refuses filing-like surfaces.
+    :class:`~application.modelo.M145CommunicationCreateCommand`
+        Strict create-command DTO consumed by
+        :func:`~application.modelo.create_m145_communication_record`.
+    :class:`~application.modelo.M145CommunicationRecord`
+        Persisted bucket-local communication record handled by this module.
+    :class:`~application.modelo.M145CommunicationValidationResult`
+        Validation result returned before export and on explicit validation.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision whose casillas, legal refs, source refs, and export
+        layouts ground every record and rendered payload.
+    :class:`~domain.calculations.registry.RegistrySnapshot`
+        Snapshot wrapper resolved before create, validate, and export work.
+"""
 
 from __future__ import annotations
 
