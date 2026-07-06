@@ -1,8 +1,27 @@
 """Google, workbook-parity, and financial-ingest settings.
 
-Split from :mod:`core.config` to keep the central settings facade within the
+Split from :mod:`~core.config` to keep the central settings facade within the
 line budget. :class:`~core.config.Settings` inherits these fields, so each field
 keeps the same ``AEAT_*`` environment variable name, validation, and default.
+
+See Also:
+    :class:`~core.config.Settings`
+        Central environment facade that inherits this mixin and normalizes its
+        path fields.
+    :func:`~core.config.load_settings`
+        Runtime entry point used by integration consumers to read these fields.
+    :mod:`~adapters.outbound.storage._factory`
+        Outbound storage factory that consumes the Google Drive vault defaults.
+    :mod:`~domain.calculations.registry._workbook_parity`
+        Workbook and registry parity scanners that consume the timeout and
+        artifact-store defaults.
+    :mod:`~adapters.inbound.financial.providers._csv`
+        CSV financial-ingest provider that reads the default CSV encoding.
+    :mod:`~adapters.persistence.storage._rotation`
+        Storage-rotation repair path that enumerates the local financial stores.
+    :mod:`~entrypoints.cli.registry`
+        Registry CLI surface that defaults parity artifacts to
+        ``aeat_registry_parity_store_dir``.
 """
 
 from __future__ import annotations
