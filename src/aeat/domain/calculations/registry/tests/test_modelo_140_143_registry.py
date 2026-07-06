@@ -9,6 +9,20 @@ window. Both are therefore grounded WINDOWLESS: the approval (art 1) and plazo
 calendar deadline_windows and no deadline application link are authored, so no
 fixed date is fabricated. Scheduling/applicability-grade: declaration-header
 casillas only, no bundled diseño de registro, no fabricated form casilla.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal catalogue references.
+    :class:`~core.TaxDomain`
+        Closed tax-family enum whose IRPF member classifies both registrations.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership extended by these IRPF registrations.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Former recognized-unmodeled set reduced by this promotion.
+    :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
+        Later windowless final-tail promotion following the same pattern.
 """
 
 from __future__ import annotations
