@@ -46,6 +46,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
+from ....domain.prorrata_register import ProrrataProvisionalResolution
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import persist_filed_revision
@@ -54,7 +55,9 @@ from .. import CalculationObservationRepository
 from .._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_declared_volume_divergence_advisory,
+    build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
+    derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
 
@@ -102,6 +105,10 @@ def _ledger_observation(
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
     snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
     return str(snapshot.revision.id)
+
+
+def _unresolved_prorrata() -> ProrrataProvisionalResolution:
+    return ProrrataProvisionalResolution(percentage=None, provenance=None)
 
 
 def _seed_verified_m303_settlement(
@@ -163,6 +170,28 @@ def _seed_verified_m303_settlement(
     calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
     return revision, work_unit
+
+
+def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() -> None:
+    """Positive sin-derecho volume with no provisional carry emits an in-year advisory."""
+    applicability = derive_prorrata_applicability(
+        declared_volume_total=Decimal("100000.00"),
+        declared_volume_con_derecho=Decimal("80000.00"),
+    )
+
+    diagnostic = build_prorrata_missing_provisional_advisory(
+        applicability=applicability,
+        provisional_resolution=_unresolved_prorrata(),
+        ejercicio=2026,
+    )
+
+    assert applicability.applies is True
+    assert "declared_sin_derecho_volume" in applicability.evidence_kinds
+    assert diagnostic is not None
+    assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
+    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    assert "por defecto" in diagnostic.message
+    assert "definitiva del ejercicio anterior" in diagnostic.message
 
 
 def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_differ() -> None:
@@ -327,6 +356,46 @@ def test_advisory_reports_ingreso_direction_when_definitiva_below_provisional() 
     assert result.direccion is RegularizacionProrrataDireccion.INGRESO
     assert diagnostic is not None
     assert "ingreso" in diagnostic.message
+
+
+def test_zero_definitive_deduction_side_still_surfaces_casilla_44_advisory() -> None:
+    """A 0% definitive prorrata is visible as settlement regularizacion, not silence."""
+    result, diagnostic = build_prorrata_regularizacion_advisory(
+        cuotas_soportadas_deducibles=Decimal("12000.00"),
+        prorrata_provisional_pct=Decimal("80"),
+        prorrata_definitiva_pct=Decimal("0"),
+        operaciones_sin_derecho_deduccion=Decimal("100000"),
+        regularizacion_year=2026,
+    )
+
+    assert result.prorrata_definitiva_pct == Decimal("0")
+    assert result.direccion is RegularizacionProrrataDireccion.INGRESO
+    assert diagnostic is not None
+    assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
+    assert "casilla 44" in diagnostic.message
+
+
+def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
+    """No prorrata-volume evidence leaves the full-deduction default without advisory noise."""
+    applicability = derive_prorrata_applicability()
+    missing_carry = build_prorrata_missing_provisional_advisory(
+        applicability=applicability,
+        provisional_resolution=_unresolved_prorrata(),
+        ejercicio=2026,
+    )
+    result, regularizacion = build_prorrata_regularizacion_advisory(
+        cuotas_soportadas_deducibles=Decimal("12000.00"),
+        prorrata_provisional_pct=Decimal("100"),
+        prorrata_definitiva_pct=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+        regularizacion_year=2026,
+    )
+
+    assert applicability.applies is False
+    assert applicability.evidence_kinds == ()
+    assert missing_carry is None
+    assert regularizacion is None
+    assert result.prorrata_definitiva_pct == Decimal("100")
 
 
 def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_entry(tmp_path: Path) -> None:
