@@ -174,10 +174,9 @@ class TestWorkflowResultTerminal:
             summary="translation",
         )
 
-    def test_terminal_result_rejects_invalid_combinations(self) -> None:
-        """Terminal workflow results reject impossible stage/reason combinations."""
-        now = datetime(2026, 4, 12, tzinfo=UTC)
-        cases: tuple[tuple[dict[str, Any], str], ...] = (
+    @pytest.mark.parametrize(
+        ("overrides", "match"),
+        (
             (
                 {
                     "final_stage": WorkflowStage.DONE,
@@ -198,22 +197,24 @@ class TestWorkflowResultTerminal:
                 },
                 r"final_stage must be DONE or ABORTED",
             ),
-        )
+        ),
+    )
+    def test_terminal_result_rejects_invalid_combinations(self, overrides: dict[str, Any], match: str) -> None:
+        """Terminal workflow results reject impossible stage/reason combinations."""
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        values: dict[str, Any] = {
+            "run_id": "a" * 16,
+            "started_at": now,
+            "ended_at": now,
+            "final_stage": WorkflowStage.DONE,
+            "aborted_reason": None,
+            "steps": (self._step(),),
+            "summary": "translation",
+        }
+        values.update(overrides)
 
-        for overrides, match in cases:
-            values: dict[str, Any] = {
-                "run_id": "a" * 16,
-                "started_at": now,
-                "ended_at": now,
-                "final_stage": WorkflowStage.DONE,
-                "aborted_reason": None,
-                "steps": (self._step(),),
-                "summary": "translation",
-            }
-            values.update(overrides)
-
-            with pytest.raises(ValidationError, match=match):
-                WorkflowResult(**values)
+        with pytest.raises(ValidationError, match=match):
+            WorkflowResult(**values)
 
     def test_json_round_trip(self) -> None:
         """Result records survive a full JSON round-trip."""
