@@ -170,3 +170,25 @@ Findings: no open S24 implementation findings.
 Residual gate inventory: `ruff check` is clean for the touched calculation
 projection, facade, and test files, and the prorrata regularización calculation
 test file plus the model-level advisory regression pass sequentially.
+
+## S25 Review
+
+Reviewed the `W04.P06.S25` ledger-rollup divergence projection after re-grounding
+the step against the cross-period prorrata ADR, the W04 plan row, the current
+`Period.contains` boundary authority, and the existing prorrata calculate-path
+advisory collector. The diff keeps declared annual prorrata volume casillas as
+the authority and adds only a pure calculation helper over existing
+`IvaLedgerObservation` rows. It classifies in-ejercicio repercutido output
+volume into con-derecho and sin-derecho buckets, treats Art. 20.Uno.26 exempt
+output as con-derecho and other domestic exempt output as sin-derecho, excludes
+input-side rows and out-of-window rows, and returns a non-blocking
+`CalculationSourceDiagnostic` when the ledger rollup contradicts the declared
+values.
+
+Findings: no open S25 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched calculation
+projection, facade, and test files. The prorrata regularización calculation test
+file passes sequentially with 7 tests, and the model-level advisory regression
+passes sequentially with 5 tests. The combined focused slice passes sequentially
+with 12 tests.
