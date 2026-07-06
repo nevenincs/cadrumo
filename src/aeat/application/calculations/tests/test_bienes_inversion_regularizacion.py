@@ -1,4 +1,4 @@
-"""Deferred-source advisory projection for capital-goods IVA regularización."""
+"""Advisory and live-source projection for capital-goods IVA regularización."""
 
 from __future__ import annotations
 
@@ -16,32 +16,35 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.application_adapter_exports import BienesInversionIvaRegisterRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (
+    CASILLA_M390_REGULARIZACION_BIENES_INVERSION,
     CASILLA_REGULARIZACION_BIENES_INVERSION,
     BienesInversionRegularizacionSourceResolver,
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
 )
+from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
+_M390_BINDING_ID = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 _CURRENT_YEAR_PRORRATA_ID = "iva.prorrata-porcentaje"
 _FILING_YEAR = 2024
-_PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
 _BUCKET_ID = "bienes-inversion-regularizacion-source-resolver"
 
 
-def _context() -> CalculationSourceContext:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+def _context(modelo: str = "303", period: str = "4T") -> CalculationSourceContext:
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_FILING_YEAR, period=period)
     return CalculationSourceContext(
         bucket_id=_BUCKET_ID,
-        modelo="303",
+        modelo=modelo,
         filing_year=_FILING_YEAR,
-        period=_PERIOD,
+        period=Period.from_year_and_code(_FILING_YEAR, period),
         revision=snapshot.revision,
     )
 
@@ -127,6 +130,43 @@ def test_source_resolver_projects_repository_register_to_binding_and_bound_casil
     assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION in resolution.owned_sources
     assert resolution.provenance
     assert resolution.provenance[0].binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+
+
+def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observation(tmp_path: Path) -> None:
+    """The M390 box 63 binding consumes the real register plus stamped M303 4T prorrata."""
+    m303_snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        register_repository.add(_register().records[0])
+        observation_repository = CalculationObservationRepository(objects=profile.repository)
+        observation_repository.save_observation(
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=_FILING_YEAR,
+                period="4T",
+                observations=(
+                    CasillaObservation(
+                        casilla_id=_CURRENT_YEAR_PRORRATA_ID,
+                        value=Decimal("60"),
+                        legal_refs=("ley-37-1992:art-104",),
+                        source_refs=("aeat-dr-303-2025",),
+                    ),
+                ),
+            ),
+            source_kind="operator_manual",
+            stamped_revision_id=m303_snapshot.revision.id,
+        )
+
+        resolution = BienesInversionRegularizacionSourceResolver(
+            missing_current_year_casilla_ids=(_CURRENT_YEAR_PRORRATA_ID,),
+            register_repository=register_repository,
+            observation_repository=observation_repository,
+        ).resolve(_context(modelo="390", period="0A"))
+
+    assert resolution.binding_values[_M390_BINDING_ID] == Decimal("200.00")
+    assert resolution.bound_inputs_by_casilla_id[CASILLA_M390_REGULARIZACION_BIENES_INVERSION] == Decimal("200.00")
+    assert _M390_BINDING_ID not in resolution.unresolved_binding_ids
+    assert resolution.diagnostics == ()
 
 
 def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata(tmp_path: Path) -> None:
