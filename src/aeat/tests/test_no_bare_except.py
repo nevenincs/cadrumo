@@ -100,7 +100,7 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
             for target in node.targets:
                 alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
-            alias_assignments.append((qualified_name(node.value), (node.target.id,)))
+            alias_assignments.extend(_broad_alias_assignments_from_target(node.target, node.value))
 
     changed = True
     while changed:
@@ -121,6 +121,8 @@ def _broad_alias_assignments_from_target(
 ) -> list[tuple[str, tuple[str, ...]]]:
     """Return broad-exception alias assignments from one target/value pair."""
     if isinstance(target, ast.Name):
+        if isinstance(value, ast.Tuple | ast.List | ast.Set):
+            return [(qualified_name(element), (target.id,)) for element in value.elts]
         return [(qualified_name(value), (target.id,))]
     if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
         assignments: list[tuple[str, tuple[str, ...]]] = []
@@ -231,6 +233,39 @@ except (ValueError, BaseAlias):
     assert [shape for _, _, shape in _bare_except_locations_for_tree("snippet.py", tree)] == [
         "except ErrorAlias: pass",
         "except broad exception: pass",
+    ]
+
+
+def test_detector_rejects_container_alias_noop_broad_exception_handlers() -> None:
+    """Exception containers assigned to names must not hide broad no-op handlers."""
+    tree = ast.parse(
+        """
+import builtins
+
+ErrorHandlers = (ValueError, Exception)
+BuiltinsHandlers: tuple[type[BaseException], ...] = (RuntimeError, builtins.BaseException)
+NarrowHandlers = (ValueError, RuntimeError)
+
+try:
+    raise RuntimeError("boom")
+except ErrorHandlers:
+    pass
+
+try:
+    raise RuntimeError("boom")
+except NarrowHandlers:
+    pass
+
+try:
+    raise RuntimeError("boom")
+except BuiltinsHandlers:
+    ...
+"""
+    )
+
+    assert [shape for _, _, shape in _bare_except_locations_for_tree("snippet.py", tree)] == [
+        "except ErrorHandlers: pass",
+        "except BuiltinsHandlers: pass",
     ]
 
 
