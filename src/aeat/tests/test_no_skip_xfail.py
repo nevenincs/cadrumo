@@ -579,12 +579,12 @@ def _shortcut_violation_name_counts(violations: Iterable[str]) -> Counter[str]:
 
 
 @pytest.fixture(scope="module")
-def skip_policy_inventory() -> _SkipPolicyInventory:
+def skip_policy_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _SkipPolicyInventory:
     """Return skip/xfail and unit/live policy violations for test controls."""
     module_trees: list[tuple[str, ast.AST]] = []
     for module_path in discover_test_control_modules():
         relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
         if tree is None:
             continue
         module_trees.append((relative, tree))
