@@ -1,7 +1,7 @@
 """Coverage for the plaintext transaction date/period participation index.
 
-:meth:`TransactionCatalogueRepository.load_for_date_range` selects candidate
-transaction ids from the plaintext, non-sensitive
+:meth:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository.load_for_date_range`
+selects candidate transaction ids from the plaintext, non-sensitive
 :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow` routing
 table before decrypting only that subset -- never a full-namespace scan (issue
 ``#408``). The index is derived and rebuildable
@@ -9,6 +9,17 @@ table before decrypting only that subset -- never a full-namespace scan (issue
 depends on its presence or freshness, so every correctness assertion here is
 mirrored by an anti-tautology proof that the fallback still reproduces the
 unfiltered result when the index is missing, incomplete, or stale.
+
+See Also:
+    :meth:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository.partition_by_date_range`:
+        Completeness-gated split that returns in-window transactions and
+        plaintext out-of-window projections.
+    :class:`~domain.transactions.LedgerDatePartition`:
+        Partition result contract that records whether the date index was
+        complete.
+    :meth:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository.rebuild_date_index`:
+        Maintenance path that regenerates the derived routing index from the
+        encrypted catalogue.
 """
 
 from __future__ import annotations
@@ -145,7 +156,8 @@ def test_load_for_date_range_matches_full_load_filtered_in_memory(
     Builds a catalogue spanning several windows, then asserts the index-backed
     :meth:`load_for_date_range` result equals a full :meth:`load` filtered in
     memory by the identical predicate every ledger aggregator already applies
-    (``start <= filing_date <= end``, mirroring :meth:`Period.contains`). This
+    (``start <= filing_date <= end``, mirroring :meth:`~core.Period.contains`).
+    This
     is the correctness guarantee the perf optimisation must never break.
     """
 
