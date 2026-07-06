@@ -42,6 +42,20 @@ run -- it is a debt signal a contributor reads on the monthly cadence, not a
 release blocker). This mirrors the ``dev/audit/complexity.py`` ratchet
 convention: RED is "new/regressed", AMBER is "grandfathered debt", GREEN is
 "clean".
+
+See Also:
+    :func:`~dev.import_hygiene_scan.find_multi_sourced_symbols`
+        Symbol-shadowing scanner reused for the D1 dimension.
+    :mod:`~dev.audit.duplication`
+        Console-output reducer whose jscpd parsing primitives are reused for
+        duplication classification.
+    :mod:`~dev.audit.complexity`
+        Baseline-ratchet complexity scanner reused for the complexity
+        dimension.
+    :class:`DimensionReport`
+        Per-dimension red/amber/green result type.
+    :class:`HealthReport`
+        Aggregate report returned by :func:`build_report`.
 """
 
 from __future__ import annotations
