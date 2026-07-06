@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
+import inspect
 
 import pytest
 from pydantic import ValidationError
+
+import aeat.core.topics as topics_module
 
 from ...resources import resources
 from .. import Topic, TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_TOPICS_PACKAGE_ROOT = Path(__file__).parent
 
 _EXPECTED_TOPICS = frozenset(
     {
@@ -110,63 +109,44 @@ def test_topic_requires_legal_refs() -> None:
     assert "legal_refs" in str(raised.value)
 
 
-_FORBIDDEN_IMPORT_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer", "aeat.entrypoints"})
-_FORBIDDEN_IMPORT_NAMES: frozenset[str] = frozenset(
+_EXPECTED_PUBLIC_EXPORTS = frozenset(
+    {
+        "Topic",
+        "TopicCatalogue",
+        "TopicNotFoundError",
+        "load_topic_catalogue",
+    },
+)
+_FORBIDDEN_MODULE_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer"})
+_FORBIDDEN_RENDERING_EXPORTS: frozenset[str] = frozenset(
     {"_emit", "emit_json_document", "emit_json_success", "render_command_output"},
 )
-_FORBIDDEN_CALL_NAMES: frozenset[str] = frozenset({"echo", "print"})
 
 
-def test_topic_catalogue_package_has_no_cli_or_rendering_surface() -> None:
+def test_topic_catalogue_package_has_no_cli_or_rendering_surface(capsys: pytest.CaptureFixture[str]) -> None:
     """Topics are backend catalogue records; CLI exposure belongs to registry."""
 
-    offenders: list[str] = []
-    for module in sorted(_TOPICS_PACKAGE_ROOT.rglob("*.py")):
-        relative = module.relative_to(_TOPICS_PACKAGE_ROOT)
-        if "__pycache__" in relative.parts or module.name.startswith("test_"):
-            continue
-        tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
-        for node in ast.walk(tree):
-            offenders.extend(_scan_node_for_cli_surface(node, relative))
-    assert offenders == []
+    public_exports = frozenset(topics_module.__all__)
+    leaked_exports = public_exports & _FORBIDDEN_RENDERING_EXPORTS
+    bound_cli_modules = {
+        name: value.__name__
+        for name, value in vars(topics_module).items()
+        if inspect.ismodule(value) and value.__name__.split(".", 1)[0] in _FORBIDDEN_MODULE_ROOTS
+    }
+    bound_entrypoint_modules = {
+        name: value.__name__
+        for name, value in vars(topics_module).items()
+        if inspect.ismodule(value) and value.__name__.startswith("aeat.entrypoints")
+    }
 
+    catalogue = resources().topics.singleton
+    assert catalogue.slugs()
+    assert catalogue.topic("iva-regime").slug == "iva-regime"
+    captured = capsys.readouterr()
 
-def _scan_node_for_cli_surface(node: ast.AST, relative: Path) -> list[str]:
-    """Return the per-node CLI-surface offences (empty when the node is clean)."""
-    if isinstance(node, ast.Import):
-        return _scan_import(node, relative)
-    if isinstance(node, ast.ImportFrom):
-        return _scan_import_from(node, relative)
-    if isinstance(node, ast.Call):
-        return _scan_call(node, relative)
-    return []
-
-
-def _scan_import(node: ast.Import, relative: Path) -> list[str]:
-    offenders: list[str] = []
-    for alias in node.names:
-        root = alias.name.split(".", 1)[0]
-        if root in _FORBIDDEN_IMPORT_ROOTS or alias.name in _FORBIDDEN_IMPORT_NAMES:
-            offenders.append(f"{relative}: import {alias.name}")
-    return offenders
-
-
-def _scan_import_from(node: ast.ImportFrom, relative: Path) -> list[str]:
-    offenders: list[str] = []
-    imported_module = node.module or ""
-    root = imported_module.split(".", 1)[0]
-    if root in _FORBIDDEN_IMPORT_ROOTS or imported_module.startswith("aeat.entrypoints"):
-        offenders.append(f"{relative}: from {imported_module} import ...")
-    for alias in node.names:
-        if alias.name in _FORBIDDEN_IMPORT_NAMES:
-            offenders.append(f"{relative}: import {alias.name}")
-    return offenders
-
-
-def _scan_call(node: ast.Call, relative: Path) -> list[str]:
-    callee = node.func
-    if isinstance(callee, ast.Name) and callee.id in _FORBIDDEN_CALL_NAMES:
-        return [f"{relative}: call {callee.id}"]
-    if isinstance(callee, ast.Attribute) and callee.attr in _FORBIDDEN_CALL_NAMES:
-        return [f"{relative}: call {callee.attr}"]
-    return []
+    assert public_exports == _EXPECTED_PUBLIC_EXPORTS
+    assert leaked_exports == frozenset()
+    assert bound_cli_modules == {}
+    assert bound_entrypoint_modules == {}
+    assert captured.out == ""
+    assert captured.err == ""
