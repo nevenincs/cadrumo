@@ -598,70 +598,51 @@ def test_no_skip_or_xfail_shortcuts(skip_policy_inventory: _SkipPolicyInventory)
     )
 
 
-def test_skip_detector_rejects_import_time_pytest_skip() -> None:
-    """Import-time dependency skips must not bypass deterministic collection."""
-    tree = ast.parse(
-        f"""
-import pytest
-
-{_pytest_name("importorskip")}("optional_dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("importorskip"))]
-
-
-def test_skip_detector_rejects_module_level_pytestmark_skip() -> None:
-    """Module-level pytestmark skips must not bypass decorator detection."""
-    tree = ast.parse(
-        f"""
-import pytest
-
-pytestmark = [{_pytest_name("mark", "skip")}]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skip"))]
-
-
-def test_skip_detector_rejects_param_level_skip_or_xfail_marks() -> None:
-    """Parametrized case marks are still deterministic skip / xfail shortcuts."""
-    tree = ast.parse(
-        f"""
-import pytest
-
-CASES = [
-    pytest.param("skip-case", marks={_pytest_name("mark", "skip")}(reason="shortcut")),
-    pytest.param("xfail-case", marks={_pytest_name("mark", "xfail")}(reason="shortcut")),
-]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [
-        (5, _pytest_name("mark", "skip")),
-        (6, _pytest_name("mark", "xfail")),
-    ]
-
-
-def test_skip_detector_rejects_pytest_module_alias_shortcuts() -> None:
-    """Aliasing pytest must not hide skip / xfail shortcuts."""
-    tree = ast.parse(
-        f"""
-import pytest as pt
-
-def test_alias_shortcut():
-    pt.{"skip"}("shortcut")
-
-pytestmark = [pt.mark.{"xfail"}]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(5, _pytest_name("skip")), (7, _pytest_name("mark", "xfail"))]
-
-
 @pytest.mark.parametrize(
     ("source", "expected_violations"),
     (
+        pytest.param(
+            """
+import pytest
+
+pytest.importorskip("optional_dependency")
+""",
+            Counter({"pytest.importorskip": 1}),
+            id="import-time-pytest-skip",
+        ),
+        pytest.param(
+            """
+import pytest
+
+pytestmark = [pytest.mark.skip]
+""",
+            Counter({"pytest.mark.skip": 1}),
+            id="module-pytestmark-skip",
+        ),
+        pytest.param(
+            """
+import pytest
+
+CASES = [
+    pytest.param("skip-case", marks=pytest.mark.skip(reason="shortcut")),
+    pytest.param("xfail-case", marks=pytest.mark.xfail(reason="shortcut")),
+]
+""",
+            Counter({"pytest.mark.skip": 1, "pytest.mark.xfail": 1}),
+            id="param-level-skip-xfail-marks",
+        ),
+        pytest.param(
+            """
+import pytest as pt
+
+def test_alias_shortcut():
+    pt.skip("shortcut")
+
+pytestmark = [pt.mark.xfail]
+""",
+            Counter({"pytest.skip": 1, "pytest.mark.xfail": 1}),
+            id="pytest-module-alias",
+        ),
         pytest.param(
             """
 import pytest
@@ -732,49 +713,27 @@ def test_case_module_alias_raise():
             Counter({"unittest.SkipTest": 1, "unittest.case.SkipTest": 1}),
             id="assigned-unittest-module",
         ),
-    ),
-)
-def test_skip_policy_rejects_assigned_skip_aliases(
-    source: str,
-    expected_violations: Counter[str],
-) -> None:
-    """Assigned aliases must still fail through the real policy inventory path."""
-    inventory = _skip_policy_inventory_for_source("dev/tests/test_assigned_skip_aliases.py", source)
-
-    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == expected_violations
-
-
-def test_skip_detector_rejects_pytest_imported_shortcut_aliases() -> None:
-    """Directly imported pytest shortcuts must not bypass dotted-name detection."""
-    tree = ast.parse(
-        f"""
-from pytest import importorskip, {"skip"} as pytest_skip
+        pytest.param(
+            """
+from pytest import importorskip, skip as pytest_skip
 
 pytest_skip("shortcut")
 importorskip("optional_dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("skip")), (5, _pytest_name("importorskip"))]
-
-
-def test_skip_detector_rejects_imported_pytest_mark_aliases() -> None:
-    """Imported pytest.mark aliases must still reject skip and xfail marks."""
-    tree = ast.parse(
-        f"""
+""",
+            Counter({"pytest.skip": 1, "pytest.importorskip": 1}),
+            id="imported-pytest-shortcut-aliases",
+        ),
+        pytest.param(
+            """
 from pytest import mark as pytest_mark
 
-pytestmark = [pytest_mark.{"skipif"}(True)]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skipif"))]
-
-
-def test_skip_detector_rejects_unittest_skiptest_raises() -> None:
-    """SkipTest raises must not bypass the pytest skip shortcut guard."""
-    tree = ast.parse(
-        """
+pytestmark = [pytest_mark.skipif(True)]
+""",
+            Counter({"pytest.mark.skipif": 1}),
+            id="imported-pytest-mark-alias",
+        ),
+        pytest.param(
+            """
 import unittest
 from unittest import SkipTest
 
@@ -783,16 +742,12 @@ def test_direct_skiptest_raise():
 
 def test_qualified_skiptest_raise():
     raise unittest.SkipTest("missing dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(6, "SkipTest"), (9, "unittest.SkipTest")]
-
-
-def test_skip_detector_rejects_aliased_unittest_skiptest_raises() -> None:
-    """Aliased unittest.SkipTest raises are still deterministic skips."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"SkipTest": 1, "unittest.SkipTest": 1}),
+            id="unittest-skiptest-raises",
+        ),
+        pytest.param(
+            """
 import unittest as unit_test
 from unittest import SkipTest as UnitSkip
 
@@ -801,16 +756,12 @@ def test_direct_skiptest_alias_raise():
 
 def test_qualified_skiptest_alias_raise():
     raise unit_test.SkipTest("missing dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(6, "SkipTest"), (9, "unittest.SkipTest")]
-
-
-def test_skip_detector_rejects_unittest_case_skiptest_raises() -> None:
-    """unittest.case.SkipTest spelling variants are still deterministic skips."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"SkipTest": 1, "unittest.SkipTest": 1}),
+            id="aliased-unittest-skiptest-raises",
+        ),
+        pytest.param(
+            """
 import unittest
 import unittest.case as unittest_case
 from unittest import case as unit_case
@@ -827,15 +778,20 @@ def test_imported_case_attr_raise():
 
 def test_direct_case_skip_alias_raise():
     raise CaseSkip("missing dependency")
-"""
-    )
+""",
+            Counter({"unittest.case.SkipTest": 3, "SkipTest": 1}),
+            id="unittest-case-skiptest-raises",
+        ),
+    ),
+)
+def test_skip_policy_rejects_forbidden_shortcut_shapes(
+    source: str,
+    expected_violations: Counter[str],
+) -> None:
+    """Skip, xfail, and SkipTest shortcuts must fail through the real policy path."""
+    inventory = _skip_policy_inventory_for_source("dev/tests/test_forbidden_skip_shapes.py", source)
 
-    assert _forbidden_marker_sites(tree) == [
-        (8, "unittest.case.SkipTest"),
-        (11, "unittest.case.SkipTest"),
-        (14, "unittest.case.SkipTest"),
-        (17, "SkipTest"),
-    ]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == expected_violations
 
 
 def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
