@@ -1,4 +1,19 @@
-"""CLI ratchet for unauthorized-but-computable modelo calculate advisories."""
+"""CLI ratchet for unauthorized-but-computable modelo calculate advisories.
+
+See Also:
+    :func:`~entrypoints.cli._modelo_work_calculate_cli._work_calculate_authorization_output`
+        CLI projection that turns the unauthorized-backend advisory into text
+        lines, JSON payload state, and a warning notice.
+    :func:`~application.modelo.authorization_advisory_for_modelo`
+        Application derivation that emits an advisory only for unauthorized
+        modelos with a local calculation engine.
+    :class:`~core.access_gate.ModeloAuthorization`
+        Derived authorization capability queried by the test before driving
+        the real Modelo 117 work-calculate flow.
+    :func:`~entrypoints.cli.tests.envelope_helpers.unwrap_envelope_notices`
+        Envelope helper used to assert the advisory travels on the uniform
+        notices channel.
+"""
 
 from __future__ import annotations
 
