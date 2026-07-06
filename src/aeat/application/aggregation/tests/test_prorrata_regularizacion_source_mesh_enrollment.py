@@ -3,6 +3,21 @@
 This test exercises the application mesh path, not the resolver in isolation:
 the mesh materialises current-year registry values, calls the real
 ``ProrrataRegularizacionSourceResolver``, and merges its binding output.
+
+See Also:
+    :class:`~application.aggregation.CalculationSourceResolution`
+        Source-mesh result envelope whose owned sources, binding values, and
+        diagnostics are asserted by this enrollment gate.
+    :func:`~application.modelo._calculation_actions._resolve_bucket_source_mesh`
+        Calculate-path mesh entry point that enrolls the prorrata resolver.
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
+        Live resolver promoted from resolver-only proof into the application
+        mesh by this slice.
+    :mod:`~application.calculations.tests.test_prorrata_regularizacion_source_resolver`
+        Resolver-isolation tests for the same ``prorrata_regularizacion`` source.
+    ``2026-07-06-cross-period-prorrata-plan`` and
+    ``2026-07-06-cross-period-prorrata-audit``
+        W07 enrollment and campaign-close records that govern the promotion.
 """
 
 from __future__ import annotations
