@@ -80,7 +80,11 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
-from .. import aggregate_renta_ledger_expenses_from_repositories
+from .. import (
+    aggregate_iva_ledger_observations,
+    aggregate_iva_ledger_observations_from_repositories,
+    aggregate_renta_ledger_expenses_from_repositories,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -411,6 +415,65 @@ def test_ledger_aggregation_filter_p95_latency(scale_bucket: SecureObjectReposit
     assert p95 < _P95_BUDGET_SECONDS, (
         f"ledger aggregation/filter P95 {p95:.3f}s at {_TOTAL_TRANSACTIONS} rows exceeds the "
         f"{_P95_BUDGET_SECONDS:.1f}s budget (samples={samples!r})"
+    )
+
+
+def test_iva_quarterly_aggregation_paired_full_scan_vs_partitioned_p95_latency(
+    scale_bucket: SecureObjectRepository,
+) -> None:
+    """Paired P95 latency: full-scan IVA aggregation vs the partitioned path.
+
+    Fresh, paired measurements run back-to-back on the same seeded bucket. One
+    quarter is roughly 750 of the 30k seeded rows, matching the period-scoped
+    ledger operation that must stay below the 3.0s budget. Paired runs control
+    for the shared machine's documented run-to-run variance because both
+    samples are drawn against the identical seeded bucket, not separate
+    benchmark runs.
+
+    The full-scan baseline calls the pure aggregator directly over a full
+    :meth:`TransactionCatalogueRepository.load` (bypassing the partition
+    entirely); the partitioned path is the real, currently-shipped
+    :func:`aggregate_iva_ledger_observations_from_repositories` entry point.
+    """
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=scale_bucket)
+    period = Period.from_year_and_code(_LAST_YEAR, "4T")
+
+    full_scan_samples: list[float] = []
+    partitioned_samples: list[float] = []
+    for _ in range(_SAMPLE_COUNT):
+        started = time.perf_counter()
+        full_scan_result = aggregate_iva_ledger_observations(tx_repo.load(), period=period)
+        full_scan_samples.append(time.perf_counter() - started)
+
+        started = time.perf_counter()
+        partitioned_result = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=period,
+            transaction_repository=tx_repo,
+        )
+        partitioned_samples.append(time.perf_counter() - started)
+
+        # Real accumulator output, not a mock stand-in.
+        assert isinstance(full_scan_result.observations, tuple)
+        assert isinstance(partitioned_result.observations, tuple)
+
+    full_scan_p95 = _p95(full_scan_samples)
+    partitioned_p95 = _p95(partitioned_samples)
+    print(
+        f"\n[bench] iva_quarterly_full_scan: n={_SAMPLE_COUNT} "
+        f"p95={full_scan_p95:.3f}s mean={statistics.mean(full_scan_samples):.3f}s "
+        f"min={min(full_scan_samples):.3f}s max={max(full_scan_samples):.3f}s",
+    )
+    print(
+        f"[bench] iva_quarterly_partitioned: n={_SAMPLE_COUNT} "
+        f"p95={partitioned_p95:.3f}s mean={statistics.mean(partitioned_samples):.3f}s "
+        f"min={min(partitioned_samples):.3f}s max={max(partitioned_samples):.3f}s "
+        f"budget={_P95_BUDGET_SECONDS:.1f}s",
+    )
+    assert partitioned_p95 < _P95_BUDGET_SECONDS, (
+        f"IVA quarterly aggregation (partitioned) P95 {partitioned_p95:.3f}s at "
+        f"{_TOTAL_TRANSACTIONS}-row ledger scale exceeds the {_P95_BUDGET_SECONDS:.1f}s budget "
+        f"(samples={partitioned_samples!r})"
     )
 
 
