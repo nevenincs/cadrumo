@@ -132,7 +132,7 @@ def test_gate_detects_an_injected_per_modelo_token_probe() -> None:
     If the scanner silently missed new tokens, the ratchet would be a no-op that
     never fails. This injects a synthetic module referencing a fresh ``Modelo.M999``
     branch and a fresh ``_M999_PROBE_CASILLA`` constant and asserts both are seen —
-    so a real new carve-out in a scanned module would push its count above baseline.
+    so a real new carve-out in a scanned module would appear outside the reviewed baseline set.
     """
     probe_source = (
         "from aeat.core import Modelo\n"
