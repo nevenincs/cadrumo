@@ -17,6 +17,16 @@ Non-tautology proof: label_pattern values on the registry
 descriptions, not the registry casilla ``label`` fields; a pattern that
 drifts from the DR vocabulary produces a zero-match parse failure on this
 fixture.
+
+See Also:
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m100_current_year`
+        Round-trip tests that consume the generated 2024/2025 fixture PDFs.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m100_current_support`
+        Shared expected casilla set that mirrors this generator's rows.
+    :func:`~domain.calculations.registry.validated_casilla_id`
+        Core casilla-id validator used to keep render-row keys canonical.
+    ``2026-07-05-modelo-130-100-continuity-audit``
+        Current-year declaration coverage that makes casilla 0604 load-bearing.
 """
 
 from __future__ import annotations
