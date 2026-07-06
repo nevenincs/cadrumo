@@ -1,4 +1,22 @@
-"""Real-behavior tests for :mod:`aeat.core.time._utc`."""
+"""Real-behavior tests for :mod:`~core.time._utc`.
+
+These cases pin the two explicit UTC policies exported by
+:mod:`~core.time`: :func:`~core.time.coerce_utc_aware` may normalise naive or
+offset-aware datetimes to UTC, while :func:`~core.time.validate_utc_aware`
+refuses naive or non-UTC values with :class:`~core.errors.CoreValidationError`.
+
+See Also:
+    :mod:`~core.time._utc`
+        Canonical UTC helper implementation under test.
+    :mod:`~core.time._clock`
+        Adjacent wall-clock seam that produces UTC-aware ``now`` values.
+    :class:`~datetime.datetime`
+        Runtime value type whose ``tzinfo`` and offset semantics are exercised.
+    Governing vault records
+        ``2026-05-28-codebase-solidification-W01-P05-S137`` and
+        ``2026-05-28-codebase-solidification-W01-P05-S139`` document the split
+        from local ``_ensure_utc`` helpers into canonical core time helpers.
+"""
 
 from __future__ import annotations
 
