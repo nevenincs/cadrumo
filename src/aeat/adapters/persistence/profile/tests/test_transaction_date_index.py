@@ -91,9 +91,9 @@ def test_date_index_table_carries_only_non_sensitive_routing_columns(
         engine = profile.repository.engine
         # ``MetaData.tables`` is properly typed ``dict[str, Table]``; the ORM
         # class's own ``__table__`` attribute is typed as the more general
-        # ``FromClause`` in the SQLAlchemy stubs even though it is always a
+        # ``FromClause`` in SQLAlchemy's type hints even though it is always a
         # real ``Table`` at runtime for a mapped class, so looking it up by
-        # name avoids that stub-precision gap.
+        # name avoids that type-precision gap.
         table = _orm.Base.metadata.tables[_orm.TransactionDateIndexRow.__tablename__]
         _orm.Base.metadata.create_all(engine, tables=[table])
         columns = {column["name"] for column in sa_inspect(engine).get_columns("transaction_date_index")}
@@ -380,7 +380,7 @@ def test_partition_by_date_range_splits_in_window_and_out_of_window(
     Regression coverage for the O2 period-first partition
     (``2026-07-05-ledger-latency-budget-adr``): in-window rows are real,
     decrypted :class:`Transaction` records; out-of-window rows are plaintext
-    stubs (id + filing date only) reconstructed from the index without
+    index projections (id + filing date only) reconstructed from the index without
     decryption.
     """
 
@@ -402,9 +402,9 @@ def test_partition_by_date_range_splits_in_window_and_out_of_window(
     assert set(partition.in_window.transactions) == {inside_q1.transaction_id}
     assert partition.in_window.transactions[inside_q1.transaction_id] == inside_q1
     assert len(partition.out_of_window) == 1
-    stub = partition.out_of_window[0]
-    assert stub.transaction_id == outside_q2.transaction_id
-    assert stub.filing_date == date(2024, 4, 1)
+    out_of_window_projection = partition.out_of_window[0]
+    assert out_of_window_projection.transaction_id == outside_q2.transaction_id
+    assert out_of_window_projection.filing_date == date(2024, 4, 1)
 
 
 def test_partition_by_date_range_matches_full_load_filtered_in_memory(
@@ -437,12 +437,12 @@ def test_partition_by_date_range_matches_full_load_filtered_in_memory(
     expected_out_of_window = set(full.transactions) - expected_in_window
 
     assert set(partition.in_window.transactions) == expected_in_window
-    assert {stub.transaction_id for stub in partition.out_of_window} == expected_out_of_window
-    # Every out-of-window stub's filing date matches the real (decrypted) date.
-    for stub in partition.out_of_window:
-        real_transaction = full.transactions[stub.transaction_id]
+    assert {projection.transaction_id for projection in partition.out_of_window} == expected_out_of_window
+    # Every out-of-window projection's filing date matches the real decrypted date.
+    for out_of_window_projection in partition.out_of_window:
+        real_transaction = full.transactions[out_of_window_projection.transaction_id]
         real_filing_date = real_transaction.raw.value_date or real_transaction.raw.booked_date
-        assert stub.filing_date == real_filing_date
+        assert out_of_window_projection.filing_date == real_filing_date
 
 
 def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
