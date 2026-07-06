@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,7 @@ from ....domain.calculations.registry import (
     CasillaId,
     RegistryFoldRequirement,
     RegistryModeloObservation,
+    RegistrySnapshot,
     validated_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
@@ -49,6 +51,11 @@ _M115_BASE_CASILLA: CasillaId = _casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+
+
+@cache
+def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
@@ -91,7 +98,7 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         for observation in _modelo_115_observations():
             repository.save_observation(observation, source_kind="app_filing")
 
-        snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+        snapshot = _snapshot("180", 2026, "0A")
         prefill = resolve_relations_from_local_store(snapshot, repository=repository)
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
@@ -157,7 +164,7 @@ def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_em
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+        snapshot = _snapshot("180", 2026, "0A")
         result = resolve_relations_from_local_store(snapshot)
 
     assert result.values, "M180 must have at least one relation"
@@ -185,7 +192,7 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
         for observation in _modelo_115_observations():
             repository.save_observation(observation, source_kind="app_filing")
 
-        snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+        snapshot = _snapshot("180", 2026, "0A")
         result = resolve_relations_from_local_store(snapshot, repository=repository)
 
     resolved = [rv for rv in result.values if rv.value is not None]
@@ -217,7 +224,7 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # empty store
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2025, period="2P")
+        snapshot = _snapshot("202", 2025, "2P")
 
         from .._relation_prefill import _formula_relation_ids
 
@@ -250,7 +257,7 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
     """Modelo 202 1P has no previous same-year installment to fold into casilla 30."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2024, period="1P")
+        snapshot = _snapshot("202", 2024, "1P")
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
@@ -273,7 +280,7 @@ def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_pat
     """Modelo 202 2P still requires the actual 1P installment relation."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2024, period="2P")
+        snapshot = _snapshot("202", 2024, "2P")
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
@@ -307,7 +314,7 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # empty store — relation cannot resolve
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2025, period="2P")
+        snapshot = _snapshot("202", 2025, "2P")
 
         from .._relation_prefill import _formula_relation_ids
 
@@ -377,7 +384,7 @@ def test_scoped_relation_source_requirements_drops_pre_activity_quarters() -> No
     not be required by the annual fold. Expected period sets derive from the
     calendar boundary (1T ends 31-Mar), not from the relation formula.
     """
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    snapshot = _snapshot("100", 2024, "0A")
     # Activity started 2024-04-01: 1T (ends 2024-03-31) is STRICTLY before it.
     scoped = _scoped_relation_source_requirements(snapshot, date(2024, 4, 1))
     assert _m130_pagos_requirement(scoped).periods == ("2T", "3T", "4T")
@@ -401,7 +408,7 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
             {"2T": q2_payment, "3T": Decimal("0"), "4T": Decimal("0")},
         ):
             repository.save_observation(observation, source_kind="app_filing")
-        snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+        snapshot = _snapshot("100", 2024, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot,
             repository=repository,
@@ -420,7 +427,7 @@ def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> 
         # to confirm), never silently summed over the hole.
         for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
             repository.save_observation(observation, source_kind="app_filing")
-        snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+        snapshot = _snapshot("100", 2024, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot,
             repository=repository,
