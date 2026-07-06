@@ -11,6 +11,7 @@ from ....domain.iva import RegularizacionProrrataDireccion
 from .._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_regularizacion_advisory,
+    project_prorrata_regularizacion_feed,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -33,6 +34,20 @@ def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_dif
     assert CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA == "44"
     assert "casilla 44" in diagnostic.message
     assert "2000.00" in diagnostic.message
+
+
+def test_projection_feeds_m303_casilla_44_and_m390_from_single_result() -> None:
+    """The proposed M303 and M390 values are one projection of the same result."""
+    projection = project_prorrata_regularizacion_feed(
+        cuotas_soportadas_deducibles=Decimal("20000.00"),
+        prorrata_provisional_pct=Decimal("80"),
+        prorrata_definitiva_pct=Decimal("90"),
+        operaciones_sin_derecho_deduccion=Decimal("10000"),
+    )
+
+    assert projection.modelo_303_casilla_44_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    assert projection.modelo_303_casilla_44_value == projection.result.importe
+    assert projection.modelo_390_regularizacion_anual_value == projection.result.importe
 
 
 def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:

@@ -137,7 +137,9 @@ from ._observations_repository import (
 )
 from ._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
+    ProrrataRegularizacionFeedProjection,
     build_prorrata_regularizacion_advisory,
+    project_prorrata_regularizacion_feed,
 )
 from ._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
 from ._row_set_assembly import (
@@ -187,6 +189,7 @@ __all__ = [
     "NoPriorObligationProvenanceKind",
     "PrefilledBinding",
     "PreviousFilingSourceResolver",
+    "ProrrataRegularizacionFeedProjection",
     "RelationPrefillSourceResolver",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",
@@ -214,6 +217,7 @@ __all__ = [
     "m111_no_retenciones_periods_for_bucket",
     "observation_key",
     "partition_cross_period_requirements_by_activity_start",
+    "project_prorrata_regularizacion_feed",
     "query_iva_wallet_balance",
     "reconcile_iva_compensation_wallet",
     "reconcile_modelo_303_iva_compensation",
