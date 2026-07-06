@@ -191,6 +191,8 @@ def _target_names(target: ast.expr) -> list[str]:
     """Return simple names bound by an assignment target."""
     if isinstance(target, ast.Name):
         return [target.id]
+    if isinstance(target, ast.Attribute):
+        return [target.attr]
     if isinstance(target, ast.Tuple | ast.List):
         names: list[str] = []
         for element in target.elts:
@@ -281,6 +283,9 @@ mock_result = object()
 def test_argument_binding(mock_client):
     return mock_client
 
+state.mock_client = object()
+namespace.fake_service = object()
+
 for mock_row in (1,):
     pass
 
@@ -305,11 +310,13 @@ def mock_response_factory():
         (4, "MockService"),
         (5, "mock_result"),
         (7, "mock_client"),
-        (10, "mock_row"),
-        (13, "mock_resource"),
-        (18, "mock_error"),
+        (10, "mock_client"),
+        (11, "fake_service"),
+        (13, "mock_row"),
+        (16, "mock_resource"),
+        (21, "mock_error"),
     }
-    assert _forbidden_test_double_definitions(tree) == [(21, "MockTransport"), (24, "mock_response_factory")]
+    assert _forbidden_test_double_definitions(tree) == [(24, "MockTransport"), (27, "mock_response_factory")]
 
 
 def test_test_double_name_detector_rejects_comprehension_targets() -> None:
