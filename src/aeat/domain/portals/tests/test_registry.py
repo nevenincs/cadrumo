@@ -171,18 +171,12 @@ def test_finalise_registry_logs_info_on_success(
     assert "loaded 42 portal entries" in debug_records[0].getMessage()
 
 
-def test_registry_module_has_no_print_calls() -> None:
-    """The registry module uses ``aeat.core.logging`` only — no ``print`` calls.
+def test_registry_finalisation_does_not_write_to_stdio(capsys: pytest.CaptureFixture[str]) -> None:
+    """The registry module reports through logging, not process stdio."""
 
-    Parses the source as an AST and walks every ``Call`` node, asserting
-    that no direct ``print(...)`` is invoked. This is stricter than a
-    substring match (which would flag ``sprint(`` or quoted ``"print("``).
-    """
-    import ast
-    from pathlib import Path
+    mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
+    captured = capsys.readouterr()
 
-    source = Path(__file__).resolve().parent.parent.joinpath("_registry.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            assert node.func.id != "print", f"print() call at line {node.lineno}"
+    assert len(mapping) == 42
+    assert captured.out == ""
+    assert captured.err == ""
