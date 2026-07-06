@@ -9,6 +9,13 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-200-base-determination-adr]]'
   - '[[2026-05-21-work-verify-deadline-independence-adr]]'
+  - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'
+  - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'
+  - '[[2026-06-02-modelo-multiyear-renta-income-adr]]'
+  - '[[2026-06-02-modelo-714-patrimonio-engine-adr]]'
+  - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
+  - '[[2026-05-27-m210-irnr-full-engine-adr]]'
+  - '[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-research]]'
   - '[[2026-06-02-modelo-multiyear-renta-income-research]]'
@@ -68,15 +75,15 @@ Author the hard-cut no-baseline meta-test that prints authorized N/30 and cross-
 
 Author the co-backing mechanism ADRs the enrollment Waves depend on: A2 353<-322 aggregation, A3 720 prior-year baseline, A4 M100/M200/M202 prior-year cross-renta binding, and the A5 engine-build ADRs for 714/151/210/721.
 
-- [ ] `W01.P04.S13` - author the A2 ADR for the 353<-322 monthly grupo-entidades aggregation mechanism grounded in LIVA art.163 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-353-322-aggregation-adr.md`.
-- [ ] `W01.P04.S14` - author the A3 ADR for the 720 prior-year asset-baseline previous_filing binding (+20k/50k re-declaration) grounded in RD 1065/2007 art.42-bis (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-720-asset-baseline-adr.md`.
-- [ ] `W01.P04.S15` - author the A4-M100 ADR for the prior-year cross-renta binding (saldos/deducciones pendientes, filing_year_delta=-1) grounded in Ley 35/2006 art.49 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-100-prior-year-binding-adr.md`.
-- [ ] `W01.P04.S16` - author the A4-M200 ADR for the BIN-compensation prior-year binding (70%/1M cap) grounded in Ley 27/2014 art.26 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-200-bin-compensation-adr.md`.
-- [ ] `W01.P04.S17` - author the A4-M202 ADR for the modalidad 40.2 prior-cuota base binding grounded in Ley 27/2014 art.40.2 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-202-prior-cuota-adr.md`.
-- [ ] `W01.P04.S18` - author the A5-714 engine-build ADR for the Patrimonio wealth base and 60% limite conjunto grounded in Ley 19/1991 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-714-engine-build-adr.md`.
-- [ ] `W01.P04.S19` - author the A5-151 engine-build ADR for the Beckham flat-rate regime grounded in Ley 35/2006 art.93 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-151-engine-build-adr.md`.
-- [ ] `W01.P04.S20` - author the A5-210 engine-wiring ADR completing the declared-but-unwired IRNR calculation link grounded in TRLIRNR RDLeg 5/2004 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-210-engine-wiring-adr.md`.
-- [ ] `W01.P04.S21` - author the A5-721 engine-build ADR for the crypto obligation-trigger grounded in Ley 58/2003 DA13 and Orden HFP/886/2023 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-721-engine-build-adr.md`.
+- [x] `W01.P04.S13` - author the A2 ADR for the 353<-322 monthly grupo-entidades aggregation mechanism grounded in LIVA art.163 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr.md`.
+- [x] `W01.P04.S14` - author the A3 ADR for the 720 prior-year asset-baseline previous_filing binding and re-declaration trigger grounded in RD 1065/2007 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-720-prior-year-baseline-adr.md`.
+- [x] `W01.P04.S15` - author the A4-M100 income-tax prior-year cross-renta binding ADR covering M100 saldos and deducciones pendientes (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-multiyear-renta-income-adr.md`.
+- [x] `W01.P04.S16` - author the A4-M200 income-tax prior-year cross-renta binding ADR covering BIN compensation and cap mechanics (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-multiyear-renta-income-adr.md`.
+- [x] `W01.P04.S17` - author the A4-M202 income-tax prior-year cross-renta binding ADR covering modalidad 40.2 prior-cuota base (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-multiyear-renta-income-adr.md`.
+- [x] `W01.P04.S18` - author the A5-714 engine-build ADR for Patrimonio wealth base and limite conjunto sequencing grounded in Ley 19/1991 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-714-patrimonio-engine-adr.md`.
+- [x] `W01.P04.S19` - author the A5-151 engine-build ADR for the Beckham flat-rate regime and six-year window grounded in Ley 35/2006 art.93 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-multiyear-renta-151-beckham-adr.md`.
+- [x] `W01.P04.S20` - author the A5-210 engine-wiring ADR for the IRNR calculation surface grounded in TRLIRNR RDLeg 5/2004 (vaultspec-high-executor); `.vault/adr/2026-05-27-m210-irnr-full-engine-adr.md`.
+- [x] `W01.P04.S21` - author the A5-721 data-fidelity and obligation-trigger ADR grounded in Ley 58/2003 DA18 and Orden HFP/886/2023 (vaultspec-high-executor); `.vault/adr/2026-06-02-modelo-721-cripto-data-fidelity-adr.md`.
 
 ## Wave `W02` - IRPF income spine
 

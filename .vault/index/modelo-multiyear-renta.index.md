@@ -19,6 +19,15 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S10]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S11]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S12]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S13]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S14]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S15]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S16]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S17]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S18]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S19]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S20]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S21]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
@@ -56,6 +65,15 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W01-P03-S10` - cross-check each recorded year-set equals the manifest renta_years claim, contains >=2 distinct years, and calls the enrollment contract (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W01-P03-S11` - add the ADVISORY work-calculate banner naming the unauthorized state for unauthorized-but-has-engine modelos (vaultspec-standard-executor)
 - `2026-06-02-modelo-multiyear-renta-W01-P03-S12` - assert the current guard_unsupported_work_modelo hard refusal at work create still fires for no-engine and unsupported stubs (vaultspec-code-reviewer)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S13` - author the A2 ADR for the 353<-322 monthly grupo-entidades aggregation mechanism grounded in LIVA art.163 (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S14` - author the A3 ADR for the 720 prior-year asset-baseline previous_filing binding and re-declaration trigger grounded in RD 1065/2007 (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S15` - author the A4-M100 income-tax prior-year cross-renta binding ADR covering M100 saldos and deducciones pendientes (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S16` - author the A4-M200 income-tax prior-year cross-renta binding ADR covering BIN compensation and cap mechanics (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S17` - author the A4-M202 income-tax prior-year cross-renta binding ADR covering modalidad 40.2 prior-cuota base (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S18` - author the A5-714 engine-build ADR for Patrimonio wealth base and limite conjunto sequencing grounded in Ley 19/1991 (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S19` - author the A5-151 engine-build ADR for the Beckham flat-rate regime and six-year window grounded in Ley 35/2006 art.93 (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S20` - author the A5-210 engine-wiring ADR for the IRNR calculation surface grounded in TRLIRNR RDLeg 5/2004 (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P04-S21` - author the A5-721 data-fidelity and obligation-trigger ADR grounded in Ley 58/2003 DA18 and Orden HFP/886/2023 (vaultspec-high-executor)
 
 ### plan
 
