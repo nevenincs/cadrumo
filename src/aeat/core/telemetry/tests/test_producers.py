@@ -5,9 +5,19 @@ wired producer: consent-off (the default posture) emits nothing to the sink,
 a fully-permitted invocation dispatches exactly the allowlisted payload the
 registry declares, and a producer cannot be made to carry a sensitive field --
 the function signatures themselves accept only accounting/timing values.
-Uses a real, minimal in-memory :class:`~aeat.core.telemetry.TelemetrySink`
+Uses a real, minimal in-memory :class:`~core.telemetry.TelemetrySink`
 implementation (not a mock), mirroring ``test_emit.py``'s sanctioned pure-logic
 test-double pattern.
+
+See Also:
+    :func:`~core.telemetry.emit_command_invocation_telemetry`:
+        Producer for command-count and duration metrics.
+    :func:`~core.telemetry.emit_llm_run_telemetry`:
+        Producer for non-sensitive local LLM run timing metrics.
+    :func:`~core.telemetry.build_telemetry_payload`:
+        Closed-schema allowlist builder shared by every producer.
+    :func:`~core.telemetry.emit_telemetry_event`:
+        Consent-gated dispatcher the producers call after schema validation.
 """
 
 from __future__ import annotations
