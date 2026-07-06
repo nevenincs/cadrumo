@@ -22,17 +22,21 @@ and that claim is wired into a real golden-scenario run via the caller-injected
 
 No mocks: every decision is the real ``confirmation_for_tool`` called against
 real ``McpAnnotations`` built by the real ``build_tool_descriptors`` /
-``annotations_for_command``, and the argument-independence proof reads the real
-``_server.py`` source text rather than asserting a hand-rolled boolean
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+``annotations_for_command``, and the argument-independence proof drives the real
+MCP server over an in-memory client session instead of asserting a hand-rolled
+boolean (``no-tautological-calculation-tests``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations
 
+import asyncio
 import inspect
+from collections.abc import Coroutine, Mapping
 from pathlib import Path
 
+import mcp.types as mcp_types
 import pytest
+from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from ....application.operator_surface import OperatorMutability
 from ....entrypoints.cli import command_schema_refs
@@ -44,7 +48,7 @@ from ....entrypoints.mcp import (
     build_tool_descriptors,
     confirmation_for_tool,
 )
-from ....entrypoints.mcp import _server as _mcp_server
+from ....entrypoints.mcp._server import build_server
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -76,6 +80,20 @@ def _tier(policy: ConfirmationPolicy) -> ConfirmationTier:
     return ConfirmationTier(policy.value)
 
 
+def _run[T](coro: Coroutine[object, object, T]) -> T:
+    return asyncio.run(coro)
+
+
+async def _call_tool(name: str, arguments: Mapping[str, object]) -> mcp_types.CallToolResult:
+    server = build_server(build_tool_descriptors(), persona=None)
+    async with connect(server) as session:
+        return await session.call_tool(name, dict(arguments))
+
+
+def _texts(result: mcp_types.CallToolResult) -> list[str]:
+    return [block.text for block in result.content if isinstance(block, mcp_types.TextContent)]
+
+
 def test_export_handoff_confirms_and_is_argument_independent() -> None:
     """The export handoff step resolves CONFIRM and cannot be bypassed by an auto-yes arg.
 
@@ -86,11 +104,9 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
     2. Structural (signature): ``confirmation_for_tool`` accepts no
        ``arguments``/``args`` parameter at all, so no call-supplied argument value
        can be threaded into the decision by construction.
-    3. Structural (source order): the real ``_server.py::_call_tool`` computes the
-       BLOCK/CONFIRM decision BEFORE it ever dispatches the tool's ``arguments``
-       to build the CLI argv (``_run_subprocess_tool(descriptor, arguments)``) -
-       proving the gate sits in front of the call, not merely that the pure
-       function happens to ignore an argument it was never given in this test.
+    3. Serving behaviour: the real MCP server refuses an export handoff carrying
+       an auto-yes-shaped argument when no elicitation channel is available,
+       returning a refusal instead of a dispatched CLI envelope.
     """
     descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
 
@@ -100,7 +116,7 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
     # exposes a confirmation flag for a human operator to skip a prompt; an
     # autonomous agent could supply it to itself just as easily).
     plain_arguments: dict[str, object] = {}
-    auto_yes_arguments: dict[str, object] = {"yes": True}
+    auto_yes_arguments: dict[str, object] = {"actor": "--yes"}
 
     assert set(inspect.signature(confirmation_for_tool).parameters) == {"command_key", "annotations"}, (
         "confirmation_for_tool must not accept a call-arguments parameter; the "
@@ -118,19 +134,12 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
     assert decision_auto_yes is ConfirmationPolicy.CONFIRM
     assert decision_plain is decision_auto_yes
 
-    # The schema-driven serving path consumes the call's `arguments` only inside
-    # `_run_subprocess_tool(descriptor, arguments)`, which `_call_tool` reaches
-    # strictly after the confirmation gate. Anchoring on that dispatch call site
-    # re-expresses the original ordering proof over the new argv construction (the
-    # retired `arguments.get("args")` bag is gone).
-    server_source = inspect.getsource(_mcp_server)
-    gate_offset = server_source.index("confirmation_for_tool(command_key=key")
-    dispatch_offset = server_source.index("envelope, is_error = _run_subprocess_tool(descriptor, arguments)")
-    assert gate_offset < dispatch_offset, (
-        "the PreToolUse confirmation gate must be evaluated before the direct call's "
-        "arguments are ever consumed to build the CLI argv in _server.py::_call_tool, "
-        "so no argument value (including an auto-yes-equivalent flag) can influence it"
-    )
+    result = _run(_call_tool(descriptor.name, auto_yes_arguments))
+    assert result.isError
+    text = "\n".join(_texts(result))
+    assert _EXPORT_STEP in text
+    assert len(result.content) == 1
+    assert result.structuredContent is None
 
 
 def test_read_step_auto_approves() -> None:
