@@ -10,7 +10,7 @@ import json
 import re
 import unicodedata
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Literal, Self, override
@@ -1338,3 +1338,48 @@ class TransactionCatalogue(BaseModel):
     def values(self) -> Iterator[Transaction]:
         """Iterate over catalogue :class:`Transaction` records."""
         return iter(self.transactions.values())
+
+
+class OutOfWindowTransactionStub(BaseModel):
+    """A catalogue transaction outside a requested date window, undecrypted.
+
+    Carries ONLY the two plaintext, non-sensitive facts a period-scoped
+    aggregator needs to report the transaction as excluded --
+    ``transaction_id`` and its ``filing_date`` -- never any decrypted field
+    (amount, category, counterparty, direction, business classification).
+    This is the O2 period-first partition contract
+    (``2026-07-05-ledger-latency-budget-adr``): an out-of-window row is
+    diagnosed from the plaintext date-index fact alone, without paying the
+    decrypt-and-validate cost, and without leaking anything the index itself
+    does not already carry.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1, max_length=128)
+    filing_date: date
+
+
+class LedgerDatePartition(BaseModel):
+    """A ledger catalogue split into an in-window and an out-of-window half.
+
+    ``in_window`` is a real, fully decrypted :class:`TransactionCatalogue`
+    scoped to ``[start, end]`` -- every regulated classifier gate runs over it
+    unchanged. ``out_of_window`` is the plaintext-only remainder
+    (:class:`OutOfWindowTransactionStub` rows): transactions the catalogue
+    holds outside the window, reported without decryption so a caller can
+    still surface a period-exclusion diagnostic for them.
+
+    ``index_complete`` records whether the partition was served from a
+    complete plaintext date index (``True``) or from a full-scan fallback
+    after a completeness-gate mismatch (``False`` -- see
+    ``ledger-participation-index-is-derived-rebuildable``): both cases return
+    an identical partition shape, so a caller cannot observe which path
+    served it except through this flag and through latency.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    in_window: TransactionCatalogue
+    out_of_window: tuple[OutOfWindowTransactionStub, ...] = ()
+    index_complete: bool

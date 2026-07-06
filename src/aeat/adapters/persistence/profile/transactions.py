@@ -67,7 +67,9 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now, validate_utc_aware
 from ....domain.transactions import (
+    LedgerDatePartition,
     LedgerStorageError,
+    OutOfWindowTransactionStub,
     StoredTransactionDriftError,
     Transaction,
     TransactionCatalogue,
@@ -424,6 +426,139 @@ class TransactionCatalogueRepository:
             len(transactions),
         )
         return TransactionCatalogue.from_transactions(transactions)
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
+
+        The O2 period-first partition (``2026-07-05-ledger-latency-budget-adr``):
+        runs a completeness gate against the plaintext
+        :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
+        rows for this bucket -- the index row count and id set must exactly
+        match the encrypted membership index -- before trusting the index for
+        a partition. On a completeness match, only the in-window transaction
+        ids are decrypted (a targeted per-id
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.load`);
+        out-of-window ids are reported as plaintext
+        :class:`~domain.transactions.OutOfWindowTransactionStub` rows (id +
+        filing date only, never decrypted). On a completeness MISMATCH -- a
+        stale or partially-synced index -- this falls back to a full
+        :meth:`load` and partitions the result in memory, so correctness never
+        depends on the index being present or fresh
+        (``ledger-participation-index-is-derived-rebuildable``): a stale index
+        costs a slower read, never a silent drop from either half.
+
+        Both paths return the identical :class:`~domain.transactions.LedgerDatePartition`
+        shape; ``index_complete`` records which path served the read.
+
+        Args:
+            start: Inclusive lower bound of the filing-date window.
+            end: Inclusive upper bound of the filing-date window.
+
+        Returns:
+            The :class:`~domain.transactions.LedgerDatePartition` for ``[start, end]``.
+        """
+        index_ids = self._load_index_ids()
+        if not index_ids:
+            return LedgerDatePartition(
+                in_window=TransactionCatalogue.from_transactions([]),
+                out_of_window=(),
+                index_complete=True,
+            )
+
+        index_rows = self._all_date_index_rows()
+        index_row_ids = set(index_rows)
+        if index_row_ids != index_ids:
+            # Stale, partially-synced, or missing index rows for this bucket:
+            # fall back to a full decrypt scan and partition in memory so
+            # correctness never depends on index freshness.
+            full_catalogue = self.load()
+            in_window: list[Transaction] = []
+            out_of_window: list[OutOfWindowTransactionStub] = []
+            for transaction in full_catalogue.values():
+                filing_date = _filing_date(transaction)
+                if start <= filing_date <= end:
+                    in_window.append(transaction)
+                else:
+                    out_of_window.append(
+                        OutOfWindowTransactionStub(
+                            transaction_id=transaction.transaction_id,
+                            filing_date=filing_date,
+                        ),
+                    )
+            _log.debug(
+                "partitioned transaction catalogue via full-scan fallback bucket_id=%s window=%s..%s "
+                "in_window=%d out_of_window=%d",
+                self._bucket_id,
+                start.isoformat(),
+                end.isoformat(),
+                len(in_window),
+                len(out_of_window),
+            )
+            return LedgerDatePartition(
+                in_window=TransactionCatalogue.from_transactions(in_window),
+                out_of_window=tuple(out_of_window),
+                index_complete=False,
+            )
+
+        from ..storage import Envelope, SensitivityClass
+
+        in_window_ids = {
+            transaction_id for transaction_id, filing_date in index_rows.items() if start <= filing_date <= end
+        }
+        transactions: list[Transaction] = []
+        for transaction_id in sorted(in_window_ids):
+            record = self._objects.load(
+                TX_BUCKET_NAMESPACE,
+                transaction_object_key(self._bucket_id, transaction_id),
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=_TX_CATALOGUE_VERSION,
+            )
+            if record is None:
+                # Index named an id the encrypted store no longer has (a race
+                # between a concurrent delete and this read); skip rather than
+                # fail the whole read -- the completeness gate above already
+                # bounds this to a rare edge, not a stale index.
+                continue
+            try:
+                envelope = Envelope[Transaction].model_validate_json(record.payload)
+            except ValidationError as exc:
+                _log.error(
+                    "transaction row schema drift bucket_id=%s (partition read)",
+                    self._bucket_id,
+                    exc_info=True,
+                )
+                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+            transactions.append(envelope.payload)
+
+        out_of_window_stubs = tuple(
+            OutOfWindowTransactionStub(transaction_id=transaction_id, filing_date=filing_date)
+            for transaction_id, filing_date in sorted(index_rows.items())
+            if transaction_id not in in_window_ids
+        )
+        _log.debug(
+            "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d out_of_window=%d",
+            self._bucket_id,
+            start.isoformat(),
+            end.isoformat(),
+            len(transactions),
+            len(out_of_window_stubs),
+        )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(transactions),
+            out_of_window=out_of_window_stubs,
+            index_complete=True,
+        )
+
+    def _all_date_index_rows(self) -> dict[str, date]:
+        """Return every ``{transaction_id: filing_date}`` this bucket's date index records."""
+        with session_scope(self._objects.engine) as session:
+            rows = session.execute(
+                select(
+                    _orm.TransactionDateIndexRow.transaction_id,
+                    _orm.TransactionDateIndexRow.filing_date,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
+            ).all()
+            return dict(rows)
 
     def rebuild_date_index(self) -> int:
         """Rebuild this bucket's plaintext date index from the encrypted catalogue.
