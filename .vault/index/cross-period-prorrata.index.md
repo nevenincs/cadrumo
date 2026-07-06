@@ -46,6 +46,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W06-P09-S37]]'
   - '[[2026-07-06-cross-period-prorrata-W06-P09-S38]]'
   - '[[2026-07-06-cross-period-prorrata-W06-P09-S39]]'
+  - '[[2026-07-06-cross-period-prorrata-W06-P09-S40]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -107,6 +108,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W06-P09-S37` - record the deferred prorrata especial per-input apportionment and the art-103.Dos.2 +10% mandatory-especial comparison advisory as an honest deferred Step behind the from-birth regime schema slot (needs especial to exist first)
 - `2026-07-06-cross-period-prorrata-W06-P09-S38` - record the deferred sectores diferenciados per-sector registers, the art-104.Tres financial/inmobiliario special denominator, and the art-105.Cinco interrupted-activity three-year rule as noted follow-ups behind the from-birth sector schema slot
 - `2026-07-06-cross-period-prorrata-W06-P09-S39` - record the deferred automatic art-104.Tres exclusion classification in the ledger rollup as a follow-up (the rollup stays a reconciliation check until it lands)
+- `2026-07-06-cross-period-prorrata-W06-P09-S40` - run the independent campaign-close honesty review (vaultspec-code-reviewer against the ADR, plan, and commit range), persist it as a vault audit, and track every surfaced item as a new Step with a verification gate (aeat-campaign-close-honesty-review)
 
 ### plan
 

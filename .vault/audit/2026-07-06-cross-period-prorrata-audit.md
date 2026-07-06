@@ -547,3 +547,44 @@ Findings: no open S39 reconciliation findings.
 Residual gate inventory: the prorrata regularizacion plus domain prorrata test
 slice passes sequentially with 44 tests. `vault check features` and
 `vault check frontmatter` are clean for `cross-period-prorrata`.
+
+## S40 Campaign-Close Honesty Review
+
+Reviewed the campaign as a fresh close reviewer against the cross-period
+prorrata ADR, the L3 plan, the feature reference, the rolling exec records, the
+feature commit trail, and live code search. The core general-prorrata capability
+is materially implemented and guarded: register persistence/carry, provisional
+IVA apportionment, settlement regularizacion projection, settlement write-back,
+manual-oracle proof, missing-carry advisory, settlement verify advisory, and the
+silent-zero deferral closure all have focused evidence.
+
+### source-mesh-promotion-still-deferred | high | `PRORRATA_REGULARIZACION` is still not a live mesh source
+
+The plan row `W04.P07.S30` is checked, but its exec record explicitly says the
+source-mesh promotion was deferred because `_source_mesh.py` carried
+non-authored WIP. The live code still keeps
+`BindingSourceKind.PRORRATA_REGULARIZACION` in `DEFERRED_SOURCE_KIND_TARGETS`,
+and the registry taxonomy test still includes it in the deferred undeclared
+source-kind carve-out. That means the campaign has not fully delivered the
+post-oracle source-kind promotion promised by the row text. This is not a silent
+calculation defect because S33-S35/S39 keep advisory visibility and no fabricated
+binding is shipped, but it is an honest open implementation item.
+
+Tracking: added `W06.P09.S41` to promote `PRORRATA_REGULARIZACION` once
+`_source_mesh.py` is owner-clean, with verification gates covering live mesh
+enrollment, removal from the deferred taxonomy carve-out, source-kind parity,
+the AEAT manual oracle, and the M303 prorrata advisory slice.
+
+Residual deferrals remain intentional and already tracked by W06: prorrata
+especial per-input apportionment, the Art. 103.Dos.2 +10 percent advisory,
+sectores diferenciados orchestration, Art. 104.Tres financial/inmobiliario
+special denominator treatment, Art. 105.Cinco, and automatic Art. 104.Tres
+exclusion classification. They are schema-backed follow-ups, not hidden shipped
+behavior.
+
+S40 outcome: review complete, campaign not closed. The next open row is
+`W06.P09.S41`.
+
+Residual gate inventory: the focused close-review prorrata slice passes
+sequentially with 48 tests. Feature and frontmatter vault checks are clean after
+S40/S41 tracking.
