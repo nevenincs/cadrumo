@@ -40,20 +40,20 @@ Build the four-layer authorization gate spine (declarative manifest, derived per
 
 Author the authorization.toml manifest as the sole authorization source of truth, fingerprint it into the registry tree, and derive the per-revision capability StrEnum and record at the registry boundary.
 
-- [ ] `W01.P01.S01` - author the default-deny authorization manifest with per-modelo renta_years claims, UNAUTHORIZED-by-absence (vaultspec-high-executor); `src/aeat/_data/registry/aeat/authorization.toml`.
-- [ ] `W01.P01.S02` - fingerprint authorization.toml into the registry tree fingerprint so cache invalidates on manifest edit (vaultspec-high-executor); `src/aeat/domain/modelos/registry/_loader.py`.
-- [ ] `W01.P01.S03` - declare the closed authorization-status StrEnum and the per-revision authorization record (vaultspec-high-executor); `src/aeat/core/access_gate/_authorization.py`.
-- [ ] `W01.P01.S04` - derive the per-revision capability from the manifest at the registry boundary, never authored independently (vaultspec-high-executor); `src/aeat/domain/modelos/registry/_authority.py`.
-- [ ] `W01.P01.S05` - write a roundtrip test asserting manifest absence authorizes zero and a listed modelo derives its capability (vaultspec-standard-executor); `src/aeat/core/access_gate/test_authorization_capability.py`.
+- [x] `W01.P01.S01` - author the directory-mode default-deny authorization manifest fragments with per-modelo renta_years claims, UNAUTHORIZED-by-absence (vaultspec-high-executor); `src/aeat/_data/registry/aeat/authorization.d`.
+- [x] `W01.P01.S02` - fingerprint authorization.d manifest fragments into the registry tree fingerprint so cache invalidates on manifest edit (vaultspec-high-executor); `src/aeat/domain/calculations/registry/_loader.py`.
+- [x] `W01.P01.S03` - declare the closed authorization-status StrEnum and the per-revision authorization record (vaultspec-high-executor); `src/aeat/core/access_gate/_authorization.py`.
+- [x] `W01.P01.S04` - derive the per-modelo authorization capability from the manifest at the registry boundary, never authored independently (vaultspec-high-executor); `src/aeat/domain/calculations/registry/_authority.py`.
+- [x] `W01.P01.S05` - write roundtrip tests asserting manifest absence authorizes zero and a listed modelo derives its capability (vaultspec-standard-executor); `src/aeat/core/access_gate/tests/test_authorization_manifest.py`.
 
 ### Phase `W01.P02` - Dual-mode enrollment recorder
 
 Build the recorder in _multi_year.py supporting both calculation-based year capture and non-calculation explicit two-year-context registration, with the >=2-distinct-renta-years invariant enforced at the pydantic type boundary. This Phase also closes the cross-cutting coverage gap on MultiYearResolver / resolve_prior_year_observations, which today carries zero direct tests yet a docstring claiming M200/M202, M303 prorrata, M303 regularizacion-inversiones, and annual quarterly roll-up use-cases: each claim gets a real-adapter integration test or the unsubstantiated claim is deleted.
 
-- [ ] `W01.P02.S06` - add the dual-mode enrollment recorder with calculation-based and non-calculation two-year-context capture (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py`.
-- [ ] `W01.P02.S07` - enforce the >=2-distinct-renta-years invariant at the pydantic type boundary so a malformed evidence record cannot construct (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py`.
+- [x] `W01.P02.S06` - add the dual-mode enrollment recorder with calculation-based and non-calculation two-year-context capture (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py`.
+- [x] `W01.P02.S07` - enforce the >=2-distinct-renta-years invariant at the pydantic type boundary so a malformed evidence record cannot construct (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py; src/aeat/application/calculations/tests/test_multi_year_recorder.py`.
 - [x] `W01.P02.S08` - write an anti-tautology test proving a single-year evidence record raises ValidationError (vaultspec-standard-executor); `src/aeat/application/calculations/tests/test_multi_year_recorder.py`.
-- [ ] `W01.P02.S88` - author MultiYearResolver.resolve() integration tests with real adapters covering each docstring-claimed use-case (M200/M202 same-year and BIN carryforward, M303 prorrata LIVA art.105 four-prior-year mean, M303 regularizacion inversiones LIVA art.93 five/ten-year schedule, annual quarterly roll-up), or delete any claim no real use-case substantiates (vaultspec-high-executor); `src/aeat/application/calculations/test_multi_year_resolver.py`.
+- [x] `W01.P02.S88` - reconcile the removed MultiYearResolver orphan: confirm no live resolver claim remains, preserve live PreviousFilingSourceResolver and carry-gate coverage, and defer any future multi-year scanner until it has a real caller (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py; src/aeat/application/calculations/tests/test_carry_gate_parity.py; .vault/exec/2026-06-26-binding-fold-in-carry-unification/2026-06-26-binding-fold-in-carry-unification-P04-S16.md; .vault/exec/2026-06-26-binding-fold-in-carry-unification/2026-06-26-binding-fold-in-carry-unification-P04-S17.md`.
 
 ### Phase `W01.P03` - CI meta-test and advisory CLI surface
 
@@ -62,7 +62,7 @@ Author the hard-cut no-baseline meta-test that prints authorized N/30 and cross-
 - [x] `W01.P03.S09` - maintain the hard-cut no-baseline authorization meta-test over the live canonical fleet, printing authorized N/FLEET_SIZE with the UNAUTHORIZED id list (vaultspec-high-executor); `src/aeat/tests/test_modelo_authorization_gate.py`.
 - [x] `W01.P03.S10` - cross-check each recorded year-set equals the manifest renta_years claim, contains >=2 distinct years, and calls the enrollment contract (vaultspec-high-executor); `src/aeat/tests/test_modelo_authorization_gate.py`.
 - [x] `W01.P03.S11` - add the ADVISORY work-calculate banner naming the unauthorized state for unauthorized-but-has-engine modelos (vaultspec-standard-executor); `src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py; src/aeat/entrypoints/cli/tests/test_modelo_authorization_advisory_banner.py`.
-- [ ] `W01.P03.S12` - assert the existing _guard_stub_modelo hard refusal at work create still fires for no-engine stubs (vaultspec-code-reviewer); `src/aeat/entrypoints/cli/test_authorization_advisory_banner.py`.
+- [x] `W01.P03.S12` - assert the current guard_unsupported_work_modelo hard refusal at work create still fires for no-engine and unsupported stubs (vaultspec-code-reviewer); `src/aeat/application/modelo/_work_create_policy.py; src/aeat/entrypoints/cli/tests/test_modelo_unsupported_work_refusal.py; src/aeat/entrypoints/cli/tests/test_root_fallback_write_guard.py`.
 
 ### Phase `W01.P04` - Mechanism-specific backing ADRs
 
