@@ -9,14 +9,15 @@ Covers:
 
 from __future__ import annotations
 
-import ast
 import json
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from ..adapters.inbound.declaracion import _parser
 from ..adapters.outbound.storage._local import LocalFileSystemProvider
 from ..core.i18n import tr
 
@@ -142,51 +143,7 @@ def test_pdfword_alias_rationale_comment_present() -> None:
 
 def test_pdfword_alias_is_dict_str_any() -> None:
     """_PdfWord remains dict[str, Any] — adapter-internal, not moved to core._types."""
-    src = _source(_PARSER_REL)
-    tree = ast.parse(src)
-    alias_value: ast.expr | None = None
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
-            continue
-        target = node.targets[0]
-        if isinstance(target, ast.Name) and target.id == "_PdfWord":
-            alias_value = node.value
-            break
-    assert alias_value is not None, "_PdfWord assignment not found in _parser.py"
-    assert _is_dict_str_any_alias(alias_value), "_PdfWord must remain exactly dict[str, Any]"
-
-
-def _is_dict_str_any_alias(node: ast.expr) -> bool:
-    """Return whether *node* is exactly ``dict[str, Any]``."""
-    if not isinstance(node, ast.Subscript):
-        return False
-    if not isinstance(node.value, ast.Name) or node.value.id != "dict":
-        return False
-    if not isinstance(node.slice, ast.Tuple) or len(node.slice.elts) != 2:
-        return False
-    key_type, value_type = node.slice.elts
-    return (
-        isinstance(key_type, ast.Name)
-        and key_type.id == "str"
-        and isinstance(value_type, ast.Name)
-        and value_type.id == "Any"
-    )
-
-
-@pytest.mark.parametrize(
-    ("source", "expected"),
-    [
-        ("alias = dict[str, Any]", True),
-        ("alias = dict[str, object]", False),
-        ("alias = Mapping[str, Any]", False),
-        ("alias = dict[str]", False),
-    ],
-)
-def test_pdfword_alias_shape_detector(source: str, expected: bool) -> None:
-    """The alias-shape detector rejects nearby but wrong type aliases."""
-    assignment = ast.parse(source).body[0]
-    assert isinstance(assignment, ast.Assign)
-    assert _is_dict_str_any_alias(assignment.value) is expected
+    assert _parser._PdfWord == dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
