@@ -30,6 +30,7 @@ related:
   - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S22]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S23]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S24]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S25]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-adr]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-audit]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-plan]]'
@@ -76,6 +77,7 @@ Auto-generated index of all documents tagged with `#cpdefix-followup-allgreen`.
 - `2026-07-05-cpdefix-followup-allgreen-W06-P09-S22` - Replace ledger evidence test-export storage imports with real adapter sources
 - `2026-07-05-cpdefix-followup-allgreen-W06-P09-S23` - Execution Notes
 - `2026-07-05-cpdefix-followup-allgreen-W06-P09-S24` - Execution Notes
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S25` - Execution Notes
 
 ### plan
 
