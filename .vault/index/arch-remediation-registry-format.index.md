@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-registry-format'
-date: '2026-07-03'
-modified: '2026-07-03'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-registry-format-P01-S01]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
   - '[[2026-07-02-arch-remediation-registry-format-plan]]'
   - '[[2026-07-03-arch-remediation-registry-format-audit]]'
+  - '[[2026-07-06-arch-remediation-registry-format-research]]'
 ---
 
 # `arch-remediation-registry-format` feature index
@@ -67,3 +68,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 ### plan
 
 - `2026-07-02-arch-remediation-registry-format-plan` - `arch-remediation-registry-format` plan
+
+### research
+
+- `2026-07-06-arch-remediation-registry-format-research` - `arch-remediation-registry-format` research: `program-track decision research bridge`

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-data-budget'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-data-budget-S01]]'
   - '[[2026-07-02-arch-remediation-data-budget-S02]]'
@@ -13,6 +13,7 @@ related:
   - '[[2026-07-02-arch-remediation-data-budget-S05]]'
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
   - '[[2026-07-02-arch-remediation-data-budget-plan]]'
+  - '[[2026-07-06-arch-remediation-data-budget-research]]'
 ---
 
 # `arch-remediation-data-budget` feature index
@@ -36,3 +37,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-data-budget
 ### plan
 
 - `2026-07-02-arch-remediation-data-budget-plan` - `arch-remediation-data-budget` plan
+
+### research
+
+- `2026-07-06-arch-remediation-data-budget-research` - `arch-remediation-data-budget` research: `program-track decision research bridge`
