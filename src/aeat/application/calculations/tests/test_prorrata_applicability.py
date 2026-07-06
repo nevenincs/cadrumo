@@ -1,4 +1,19 @@
-"""Applicability projection for annual prorrata regularizacion."""
+"""Applicability projection for annual prorrata regularizacion.
+
+See Also:
+    :func:`~application.calculations._prorrata_regularizacion.derive_prorrata_applicability`
+        Pure fail-closed-to-visible projection exercised by this test module.
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataApplicabilityProjection`
+        Result type carrying the boolean applicability decision and evidence
+        kinds asserted here.
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataDeclaredVolumeLedgerRollup`
+        Ledger-side volume carrier used for projected sin-derecho evidence.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Register entry input proving active taxpayer prorrata state.
+    :class:`~core.ProrrataRegisterRegime`
+        Closed taxpayer-state axis distinguishing general, especial, and no
+        prorrata applicability.
+"""
 
 from __future__ import annotations
 
