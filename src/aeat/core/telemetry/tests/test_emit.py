@@ -3,10 +3,20 @@
 Proves the consent gate composes correctly with the sink dispatch: a refused
 gate never touches the sink at all (true no-op), and a permitted gate hands
 the exact allowlisted payload to the sink. Uses a real, minimal in-memory
-:class:`TelemetrySink` implementation (not a mock) to observe dispatch --
+:class:`~core.telemetry.TelemetrySink` implementation (not a mock) to observe dispatch --
 this is the sanctioned "test double for isolating pure logic" case
 (``aeat-local-execution`` / the project's real-behavior test mandate), since
 no external service or persistence boundary is involved.
+
+See Also:
+    :func:`~core.telemetry.emit_telemetry_event`:
+        Consent-gated dispatcher under test.
+    :func:`~core.telemetry.telemetry_emit_permitted`:
+        Four-way gate composed before any sink receives a payload.
+    :class:`~core.telemetry.LocalNoopTelemetrySink`:
+        Default inert sink used when no transport is supplied.
+    :class:`~core.telemetry.TelemetryEventPayload`:
+        Already-allowlisted payload handed to the sink unchanged.
 """
 
 from __future__ import annotations
