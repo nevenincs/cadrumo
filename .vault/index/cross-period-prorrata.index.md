@@ -36,6 +36,8 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W04-P06-S27]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P07-S28]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P07-S29]]'
+  - '[[2026-07-06-cross-period-prorrata-W04-P07-S30]]'
+  - '[[2026-07-06-cross-period-prorrata-W04-P07-S31]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -87,6 +89,8 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W04-P06-S27` - prove prorrata settlement projection and year carry
 - `2026-07-06-cross-period-prorrata-W04-P07-S28` - bundle AEAT prorrata regularizacion oracle
 - `2026-07-06-cross-period-prorrata-W04-P07-S29` - prove prorrata regularizacion manual oracle
+- `2026-07-06-cross-period-prorrata-W04-P07-S30` - defer prorrata source-mesh promotion pending peer WIP
+- `2026-07-06-cross-period-prorrata-W04-P07-S31` - defer bienes-inversion unblock record pending source promotion
 
 ### plan
 

@@ -306,3 +306,43 @@ oracle test passes sequentially with 1 test, the adjacent prorrata regularizaci�
 calculation test file passes sequentially with 8 tests, and the external oracle
 enrollment test module passes when selected with the integration marker
 (`2 passed`).
+
+## S30 Deferral Review
+
+Reviewed the `W04.P07.S30` live source-mesh promotion after re-grounding it
+against the cross-period prorrata ADR, the W04/P07 plan row, the existing
+`PRORRATA_REGULARIZACION` deferred-source registry entry, and the
+`iva_compensation_annual_partition` precedent. The S29 AEAT manual oracle proof
+is landed, so the semantic gate for promotion is satisfied.
+
+The implementation target is not safely editable at this point:
+`src/aeat/application/aggregation/_source_mesh.py` carries non-authored
+uncommitted WIP adding structured out-of-window source-diagnostic fields and
+helpers. The shared-worktree safety rule requires aborting edits to a file with
+non-authored WIP, so S30 is formally deferred rather than partially promoted.
+
+Findings: no S30 implementation was attempted.
+
+Blocker: non-authored WIP in `_source_mesh.py`.
+
+Follow-up: rerun S30 after the `_source_mesh.py` WIP owner lands or clears that
+change; enroll the `PRORRATA_REGULARIZACION` resolver in `merge_source_resolutions`
+and remove it from `DEFERRED_SOURCE_KIND_TARGETS` in the same change, gated by the
+S29 oracle proof.
+
+## S31 Deferral Review
+
+Reviewed the `W04.P07.S31` bienes-inversión unblock record against the same
+source-mesh surface. The current `BIENES_INVERSION_REGULARIZACION` deferred
+entry still declares `promotion_depends_on=BindingSourceKind.PRORRATA_REGULARIZACION`,
+but the prerequisite S30 live promotion is formally deferred and `_source_mesh.py`
+is still blocked by non-authored WIP.
+
+Findings: no S31 implementation was attempted.
+
+Blocker: same non-authored `_source_mesh.py` WIP as S30, plus the prerequisite
+`PRORRATA_REGULARIZACION` live source remains deferred.
+
+Follow-up: after S30 lands the live prorrata regularización source, record the
+bienes-inversión casilla-43 automatic feed unblock in the source-mesh disposition
+surface while preserving the existing promotion dependency.
