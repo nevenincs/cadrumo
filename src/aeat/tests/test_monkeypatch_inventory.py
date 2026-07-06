@@ -42,6 +42,7 @@ class _PatchAliasInventory(NamedTuple):
     pytest_aliases: set[str]
     internal_pytest_aliases: set[str]
     internal_monkeypatch_aliases: set[str]
+    direct_patch_aliases: dict[str, str]
     import_sites: list[tuple[int, str]]
 
 
@@ -118,19 +119,32 @@ def _patch_inventory_sites(tree: ast.AST) -> _PatchInventorySites:
                 aliases.pytest_aliases,
                 aliases.internal_pytest_aliases,
                 aliases.internal_monkeypatch_aliases,
+                aliases.direct_patch_aliases,
             )
             if name in _PATCH_CONTEXT_FACTORIES:
                 context_sites.append((node.lineno, name))
         elif isinstance(node, ast.arg) and node.arg == "monkeypatch":
             add(node.lineno, "argument monkeypatch")
-        elif isinstance(node, ast.Name) and node.id in {"monkeypatch", "MonkeyPatch"}:
-            add(node.lineno, f"name {node.id}")
+        elif isinstance(node, ast.Name):
+            if node.id in {"monkeypatch", "MonkeyPatch"}:
+                add(node.lineno, f"name {node.id}")
+            else:
+                name = _canonical_patch_name(
+                    node.id,
+                    aliases.pytest_aliases,
+                    aliases.internal_pytest_aliases,
+                    aliases.internal_monkeypatch_aliases,
+                    aliases.direct_patch_aliases,
+                )
+                if name in _PATCH_REFERENCE_NAMES:
+                    add(node.lineno, name)
         elif isinstance(node, ast.Attribute):
             name = _canonical_patch_name(
                 qualified_name(node),
                 aliases.pytest_aliases,
                 aliases.internal_pytest_aliases,
                 aliases.internal_monkeypatch_aliases,
+                aliases.direct_patch_aliases,
             )
             if name in _PATCH_REFERENCE_NAMES:
                 add(node.lineno, name)
@@ -158,6 +172,7 @@ def _patch_alias_inventory(tree: ast.AST) -> _PatchAliasInventory:
     pytest_aliases = {"pytest"}
     internal_pytest_aliases = {"_pytest"}
     internal_monkeypatch_aliases: set[str] = set()
+    direct_patch_aliases: dict[str, str] = {}
     import_sites: list[tuple[int, str]] = []
 
     for node in ast.walk(tree):
@@ -179,8 +194,12 @@ def _patch_alias_inventory(tree: ast.AST) -> _PatchAliasInventory:
             module = node.module or ""
             for alias in node.names:
                 if module == "pytest" and alias.name == "MonkeyPatch":
+                    if alias.asname is not None:
+                        direct_patch_aliases[alias.asname] = "pytest.MonkeyPatch"
                     import_sites.append((node.lineno, "import pytest.MonkeyPatch"))
                 elif module == _PYTEST_INTERNAL_MONKEYPATCH_MODULE:
+                    if alias.name == "MonkeyPatch" and alias.asname is not None:
+                        direct_patch_aliases[alias.asname] = "_pytest.monkeypatch.MonkeyPatch"
                     import_sites.append((node.lineno, f"import {_PYTEST_INTERNAL_MONKEYPATCH_MODULE}.{alias.name}"))
                 elif module == "_pytest" and alias.name == "monkeypatch":
                     internal_monkeypatch_aliases.add(alias.asname or alias.name)
@@ -189,6 +208,7 @@ def _patch_alias_inventory(tree: ast.AST) -> _PatchAliasInventory:
         pytest_aliases=pytest_aliases,
         internal_pytest_aliases=internal_pytest_aliases,
         internal_monkeypatch_aliases=internal_monkeypatch_aliases,
+        direct_patch_aliases=direct_patch_aliases,
         import_sites=import_sites,
     )
 
@@ -213,8 +233,12 @@ def _canonical_patch_name(
     pytest_aliases: set[str],
     internal_pytest_aliases: set[str],
     internal_monkeypatch_aliases: set[str],
+    direct_patch_aliases: dict[str, str],
 ) -> str:
     """Return canonical MonkeyPatch names for pytest and _pytest aliases."""
+    for alias, canonical_name in direct_patch_aliases.items():
+        if name == alias or name.startswith(alias + "."):
+            return canonical_name + name.removeprefix(alias)
     for alias in pytest_aliases:
         prefix = alias + ".MonkeyPatch"
         if name == prefix or name.startswith(prefix + "."):
@@ -372,6 +396,34 @@ def test_context_factory():
         (7, "_pytest.monkeypatch.MonkeyPatch"),
         (8, "_pytest.monkeypatch.MonkeyPatch"),
         (9, "_pytest.monkeypatch.MonkeyPatch"),
+    }
+
+
+def test_monkeypatch_detector_rejects_direct_monkeypatch_alias_contexts() -> None:
+    """Direct MonkeyPatch import aliases must still resolve to patch machinery."""
+    tree = ast.parse(
+        """
+from pytest import MonkeyPatch as PublicPatch
+from _pytest.monkeypatch import MonkeyPatch as InternalPatch
+
+def test_context_factory(public: PublicPatch, internal: InternalPatch):
+    with PublicPatch.context():
+        with InternalPatch.context():
+            pass
+"""
+    )
+
+    assert _explicit_patch_context_sites(tree) == [
+        (6, "pytest.MonkeyPatch.context"),
+        (7, "_pytest.monkeypatch.MonkeyPatch.context"),
+    ]
+    assert set(_monkeypatch_reference_sites(tree)) == {
+        (2, "import pytest.MonkeyPatch"),
+        (3, "import _pytest.monkeypatch.MonkeyPatch"),
+        (5, "pytest.MonkeyPatch"),
+        (5, "_pytest.monkeypatch.MonkeyPatch"),
+        (6, "pytest.MonkeyPatch"),
+        (7, "_pytest.monkeypatch.MonkeyPatch"),
     }
 
 
