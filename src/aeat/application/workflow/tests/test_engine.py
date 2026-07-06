@@ -106,21 +106,21 @@ class TestHappyPath:
         assert result.final_stage is WorkflowStage.DONE
         assert result.resumed_from == prior_run_id
 
-    def test_run_for_period_rejects_malformed_resumed_from(self) -> None:
+    @pytest.mark.parametrize("bad_resumed_from", ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"))
+    def test_run_for_period_rejects_malformed_resumed_from(self, bad_resumed_from: str) -> None:
         """``run_for_period`` rejects a ``resumed_from`` whose shape is not the
         16-character lowercase hex run id produced by the engine itself."""
 
         fx = _fixtures()
-        for bad in ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"):
-            with pytest.raises(WorkflowInputMismatchError, match="resumed_from"):
-                _run_for_period(
-                    fx.engine(),
-                    fx.profile,
-                    fx.obligation.modelo,
-                    fx.obligation.period,
-                    today=fx.today,
-                    resumed_from=bad,
-                )
+        with pytest.raises(WorkflowInputMismatchError, match="resumed_from"):
+            _run_for_period(
+                fx.engine(),
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                resumed_from=bad_resumed_from,
+            )
 
 
 class TestGateProjectionAgreement:
@@ -315,18 +315,21 @@ class TestUnhandledEnvelope:
         synthetic.__cause__ = exc
         return build_error_envelope(synthetic)
 
-    def test_envelope_code_for_common_exceptions(self) -> None:
-        for exc in (
+    @pytest.mark.parametrize(
+        "exc",
+        (
             ValueError("bad value"),
             TypeError("wrong type"),
             KeyError("missing"),
             RuntimeError("boom"),
             AttributeError("no attr"),
-        ):
-            env = self._envelope_for_unhandled(exc)
-            assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-            assert env.category == ErrorCategory.INTERNAL.value
-            assert env.retryable is False
+        ),
+    )
+    def test_envelope_code_for_common_exceptions(self, exc: BaseException) -> None:
+        env = self._envelope_for_unhandled(exc)
+        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
+        assert env.category == ErrorCategory.INTERNAL.value
+        assert env.retryable is False
 
     def test_envelope_context_carries_stage_and_error_type(self) -> None:
         """The envelope context must surface the stage and error_type
@@ -364,8 +367,9 @@ class TestUnhandledEnvelope:
         else:
             raise AssertionError(f"unknown unhandled workflow source: {source}")
 
-    def test_real_engine_unhandled_paths_emit_envelope_code(self) -> None:
-        cases = (
+    @pytest.mark.parametrize(
+        ("source", "exc", "expected_stage"),
+        (
             (
                 "deadline",
                 ValueError("registry unavailable"),
@@ -396,11 +400,16 @@ class TestUnhandledEnvelope:
                 OSError("network error"),
                 WorkflowStage.RUNNING_PREFLIGHT,
             ),
-        )
-
-        for source, exc, expected_stage in cases:
-            fx = _fixtures()
-            self._arm_unhandled_case(fx, source, exc)
-            result = _run_next(fx)
-            assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-            assert result.steps[-1].stage is expected_stage
+        ),
+    )
+    def test_real_engine_unhandled_paths_emit_envelope_code(
+        self,
+        source: str,
+        exc: BaseException,
+        expected_stage: WorkflowStage,
+    ) -> None:
+        fx = _fixtures()
+        self._arm_unhandled_case(fx, source, exc)
+        result = _run_next(fx)
+        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
+        assert result.steps[-1].stage is expected_stage

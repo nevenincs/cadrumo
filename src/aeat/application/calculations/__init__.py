@@ -64,6 +64,7 @@ See Also:
 
 from ._bienes_inversion_regularizacion import (
     CASILLA_REGULARIZACION_BIENES_INVERSION,
+    BienesInversionRegularizacionSourceResolver,
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
 )
@@ -141,6 +142,7 @@ from ._prorrata_regularizacion import (
     ProrrataApplicabilityProjection,
     ProrrataDeclaredVolumeLedgerRollup,
     ProrrataRegularizacionFeedProjection,
+    ProrrataRegularizacionSourceResolver,
     build_prorrata_declared_volume_divergence_advisory,
     build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
@@ -167,6 +169,7 @@ __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "M111_NO_RETENCIONES_PROFILE_PATH",
     "AssembledObservations",
+    "BienesInversionRegularizacionSourceResolver",
     "BindingPrefillReport",
     "CalculationObservationRepository",
     "CrossPeriodCleanStateBlocker",
@@ -198,6 +201,7 @@ __all__ = [
     "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
+    "ProrrataRegularizacionSourceResolver",
     "RelationPrefillSourceResolver",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",

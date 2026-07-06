@@ -1,12 +1,23 @@
 """Tests for the bulk CSV/XLSX invoice import application service.
 
-:func:`import_invoices_from_rows` delegates every row's write to
-:func:`create_catalogue_invoice` -- the sole sanctioned
-:class:`~aeat.domain.invoices.Invoice` writer
+:func:`~application.invoices.import_invoices_from_rows` delegates every row's
+write to :func:`~application.invoices.create_catalogue_invoice` -- the sole
+sanctioned :class:`~domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``) -- and never persists a row
 itself. These tests exercise it against the real encrypted
-:class:`InvoiceCatalogueRepository` (real master-key provider, real engine) --
-no mocks.
+:class:`~tests.application_adapter_exports.InvoiceCatalogueRepository` (real
+master-key provider, real engine) -- no mocks.
+
+See Also:
+    :class:`~application.invoices.BulkInvoiceImportRow`
+        Typed per-row boundary the tests validate before persistence.
+    :func:`~application.invoices.read_bulk_invoice_import_rows`
+        CSV/XLSX reader whose extension and column validation are covered here.
+    :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_import`
+        CLI wrapper that feeds operator files into this application service.
+    ``2026-04-17-invoice-catalogue-adr``
+        Accepted catalogue identity and validation contract that bulk import
+        preserves by using the single-invoice writer.
 """
 
 from __future__ import annotations

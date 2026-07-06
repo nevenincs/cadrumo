@@ -12,6 +12,18 @@ resulting additional deduction at the cuota devengada on the disposal itself
 ("no será deducible la diferencia ... y el importe de la cuota devengada por la
 entrega del bien"). Arithmetic below is worked by hand from the statute's
 ordinals, never by re-running the function under test.
+
+See Also:
+    :func:`~domain.bienes_inversion.compute_regularizacion_transmision`
+        Pure art. 110 single-disposal compute under test.
+    :class:`~domain.bienes_inversion.RegularizacionTransmisionResult`
+        Result payload carrying capped and uncapped amounts plus direction.
+    :func:`~domain.bienes_inversion.compute_registro_transmisiones`
+        Register-wide projection that folds disposal computes into casilla 43.
+    :func:`~application.calculations.build_bienes_inversion_transmision_advisory`
+        Application diagnostic that surfaces art. 110 projected values.
+    ``2026-07-01-iva-bienes-inversion-regularizacion-adr``
+        Governing capital-goods regularización design record.
 """
 
 from __future__ import annotations

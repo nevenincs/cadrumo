@@ -3,6 +3,24 @@
 Builds real text-bearing PDFs in memory (reportlab), wraps them as
 ``EvidenceInput``, and asserts :func:`extract_invoice_fields` recovers the
 grounded fields with no file written and no field fabricated. No mocks.
+
+See Also:
+    :class:`~application.ledger.InvoiceDraft`
+        Public reviewed-draft record returned before any invoice is persisted.
+    :func:`~application.ledger.extract_invoice_fields`
+        On-host text-layer primitive exercised by the pure extraction tests.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        CLI-facing resolver that reads stored evidence bytes from secure storage
+        and chooses text-layer or on-host vision extraction.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Confirmation step that re-extracts, applies overrides, and delegates the
+        catalogue write.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Sole sanctioned invoice-catalogue writer used by confirmation.
+    ``2026-06-10-llm-evidence-classification-adr`` and
+    ``2026-05-30-purchase-invoice-ocr-extraction-discipline-adr``
+        Decisions requiring on-host/local-first evidence reading and no
+        fabricated fields.
 """
 
 from __future__ import annotations
@@ -416,8 +434,8 @@ class TestConfirmInvoiceDraftFromEvidence:
     """Real-behaviour tests for the non-interactive confirm-into-Invoice step.
 
     Confirms delegate the write to
-    :func:`aeat.application.invoices.create_catalogue_invoice` (the sole
-    sanctioned :class:`~aeat.domain.invoices.Invoice` writer); these tests
+    :func:`~application.invoices.create_catalogue_invoice` (the sole
+    sanctioned :class:`~domain.invoices.Invoice` writer); these tests
     assert the resulting row is a genuine catalogue member (re-loaded through
     a fresh :class:`InvoiceCatalogueRepository`), that a same-identity
     re-confirm is a guarded no-op, and that an override wins over the

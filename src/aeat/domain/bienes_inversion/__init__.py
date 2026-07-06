@@ -17,15 +17,15 @@ in the bundled consolidated LIVA corpus.
 Register-wide projection returns :class:`RegistroRegularizacionResult` for the
 ordinary annual art-109 path: each art-108-eligible in-window good (not yet
 disposed of) is either computed into the proposed Modelo 303 casilla 43 / Modelo
-390 regularización value, or reported as pending the separately deferred
-current-year prorrata-definitiva input. A good recorded as disposed of in the
-projected year routes instead through :func:`compute_registro_transmisiones`,
-which folds the art-110 single ("única") regularización for every remaining
-window year into the same casilla-43 total; art-110 carries no pending state —
-the disposal regime and acquisition-year facts are already on the record, so
-every disposed good is always computed. This domain module does not read the
-secure-object store or derive prorrata; application and persistence layers
-supply those facts.
+390 regularización value when the current-year definitive prorrata fact is
+available, or reported as pending that separate input. A good recorded as
+disposed of in the projected year routes instead through
+:func:`compute_registro_transmisiones`, which folds the art-110 single ("única")
+regularización for every remaining window year into the same casilla-43 total;
+art-110 carries no pending state — the disposal regime and acquisition-year facts
+are already on the record, so every disposed good is always computed. This domain
+module does not read the secure-object store or derive prorrata; application and
+persistence layers supply those facts.
 
 See Also:
     :mod:`application.bienes_inversion`
@@ -33,7 +33,7 @@ See Also:
     :mod:`adapters.persistence.profile.bienes_inversion`
         FINANCIAL secure-object repository that stores the register singleton.
     :mod:`application.calculations`
-        Advisory projection surface for the deferred
+        Source resolver and advisory projection surfaces for the
         ``bienes_inversion_regularizacion`` calculation source.
     :mod:`domain.iva`
         Legal prorrata substrate that supplies the separate definitive
@@ -113,11 +113,11 @@ class BienInversionKind(StrEnum):
 
 
 class BienInversionDisposalRegime(StrEnum):
-    """LIVA art. 110 disposal (transmisión) regime carried but not yet computed.
+    """LIVA art. 110 disposal (transmisión) regime.
 
     ``SUJETA_NO_EXENTA`` imputes the remaining window years at a 100% deduction
     percentage (capped at the amount originally deducted); ``EXENTA_O_NO_SUJETA``
-    imputes them at 0%. The compute over these fields is deferred to a later slice.
+    imputes them at 0%.
     """
 
     SUJETA_NO_EXENTA = "sujeta_no_exenta"
@@ -294,8 +294,8 @@ def compute_regularizacion_anual(
     :attr:`RegularizacionDireccion.NINGUNA`.
 
     Both percentages are supplied as inputs; deriving the current-year definitive
-    percentage (LIVA arts. 102-106) is a separately-deferred design and this
-    function stays independent of it.
+    percentage (LIVA arts. 102-106) is a separate registry/materialisation concern
+    and this function stays independent of it.
 
     Args:
         cuota_soportada: Total input IVA borne on acquisition (strictly positive).
@@ -568,7 +568,7 @@ class RegistroRegularizacionRow(BaseModel):
         kind: :class:`BienInversionKind` of the good.
         prorrata_anio_pct: The definitive percentage supplied for the year, or
             ``None`` when the caller could not supply it (the good is reported but
-            not yet computed — the deferred prorrata-definitiva input).
+            not yet computed because the prorrata-definitiva input is absent).
         result: The :class:`RegularizacionAnualResult`, or ``None`` when
             ``prorrata_anio_pct`` was absent.
     """
@@ -595,7 +595,7 @@ class RegistroRegularizacionResult(BaseModel):
         computed_count: Number of goods whose regularización was actually computed
             (a percentage was supplied and the gate fired).
         pending_percentage_count: Number of in-window goods for which no
-            current-year definitive percentage was supplied (the deferred input).
+            current-year definitive percentage was supplied.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -620,8 +620,7 @@ def compute_registro_regularizacion(
     ``prorrata_definitiva_by_identifier``, runs
     :func:`compute_regularizacion_anual` and folds the signed importe into the
     proposed casilla-43 total. Goods without a supplied percentage are reported as
-    pending (the separately-deferred prorrata-definitiva input) rather than
-    silently dropped.
+    pending rather than silently dropped.
 
     Args:
         register: The persisted :class:`BienesInversionIvaRegister`.
@@ -732,10 +731,10 @@ def compute_registro_transmisiones(
     folds the signed importe into the proposed casilla-43 total.
 
     Unlike :func:`compute_registro_regularizacion`, a disposal has no pending
-    state analogous to the deferred prorrata-definitiva input: every disposal
-    fact the register carries (acquisition-year percentage, cuota soportada,
-    disposal regime) is already on the record, so every disposed good is always
-    computed.
+    state analogous to a missing current-year prorrata-definitiva input: every
+    disposal fact the register carries (acquisition-year percentage, cuota
+    soportada, disposal regime) is already on the record, so every disposed good
+    is always computed.
 
     Args:
         register: The persisted :class:`BienesInversionIvaRegister`.

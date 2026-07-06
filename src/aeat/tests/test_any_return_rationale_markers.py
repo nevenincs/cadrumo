@@ -33,6 +33,7 @@ No test doubles, no skip/xfail shortcuts, no tautological assertions.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -243,7 +244,6 @@ def test_google_drive_any_return_sites_carry_rationale() -> None:
 # documented justification.
 
 _STDIO_MODULE = _SRC / "entrypoints/cli/_stdio.py"
-_STDIO_LOGGER_TOKEN = "aeat.core.logging"
 _STDIO_RATIONALE_TOKEN = "before settings are loaded"
 
 
@@ -260,7 +260,6 @@ def test_stdio_stdlib_logger_rationale_present() -> None:
         f"entrypoints/cli/_stdio.py: missing rationale comment {_STDIO_RATIONALE_TOKEN!r} "
         "— the inline explanation for stdlib getLogger usage has been removed"
     )
-    assert "_LOGGER = logging.getLogger(__name__)" in source, (
-        "entrypoints/cli/_stdio.py: _LOGGER assignment not found — "
-        "stdlib logger survivor enrollment check requires this assignment"
-    )
+    from ..entrypoints.cli import _stdio
+
+    assert _stdio._LOGGER is logging.getLogger("aeat.entrypoints.cli._stdio")

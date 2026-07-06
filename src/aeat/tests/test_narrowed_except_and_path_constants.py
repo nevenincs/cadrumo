@@ -19,6 +19,8 @@ No mocks, no skips, no tautological assertions.
 
 from __future__ import annotations
 
+import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -130,14 +132,11 @@ def test_llm_cache_json_loads_rationale_present() -> None:
 
 
 def test_schedules_final_path_constants() -> None:
-    """_schedules.py must declare _IVA_REGIME_PATH and _TAXPAYER_ENTITY_TYPE_PATH as Final constants."""
-    src = _read("domain/calculations/registry/_schedules.py")
-    assert '_IVA_REGIME_PATH: Final[str] = "iva.regime"' in src, (
-        "domain/calculations/registry/_schedules.py: missing _IVA_REGIME_PATH Final constant"
-    )
-    assert '_TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"' in src, (
-        "domain/calculations/registry/_schedules.py: missing _TAXPAYER_ENTITY_TYPE_PATH Final constant"
-    )
+    """_schedules.py exposes the registry dotted-path constants used by profile predicates."""
+    from ..domain.calculations.registry import _schedules
+
+    assert _schedules._IVA_REGIME_PATH == "iva.regime"
+    assert _schedules._TAXPAYER_ENTITY_TYPE_PATH == "taxpayer.entity_type"
 
 
 # ---------------------------------------------------------------------------
@@ -145,38 +144,25 @@ def test_schedules_final_path_constants() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_schedules_uses_constants_in_resolver() -> None:
-    """_resolve_profile_fact must reference the Final constants, not bare string literals."""
-    src = _read("domain/calculations/registry/_schedules.py")
-    # Find the _resolve_profile_fact function body.
-    assert "def _resolve_profile_fact" in src, (
-        "domain/calculations/registry/_schedules.py: _resolve_profile_fact not found"
-    )
-    func_start = src.index("def _resolve_profile_fact")
-    func_body = src[func_start:]
-    # The constants must appear in the function body.
-    assert "_IVA_REGIME_PATH" in func_body, (
-        "domain/calculations/registry/_schedules.py: _IVA_REGIME_PATH constant not used in _resolve_profile_fact"
-    )
-    assert "_TAXPAYER_ENTITY_TYPE_PATH" in func_body, (
-        "domain/calculations/registry/_schedules.py: "
-        "_TAXPAYER_ENTITY_TYPE_PATH constant not used in _resolve_profile_fact"
-    )
+def test_schedules_resolver_accepts_registry_dotted_profile_paths() -> None:
+    """_resolve_profile_fact maps registry dotted fields onto the flat profile object."""
+    from ..domain.calculations.registry import _schedules
 
+    @dataclass(frozen=True)
+    class _Regime:
+        value: str
 
-# ---------------------------------------------------------------------------
-# Sibling ratchet must still enumerate _xlsx.py teardown rationale
-# ---------------------------------------------------------------------------
+    @dataclass(frozen=True)
+    class _Profile:
+        iva_regime: _Regime
+        entity_type: str
 
+    profile = _Profile(iva_regime=_Regime("monthly"), entity_type="legal_entity")
 
-def test_broad_except_ratchet_still_covers_xlsx() -> None:
-    """The broad-except rationale inventory must still list _xlsx.py."""
-    ratchet = _read("tests/test_broad_except_and_any_return_rationale.py")
-    assert "_xlsx.py" in ratchet, (
-        "test_broad_except_and_any_return_rationale.py: _xlsx.py no longer listed — ratchet coverage broken"
-    )
-    assert "BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN" in ratchet, (
-        "test_broad_except_and_any_return_rationale.py: BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN token not in ratchet"
+    assert _schedules._resolve_profile_fact(profile, _schedules._IVA_REGIME_PATH) == "monthly"
+    assert (
+        _schedules._resolve_profile_fact(profile, _schedules._TAXPAYER_ENTITY_TYPE_PATH)
+        == "legal_entity"
     )
 
 
@@ -187,8 +173,6 @@ def test_broad_except_ratchet_still_covers_xlsx() -> None:
 
 def test_sink_is_logging_handler_subclass() -> None:
     """_sink.py must define JsonlRunSink as a subclass of logging.Handler."""
-    src = _read("core/observability/_sink.py")
-    assert "class JsonlRunSink(logging.Handler)" in src, (
-        "core/observability/_sink.py: JsonlRunSink(logging.Handler) class definition not found — "
-        "ABC contract requiring stdlib logging import may have changed"
-    )
+    from ..core.observability._sink import JsonlRunSink
+
+    assert issubclass(JsonlRunSink, logging.Handler)

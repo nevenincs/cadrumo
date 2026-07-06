@@ -18,6 +18,19 @@ notation as a ``bbox_anchored`` layout (box number, then the value
 immediately to its right) -- the same discipline
 ``test_parser_boundary_m131_current_year.py`` applies when the printed
 layout's exact wording cannot be confirmed against a real specimen.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public parser entry point exercised against the synthetic fixture.
+    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+        Registry-owned ``declaracion_pdf`` profile contract asserted here.
+    :class:`~adapters.inbound.declaracion.DeclaracionParseError`
+        Structured failure raised when a bbox anchor misses coverage.
+    ``test_parser_boundary_m131_current_year.py``
+        Sibling current-year synthetic-fixture discipline for provisional
+        declaration profiles.
+    ``2026-05-21-declaracion-extraction-architecture-adr``
+        Accepted registry-driven declaration extraction architecture.
 """
 
 from __future__ import annotations

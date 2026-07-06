@@ -21,7 +21,7 @@ from .. import (
     storage_degradation_resolution,
 )
 from .._errors import AggregationValidationError
-from .._source_mesh import SourceMeshError
+from .._source_mesh import SourceMeshError, out_of_window_summary_source_diagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -157,6 +157,58 @@ def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> Non
     error = context["error"]
     assert isinstance(error, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.binding_source_mismatch"
+
+
+def test_out_of_window_summary_source_diagnostic_carries_count_and_date_span() -> None:
+    diagnostic = out_of_window_summary_source_diagnostic(
+        source_kind="ledger_renta_income_aggregation",
+        resolver_id="ledger_renta_income_aggregation",
+        count=27_516,
+        min_filing_date=date(2021, 1, 1),
+        max_filing_date=date(2030, 12, 31),
+    )
+
+    assert diagnostic.reason == "source_issue"
+    assert diagnostic.out_of_window_count == 27_516
+    assert diagnostic.out_of_window_min_filing_date == date(2021, 1, 1)
+    assert diagnostic.out_of_window_max_filing_date == date(2030, 12, 31)
+    assert "27516 ledger transaction(s)" in diagnostic.message
+    assert "2021-01-01..2030-12-31" in diagnostic.message
+    assert diagnostic.model_dump(mode="json")["out_of_window_min_filing_date"] == "2021-01-01"
+
+
+def test_source_diagnostic_rejects_incomplete_out_of_window_summary() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            message="period summary",
+            out_of_window_count=2,
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.out_of_window_summary_incomplete"
+
+
+def test_source_diagnostic_rejects_reversed_out_of_window_summary_span() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            message="period summary",
+            out_of_window_count=2,
+            out_of_window_min_filing_date=date(2024, 6, 1),
+            out_of_window_max_filing_date=date(2024, 1, 1),
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid"
 
 
 def test_source_provenance_projects_canonical_binding_source() -> None:

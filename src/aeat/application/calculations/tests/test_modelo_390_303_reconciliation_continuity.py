@@ -110,6 +110,7 @@ _RECONCILIATION_PAIRS: tuple[tuple[CasillaId, CasillaId], ...] = (
     (_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA, _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA),
     (_M390_RESULTADO_REGIMEN_GENERAL_CASILLA, _M390_RECONCILIACION_RESULTADO_303_CASILLA),
 )
+_M390_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 
 #: 303 profile-gap workaround bindings (see module docstring / R2). Supplied
 #: when building the source quarters because the direct-calculate path does not
@@ -250,6 +251,9 @@ def _calculate_390_annual(
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, annual_ledger),
         **relation_binding_values,
         **annual_partition.binding_values,
+        # This reconciliation fixture has no capital-goods register entries; the
+        # annual casilla 63 binding is therefore an explicit zero fact.
+        _M390_BIENES_INVERSION_REGULARIZACION_BINDING: Decimal("0"),
     }
     inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(

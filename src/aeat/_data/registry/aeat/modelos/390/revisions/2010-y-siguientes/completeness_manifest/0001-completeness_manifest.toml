@@ -9,7 +9,15 @@ legal_refs = [
     "ley-37-1992:art-90",
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
+    "ley-37-1992:art-94",
+    "ley-37-1992:art-95",
     "ley-37-1992:art-99",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-105",
+    "ley-37-1992:art-107",
+    "ley-37-1992:art-108",
+    "ley-37-1992:art-109",
+    "ley-37-1992:art-110",
     "ley-37-1992:art-122",
     "ley-37-1992:art-123",
     "ley-37-1992:art-161",
@@ -51,6 +59,14 @@ number = "iva.anual.reconciliacion.devengada-303"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.reconciliacion.resultado-303"
 number = "iva.anual.reconciliacion.resultado-303"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regularizacion-prorrata-definitiva"
+number = "522"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regularizacion-bienes-inversion"
+number = "63"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"

@@ -21,6 +21,7 @@ from pydantic_settings import SettingsConfigDict
 from ..core.config import PROJECT_ROOT, CertificateBackend, Settings
 from ..core.external_constants import load_external_constants
 from .env_scope import isolated_aeat_env as _isolated_aeat_env
+from .env_scope import settings_without_env_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -70,14 +71,8 @@ class TestEnvExampleAlignment:
 
     def test_settings_instantiate_without_env(self) -> None:
         """Settings must load with all defaults when no env file and no env vars are present."""
-
-        class IsolatedSettings(Settings):
-            """Settings variant that skips the on-disk env file for test isolation."""
-
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env():
-            settings = IsolatedSettings()
+            settings = settings_without_env_file()
         assert settings.aeat_base_url == load_external_constants().aeat.domains.sede
         assert settings.aeat_output_language == "es"
 
@@ -88,52 +83,37 @@ class TestAuthProviderEnum:
     def test_env_value_coerces_to_enum(self) -> None:
         from ..core.config import AuthProviderKindSetting
 
-        class IsolatedSettings(Settings):
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env(AEAT_AUTH_PROVIDER="clave_movil"):
-            settings = IsolatedSettings()
+            settings = settings_without_env_file()
         assert settings.aeat_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
 
     def test_blank_env_value_treated_as_unset(self) -> None:
-        class IsolatedSettings(Settings):
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
-
         with _isolated_aeat_env(AEAT_AUTH_PROVIDER=""):
-            settings = IsolatedSettings()
+            settings = settings_without_env_file()
         assert settings.aeat_auth_provider is None
 
     def test_invalid_value_rejected(self) -> None:
         import pydantic
 
-        class IsolatedSettings(Settings):
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env(AEAT_AUTH_PROVIDER="not_a_provider_kind"):
             with pytest.raises(pydantic.ValidationError):
-                IsolatedSettings()
+                settings_without_env_file()
 
 
 class TestCertificateBackendEnum:
     """Certificate backend settings accept canonical values only."""
 
     def test_lowercase_setting_value_is_accepted(self) -> None:
-        class IsolatedSettings(Settings):
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="playwright_context"):
-            settings = IsolatedSettings()
+            settings = settings_without_env_file()
         assert settings.aeat_certificate_backend is CertificateBackend.PLAYWRIGHT_CONTEXT
 
     def test_uppercase_enum_name_is_rejected(self) -> None:
         import pydantic
 
-        class IsolatedSettings(Settings):
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="PLAYWRIGHT_CONTEXT"):
             with pytest.raises(pydantic.ValidationError):
-                IsolatedSettings()
+                settings_without_env_file()
 
 
 class TestStatusDetailUrlTemplate:
@@ -208,26 +188,14 @@ class TestStatusDetailUrlTemplate:
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
-
-        class IsolatedSettings(Settings):
-            """Settings variant that skips the on-disk env file for test isolation."""
-
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env(AEAT_CERTIFICATE_PATH=""):
-            settings = IsolatedSettings()
+            settings = settings_without_env_file()
         assert settings.aeat_certificate_path is None
 
     def test_blank_optional_secret_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional secret env vars must normalize to ``None``."""
-
-        class IsolatedSettings(Settings):
-            """Settings variant that skips the on-disk env file for test isolation."""
-
-            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
-
         with _isolated_aeat_env(AEAT_CERTIFICATE_PASSWORD_SECRET="", AEAT_LLM_OPENAI_API_KEY=""):
-            settings = IsolatedSettings()
+            settings = settings_without_env_file()
         assert settings.aeat_certificate_password_secret is None
         assert settings.aeat_llm_openai_api_key is None
 

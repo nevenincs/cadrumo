@@ -375,7 +375,11 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
         ("369", "esquema-importacion"),
         ("390", "2010-y-siguientes"),
         ("349", "2020-y-siguientes"),
-        ("714", "2021-y-siguientes"),
+        # 714/2021-y-siguientes deliberately dropped: b2e72ee87e closed the
+        # M714 edge enrollment window (valid_to=2025-12-31), so it is no
+        # longer open-ended. It still declares orden_aplicabilidad and is
+        # covered by test_backfilled_revision_has_valid_orden_aplicabilidad
+        # above, which asserts the connective gate regardless of window shape.
         ("720", "2013-y-siguientes"),
         ("840", "2003-y-siguientes"),
     ],

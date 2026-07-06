@@ -1,16 +1,15 @@
 """Calculate-path advisory wiring for the capital-goods IVA regularización register.
 
 Modelo 303 casilla ``43`` (Regularización bienes de inversión - Cuota) is
-``input_kind = manual``: LIVA arts. 107-110 require an annual comparison against
-the year's DEFINITIVE prorrata percentage, and that percentage is itself an
-unmodelled, separately-deferred source
-(``2026-06-19-silent-zero-base-aggregation-adr`` /
-``2026-07-01-iva-complexity-hardening-scope-adr``). Per
-``2026-07-01-iva-bienes-inversion-regularizacion-adr`` (Decision 2), the bounded
-first slice does not force-fit casilla 43 as a hard binding; instead it reads the
-profile-scoped :class:`~domain.bienes_inversion.BienesInversionIvaRegister`
-and, when it holds capital goods in their LIVA art. 107 regularisation window for
-the filing year, surfaces a non-blocking
+``input_kind = manual``: LIVA arts. 107-110 require a governed feed from the
+profile-scoped capital-goods register, the current-year definitive prorrata
+percentage, and art-110 disposal cap facts before the source can become a hard
+binding. Per ``2026-07-01-iva-bienes-inversion-regularizacion-adr`` (Decision
+2), the bounded first slice does not force-fit casilla 43 as a hard binding;
+instead it reads the profile-scoped
+:class:`~domain.bienes_inversion.BienesInversionIvaRegister` and, when it holds
+capital goods in their LIVA art. 107 regularisation window for the filing year,
+surfaces a non-blocking
 :class:`~application.aggregation.CalculationSourceDiagnostic` naming the
 proposed casilla-43 value (or, absent the deferred definitive-percentage input,
 which goods are pending it) — never a silent blank
@@ -28,9 +27,10 @@ not raise noise for a compute that is not yet due.
 
 This module supplies the ``prorrata_definitiva_by_identifier`` mapping to
 :func:`~application.calculations.build_bienes_inversion_regularizacion_advisory`
-as an empty mapping: the current-year definitive percentage is the deferred
-input the ADR names, so every in-window, non-disposed good is reported pending
-it until that source lands, rather than silently omitted. It likewise supplies no
+as an empty mapping: until a bienes-inversion source resolver maps the live
+prorrata percentage onto each register row and binding target, every in-window,
+non-disposed good is reported pending that source input rather than silently
+omitted. It likewise supplies no
 ``cuota_devengada_entrega_by_identifier`` to
 :func:`~application.calculations.build_bienes_inversion_transmision_advisory`,
 so the regla-1ª cap stays unapplied until the operator's own cuota devengada on

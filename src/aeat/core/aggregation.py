@@ -286,24 +286,20 @@ class BindingSourceKind(StrEnum):
     IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
     # Capital-goods IVA deduction regularización (LIVA arts. 107-110): the source
     # that would materialise Modelo 303 casilla 43 / the Modelo 390 regularización
-    # field from the profile-scoped bienes-de-inversión register plus the
-    # definitive prorrata percentages. Registered in ``DEFERRED_SOURCE_KINDS`` for
-    # the first slice — the automatic feed is blocked on the separately-deferred
-    # prorrata-definitiva source (2026-06-19-silent-zero-base-aggregation-adr), so
-    # it carries no registry binding yet and surfaces an advisory rather than a
-    # hard binding (ADR 2026-07-01-iva-bienes-inversion-regularizacion).
+    # field from the profile-scoped bienes-de-inversión register plus definitive
+    # prorrata percentages. It is registry-declared and source-mesh enrolled for
+    # the governed M303/M390 binding targets; the separate advisory path remains
+    # available for operator review when the definitive prorrata fact is missing
+    # or only a non-blocking proposed value can be shown.
     BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage
     # (prior-year definitive, art. 105.Uno) applied across the year and the
     # current-year definitive percentage (art. 104) over full-year volumes.
-    # Registered in ``DEFERRED_SOURCE_KINDS`` for the first slice — it carries no
-    # registry binding yet and surfaces an advisory (the automatic casilla-44
-    # feed is promoted to a live mesh binding once the provisional-carry store
-    # lands), per ADR 2026-07-01-iva-complexity-hardening-scope. This is the same
-    # definitive-percentage source the capital-goods regularización (#349) is
-    # blocked on.
+    # Registry-declared live mesh source once the provisional-carry store and Q4
+    # regularisation path are proven end to end, per ADR
+    # 2026-07-01-iva-complexity-hardening-scope.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:

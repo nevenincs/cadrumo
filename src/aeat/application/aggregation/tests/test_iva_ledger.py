@@ -620,15 +620,12 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
 def test_repository_backed_projection_reports_out_of_period_catalogue_transactions(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """A catalogue transaction outside the requested quarter must surface as an issue.
+    """A catalogue transaction outside the requested quarter must surface as a summary.
 
     Regression test (issue #408): the repository-backed entry point must NOT
-    pre-filter the loaded catalogue by date range. ``OUTSIDE_PERIOD`` is a
-    genuine no-silent-under-declaration-class diagnostic -- an operator
-    querying Q2 needs to see that a Q3-dated catalogue transaction exists and
-    was excluded, not have it silently vanish before the classifier ever runs
-    (a pre-filtering optimisation would make this issue structurally
-    unreachable).
+    silently drop out-of-window rows. The compact summary keeps the operator
+    visibility signal without allocating one row-level issue per excluded
+    plaintext index entry.
     """
     in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
     out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
@@ -642,20 +639,22 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
     )
 
     assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
-    assert len(result.issues) == 1
-    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result.issues[0].transaction_id == out_of_period.transaction_id
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2026, 7, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2026, 7, 10)
 
 
-def test_repository_backed_projection_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+def test_repository_backed_projection_summarizes_previously_silent_out_of_window_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+    """Out-of-window rows surface as one compact period-exclusion summary.
 
     Reviewed-excluded and archived rows are ignored before the in-window IVA
     classifier runs. When those rows fall outside the requested window, the
-    repository-backed partition reports each one as ``OUTSIDE_PERIOD`` instead
-    of dropping them before aggregation.
+    repository-backed partition reports their count and date span instead of
+    dropping them before aggregation.
     """
     in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
     excluded_out_of_period = _transaction(
@@ -680,11 +679,11 @@ def test_repository_backed_projection_coarsens_previously_silent_out_of_window_r
     )
 
     assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
-    assert {issue.transaction_id for issue in result.issues} == {
-        excluded_out_of_period.transaction_id,
-        archived_out_of_period.transaction_id,
-    }
-    assert all(issue.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for issue in result.issues)
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 2
+    assert result.out_of_window_summary.min_filing_date == date(2026, 7, 1)
+    assert result.out_of_window_summary.max_filing_date == date(2026, 7, 2)
 
 
 def test_repository_backed_projection_partition_matches_full_scan(
@@ -726,16 +725,13 @@ def test_repository_backed_projection_partition_matches_full_scan(
     assert set(partitioned.prorrata_references) == set(full_scan.prorrata_references)
     assert {o.ledger_id for o in partitioned.observations} == {q2_row_a.transaction_id, q2_row_b.transaction_id}
 
-    # Permitted delta: the out-of-window issue taxonomy. Full-scan refines by
-    # reason (REVIEWED_EXCLUDED silently drops, in-window checks run for the
-    # rest); partitioned coarsens every out-of-window id to OUTSIDE_PERIOD.
-    partitioned_out_of_window_ids = {i.transaction_id for i in partitioned.issues}
-    assert partitioned_out_of_window_ids == {
-        q1_row.transaction_id,
-        q3_row.transaction_id,
-        excluded_q3_row.transaction_id,
-    }
-    assert all(i.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+    # Permitted delta: repository-backed partitioning reports one compact
+    # out-of-window summary, while full-scan refines by row after decryption.
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 3
+    assert partitioned.out_of_window_summary.min_filing_date == date(2026, 2, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2026, 9, 1)
 
     full_scan_ids_with_issues = {i.transaction_id for i in full_scan.issues}
     assert full_scan_ids_with_issues == {q1_row.transaction_id, q3_row.transaction_id}

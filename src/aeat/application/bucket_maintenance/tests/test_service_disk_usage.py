@@ -10,10 +10,23 @@ disk-envelope-accounting slice.
 
 Authority: ``composition-service-no-parallel-write-path`` (the service reads
 filesystem metadata through the existing
-:func:`~aeat.adapters.persistence.storage.bucket.bucket_paths` layout
+:func:`~adapters.persistence.storage.bucket.bucket_paths` layout
 resolver rather than inventing a parallel storage-accounting path);
 ``sensitive-financial-data-secure-storage-only`` (the measurement never
 opens or decrypts a secure-object payload — only ``os.stat`` sizes).
+
+See Also:
+    :class:`~application.bucket_maintenance.BucketMaintenanceService`
+        Application facade whose disk-usage service contract is exercised here.
+    :class:`~application.bucket_maintenance.DiskUsageBucketCommand`
+        Typed command carrying the measured bucket id.
+    :class:`~application.bucket_maintenance.DiskUsageBucketResult`
+        Result payload whose totals and per-subdir rows are asserted.
+    :mod:`~entrypoints.cli._config._sandbox`
+        CLI sandbox usage surface that consumes the same service report.
+    ``2026-05-12-cli-workflow-redesign-bucket-adr`` and
+    ``2026-05-22-secure-storage-production-hardening-architecture-adr``
+        Bucket-maintenance and secure-storage boundaries this measurement keeps.
 """
 
 from __future__ import annotations

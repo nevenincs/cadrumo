@@ -54,6 +54,7 @@ See Also:
 from __future__ import annotations
 
 import json
+import weakref
 from collections.abc import Iterable
 from datetime import date, datetime
 from typing import TYPE_CHECKING
@@ -196,6 +197,30 @@ class TransactionCatalogueRepository:
     persists them. The class exposes the concrete load/save implementation
     behind
     :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`.
+
+    ``_serialized_hash_cache`` is the O3 write-path lever
+    (``2026-07-06-ledger-perf-optimization-adr``): memoizes the stored-envelope
+    SHA-256 of each loaded frozen :class:`~domain.transactions.Transaction`
+    instance, populated once per row at :meth:`load` and consulted by
+    :meth:`_reconcile` before re-serializing an untouched row.
+
+    Keying is identity-based (``id(transaction)``), not value-based:
+    ``Transaction``'s pydantic-generated ``__hash__`` is unusable as a dict key
+    because :attr:`~domain.transactions.RawTransaction.raw_fields` is stored as
+    a ``mappingproxy`` (unhashable), which rules out a plain
+    :class:`~weakref.WeakKeyDictionary` (it hashes the key object itself). A
+    bare ``id()`` integer key alone would risk the GC-recycle hazard the ADR
+    warns against -- a collected instance's address could be reused by an
+    unrelated object -- so each cache entry is paired with a
+    :func:`weakref.finalize` callback that evicts the ``id()`` entry the
+    INSTANT its ``Transaction`` is garbage-collected, before the address could
+    be recycled for a different object. ``Transaction`` is strict-frozen, so a
+    content edit always produces a NEW instance rather than mutating the
+    loaded one; the edited instance's ``id()`` is simply absent from the cache
+    (a miss, correctly falling through to fresh serialize-and-hash). The cache
+    never substitutes for the save-time ``namespace_payload_hashes`` store-side
+    scan; it only skips re-deriving the FRESH-SERIALIZATION side of that
+    comparison for rows the same process already loaded unchanged.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
@@ -207,6 +232,7 @@ class TransactionCatalogueRepository:
                 context={"repository": "transaction_catalogue", "operation": "object_key"},
             )
         self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
+        self._serialized_hash_cache: dict[int, str] = {}
 
     @property
     def bucket_id(self) -> str:
@@ -299,7 +325,14 @@ class TransactionCatalogueRepository:
                     },
                     translated_message="errors.integrity.integrity_storage_envelope_version",
                 )
-            transactions.append(envelope.payload)
+            transaction = envelope.payload
+            # O3 write-path cache (2026-07-06-ledger-perf-optimization-adr):
+            # memoize the stored envelope's payload hash against this exact
+            # loaded instance. An untouched row at save time is the SAME
+            # object (frozen models never mutate in place), so ``_reconcile``
+            # can reuse this hash instead of re-serializing the row.
+            self._cache_serialized_hash(transaction, sha256_hex(record.payload))
+            transactions.append(transaction)
         _log.debug(
             "loaded transaction catalogue bucket_id=%s entries=%d",
             self._bucket_id,
@@ -683,6 +716,14 @@ class TransactionCatalogueRepository:
         untouched. Deletions and the membership index are bounded to *this*
         bucket via the per-bucket index, so a reconciliation can never touch
         another bucket's rows.
+
+        An incoming transaction that IS (object identity) an instance this
+        same repository loaded reuses the memoized
+        ``_serialized_hash_cache`` entry instead of re-serializing and
+        re-hashing the row (O3,
+        ``2026-07-06-ledger-perf-optimization-adr``). The store-side
+        comparison (``stored_hashes``) is always fresh; only the
+        fresh-serialization side of the diff is skipped for a cache hit.
         """
         from ..storage import SecureObjectDeletion, SecureObjectWrite
         from ..storage.crypto import secure_object_key_digest
@@ -695,8 +736,11 @@ class TransactionCatalogueRepository:
         for transaction_id, transaction in catalogue.transactions.items():
             object_key = transaction_object_key(self._bucket_id, transaction_id)
             digest = secure_object_key_digest(object_key)
+            cached_hash = self._serialized_hash_cache.get(id(transaction))
+            if cached_hash is not None and stored_hashes.get(digest) == cached_hash:
+                continue
             payload = self._serialise_transaction(transaction)
-            if stored_hashes.get(digest) == sha256_hex(payload):
+            if cached_hash is None and stored_hashes.get(digest) == sha256_hex(payload):
                 continue
             writes.append(
                 SecureObjectWrite(
@@ -729,6 +773,21 @@ class TransactionCatalogueRepository:
             for transaction_id in current_ids - incoming_ids
         )
         return tuple(writes), deletions
+
+    def _cache_serialized_hash(self, transaction: Transaction, payload_hash: str) -> None:
+        """Memoize ``payload_hash`` against ``transaction``'s identity.
+
+        Keyed by ``id(transaction)`` rather than the object itself (see the
+        class docstring for why a plain hash-keyed cache is unsafe here). A
+        :func:`weakref.finalize` callback evicts the entry the instant this
+        exact ``transaction`` instance is garbage-collected, so a later,
+        unrelated object cannot inherit a stale cache hit at a recycled
+        address.
+        """
+        key = id(transaction)
+        cache = self._serialized_hash_cache
+        weakref.finalize(transaction, cache.pop, key, None)
+        cache[key] = payload_hash
 
     def _load_index_ids(self) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""

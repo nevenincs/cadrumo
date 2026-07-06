@@ -24,7 +24,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal, NamedTuple, Protocol, runtime_checkable
+from typing import Literal, NamedTuple, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -200,29 +200,6 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
                 "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
             ),
         ),
-        # IVA regularización kinds: dependency-triggered, not dateless. LIVA
-        # arts. 107-110 capital-goods regularización (casilla 43) promotes once
-        # the prorrata regularización source lands, consuming the same definitive
-        # percentage.
-        BindingSourceKind.BIENES_INVERSION_REGULARIZACION: DeferredSourceTarget(
-            owning_adr="2026-07-01-iva-bienes-inversion-regularizacion-adr",
-            trigger=(
-                "Promote once the prorrata-definitiva source lands; it consumes the same annual definitive "
-                "percentage as prorrata regularización (LIVA arts. 107-110, casilla 43)."
-            ),
-            promotion_depends_on=BindingSourceKind.PRORRATA_REGULARIZACION,
-        ),
-        # LIVA arts. 104-105 annual prorrata-general regularización por porcentaje
-        # definitivo (casilla 44) stays operator-confirmable until the
-        # provisional-carry store is wired and the source is promoted to a live
-        # mesh binding on the iva_compensation_annual_partition precedent.
-        BindingSourceKind.PRORRATA_REGULARIZACION: DeferredSourceTarget(
-            owning_adr="2026-07-01-iva-complexity-hardening-scope-adr",
-            trigger=(
-                "Promote to a live mesh binding on the iva_compensation_annual_partition precedent once the "
-                "provisional-carry store plus Q4 regularisation is proven end to end (LIVA arts. 104-105, casilla 44)."
-            ),
-        ),
     },
 )
 
@@ -252,8 +229,9 @@ class CallerOverrideDisposition(StrEnum):
         LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
             the invoice families). A caller override is REJECTED so the persisted
             revision faithfully reflects the sources it aggregates.
-        CARRY: Carry-style sources (previous_filing, relation_prefill, and the
-            IVA-compensation annual partition). A caller override of an
+        CARRY: Carry-style sources (previous_filing, relation_prefill, the
+            IVA-compensation annual partition, and prorrata regularizacion).
+            A caller override of an
             automatically-carried prior value is legitimate and must reach the
             engine, so these are EXCLUDED from the post-merge caller-override
             guard.
@@ -309,6 +287,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.PREVIOUS_FILING,
                 BindingSourceKind.RELATION_PREFILL,
                 BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+                BindingSourceKind.PRORRATA_REGULARIZACION,
             },
         ),
         disposition=CallerOverrideDisposition.CARRY,
@@ -417,11 +396,67 @@ class CalculationSourceDiagnostic(BaseModel):
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     casilla_id: CasillaId | None = None
+    out_of_window_count: int | None = Field(default=None, ge=1)
+    out_of_window_min_filing_date: date | None = None
+    out_of_window_max_filing_date: date | None = None
 
     @model_validator(mode="before")
     @classmethod
     def _set_binding_source(cls, value: object) -> object:
         return _infer_binding_source(value)
+
+    @model_validator(mode="after")
+    def _validate_out_of_window_summary(self) -> Self:
+        summary_fields = (
+            self.out_of_window_count,
+            self.out_of_window_min_filing_date,
+            self.out_of_window_max_filing_date,
+        )
+        if all(value is None for value in summary_fields):
+            return self
+        if any(value is None for value in summary_fields):
+            raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_incomplete")
+        if self.out_of_window_max_filing_date < self.out_of_window_min_filing_date:
+            raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid")
+        return self
+
+
+def out_of_window_summary_message(
+    *,
+    count: int,
+    min_filing_date: date,
+    max_filing_date: date,
+) -> str:
+    """Return the standard source-diagnostic message for summarized period exclusions."""
+    return (
+        f"{count} ledger transaction(s) have filing dates outside the requested period "
+        f"({min_filing_date.isoformat()}..{max_filing_date.isoformat()}); "
+        "excluded by period before classification"
+    )
+
+
+def out_of_window_summary_source_diagnostic(
+    *,
+    source_kind: str,
+    resolver_id: str,
+    count: int,
+    min_filing_date: date,
+    max_filing_date: date,
+) -> CalculationSourceDiagnostic:
+    """Build one structured source diagnostic for summarized ``OUTSIDE_PERIOD`` rows."""
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=source_kind,
+        resolver_id=resolver_id,
+        message=out_of_window_summary_message(
+            count=count,
+            min_filing_date=min_filing_date,
+            max_filing_date=max_filing_date,
+        ),
+        out_of_window_count=count,
+        out_of_window_min_filing_date=min_filing_date,
+        out_of_window_max_filing_date=max_filing_date,
+    )
 
 
 class CalculationSourceProvenance(BaseModel):
@@ -1024,6 +1059,8 @@ __all__ = [
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
+    "out_of_window_summary_message",
+    "out_of_window_summary_source_diagnostic",
     "precedence_ladder_sources",
     "storage_degradation_resolution",
 ]

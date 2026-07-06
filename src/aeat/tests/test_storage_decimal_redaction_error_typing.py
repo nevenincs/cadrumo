@@ -10,6 +10,7 @@ Verifies:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TypedDict, cast
 
 import pytest
@@ -42,39 +43,50 @@ def test_financial_validation_error_typing_and_registry() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_encrypted_column_type_guards_raise_storage_validation_error() -> None:
+def _encrypted_string_bind_with_wrong_type() -> None:
+    from ..adapters.persistence.storage.crypto import EncryptedString
+
+    EncryptedString().process_bind_param(cast(str, 12345), cast(Dialect, None))
+
+
+def _encrypted_bytes_bind_with_wrong_type() -> None:
+    from ..adapters.persistence.storage.crypto import EncryptedBytes
+
+    EncryptedBytes().process_bind_param(cast(bytes, "not-bytes"), cast(Dialect, None))
+
+
+def _hashed_lookup_compute_with_wrong_type() -> None:
+    from ..adapters.persistence.storage.crypto import HashedLookup
+
+    HashedLookup.compute(cast(str, 12345))
+
+
+def _hashed_lookup_bind_with_wrong_type() -> None:
+    from ..adapters.persistence.storage.crypto import HashedLookup
+
+    HashedLookup().process_bind_param(cast(str | bytes, 99.9), cast(Dialect, None))
+
+
+@pytest.mark.parametrize(
+    "call",
+    (
+        _encrypted_string_bind_with_wrong_type,
+        _encrypted_bytes_bind_with_wrong_type,
+        _hashed_lookup_compute_with_wrong_type,
+        _hashed_lookup_bind_with_wrong_type,
+    ),
+)
+def test_encrypted_column_type_guards_raise_storage_validation_error(call: Callable[[], object]) -> None:
     """Encrypted-column type guards raise StorageValidationError before key resolution.
 
     The type-guard fires before key resolution so no master-key provider is needed.
     Dialect argument is irrelevant at this error path.
     """
-    from ..adapters.persistence.storage.crypto import (
-        EncryptedBytes,
-        EncryptedString,
-        HashedLookup,
-    )
     from ..adapters.persistence.storage.errors import StorageValidationError
 
-    cases = (
-        (
-            "encrypted-string-bind",
-            lambda: EncryptedString().process_bind_param(cast(str, 12345), cast(Dialect, None)),
-        ),
-        (
-            "encrypted-bytes-bind",
-            lambda: EncryptedBytes().process_bind_param(cast(bytes, "not-bytes"), cast(Dialect, None)),
-        ),
-        ("hashed-lookup-compute", lambda: HashedLookup.compute(cast(str, 12345))),
-        (
-            "hashed-lookup-bind",
-            lambda: HashedLookup().process_bind_param(cast(str | bytes, 99.9), cast(Dialect, None)),
-        ),
-    )
-
-    for case_id, call in cases:
-        with pytest.raises(StorageValidationError) as exc_info:
-            call()
-        assert exc_info.type is StorageValidationError, case_id
+    with pytest.raises(StorageValidationError) as exc_info:
+        call()
+    assert exc_info.type is StorageValidationError
 
 
 # ---------------------------------------------------------------------------
@@ -102,20 +114,33 @@ def test_decimal_format_error_typing_registry_and_raise_site() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_redaction_error_typing_registry_and_raise_sites() -> None:
-    """RedactionError is registered, not a ValueError, and raised by redaction entrypoints."""
+def _redact_with_non_string_value() -> None:
+    from ..core.redaction import redact
+
+    redact(cast(str, 12345), rules=())
+
+
+def _redact_cli_output_with_non_string_value() -> None:
+    from ..core.redaction import redact_for_cli_output
+
+    redact_for_cli_output(cast(str, {"not": "a string"}))
+
+
+@pytest.mark.parametrize("call", (_redact_with_non_string_value, _redact_cli_output_with_non_string_value))
+def test_redaction_error_raise_sites(call: Callable[[], object]) -> None:
+    """Redaction entrypoints raise RedactionError for non-string input."""
+    from ..core.errors import RedactionError
+
+    with pytest.raises(RedactionError) as exc_info:
+        call()
+    assert exc_info.type is RedactionError
+
+
+def test_redaction_error_typing_and_registry() -> None:
+    """RedactionError is registered and not a ValueError."""
     from ..core.errors import ERROR_REGISTRY, RedactionError, get_registered_error_code
-    from ..core.redaction import redact, redact_for_cli_output
 
     assert not issubclass(RedactionError, ValueError)
-    cases = (
-        ("redact", lambda: redact(cast(str, 12345), rules=())),
-        ("redact-for-cli-output", lambda: redact_for_cli_output(cast(str, {"not": "a string"}))),
-    )
-    for case_id, call in cases:
-        with pytest.raises(RedactionError) as exc_info:
-            call()
-        assert exc_info.type is RedactionError, case_id
 
     err = RedactionError("test")
     code = get_registered_error_code(err)
@@ -197,7 +222,14 @@ class _PortalEntryOverrides(TypedDict, total=False):
     path: str
 
 
-def test_portal_validation_error_for_invalid_entry_shapes() -> None:
+@pytest.mark.parametrize(
+    "kwargs",
+    (
+        {"url": "https://example.com", "path": "/also-present"},
+        {"path": "no-leading-slash"},
+    ),
+)
+def test_portal_validation_error_for_invalid_entry_shapes(kwargs: _PortalEntryOverrides) -> None:
     """build_entry raises PortalValidationError for mutually exclusive or malformed URL fields."""
     from ..domain.portals import (
         AuthMethod,
@@ -209,24 +241,19 @@ def test_portal_validation_error_for_invalid_entry_shapes() -> None:
         build_entry,
     )
 
-    cases: tuple[tuple[str, _PortalEntryOverrides], ...] = (
-        ("url-and-path", {"url": "https://example.com", "path": "/also-present"}),
-        ("path-without-leading-slash", {"path": "no-leading-slash"}),
-    )
-    for case_id, kwargs in cases:
-        with pytest.raises(PortalValidationError) as exc_info:
-            # negative test: None passed for enum/struct args; rejected before use
-            build_entry(
-                portal=cast(Portal, None),
-                subdomain=cast(PortalHost, None),
-                category=cast(PortalCategory, None),
-                auth_methods=cast(list[AuthMethod], []),
-                url_stability=cast(UrlStability, None),
-                label="test",
-                purpose="test",
-                **kwargs,
-            )
-        assert exc_info.type is PortalValidationError, case_id
+    with pytest.raises(PortalValidationError) as exc_info:
+        # negative test: None passed for enum/struct args; rejected before use
+        build_entry(
+            portal=cast(Portal, None),
+            subdomain=cast(PortalHost, None),
+            category=cast(PortalCategory, None),
+            auth_methods=cast(list[AuthMethod], []),
+            url_stability=cast(UrlStability, None),
+            label="test",
+            purpose="test",
+            **kwargs,
+        )
+    assert exc_info.type is PortalValidationError
 
 
 # ---------------------------------------------------------------------------
@@ -234,20 +261,39 @@ def test_portal_validation_error_for_invalid_entry_shapes() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_profile_answer_type_error_raise_sites() -> None:
+def _parse_descendiente_discapacidad_with_wrong_type() -> None:
+    from ..domain.contribuyente import parse_descendiente_flag
+
+    parse_descendiente_flag("NACIMIENTO=2010-01-01,DISCAPACIDAD=50")
+
+
+def _parse_marriage_date_with_wrong_type() -> None:
+    from ..domain.contribuyente import parse_marriage_date_flag
+
+    parse_marriage_date_flag("not-a-date")
+
+
+def _parse_ccaa_label_with_unknown_value() -> None:
+    from ..domain.contribuyente import CCAA
+
+    CCAA.from_label("xyzzy")
+
+
+@pytest.mark.parametrize(
+    "call",
+    (
+        _parse_descendiente_discapacidad_with_wrong_type,
+        _parse_marriage_date_with_wrong_type,
+        _parse_ccaa_label_with_unknown_value,
+    ),
+)
+def test_profile_answer_type_error_raise_sites(call: Callable[[], object]) -> None:
     """Profile parsing helpers raise ProfileAnswerTypeError for invalid typed answers."""
     from ..core.errors import ProfileAnswerTypeError
-    from ..domain.contribuyente import CCAA, parse_descendiente_flag, parse_marriage_date_flag
 
-    cases = (
-        ("descendant-discapacidad", lambda: parse_descendiente_flag("NACIMIENTO=2010-01-01,DISCAPACIDAD=50")),
-        ("marriage-date", lambda: parse_marriage_date_flag("not-a-date")),
-        ("ccaa-label", lambda: CCAA.from_label("xyzzy")),
-    )
-    for case_id, call in cases:
-        with pytest.raises(ProfileAnswerTypeError) as exc_info:
-            call()
-        assert exc_info.type is ProfileAnswerTypeError, case_id
+    with pytest.raises(ProfileAnswerTypeError) as exc_info:
+        call()
+    assert exc_info.type is ProfileAnswerTypeError
 
 
 # ---------------------------------------------------------------------------
@@ -280,15 +326,22 @@ def test_m232_binding_error_too_many_rows() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_error_envelope_roundtrip_for_core_error_classes() -> None:
+@pytest.mark.parametrize(
+    ("error_name", "expected_code"),
+    (
+        ("decimal", "ERROR_DECIMAL_FORMAT"),
+        ("redaction", "ERROR_REDACTION"),
+    ),
+)
+def test_error_envelope_roundtrip_for_core_error_classes(error_name: str, expected_code: str) -> None:
     """build_error_envelope produces valid ErrorEnvelopes for migrated core errors."""
     from ..core.errors import DecimalFormatError, RedactionError, build_error_envelope
 
-    cases = (
-        (DecimalFormatError("test decimal format"), "ERROR_DECIMAL_FORMAT"),
-        (RedactionError("test redaction error"), "ERROR_REDACTION"),
+    err = (
+        DecimalFormatError("test decimal format")
+        if error_name == "decimal"
+        else RedactionError("test redaction error")
     )
-    for err, expected_code in cases:
-        envelope = build_error_envelope(err)
-        assert envelope.code == expected_code
-        assert envelope.message
+    envelope = build_error_envelope(err)
+    assert envelope.code == expected_code
+    assert envelope.message

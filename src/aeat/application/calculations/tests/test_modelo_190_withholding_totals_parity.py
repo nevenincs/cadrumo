@@ -4,7 +4,7 @@ Modelo 190's resumen-anual summary casillas (``decl.percepciones-total``,
 ``decl.retenciones-total``) are computed by the registry as a SUM of the
 taxpayer's four Modelo 111 quarterly filings — a ``source = "relation_prefill"``
 aggregation entirely independent of the per-perceptor-clave
-:class:`~aeat.domain.calculations.registry.WithholdingObservation` detail (the
+:class:`~domain.calculations.registry.WithholdingObservation` detail (the
 AEAT Diseño de Registros type-2 "registro de perceptor" rows, ``source =
 "withholding"``) that materialises the ``modelo-190-perceptor-row-*`` bindings
 and the distinct-percepción count (``decl.total-percepciones``).
@@ -18,7 +18,7 @@ today's engine would silently accept both without complaint
 
 This module drives the REAL registry-loaded Modelo 190 ``2024-y-siguientes``
 snapshot and the REAL engine (``calculate_registry_snapshot``, no mocks) to
-prove :func:`~aeat.domain.calculations.registry.compute_withholding_totals_parity`
+prove :func:`~domain.calculations.registry.compute_withholding_totals_parity`
 against genuine engine output: a consistent per-perceptor set (rows sum to the
 engine-computed summary) passes, and a dropped perceptor row (the row set no
 longer accounts for the full summary total) is CAUGHT with the exact delta
@@ -27,6 +27,23 @@ named, never silently accepted.
 Grounding: RD 439/2007 art. 108, Orden EHA/3127/2009 art. 1 (Anexo II Tipo de
 Registro 2, posiciones 82-94 percepción íntegra / 95-107 retenciones
 practicadas), Orden HAC/1431/2025 art. 2, Ley 35/2006 arts. 99, 101.
+
+See Also:
+    :func:`~domain.calculations.registry.compute_withholding_totals_parity`
+        Pure comparison primitive whose row-vs-summary deltas this suite
+        asserts.
+    :class:`~domain.calculations.registry.WithholdingTotalsParity`
+        Verdict model that preserves percepciones and retenciones axes
+        separately.
+    :class:`~domain.calculations.registry.WithholdingObservation`
+        Per-perceptor-clave row detail source for Modelo 190 bindings.
+    :func:`~domain.calculations.registry.resolve_withholding_binding_values`
+        Registry binding resolver that materialises withholding detail facts and
+        the distinct-percepción count.
+    ``2026-06-25-modelo-190-percepciones-count-adr`` and
+    ``2026-06-30-retenciones-perceptor-count-audit``
+        Decision and audit records that keep M190 on the withholding/percepción
+        source instead of the RET-1 distinct-NIF source.
 """
 
 from __future__ import annotations

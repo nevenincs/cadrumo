@@ -33,27 +33,37 @@ def test_default_catalogue_loads_registry_invariants(catalogue: ApoderamientosCa
     assert {"303", "390"} <= set(iva.modelo_codes)
 
 
-def test_parse_scope_tokens_accepts_known_tokens_and_deduplicates(catalogue: ApoderamientosCatalogue) -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("raw_tokens", "expected"),
+    (
         (("IVA",), ("IVA",)),
         (("IVA", "RENT", "CENSO"), ("IVA", "RENT", "CENSO")),
         (("IVA", "RENT", "IVA"), ("IVA", "RENT")),
-    )
+    ),
+)
+def test_parse_scope_tokens_accepts_known_tokens_and_deduplicates(
+    catalogue: ApoderamientosCatalogue,
+    raw_tokens: tuple[str, ...],
+    expected: tuple[str, ...],
+) -> None:
+    assert parse_scope_tokens(raw_tokens, catalogue) == expected
 
-    for raw_tokens, expected in cases:
-        assert parse_scope_tokens(raw_tokens, catalogue) == expected, raw_tokens
 
-
-def test_parse_scope_tokens_rejects_invalid_operator_tokens(catalogue: ApoderamientosCatalogue) -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("raw_tokens", "expected_match"),
+    (
         (("BOGUS",), "not in catalogue"),
         (("iva",), "must be uppercase"),
         (("IVA,RENT",), "contains a comma"),
-    )
-
-    for raw_tokens, expected_match in cases:
-        with pytest.raises(UnknownScopeError, match=expected_match):
-            parse_scope_tokens(raw_tokens, catalogue)
+    ),
+)
+def test_parse_scope_tokens_rejects_invalid_operator_tokens(
+    catalogue: ApoderamientosCatalogue,
+    raw_tokens: tuple[str, ...],
+    expected_match: str,
+) -> None:
+    with pytest.raises(UnknownScopeError, match=expected_match):
+        parse_scope_tokens(raw_tokens, catalogue)
 
 
 def test_all_token_expansion_is_sorted_and_deduplicated(catalogue: ApoderamientosCatalogue) -> None:
@@ -61,7 +71,13 @@ def test_all_token_expansion_is_sorted_and_deduplicated(catalogue: Apoderamiento
     assert set(expanded) == catalogue.code_set()
     assert list(expanded) == sorted(expanded)
 
-    for raw_tokens in ((ALL_TOKEN,), (ALL_TOKEN, "IVA")):
-        result = parse_scope_tokens(raw_tokens, catalogue)
-        assert set(result) == catalogue.code_set(), raw_tokens
-        assert result.count("IVA") == 1, raw_tokens
+
+
+@pytest.mark.parametrize("raw_tokens", ((ALL_TOKEN,), (ALL_TOKEN, "IVA")))
+def test_parse_scope_tokens_expands_all_token_without_duplicates(
+    catalogue: ApoderamientosCatalogue,
+    raw_tokens: tuple[str, ...],
+) -> None:
+    result = parse_scope_tokens(raw_tokens, catalogue)
+    assert set(result) == catalogue.code_set()
+    assert result.count("IVA") == 1

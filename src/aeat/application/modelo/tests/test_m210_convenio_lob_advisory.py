@@ -1,7 +1,7 @@
 """Convenio doble imposición limitation-of-benefits (LOB) advisory tests.
 
 Covers the ``m210_convenio_lob_advisory`` non-blocking
-:class:`~aeat.domain.modelos.ModeloVerificationFinding` this module surfaces
+:class:`~domain.modelos.ModeloVerificationFinding` this module surfaces
 whenever a Modelo 210 rate actually applies a matched treaty override row (per
 the treaty-eligibility policy: residence-certificate and
 limitation-of-benefits checks surface as non-blocking advisory notices rather
@@ -13,7 +13,18 @@ AR/pension ALLOCATION_DOMESTIC_TARIFF) and must not fire for a domestic
 resident with no ``country_of_fiscal_residence``, nor for a treaty country
 whose declared ``tipo_renta`` has no matching override row (the missing-row
 BLOCKING branch is a separate concern owned by
-:func:`aeat.application.modelo._m210_rate.resolve_m210_rate`).
+:func:`~application.modelo._m210_rate.resolve_m210_rate`).
+
+See Also:
+    :func:`~application.modelo._m210_convenio_lob_advisory._m210_convenio_lob_advisory_finding`
+        Advisory builder under test.
+    :func:`~application.modelo._m210_rate.resolve_m210_rate`
+        Rate resolver that owns the blocking missing-row branch.
+    :class:`~domain.calculations.registry.ConvenioAuthority`
+        Cross-cutting treaty authority consumed by the advisory and resolver.
+    ``2026-06-30-convenio-doble-imposicion-adr`` and
+    ``2026-05-27-m210-irnr-full-engine-adr``
+        Accepted treaty-authority and M210 rate-resolution contracts.
 """
 
 from __future__ import annotations
@@ -148,7 +159,7 @@ def test_lob_advisory_silent_when_treaty_country_has_no_matching_override_row(
     Zimbabwe (ZW) is not a seeded treaty country at all, and GB has no
     ``interest`` override row (only ``general``). Both are missing-row cases
     owned by the BLOCKING ``m210-convenio-rate-missing`` finding
-    (:func:`aeat.application.modelo._m210_rate.resolve_m210_rate`), not the LOB
+    (:func:`~application.modelo._m210_rate.resolve_m210_rate`), not the LOB
     advisory: there is no matched treaty benefit to scrutinise.
     """
     zw_profile = _irnr_profile("ZW")

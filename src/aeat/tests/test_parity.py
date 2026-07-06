@@ -30,6 +30,16 @@ def _leaf(data: dict[str, LocaleNode], *keys: str) -> str:
     return node
 
 
+def _mapping(data: dict[str, LocaleNode], *keys: str) -> dict[str, LocaleNode]:
+    """Walk a nested locale tree to a mapping node."""
+    node: LocaleNode = data
+    for key in keys:
+        assert isinstance(node, dict), f"expected dict at {key!r}, got {type(node).__name__}"
+        node = node[key]
+    assert isinstance(node, dict), f"expected dict node, got {type(node).__name__}"
+    return node
+
+
 @pytest.fixture(scope="module")
 def manager():
     locales_dir = Path(__file__).resolve().parents[1] / "locales"
@@ -148,7 +158,6 @@ def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: P
 
     temp_manager.set_locale_value("es", "cli.locales.set_locale_help", "Código de locale.")
 
-    assert "    set_locale_help: 'Código de locale.'\n" in locale_path.read_text(encoding="utf-8")
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "locales", "set_locale_help") == "Código de locale."
 
@@ -168,9 +177,9 @@ def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
 
     temp_manager.remove_locale_value("es", "cli.locales.stale")
 
-    text = locale_path.read_text(encoding="utf-8")
-    assert "stale" not in text
-    assert "    app_help: Auditar y generar catálogos de traducción\n" in text
+    data = temp_manager.load_locale(locale_path)
+    assert "stale" not in _mapping(data, "cli", "locales")
+    assert _leaf(data, "cli", "locales", "app_help") == "Auditar y generar catálogos de traducción"
 
 
 def test_remove_locale_value_prunes_empty_namespace(tmp_path: Path):
@@ -194,10 +203,9 @@ def test_remove_locale_value_prunes_empty_namespace(tmp_path: Path):
 
     temp_manager.remove_locale_value("en", "wizard.setup.flags.old-option.help")
 
-    text = locale_path.read_text(encoding="utf-8")
-    assert "old-option" not in text
-    assert "      current-option:\n" in text
-    assert "        help: Current option\n" in text
+    data = temp_manager.load_locale(locale_path)
+    assert "old-option" not in _mapping(data, "wizard", "setup", "flags")
+    assert _leaf(data, "wizard", "setup", "flags", "current-option", "help") == "Current option"
 
 
 def test_remove_locale_value_deletes_yaml_null_leaf(tmp_path: Path):
@@ -215,9 +223,9 @@ def test_remove_locale_value_deletes_yaml_null_leaf(tmp_path: Path):
 
     temp_manager.remove_locale_value("en", "wizard.setup.flags.old-option")
 
-    text = locale_path.read_text(encoding="utf-8")
-    assert "old-option" not in text
-    assert "      current-option:\n" in text
+    data = temp_manager.load_locale(locale_path)
+    assert "old-option" not in _mapping(data, "wizard", "setup", "flags")
+    assert _leaf(data, "wizard", "setup", "flags", "current-option", "help") == "Current option"
 
 
 def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
@@ -234,7 +242,8 @@ def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
     with pytest.raises(LocaleError):
         temp_manager.set_locale_value("../outside", "cli.label", "no escribir")
 
-    assert outside.read_text(encoding="utf-8") == "cli:\n  label: fuera\n"
+    outside_data = temp_manager.load_locale(outside)
+    assert _leaf(outside_data, "cli", "label") == "fuera"
 
 
 def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:

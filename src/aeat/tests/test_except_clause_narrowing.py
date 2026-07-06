@@ -200,21 +200,15 @@ class TestInvalidatePersistedCleanupIsolated:
         # Reproduce the pattern from _clave_movil.py lines 1039-1043 (post-fix)
         import contextlib
 
-        original_raised = None
-        try:
+        with pytest.raises(_OriginalError, match="the original persist failure") as exc_info:
             try:
                 raise _OriginalError("the original persist failure")
             except Exception:
                 with contextlib.suppress(_CleanupError):
                     raise _CleanupError("cleanup also failed") from None
                 raise  # original re-raised
-        except _OriginalError as exc:
-            original_raised = exc
-        except _CleanupError:
-            pytest.fail("CleanupError masked the original OriginalError")
 
-        assert original_raised is not None
-        assert isinstance(original_raised, _OriginalError)
+        assert isinstance(exc_info.value, _OriginalError)
 
     def test_cleanup_success_still_reraises_original(self) -> None:
         class _OriginalError(Exception):
@@ -226,9 +220,7 @@ class TestInvalidatePersistedCleanupIsolated:
         import contextlib
 
         cleanup_called = False
-        original_raised = None
-
-        try:
+        with pytest.raises(_OriginalError, match="persist failure") as exc_info:
             try:
                 raise _OriginalError("persist failure")
             except Exception:
@@ -236,11 +228,9 @@ class TestInvalidatePersistedCleanupIsolated:
                     cleanup_called = True
                     # cleanup succeeds (no raise)
                 raise
-        except _OriginalError as exc:
-            original_raised = exc
 
         assert cleanup_called
-        assert original_raised is not None
+        assert isinstance(exc_info.value, _OriginalError)
 
 
 # ---------------------------------------------------------------------------

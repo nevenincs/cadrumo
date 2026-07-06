@@ -7,11 +7,12 @@ authoritative profile-scoped state; this service owns no calculation, only the
 declare/list surface the CLI exposes. The art-109 annual compute lives in the
 pure domain module :mod:`domain.bienes_inversion`.
 
-The register is source evidence for the deferred
+The register is source evidence for the live
 ``bienes_inversion_regularizacion`` calculation source: application calculation
-code may project it into a non-blocking advisory for Modelo 303 casilla 43 /
-Modelo 390 regularización, but this facade does not derive definitive prorrata
-percentages or write binding values.
+code can project it into governed Modelo 303 casilla 43 / Modelo 390
+regularización binding values once definitive prorrata facts exist, and into a
+non-blocking advisory when those facts are still pending. This facade does not
+derive definitive prorrata percentages or write binding values.
 
 See Also:
     :mod:`domain.bienes_inversion`

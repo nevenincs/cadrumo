@@ -111,6 +111,10 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
         "source_periods": ("1T", "2T", "3T", "4T"),
         "regularizacion_output": "modelo_303_casilla_44",
     },
+    "bienes_inversion_regularizacion": {
+        "source_modelo": "303",
+        "regularizacion_output": "modelo_303_casilla_43",
+    },
 }
 
 

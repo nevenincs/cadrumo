@@ -780,7 +780,15 @@ _M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE: Mapping[str, frozenset[st
             _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
             _AUTONOMIC_DEDUCTION_ART_77_REF,
             "ley-35-2006:art-79",
+            # art-99 (obligacion de pagos a cuenta) plus its RIRPF implementing
+            # articles: casilla 0604 (pagos fraccionados ingresados) is a
+            # computed casilla whose formula is grounded in RD 439/2007
+            # art-109 (obligados al pago fraccionado) and art-110 (importe
+            # del fraccionamiento), not just the LIRPF framework article.
+            "ley-35-2006:art-99",
             "ley-35-2006:art-103",
+            "rd-439-2007:art-109",
+            "rd-439-2007:art-110",
         }
     ),
 }

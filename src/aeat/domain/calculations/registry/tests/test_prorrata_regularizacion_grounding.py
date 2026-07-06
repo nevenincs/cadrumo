@@ -8,10 +8,21 @@ in the generic deduction framework arts. 92/94/95 alone. The official form
 casilla 44 ("Regularizacion prorrata por porcentaje definitivo - Cuota") is the
 operator-facing, exported carrier of that concept; it must ground in its
 binding provisions, consistent with the dedicated
-:func:`~aeat.domain.iva.compute_regularizacion_prorrata_anual` procedure. This
+:func:`~domain.iva.compute_regularizacion_prorrata_anual` procedure. This
 gate pins that casilla 44 cites arts. 104-105 and never lets the generic
 deduction framework stand in for the binding provisions, across both live
 M303 revisions.
+
+See Also:
+    :class:`~domain.calculations.registry._bindings._ProrrataRegularizacionSelector`
+        Registry selector contract for the prorrata regularización source.
+    :data:`~core.BindingSourceKind.PRORRATA_REGULARIZACION`
+        Source-kind token governing the casilla-44 binding.
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
+        Live resolver that materialises the grounded binding after calculation.
+    ``2026-06-19-silent-zero-base-aggregation-adr`` and
+    ``2026-07-05-cross-period-prorrata-adr``
+        Deferral rationale and accepted cross-period regularización model.
 """
 
 from __future__ import annotations

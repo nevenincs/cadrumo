@@ -49,9 +49,13 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 _COMPLETENESS_MANIFEST_LEGAL_REFS = frozenset(
     [
         "ley-58-2003:art-93",
+        "ley-58-2003:da-18",
         "orden-hap-72-2013:art-1",
         "orden-hap-72-2013:art-2",
         "orden-hap-72-2013:art-7",
+        "rd-1065-2007:art-42-bis",
+        "rd-1065-2007:art-42-ter",
+        "rd-1065-2007:art-54-bis",
     ]
 )
 

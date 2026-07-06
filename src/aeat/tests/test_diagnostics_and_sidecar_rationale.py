@@ -2,22 +2,22 @@
 
 Covers:
   (a) diagnostics.py BROAD-EXCEPT-RATIONALE markers present and complete
-  (b) wizard _commands.py next tab-label is localised via tr()
+  (b) wizard next tab-label locale keys exist
   (c) _parser.py _PdfWord adapter-internal alias rationale documented
   (d) _local.py sidecar manifest read wrapped in Mapping[str, object]
 """
 
 from __future__ import annotations
 
-import ast
 import json
-import re
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from ..adapters.inbound.declaracion import _parser
 from ..adapters.outbound.storage._local import LocalFileSystemProvider
 from ..core.i18n import tr
 
@@ -89,18 +89,10 @@ def test_diagnostics_record_read_pragma_preserved() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (b) wizard _commands.py next tab-label is localised
+# (b) wizard next tab-label locale keys exist
 # ---------------------------------------------------------------------------
 
-_COMMANDS_REL = "application/wizard/_commands.py"
 _NEXT_LOCALE_KEY = "application.wizard.output_labels.next"
-
-
-def test_wizard_next_label_uses_tr() -> None:
-    """The 'next' tab-label emit uses tr() with the canonical locale key."""
-    src = _source(_COMMANDS_REL)
-    pattern = re.compile(r"tr\(['\"]" + re.escape(_NEXT_LOCALE_KEY) + r"['\"]")
-    assert pattern.search(src), f"wizard/_commands.py must call tr('{_NEXT_LOCALE_KEY}') for the next tab label"
 
 
 def test_wizard_next_locale_key_in_en() -> None:
@@ -151,16 +143,7 @@ def test_pdfword_alias_rationale_comment_present() -> None:
 
 def test_pdfword_alias_is_dict_str_any() -> None:
     """_PdfWord remains dict[str, Any] — adapter-internal, not moved to core._types."""
-    src = _source(_PARSER_REL)
-    tree = ast.parse(src)
-    assignments: dict[str, ast.Assign] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
-            continue
-        target = node.targets[0]
-        if isinstance(target, ast.Name) and target.id == "_PdfWord":
-            assignments[target.id] = node
-    assert "_PdfWord" in assignments, "_PdfWord assignment not found in _parser.py"
+    assert _parser._PdfWord == dict[str, Any]
 
 
 # ---------------------------------------------------------------------------

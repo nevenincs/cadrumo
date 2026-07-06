@@ -39,7 +39,7 @@ is labelled "excluida la parte del ahorro" to keep that deferral honest.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -53,7 +53,7 @@ from ...core import Modelo, Period, PeriodKind
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
-    OutOfWindowTransactionStub,
+    OutOfWindowTransactionSummary,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -140,7 +140,12 @@ class ImpatriadoIncomeObservation(BaseModel):
 
 
 class ImpatriadoIncomeLedgerAggregation(BaseModel):
-    """Annual Spanish-source income observations for one Modelo 151 ejercicio."""
+    """Annual Spanish-source income observations for one Modelo 151 ejercicio.
+
+    ``out_of_window_summary`` is populated by repository-backed date partitions.
+    Full-catalogue aggregation keeps row-level issues because every transaction
+    is already loaded for classification.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -148,6 +153,7 @@ class ImpatriadoIncomeLedgerAggregation(BaseModel):
     period: Period
     observations: Sequence[ImpatriadoIncomeObservation] = Field(default_factory=tuple)
     issues: Sequence[ImpatriadoIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
+    out_of_window_summary: OutOfWindowTransactionSummary | None = None
     casilla_aggregation: CasillaAggregation
 
     @field_validator("observations")
@@ -218,29 +224,11 @@ def aggregate_impatriado_income_ledger_from_repositories(
         return aggregate_impatriado_income_ledger(repository.load(), bucket_id=bucket_id, period=period)
     partition = repository.partition_by_date_range(period.start_date, period.end_date)
     result = aggregate_impatriado_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
-    return result.model_copy(
-        update={"issues": (*result.issues, *_out_of_window_impatriado_issues(partition.out_of_window))},
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
+        partition.out_of_window,
     )
-
-
-def _out_of_window_impatriado_issues(
-    stubs: Iterable[OutOfWindowTransactionStub],
-) -> tuple[ImpatriadoIncomeLedgerAggregationIssue, ...]:
-    """Return one uniform ``OUTSIDE_PERIOD`` issue per out-of-window catalogue stub.
-
-    Diagnosed from the plaintext ``(transaction_id, filing_date)`` stub alone:
-    the row was never decrypted, so no other gate (direction, currency,
-    business classification, the Beckham ``source_jurisdiction`` segregation,
-    ...) can be evaluated for it.
-    """
-    return tuple(
-        ImpatriadoIncomeLedgerAggregationIssue(
-            transaction_id=stub.transaction_id,
-            reason=ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {stub.filing_date.isoformat()} is outside the annual impatriado income window; "
-            "excluded by period before classification",
-        )
-        for stub in stubs
+    return result.model_copy(
+        update={"out_of_window_summary": out_of_window_summary},
     )
 
 
