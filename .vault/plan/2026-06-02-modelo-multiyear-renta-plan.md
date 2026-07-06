@@ -52,7 +52,7 @@ Build the recorder in _multi_year.py supporting both calculation-based year capt
 
 - [ ] `W01.P02.S06` - add the dual-mode enrollment recorder with calculation-based and non-calculation two-year-context capture (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py`.
 - [ ] `W01.P02.S07` - enforce the >=2-distinct-renta-years invariant at the pydantic type boundary so a malformed evidence record cannot construct (vaultspec-high-executor); `src/aeat/application/calculations/_multi_year.py`.
-- [ ] `W01.P02.S08` - write an anti-tautology test proving a single-year evidence record raises ValidationError (vaultspec-standard-executor); `src/aeat/application/calculations/test_multi_year_recorder.py`.
+- [x] `W01.P02.S08` - write an anti-tautology test proving a single-year evidence record raises ValidationError (vaultspec-standard-executor); `src/aeat/application/calculations/tests/test_multi_year_recorder.py`.
 - [ ] `W01.P02.S88` - author MultiYearResolver.resolve() integration tests with real adapters covering each docstring-claimed use-case (M200/M202 same-year and BIN carryforward, M303 prorrata LIVA art.105 four-prior-year mean, M303 regularizacion inversiones LIVA art.93 five/ten-year schedule, annual quarterly roll-up), or delete any claim no real use-case substantiates (vaultspec-high-executor); `src/aeat/application/calculations/test_multi_year_resolver.py`.
 
 ### Phase `W01.P03` - CI meta-test and advisory CLI surface
