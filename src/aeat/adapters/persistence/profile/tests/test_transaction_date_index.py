@@ -377,11 +377,9 @@ def test_partition_by_date_range_splits_in_window_and_out_of_window(
 ) -> None:
     """The completeness-gated partition returns exactly the right in/out-of-window split.
 
-    Regression coverage for the O2 period-first partition
-    (``2026-07-05-ledger-latency-budget-adr``): in-window rows are real,
-    decrypted :class:`Transaction` records; out-of-window rows are plaintext
-    index projections (id + filing date only) reconstructed from the index without
-    decryption.
+    In-window rows are real, decrypted :class:`Transaction` records;
+    out-of-window rows are plaintext index projections (id + filing date only)
+    reconstructed from the index without decryption.
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -450,13 +448,13 @@ def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
 ) -> None:
     """Anti-staleness proof (mandatory): a mismatched index forces a full-scan fallback, never a silent drop.
 
-    Deletes ONE index row (simulating a crash between the encrypted commit and
+    Deletes one index row (simulating a crash between the encrypted commit and
     the separate index-sync transaction, or a partially-rebuilt index) and
     asserts the completeness gate detects the count/id mismatch and falls back
     to a full decrypt scan -- reproducing the identical partition a complete
     index would have produced, with ``index_complete=False`` recording which
     path served the read. This is the guard against reopening the
-    #599/#408 silent-drop class: a stale index must cost latency, never
+    stale-index silent-drop class: a stale index must cost latency, never
     correctness.
     """
 

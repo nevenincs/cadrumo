@@ -1,11 +1,11 @@
 """Encrypted roundtrip coverage for calculation-revision source-mesh provenance.
 
-Exercises the ``source_provenance`` field added to
-:class:`~aeat.domain.modelos.CalculationRevision` (calculation-source-connectivity
-ADR, Phase 9 / W04.P09.S50): the resolver→source-object→fingerprint trace must
-survive the real encrypted ``SecureObjectRepository`` -> SQLite -> decrypt cycle
-with strict model equality, and a corrupted on-disk payload MUST be refused on
-load so the field's constraints are proven non-tautological.
+Exercises the ``source_provenance`` field on
+:class:`~aeat.domain.modelos.CalculationRevision`: the
+resolver-to-source-object-to-fingerprint trace must survive the real encrypted
+``SecureObjectRepository`` -> SQLite -> decrypt cycle with strict model equality,
+and a corrupted on-disk payload must be refused on load so the field's
+constraints are proven non-tautological.
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ _CASILLA: CasillaId = _casilla_id("00501")
 
 
 def _source_provenance() -> tuple[CalculationSourceRef, ...]:
-    """Two provenance rows with EVERY field populated non-default.
+    """Two provenance rows with every field populated non-default.
 
     A binding-backed invoice row (fingerprint present, typed ``binding_source``)
     plus a second invoice row, so the persisted tuple carries more than one entry
