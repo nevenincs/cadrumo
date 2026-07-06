@@ -138,10 +138,13 @@ from ._observations_repository import (
 )
 from ._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
+    ProrrataApplicabilityProjection,
     ProrrataDeclaredVolumeLedgerRollup,
     ProrrataRegularizacionFeedProjection,
     build_prorrata_declared_volume_divergence_advisory,
+    build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
+    derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
 from ._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
@@ -192,6 +195,7 @@ __all__ = [
     "NoPriorObligationProvenanceKind",
     "PrefilledBinding",
     "PreviousFilingSourceResolver",
+    "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
     "RelationPrefillSourceResolver",
@@ -205,11 +209,13 @@ __all__ = [
     "build_bienes_inversion_regularizacion_advisory",
     "build_bienes_inversion_transmision_advisory",
     "build_prorrata_declared_volume_divergence_advisory",
+    "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
+    "derive_prorrata_applicability",
     "evaluate_cross_period_clean_state",
     "extract_modelo_303_local_iva_compensation_recurrence",
     "filing_external_evidence_blockers",

@@ -371,3 +371,33 @@ Residual gate inventory: `ruff check` is clean for the touched projection and
 new test file. The new applicability test file passes sequentially with 6 tests,
 and the adjacent prorrata regularización calculation test file passes
 sequentially with 8 tests.
+
+## S33 Review
+
+Reviewed the `W05.P08.S33` missing-carry advisory after re-grounding it against
+the S32 applicability projection, the prorrata register seed/service APIs, the
+existing calculate-path prorrata advisory collector, the W05/P08 plan row, and
+the cross-period prorrata ADR. The change adds a pure calculation-layer
+diagnostic builder that returns a `PRORRATA_REGULARIZACION` source diagnostic
+only when prorrata applies and the provisional percentage ladder is unresolved,
+exports it through the calculation facade, and wires it into the existing
+post-calculation Modelo 303 advisory fan-out.
+
+The diagnostic names the missing operator action without fabricating a
+percentage: first ejercicios must record the inicio-de-actividad percentage, and
+later ejercicios must seed or record the prior definitive percentage. The live
+collector loads the profile-scoped prorrata register by bucket, derives
+applicability from active register entries plus available declared-volume
+casillas, and emits the missing-carry diagnostic even on non-settlement periods.
+It preserves the existing settlement regularización projection when a real prior
+definitive percentage is available. The change does not promote source kinds,
+edit `_source_mesh.py`, change registry bindings, or add
+resolver/validator/selector conventions.
+
+Findings: no open S33 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched calculation
+projection, calculation facade, advisory coordinator, advisory collector, and
+test files. The missing-carry plus model advisory test slice passes sequentially
+with 10 tests, and the adjacent applicability plus prorrata regularización
+calculation slices pass sequentially with 14 tests.
