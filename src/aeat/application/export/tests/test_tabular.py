@@ -111,18 +111,19 @@ def test_export_format_error_registry_uses_distinct_application_and_adapter_clas
     ]
 
 
-def test_export_errors_are_registered_with_expected_attributes() -> None:
-    """Export errors must be registered so the CLI can handle them."""
-    cases = (
+@pytest.mark.parametrize(
+    ("code_key", "message_key"),
+    (
         ("REFUSED_EXPORT_FORMAT", "errors.refused.refused_export_format"),
         ("REFUSED_EXPORT_FIELD", "errors.refused.refused_export_field"),
-    )
-
-    for code_key, message_key in cases:
-        code = ERROR_REGISTRY[code_key]
-        assert code.code == code_key
-        assert code.message_key == message_key
-        assert code.retryable is False
+    ),
+)
+def test_export_errors_are_registered_with_expected_attributes(code_key: str, message_key: str) -> None:
+    """Export errors must be registered so the CLI can handle them."""
+    code = ERROR_REGISTRY[code_key]
+    assert code.code == code_key
+    assert code.message_key == message_key
+    assert code.retryable is False
 
 
 # ---------------------------------------------------------------------------
@@ -130,9 +131,9 @@ def test_export_errors_are_registered_with_expected_attributes() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_export_errors_build_error_envelope() -> None:
-    """build_error_envelope must succeed for export errors."""
-    cases: tuple[tuple[ExportFormatError | ExportFieldError, str], ...] = (
+@pytest.mark.parametrize(
+    ("error", "expected_code"),
+    (
         (
             ExportFormatError(
                 translated_message="errors.refused.refused_export_format",
@@ -147,14 +148,15 @@ def test_export_errors_build_error_envelope() -> None:
             ),
             "REFUSED_EXPORT_FIELD",
         ),
-    )
-
-    for error, expected_code in cases:
-        envelope = build_error_envelope(error)
-        assert envelope.code == expected_code
-        assert envelope.category == "REFUSED"
-        assert envelope.retryable is False
-        assert envelope.message != ""
+    ),
+)
+def test_export_errors_build_error_envelope(error: ExportFormatError | ExportFieldError, expected_code: str) -> None:
+    """build_error_envelope must succeed for export errors."""
+    envelope = build_error_envelope(error)
+    assert envelope.code == expected_code
+    assert envelope.category == "REFUSED"
+    assert envelope.retryable is False
+    assert envelope.message != ""
 
 
 # ---------------------------------------------------------------------------
@@ -162,7 +164,9 @@ def test_export_errors_build_error_envelope() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_export_error_locale_keys_present_in_catalogue() -> None:
+@pytest.mark.parametrize("locale_key", ("refused_export_format", "refused_export_field"))
+@pytest.mark.parametrize("locale_code", ("en", "es", "ca", "hu"))
+def test_export_error_locale_keys_present_in_catalogue(locale_key: str, locale_code: str) -> None:
     """The locale catalogue must carry export error keys for every locale."""
     import importlib.resources
     import pathlib
@@ -170,14 +174,12 @@ def test_export_error_locale_keys_present_in_catalogue() -> None:
     import yaml
 
     locale_dir = pathlib.Path(str(importlib.resources.files("aeat.locales")))
-    for locale_key in ("refused_export_format", "refused_export_field"):
-        for locale_code in ("en", "es", "ca", "hu"):
-            text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
-            data = yaml.safe_load(text)
-            value = data.get("errors", {}).get("refused", {}).get(locale_key)
-            assert value, (
-                f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"
-            )
+    text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
+    data = yaml.safe_load(text)
+    value = data.get("errors", {}).get("refused", {}).get(locale_key)
+    assert value, (
+        f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"
+    )
 
 
 # ---------------------------------------------------------------------------
