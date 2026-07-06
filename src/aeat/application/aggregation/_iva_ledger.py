@@ -30,9 +30,10 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.calculations.registry import (
@@ -81,6 +82,7 @@ _RATE_KIND_TO_DOMESTIC_CATEGORY: dict[IvaRateKind, IvaCategory] = {
     IvaRateKind.REDUCED: IvaCategory.DOMESTIC_REDUCED_10,
     IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL_21,
 }
+_HUNDRED = Decimal("100")
 
 
 class IvaLedgerAggregationIssueReason(StrEnum):
@@ -130,6 +132,15 @@ class ProrrataLedgerReference(BaseModel):
     reference: ProrrataReference
     base_amount: Decimal = Field(..., ge=Decimal("0"))
     input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
+
+
+class IvaLedgerProrrataApportionment(BaseModel):
+    """General-prorrata percentage applied to deducible ledger IVA cuotas."""
+
+    model_config = _STRICT_FROZEN
+
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
+    provenance: ProrrataProvisionalProvenance
 
 
 class IvaLedgerInputKind(StrEnum):
@@ -193,6 +204,7 @@ class IvaLedgerAggregation(BaseModel):
     period: Period
     observations: Sequence[IvaLedgerObservation] = Field(default_factory=tuple)
     prorrata_references: Sequence[ProrrataLedgerReference] = Field(default_factory=tuple)
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None = None
     issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
 
     @field_validator("observations")
@@ -240,6 +252,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    prorrata_register_repository: ProrrataRegisterRepository | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations.
 
@@ -251,15 +264,28 @@ def aggregate_iva_ledger_observations_from_repositories(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
+    prorrata_apportionment = _active_general_prorrata_apportionment(
+        bucket_id=bucket_id,
+        ejercicio=period.year,
+        prorrata_register_repository=prorrata_register_repository,
+    )
     # Only the in-window subset is decrypted and classified. Out-of-window
     # catalogue rows come from the plaintext date index and are reported
     # uniformly as ``OUTSIDE_PERIOD`` because decrypted-field gates cannot run
     # for those rows. A period with no calendar span falls back to the
     # unfiltered load.
     if not period.has_date_span():
-        return aggregate_iva_ledger_observations(repository.load(), period=period)
+        return aggregate_iva_ledger_observations(
+            repository.load(),
+            period=period,
+            prorrata_apportionment=prorrata_apportionment,
+        )
     partition = repository.partition_by_date_range(period.start_date, period.end_date)
-    result = aggregate_iva_ledger_observations(partition.in_window, period=period)
+    result = aggregate_iva_ledger_observations(
+        partition.in_window,
+        period=period,
+        prorrata_apportionment=prorrata_apportionment,
+    )
     return result.model_copy(
         update={"issues": (*result.issues, *_out_of_window_issues(partition.out_of_window))},
     )
@@ -365,6 +391,7 @@ def aggregate_iva_ledger_candidate_bindings(
     candidates: Iterable[IvaLedgerCandidate],
     *,
     period: Period,
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
 ) -> dict[BindingId, Decimal]:
     """Validate pre-classified candidates and resolve registry bindings.
 
@@ -374,6 +401,8 @@ def aggregate_iva_ledger_candidate_bindings(
             into engine binding channels.
         period: The aggregation :class:`Period` whose date range bounds the
             candidate set.
+        prorrata_apportionment: Optional active general-prorrata percentage to
+            apply to deducible IVA cuota bindings after selector resolution.
     """
     aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
     if aggregation.issues:
@@ -399,19 +428,26 @@ def aggregate_iva_ledger_candidate_bindings(
                 "revision_id": revision.id,
             },
         )
-    return resolve_ledger_iva_aggregation_binding_values(revision, aggregation.observations)
+    return resolve_iva_ledger_binding_values(
+        revision,
+        aggregation.observations,
+        prorrata_apportionment=prorrata_apportionment,
+    )
 
 
 def aggregate_iva_ledger_observations(
     transactions: TransactionCatalogue,
     *,
     period: Period,
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
 ) -> IvaLedgerAggregation:
     """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`.
 
     Args:
         transactions: The :class:`TransactionCatalogue` supplying active ledger entries.
         period: Filing period as a typed :class:`Period` instance.
+        prorrata_apportionment: Optional active general-prorrata percentage to
+            apply later to deducible IVA cuota binding values.
     """
     resolved_period = period
     observations: list[IvaLedgerObservation] = []
@@ -440,8 +476,66 @@ def aggregate_iva_ledger_observations(
         period=resolved_period,
         observations=tuple(observations),
         prorrata_references=tuple(prorrata_references),
+        prorrata_apportionment=prorrata_apportionment,
         issues=tuple(issues),
     )
+
+
+def resolve_iva_ledger_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[IvaLedgerObservation],
+    *,
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
+) -> dict[BindingId, Decimal]:
+    """Resolve IVA ledger bindings, applying general-prorrata to deducible cuotas only."""
+    binding_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    if prorrata_apportionment is None or prorrata_apportionment.percentage == _HUNDRED:
+        return binding_values
+    multiplier = prorrata_apportionment.percentage / _HUNDRED
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    if not deducible_binding_ids:
+        return binding_values
+    return {
+        binding_id: value * multiplier if binding_id in deducible_binding_ids else value
+        for binding_id, value in binding_values.items()
+    }
+
+
+def _active_general_prorrata_apportionment(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    prorrata_register_repository: ProrrataRegisterRepository | None,
+) -> IvaLedgerProrrataApportionment | None:
+    repository = prorrata_register_repository or ProrrataRegisterRepository(bucket_id=bucket_id)
+    register = repository.load()
+    entry = register.entry_for(ejercicio)
+    if entry is None or entry.regime is not ProrrataRegisterRegime.GENERAL:
+        return None
+    resolution = register.resolve_provisional(ejercicio)
+    if resolution.percentage is None or resolution.provenance is None:
+        return None
+    return IvaLedgerProrrataApportionment(
+        percentage=resolution.percentage,
+        provenance=resolution.provenance,
+    )
+
+
+def _deducible_cuota_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
+    ledger_iva_amount_bindings = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+        and getattr(binding.selector, "fact", "iva_amount_sum") == "iva_amount_sum"
+    }
+    binding_ids: set[BindingId] = set()
+    for casilla in revision.casillas:
+        if "deducible" not in casilla.section:
+            continue
+        for binding_id in (casilla.binding, *casilla.alternate_bindings):
+            if binding_id is not None and binding_id in ledger_iva_amount_bindings:
+                binding_ids.add(binding_id)
+    return frozenset(binding_ids)
 
 
 @dataclass(frozen=True)
@@ -849,12 +943,14 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
+    "IvaLedgerProrrataApportionment",
     "ProrrataLedgerReference",
     "aggregate_iva_ledger_candidate_bindings",
     "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "iva_ledger_missing_fact_reasons",
+    "resolve_iva_ledger_binding_values",
     "validate_iva_ledger_counterparty_category",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",

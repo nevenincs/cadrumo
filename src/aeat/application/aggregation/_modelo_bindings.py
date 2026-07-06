@@ -45,7 +45,6 @@ from ...domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
     resolve_ledger_impatriado_income_aggregation_binding_values,
-    resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
@@ -68,7 +67,12 @@ from ...domain.transactions import TransactionCatalogueRepositoryProtocol, Trans
 from ...domain.usage_ratios import UsageRatioPersistenceError
 from ._errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
-from ._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations_from_repositories
+from ._iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    IvaLedgerProrrataApportionment,
+    aggregate_iva_ledger_observations_from_repositories,
+    resolve_iva_ledger_binding_values,
+)
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
@@ -165,15 +169,17 @@ class LedgerIvaAggregationSourceResolver:
             )
         transaction_ids = {observation.ledger_id for observation in aggregation.observations}
         transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
-        binding_values = resolve_ledger_iva_aggregation_binding_values(
+        binding_values = resolve_iva_ledger_binding_values(
             context.revision,
             aggregation.observations,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
         )
         _raise_if_m303_invoice_domestic_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
             invoice_repository=self._invoice_repository,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
         )
         # Reuse the fail-closed candidate-path screen as a NON-blocking advisory on
         # the calculate path: a declarable IVA observation whose category/rate/flow
@@ -611,6 +617,7 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     period: Period,
     transaction_binding_values: Mapping[BindingId, Decimal],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None,
 ) -> None:
     """Refuse M303 when domestic invoice IVA would be absent from ledger totals.
 
@@ -632,7 +639,11 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     )
     if not invoice_observations:
         return
-    invoice_binding_values = resolve_ledger_iva_aggregation_binding_values(context.revision, invoice_observations)
+    invoice_binding_values = resolve_iva_ledger_binding_values(
+        context.revision,
+        invoice_observations,
+        prorrata_apportionment=prorrata_apportionment,
+    )
     missing_binding_values = {
         binding_id: invoice_value - transaction_value
         for binding_id in _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS
