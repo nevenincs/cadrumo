@@ -1,4 +1,18 @@
-"""Modelo 131 módulos engine food and hospitality activity cases."""
+"""Modelo 131 módulos engine food and hospitality activity cases.
+
+See Also:
+    :mod:`~domain.calculations.registry.tests._modelo_131_modulos_engine_support`
+        Shared independent coefficient tables and oracle arithmetic.
+    :mod:`~domain.calculations.registry._formula_runtime_m131`
+        Extracted M131 módulos formula evaluators exercised here.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry runtime entry point reached through ``_run_modulos_engine``.
+    :class:`~domain.calculations.registry.ParameterDefinition`
+        Registry-authored coefficient and índice tables cross-checked by these
+        cases.
+    :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine`
+        Core phased dataset that anchors the shared worked-example narrative.
+"""
 
 from __future__ import annotations
 

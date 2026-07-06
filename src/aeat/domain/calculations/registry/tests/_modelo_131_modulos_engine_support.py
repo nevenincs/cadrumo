@@ -1,4 +1,18 @@
-"""Shared fixtures and oracle helpers for Modelo 131 módulos engine tests."""
+"""Shared fixtures and oracle helpers for Modelo 131 módulos engine tests.
+
+See Also:
+    :mod:`~domain.calculations.registry._formula_runtime_m131`
+        Extracted M131 módulos formula evaluators under test.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry runtime entry point exercised by the helper.
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_snapshot`
+        Bundled-registry fixture that supplies the Modelo 131 2025 snapshot.
+    :class:`~domain.calculations.registry.ParameterDefinition`
+        Registry table rows mirrored by these independently transcribed
+        expected-value helpers.
+    :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine`
+        Core phased dataset using these helpers.
+"""
 
 from __future__ import annotations
 
