@@ -1,17 +1,16 @@
 """Approval-basis staleness coverage for the taxpayer profile-activity source.
 
 Exercises the ``profile_activity_fingerprint`` added to
-:class:`~aeat.domain.filing.ModeloApprovalBasis` (calculation-source-connectivity
-ADR, Phase 9 / W05.P10.S63): an ``APROBADO`` draft must go stale with
+:class:`~aeat.domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
 :attr:`~aeat.application.filing.ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED`
 when a taxpayer-profile fact that scopes relation resolution changes (activity-start
-date, m111 no-retenciones attestations, declared income categories), and must NOT be
+date, m111 no-retenciones attestations, declared income categories), and must not be
 flagged when the profile is unchanged.
 
 The digest is self-loaded from the bucket's
 :class:`~aeat.application.user_profile.ProfileRepository` via the wizard-free
 canonical projection (:func:`~aeat.application.user_profile.record_to_path_values`)
-— the SAME projection the relation resolver reads — so change-detection is
+— the same projection the relation resolver reads — so change-detection is
 reproducible at approve and refresh time with only ``bucket_id`` in scope, without
 running the source mesh.
 """
@@ -170,4 +169,3 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
     assert approved.approval_basis.profile_activity_fingerprint != empty_profile_activity_fingerprint()
     assert ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED not in reasons
     assert reasons == ()
-

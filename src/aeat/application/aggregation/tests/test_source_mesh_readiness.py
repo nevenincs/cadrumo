@@ -2,22 +2,21 @@
 
 The fincas domain and the inventory application service both hold real
 aggregates, but neither is persisted through the canonical secure-storage
-revision boundary yet, so per the calculation-source-connectivity ADR (Phase 8:
-"enroll fincas and inventory only after persistence hardening") they must NOT be
-enrolled as live calculation sources. The ``no-dormant-source-resolvers`` rule
-still applies: the surface is provisioned and its unreadiness is made VISIBLE
-through a ``source_domain_not_ready`` blocked-readiness diagnostic rather than a
-silent blank.
+revision boundary yet, so they must not be enrolled as live calculation
+sources. The ``no-dormant-source-resolvers`` rule still applies: the surface is
+provisioned and its unreadiness is made visible through a
+``source_domain_not_ready`` blocked-readiness diagnostic rather than a silent
+blank.
 
 These tests are the fail-closed proof of that contract. They assert that each
 readiness resolver:
 
 * reports its domain as not ready (the pure-domain / pure-application readiness
   fact);
-* resolves NO binding value on any channel and owns NO binding source
+* resolves no binding value on any channel and owns no binding source
   (``owned_sources == ()``) — it cannot contribute to a calculation even if
   merged;
-* emits EXACTLY one ``source_domain_not_ready`` diagnostic carrying the domain's
+* emits exactly one ``source_domain_not_ready`` diagnostic carrying the domain's
   blocking reason and ``binding_source is None`` (an advisory category, not a
   registry binding source); and
 
