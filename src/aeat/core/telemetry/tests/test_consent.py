@@ -5,6 +5,16 @@ remote-transmission exception. It must be off by default, re-affirmed per
 invocation, refused while the tier is ``off``, and barred absolutely in
 gestor deployments (``sensitive-financial-data-secure-storage-only``,
 secure-storage telemetry policy).
+
+See Also:
+    :func:`~core.telemetry.telemetry_emit_permitted`:
+        Four-way consent gate under test.
+    :class:`~core.telemetry.TelemetryTier`:
+        Closed tier enum consulted by the gate.
+    :class:`~core.config.Settings`:
+        Deployment posture carrying opt-in, tier, and gestor-mode fields.
+    :func:`~core.telemetry.emit_telemetry_event`:
+        Dispatcher that applies this gate before any sink receives a payload.
 """
 
 from __future__ import annotations
