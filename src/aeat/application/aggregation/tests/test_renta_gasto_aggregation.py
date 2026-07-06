@@ -412,11 +412,12 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     )
     assert {o.transaction_id for o in result_q1.observations} == {q1_a.transaction_id, q1_b.transaction_id}
     # Regression (issue #408): the excluded May row must surface as a visible
-    # OUTSIDE_PERIOD issue, not silently vanish -- the repository-backed entry
-    # point must NOT pre-filter the loaded catalogue by date range.
-    assert len(result_q1.issues) == 1
-    assert result_q1.issues[0].reason is RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result_q1.issues[0].transaction_id == q2_only.transaction_id
+    # compact summary, not silently vanish.
+    assert result_q1.issues == ()
+    assert result_q1.out_of_window_summary is not None
+    assert result_q1.out_of_window_summary.count == 1
+    assert result_q1.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id="test",
@@ -425,18 +426,19 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     )
     # Q2 cumulative window includes all three input bases.
     expected_q2 = sum((q1_a_base, q1_b_base, q2_base), Decimal("0"))
+    assert result_q2.out_of_window_summary is None
     assert result_q2.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == expected_q2
 
 
-def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+def test_repository_backed_aggregation_summarizes_previously_silent_out_of_window_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+    """Out-of-window rows surface as one compact period-exclusion summary.
 
     A wrong-direction incoming row is ignored before the in-window gasto
     classifier runs because this aggregation owns outgoing rows. When that row
     falls outside the requested cumulative window, the repository-backed
-    partition reports it as ``OUTSIDE_PERIOD`` instead of dropping it before
+    partition reports its count and date span instead of dropping it before
     aggregation.
     """
     in_window = _gasto_transaction("row-in-window", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
@@ -456,9 +458,11 @@ def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
-    assert len(result.issues) == 1
-    assert result.issues[0].transaction_id == wrong_direction_out_of_window.transaction_id
-    assert result.issues[0].reason is RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
 
 def test_repository_backed_aggregation_partition_matches_full_scan(
@@ -495,9 +499,11 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
     assert {o.transaction_id for o in partitioned.observations} == {q1_row.transaction_id}
 
-    partitioned_issue_ids = {i.transaction_id for i in partitioned.issues}
-    assert partitioned_issue_ids == {q3_row.transaction_id, wrong_direction_q3_row.transaction_id}
-    assert all(i.reason is RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 2
+    assert partitioned.out_of_window_summary.min_filing_date == date(2024, 8, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2024, 9, 1)
 
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {q3_row.transaction_id}

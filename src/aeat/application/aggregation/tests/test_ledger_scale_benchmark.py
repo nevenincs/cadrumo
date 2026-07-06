@@ -43,9 +43,10 @@ assertions on the real outputs they exercise.
 
 from __future__ import annotations
 
+import logging
 import statistics
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -55,7 +56,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.profile.transactions import TX_BUCKET_NAMESPACE, TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.calculations import CalculationObservationRepository
 from ....application.modelo import (
@@ -64,6 +65,7 @@ from ....application.modelo import (
     persist_filed_revision_observation,
 )
 from ....core import Period
+from ....core.hashing import sha256_hex
 from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.transactions import (
@@ -144,6 +146,11 @@ _M100_RENDIMIENTO_SOURCE_1553_CASILLA = validated_casilla_id("1553", surface="be
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA = validated_casilla_id("1577", surface="bench M100 1577")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA = validated_casilla_id("1391", surface="bench M100 BIN")
 _PRIOR_YEAR_NET_INCOME = Decimal("50000")
+_TRANSACTION_REPOSITORY_LOGGER = "aeat.adapters.persistence.profile.transactions"
+_PARTITION_LOG_MARKERS = (
+    "partitioned transaction catalogue via date index",
+    "partitioned transaction catalogue via full-scan fallback",
+)
 
 
 def _raw(idx: int, *, booked: date) -> RawTransaction:
@@ -293,6 +300,39 @@ def _p95(samples: list[float]) -> float:
     return ordered[rank]
 
 
+def _save_benchmark_update(transaction: Transaction, sample_index: int) -> Transaction:
+    """Return a same-id transaction update for write-path timing."""
+    payload = transaction.model_dump(mode="python")
+    payload["group_label"] = f"write-bench-{sample_index}"
+    payload["modified_at"] = datetime(2031, 1, 1, 12, 0, tzinfo=UTC) + timedelta(seconds=sample_index)
+    return Transaction.model_validate(payload)
+
+
+def _partition_log_messages(records: Iterable[logging.LogRecord]) -> tuple[str, ...]:
+    """Return real transaction-repository partition log messages captured by pytest."""
+    return tuple(
+        message
+        for record in records
+        for message in (record.getMessage(),)
+        if any(marker in message for marker in _PARTITION_LOG_MARKERS)
+    )
+
+
+def _partition_in_window_rows(messages: Iterable[str]) -> int:
+    """Return the in-window row total reported by real partition log messages."""
+    total = 0
+    for message in messages:
+        marker = "in_window="
+        start = message.find(marker)
+        if start < 0:
+            continue
+        start += len(marker)
+        end = message.find(" ", start)
+        token = message[start:] if end < 0 else message[start:end]
+        total += int(token)
+    return total
+
+
 @pytest.fixture(scope="module")
 def scale_bucket() -> Iterator[SecureObjectRepository]:
     """Yield a real bucket seeded with the 30k-transaction / 10-year ledger.
@@ -391,8 +431,86 @@ def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: Secure
     )
 
 
+def test_single_transaction_save_reports_write_path_latency(scale_bucket: SecureObjectRepository) -> None:
+    """Report latency of saving one changed transaction in a 30k-row catalogue.
+
+    The transaction repository no longer rewrites unchanged secure-object rows,
+    but `_reconcile` still does O(n) catalogue work before it can discover the
+    single changed row: a namespace hash scan plus serialisation and SHA-256 of
+    every incoming transaction payload. This benchmark measures those two
+    components and the real `repo.save(updated_catalogue)` total against the
+    seeded encrypted SQLite bucket.
+    """
+    repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=scale_bucket)
+    original_catalogue = repo.load()
+    target_id = min(original_catalogue.transactions)
+    target = original_catalogue.transactions[target_id]
+    target_filing_date = target.raw.value_date or target.raw.booked_date
+
+    namespace_hash_samples: list[float] = []
+    for _ in range(_DIAGNOSTIC_SAMPLE_COUNT):
+        started = time.perf_counter()
+        namespace_hashes = scale_bucket.namespace_payload_hashes(TX_BUCKET_NAMESPACE)
+        namespace_hash_samples.append(time.perf_counter() - started)
+        assert len(namespace_hashes) >= _TOTAL_TRANSACTIONS
+
+    serialise_hash_samples: list[float] = []
+    for _ in range(_DIAGNOSTIC_SAMPLE_COUNT):
+        started = time.perf_counter()
+        payload_hashes = tuple(
+            sha256_hex(repo._serialise_transaction(transaction))
+            for transaction in original_catalogue.transactions.values()
+        )
+        serialise_hash_samples.append(time.perf_counter() - started)
+        assert len(payload_hashes) == _TOTAL_TRANSACTIONS
+
+    save_samples: list[float] = []
+    current_catalogue = original_catalogue
+    try:
+        for sample_index in range(_DIAGNOSTIC_SAMPLE_COUNT):
+            current_transaction = current_catalogue.transactions[target_id]
+            updated_transaction = _save_benchmark_update(current_transaction, sample_index)
+            assert updated_transaction.transaction_id == target_id
+            updated_transactions = dict(current_catalogue.transactions)
+            updated_transactions[target_id] = updated_transaction
+            updated_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
+
+            started = time.perf_counter()
+            repo.save(updated_catalogue)
+            save_samples.append(time.perf_counter() - started)
+            current_catalogue = updated_catalogue
+
+        loaded_target_window = repo.load_for_date_range(target_filing_date, target_filing_date)
+        assert loaded_target_window.transactions[target_id].group_label == f"write-bench-{_DIAGNOSTIC_SAMPLE_COUNT - 1}"
+    finally:
+        repo.save(original_catalogue)
+
+    namespace_p95 = _p95(namespace_hash_samples)
+    serialise_hash_p95 = _p95(serialise_hash_samples)
+    save_p95 = _p95(save_samples)
+    print(
+        f"\n[bench] transaction_save_namespace_hash_scan: n={_DIAGNOSTIC_SAMPLE_COUNT} "
+        f"p95={namespace_p95:.3f}s mean={statistics.mean(namespace_hash_samples):.3f}s "
+        f"min={min(namespace_hash_samples):.3f}s max={max(namespace_hash_samples):.3f}s "
+        f"namespace={TX_BUCKET_NAMESPACE}",
+    )
+    print(
+        f"[bench] transaction_save_serialize_hash_all_rows: n={_DIAGNOSTIC_SAMPLE_COUNT} "
+        f"rows={_TOTAL_TRANSACTIONS} p95={serialise_hash_p95:.3f}s "
+        f"mean={statistics.mean(serialise_hash_samples):.3f}s "
+        f"min={min(serialise_hash_samples):.3f}s max={max(serialise_hash_samples):.3f}s",
+    )
+    print(
+        f"[bench] single_transaction_save: n={_DIAGNOSTIC_SAMPLE_COUNT} rows={_TOTAL_TRANSACTIONS} "
+        f"changed_rows=1 p95={save_p95:.3f}s mean={statistics.mean(save_samples):.3f}s "
+        f"min={min(save_samples):.3f}s max={max(save_samples):.3f}s "
+        f"serialize_hash_p95={serialise_hash_p95:.3f}s namespace_hash_scan_p95={namespace_p95:.3f}s",
+    )
+
+
 def test_iva_quarterly_aggregation_partitioned_p95_latency(
     scale_bucket: SecureObjectRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Budgeted P95 latency for the partitioned quarterly IVA path.
 
@@ -411,26 +529,37 @@ def test_iva_quarterly_aggregation_partitioned_p95_latency(
 
     full_scan_samples: list[float] = []
     partitioned_samples: list[float] = []
-    for sample_index in range(_BUDGET_SAMPLE_COUNT):
-        if sample_index < _DIAGNOSTIC_SAMPLE_COUNT:
+    paired_partitioned_samples: list[float] = []
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger=_TRANSACTION_REPOSITORY_LOGGER):
+        for sample_index in range(_BUDGET_SAMPLE_COUNT):
+            if sample_index < _DIAGNOSTIC_SAMPLE_COUNT:
+                started = time.perf_counter()
+                full_scan_result = aggregate_iva_ledger_observations(tx_repo.load(), period=period)
+                full_scan_samples.append(time.perf_counter() - started)
+                assert isinstance(full_scan_result.observations, tuple)
+
             started = time.perf_counter()
-            full_scan_result = aggregate_iva_ledger_observations(tx_repo.load(), period=period)
-            full_scan_samples.append(time.perf_counter() - started)
-            assert isinstance(full_scan_result.observations, tuple)
+            partitioned_result = aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=_BUCKET_ID,
+                period=period,
+                transaction_repository=tx_repo,
+            )
+            partitioned_duration = time.perf_counter() - started
+            partitioned_samples.append(partitioned_duration)
+            if sample_index < _DIAGNOSTIC_SAMPLE_COUNT:
+                paired_partitioned_samples.append(partitioned_duration)
 
-        started = time.perf_counter()
-        partitioned_result = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=_BUCKET_ID,
-            period=period,
-            transaction_repository=tx_repo,
-        )
-        partitioned_samples.append(time.perf_counter() - started)
-
-        # Real accumulator output, not a mock stand-in.
-        assert isinstance(partitioned_result.observations, tuple)
+            # Real accumulator output, not a mock stand-in.
+            assert isinstance(partitioned_result.observations, tuple)
 
     full_scan_p95 = _p95(full_scan_samples)
     partitioned_p95 = _p95(partitioned_samples)
+    paired_partitioned_p95 = _p95(paired_partitioned_samples)
+    partition_messages = _partition_log_messages(caplog.records)
+    partition_read_count = len(partition_messages)
+    partition_in_window_rows = _partition_in_window_rows(partition_messages)
+    assert partition_read_count == _BUDGET_SAMPLE_COUNT
     print(
         f"\n[bench] iva_quarterly_full_scan_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
         f"p95={full_scan_p95:.3f}s mean={statistics.mean(full_scan_samples):.3f}s "
@@ -440,7 +569,9 @@ def test_iva_quarterly_aggregation_partitioned_p95_latency(
         f"[bench] iva_quarterly_partitioned: n={_BUDGET_SAMPLE_COUNT} "
         f"p95={partitioned_p95:.3f}s mean={statistics.mean(partitioned_samples):.3f}s "
         f"min={min(partitioned_samples):.3f}s max={max(partitioned_samples):.3f}s "
-        f"budget={_P95_BUDGET_SECONDS:.1f}s",
+        f"budget={_P95_BUDGET_SECONDS:.1f}s "
+        f"paired_p95_delta_vs_full_scan={(full_scan_p95 - paired_partitioned_p95):.3f}s "
+        f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
     assert partitioned_p95 < _P95_BUDGET_SECONDS, (
         f"IVA quarterly aggregation (partitioned) P95 {partitioned_p95:.3f}s at "
@@ -449,7 +580,10 @@ def test_iva_quarterly_aggregation_partitioned_p95_latency(
     )
 
 
-def test_modelo_calculate_reports_latency(scale_bucket: SecureObjectRepository) -> None:
+def test_modelo_calculate_reports_latency(
+    scale_bucket: SecureObjectRepository,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Report latency of real M130 quarterly calculate at 30k-row ledger scale.
 
     Exercises :func:`calculate_modelo_revision_from_bucket_aggregation` end to
@@ -474,42 +608,49 @@ def test_modelo_calculate_reports_latency(scale_bucket: SecureObjectRepository) 
 
     quarters = ("1T", "2T", "3T", "4T")
     samples: list[float] = []
-    for year in _M130_DIAGNOSTIC_YEARS:
-        for quarter in quarters:
-            filed_at = datetime(year, 4, 6, 12, 0, tzinfo=UTC)
-            work_unit = create_work_unit(
-                bucket_id=_BUCKET_ID,
-                modelo="130",
-                filing_year=year,
-                period=Period.from_year_and_code(year, quarter),
-                revision_id=_M130_REVISION,
-                repository=wu_repo,
-                clock=filed_at,
-            )
-            started = time.perf_counter()
-            revision = calculate_modelo_revision_from_bucket_aggregation(
-                work_unit.work_unit_id,
-                casilla_inputs=_M130_MANUAL_INPUTS,
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                transaction_repository=tx_repo,
-                invoice_repository=invoice_repo,
-                clock=filed_at,
-            )
-            samples.append(time.perf_counter() - started)
-            assert revision.casilla_values  # the engine produced real casilla output, not an empty stub
-            persist_filed_revision_observation(
-                revision=revision,
-                work_unit=work_unit,
-                repository=observation_repo,
-                captured_at=filed_at,
-            )
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger=_TRANSACTION_REPOSITORY_LOGGER):
+        for year in _M130_DIAGNOSTIC_YEARS:
+            for quarter in quarters:
+                filed_at = datetime(year, 4, 6, 12, 0, tzinfo=UTC)
+                work_unit = create_work_unit(
+                    bucket_id=_BUCKET_ID,
+                    modelo="130",
+                    filing_year=year,
+                    period=Period.from_year_and_code(year, quarter),
+                    revision_id=_M130_REVISION,
+                    repository=wu_repo,
+                    clock=filed_at,
+                )
+                started = time.perf_counter()
+                revision = calculate_modelo_revision_from_bucket_aggregation(
+                    work_unit.work_unit_id,
+                    casilla_inputs=_M130_MANUAL_INPUTS,
+                    work_unit_repository=wu_repo,
+                    calculation_repository=cr_repo,
+                    transaction_repository=tx_repo,
+                    invoice_repository=invoice_repo,
+                    clock=filed_at,
+                )
+                samples.append(time.perf_counter() - started)
+                assert revision.casilla_values  # the engine produced real casilla output, not an empty stub
+                persist_filed_revision_observation(
+                    revision=revision,
+                    work_unit=work_unit,
+                    repository=observation_repo,
+                    captured_at=filed_at,
+                )
 
     reported = samples
     p95 = _p95(reported)
+    partition_messages = _partition_log_messages(caplog.records)
+    partition_read_count = len(partition_messages)
+    partition_in_window_rows = _partition_in_window_rows(partition_messages)
+    assert partition_read_count >= len(reported)
     print(
         f"\n[bench] modelo_calculate_diagnostic: n={len(reported)} "
         f"p95={p95:.3f}s mean={statistics.mean(reported):.3f}s "
         f"min={min(reported):.3f}s max={max(reported):.3f}s "
-        f"budget={_P95_BUDGET_SECONDS:.1f}s budget_scope=diagnostic_modelo_calculate",
+        f"budget={_P95_BUDGET_SECONDS:.1f}s budget_scope=diagnostic_modelo_calculate "
+        f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
