@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-06-30'
+modified: '2026-07-06'
 tier: L4
 related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
@@ -59,8 +59,8 @@ Build the recorder in _multi_year.py supporting both calculation-based year capt
 
 Author the hard-cut no-baseline meta-test that prints authorized N/30 and cross-checks recorded year-sets against the manifest, and add the advisory work calculate banner for unauthorized-but-has-engine modelos while preserving the work create stub refusal.
 
-- [ ] `W01.P03.S09` - author the hard-cut no-baseline meta-test enumerating all 30 modelos and printing authorized N/30 with the UNAUTHORIZED id list (vaultspec-high-executor); `src/aeat/domain/modelos/test_modelo_authorization_gate.py`.
-- [ ] `W01.P03.S10` - cross-check each recorded year-set equals the manifest renta_years claim and contains >=2 distinct years (vaultspec-high-executor); `src/aeat/domain/modelos/test_modelo_authorization_gate.py`.
+- [x] `W01.P03.S09` - maintain the hard-cut no-baseline authorization meta-test over the live canonical fleet, printing authorized N/FLEET_SIZE with the UNAUTHORIZED id list (vaultspec-high-executor); `src/aeat/tests/test_modelo_authorization_gate.py`.
+- [x] `W01.P03.S10` - cross-check each recorded year-set equals the manifest renta_years claim, contains >=2 distinct years, and calls the enrollment contract (vaultspec-high-executor); `src/aeat/tests/test_modelo_authorization_gate.py`.
 - [ ] `W01.P03.S11` - add the ADVISORY work-calculate banner naming the unauthorized state for unauthorized-but-has-engine modelos (vaultspec-standard-executor); `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W01.P03.S12` - assert the existing _guard_stub_modelo hard refusal at work create still fires for no-engine stubs (vaultspec-code-reviewer); `src/aeat/entrypoints/cli/test_authorization_advisory_banner.py`.
 
