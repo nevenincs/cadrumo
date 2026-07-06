@@ -3,11 +3,19 @@
 The profile-bucket lifecycle substrate invariant forbids any
 module-global or class-level mutable state that could
 survive a bucket switch. Cache state moves to the per-bucket
-:class:`BucketSession` instance.
+:class:`~adapters.persistence.storage.master_key.BucketSession` instance.
 
 Asserts directly against the imported provider classes that they declare
-zero class-level annotations naming :class:`typing.ClassVar`. This is the
+zero class-level annotations naming :class:`~typing.ClassVar`. This is the
 regression gate for the master-key substrate invariant.
+
+See Also:
+    :class:`~adapters.persistence.storage.master_key.KeyringMasterKeyProvider`
+        OS-keychain-backed provider guarded against revived class caches.
+    :class:`~adapters.persistence.storage.master_key.FileFallbackMasterKeyProvider`
+        File-backed provider guarded against revived class caches.
+    ``2026-05-14-profile-bucket-lifecycle-adr``
+        Decision that moved provider caches to bucket-scoped session state.
 """
 
 from __future__ import annotations
