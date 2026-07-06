@@ -247,10 +247,10 @@ Complete the declared-but-unwired modelo-210-2025-calculation link, then enroll 
 
 Build the Patrimonio wealth-base engine (60% limite conjunto x-ref to M100) per A5, then enroll a year-over-year wealth-base calculation across two renta years; Ley 19/1991.
 
-- [ ] `W06.P24.S65` - build the Patrimonio wealth-base engine with the 60% limite conjunto x-ref to M100 per A5-714 (Ley 19/1991) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_714.py`.
-- [ ] `W06.P24.S66` - declare the modelo-714 calculation application-link surface in the registry (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/714/`.
-- [ ] `W06.P24.S67` - write the M714 >=2-renta E2E test asserting year-over-year wealth-base calculation via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_714_wealth_continuity.py`.
-- [ ] `W06.P24.S68` - enroll M714 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W06.P24.S65` - build the Patrimonio wealth-base engine with the 60% limite conjunto x-ref to M100 per A5-714 (Ley 19/1991) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_714.py`.
+- [x] `W06.P24.S66` - declare the modelo-714 calculation application-link surface in the registry (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/714/`.
+- [x] `W06.P24.S67` - write the M714 >=2-renta E2E test asserting year-over-year wealth-base calculation via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_714_wealth_continuity.py`.
+- [x] `W06.P24.S68` - enroll M714 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W06.P25` - Modelo 721 (crypto declaracion, ENGINE-BUILD-THEN-CALC)
 
@@ -307,8 +307,8 @@ Enroll the declaracion censal via obligation-set continuity across two annual co
 
 Enroll the Impuesto sobre Actividades Economicas via the 1M-per-year cifra-de-negocios exemption logic across two annual contexts.
 
-- [ ] `W07.P31.S86` - write the M840 threshold-continuity E2E test asserting the 1M-per-year cifra-de-negocios exemption across two annual contexts via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_840_exemption_continuity.py`.
-- [ ] `W07.P31.S87` - enroll M840 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W07.P31.S86` - write the M840 threshold-continuity E2E test asserting the 1M-per-year cifra-de-negocios exemption across two annual contexts via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_840_exemption_continuity.py`.
+- [x] `W07.P31.S87` - enroll M840 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ## Parallelization
 
