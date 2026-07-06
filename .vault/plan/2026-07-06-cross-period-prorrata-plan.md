@@ -43,11 +43,11 @@ The ProrrataRegister aggregate, per-ejercicio entry model, closed regime and pro
 
 The PROFILE_* secure-object namespace, the FINANCIAL singleton repository, the application service facade, and the full roundtrip + anti-tautology proof for the persistence boundary.
 
-- [ ] `W01.P02.S05` - declare the PROFILE_PRORRATA_REGISTER FINANCIAL bucket-local secure-object namespace singleton and export it from the storage facade, mirroring PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `W01.P02.S06` - implement the encrypted ProrrataRegisterRepository (governed singleton save/load through SecureObjectRepository) on the bienes_inversion adapter pattern; `src/aeat/adapters/persistence/profile/prorrata_register.py`.
-- [ ] `W01.P02.S07` - add the application service facade to declare, list, and get the per-ejercicio register entry, exposed only through the package top-level __all__; `src/aeat/application/prorrata_register/__init__.py`.
-- [ ] `W01.P02.S08` - add the strict save/load/equality roundtrip test with every defaultable field populated non-default, using the real EphemeralMasterKeyProvider and SQLite engine (aeat-roundtrip-discipline); `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
-- [ ] `W01.P02.S09` - add the anti-tautology corrupt-payload proof: mutate the on-disk register to delete a field, reload, assert ValidationError or strict inequality surfaces; `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
+- [x] `W01.P02.S05` - declare the PROFILE_PRORRATA_REGISTER FINANCIAL bucket-local secure-object namespace singleton and export it from the storage facade, mirroring PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `W01.P02.S06` - implement the encrypted ProrrataRegisterRepository (governed singleton save/load through SecureObjectRepository) on the bienes_inversion adapter pattern; `src/aeat/adapters/persistence/profile/prorrata_register.py`.
+- [x] `W01.P02.S07` - add the application service facade to declare, list, and get the per-ejercicio register entry, exposed only through the package top-level __all__; `src/aeat/application/prorrata_register/__init__.py`.
+- [x] `W01.P02.S08` - add the strict save/load/equality roundtrip test with every defaultable field populated non-default, using the real EphemeralMasterKeyProvider and SQLite engine (aeat-roundtrip-discipline); `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
+- [x] `W01.P02.S09` - add the anti-tautology corrupt-payload proof: mutate the on-disk register to delete a field, reload, assert ValidationError or strict inequality surfaces; `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
 
 ## Wave `W02` - Provisional seed (the cross-year carry)
 

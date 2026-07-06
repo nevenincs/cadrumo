@@ -11,6 +11,11 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W01-P01-S02]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P01-S03]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P01-S04]]'
+  - '[[2026-07-06-cross-period-prorrata-W01-P02-S05]]'
+  - '[[2026-07-06-cross-period-prorrata-W01-P02-S06]]'
+  - '[[2026-07-06-cross-period-prorrata-W01-P02-S07]]'
+  - '[[2026-07-06-cross-period-prorrata-W01-P02-S08]]'
+  - '[[2026-07-06-cross-period-prorrata-W01-P02-S09]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
@@ -31,6 +36,11 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W01-P01-S02` - declare the strict ProrrataRegisterEntry pydantic model (ejercicio, regime, sector axis, provisional percentage + provenance + optional authorisation reference, definitive percentage + volume inputs once settled, source-observation identity) mirroring domain/bienes_inversion shapes
 - `2026-07-06-cross-period-prorrata-W01-P01-S03` - declare the ProrrataRegister aggregate holding one entry per (ejercicio, sector) with regime and sector axes present from birth so especial and sectores land without migration (no-legacy-compatibility)
 - `2026-07-06-cross-period-prorrata-W01-P01-S04` - implement the pure precedence-ladder resolver (authorised/inicio provenance > carried prior definitive > no value) returning the in-force provisional percentage or None, never a fabricated default, with unit tests over the ladder
+- `2026-07-06-cross-period-prorrata-W01-P02-S05` - declare the PROFILE_PRORRATA_REGISTER FINANCIAL bucket-local secure-object namespace singleton and export it from the storage facade, mirroring PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
+- `2026-07-06-cross-period-prorrata-W01-P02-S06` - implement the encrypted ProrrataRegisterRepository (governed singleton save/load through SecureObjectRepository) on the bienes_inversion adapter pattern
+- `2026-07-06-cross-period-prorrata-W01-P02-S07` - add the application service facade to declare, list, and get the per-ejercicio register entry, exposed only through the package top-level __all__
+- `2026-07-06-cross-period-prorrata-W01-P02-S08` - add the strict save/load/equality roundtrip test with every defaultable field populated non-default, using the real EphemeralMasterKeyProvider and SQLite engine (aeat-roundtrip-discipline)
+- `2026-07-06-cross-period-prorrata-W01-P02-S09` - add the anti-tautology corrupt-payload proof: mutate the on-disk register to delete a field, reload, assert ValidationError or strict inequality surfaces
 
 ### plan
 
