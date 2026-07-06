@@ -501,3 +501,25 @@ Findings: no open S37 reconciliation findings.
 
 Residual gate inventory: the focused domain prorrata/register test slice passes
 sequentially with 51 tests.
+
+## S38 Review
+
+Reviewed the `W06.P09.S38` sector follow-up record against the cross-period
+prorrata ADR, the W06 plan row, the register `sector_id` slot, and the domain
+sectoral prorrata predicate. The register already keys entries by
+`(ejercicio, sector_id)` and rejects duplicates, and the domain substrate can
+evaluate the Art. 9.1.c sectoral-separation predicate from supplied sectors.
+That is schema/substrate capacity only: the application does not yet identify
+taxpayer sectors, orchestrate per-sector register entries, or run per-sector
+provisional/definitive lifecycle flows.
+
+S38 correctly records three follow-ups rather than shipping implicit behavior:
+per-sector register orchestration, the Art. 104.Tres financial/inmobiliario
+special denominator treatment beyond the current exclusion set, and the Art.
+105.Cinco interrupted-activity three-year rule. No production code or registry
+convention changed in this step.
+
+Findings: no open S38 reconciliation findings.
+
+Residual gate inventory: the focused domain prorrata/register test slice passes
+sequentially with 51 tests.
