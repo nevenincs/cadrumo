@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-from ....tests.application_adapter_exports import BucketEventHistoryRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
