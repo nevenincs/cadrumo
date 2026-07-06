@@ -12,6 +12,7 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
   - '[[2026-06-04-modelo-multiyear-renta-research]]'
+  - '[[2026-07-06-modelo-multiyear-renta-audit]]'
 ---
 
 # `modelo-multiyear-renta` feature index
@@ -27,6 +28,7 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 ### audit
 
 - `2026-06-02-modelo-multiyear-renta-audit` - `modelo-multiyear-renta` audit: `multi-year-renta campaign-close honesty review`
+- `2026-07-06-modelo-multiyear-renta-audit` - `modelo-multiyear-renta` audit: `Modelo 145 fleet drift review`
 
 ### exec
 
