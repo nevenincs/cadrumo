@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.application.workflow.WorkflowEngine`.
+"""Unit tests for :class:`~application.workflow.WorkflowEngine`.
 
 Every test uses real Protocol-conforming test harness components. No imports from
 ``unittest`` — the project-wide pytest-only mandate applies to this
@@ -9,12 +9,27 @@ The shared :class:`_Fixtures` helper builds a healthy set of components
 and lets individual tests override exactly the knob that should
 provoke a bailout.
 
-The :mod:`aeat.adapters.outbound.aeat.sede` boundary is exercised through the
+The :mod:`~adapters.outbound.aeat.sede` boundary is exercised through the
 :class:`WorkflowEngine` constructor's ``expedientes_source`` and
 ``notifications_source`` seams. Tests inject async callables that
-return real :class:`aeat.adapters.outbound.aeat.sede.Expediente` and
-:class:`aeat.adapters.outbound.aeat.sede.RemoteNotification` records, bypassing the live
-Playwright walkers without falsifying their record shape.
+return real :class:`~adapters.outbound.aeat.sede.Expediente` and
+:class:`~adapters.outbound.aeat.sede.RemoteNotification` records, bypassing the
+live Playwright walkers without falsifying their record shape.
+
+See Also:
+    :mod:`~application.workflow._engine`
+        Linear workflow composition root whose stages and abort matrix are
+        exercised here.
+    :mod:`~application.workflow._protocols`
+        Narrow component contracts implemented by the real-behaviour harness.
+    :func:`~application.state_projection.build_pending_obligations`
+        Projection consumer checked against the engine's shared deadline
+        schedule.
+    Governing vault records
+        ``2026-04-12-workflow-engine-plan`` introduced the engine stages and
+        Protocol harness; the workflow-engine harvest ADR keeps the engine as
+        an application-layer lifecycle gate rather than a standalone CLI
+        surface.
 """
 
 from __future__ import annotations
@@ -291,7 +306,7 @@ class TestGateProjectionAgreement:
 
 class TestUnhandledEnvelope:
     """Every ``except Exception`` catch site in ``_record_unhandled`` must
-    produce a structured :class:`~aeat.core.errors.ErrorEnvelope` with a
+    produce a structured :class:`~core.errors.ErrorEnvelope` with a
     stable ``INTERNAL_WORKFLOW_UNHANDLED`` code.
 
     Each test triggers one real catch path with a real exception class and
