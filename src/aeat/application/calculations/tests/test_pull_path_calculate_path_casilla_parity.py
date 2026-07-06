@@ -7,15 +7,16 @@ produces differently because both paths persisted to the same revision without a
 cross-path comparison.  The relation-canonicalisation work centralised relation handling so that:
 
 * The **live bucket-aggregation calculate path** enrolls
-  :class:`~aeat.application.calculations._relation_prefill.RelationPrefillSourceResolver`
+  :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
   in its ``merge_source_resolutions`` mesh, which delegates to
-  :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
+  :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
   before calling the formula engine. The M180 perceptor count is a separate
   RET-1 ``retenciones_aggregation`` source, so the parity path seeds and
   resolves that source explicitly instead of summing quarterly counts.
 
 * The **standalone relay path** calls ``resolve_relations_from_local_store``
-  directly and feeds its output into :func:`calculate_registry_snapshot`.
+  directly and feeds its output into
+  :func:`~domain.calculations.registry.calculate_registry_snapshot`.
 
 Both paths share one implementation — ``resolve_relations_from_local_store`` —
 so divergence at the relation-resolution boundary is structurally impossible:
@@ -41,6 +42,23 @@ regression:
     real ``CalculationRevisionCatalogueRepository``, real retención observation
     repository, real registry authority, real formula engine.  No mocks, no
     skips, no xfail.
+
+See Also:
+    :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        Live source-mesh adapter whose ``resolve`` path is compared with the
+        direct relay path.
+    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+        Shared relation-resolution implementation both transports consume.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry formula engine that consumes the resolved relation values.
+    :class:`~application.aggregation.RetencionesAggregationSourceResolver`
+        RET-1 source resolver seeded explicitly so M180 count parity is not
+        faked by summing quarterly relation values.
+    Governing vault records
+        ``2026-06-10-calculation-engine-foundations-audit`` codifies
+        ``one-aggregation-path-pull-equals-calculate`` and
+        ``no-dormant-source-resolvers``; ``2026-06-26-binding-resolver-contract-unification-adr``
+        keeps pull and calculate paths on one resolver set.
 """
 
 from __future__ import annotations
@@ -348,12 +366,14 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     store and verifies that:
 
     (A) The live bucket-aggregation calculate path for M180 (which enrolls
-        :class:`RelationPrefillSourceResolver` in its source mesh) produces the
-        same casilla values as
+        :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        in its source mesh) produces the same casilla values as
 
-    (B) The standalone relay path (:class:`RelationPrefillSourceResolver` called
-        directly against the same observation store, feeding its resolved
-        ``relation_values`` into :func:`calculate_registry_snapshot`).
+    (B) The standalone relay path
+        (:class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        called directly against the same observation store, feeding its resolved
+        ``relation_values`` into
+        :func:`~domain.calculations.registry.calculate_registry_snapshot`).
 
     This locks the parity guarantee: the relation-canonicalisation work centralised both
     paths onto one shared ``resolve_relations_from_local_store`` call so divergence is
