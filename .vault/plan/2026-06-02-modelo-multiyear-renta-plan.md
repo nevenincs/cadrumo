@@ -144,65 +144,65 @@ Enroll the IVA fleet 303, 390, 322, 353, 369, 349, 308, 309, 360 into the gate. 
 
 Enroll the IVA autoliquidacion: 4T/N -> 1T/N+1 cuota-a-compensar carry across two renta years via the iva_wallet engine integration pattern.
 
-- [ ] `W04.P11.S35` - write the M303 >=2-renta E2E test asserting the 4T/N cuota-a-compensar carries into 1T/N+1 via the iva_wallet engine and real adapters, exercising MultiYearResolver.resolve() for the prorrata LIVA art.105 four-prior-year-mean path so the docstring claim is verified not assumed (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_303_carry_forward_continuity.py`.
-- [ ] `W04.P11.S36` - enroll M303 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P11.S35` - reconcile the M303 two-renta compensation-carry enrollment test proving 4T/2025 saldo into 1T/2026 casilla 110 via real registry calculation and relation resolver; `src/aeat/application/calculations/tests/test_modelo_303_compensacion_carry_forward_continuity.py; src/aeat/_data/registry/aeat/modelos/303/revisions/2024-y-siguientes/relations/0001-relations.toml`.
+- [x] `W04.P11.S36` - reconcile the M303 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/303.toml`.
 
 ### Phase `W04.P12` - Modelo 390 (IVA resumen anual, RECONCILIATION-CROSS-RENTA)
 
 Enroll the IVA annual resumen reconciled against its four 303 feeders across two renta years, extending the existing binding-prefill pattern.
 
-- [ ] `W04.P12.S37` - write the M390 reconciliation E2E test driving the four 303 feeders and the annual 390 resumen across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_390_annual_reconciliation.py`.
-- [ ] `W04.P12.S38` - enroll M390 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P12.S37` - reconcile the M390 two-renta annual reconciliation test against four M303 quarterly feeders; `src/aeat/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py; src/aeat/_data/registry/aeat/modelos/390/revisions/2022-y-siguientes/bindings/0001-bindings.toml`.
+- [x] `W04.P12.S38` - reconcile the M390 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/390.toml`.
 
 ### Phase `W04.P13` - Modelo 322 (IVA grupo entidades individual, CALC-CROSS-RENTA)
 
 Enroll the grupo-entidades individual autoliquidacion across two renta years; feeds the 353 aggregation per A2 (LIVA art.163).
 
-- [ ] `W04.P13.S39` - write the M322 >=2-renta E2E test asserting the grupo-entidades individual autoliquidacion across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_322_grupo_continuity.py`.
-- [ ] `W04.P13.S40` - enroll M322 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P13.S39` - reconcile the M322 two-renta REGE individual calculation enrollment test for December 2025 and 2026; `src/aeat/application/calculations/tests/test_modelo_322_grupo_individual_continuity.py`.
+- [x] `W04.P13.S40` - reconcile the M322 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/322.toml`.
 
 ### Phase `W04.P14` - Modelo 353 (IVA grupo entidades agregado, CALC-CROSS-RENTA)
 
 Enroll the grupo-entidades aggregated autoliquidacion via the A2 353<-322 monthly aggregation mechanism across two renta years.
 
-- [ ] `W04.P14.S41` - author the 353<-322 monthly grupo aggregation mechanism in the registry per A2 (LIVA art.163) (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/353/`.
-- [ ] `W04.P14.S42` - write the M353 >=2-renta E2E test asserting the aggregated grupo autoliquidacion sums its 322 members across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_353_aggregation_continuity.py`.
-- [ ] `W04.P14.S43` - enroll M353 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P14.S41` - reconcile the 353<-322 per-member aggregation bindings using per_grupo_member grouping and sum aggregation; `src/aeat/_data/registry/aeat/modelos/353/revisions/2008-y-siguientes/bindings/0002-bindings.toml`.
+- [x] `W04.P14.S42` - reconcile the M353 two-renta aggregation enrollment test summing two members real 322 calculations into 353; `src/aeat/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py`.
+- [x] `W04.P14.S43` - reconcile the M353 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/353.toml`.
 
 ### Phase `W04.P15` - Modelo 369 (IVA OSS/IOSS, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the One-Stop-Shop declaration via year-over-year data-fidelity and provenance roundtrip across two renta years (no numeric oracle).
 
-- [ ] `W04.P15.S44` - write the M369 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of the One-Stop-Shop OSS/IOSS declaration across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_369_fidelity_continuity.py`.
-- [ ] `W04.P15.S45` - enroll M369 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P15.S44` - reconcile the M369 calculation-mode OSS Union-scheme cuota-total enrollment test across two renta years; `src/aeat/application/calculations/tests/test_modelo_369_oss_fidelity.py`.
+- [x] `W04.P15.S45` - reconcile the M369 authorization manifest entry with calculation evidence_class and renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/369.toml`.
 
 ### Phase `W04.P16` - Modelo 349 (IVA operaciones intracomunitarias, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the recapitulativa de operaciones intracomunitarias via year-over-year data-fidelity and provenance roundtrip across two renta years.
 
-- [ ] `W04.P16.S46` - write the M349 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of the recapitulativa de operaciones intracomunitarias across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_349_fidelity_continuity.py`.
-- [ ] `W04.P16.S47` - enroll M349 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P16.S46` - reconcile the M349 intracomunitario data-fidelity enrollment test proving encrypted observation roundtrip and year isolation; `src/aeat/application/calculations/tests/test_modelo_349_intracomunitario_fidelity.py`.
+- [x] `W04.P16.S47` - reconcile the M349 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/349.toml`.
 
 ### Phase `W04.P17` - Modelo 308 (IVA solicitud devolucion, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the devolucion-a-no-establecidos / recargo-equivalencia request via year-over-year data-fidelity and provenance roundtrip across two renta years.
 
-- [ ] `W04.P17.S48` - write the M308 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of the devolucion no-establecidos y recargo de equivalencia across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_308_fidelity_continuity.py`.
-- [ ] `W04.P17.S49` - enroll M308 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P17.S48` - reconcile the M308 ad-hoc data-fidelity enrollment test proving two-renta encrypted observation roundtrip; `src/aeat/application/calculations/tests/test_modelo_308_adhoc_fidelity.py`.
+- [x] `W04.P17.S49` - reconcile the M308 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/308.toml`.
 
 ### Phase `W04.P18` - Modelo 309 (IVA no periodica, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the declaracion-liquidacion no periodica via year-over-year data-fidelity and provenance roundtrip across two renta years.
 
-- [ ] `W04.P18.S50` - write the M309 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of the declaracion-liquidacion no periodica across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_309_fidelity_continuity.py`.
-- [ ] `W04.P18.S51` - enroll M309 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P18.S50` - reconcile the M309 calculation-mode ad-hoc cuota-total enrollment test across two renta years; `src/aeat/application/calculations/tests/test_modelo_309_adhoc_fidelity.py`.
+- [x] `W04.P18.S51` - reconcile the M309 authorization manifest entry with calculation evidence_class and renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/309.toml`.
 
 ### Phase `W04.P19` - Modelo 360 (IVA devolucion otros estados, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the devolucion-a-empresarios-en-otros-estados request via year-over-year data-fidelity and provenance roundtrip across two renta years.
 
-- [ ] `W04.P19.S52` - write the M360 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of the devolucion a empresarios establecidos en otros estados across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_360_fidelity_continuity.py`.
-- [ ] `W04.P19.S53` - enroll M360 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W04.P19.S52` - reconcile the M360 ad-hoc refund-request data-fidelity enrollment test proving two-renta roundtrip and estado-miembro isolation; `src/aeat/application/calculations/tests/test_modelo_360_adhoc_fidelity.py`.
+- [x] `W04.P19.S53` - reconcile the M360 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/360.toml`.
 
 ## Wave `W05` - Impuesto sobre Sociedades
 
@@ -212,24 +212,24 @@ Enroll the IS modelos 200, 202, 232 into the gate. Depends on W01 and on the A4 
 
 Enroll the IS annual declaration with the A4 prior-year BIN-compensation hook (70%/1M cap, Ley 27/2014 art.26) across two renta years; co-backed by the base-determination ADR.
 
-- [ ] `W05.P20.S54` - author the M200 BIN-compensation prior-year binding (70%/1M cap) in the registry per A4-M200 (Ley 27/2014 art.26) (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/200/`.
-- [ ] `W05.P20.S55` - write the M200 >=2-renta E2E test asserting prior-year base-imponible-negativa compensates into the current-year cuota under the 70%/1M cap via real adapters, exercising MultiYearResolver.resolve() for the IS BIN-carryforward path so the docstring claim is verified not assumed (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_200_bin_compensation_continuity.py`.
-- [ ] `W05.P20.S56` - enroll M200 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W05.P20.S54` - reconcile the M200 BIN stock carry binding copying prior pending BIN into the current-year binding surface; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/relations.toml`.
+- [x] `W05.P20.S55` - reconcile the M200 two-renta BIN stock enrollment test and separate 70 percent / 1M cap guard coverage; `src/aeat/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py`.
+- [x] `W05.P20.S56` - reconcile the M200 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/200.toml`.
 
 ### Phase `W05.P21` - Modelo 202 (IS pago fraccionado, CALC-CROSS-RENTA)
 
 Enroll the IS pago fraccionado modalidad 40.2 with the A4 prior-cuota-base hook (art.40.2) across two renta years.
 
-- [ ] `W05.P21.S57` - author the M202 modalidad 40.2 prior-cuota base binding in the registry per A4-M202 (Ley 27/2014 art.40.2) (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/202/`.
-- [ ] `W05.P21.S58` - write the M202 >=2-renta E2E test asserting the prior-year cuota integra drives the current pago fraccionado base via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_202_prior_cuota_continuity.py`.
-- [ ] `W05.P21.S59` - enroll M202 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W05.P21.S57` - reconcile the M202 cuota-base ejercicio anterior bindings from prior Modelo 200 cuota liquida for 2P and 3P; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/0003-modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior.toml; src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/relations/0004-modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p.toml`.
+- [x] `W05.P21.S58` - reconcile the M202 2P two-renta enrollment test proving prior M200 cuota liquida feeds current pago fraccionado base; `src/aeat/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py`.
+- [x] `W05.P21.S59` - reconcile the M202 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/202.toml`.
 
 ### Phase `W05.P22` - Modelo 232 (IS operaciones vinculadas, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the operaciones-vinculadas-y-paraisos informativa via year-over-year data-fidelity and provenance roundtrip across two renta years.
 
-- [ ] `W05.P22.S60` - write the M232 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of operaciones-vinculadas across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_232_fidelity_continuity.py`.
-- [ ] `W05.P22.S61` - enroll M232 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W05.P22.S60` - reconcile the M232 related-party data-fidelity enrollment test proving NIF continuity, distinct importes, and threshold coverage; `src/aeat/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py`.
+- [x] `W05.P22.S61` - reconcile the M232 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/232.toml`.
 
 ## Wave `W06` - IRNR, wealth, and impatriate engine-build
 
