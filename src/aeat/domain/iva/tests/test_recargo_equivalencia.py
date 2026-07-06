@@ -25,21 +25,32 @@ def _load_recargo_toml() -> dict[str, dict[str, dict[str, str]]]:
         return tomllib.load(handle)
 
 
-def test_recargo_rate_parameters_match_registry_boe_values_and_liva_ref() -> None:
+@pytest.mark.parametrize(
+    ("field_name", "parameter_id", "expected_boe_value"),
+    (
+        pytest.param("general_rate", "liva-art-161:recargo-rate-general", Decimal("0.052"), id="general"),
+        pytest.param("reducido_rate", "liva-art-161:recargo-rate-reducido", Decimal("0.014"), id="reducido"),
+        pytest.param(
+            "super_reducido_rate",
+            "liva-art-161:recargo-rate-super-reducido",
+            Decimal("0.005"),
+            id="super-reducido",
+        ),
+        pytest.param("tabaco_rate", "liva-art-161:recargo-rate-tabaco", Decimal("0.0175"), id="tabaco"),
+    ),
+)
+def test_recargo_rate_parameters_match_registry_boe_values_and_liva_ref(
+    field_name: str,
+    parameter_id: str,
+    expected_boe_value: Decimal,
+) -> None:
     raw = _load_recargo_toml()["parameters"]
     rates = load_recargo_rates()
-    cases = (
-        ("general_rate", "liva-art-161:recargo-rate-general", Decimal("0.052")),
-        ("reducido_rate", "liva-art-161:recargo-rate-reducido", Decimal("0.014")),
-        ("super_reducido_rate", "liva-art-161:recargo-rate-super-reducido", Decimal("0.005")),
-        ("tabaco_rate", "liva-art-161:recargo-rate-tabaco", Decimal("0.0175")),
-    )
 
-    for field_name, parameter_id, expected_boe_value in cases:
-        parameter = raw[parameter_id]
-        assert getattr(rates, field_name) == Decimal(parameter["value"]) == expected_boe_value
-        legal_refs = parameter.get("legal_refs") or []
-        assert "ley-37-1992:art-161" in legal_refs, f"{parameter_id} must cite ley-37-1992:art-161"
+    parameter = raw[parameter_id]
+    assert getattr(rates, field_name) == Decimal(parameter["value"]) == expected_boe_value
+    legal_refs = parameter.get("legal_refs") or []
+    assert "ley-37-1992:art-161" in legal_refs, f"{parameter_id} must cite ley-37-1992:art-161"
 
 
 def test_recargo_legal_section_carries_required_text_from_boe() -> None:
@@ -67,17 +78,18 @@ def test_recargo_record_is_frozen() -> None:
         load_recargo_rates().general_rate = Decimal("0.999")
 
 
-def test_recargo_rate_for() -> None:
-    cases: tuple[tuple[IvaRateKind, Decimal | None], ...] = (
-        (IvaRateKind.GENERAL, Decimal("0.052")),
-        (IvaRateKind.REDUCED, Decimal("0.014")),
-        (IvaRateKind.SUPER_REDUCED, Decimal("0.005")),
-        (IvaRateKind.ZERO, None),
-        (IvaRateKind.EXEMPT, None),
-    )
-
-    for iva_rate_kind, expected in cases:
-        assert recargo_rate_for(iva_rate_kind) == expected, iva_rate_kind
+@pytest.mark.parametrize(
+    ("iva_rate_kind", "expected"),
+    (
+        pytest.param(IvaRateKind.GENERAL, Decimal("0.052"), id="general"),
+        pytest.param(IvaRateKind.REDUCED, Decimal("0.014"), id="reducido"),
+        pytest.param(IvaRateKind.SUPER_REDUCED, Decimal("0.005"), id="super-reducido"),
+        pytest.param(IvaRateKind.ZERO, None, id="zero"),
+        pytest.param(IvaRateKind.EXEMPT, None, id="exempt"),
+    ),
+)
+def test_recargo_rate_for(iva_rate_kind: IvaRateKind, expected: Decimal | None) -> None:
+    assert recargo_rate_for(iva_rate_kind) == expected
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:
