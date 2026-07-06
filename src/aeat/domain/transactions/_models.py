@@ -166,15 +166,6 @@ def _parse_datetime(value: str) -> datetime:
     return parse_iso_datetime(value)
 
 
-def _coerce_history(raw: object) -> tuple[object, ...]:
-    """Freeze an inbound history sequence into a tuple; leave items for pydantic to validate."""
-    if isinstance(raw, tuple):
-        return raw
-    if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
-        return tuple(raw)
-    raise TransactionValidationError("classification_history must be a sequence of history entries")
-
-
 def _require_aware_datetime(value: datetime) -> datetime:
     """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
     try:
