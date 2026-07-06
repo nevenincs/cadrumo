@@ -5,10 +5,25 @@
   },
   "hu": {
     "untranslated_pending": "The hu locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nHungarian translations and removes entries from this allowlist.\n",
-    "_untranslated_ceiling": 118,
+    "_untranslated_ceiling": 106,
     "wizard.setup.residence.ccaa.choices.extremadura.label": "Proper noun with no Hungarian exonym; 'Extremadura' is spelled identically in Hungarian (unlike e.g. Andalucia -> Andaluzia).",
     "wizard.setup.residence.ccaa.choices.la_rioja.label": "Proper noun with no Hungarian exonym; 'La Rioja' is spelled identically in Hungarian.",
     "wizard.setup.residence.ccaa.choices.madrid.label": "Proper noun with no Hungarian exonym; 'Madrid' is spelled identically in Hungarian.",
-    "wizard.setup.residence.ccaa.choices.murcia.label": "Proper noun with no Hungarian exonym; 'Murcia' is spelled identically in Hungarian."
+    "wizard.setup.residence.ccaa.choices.murcia.label": "Proper noun with no Hungarian exonym; 'Murcia' is spelled identically in Hungarian.",
+    "topic.sii.title": "SII is the AEAT acronym (Suministro Inmediato de Informacion); no Hungarian equivalent term exists.",
+    "topic.verifactu.title": "VERI*FACTU is the AEAT brand name for the invoicing regulation; not translated.",
+    "wizard.choices.irpf": "IRPF is the Spanish tax acronym; kept as-is across locales, matching the schema label convention.",
+    "wizard.choices.iva": "IVA is the Spanish tax acronym; kept as-is across locales, matching the schema label convention.",
+    "wizard.setup.iva.title": "IVA is the Spanish tax acronym; kept as-is across locales, matching the schema label convention.",
+    "auth.catalogue.clave_movil_label": "Cl@ve Movil is the AEAT/Spanish government auth-provider brand name; not translated.",
+    "auth.catalogue.clave_permanente_label": "Cl@ve Permanente is the AEAT/Spanish government auth-provider brand name; not translated.",
+    "auth.catalogue.clave_pin_label": "Cl@ve PIN is the AEAT/Spanish government auth-provider brand name; not translated.",
+    "auth.catalogue.dnie_pkcs_label": "DNI-e PKCS names the Spanish electronic ID certificate format; not translated.",
+    "cli.app.modelo.describe.label_modelo": "'Modelo' is the domain Spanish stem for an AEAT filing form, per aeat-spanish-stem-naming; not translated.",
+    "cli.ledger.labels.sha256": "SHA-256 is a technical algorithm name; not translated.",
+    "cli.diagnostics.repair.python_label": "'Python' is a proper noun (the runtime name); not translated.",
+    "application.storage.calc_sheets.engine.labels.casilla": "'Casilla' is the domain Spanish stem for an AEAT form box, per aeat-spanish-stem-naming; not translated.",
+    "application.wizard.next_hint.modelo_work_create": "This value is a literal CLI command string ('aeat app modelo work create'), not prose; the invocation must stay identical across locales.",
+    "cli.diagnostics.repair.finding_label": "This value is a punctuation separator glyph ('-'), not translatable prose."
   }
 }
