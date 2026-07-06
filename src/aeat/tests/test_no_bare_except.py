@@ -97,9 +97,8 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
                 if alias.name in {"BaseException", "Exception"}:
                     names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Assign):
-            target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
-            if target_names:
-                alias_assignments.append((qualified_name(node.value), target_names))
+            for target in node.targets:
+                alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
             alias_assignments.append((qualified_name(node.value), (node.target.id,)))
 
@@ -114,6 +113,22 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
                     names.add(target_name)
                     changed = True
     return _BareExceptInventory(broad_names=names, try_nodes=try_nodes)
+
+
+def _broad_alias_assignments_from_target(
+    target: ast.expr,
+    value: ast.expr,
+) -> list[tuple[str, tuple[str, ...]]]:
+    """Return broad-exception alias assignments from one target/value pair."""
+    if isinstance(target, ast.Name):
+        return [(qualified_name(value), (target.id,))]
+    if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
+        assignments: list[tuple[str, tuple[str, ...]]] = []
+        for target_element, value_element in zip(target.elts, value.elts, strict=False):
+            if isinstance(target_element, ast.Name):
+                assignments.append((qualified_name(value_element), (target_element.id,)))
+        return assignments
+    return []
 
 
 def _contains_broad_exception_root(node: ast.AST, broad_names: set[str]) -> bool:
@@ -188,6 +203,33 @@ except (ValueError, AliasedException):
     assert [shape for _, _, shape in _bare_except_locations_for_tree("snippet.py", tree)] == [
         "bare except:",
         "except py_builtins.BaseException: pass",
+        "except broad exception: pass",
+    ]
+
+
+def test_detector_rejects_tuple_assigned_alias_noop_broad_exception_handlers() -> None:
+    """Tuple-assigned broad aliases must not hide no-op exception handlers."""
+    tree = ast.parse(
+        """
+import builtins
+
+ErrorAlias, NarrowAlias = Exception, ValueError
+BaseAlias, OtherAlias = builtins.BaseException, RuntimeError
+
+try:
+    raise RuntimeError("boom")
+except ErrorAlias:
+    pass
+
+try:
+    raise RuntimeError("boom")
+except (ValueError, BaseAlias):
+    ...
+"""
+    )
+
+    assert [shape for _, _, shape in _bare_except_locations_for_tree("snippet.py", tree)] == [
+        "except ErrorAlias: pass",
         "except broad exception: pass",
     ]
 
