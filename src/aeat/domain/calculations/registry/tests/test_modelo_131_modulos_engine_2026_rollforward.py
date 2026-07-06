@@ -1,10 +1,9 @@
-"""Modelo 131 estimación-objetiva módulos engine — 2026 per-year roll-forward parity.
+"""Modelo 131 estimación-objetiva módulos engine — 2026 roll-forward parity.
 
-Per the ``2026-07-01-modelo-131-eo-modulos-engine-adr`` Phase 4 (per-year
-roll-forward), the 2026 revision replicates the 2025 revision's four-fase
-módulos engine (coefficient table, casillas, formulas, verification
-predicates) because the bundled Orden HAC/1425/2025 Anexo II reproduces the
-SAME euro figures as Orden HAC/1347/2024 for every currently-tabled activity
+The 2026 revision replicates the 2025 revision's four-fase módulos engine
+(coefficient table, casillas, formulas, verification predicates) because the
+bundled Orden HAC/1425/2025 Anexo II reproduces the same euro figures as Orden
+HAC/1347/2024 for every currently-tabled activity
 (confirmed by a full numeric diff of the corpus text at authoring time: every
 signos/módulos rendimiento figure, every índice-corrector-de-exceso cuantía,
 the reducción general, and the incentivos-al-empleo tramos/incremento
