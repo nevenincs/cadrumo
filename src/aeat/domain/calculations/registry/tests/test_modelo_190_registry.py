@@ -23,7 +23,7 @@ from .. import (
     resolve_withholding_binding_values,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -183,22 +183,8 @@ def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
-    modelo, catalogues = _committed_modelo("190")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
-    modelo_111, _ = _committed_modelo("111")
-    snapshot_111 = build_snapshot(
-        modelo_111,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-    )
+    snapshot = _committed_snapshot("190", 2025, "0A")
+    snapshot_111 = _committed_snapshot("111", 2025, "1T")
 
     modelo_111_outputs = {casilla.id for casilla in snapshot_111.revision.casillas}
     relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
@@ -210,14 +196,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
 
 
 def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:
-    modelo, catalogues = _committed_modelo("190")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
+    snapshot = _committed_snapshot("190", 2025, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     source_values: dict[CasillaId, tuple[Decimal, ...]] = {
         _M111_IMPORTE_SOURCE_CASILLAS[0]: (Decimal("1000"), Decimal("2000"), Decimal("1500"), Decimal("2500")),

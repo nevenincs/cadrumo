@@ -12,6 +12,24 @@ This concrete repository is the persistence adapter behind the read-side
 in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`ModeloRecordCatalogue` model and its pure mutators.
+
+See Also:
+    :mod:`~adapters.persistence.profile._modelo_runtime`
+        Bucket-id resolution and runtime secure-object factory shared by modelo
+        persistence adapters.
+    :class:`~domain.modelos.ModeloRecordCatalogue`
+        Domain catalogue payload encrypted by this repository.
+    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :mod:`~adapters.persistence.profile.modelos_work_units`
+        Sibling work-unit catalogue repository whose current/filed pointers
+        reference filing records stored here.
+    :func:`~application.modelo.file_modelo_revision`
+        Application service that writes local/internal filing state through the
+        modelo catalogue repositories.
 """
 
 from __future__ import annotations

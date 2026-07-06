@@ -17,10 +17,9 @@ from .. import (
     RegistryValidationError,
     RegistryValidator,
     binding_source_casilla_ids,
-    build_snapshot,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -160,21 +159,14 @@ def test_modelo_390_revision_period_selector_starts_at_2010() -> None:
 
 
 def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
-    modelo, catalogues = _load_modelo_390()
     for filing_year in (2020, 2021, 2022, 2023, 2024, 2025, 2026):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=filing_year,
-            period="0A",
-        )
+        snapshot = _committed_snapshot("390", filing_year, "0A")
         assert snapshot.revision.id == "2010-y-siguientes"
 
 
 def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None:
-    modelo, catalogues = _load_modelo_390()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
+    _, catalogues = _load_modelo_390()
+    snapshot = _committed_snapshot("390", 2025, "0A")
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3111-2009:art-1",)

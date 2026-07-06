@@ -8,6 +8,17 @@ schemas project :class:`~application.diagnostics_run_health.RunHealthReport`,
 :class:`~application.diagnostics_run_health.ErrorsBreakdownReport`, and
 :class:`~application.diagnostics_run_health.LlmUsageReport` into the CLI
 JSON contract.
+
+See Also:
+    :mod:`~entrypoints.cli._app_diagnostics`
+        CLI transport that populates the local-only diagnostics payloads.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        CLI transport that populates the telemetry status/flush payloads.
+    :mod:`~application.diagnostics_run_health`
+        Application report models mirrored by the run-health payload family.
+    :mod:`~application.diagnostics_telemetry`
+        Application posture/flush models mirrored by the telemetry payload
+        family.
 """
 
 from __future__ import annotations

@@ -15,7 +15,6 @@ from .. import (
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidationError,
-    build_snapshot,
     calculate_registry_snapshot,
     resolve_previous_filing_binding_values,
     validated_casilla_id,
@@ -23,7 +22,7 @@ from .. import (
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
 from .._text import normalise_corpus_text
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,15 +90,8 @@ def modelo_130_registry():
     return _committed_modelo("130")
 
 
-def _snapshot_130(modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
-    modelo, catalogues = modelo_130_registry
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=filing_year,
-        period=period,
-    )
+def _snapshot_130(_modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
+    return _committed_snapshot("130", filing_year, period)
 
 
 def test_modelo_130_extraction_profile_legal_refs_match_target_casillas(
@@ -193,14 +185,7 @@ def test_modelo_130_art109_profile_advisory_is_not_a_casilla_17_formula_branch(
 
 
 def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registry: _ModeloFixture) -> None:
-    modelo, catalogues = modelo_130_registry
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="1T",
-    )
+    snapshot = _snapshot_130(modelo_130_registry)
 
     construct = snapshot.revision.constructs[0]
     linked_by_surface = {

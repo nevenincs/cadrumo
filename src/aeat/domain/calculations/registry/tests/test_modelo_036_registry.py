@@ -7,8 +7,8 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
-from ._registry_schema_support import _committed_modelo
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
@@ -66,21 +66,13 @@ def test_modelo_036_snapshot_builds_for_event_periods() -> None:
     # M036 is event-triggered (cadence="ad_hoc"); the period names are
     # the three censal event kinds the form supports. Snapshot.period
     # max_length=32 accommodates these descriptive names.
-    modelo, catalogues = _load_modelo_036()
     for period in ("alta", "modificacion", "baja"):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2025,
-            period=period,
-        )
+        snapshot = _committed_snapshot("036", 2025, period)
         assert snapshot.revision.id == "2025-02-03-y-siguientes"
 
 
 def test_modelo_036_snapshot_carries_rgat_substantive_grounding() -> None:
-    modelo, catalogues = _load_modelo_036()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="alta")
+    snapshot = _committed_snapshot("036", 2025, "alta")
     assert "rd-1065-2007:art-9" in snapshot.legal
     assert "rd-1065-2007:art-10" in snapshot.legal
     assert "rd-1065-2007:art-11" in snapshot.legal

@@ -22,6 +22,24 @@ This module is intentionally free of any PDF-parsing, work-unit, or
 bucket-event dependency: it is a pure function over two ``{casilla_id: Decimal}``
 mappings plus a tolerance, so it can be tested and reused without a persisted
 work unit, a registry snapshot, or a parsed declaración.
+
+See Also:
+    :mod:`~application.modelo._reconcile`
+        Reconciliation workflow that loads work-unit state and delegates
+        casilla comparison to this pure primitive.
+    :class:`~domain.modelos.CalculationRevision`
+        Persisted computed revision whose ``casilla_values`` are compared.
+    :class:`~domain.calculations.registry.RegistryVerificationPolicy`
+        Registry-declared scope and tolerance used before divergences are
+        surfaced.
+    :class:`~adapters.inbound.pdf.ExtractedCasilla`
+        Parsed declaration row shape that feeds the filed-value mapping.
+    :class:`CasillaDivergence`
+        Typed row returned for each surfaced disagreement.
+    :class:`CasillaDivergenceKind`
+        Closed divergence taxonomy emitted by the comparison.
+    :func:`detect_casilla_divergences`
+        Pure comparison entry point exported by this module.
 """
 
 from __future__ import annotations

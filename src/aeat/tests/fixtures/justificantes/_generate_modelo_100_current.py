@@ -91,6 +91,7 @@ _M100_CURRENT_YEAR_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     ),
     (_casilla_id("0587"), "Cuota liquida incrementada total ( [0585] + [0586] )", "200,00"),
     (_casilla_id("0595"), "Cuota resultante de la autoliquidacion ( [0587] - [0588] - [0589] )", "200,00"),
+    (_casilla_id("0604"), "Pagos fraccionados ingresados (actividades economicas)", "50,00"),
     (_casilla_id("0610"), "Cuota diferencial", "150,00"),
     (_casilla_id("0670"), "Resultado de la declaracion ( [0610] - [0611] + [0612] )", "150,00"),
 )

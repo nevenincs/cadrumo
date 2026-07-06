@@ -10,6 +10,17 @@ headless DNI/NIE + password login flow.
 
 Application callers later narrow this provider-owned shape to the common
 :class:`~application.auth.PersistedAuthSession` reuse contract.
+
+See Also:
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+        Provider that writes and reloads this metadata beside browser state.
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+        Public session detail projected from this encrypted metadata record.
+    :class:`~adapters.outbound.aeat.auth._session_store.PersistedBrowserSession`
+        Encrypted browser-session envelope whose metadata mapping stores this
+        provider-owned record.
+    :class:`~application.auth.PersistedAuthSession`
+        Application reuse contract that receives the narrowed provider detail.
 """
 
 from __future__ import annotations

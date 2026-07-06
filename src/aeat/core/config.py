@@ -28,7 +28,7 @@ from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_v
 from pydantic_settings import SettingsConfigDict
 
 from . import _config_live_tests as _live_test_config
-from ._config_runtime_fields import AeatRuntimeSettings
+from ._config_integration_fields import AeatIntegrationSettings
 from ._config_state_root import default_storage_root
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
@@ -52,7 +52,7 @@ from ._config_support import default_sede_expedientes_path as _default_sede_expe
 from ._config_support import default_status_detail_url_template as _default_status_detail_url_template
 from ._config_support import default_status_notificaciones_path as _default_status_notificaciones_path
 from .errors import ActiveProfilePointerError, CoreValidationError
-from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
 from .telemetry import TelemetryTier
@@ -84,7 +84,7 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
 }
 
 
-class Settings(AeatRuntimeSettings):
+class Settings(AeatIntegrationSettings):
     """Application settings populated from environment variables and ``.env``.
 
     Field names map directly to env var names (uppercased). For example,
@@ -129,76 +129,6 @@ class Settings(AeatRuntimeSettings):
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
     )
-    # ── Google integration ───────────────────────────────────────────────
-    aeat_google_drive_vault_folder_name: str = Field(
-        default="aeat-vault",
-        min_length=1,
-        description="Folder name created under the Google Drive root for the AEAT vault",
-    )
-    aeat_google_oauth_access_refresh_buffer_s: int = Field(
-        default=300,
-        gt=0,
-        description="Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens",
-    )
-    # ── Workbook parity / Sheets ─────────────────────────────────────────
-    aeat_workbook_parity_per_file_timeout_s: float = Field(
-        default=15.0,
-        gt=0,
-        description="Default per-file timeout (seconds) for workbook-parity scans",
-    )
-    aeat_workbook_parity_recalc_timeout_s: int = Field(
-        default=60,
-        gt=0,
-        description="Subprocess timeout (seconds) when forcing workbook recalculation",
-    )
-    aeat_workbook_parity_libreoffice_timeout_s: int = Field(
-        default=120,
-        gt=0,
-        description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
-    )
-    aeat_registry_parity_store_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "audit" / "registry" / "parity",
-        description="Directory where registry parity tape artifacts are archived by default",
-    )
-    aeat_calc_sheets_recalc_delay_s: float = Field(
-        default=2.0,
-        gt=0,
-        description="Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls",
-    )
-    # ── Financial ingest ───────────────────────────────────────────────────
-    financial_base_currency: str = Field(
-        default=DEFAULT_CURRENCY,
-        description="Fallback ISO 4217 currency used when a financial source omits a per-row currency",
-    )
-    financial_default_csv_encoding: str = Field(
-        default="utf-8",
-        description="Preferred encoding attempted first when decoding financial CSV sources",
-    )
-    aeat_financial_txs_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "transactions",
-        description="Directory where the transaction catalogue JSON file is stored",
-    )
-    aeat_invoices_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "invoices",
-        description="Directory where the invoice catalogue JSON file is stored",
-    )
-    aeat_attachments_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "attachments",
-        description="Root directory for the attachment byte and manifest store",
-    )
-    aeat_purchase_invoice_evidence_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "purchase-invoice-evidence",
-        description="Root directory for purchase invoice evidence record manifests",
-    )
-    aeat_usage_ratios_path: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
-        description="User-configured per-category usage ratio overrides",
-    )
-    aeat_ledgers_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "ledgers",
-        description="Directory for encrypted inventory and amortization ledgers",
-    )
-
     # ── Multilingual i18n ───────────────────────────────────────────────────
     aeat_output_language: Annotated[
         OutputLanguage | None,

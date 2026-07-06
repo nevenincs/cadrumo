@@ -25,7 +25,9 @@ reports an explicit empty/False value, never a fabricated positive.
 
 See Also:
     :func:`~domain.calculations.registry.build_support_matrix`
-        Pure builder that folds validated registry authority into typed rows.
+        Pure builder that folds the
+        :class:`~domain.calculations.registry.ValidatedRegistryAuthority` into
+        typed rows.
     :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
         Query-service envelope returned by
         :meth:`~domain.calculations.registry.RegistryQueryService.support_matrix`.
@@ -42,6 +44,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ._authority import ValidatedRegistryAuthority
 from ._ids import ModeloId, RevisionId
+from ._record_design_coverage import calculation_closure_casilla_ids
 from ._schema import CalculationClass, EvidenceTier, ModeloDefinition, ModeloRevision
 from ._schema_surfaces import CasillaContinuidadEvolutionDefinition
 
@@ -65,11 +68,6 @@ def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
 
 
 def _calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str):
-    # Deferred import: avoids a module cycle between the record-design
-    # coverage module (which itself imports from ``_queries``-adjacent
-    # surfaces) and this new support-matrix module.
-    from ._record_design_coverage import calculation_closure_casilla_ids
-
     return calculation_closure_casilla_ids(revision, modelo_id)
 
 
@@ -268,7 +266,9 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
     """Probe every modelo in ``authority`` and return its typed support row.
 
     Args:
-        authority: The registry authority to probe.
+        authority: The
+            :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+            to probe.
 
     Returns:
         Every modelo's :class:`~domain.calculations.registry.ModeloEntry`,

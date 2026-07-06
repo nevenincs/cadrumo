@@ -17,9 +17,11 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
-from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE
+from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_repository_for_active_bucket
+from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
+from ....core.redaction import default_rules_for_class, redact_structured
 from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
 
@@ -82,10 +84,7 @@ class UsageRecorder:
         :func:`core.redaction.redact_structured` at
         :class:`core.classification.SensitivityClass` ``DIAGNOSTIC``
         class before encoding so NIFs are SHA-256 prefixed, URLs are reduced
-        to host-only, and bearer-shaped tokens are fingerprinted. Storage-layer
-        imports are deferred to the method body so that CLI commands which
-        never touch the recorder do not pull Alembic plugin discovery into
-        their import graph.
+        to host-only, and bearer-shaped tokens are fingerprinted.
 
         Args:
             record: Usage record to append.
@@ -97,10 +96,6 @@ class UsageRecorder:
             :exc:`adapters.outbound.llm.LLMCacheError`: When the storage
             write fails.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-        from ....core.redaction import default_rules_for_class, redact_structured
-
         path = self.root_dir / f"usage-{record.created_at.date().isoformat()}.jsonl"
         redacted = redact_structured(
             record.model_dump(mode="json"),
@@ -135,9 +130,6 @@ class UsageRecorder:
             Loaded :class:`adapters.outbound.llm.UsageRecord` entries in
             file-iteration order.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         records: list[UsageRecord] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _USAGE_NAMESPACE,

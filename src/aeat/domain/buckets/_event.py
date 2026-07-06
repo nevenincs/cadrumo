@@ -77,6 +77,11 @@ class BucketEventType(StrEnum):
     MODELO_EXPORTED = "modelo.exported"
     MODELO_IVA_WALLET_CORRECTED = "modelo.iva_wallet.corrected"
     MODELO_IVA_WALLET_OVERRIDE_RECORDED = "modelo.iva_wallet.override_recorded"
+    # Modelo 145 local payer-communication lifecycle
+    MODELO_145_COMMUNICATION_CREATED = "modelo.145.communication.created"
+    MODELO_145_COMMUNICATION_EXPORTED = "modelo.145.communication.exported"
+    MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER = "modelo.145.communication.delivered_to_payer"
+    MODELO_145_COMMUNICATION_LOCALLY_COMPLETED = "modelo.145.communication.locally_completed"
     # Work-unit lifecycle
     MODELO_WORK_UNIT_CREATED = "modelo.work_unit.created"
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
@@ -218,6 +223,7 @@ class BucketEventObjectType(StrEnum):
     CALCULATION_REVISION = "calculation_revision"
     VERIFICATION_REPORT = "verification_report"
     FILING_RECORD = "filing_record"
+    COMMUNICATION_RECORD = "communication_record"
     PROFILE = "profile"
     BUCKET = "bucket"
     LEDGER_TRANSACTION = "ledger_transaction"

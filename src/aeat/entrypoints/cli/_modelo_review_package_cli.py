@@ -40,6 +40,20 @@ around the pure decrypt primitive to refuse a captured package presented twice.
 Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
 never written to disk except as the final recovered archive the operator
 explicitly requests via ``--output``.
+
+See Also:
+    :func:`~application.modelo.build_review_package`
+        Application builder for checksum-verifiable review packages.
+    :func:`~application.modelo.sign_review_package`
+        Ed25519 authenticity primitive wired by ``sign``.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 confidentiality primitive wired by ``encrypt-for-recipient``.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Trusted-recipient public-key registry used before encryption.
+    :mod:`~entrypoints.cli._modelo_review_package_payloads`
+        Typed JSON payload schemas emitted by this CLI group.
+    :mod:`~entrypoints.cli._config._collab`
+        Configuration surface that registers recipient fingerprints.
 """
 
 from __future__ import annotations
@@ -111,17 +125,18 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from ._modelo_review_package_payloads import (
-    ModeloReviewPackageBuildResult,
-    ModeloReviewPackageCounterSignResult,
-    ModeloReviewPackageDecryptResult,
-    ModeloReviewPackageEncryptFeedbackResult,
-    ModeloReviewPackageEncryptForRecipientResult,
-    ModeloReviewPackageImportFeedbackResult,
-    ModeloReviewPackageSignResult,
-    ModeloReviewPackageVerifyReceiptResult,
-    ModeloReviewPackageVerifyResult,
-    ModeloReviewPackageVerifySignatureResult,
+from ._modelo_review_package_rendering import (
+    review_package_build_result_lines,
+    review_package_build_result_payload,
+    review_package_counter_sign_result,
+    review_package_decrypt_result,
+    review_package_encrypt_feedback_result,
+    review_package_encrypt_for_recipient_result,
+    review_package_import_feedback_result,
+    review_package_sign_result,
+    review_package_verify_receipt_result,
+    review_package_verify_result,
+    review_package_verify_signature_result,
 )
 
 _BUCKET_ID_HELP = tr("cli.app.modelo.work.bucket_id_help")
@@ -336,35 +351,15 @@ def review_package_build(
         except (ReviewPackageRevisionStateError, ReviewPackageError) as exc:
             raise bad_parameter_from_error(exc) from exc
 
-    manifest = build_result.manifest
-    result = ModeloReviewPackageBuildResult(
-        bucket_id=manifest.bucket_id,
-        work_unit_id=manifest.work_unit_id,
-        calculation_revision_id=manifest.calculation_revision_id,
-        modelo=manifest.modelo,
-        filing_year=manifest.filing_year,
-        period=manifest.period,
-        revision_state=manifest.revision_state,
-        has_ledger_evidence=manifest.has_ledger_evidence,
-        output_path=str(build_result.output_path),
-        member_count=build_result.member_count,
-        built_by=manifest.built_by,
-        built_at=manifest.built_at.isoformat(),
+    _emit_envelope(
+        ctx,
+        command="modelo.review_package.build",
+        result=review_package_build_result_payload(build_result),
+        lines=review_package_build_result_lines(
+            build_result,
+            export_bucket_event_id=export_result.bucket_event_id,
+        ),
     )
-    lines = [
-        "operation\tmodelo.review_package.build",
-        f"work_unit_id\t{manifest.work_unit_id}",
-        f"calculation_revision_id\t{manifest.calculation_revision_id}",
-        f"bucket\t{manifest.bucket_id}",
-        f"modelo\t{manifest.modelo}",
-        f"filing_year\t{manifest.filing_year}",
-        f"period\t{manifest.period}",
-        f"output_path\t{build_result.output_path}",
-        f"member_count\t{build_result.member_count}",
-        f"has_ledger_evidence\t{manifest.has_ledger_evidence}",
-        f"export_bucket_event_id\t{export_result.bucket_event_id}",
-    ]
-    _emit_envelope(ctx, command="modelo.review_package.build", result=result, lines=lines)
 
 
 @review_package_app.command(
@@ -405,35 +400,7 @@ def review_package_verify(
     except ReviewPackageIntegrityError as exc:
         raise bad_parameter_from_error(exc) from exc
 
-    manifest = verification.manifest
-    result = ModeloReviewPackageVerifyResult(
-        package_path=str(package),
-        is_clean=verification.is_clean,
-        missing=list(verification.missing),
-        unexpected=list(verification.unexpected),
-        mismatched=list(verification.mismatched),
-        bucket_id=manifest.bucket_id,
-        work_unit_id=manifest.work_unit_id,
-        calculation_revision_id=manifest.calculation_revision_id,
-        modelo=manifest.modelo,
-        filing_year=manifest.filing_year,
-        period=manifest.period,
-        revision_state=manifest.revision_state,
-        has_ledger_evidence=manifest.has_ledger_evidence,
-        built_by=manifest.built_by,
-        built_at=manifest.built_at.isoformat(),
-    )
-    lines = [
-        "operation\tmodelo.review_package.verify",
-        f"package_path\t{package}",
-        f"is_clean\t{verification.is_clean}",
-        f"missing\t{', '.join(verification.missing)}",
-        f"unexpected\t{', '.join(verification.unexpected)}",
-        f"mismatched\t{', '.join(verification.mismatched)}",
-        f"calculation_revision_id\t{manifest.calculation_revision_id}",
-        f"modelo\t{manifest.modelo}",
-        f"built_by\t{manifest.built_by}",
-    ]
+    result, lines = review_package_verify_result(package, verification)
     _emit_envelope(ctx, command="modelo.review_package.verify", result=result, lines=lines)
 
 
@@ -503,23 +470,13 @@ def review_package_sign(
     output.write_text(signed.model_dump_json(indent=2), encoding="utf-8")
 
     public_key = review_package_signing_public_key(keypair)
-    result = ModeloReviewPackageSignResult(
-        package_path=str(package),
-        signature_path=str(output),
+    result, lines = review_package_sign_result(
+        package,
+        output,
         bucket_id=resolved_bucket_id,
-        calculation_revision_id=signed.calculation_revision_id,
-        manifest_sha256=signed.manifest_sha256,
+        signed=signed,
         signer_public_key_hex=public_key.public_key_hex,
-        signed_at=signed.signed_at.isoformat(),
     )
-    lines = [
-        "operation\tmodelo.review_package.sign",
-        f"package_path\t{package}",
-        f"signature_path\t{output}",
-        f"bucket\t{resolved_bucket_id}",
-        f"calculation_revision_id\t{signed.calculation_revision_id}",
-        f"signer_public_key_hex\t{public_key.public_key_hex}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.sign", result=result, lines=lines)
 
 
@@ -582,20 +539,14 @@ def review_package_verify_signature(
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
 
-    is_valid = verify_review_package_signature(package, signed, public_key_hex=public_key.strip().lower())
-
-    result = ModeloReviewPackageVerifySignatureResult(
-        package_path=str(package),
-        signature_path=str(signature),
-        signer_public_key_hex=public_key.strip().lower(),
+    signer_public_key_hex = public_key.strip().lower()
+    is_valid = verify_review_package_signature(package, signed, public_key_hex=signer_public_key_hex)
+    result, lines = review_package_verify_signature_result(
+        package,
+        signature,
+        signer_public_key_hex=signer_public_key_hex,
         is_valid=is_valid,
     )
-    lines = [
-        "operation\tmodelo.review_package.verify_signature",
-        f"package_path\t{package}",
-        f"signature_path\t{signature}",
-        f"is_valid\t{is_valid}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.verify_signature", result=result, lines=lines)
 
 
@@ -688,22 +639,14 @@ def review_package_counter_sign(
     output.write_text(receipt.model_dump_json(indent=2), encoding="utf-8")
 
     counter_public_key = review_package_signing_public_key(counter_signer_keypair)
-    result = ModeloReviewPackageCounterSignResult(
-        package_path=str(package),
-        signature_path=str(signature),
-        receipt_path=str(output),
+    result, lines = review_package_counter_sign_result(
+        package,
+        signature,
+        output,
         bucket_id=resolved_bucket_id,
-        note=receipt.note,
+        receipt=receipt,
         counter_signer_public_key_hex=counter_public_key.public_key_hex,
-        counter_signed_at=receipt.counter_signed_at.isoformat(),
     )
-    lines = [
-        "operation\tmodelo.review_package.counter_sign",
-        f"package_path\t{package}",
-        f"receipt_path\t{output}",
-        f"bucket\t{resolved_bucket_id}",
-        f"counter_signer_public_key_hex\t{counter_public_key.public_key_hex}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.counter_sign", result=result, lines=lines)
 
 
@@ -785,19 +728,13 @@ def review_package_verify_receipt(
         counter_signer_public_key_hex=counter_key,
     )
 
-    result = ModeloReviewPackageVerifyReceiptResult(
-        package_path=str(package),
-        receipt_path=str(receipt_path),
+    result, lines = review_package_verify_receipt_result(
+        package,
+        receipt_path,
         operator_public_key_hex=operator_key,
         counter_signer_public_key_hex=counter_key,
         is_valid=is_valid,
     )
-    lines = [
-        "operation\tmodelo.review_package.verify_receipt",
-        f"package_path\t{package}",
-        f"receipt_path\t{receipt_path}",
-        f"is_valid\t{is_valid}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.verify_receipt", result=result, lines=lines)
 
 
@@ -914,24 +851,13 @@ def review_package_encrypt_for_recipient(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
 
-    result = ModeloReviewPackageEncryptForRecipientResult(
-        package_path=str(package),
-        output_path=str(output),
+    result, lines = review_package_encrypt_for_recipient_result(
+        package,
+        output,
         recipient_id=recipient_id,
         recipient_public_key_hex=recipient.public_key_hex,
-        review_only=envelope.review_only,
-        issued_at=envelope.issued_at.isoformat(),
-        valid_until=envelope.valid_until.isoformat() if envelope.valid_until is not None else None,
+        envelope=envelope,
     )
-    lines = [
-        "operation\tmodelo.review_package.encrypt_for_recipient",
-        f"package_path\t{package}",
-        f"output_path\t{output}",
-        f"recipient_id\t{recipient_id}",
-        f"recipient_public_key_hex\t{recipient.public_key_hex}",
-        f"review_only\t{envelope.review_only}",
-        f"valid_until\t{result.valid_until or 'never'}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.encrypt_for_recipient", result=result, lines=lines)
 
 
@@ -1010,19 +936,12 @@ def review_package_decrypt(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(decrypted.package_bytes)
 
-    result = ModeloReviewPackageDecryptResult(
-        envelope_path=str(envelope_path),
-        output_path=str(output),
+    result, lines = review_package_decrypt_result(
+        envelope_path,
+        output,
         bucket_id=resolved_bucket_id,
-        review_only=decrypted.review_only,
+        decrypted=decrypted,
     )
-    lines = [
-        "operation\tmodelo.review_package.decrypt",
-        f"envelope_path\t{envelope_path}",
-        f"output_path\t{output}",
-        f"bucket\t{resolved_bucket_id}",
-        f"review_only\t{decrypted.review_only}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.decrypt", result=result, lines=lines)
 
 
@@ -1163,24 +1082,15 @@ def review_package_encrypt_feedback(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
 
-    result = ModeloReviewPackageEncryptFeedbackResult(
-        output_path=str(output),
+    result, lines = review_package_encrypt_feedback_result(
+        output,
         originator_id=originator_id,
         originator_public_key_hex=originator.public_key_hex,
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,
         has_counter_sign=counter_signed_receipt is not None,
-        issued_at=envelope.issued_at.isoformat(),
-        valid_until=envelope.valid_until.isoformat() if envelope.valid_until is not None else None,
+        envelope=envelope,
     )
-    lines = [
-        "operation\tmodelo.review_package.encrypt_feedback",
-        f"output_path\t{output}",
-        f"originator_id\t{originator_id}",
-        f"work_unit_id\t{work_unit_id}",
-        f"calculation_revision_id\t{calculation_revision_id}",
-        f"has_counter_sign\t{counter_signed_receipt is not None}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.encrypt_feedback", result=result, lines=lines)
 
 
@@ -1301,26 +1211,12 @@ def review_package_import_feedback(
         )
         attached = True
 
-    result = ModeloReviewPackageImportFeedbackResult(
-        envelope_path=str(envelope_path),
+    result, lines = review_package_import_feedback_result(
+        envelope_path,
         bucket_id=resolved_bucket_id,
-        work_unit_id=imported.feedback.work_unit_id,
-        calculation_revision_id=imported.feedback.calculation_revision_id,
-        note=imported.feedback.note,
-        submitted_by=imported.feedback.submitted_by,
-        counter_signature_verified=imported.counter_signature_verified,
-        attached_to_journal=attached,
+        imported=imported,
+        attached=attached,
     )
-    lines = [
-        "operation\tmodelo.review_package.import_feedback",
-        f"envelope_path\t{envelope_path}",
-        f"bucket\t{resolved_bucket_id}",
-        f"work_unit_id\t{imported.feedback.work_unit_id}",
-        f"calculation_revision_id\t{imported.feedback.calculation_revision_id}",
-        f"submitted_by\t{imported.feedback.submitted_by}",
-        f"counter_signature_verified\t{imported.counter_signature_verified}",
-        f"attached_to_journal\t{attached}",
-    ]
     _emit_envelope(ctx, command="modelo.review_package.import_feedback", result=result, lines=lines)
 
 

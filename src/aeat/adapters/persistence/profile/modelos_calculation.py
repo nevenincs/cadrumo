@@ -18,6 +18,20 @@ typed :class:`~domain.modelos.CalculationRevisionCatalogue` model, the pure
 :class:`~domain.modelos.CalculationRevisionPersistenceError` boundary error.
 The namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning persisted envelopes.
+
+See Also:
+    :mod:`~adapters.persistence.profile._modelo_runtime`
+        Bucket-id resolution and runtime secure-object factory shared by modelo
+        persistence adapters.
+    :class:`~domain.modelos.CalculationRevisionCatalogue`
+        Domain catalogue payload encrypted by this repository.
+    :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Runtime-created encrypted storage boundary used for load/save.
 """
 
 from __future__ import annotations

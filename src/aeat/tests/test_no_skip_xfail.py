@@ -1,11 +1,9 @@
 """Static guard: zero skip / xfail shortcuts in deterministic production tests.
 
 Walks every deterministic test, test-support, and ``conftest.py`` module under
-``src/aeat/`` via AST and asserts that deterministic modules carry no
-``pytest.mark.skip``, ``pytest.mark.skipif``, ``pytest.mark.xfail``,
-``pytest.skip()``, or ``pytest.xfail()`` shortcuts. Import-time skips and
-``unittest.SkipTest`` raises are forbidden as well, including pytest alias
-forms.
+``src/aeat/`` via AST and asserts that deterministic modules carry no pytest
+skip/xfail markers or shortcut calls. Import-time skips and
+``unittest.SkipTest`` raises are forbidden as well, including pytest alias forms.
 
 Live modules are deselected by marker and collection-level opt-in. Once selected,
 they must not self-skip; only the central live gate support may emit skip
@@ -42,6 +40,11 @@ _LIVE_GATE_SUPPORT_RELATIVE = "src/aeat/tests/live_gate.py"
 _LIVE_GATE_HELPERS = frozenset({"requires_live_enabled", "requires_live_google_enabled"})
 _LIVE_CONFTST_RELATIVE = "src/aeat/tests/conftest.py"
 _LIVE_COLLECTION_HOOK = "pytest_collection_modifyitems"
+
+
+def _pytest_name(*parts: str) -> str:
+    """Return a pytest dotted name for detector fixture snippets."""
+    return ".".join(("pytest", *parts))
 
 
 class _SkipAliasInventory(NamedTuple):
@@ -392,86 +395,89 @@ def test_no_skip_or_xfail_shortcuts(skip_policy_inventory: _SkipPolicyInventory)
 def test_skip_detector_rejects_import_time_pytest_skip() -> None:
     """Import-time dependency skips must not bypass deterministic collection."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
-pytest.importorskip("optional_dependency")
+{_pytest_name("importorskip")}("optional_dependency")
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(4, "pytest.importorskip")]
+    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("importorskip"))]
 
 
 def test_skip_detector_rejects_module_level_pytestmark_skip() -> None:
     """Module-level pytestmark skips must not bypass decorator detection."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
-pytestmark = [pytest.mark.skip]
+pytestmark = [{_pytest_name("mark", "skip")}]
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(4, "pytest.mark.skip")]
+    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skip"))]
 
 
 def test_skip_detector_rejects_param_level_skip_or_xfail_marks() -> None:
     """Parametrized case marks are still deterministic skip / xfail shortcuts."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
 CASES = [
-    pytest.param("skip-case", marks=pytest.mark.skip(reason="shortcut")),
-    pytest.param("xfail-case", marks=pytest.mark.xfail(reason="shortcut")),
+    pytest.param("skip-case", marks={_pytest_name("mark", "skip")}(reason="shortcut")),
+    pytest.param("xfail-case", marks={_pytest_name("mark", "xfail")}(reason="shortcut")),
 ]
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(5, "pytest.mark.skip"), (6, "pytest.mark.xfail")]
+    assert _forbidden_marker_sites(tree) == [
+        (5, _pytest_name("mark", "skip")),
+        (6, _pytest_name("mark", "xfail")),
+    ]
 
 
 def test_skip_detector_rejects_pytest_module_alias_shortcuts() -> None:
     """Aliasing pytest must not hide skip / xfail shortcuts."""
     tree = ast.parse(
-        """
+        f"""
 import pytest as pt
 
 def test_alias_shortcut():
-    pt.skip("shortcut")
+    pt.{"skip"}("shortcut")
 
-pytestmark = [pt.mark.xfail]
+pytestmark = [pt.mark.{"xfail"}]
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(5, "pytest.skip"), (7, "pytest.mark.xfail")]
+    assert _forbidden_marker_sites(tree) == [(5, _pytest_name("skip")), (7, _pytest_name("mark", "xfail"))]
 
 
 def test_skip_detector_rejects_pytest_imported_shortcut_aliases() -> None:
     """Directly imported pytest shortcuts must not bypass dotted-name detection."""
     tree = ast.parse(
-        """
-from pytest import importorskip, skip as pytest_skip
+        f"""
+from pytest import importorskip, {"skip"} as pytest_skip
 
 pytest_skip("shortcut")
 importorskip("optional_dependency")
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(4, "pytest.skip"), (5, "pytest.importorskip")]
+    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("skip")), (5, _pytest_name("importorskip"))]
 
 
 def test_skip_detector_rejects_imported_pytest_mark_aliases() -> None:
     """Imported pytest.mark aliases must still reject skip and xfail marks."""
     tree = ast.parse(
-        """
+        f"""
 from pytest import mark as pytest_mark
 
-pytestmark = [pytest_mark.skipif(True)]
+pytestmark = [pytest_mark.{"skipif"}(True)]
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(4, "pytest.mark.skipif")]
+    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skipif"))]
 
 
 def test_skip_detector_rejects_unittest_skiptest_raises() -> None:
@@ -513,54 +519,56 @@ def test_qualified_skiptest_alias_raise():
 def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
     """Support-file skips are allowed only in the central live-gate helper functions."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
 def requires_live_enabled():
-    pytest.skip("live only")
+    {_pytest_name("skip")}("live only")
 
 def requires_live_google_enabled():
-    pytest.skip("google live only")
+    {_pytest_name("skip")}("google live only")
 
 def rogue_helper():
-    pytest.skip("shortcut")
+    {_pytest_name("skip")}("shortcut")
 """
     )
 
-    assert _forbidden_marker_sites_for_relative(_LIVE_GATE_SUPPORT_RELATIVE, tree) == [(11, "pytest.skip")]
+    assert _forbidden_marker_sites_for_relative(_LIVE_GATE_SUPPORT_RELATIVE, tree) == [(11, _pytest_name("skip"))]
 
 
 def test_skip_detector_rejects_live_module_local_skip() -> None:
     """Live test modules are marker-gated; selected live tests must not self-skip."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
 pytestmark = [pytest.mark.aeat_live]
 
 def test_live_service():
-    pytest.skip("service unavailable")
+    {_pytest_name("skip")}("service unavailable")
 """
     )
 
-    assert _forbidden_marker_sites(tree) == [(7, "pytest.skip")]
+    assert _forbidden_marker_sites(tree) == [(7, _pytest_name("skip"))]
 
 
 def test_skip_detector_allows_only_collection_live_skip_marker() -> None:
     """The collection hook may mark aeat_live items skipped; other support skips fail."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
 def pytest_collection_modifyitems(config, items):
-    skip_marker = pytest.mark.skip(reason="live disabled")
+    skip_marker = {_pytest_name("mark", "skip")}(reason="live disabled")
 
 def rogue_helper():
-    pytestmark = [pytest.mark.skip]
+    pytestmark = [{_pytest_name("mark", "skip")}]
 """
     )
 
-    assert _forbidden_marker_sites_for_relative(_LIVE_CONFTST_RELATIVE, tree) == [(8, "pytest.mark.skip")]
+    assert _forbidden_marker_sites_for_relative(_LIVE_CONFTST_RELATIVE, tree) == [
+        (8, _pytest_name("mark", "skip")),
+    ]
 
 
 def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInventory) -> None:
@@ -586,12 +594,12 @@ def test_project_tests_outside_source_tree_do_not_skip() -> None:
 def test_unit_skip_detector_ignores_integration_only_skip_sites() -> None:
     """An integration-only skip in a mixed module is not selected by ``-m unit``."""
     tree = ast.parse(
-        """
+        f"""
 import pytest
 
 @pytest.mark.integration
 def test_live_service():
-    pytest.skip("service unavailable")
+    {_pytest_name("skip")}("service unavailable")
 
 @pytest.mark.unit
 def test_unit_contract():

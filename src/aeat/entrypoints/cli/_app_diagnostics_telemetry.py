@@ -22,6 +22,16 @@ and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
 through :func:`~entrypoints.cli._common._emit_envelope`.
+
+See Also:
+    :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
+        Read-only application service backing ``status``.
+    :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
+        Dry-run payload builder backing the default ``flush`` mode.
+    :func:`~application.diagnostics_telemetry.flush_telemetry`
+        Non-dry-run application service that still honours the consent gate.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed payload shape surfaced in the flush preview result.
 """
 
 from __future__ import annotations

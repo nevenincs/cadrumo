@@ -16,10 +16,12 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import LLM_CACHE_NAMESPACE
+from ....adapters.persistence.storage import LLM_CACHE_NAMESPACE, secure_object_repository_for_active_bucket
+from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
+from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
 from ._errors import LLMCacheError
 from ._models import (
@@ -100,9 +102,6 @@ class LLMCache:
             :exc:`~adapters.outbound.llm.LLMCacheError`: When the cached
             payload is present but cannot be parsed.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         key = self.build_key(request, provider, model)
         record = secure_object_repository_for_active_bucket().load(
             _CACHE_NAMESPACE,
@@ -139,9 +138,7 @@ class LLMCache:
         payload is stored as an encrypted SQL secure object rather than a
         materialized JSON file. The redaction is idempotent — re-reads of an
         already-redacted entry stay correct because the cache carries the
-        redacted text only. Storage imports are deferred inside this method
-        body so the LLM package's import chain does not pull Alembic plugin
-        discovery into CLI commands that never touch the cache.
+        redacted text only.
 
         Args:
             request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
@@ -156,10 +153,6 @@ class LLMCache:
             produces a non-dict result or the storage write fails with an
             OS-level error.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-        from ....core.redaction import default_rules_for_class, redact_structured
-
         key = self.build_key(request, response.provider, response.model)
         entry = CachedEntry(
             provider=response.provider,
@@ -204,9 +197,6 @@ class LLMCache:
             entry count and total decrypted JSON byte size for this logical
             cache partition.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         records = tuple(
             record
             for record in secure_object_repository_for_active_bucket().list_records(
@@ -228,9 +218,6 @@ class LLMCache:
             :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
             entry cannot be parsed during iteration.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         removed = 0
         repository = secure_object_repository_for_active_bucket()
         for record in repository.list_records(

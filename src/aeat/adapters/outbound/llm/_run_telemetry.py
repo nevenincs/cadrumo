@@ -27,6 +27,19 @@ saved under embeds a random UUID4 suffix (so two runs starting in the same
 microsecond never collide); that suffix is persisted inside the record's own
 payload alongside its natural fields so pruning can reconstruct the exact
 save-time key and issue a matching delete, without a parallel index.
+
+See Also:
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Public recorder that appends and reads these local-only records.
+    :class:`~adapters.outbound.llm.LLMRunRecord`
+        Timing/outcome-only payload stored for each completed LLM run.
+    :func:`~application.diagnostics_run_health.build_run_health_report`
+        Application diagnostic that aggregates these records for operators.
+    :mod:`~application.diagnostics_telemetry`
+        Remote-telemetry preview/flush layer that aggregates only the same
+        non-sensitive accounting signal through a separate consent gate.
+    :data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`
+        Secure-object namespace used for the encrypted local store.
 """
 
 from __future__ import annotations
@@ -39,7 +52,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE
+from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
+from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
 from ....core.time import now
@@ -110,10 +124,6 @@ class LLMRunTelemetryRecorder:
     def record(self, record: LLMRunRecord) -> Path:
         """Append ``record`` to encrypted secure-object storage.
 
-        Storage-layer imports are deferred to the method body so that
-        callers which never touch the recorder do not pull storage-layer
-        plugin discovery into their import graph.
-
         Args:
             record: Run-timing record to append.
 
@@ -124,9 +134,6 @@ class LLMRunTelemetryRecorder:
             :exc:`~adapters.outbound.llm.LLMCacheError`: When the storage
             write fails.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         path = self.root_dir / f"run-telemetry-{record.started_at.date().isoformat()}.jsonl"
         # The uuid4 suffix is minted once here and persisted inside the
         # payload (rather than only folded into the object key) so
@@ -176,9 +183,6 @@ class LLMRunTelemetryRecorder:
         the object key is needed only for pruning and is not part of the
         public :meth:`load_records` contract.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         rows: list[tuple[LLMRunRecord, str]] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _RUN_TELEMETRY_NAMESPACE,
@@ -264,8 +268,6 @@ class LLMRunTelemetryRecorder:
             longer resolves (e.g. removed by a concurrent prune) is silently
             skipped rather than counted or raised.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-
         settings = load_settings()
         effective_retention_days = (
             retention_days if retention_days is not None else settings.aeat_llm_run_telemetry_retention_days

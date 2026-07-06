@@ -31,14 +31,10 @@ See Also:
 
 from __future__ import annotations
 
-import decimal as _decimal
-import re as _re
 from collections.abc import Iterable, Mapping
-from datetime import date as _date
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -54,19 +50,14 @@ from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
-    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     CasillaDefinition,
     CasillaId,
     CasillaObservation,
     InputKind,
-    RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
-    RegistryUnresolvedOutcomeReason,
-    VerificationPredicateDefinition,
     derive_modelo_202_modality,
-    validated_casilla_id,
 )
-from ...domain.deadlines import FiscalResidency, TaxpayerProfile
+from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -106,7 +97,6 @@ from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    ModeloApplicabilityFilterError,
     WorkUnitNotFoundError,
 )
 from ._art20_advisory import _art20_reduccion_advisory_finding
@@ -125,7 +115,6 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
-from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
@@ -164,809 +153,114 @@ if TYPE_CHECKING:
     from ...domain.iva_compensation import IvaCompensationReconciliationDecision
     from ..calculations import IvaWalletDecisionRepository
 
-_PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
-_PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
-_PREDICATE_AT_MOST_ONE_POSITIVE = _re.compile(r"^at_most_one_positive\(\[(?P<ids>[^\]]*)\]\)$")
-_PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$")
-# implies_nonzero(["antecedent_id", "consequent_id"]) — material implication
-# with a strictly-positive antecedent test: predicate holds iff antecedent
-# is <= 0 OR consequent is non-zero. Authored for AEAT cuota-mínima
-# invariants of the shape "cuando C01 sea positivo, C07 debe ser distinta
-# de cero" (M131 EO cuota mínima, M130/M303 régimen simplificado analogues).
-_PREDICATE_IMPLIES_NONZERO = _re.compile(r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
-# implies_any_nonzero(["antecedent_id", "c1_id", "c2_id", ...]) — the
-# N-consequent generalisation of implies_nonzero: predicate holds iff the
-# antecedent is <= 0 OR at least one of the listed consequents is non-zero.
-# Authored for the M303 official-Diseño under-declaration contradiction (a
-# positive computed total with every constituent official numbered box still
-# zero). See the implies_any_nonzero branch in _evaluate_advisory_predicate_fires.
-_PREDICATE_IMPLIES_ANY_NONZERO = _re.compile(r"^implies_any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
-# equals(["lhs_id", "rhs_id"]) — binary consistency invariant: predicate holds
-# iff the two named casillas hold the same value. Authored for the M303 official
-# Diseño box projections (Stage 2): each numbered box copies an already-computed
-# semantic source, so box == source must hold for VERIFICADO_COMPLETO. A copy
-# cannot drift from its source within one evaluation, so the live filing always
-# satisfies it; the predicate's value is catching a FUTURE mis-edit (a box
-# re-flipped to manual, or a projection pointed at the wrong source). As a
-# BLOCKING_RULE it refuses a filing whose projected box has drifted from its
-# semantic source. See the equals branch in _evaluate_predicate_expression.
-_PREDICATE_EQUALS = _re.compile(r"^equals\(\[(?P<ids>[^\]]*)\]\)$")
-# profile_field_required("field_name", "applicability_filter") —
-# profile-state-aware conditional non-zero requirement; sibling of
-# implies_nonzero per the dsl-conditional-predicate ADR. The
-# applicability filter is dispatched via _evaluate_applicability_filter
-# against the TaxpayerProfile threaded through the verification pipeline.
-# First use site: M210 representante-fiscal gate per
-# m210-irnr-full-engine ADR §D2.5 (TRLIRNR Art 10).
-_PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
-_M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = "decl.numero-rectificaciones"
-_M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones"
-
-# Per-predicate next_action dispatch. Predicates listed here emit their
-# dedicated next_action prose via a direct tr() call (so the locale
-# scaffold AST scanner can pick up the literal key); predicates absent
-# from this dispatch fall back to the generic cross-casilla template.
-
-
-def _resolve_predicate_next_action(predicate_id: str) -> str | None:
-    if predicate_id == "m210-representante-fiscal-required":
-        return tr("application.modelo.findings.representante_fiscal_required.next_action")
-    return None
-
-
-# Per-advisory fallback message for advisory predicates whose finding text is
-# not (yet) carried in the locale catalogue. The advisory finding message is
-# resolved via ``tr(advisory_key, default=...)``: a registered locale key still
-# takes precedence, and this default is used only when the key is absent — so
-# translators can enrich the catalogue later without a code change. Mirrors the
-# ``_resolve_predicate_next_action`` per-predicate dispatch shape.
-def _resolve_advisory_message_default(predicate_id: str) -> str | None:
-    if predicate_id == "modelo-130-art109-exencion-alta-retencion":
-        return (
-            "The taxpayer profile says the Art. 109 RIRPF 70% income-coverage exception is met "
-            "for covered professional, agricultural, livestock, or forestry activity income. "
-            "Modelo 130 casilla 17 remains the official form subtraction; confirm that "
-            "preparing an M130 draft is intentional for this profile before filing."
-        )
-    if predicate_id in {
-        "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",
-        "modelo-100-2025-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",
-    }:
-        return (
-            "The deducción por inversión en vivienda habitual is claimed but no pre-2013 "
-            "acquisition signal is recorded. The transitional régimen (LIRPF DT 18ª) admits "
-            "only dwellings acquired before 1 January 2013 (or pre-2013 construction / "
-            "rehabilitation amounts); the deducción was abolished for later acquisitions. "
-            "Confirm the acquisition date qualifies before filing."
-        )
-    return None
-
-
-# advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
-# fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
-# and denominator > 0. This is a generic casilla-ratio predicate; it is not an
-# Art. 109 RIRPF exemption test for Modelo 130.
-_PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
-    r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$',
+from ._verification_predicates import (
+    _BALANCE_CENT_TOLERANCE as _BALANCE_CENT_TOLERANCE,
 )
-_PREDICATE_PROFILE_FLAG_ENABLED = _re.compile(r'^profile_flag_enabled\("(?P<field>[^"]+)"\)$')
-# advisory_when_positive(["casilla_id"]) — single-casilla positive advisory:
-# fires (advisory shown) iff the one named casilla value is strictly > 0.
-# ADVISORY-only; see the advisory_when_positive branch in
-# _evaluate_advisory_predicate_fires. A generic single-casilla positive-value
-# advisory operator; it carries no modelo-specific prose of its own (the M100
-# anualidades por alimentos separate-escala it was first authored for is now a
-# fully computed, correctly-gated chain and no longer uses this advisory).
-_PREDICATE_ADVISORY_WHEN_POSITIVE = _re.compile(
-    r"^advisory_when_positive\(\[(?P<ids>[^\]]*)\]\)$",
+from ._verification_predicates import (
+    _M210_UNRESOLVED_RATE_REASONS as _M210_UNRESOLVED_RATE_REASONS,
 )
-# roll_forward_balances(["closing_id", "opening_id", "applied_id", "base_id"]) —
-# carry-forward stock continuity: closing == opening − applied + max(0, −base),
-# within a one-cent tolerance. See _roll_forward_balance_reconciles.
-_PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<ids>[^\]]*)\]\)$")
-# casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
-# "consequent_casilla_id"]) — categorical-conditional material implication:
-# fires when the antecedent TEXT casilla's operator-entered raw value equals
-# the literal AND the consequent (Decimal) casilla is zero. ADVISORY-only
-# (no BLOCKING_RULE branch); see the casilla_equals_implies_nonzero branch in
-# _evaluate_advisory_predicate_fires and the
-# m210-categorical-conditional-predicate ADR. Authored for the M210
-# inmobiliaria branch (tipo_renta == "inmobiliaria" implies a non-zero
-# base_imponible), the no-silent-under-declaration shape implies_nonzero
-# cannot express because its trigger is a categorical equality, not a
-# numeric antecedent.
-_PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO = _re.compile(
-    r"^casilla_equals_implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$",
+from ._verification_predicates import (
+    _M349_IMPORTE_RECTIFICACIONES_CASILLA as _M349_IMPORTE_RECTIFICACIONES_CASILLA,
 )
-# casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
-# "profile_field"]) — categorical-antecedent / profile-state-consequent
-# conditional advisory: fires when the named antecedent TEXT casilla's
-# operator-entered raw value equals the literal AND the named boolean
-# TaxpayerProfile field/property is False. ADVISORY-only (no BLOCKING_RULE
-# branch); sibling of casilla_equals_implies_nonzero (whose consequent test
-# reads a Decimal casilla) and profile_flag_enabled (whose antecedent is
-# unconditional). Authored for the M210 IRNR tipo_renta="ue_residente"
-# category (TRLIRNR Art 25.1.a reduced rate): the operator-entered
-# categorical rate election is not cross-checked against the declared
-# country_of_fiscal_residence, so a non-EU/EEA filer could self-declare the
-# reduced 19% rate reserved for EU/EEE residents rather than the correct 24%
-# general rate. See the casilla_equals_implies_profile_flag branch in
-# _evaluate_advisory_predicate_fires.
-_PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG = _re.compile(
-    r"^casilla_equals_implies_profile_flag\(\[(?P<ids>[^\]]*)\]\)$",
+from ._verification_predicates import (
+    _M349_NUMERO_RECTIFICACIONES_CASILLA as _M349_NUMERO_RECTIFICACIONES_CASILLA,
 )
-# casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
-# "casilla_a_id", "casilla_b_id"]) — categorical-conditional divergence
-# check: fires when the antecedent TEXT casilla's operator-entered raw value
-# equals the literal AND the two named (Decimal) casillas differ by more
-# than one cent. ADVISORY-only (no BLOCKING_RULE branch); sibling of
-# casilla_equals_implies_nonzero (whose consequent test is "== 0" rather
-# than a cross-casilla divergence). See the
-# casilla_equals_implies_diverges branch in
-# _evaluate_advisory_predicate_fires and the
-# 2026-07-01-modelo-131-eo-modulos-engine-adr. Authored for the M131/M100
-# estimación-objetiva índice corrector de exceso (b.3), which Orden
-# HAC/1347/2024 Anexo II instrucción 2.3 declares incompatible with the
-# índices correctores especiales (a.2 transporte por autotaxis, a.4
-# transporte de mercancías por carretera / servicios de mudanzas) for the
-# activities that carry both — a shape no existing operator can express
-# because it combines a categorical epígrafe equality with a Decimal-pair
-# divergence test.
-_PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES = _re.compile(
-    r"^casilla_equals_implies_diverges\(\[(?P<ids>[^\]]*)\]\)$",
+from ._verification_predicates import (
+    _PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES as _PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES,
 )
-# deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
-# "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory:
-# fires when the amount (Decimal) casilla is strictly positive but neither the
-# acquisition-date TEXT casilla holds a date strictly before the cutoff nor the
-# construction-date TEXT casilla is non-empty. ADVISORY-only; see the
-# deduccion_requires_adquisicion_before branch in
-# _evaluate_advisory_predicate_fires. Authored for the M100 deducción por
-# inversión en vivienda habitual transitional régimen (LIRPF DT 18ª), whose
-# eligibility requires acquisition before 01-01-2013 — a date-threshold trigger
-# neither implies_nonzero (numeric antecedent) nor casilla_equals_implies_nonzero
-# (categorical text equality) can express.
-_PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE = _re.compile(
-    r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
+from ._verification_predicates import (
+    _PREDICATE_ADVISORY_WHEN_POSITIVE as _PREDICATE_ADVISORY_WHEN_POSITIVE,
 )
-# advisory_when_computed_diverges(["declared_id", "computed_id"]) —
-# table-driven-engine-vs-operator-declared discrepancy: fires when the named
-# COMPUTED reference casilla resolves strictly > 0 (the engine has table
-# coverage for the declared activity) AND it differs from the named
-# operator-declared casilla by more than one cent. ADVISORY-only; see the
-# advisory_when_computed_diverges branch in _evaluate_advisory_predicate_fires
-# and the 2026-07-01-modelo-131-eo-modulos-engine-adr. Authored for the M131
-# estimación-objetiva módulos engine: casilla 01 ("Suma de rendimientos
-# netos") stays a manual operator input (Phase 1 does not wire fases 2ª/3ª),
-# but a tabled first-slice activity now has a computed reference figure
-# (modulos-rendimiento-neto-actividad) the operator can be prompted to
-# reconcile against.
-_PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES = _re.compile(
-    r"^advisory_when_computed_diverges\(\[(?P<ids>[^\]]*)\]\)$",
+from ._verification_predicates import (
+    _PREDICATE_ADVISORY_WHEN_RATIO_GE as _PREDICATE_ADVISORY_WHEN_RATIO_GE,
 )
-
-#: One-cent tolerance for the roll-forward continuity reconciliation — absorbs the
-#: sub-cent drift a total-of-per-year-detail figure can accumulate without masking
-#: a genuine discontinuity (which is euros, not cents).
-_BALANCE_CENT_TOLERANCE = Decimal("0.01")
-
-
-def _parse_predicate_casilla_ids(ids_fragment: str) -> list[CasillaId]:
-    """Parse the comma-separated quoted-id list from a predicate expression."""
-    ids: list[CasillaId] = []
-    for token in ids_fragment.split(","):
-        token = token.strip().strip('"').strip("'")
-        if token:
-            ids.append(_validated_predicate_casilla_id(token))
-    return ids
-
-
-def _validated_predicate_casilla_id(token: str) -> CasillaId:
-    try:
-        return validated_casilla_id(token, surface="verification predicate casilla id")
-    except ValueError as exc:
-        raise ModeloError(f"verification predicate references non-canonical casilla.id {token!r}") from exc
-
-
-def _parse_predicate_raw_tokens(ids_fragment: str) -> list[str]:
-    """Parse the comma-separated quoted-token list without casilla-id validation.
-
-    Used for ``casilla_equals_implies_nonzero``, whose middle token is a
-    literal string (e.g. ``"inmobiliaria"``), not a casilla id — unlike
-    :func:`_parse_predicate_casilla_ids`, which validates every token. The
-    caller validates the antecedent/consequent slots individually via
-    :func:`_validated_predicate_casilla_id`.
-    """
-    return [token.strip().strip('"').strip("'") for token in ids_fragment.split(",") if token.strip()]
-
-
-def _parse_predicate_date(raw: str) -> _date | None:
-    """Parse an operator-entered date string, or ``None`` when absent/unparseable.
-
-    Accepts the ISO ``YYYY-MM-DD`` form (the cutoff literal shape) and the two
-    common Spanish operator-entry forms ``DD/MM/YYYY`` and ``DD-MM-YYYY``. Used
-    by the ``deduccion_requires_adquisicion_before`` advisory to read the
-    acquisition-date TEXT casilla and the cutoff literal. An empty or malformed
-    value returns ``None`` so the advisory treats it as "no eligibility signal"
-    (conservative: a non-blocking prompt to correct or confirm the date).
-    """
-    text = raw.strip()
-    if not text:
-        return None
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
-        try:
-            return datetime.strptime(text, fmt).date()
-        except ValueError:
-            continue
-    return None
-
-
-def _roll_forward_balance_reconciles(
-    ids: list[CasillaId],
-    casilla_values: Mapping[CasillaId, Decimal],
-) -> bool | None:
-    """Return whether a carry-forward closing balance reconciles to its roll-forward.
-
-    ``ids`` is ``[closing, opening, applied, base]``. The carry-forward stock
-    continuity invariant is::
-
-        closing == opening − applied + max(0, −base)
-
-    the opening stock less the amount applied (consumed) this period plus any
-    stock newly generated this period — the ``base`` being negative when a new
-    negative base / BIN is generated, so ``max(0, −base)`` is the generated
-    amount and contributes nothing in a profit year. Holds within a one-cent
-    tolerance to absorb per-year-detail rounding. Returns ``None`` on a malformed
-    arity (the caller treats that as "not applicable"); a missing casilla reads as
-    ``Decimal(0)`` via ``.get`` so an absent closing/opening does not crash the
-    gate. Authored for the Modelo 200 BIN total-pendiente roll-forward
-    (modelo-200-bin-continuity ADR); general to any carry-forward stock.
-    """
-    if len(ids) != 4:
-        return None
-    closing = casilla_values.get(ids[0], Decimal(0))
-    opening = casilla_values.get(ids[1], Decimal(0))
-    applied = casilla_values.get(ids[2], Decimal(0))
-    base = casilla_values.get(ids[3], Decimal(0))
-    generated = max(Decimal(0), -base)
-    expected = opening - applied + generated
-    return abs(closing - expected) <= _BALANCE_CENT_TOLERANCE
-
-
-def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
-    """Return True iff the profile state matches the named applicability filter.
-
-    Used by ``profile_field_required`` predicates to gate whether the
-    field-presence requirement applies to a given profile. Adding a
-    new filter is a deliberate authoring decision: the dispatch table
-    here is the single source of truth, and an unknown filter name
-    raises ``ValueError`` rather than silently passing (mirrors the
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS gate).
-    """
-    if filter_name == "non_resident_irnr_non_eea":
-        # TRLIRNR Art 10 letter applies only to non-EU residents.
-        # M210 uses the broader ue_eee_status: EEA residents are exempt
-        # because of the bilateral mutual-assistance regime.
-        return profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and not profile.ue_eee_status
-    raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
-
-
-def _evaluate_predicate_expression(
-    expression: str,
-    casilla_values: Mapping[CasillaId, Decimal],
-    profile: TaxpayerProfile,
-) -> bool:
-    """Return True when the predicate holds, False when it is violated.
-
-    Supports the DSL operators registered in
-    :data:`~aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
-
-    - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
-    - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
-    - ``at_most_one_positive(["id1", "id2", ...])`` — no more than one named
-      casilla may be strictly positive.
-    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
-      casilla is strictly positive, the limited casilla MUST NOT exceed it.
-    - ``equals(["lhs_id", "rhs_id"])`` — binary consistency invariant: predicate
-      holds iff the two named casillas hold the same value (M303 official-box
-      projection consistency: box == its semantic source).
-    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
-      implication with strictly-positive antecedent: predicate holds iff
-      antecedent <= 0 OR consequent != 0.
-    - ``implies_any_nonzero(["antecedent_id", "c1_id", ...])`` — N-consequent
-      generalisation: predicate holds iff antecedent <= 0 OR at least one
-      listed consequent != 0 (M303 official-Diseño under-declaration shape).
-    - ``profile_field_required("field_name", "applicability_filter")`` —
-      profile-state-aware conditional non-zero requirement; sibling of
-      ``implies_nonzero`` per the dsl-conditional-predicate ADR.
-
-    An expression that does not match any registered pattern is treated as
-    holding (i.e. unknown predicates do not block the operator). The
-    authoring-time validator in
-    :mod:`~aeat.domain.calculations.registry._validate_surfaces` is the gate
-    against typos reaching this branch.
-    """
-    expr = expression.strip()
-
-    m = _PREDICATE_ALL_NONZERO.match(expr)
-    if m:
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
-
-    m = _PREDICATE_ANY_NONZERO.match(expr)
-    if m:
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
-
-    m = _PREDICATE_AT_MOST_ONE_POSITIVE.match(expr)
-    if m:
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) < 2:
-            return True
-        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
-
-    m = _PREDICATE_CAP_LE_WHEN_POSITIVE.match(expr)
-    if m:
-        # cap_le_when_positive(["limited_id", "ceiling_id"]) — when the
-        # ceiling casilla is strictly positive, the limited casilla value
-        # MUST NOT exceed the ceiling, enforcing AEAT cap rules like
-        # Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
-        # caso podrá figurar... un importe superior a la cantidad positiva
-        # consignada".
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) != 2:
-            return True
-        limited_id, ceiling_id = ids[0], ids[1]
-        ceiling = casilla_values.get(ceiling_id, Decimal(0))
-        if ceiling <= Decimal(0):
-            return True
-        limited = casilla_values.get(limited_id, Decimal(0))
-        return limited <= ceiling
-
-    m = _PREDICATE_EQUALS.match(expr)
-    if m:
-        # equals(["lhs_id", "rhs_id"]) — binary consistency check. Predicate holds
-        # (returns True, no violation) iff the two named casillas hold the same
-        # value. A malformed arity reads as holding (defensive, same convention as
-        # the other operators); the authoring-time validator in
-        # _validate_surfaces rejects a malformed equals at registry load, so a
-        # bad arity cannot reach here from a validated registry. A missing casilla
-        # reads as Decimal(0) via .get. The violation case (returns False) is
-        # "the two casillas differ" — a projected box that has drifted from its
-        # semantic source (a future mis-edit).
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) != 2:
-            return True
-        lhs = casilla_values.get(ids[0], Decimal(0))
-        rhs = casilla_values.get(ids[1], Decimal(0))
-        return lhs == rhs
-
-    m = _PREDICATE_IMPLIES_NONZERO.match(expr)
-    if m:
-        # implies_nonzero(["antecedent_id", "consequent_id"]) — material
-        # implication "antecedent strictly positive → consequent non-zero".
-        # Predicate holds (returns True) when:
-        #   - the expression is malformed (defensive — same shape as
-        #     cap_le_when_positive),
-        #   - the antecedent is <= 0 (implication trivially holds with
-        #     non-positive antecedent — mirrors AEAT phrasing "cuando C01
-        #     sea positivo"),
-        #   - or the consequent is non-zero.
-        # The violation case (returns False) is "antecedent strictly
-        # positive AND consequent == 0". A missing consequent reads as
-        # Decimal(0) via the .get default — same convention as the other
-        # operators.
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) != 2:
-            return True
-        antecedent_id, consequent_id = ids[0], ids[1]
-        antecedent = casilla_values.get(antecedent_id, Decimal(0))
-        if antecedent <= Decimal(0):
-            return True
-        consequent = casilla_values.get(consequent_id, Decimal(0))
-        return consequent != Decimal(0)
-
-    m = _PREDICATE_IMPLIES_ANY_NONZERO.match(expr)
-    if m:
-        # implies_any_nonzero(["antecedent_id", "c1_id", ...]) — material
-        # implication "antecedent strictly positive → at least one consequent
-        # non-zero". Predicate holds (returns True) when the expression names
-        # no consequents (defensive), the antecedent is <= 0 (implication
-        # trivially holds), or ANY consequent is non-zero. The violation case
-        # (returns False) is "antecedent strictly positive AND every consequent
-        # == 0" — the M303 silent-under-declaration shape. Missing consequents
-        # read as Decimal(0) via .get, same convention as the other operators.
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) < 2:
-            return True
-        antecedent = casilla_values.get(ids[0], Decimal(0))
-        if antecedent <= Decimal(0):
-            return True
-        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids[1:])
-
-    m = _PREDICATE_PROFILE_FIELD_REQUIRED.match(expr)
-    if m:
-        field_name = m.group("field")
-        filter_name = m.group("filter")
-        # Applicability dispatch: filter_name -> profile-predicate function.
-        # An unknown filter raises ValueError (single source of truth in the
-        # dispatch table) rather than silently passing the predicate.
-        if not _evaluate_applicability_filter(filter_name, profile):
-            return True  # rule doesn't apply; predicate trivially holds
-        field_value = getattr(profile, field_name, None)
-        return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
-
-    m = _PREDICATE_ROLL_FORWARD_BALANCES.match(expr)
-    if m:
-        # roll_forward_balances(["closing", "opening", "applied", "base"]) — as a
-        # BLOCKING_RULE the predicate HOLDS (returns True) when the closing
-        # balance reconciles to opening − applied + max(0, −base) within a cent.
-        # A malformed arity reads as holding (defensive, like the other
-        # operators); the authoring validator rejects it at registry load.
-        reconciles = _roll_forward_balance_reconciles(_parse_predicate_casilla_ids(m.group("ids")), casilla_values)
-        return True if reconciles is None else reconciles
-
-    return True
-
-
-_M210_UNRESOLVED_RATE_REASONS = frozenset(
-    {
-        RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
-        RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
-    },
+from ._verification_predicates import (
+    _PREDICATE_ALL_NONZERO as _PREDICATE_ALL_NONZERO,
 )
-
-
-def _m210_unresolved_outcome_findings(
-    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
-    *,
-    profile: TaxpayerProfile,
-    snapshot: RegistrySnapshot,
-    year: int,
-    tipo_renta: str,
-) -> list[ModeloVerificationFinding]:
-    """Convert typed M210 unresolved engine outcomes into verification findings.
-
-    The formula runtime reports an unresolvable IRNR rate beside the Decimal
-    value channels as :class:`RegistryCalculationUnresolvedOutcome`. This
-    verification-layer consumer replays the application M210 rate resolver over
-    each M210 rate outcome and returns any BLOCKING findings it emits.
-    """
-    findings: list[ModeloVerificationFinding] = []
-    for outcome in unresolved_outcomes:
-        if outcome.reason not in _M210_UNRESOLVED_RATE_REASONS:
-            continue
-        resolved_tipo_renta = tipo_renta or outcome.context.get("tipo_renta", "")
-        _rate, obs_findings = _resolve_m210_rate(profile, resolved_tipo_renta, year, snapshot)
-        findings.extend(obs_findings)
-    return findings
-
-
-def _evaluate_advisory_predicate_fires(
-    expression: str,
-    casilla_values: Mapping[CasillaId, Decimal],
-    text_values: Mapping[CasillaId, str] = MappingProxyType({}),
-    profile: TaxpayerProfile | None = None,
-) -> bool:
-    """Return True when an advisory predicate's condition is met (i.e. advisory should fire).
-
-    Supports:
-
-    - ``advisory_when_ratio_ge(["num_id", "den_id", "threshold"])`` — fires when
-      num/den >= threshold and den > 0. This is a generic casilla-ratio
-      predicate, not an Art. 109 RIRPF Modelo 130 exemption test.
-    - ``profile_flag_enabled("profile_field_name")`` — fires when the named
-      supported boolean TaxpayerProfile field is true.
-    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — fires when the
-      material implication is violated, i.e. the antecedent is strictly positive
-      but the consequent is zero. As an ADVISORY this surfaces a non-blocking
-      operator alert for the same shape the BLOCKING_RULE variant refuses: e.g.
-      a positive resultado contable with an undetermined (zero) base imponible,
-      a likely silent under-declaration that a positive-result entity should
-      confirm (legitimate zero-base via BIN compensation remains permissible,
-      hence advisory rather than blocking).
-    - ``implies_any_nonzero(["antecedent_id", "c1_id", ...])`` — the
-      N-consequent generalisation: fires when the antecedent is strictly
-      positive but EVERY listed consequent is zero. The M303 official-Diseño
-      contradiction (a positive computed total whose constituent official
-      numbered boxes are all unpopulated by the calculate path).
-    - ``at_most_one_positive(["id1", "id2", ...])`` — fires when more than one
-      listed casilla is strictly positive.
-    - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
-      "consequent_casilla_id"])`` — categorical-conditional material
-      implication: fires when the named antecedent TEXT casilla's
-      operator-entered raw value (read from ``text_values``, not
-      ``casilla_values``) equals the literal AND the named consequent
-      (Decimal) casilla is zero. A missing or differing antecedent value does
-      not fire. ``text_values`` defaults to an empty mapping for callers that
-      have no text-casilla channel (every other operator ignores it). See the
-      m210-categorical-conditional-predicate ADR.
-    - ``casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
-      "casilla_a_id", "casilla_b_id"])`` — categorical-conditional divergence
-      check: fires when the named antecedent TEXT casilla's operator-entered
-      raw value (read from ``text_values``) equals the literal AND the two
-      named (Decimal) casillas differ by more than one cent. A missing or
-      differing antecedent value, or two casillas within a cent of each
-      other, does not fire. Sibling of ``casilla_equals_implies_nonzero``
-      (whose consequent test is "== 0" rather than a cross-casilla
-      divergence). Authored for the M131/M100 estimación-objetiva índice
-      corrector de exceso (b.3), incompatible per Orden HAC/1347/2024 Anexo
-      II instrucción 2.3 with the índices correctores especiales for the
-      activities that carry both.
-    - ``casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
-      "profile_field"])`` — categorical-antecedent / profile-state-consequent
-      conditional advisory: fires when the named antecedent TEXT casilla's
-      operator-entered raw value (read from ``text_values``) equals the
-      literal AND the named boolean ``TaxpayerProfile`` field/property is
-      False. A missing or differing antecedent value, an unsupported profile
-      field, or a missing profile does not fire. Authored for the M210 IRNR
-      ``tipo_renta="ue_residente"`` reduced-rate election: the categorical
-      rate choice is cross-checked against the profile's derived
-      ``ue_eee_status``, so a non-EU/EEA filer self-declaring the reduced
-      rate is prompted to confirm eligibility rather than silently filing it.
-    """
-    expr = expression.strip()
-    m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
-    if m:
-        num_id = _validated_predicate_casilla_id(m.group("num"))
-        den_id = _validated_predicate_casilla_id(m.group("den"))
-        thr_str = m.group("thr")
-        den = casilla_values.get(den_id, Decimal(0))
-        if den <= Decimal(0):
-            return False
-        num = casilla_values.get(num_id, Decimal(0))
-        try:
-            threshold = Decimal(thr_str)
-        except _decimal.InvalidOperation:
-            return False
-        return (num / den) >= threshold
-    m = _PREDICATE_PROFILE_FLAG_ENABLED.match(expr)
-    if m:
-        if profile is None:
-            return False
-        field = m.group("field")
-        if field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
-            return False
-        return bool(getattr(profile, field, False))
-    m = _PREDICATE_ADVISORY_WHEN_POSITIVE.match(expr)
-    if m:
-        # advisory_when_positive(["casilla_id"]) — fires (advisory shown) iff the
-        # single named casilla value is strictly > 0. A malformed arity (not
-        # exactly one id) does not fire (defensive, same convention as the other
-        # operators); the registry-build validator rejects a bad arity or an
-        # unknown casilla at load, so this branch only ever sees a well-formed,
-        # existing casilla in production.
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) != 1:
-            return False
-        return casilla_values.get(ids[0], Decimal(0)) > Decimal(0)
-    m = _PREDICATE_AT_MOST_ONE_POSITIVE.match(expr)
-    if m:
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) < 2:
-            return False
-        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) > 1
-    m = _PREDICATE_IMPLIES_NONZERO.match(expr)
-    if m:
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) != 2:
-            return False
-        antecedent = casilla_values.get(ids[0], Decimal(0))
-        consequent = casilla_values.get(ids[1], Decimal(0))
-        return antecedent > Decimal(0) and consequent == Decimal(0)
-    m = _PREDICATE_IMPLIES_ANY_NONZERO.match(expr)
-    if m:
-        # Fires (advisory shown) when the antecedent is strictly positive but
-        # EVERY listed consequent is zero — the M303 official-Diseño
-        # contradiction (a positive computed total whose constituent official
-        # numbered boxes are all unpopulated). See the docstring branch in
-        # _evaluate_predicate_expression for the BLOCKING_RULE complement.
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) < 2:
-            return False
-        antecedent = casilla_values.get(ids[0], Decimal(0))
-        if antecedent <= Decimal(0):
-            return False
-        return all(casilla_values.get(cid, Decimal(0)) == Decimal(0) for cid in ids[1:])
-    m = _PREDICATE_ROLL_FORWARD_BALANCES.match(expr)
-    if m:
-        # roll_forward_balances(["closing", "opening", "applied", "base"]) — as an
-        # ADVISORY the predicate FIRES (returns True, advisory shown) when the
-        # closing balance does NOT reconcile to opening − applied + max(0, −base):
-        # a carry-forward stock discontinuity (e.g. a silently-dropped BIN
-        # carryforward) that would compound into future-year compensation. A
-        # reconciling balance (within a cent) or a malformed arity does not fire.
-        reconciles = _roll_forward_balance_reconciles(_parse_predicate_casilla_ids(m.group("ids")), casilla_values)
-        return reconciles is False
-    m = _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO.match(expr)
-    if m:
-        # casilla_equals_implies_nonzero(["antecedent_id", "literal",
-        # "consequent_id"]) — fires (advisory shown) when the antecedent TEXT
-        # casilla's operator-entered raw value equals the literal AND the
-        # consequent (Decimal) casilla is zero. A malformed arity, or an
-        # antecedent absent from text_values, does not fire (defensive,
-        # same convention as the other operators).
-        tokens = _parse_predicate_raw_tokens(m.group("ids"))
-        if len(tokens) != 3:
-            return False
-        antecedent_id = _validated_predicate_casilla_id(tokens[0])
-        literal = tokens[1]
-        consequent_id = _validated_predicate_casilla_id(tokens[2])
-        if text_values.get(antecedent_id) != literal:
-            return False
-        consequent = casilla_values.get(consequent_id, Decimal(0))
-        return consequent == Decimal(0)
-    m = _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG.match(expr)
-    if m:
-        # casilla_equals_implies_profile_flag(["antecedent_id", "literal",
-        # "profile_field"]) — fires (advisory shown) when the antecedent TEXT
-        # casilla's operator-entered raw value equals the literal AND the
-        # named boolean TaxpayerProfile field/property is False. A malformed
-        # arity, an antecedent absent from text_values / not equal to the
-        # literal, an unsupported profile field, or a missing profile does
-        # not fire (defensive, same convention as the other operators).
-        tokens = _parse_predicate_raw_tokens(m.group("ids"))
-        if len(tokens) != 3:
-            return False
-        antecedent_id = _validated_predicate_casilla_id(tokens[0])
-        literal = tokens[1]
-        field = tokens[2]
-        if text_values.get(antecedent_id) != literal:
-            return False
-        if profile is None or field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
-            return False
-        return not bool(getattr(profile, field, False))
-    m = _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES.match(expr)
-    if m:
-        # casilla_equals_implies_diverges(["antecedent_id", "literal",
-        # "casilla_a_id", "casilla_b_id"]) — fires (advisory shown) when the
-        # antecedent TEXT casilla's operator-entered raw value equals the
-        # literal AND the two named (Decimal) casillas differ by more than
-        # one cent. A malformed arity, or an antecedent absent from
-        # text_values / not equal to the literal, does not fire (defensive,
-        # same convention as casilla_equals_implies_nonzero).
-        tokens = _parse_predicate_raw_tokens(m.group("ids"))
-        if len(tokens) != 4:
-            return False
-        antecedent_id = _validated_predicate_casilla_id(tokens[0])
-        literal = tokens[1]
-        casilla_a_id = _validated_predicate_casilla_id(tokens[2])
-        casilla_b_id = _validated_predicate_casilla_id(tokens[3])
-        if text_values.get(antecedent_id) != literal:
-            return False
-        casilla_a = casilla_values.get(casilla_a_id, Decimal(0))
-        casilla_b = casilla_values.get(casilla_b_id, Decimal(0))
-        return abs(casilla_a - casilla_b) > Decimal("0.01")
-    m = _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE.match(expr)
-    if m:
-        # deduccion_requires_adquisicion_before(["amount_id",
-        # "acquisition_date_id", "construction_date_id", "cutoff_iso"]) — fires
-        # (advisory shown) when the amount casilla is strictly positive (a
-        # deducción is claimed) AND no pre-cutoff eligibility signal is present:
-        # neither a pre-cutoff acquisition date (read from text_values) nor a
-        # non-empty construction date. A malformed arity or unparseable cutoff
-        # does not fire (defensive, same convention as the other operators).
-        tokens = _parse_predicate_raw_tokens(m.group("ids"))
-        if len(tokens) != 4:
-            return False
-        amount_id = _validated_predicate_casilla_id(tokens[0])
-        acquisition_date_id = _validated_predicate_casilla_id(tokens[1])
-        construction_date_id = _validated_predicate_casilla_id(tokens[2])
-        cutoff = _parse_predicate_date(tokens[3])
-        if cutoff is None:
-            return False
-        amount = casilla_values.get(amount_id, Decimal(0))
-        if amount <= Decimal(0):
-            return False
-        acquisition_date = _parse_predicate_date(text_values.get(acquisition_date_id, ""))
-        eligible_by_acquisition = acquisition_date is not None and acquisition_date < cutoff
-        eligible_by_construction = bool(text_values.get(construction_date_id, "").strip())
-        return not (eligible_by_acquisition or eligible_by_construction)
-    m = _PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES.match(expr)
-    if m:
-        # advisory_when_computed_diverges(["declared_id", "computed_id"]) —
-        # fires (advisory shown) when the named COMPUTED reference casilla is
-        # strictly positive (the table-driven engine has coverage for the
-        # declared activity) AND it differs from the named operator-declared
-        # casilla by more than one cent. A malformed arity does not fire
-        # (defensive, same convention as the other operators). A zero
-        # computed casilla holds trivially — the engine has no table
-        # coverage, so there is nothing to reconcile against.
-        ids = _parse_predicate_casilla_ids(m.group("ids"))
-        if len(ids) != 2:
-            return False
-        declared_id, computed_id = ids[0], ids[1]
-        computed = casilla_values.get(computed_id, Decimal(0))
-        if computed <= Decimal(0):
-            return False
-        declared = casilla_values.get(declared_id, Decimal(0))
-        return abs(declared - computed) > Decimal("0.01")
-    return False
-
-
-def _evaluate_verification_predicates(
-    predicates: tuple[VerificationPredicateDefinition, ...],
-    casilla_values: Mapping[CasillaId, Decimal],
-    profile: TaxpayerProfile,
-    text_values: Mapping[CasillaId, str] = MappingProxyType({}),
-) -> list[ModeloVerificationFinding]:
-    """Evaluate Layer 2 cross-casilla predicates into verification findings.
-
-    ``predicates`` are
-    :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
-    entries from the selected registry snapshot. The returned records are
-    :class:`~aeat.domain.modelos.ModeloVerificationFinding` values.
-
-    ``text_values`` carries operator-entered raw strings (e.g.
-    :attr:`~aeat.domain.modelos.CalculationRevision.input_values_by_casilla_id`),
-    independent of the Decimal ``casilla_values`` projection. It defaults to an
-    empty mapping and is consumed by text-aware ADVISORY operators such as
-    ``casilla_equals_implies_nonzero``; every other operator ignores it.
-
-    ``BLOCKING_RULE`` predicates use negative logic: the predicate expression must
-    hold, and a violation emits a BLOCKING finding. ``ADVISORY`` predicates use
-    affirmative logic: when their condition fires, the operator receives a
-    WARNING-severity ADVISORY finding and the verified-complete grant remains
-    possible if no blocking findings exist.
-
-    ``profile`` is a :class:`~aeat.domain.deadlines.TaxpayerProfile` threaded
-    through to support profile-state-aware predicate operators such as
-    ``profile_field_required`` and ``profile_flag_enabled``. Casilla-only
-    operators ignore the parameter.
-
-    See Also:
-        :func:`_evaluate_predicate_expression`:
-            Evaluates the blocking-rule predicate DSL.
-        :func:`_evaluate_advisory_predicate_fires`:
-            Evaluates the advisory predicate DSL.
-        :func:`_classify_verification_outcome`:
-            Converts finding severity into report completeness and grant status.
-    """
-    if not predicates:
-        return []
-
-    findings: list[ModeloVerificationFinding] = []
-    for predicate in predicates:
-        if predicate.finding_kind == "ADVISORY":
-            # ADVISORY predicates fire a WARNING finding when their condition IS met
-            # (affirmative logic — opposite of BLOCKING_RULE predicates).
-            if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
-                advisory_key = f"application.modelo.findings.{predicate.predicate_id.replace('-', '_')}"
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.ADVISORY,
-                        severity=ModeloVerificationFindingSeverity.WARNING,
-                        message=tr(advisory_key, default=_resolve_advisory_message_default(predicate.predicate_id)),
-                        legal_refs=tuple(str(r) for r in predicate.legal_refs),
-                    ),
-                )
-        else:
-            if not _evaluate_predicate_expression(predicate.expression, casilla_values, profile):
-                next_action = _resolve_predicate_next_action(predicate.predicate_id)
-                if next_action is None:
-                    next_action = tr(
-                        "application.modelo.findings.cross_casilla_invariant_next_action",
-                        predicate_id=predicate.predicate_id,
-                    )
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                        severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        message=tr(
-                            "application.modelo.findings.cross_casilla_invariant_violated",
-                            predicate_id=predicate.predicate_id,
-                            expression=predicate.expression,
-                        ),
-                        next_action=next_action,
-                        legal_refs=tuple(str(r) for r in predicate.legal_refs),
-                    ),
-                )
-    return findings
-
-
-evaluate_advisory_predicate_fires = _evaluate_advisory_predicate_fires
-evaluate_predicate_expression = _evaluate_predicate_expression
-evaluate_verification_predicates = _evaluate_verification_predicates
+from ._verification_predicates import (
+    _PREDICATE_ANY_NONZERO as _PREDICATE_ANY_NONZERO,
+)
+from ._verification_predicates import (
+    _PREDICATE_AT_MOST_ONE_POSITIVE as _PREDICATE_AT_MOST_ONE_POSITIVE,
+)
+from ._verification_predicates import (
+    _PREDICATE_CAP_LE_WHEN_POSITIVE as _PREDICATE_CAP_LE_WHEN_POSITIVE,
+)
+from ._verification_predicates import (
+    _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES as _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES,
+)
+from ._verification_predicates import (
+    _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO as _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO,
+)
+from ._verification_predicates import (
+    _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG as _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG,
+)
+from ._verification_predicates import (
+    _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE as _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE,
+)
+from ._verification_predicates import (
+    _PREDICATE_EQUALS as _PREDICATE_EQUALS,
+)
+from ._verification_predicates import (
+    _PREDICATE_IMPLIES_ANY_NONZERO as _PREDICATE_IMPLIES_ANY_NONZERO,
+)
+from ._verification_predicates import (
+    _PREDICATE_IMPLIES_NONZERO as _PREDICATE_IMPLIES_NONZERO,
+)
+from ._verification_predicates import (
+    _PREDICATE_PROFILE_FIELD_REQUIRED as _PREDICATE_PROFILE_FIELD_REQUIRED,
+)
+from ._verification_predicates import (
+    _PREDICATE_PROFILE_FLAG_ENABLED as _PREDICATE_PROFILE_FLAG_ENABLED,
+)
+from ._verification_predicates import (
+    _PREDICATE_ROLL_FORWARD_BALANCES as _PREDICATE_ROLL_FORWARD_BALANCES,
+)
+from ._verification_predicates import (
+    _evaluate_advisory_predicate_fires as _evaluate_advisory_predicate_fires,
+)
+from ._verification_predicates import (
+    _evaluate_applicability_filter as _evaluate_applicability_filter,
+)
+from ._verification_predicates import (
+    _evaluate_predicate_expression as _evaluate_predicate_expression,
+)
+from ._verification_predicates import (
+    _evaluate_verification_predicates as _evaluate_verification_predicates,
+)
+from ._verification_predicates import (
+    _m210_unresolved_outcome_findings as _m210_unresolved_outcome_findings,
+)
+from ._verification_predicates import (
+    _parse_predicate_casilla_ids as _parse_predicate_casilla_ids,
+)
+from ._verification_predicates import (
+    _parse_predicate_date as _parse_predicate_date,
+)
+from ._verification_predicates import (
+    _parse_predicate_raw_tokens as _parse_predicate_raw_tokens,
+)
+from ._verification_predicates import (
+    _resolve_advisory_message_default as _resolve_advisory_message_default,
+)
+from ._verification_predicates import (
+    _resolve_predicate_next_action as _resolve_predicate_next_action,
+)
+from ._verification_predicates import (
+    _roll_forward_balance_reconciles as _roll_forward_balance_reconciles,
+)
+from ._verification_predicates import (
+    _validated_predicate_casilla_id as _validated_predicate_casilla_id,
+)
+from ._verification_predicates import (
+    evaluate_advisory_predicate_fires as evaluate_advisory_predicate_fires,
+)
+from ._verification_predicates import (
+    evaluate_predicate_expression as evaluate_predicate_expression,
+)
+from ._verification_predicates import (
+    evaluate_verification_predicates as evaluate_verification_predicates,
+)
 
 
 def _normalised_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
@@ -1560,6 +854,31 @@ def _emit_verification_bucket_event(
     )
 
 
+def _append_revision_advisory_findings(
+    findings: list[ModeloVerificationFinding],
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    profile: TaxpayerProfile,
+    snapshot: RegistrySnapshot,
+) -> None:
+    for finding in (
+        _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
+        _art20_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
+        _art52_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
+        _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values),
+        _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
+            snapshot,
+            target.casilla_values,
+            work_unit=work_unit,
+        ),
+        _m210_convenio_lob_advisory_finding(snapshot, profile, target.input_values_by_casilla_id),
+    ):
+        if finding is not None:
+            findings.append(finding)
+    findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
+
+
 def _collect_revision_verification_findings(
     *,
     work_unit: WorkUnit,
@@ -1676,78 +995,13 @@ def _collect_revision_verification_findings(
         ),
     )
 
-    # Advisory: DT 12ª LIRPF — warn when a large trabajo income (0003 > 20 000)
-    # is present but the trabajo reducción slot (0011) is zero / absent.
-    # This heuristic surfaces the DT_12A_REDUCCION_POSSIBLE advisory so
-    # retirees do not silently lose the 40% reducción for pre-2007 aportaciones.
-    dt12_finding = _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
-    if dt12_finding is not None:
-        findings.append(dt12_finding)
-
-    # Advisory: art. 20 LIRPF — warn when the rendimiento neto del trabajo (0022) is
-    # within the reducción band (strictly below the RNT ceiling) but the general
-    # reducción casilla (0023) is zero. Stays ADVISORY because the art. 20 eligibility
-    # gate ("otras rentas distintas del trabajo" ≤ 6.500 €) is a cross-section aggregate
-    # the engine cannot yet evaluate, so a legitimately-zero reduction must remain
-    # permissible (no-silent-under-declaration).
-    art20_finding = _art20_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
-    if art20_finding is not None:
-        findings.append(art20_finding)
-
-    # Advisory: art. 52 LIRPF — warn when the previsión-social reducción (0468) is
-    # granted above the EUR 1.500 individual sub-limit while both the plan-de-empleo
-    # worker-contribution casilla (0426) and the contribución empresarial casilla
-    # (0427) are zero. The combined EUR 10.000 ceiling only applies when the EUR
-    # 8.500 increment is backed by one of those two boxes; a purely-individual
-    # aportación is bound by the lower EUR 1.500 limit. Stays ADVISORY because the
-    # engine does not yet split individual from employer-linked aportaciones within
-    # casilla 0463 (Phase 2b), so a legitimately employer-backed reducción above
-    # EUR 1.500 must remain permissible (no-silent-under-declaration).
-    art52_finding = _art52_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
-    if art52_finding is not None:
-        findings.append(art52_finding)
-
-    # Advisory: DT 12ª LIRPF antiquity condition — warn to confirm the pre-2007
-    # TRLIRPF art. 17.2.a) "más de dos años desde la primera aportación" antiquity
-    # condition (waived for invalidez) whenever a trabajo reducción (0011) has been
-    # applied. Distinct from the possible-omission advisory above: this fires on a
-    # POSITIVE reducción, not a zero one. Stays ADVISORY because the engine models
-    # neither "years since first aportación" nor an invalidez flag, so a genuinely
-    # invalidez-exempt or antiquity-satisfying rescate must remain permissible
-    # (no-silent-under-declaration).
-    dt12_antiquity_finding = _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values)
-    if dt12_antiquity_finding is not None:
-        findings.append(dt12_antiquity_finding)
-
-    # Advisory: Madrid nacimiento/adopción D4 indeterminate-eligibility — warn to
-    # confirm eligibility for casilla 1039 when the calculate-path auto-trigger
-    # fail-closed on an indeterminate (tributación conjunta or married/pareja de
-    # hecho) unit that has at least one nacimiento/adopción-eligible descendant.
-    # Stays ADVISORY because the unidad-familiar 61.860 € límite depends on the
-    # spouse's base imponible, which this application does not persist; a
-    # legitimately ineligible or already-confirmed unit must remain permissible
-    # (no-silent-under-declaration is symmetric for a deducción — over-claim,
-    # not silence, is the hazard the fail-closed default already guards
-    # against).
-    madrid_nacimiento_adopcion_finding = _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
-        snapshot,
-        target.casilla_values,
+    _append_revision_advisory_findings(
+        findings,
         work_unit=work_unit,
+        target=target,
+        profile=profile,
+        snapshot=snapshot,
     )
-    if madrid_nacimiento_adopcion_finding is not None:
-        findings.append(madrid_nacimiento_adopcion_finding)
-
-    # Advisory: Convenio doble imposición limitation-of-benefits — warn to confirm
-    # treaty eligibility (beneficial ownership, economic substance) whenever a
-    # Modelo 210 rate actually applies a matched treaty override row. Stays
-    # ADVISORY because the engine cannot verify beneficial-ownership or LOB
-    # substance from country_of_fiscal_residence alone; a genuinely eligible
-    # treaty claim must remain permissible (no-silent-under-declaration).
-    lob_finding = _m210_convenio_lob_advisory_finding(snapshot, profile, target.input_values_by_casilla_id)
-    if lob_finding is not None:
-        findings.append(lob_finding)
-
-    findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
 
     return findings, resolved_casilla_ids, missing_required_casilla_ids
 

@@ -102,6 +102,71 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: P
                 )
 
 
+def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives(tmp_path: Path) -> None:
+    """A later seed must replace a sticky first-period-zero wallet decision."""
+    taxpayer_nif = "12345678Z"
+    with _secure_backend(tmp_path):
+        _store_operator_profile_with_tax_id(taxpayer_nif)
+        snapshot = _snapshot_303(period="1T")
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+
+        first_revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            backend_binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=None,
+            filing_period_date=date(2026, 3, 31),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=_DECIDED_AT,
+        )
+        assert first_revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
+        first_decision = IvaWalletDecisionRepository().load_decision(
+            taxpayer_nif,
+            _period(_TARGET_YEAR, "1T"),
+        )
+        assert first_decision is not None
+        assert first_decision.divergence == "first_period_zero"
+        assert first_decision.blocked is False
+
+        seed_iva_compensation_period(
+            taxpayer_nif=taxpayer_nif,
+            period=_period(2025, "4T"),
+            amount=Decimal("450.00"),
+            seeded_at=_DECIDED_AT,
+        )
+
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=None,
+                filing_period_date=date(2026, 3, 31),
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+                clock=_DECIDED_AT,
+            )
+
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["divergence"] == "filed_history_only"
+        refreshed = IvaWalletDecisionRepository().load_decision(
+            taxpayer_nif,
+            _period(_TARGET_YEAR, "1T"),
+        )
+        assert refreshed is not None
+        assert refreshed.divergence == "filed_history_only"
+        assert refreshed.local_recurrence_amount == Decimal("450.00")
+        assert refreshed.blocked is True
+        assert any(source.source_periods == (_period(2025, "4T"),) for source in refreshed.authority_sources)
+
+
 def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303_engine(tmp_path: Path) -> None:
     """A caller explicit zero is allowed only after the local zero seed reconciles it."""
     with _secure_backend(tmp_path):

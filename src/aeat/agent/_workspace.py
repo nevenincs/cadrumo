@@ -32,6 +32,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .. import __version__
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from . import harness_root, iter_operator_rules, iter_personas
 
@@ -122,8 +123,6 @@ def _plugin_version() -> str:
     try:
         return _metadata.version(_PLUGIN_NAME)
     except _metadata.PackageNotFoundError:
-        from .. import __version__
-
         return __version__
 
 

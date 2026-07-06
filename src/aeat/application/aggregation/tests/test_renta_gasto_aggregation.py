@@ -112,6 +112,7 @@ def _gasto_transaction(
     amount: Decimal = Decimal("1000.00"),
     currency: str = "EUR",
     taxable_base: Decimal | None = None,
+    irpf_category: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
@@ -136,6 +137,7 @@ def _gasto_transaction(
             "taxable_base": taxable_base,
             "iva_rate": None,
             "iva_amount": None,
+            "irpf_category": irpf_category,
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
@@ -254,6 +256,58 @@ def test_personal_outgoing_is_skipped_silently() -> None:
         value_date=date(2024, 2, 1),
         taxable_base=Decimal("75.00"),
         business_classification=BusinessClassification.PERSONAL,
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert result.observations == ()
+    assert result.issues == ()
+    assert _M130_GASTOS_CASILLA not in result.casilla_aggregation.casilla_values
+
+
+def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() -> None:
+    """Explicit actividad-economica category is the M130 gasto eligibility gate.
+
+    Casilla 02 covers fiscalmente deducible gastos imputables to direct-estimation
+    actividades economicas over the same year-to-date window as casilla 01. A row
+    explicitly tagged with ``irpf_category=actividad_economica`` must therefore
+    flow even before the broad business-classification sweep marks it BUSINESS.
+    """
+    actividad_base = Decimal("180.00")
+    tagged = _gasto_transaction(
+        "actividad-tagged",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("217.80"),
+        taxable_base=actividad_base,
+        irpf_category="actividad_economica",
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    untagged = _gasto_transaction(
+        "actividad-untagged",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("217.80"),
+        taxable_base=actividad_base,
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((tagged, untagged))
+
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert {observation.transaction_id for observation in result.observations} == {tagged.transaction_id}
+    assert result.observations[0].deductible_amount == actividad_base
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == actividad_base
+    assert result.issues == ()
+
+
+def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
+    """A final reviewed exclusion cannot re-enter through the actividad category."""
+    tx = _gasto_transaction(
+        "reviewed-excluded",
+        value_date=date(2024, 2, 1),
+        taxable_base=Decimal("125.00"),
+        irpf_category="actividad_economica",
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 

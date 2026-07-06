@@ -35,6 +35,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core.config import Settings, load_settings, override_settings
 from ...core.time import now
 from ._certificate_secret_backend import (
     CertificateSecretBackendKind,
@@ -44,14 +45,16 @@ from ._certificate_sources import (
     CertificateSourceNotFoundError as _StateCertificateSourceNotFoundError,
 )
 from ._certificate_sources import (
-    active_certificate_source as _active_certificate_source,
-)
-from ._certificate_sources import (
+    _auth_state,
     list_certificate_sources,
     register_certificate_source,
     remove_certificate_source,
     select_certificate_source,
 )
+from ._certificate_sources import (
+    active_certificate_source as _active_certificate_source,
+)
+from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
 from ._operator_results import (
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
@@ -67,7 +70,6 @@ from ._operator_results import (
 if TYPE_CHECKING:
     from pydantic import SecretStr
 
-    from ...core.config import Settings
     from ...domain.buckets import BucketEventType
     from ..workflow import WorkflowState
 
@@ -356,9 +358,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         registered source, sorted by name (matching
         :func:`~application.auth.list_operator_certificate_sources`).
     """
-    from ...core.config import load_settings, override_settings
     from ..workflow import workflow_state_repository
-    from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
 
     resolved_settings = settings or load_settings()
     state = workflow_state_repository().load()
@@ -514,8 +514,6 @@ def remove_operator_certificate_source_secret(
 
 
 def _auth_state_certificate_sources(state: WorkflowState) -> dict[str, object]:
-    from ._certificate_sources import _auth_state
-
     return dict(_auth_state(state).certificate_sources)
 
 

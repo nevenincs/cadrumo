@@ -526,6 +526,16 @@ LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+M145_COMMUNICATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="m145_communication_record",
+    namespace="aeat.application.modelo.m145_communication_record",
+    owner="aeat.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="m145-communication:{bucket_id}:{communication_record_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_snapshot_base_probe",
     namespace="aeat.application.live.test_snapshot_base_probe",
@@ -1069,6 +1079,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_CENSO_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,
+        M145_COMMUNICATION_RECORD_NAMESPACE,
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         TEST_SESSION_LIFECYCLE_NAMESPACE,
         TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
@@ -1145,6 +1156,7 @@ __all__ = [
     "LLM_CACHE_NAMESPACE",
     "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
+    "M145_COMMUNICATION_RECORD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE",

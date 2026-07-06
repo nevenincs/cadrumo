@@ -1,18 +1,7 @@
-"""Strict immutable models for the transaction catalogue.
+"""Strict immutable transaction-catalogue boundary models.
 
-Defines the boundary records that flow through the transaction
-pipeline:
-
-- :class:`Transaction` -- the immutable wrapper that preserves the
-  upstream :class:`domain.transactions._raw_transaction.RawTransaction`
-  verbatim and adds classification metadata.
-- :class:`ClassificationHistoryEntry` -- one frozen record in the
-  per-transaction classification chain.
-- :class:`TransactionCatalogue` -- the immutable mapping keyed by
-  ``transaction_id``.
-
-Every model is strict + frozen + ``extra="forbid"``; no dataclasses;
-no bare ``dict[str, Any]`` at the boundary.
+Defines :class:`Transaction`, :class:`ClassificationHistoryEntry`, and :class:`TransactionCatalogue`.
+Every model is strict + frozen + ``extra="forbid"``; no dataclasses or bare ``dict[str, Any]`` at the boundary.
 """
 
 from __future__ import annotations
@@ -1255,11 +1244,9 @@ class BucketTransactionRef(BaseModel):
 class TransactionCatalogue(BaseModel):
     """Immutable catalogue keyed by ``transaction_id``.
 
-    Attributes:
-        transactions: Frozen :class:`types.MappingProxyType` from
-            stable transaction id to :class:`Transaction`. Built via
-            :meth:`from_transactions` or by passing a mapping / iterable
-            to ``model_validate``.
+    ``transactions`` is a frozen :class:`types.MappingProxyType` from stable
+    transaction id to :class:`Transaction`, built via :meth:`from_transactions`
+    or by passing a mapping / iterable to ``model_validate``.
     """
 
     model_config = _STRICT_FROZEN

@@ -20,7 +20,7 @@ from .. import (
     resolve_relation_values_from_observations,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -171,22 +171,8 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
 
 
 def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
-    modelo, catalogues = _committed_modelo("180")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
-    modelo_115, _ = _committed_modelo("115")
-    snapshot_115 = build_snapshot(
-        modelo_115,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-    )
+    snapshot = _committed_snapshot("180", 2025, "0A")
+    snapshot_115 = _committed_snapshot("115", 2025, "1T")
 
     modelo_115_outputs = {casilla.id for casilla in snapshot_115.revision.casillas}
     relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
@@ -195,22 +181,8 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
 
 
 def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -> None:
-    modelo, catalogues = _committed_modelo("180")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
-    modelo_115, _ = _committed_modelo("115")
-    snapshot_115 = build_snapshot(
-        modelo_115,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-    )
+    snapshot = _committed_snapshot("180", 2025, "0A")
+    snapshot_115 = _committed_snapshot("115", 2025, "1T")
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
@@ -252,14 +224,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
-    modelo, catalogues = _committed_modelo("180")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
+    snapshot = _committed_snapshot("180", 2025, "0A")
     incomplete_observations = (
         registry_grounded_modelo_observation(
             modelo="115",

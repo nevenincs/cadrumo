@@ -7,8 +7,8 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
-from ._registry_schema_support import _committed_modelo
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,21 +47,13 @@ def test_modelo_308_revision_starts_at_2009() -> None:
 
 
 def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
-    modelo, catalogues = _load_modelo_308()
     for filing_year in (2020, 2024, 2025, 2026):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=filing_year,
-            period="AD-HOC",
-        )
+        snapshot = _committed_snapshot("308", filing_year, "AD-HOC")
         assert snapshot.revision.id == "2009-y-siguientes"
 
 
 def test_modelo_308_snapshot_carries_legal_authority() -> None:
-    modelo, catalogues = _load_modelo_308()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="AD-HOC")
+    snapshot = _committed_snapshot("308", 2025, "AD-HOC")
     assert "orden-eha-3786-2008:art-2" in snapshot.legal
     assert "orden-eha-3786-2008:art-11" in snapshot.legal
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3786-2008:art-2",)

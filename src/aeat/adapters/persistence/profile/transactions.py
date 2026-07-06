@@ -35,6 +35,20 @@ commit all-or-nothing, preserving the co-write atomicity the single-blob
 decryption-free
 :meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
 scan, so an unchanged transaction is never rewritten.
+
+See Also:
+    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :class:`~domain.transactions.Transaction`
+        Domain transaction payload stored one encrypted row at a time.
+    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and object-key contract
+        for transaction secure objects.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Runtime-created encrypted storage boundary used for atomic batches.
+    :mod:`~application.ledger`
+        Application ledger workflows that consume this repository through the
+        transaction catalogue boundary.
 """
 
 from __future__ import annotations
@@ -60,6 +74,8 @@ from ....domain.transactions import (
     transaction_index_object_key,
     transaction_object_key,
 )
+from ..storage.sql import _orm
+from ..storage.sql.session import session_scope
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import (
@@ -434,9 +450,6 @@ class TransactionCatalogueRepository:
         so :meth:`load_for_date_range` can tell a genuinely stale/missing
         index apart from a real empty result).
         """
-        from ..storage.sql import _orm
-        from ..storage.sql.session import session_scope
-
         with session_scope(self._objects.engine) as session:
             any_row = session.execute(
                 select(_orm.TransactionDateIndexRow.id)
@@ -476,9 +489,6 @@ class TransactionCatalogueRepository:
         filing date, filing year) -- never an amount, counterparty,
         description, or any other financial content.
         """
-        from ..storage.sql import _orm
-        from ..storage.sql.session import session_scope
-
         incoming: dict[str, date] = {
             transaction_id: _filing_date(transaction) for transaction_id, transaction in catalogue.transactions.items()
         }

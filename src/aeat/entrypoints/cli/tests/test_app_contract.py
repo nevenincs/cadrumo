@@ -102,6 +102,7 @@ def test_manifest_indexes_all_payload_module_naming_shapes() -> None:
     commands = {entry["command"] for entry in _manifest()["command_schemas"]}
     assert "modelo.reconcile.pull" in commands  # _payloads_modelo_reconcile.py
     assert "modelo.m036.alta" in commands  # _modelo_payloads_m036.py
+    assert "modelo.m145.create" in commands  # _modelo_payloads_m145.py
     assert len(commands) >= 200
 
 

@@ -55,6 +55,7 @@ from ...domain.modelos import (
     WorkUnit,
 )
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFactValue, load_user_profile_schema
+from ..user_profile import UserProfileLifecycleRepository
 from ._profile_binding import (
     is_indeterminate_unidad_familiar,
     is_madrid_resident,
@@ -147,8 +148,6 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
 
 def _load_fact_index(bucket_id: str) -> dict[str, UserProfileFactValue] | None:
     """Return the bucket's profile fact index, or ``None`` when no profile exists."""
-    from ..user_profile import UserProfileLifecycleRepository
-
     try:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
     except ProfileNotFoundError:

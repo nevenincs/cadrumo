@@ -12,6 +12,16 @@ No producer here performs a network call. When the consent gate refuses (the
 default posture), :func:`~core.telemetry.emit_telemetry_event` is a pure
 no-op and none of these functions have any observable side effect beyond that
 no-op return value.
+
+See Also:
+    :func:`~core.telemetry.build_telemetry_payload`
+        Closed-schema builder each producer uses before emission.
+    :func:`~core.telemetry.emit_telemetry_event`
+        Consent-gated dispatcher shared by all producers.
+    :func:`~core.telemetry.workspace_hash`
+        Stable pseudonymous deployment identifier carried by producer payloads.
+    :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`
+        Metric allowlist that declares which counters and timings may be remote.
 """
 
 from __future__ import annotations

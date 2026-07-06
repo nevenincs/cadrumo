@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -13,6 +14,7 @@ from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from .. import (
     CasillaFieldKind,
     InputKind,
+    RegistrySnapshot,
     RegistryValidator,
     build_snapshot,
     parse_export_payload,
@@ -54,6 +56,18 @@ from ._modelo_349_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
+def _snapshot_349(filing_year: int, period: str) -> RegistrySnapshot:
+    modelo, catalogues = _load_modelo_349()
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+    )
+
+
 def test_committed_modelo_349_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_349()
 
@@ -63,8 +77,6 @@ def test_committed_modelo_349_validates_against_catalogues() -> None:
 
 
 def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_periods() -> None:
-    modelo, catalogues = _load_modelo_349()
-
     for filing_year, period, expected_revision in (
         (2020, "1T", "2020-y-siguientes"),
         (2024, "05", "2020-y-siguientes"),
@@ -73,13 +85,7 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
         (2026, "1T", "2020-y-siguientes"),
         (2026, "4T", "2020-y-siguientes"),
     ):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=filing_year,
-            period=period,
-        )
+        snapshot = _snapshot_349(filing_year, period)
 
         assert snapshot.revision.id == expected_revision, (filing_year, period)
         assert snapshot.revision.orden_aplicabilidad == (
@@ -89,14 +95,8 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
 
 
 def test_committed_modelo_349_is_informative_static_documentation_only() -> None:
-    modelo, catalogues = _load_modelo_349()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="01",
-    )
+    modelo, _ = _load_modelo_349()
+    snapshot = _snapshot_349(2026, "01")
     decision = snapshot.live_cross_references["modelo-349-static-documentation"]
     construct = snapshot.constructs["modelo-349-informative"]
 
@@ -483,14 +483,7 @@ def test_committed_modelo_349_construct_includes_extraction_profiles() -> None:
 
 
 def test_committed_modelo_349_record_design_round_trips_declarante_operador_rectificacion() -> None:
-    modelo, catalogues = _load_modelo_349()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="1T",
-    )
+    snapshot = _snapshot_349(2026, "1T")
     layout = resolve_export_layout(snapshot).layout
 
     declarante = _fixed_width_record(

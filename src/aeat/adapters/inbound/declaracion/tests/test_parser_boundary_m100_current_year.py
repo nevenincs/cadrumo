@@ -48,6 +48,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
     "0586": Decimal("100.00"),
     "0587": Decimal("200.00"),
     "0595": Decimal("200.00"),
+    "0604": Decimal("50.00"),
     "0610": Decimal("150.00"),
     "0670": Decimal("150.00"),
 }
@@ -62,7 +63,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
     ids=["2024", "2025"],
 )
 def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, profile_id: str) -> None:
-    """Registry profile declares exactly the 20-casilla current-year target set."""
+    """Registry profile declares exactly the 21-casilla current-year target set."""
     snapshot = _modelo_snapshot("100", filing_year=year, period="0A")
     profile = snapshot.extraction_profiles[profile_id]
     assert {target.casilla_id for target in profile.target_casillas} == M100_CURRENT_YEAR_EXPECTED_CASILLAS

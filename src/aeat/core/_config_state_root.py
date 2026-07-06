@@ -23,6 +23,20 @@ frozen :class:`StateRootInputs` seam so the detection is deterministic and
 testable without mutating the ambient process. :func:`default_storage_root` is
 the live entry point :class:`~core.config.Settings` binds as its
 ``aeat_local_storage_root`` default factory.
+
+See Also:
+    :class:`~core.config.Settings`
+        Central settings aggregate whose storage-root default is resolved here.
+    :data:`~core.config.PROJECT_ROOT`
+        Checkout-root anchor mirrored when source-tree defaults are preserved.
+    :class:`StateRootInputs`
+        Frozen seam that captures every environmental input used by resolution.
+    :func:`detect_run_mode`
+        Checkout-versus-installed classifier used before selecting a root.
+    :func:`resolve_state_root`
+        Pure resolver that returns the effective storage root.
+    :func:`default_storage_root`
+        Live default factory bound into the settings model.
 """
 
 from __future__ import annotations

@@ -34,6 +34,17 @@ client dependency (the same library the
 :class:`~adapters.outbound.llm._providers.gemini.GeminiAdapter` and
 sibling LLM provider adapters use), rather than introducing a second HTTP
 client dependency.
+
+See Also:
+    :class:`~core.telemetry.HttpTelemetrySink`
+        Public facade export for this optional network sink.
+    :func:`~core.telemetry.emit_telemetry_event`
+        Gate-then-dispatch function that accepts a sink but never constructs
+        this transport by default.
+    :func:`~core.telemetry.telemetry_emit_permitted`
+        Consent gate callers must pass before any real send is attempted.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed payload shape posted by this transport when configured.
 """
 
 from __future__ import annotations

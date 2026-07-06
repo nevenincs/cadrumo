@@ -500,107 +500,140 @@ def _register_evidence_confirm_command() -> None:
         invoice is a guarded no-op: the existing invoice is returned
         unchanged (``created: false``) rather than raising or duplicating.
         """
-        if (evidence_id is None) == (attachment_id is None):
-            raise _bad(
-                tr(
-                    "cli.app.ledger.evidence.extract_reference_required",
-                    default="Supply exactly one of --evidence-id or --attachment-id.",
-                ),
-            )
-        transaction_repository = _tx_repo(_state())
-        bucket_id = transaction_repository.bucket_id
-        try:
-            result = confirm_invoice_draft_from_evidence(
-                bucket_id=bucket_id,
-                kind=InvoiceKind(kind.value),
-                counterparty_country=country_code,
-                evidence_id=evidence_id,
-                attachment_id=attachment_id,
-                counterparty_tax_id=counterparty_nif,
-                counterparty_name=counterparty_name,
-                invoice_number=invoice_number,
-                invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
-                taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
-                iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-                currency=currency,
-                notes=notes,
-            )
-        except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
-            raise _bad(str(exc)) from exc
-        except InvoiceValidationError as exc:
-            raise _bad(str(exc)) from exc
-
-        invoice = result.invoice
-        payload = {
-            "bucket_id": bucket_id,
-            "evidence_id": evidence_id,
-            "attachment_id": attachment_id,
-            "created": result.created,
-            "invoice_id": invoice.invoice_id,
-            "kind": invoice.kind.value,
-            "invoice_number": invoice.invoice_number,
-            "issued_at": invoice.issued_at.isoformat(),
-            "counterparty_name": invoice.counterparty_name,
-            "counterparty_tax_id": invoice.counterparty_tax_id,
-            "counterparty_country": invoice.counterparty_country,
-            "base_total": format(invoice.base_total, "f"),
-            "iva_total": format(invoice.iva_total, "f"),
-            "grand_total": format(invoice.grand_total, "f"),
-            "currency": invoice.currency,
-            "payment_status": invoice.payment_status.value,
-            "linked_transaction_ids": list(invoice.linked_transaction_ids),
-            "notes": invoice.notes,
-        }
-        lines = [
-            f"bucket_id\t{bucket_id}",
-            f"evidence_id\t{evidence_id or '-'}",
-            f"attachment_id\t{attachment_id or '-'}",
-            f"created\t{result.created}",
-            f"invoice_id\t{invoice.invoice_id}",
-            f"kind\t{invoice.kind.value}",
-            f"counterparty_name\t{invoice.counterparty_name}",
-            f"counterparty_tax_id\t{invoice.counterparty_tax_id}",
-            f"invoice_number\t{invoice.invoice_number}",
-            f"issued_at\t{invoice.issued_at.isoformat()}",
-            f"grand_total\t{format(invoice.grand_total, 'f')}",
-            f"currency\t{invoice.currency}",
-        ]
-        notices: list[Notice] = []
-        if not result.created:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code="ledger.evidence.confirm.already_exists",
-                    message=tr(
-                        "cli.app.ledger.evidence.confirm_already_exists_message",
-                        default=(
-                            "An invoice with this identity already exists; returning it unchanged "
-                            "rather than creating a duplicate."
-                        ),
-                    ),
-                    context={"invoice_id": invoice.invoice_id},
-                ),
-            )
-        else:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code="ledger.evidence.confirm.linked_transaction_hint",
-                    message=tr(
-                        "cli.app.ledger.evidence.confirm_link_hint_message",
-                        default="Link this invoice to a ledger transaction with `aeat app ledger link`.",
-                    ),
-                    suggestion=f"aeat app ledger link <transaction-id> --invoice-id {invoice.invoice_id}",
-                    context={"invoice_id": invoice.invoice_id},
-                ),
-            )
-        _emit_envelope(
-            ctx,
-            command="ledger.evidence.confirm",
-            result=EvidenceConfirmResult.model_validate(payload),
-            lines=lines,
-            notices=notices,
+        _run_evidence_confirm(
+            ctx=ctx,
+            kind=kind,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            counterparty_nif=counterparty_nif,
+            counterparty_name=counterparty_name,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
+            country_code=country_code,
+            currency=currency,
+            notes=notes,
         )
+
+
+def _run_evidence_confirm(
+    *,
+    ctx: typer.Context,
+    kind: InvoiceKindOption,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    counterparty_nif: str | None,
+    counterparty_name: str | None,
+    invoice_number: str | None,
+    invoice_date: str | None,
+    taxable_base: str | None,
+    iva_rate: str | None,
+    country_code: str,
+    currency: str,
+    notes: str,
+) -> None:
+    if (evidence_id is None) == (attachment_id is None):
+        raise _bad(
+            tr(
+                "cli.app.ledger.evidence.extract_reference_required",
+                default="Supply exactly one of --evidence-id or --attachment-id.",
+            ),
+        )
+    transaction_repository = _tx_repo(_state())
+    bucket_id = transaction_repository.bucket_id
+    try:
+        result = confirm_invoice_draft_from_evidence(
+            bucket_id=bucket_id,
+            kind=InvoiceKind(kind.value),
+            counterparty_country=country_code,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            counterparty_tax_id=counterparty_nif,
+            counterparty_name=counterparty_name,
+            invoice_number=invoice_number,
+            invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
+            taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
+            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+            currency=currency,
+            notes=notes,
+        )
+    except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
+        raise _bad(str(exc)) from exc
+    except InvoiceValidationError as exc:
+        raise _bad(str(exc)) from exc
+
+    invoice = result.invoice
+    payload = {
+        "bucket_id": bucket_id,
+        "evidence_id": evidence_id,
+        "attachment_id": attachment_id,
+        "created": result.created,
+        "invoice_id": invoice.invoice_id,
+        "kind": invoice.kind.value,
+        "invoice_number": invoice.invoice_number,
+        "issued_at": invoice.issued_at.isoformat(),
+        "counterparty_name": invoice.counterparty_name,
+        "counterparty_tax_id": invoice.counterparty_tax_id,
+        "counterparty_country": invoice.counterparty_country,
+        "base_total": format(invoice.base_total, "f"),
+        "iva_total": format(invoice.iva_total, "f"),
+        "grand_total": format(invoice.grand_total, "f"),
+        "currency": invoice.currency,
+        "payment_status": invoice.payment_status.value,
+        "linked_transaction_ids": list(invoice.linked_transaction_ids),
+        "notes": invoice.notes,
+    }
+    lines = [
+        f"bucket_id\t{bucket_id}",
+        f"evidence_id\t{evidence_id or '-'}",
+        f"attachment_id\t{attachment_id or '-'}",
+        f"created\t{result.created}",
+        f"invoice_id\t{invoice.invoice_id}",
+        f"kind\t{invoice.kind.value}",
+        f"counterparty_name\t{invoice.counterparty_name}",
+        f"counterparty_tax_id\t{invoice.counterparty_tax_id}",
+        f"invoice_number\t{invoice.invoice_number}",
+        f"issued_at\t{invoice.issued_at.isoformat()}",
+        f"grand_total\t{format(invoice.grand_total, 'f')}",
+        f"currency\t{invoice.currency}",
+    ]
+    notices: list[Notice] = []
+    if not result.created:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.evidence.confirm.already_exists",
+                message=tr(
+                    "cli.app.ledger.evidence.confirm_already_exists_message",
+                    default=(
+                        "An invoice with this identity already exists; returning it unchanged "
+                        "rather than creating a duplicate."
+                    ),
+                ),
+                context={"invoice_id": invoice.invoice_id},
+            ),
+        )
+    else:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.evidence.confirm.linked_transaction_hint",
+                message=tr(
+                    "cli.app.ledger.evidence.confirm_link_hint_message",
+                    default="Link this invoice to a ledger transaction with `aeat app ledger link`.",
+                ),
+                suggestion=f"aeat app ledger link <transaction-id> --invoice-id {invoice.invoice_id}",
+                context={"invoice_id": invoice.invoice_id},
+            ),
+        )
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.confirm",
+        result=EvidenceConfirmResult.model_validate(payload),
+        lines=lines,
+        notices=notices,
+    )
 
 
 def _evidence_service() -> PurchaseInvoiceEvidenceService:

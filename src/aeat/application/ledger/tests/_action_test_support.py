@@ -13,15 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.financial.providers import ParsedLedgerRow
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import AttachmentStore
-from ....adapters.persistence.storage.errors import StorageValidationError
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.ledger import (
     ExportSerializationFormat,
     LedgerExportCommand,
@@ -70,6 +61,17 @@ from ....domain.transactions import (
     TransactionValidationError,
 )
 from ....domain.usage_ratios import UsageRatioProfile
+from ....tests.ledger_action_adapters import (
+    AttachmentStore,
+    BucketEventHistoryRepository,
+    CalculationRevisionCatalogueRepository,
+    InvoiceCatalogueRepository,
+    ParsedLedgerRow,
+    SecureObjectRepository,
+    StorageValidationError,
+    TransactionCatalogueRepository,
+    WorkUnitCatalogueRepository,
+)
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import (
     TestRuntimeProfile,

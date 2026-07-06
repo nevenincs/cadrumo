@@ -461,27 +461,17 @@ class SecureObjectRepository:
     ) -> Iterator[SecureObjectRecord]:
         """Yield secure-object rows under ``namespace`` or fail on unreadable rows.
 
-        Every readable row is returned as a
-        :class:`~adapters.persistence.storage.SecureObjectRecord`.
-
-        The default listing path is fail-closed: it first walks the
-        namespace through
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.iter_records_with_failures`,
-        and if any row is unreadable it raises
-        :class:`~adapters.persistence.storage.SecureObjectUnreadableError`
-        before yielding a readable subset. Use
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.iter_records_with_failures`
-        for explicit diagnostic
-        iteration over mixed readable/unreadable rows.
+        The default listing path is fail-closed: it walks the namespace through
+        :meth:`iter_records_with_failures` and raises
+        :class:`~adapters.persistence.storage.SecureObjectUnreadableError` before
+        yielding a partial readable subset. Use ``iter_records_with_failures`` for
+        explicit mixed readable/unreadable diagnostics.
 
         Args:
             namespace: The storage namespace whose rows are listed.
-            expected_class: The
-                :class:`~adapters.persistence.storage.SensitivityClass`
-                all rows in this namespace must carry.
-            max_supported_version: Current row ``schema_version`` expected
-                by the consumer. Any different version is treated as
-                unreadable.
+            expected_class: Sensitivity class all rows in this namespace must carry.
+            max_supported_version: Expected row ``schema_version``; any different
+                version is treated as unreadable.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(

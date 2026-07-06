@@ -33,37 +33,20 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_validator_accepts_committed_definition(
+def test_committed_definition_legal_authority_and_deadline_shape(
     mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
 ) -> None:
+    """Each Batch-3 informativa validates and carries only grounded deadline windows."""
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
-) -> None:
-    _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_deadline_window_shape_matches_bundled_grounding(
-    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
-) -> None:
-    """Annual modelos carry January windows citing the plazo; 234/238 carry none.
-
-    234's event-driven plazo (RGAT 46.3) and 238's delegated annual plazo (RGAT
-    54.6) have no bundled calendar provision, so no window is authored — the
-    absence is the honest, non-fabricated state, not an omission.
-    """
-    modelo, _ = _committed_modelo(mid)
     revision = modelo.revisions[rev]
     if has_windows:
         assert revision.deadline_windows

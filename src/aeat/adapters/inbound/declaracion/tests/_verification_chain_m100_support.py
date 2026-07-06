@@ -36,6 +36,7 @@ _EXPECTED_CASILLAS_M100: frozenset[CasillaId] = _casilla_ids(
     "0586",
     "0587",
     "0595",
+    "0604",
     "0610",
     "0670",
 )
@@ -59,6 +60,7 @@ _M100_COMPUTED_CASILLAS: frozenset[CasillaId] = _casilla_ids(
     "0546",
     "0585",
     "0586",
+    "0604",
 )
 _M100_CLOSURE_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
     _M100_CUOTA_ESTATAL_CASILLA,

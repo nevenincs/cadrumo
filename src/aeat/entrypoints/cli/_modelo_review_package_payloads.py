@@ -6,6 +6,22 @@ modelo review-package build`` and ``aeat app modelo review-package verify``
 verbs. Kept in its own module (mirroring the ``_modelo_aux_payloads`` split
 for the evidence-bundle audit payloads) so the review-package CLI surface has
 one dedicated payload home.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_review_package_cli`
+        CLI transport that populates these result payloads.
+    :func:`~application.modelo.build_review_package`
+        Application build primitive represented by
+        :class:`ModeloReviewPackageBuildResult`.
+    :func:`~application.modelo.sign_review_package`
+        Application signing primitive represented by
+        :class:`ModeloReviewPackageSignResult`.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        Recipient-sealing primitive represented by
+        :class:`ModeloReviewPackageEncryptForRecipientResult`.
+    :func:`~application.modelo.import_feedback_package`
+        Feedback-import primitive represented by
+        :class:`ModeloReviewPackageImportFeedbackResult`.
 """
 
 from __future__ import annotations

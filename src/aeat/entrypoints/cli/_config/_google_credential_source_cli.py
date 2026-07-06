@@ -35,6 +35,23 @@ Google-backed command builds credentials for this profile
 (``composition-service-no-parallel-write-path`` — this CLI module delegates to
 the landed persistence and resolver primitives; it does not re-implement
 credential resolution).
+
+See Also:
+    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
+        Persisted per-profile selection this CLI writes and reads.
+    :class:`~adapters.outbound.google.GoogleImpersonationConfig`
+        Service-account impersonation configuration validated for the
+        non-default credential-source kind.
+    :class:`~core.GoogleCredentialSourceKind`
+        Closed credential-source taxonomy accepted by the CLI.
+    :func:`~adapters.outbound.google.save_credential_source_selection`
+        Persistence primitive used by ``set``.
+    :func:`~adapters.outbound.google.load_credential_source_selection`
+        Persistence primitive used by ``show``.
+    :func:`~adapters.outbound.storage.build_google_credentials`
+        Runtime factory that later consumes the stored selection.
+    :mod:`~entrypoints.cli._config._google_credential_source_payloads`
+        Typed JSON payload schemas emitted by this command group.
 """
 
 from __future__ import annotations

@@ -18,6 +18,8 @@ registry -- the decrypt primitive itself performs no persistence; a caller
 (the future CLI decrypt verb) composes this ledger's ``check_and_consume``
 around the existing, unmodified
 :func:`~application.modelo.decrypt_review_package_for_recipient` call.
+The encrypted row's storage policy is governed by
+:class:`~adapters.persistence.storage.SensitivityClass`.
 
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not
@@ -42,6 +44,14 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    SensitivityClass,
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -111,11 +121,6 @@ class RecipientReplayGuardRepository:
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object store.
         """
-        from ...adapters.persistence.storage import (
-            secure_object_repository_for_active_bucket,
-            secure_object_repository_for_bucket,
-        )
-
         if objects is not None:
             self._objects = objects
         elif bucket_id is not None:
@@ -139,11 +144,6 @@ class RecipientReplayGuardRepository:
                 plausible-looking empty ledger (which would re-open every
                 previously-consumed nonce to replay).
         """
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ...adapters.persistence.storage import SensitivityClass
-
         try:
             record = self._objects.load(
                 _NAMESPACE.namespace,
@@ -196,11 +196,6 @@ class RecipientReplayGuardRepository:
         return updated
 
     def _save_unlocked(self, ledger: ConsumedNonceLedger) -> None:
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ...adapters.persistence.storage import SensitivityClass
-
         self._objects.save(
             namespace=_NAMESPACE.namespace,
             object_key=self._object_key,
@@ -213,10 +208,6 @@ class RecipientReplayGuardRepository:
 
     @property
     def _object_key(self) -> str:
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-
         return _NAMESPACE.require_default_object_key()
 
 

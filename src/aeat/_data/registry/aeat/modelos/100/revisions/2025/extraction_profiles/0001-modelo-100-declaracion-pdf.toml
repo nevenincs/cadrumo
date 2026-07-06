@@ -37,6 +37,9 @@ target_casillas = [
     # DR ejercicio 2025, field CAUTLIQ: "Cuota resultante de la autoliquidación ( [0587] - [0588] - [0414] - ... )"
     # (2025 inserts a new [0414] deduction term vs. 2024; pattern is tail-agnostic.)
     {casilla_id = "0595", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+resultante\s+de\s+la\s+autoliquidaci[oó]n'},
+    # 0604 — Pagos fraccionados ingresados (actividades económicas) (ley-35-2006:art-99)
+    # DR ejercicio 2025, field RET9: "Pagos fraccionados ingresados (actividades económicas)"
+    {casilla_id = "0604", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Pagos\s+fraccionados\s+ingresados\s*\(actividades\s+econ[oó]micas\)'},
     # 0610 — Cuota diferencial (ley-35-2006:art-79)
     # DR ejercicio 2025, field CDIF: "Cuota diferencial" (bare label; anchored to
     # line start with a negative lookahead so it cannot match a longer sibling
@@ -115,6 +118,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-77",
     "ley-35-2006:art-79",
+    "ley-35-2006:art-99",
     "ley-35-2006:art-103",
 ]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]

@@ -267,9 +267,8 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     that would mask a genuine programmer error as a merely-corrupt
     certificate.
     """
-    from ...adapters.outbound.aeat.auth import AuthProviderKind, AuthValidationError
     from ...core.config import Settings
-    from ..auth import probe_provider_configuration
+    from ..auth import AuthProviderKind, probe_provider_configuration
 
     settings = Settings(
         aeat_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
@@ -278,8 +277,9 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
         aeat_cert_critical_days=30,
     )
 
-    with pytest.raises(AuthValidationError, match=r"warn_days.*critical_days"):
+    with pytest.raises(AeatError, match=r"warn_days.*critical_days") as exc_info:
         probe_provider_configuration(AuthProviderKind.CERTIFICATE.value, settings=settings)
+    assert get_registered_error_code(exc_info.value).code == "AUTH_AUTH_VALIDATION"
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:

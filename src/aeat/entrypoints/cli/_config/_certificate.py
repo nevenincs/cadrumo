@@ -12,6 +12,20 @@ to be active, ``certificate secret set`` binds a passphrase to one
 named source through a typed
 :class:`~application.auth.CertificateSecretBackend` (encrypted
 secure-storage by default; an OS keyring backend is also available).
+
+See Also:
+    :func:`~application.auth.register_operator_certificate_source`
+        Application service behind ``certificate register``.
+    :func:`~application.auth.list_operator_certificate_sources`
+        Application service behind ``certificate list``.
+    :func:`~application.auth.select_operator_certificate_source`
+        Application service behind ``certificate select``.
+    :class:`~application.auth.CertificateSecretBackend`
+        Per-source passphrase boundary used by ``certificate secret`` verbs.
+    :class:`~application.auth.CertificateSecretBackendKind`
+        Closed set of supported certificate-secret backend choices.
+    :mod:`~entrypoints.cli._config_payloads`
+        Typed JSON payload schemas shared by config auth command results.
 """
 
 from __future__ import annotations

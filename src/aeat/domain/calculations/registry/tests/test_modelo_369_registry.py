@@ -18,12 +18,11 @@ from .. import (
     OssIossLedgerObservation,
     RegistryCatalogues,
     RegistryValidator,
-    build_snapshot,
     extract_record_design,
     resolve_ledger_oss_aggregation_binding_values,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -232,17 +231,10 @@ def test_modelo_369_revisions_split_exterior_union_importacion_periods() -> None
 
 
 def test_modelo_369_snapshots_select_scheme_and_carry_authority() -> None:
-    modelo, catalogues = _load_modelo_369()
+    _, catalogues = _load_modelo_369()
 
     for period, revision_id, expected_legal_refs in _M369_SCHEME_CASES:
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2025,
-            period=period,
-            revision_id=revision_id,
-        )
+        snapshot = _committed_snapshot("369", 2025, period)
 
         assert snapshot.revision.id == revision_id, period
         assert "orden-hac-610-2021:art-1" in snapshot.legal
@@ -291,17 +283,8 @@ def test_modelo_369_filing_schedule_explains_b2c_scope_not_b2b() -> None:
     163 octiesdecies-octovicies; HAC/610/2021). The note is asserted on the built
     snapshot projection, the surface an operator-facing consumer reads.
     """
-    modelo, catalogues = _load_modelo_369()
-
     for period, revision_id, _expected_legal_refs in _M369_SCHEME_CASES:
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2025,
-            period=period,
-            revision_id=revision_id,
-        )
+        snapshot = _committed_snapshot("369", 2025, period)
 
         schedules = tuple(snapshot.filing_schedules.values())
         assert len(schedules) == 1
@@ -604,12 +587,11 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         TransactionKind,
     )
     from .. import (
-        build_snapshot,
         calculate_registry_snapshot,
         resolve_bound_inputs_by_casilla_id,
     )
 
-    modelo, catalogues = _load_modelo_369()
+    modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
 
     observations = [
@@ -649,14 +631,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     ]
 
     binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-        revision_id="esquema-union",
-    )
+    snapshot = _committed_snapshot("369", 2025, "1T")
     casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
@@ -694,12 +669,11 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         TransactionKind,
     )
     from .. import (
-        build_snapshot,
         calculate_registry_snapshot,
         resolve_bound_inputs_by_casilla_id,
     )
 
-    modelo, catalogues = _load_modelo_369()
+    modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]
 
     observations = [
@@ -728,14 +702,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
     ]
 
     binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="01",
-        revision_id="esquema-importacion",
-    )
+    snapshot = _committed_snapshot("369", 2025, "01")
     casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,

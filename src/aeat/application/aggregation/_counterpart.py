@@ -1,10 +1,14 @@
 """Modelo 347/349 counterpart aggregation for informativa declarations.
 
-Used by :mod:`application.aggregation._service`, the per-modelo
+Used by :mod:`~application.aggregation._service`, the per-modelo
 aggregation service. This is not the live calculate source mesh: standalone
 ``CounterpartObservation`` rows are currently operator-supplied to the aggregate
 surface, while calculation-facing source values use
-:class:`application.aggregation.CalculationSourceResolution`.
+:class:`~application.aggregation.CalculationSourceResolution`.
+When a modelo revision declares only one counterpart source family, the
+calculation resolver narrows the active
+:class:`~domain.calculations.registry.ModeloRevision` view before projecting
+the registry binding values.
 
 Modelo 347 covers annual operations with third parties whose total exceeds the
 declaration floor. Modelo 349 covers intra-EU operations by member-state

@@ -26,7 +26,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage import StorageCustodyProfile
+from ...adapters.persistence.storage import (
+    BUCKET_AUDIT_DIRNAME,
+    BUCKET_BLOBS_DIRNAME,
+    BUCKET_DB_DIRNAME,
+    StorageCustodyProfile,
+)
 from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
@@ -48,6 +53,7 @@ from ..user_profile import (
     missing_filing_baseline_flags,
     profile_create_storage_span,
     profile_storage_session,
+    reactivate_profile_with_lifecycle_span,
     record_to_path_values,
     register_active_profile,
     remove_profile_bucket_directory,
@@ -398,7 +404,6 @@ class BucketMaintenanceService:
         Returns:
             :class:`RestoreBucketResult`: The result of the restore operation.
         """
-        from ...application.user_profile import reactivate_profile_with_lifecycle_span
         from ...domain.user_profile import ProfileNotFoundError
 
         pointer = read_profile_bucket_by_id(command.bucket_id)
@@ -542,11 +547,6 @@ class BucketMaintenanceService:
             manifest sits directly under the bucket directory, not in a
             fixed subdirectory of its own).
         """
-        from ...adapters.persistence.storage import (
-            BUCKET_AUDIT_DIRNAME,
-            BUCKET_BLOBS_DIRNAME,
-            BUCKET_DB_DIRNAME,
-        )
         from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path
         from ...core.config import load_settings
 

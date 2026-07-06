@@ -12,6 +12,24 @@ This concrete repository is the persistence adapter behind the read-side
 lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`VerificationReportCatalogue` model and its pure mutators.
+
+See Also:
+    :mod:`~adapters.persistence.profile._modelo_runtime`
+        Bucket-id resolution and runtime secure-object factory shared by modelo
+        persistence adapters.
+    :class:`~domain.modelos.VerificationReportCatalogue`
+        Domain catalogue payload encrypted by this repository.
+    :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :mod:`~adapters.persistence.profile.modelos_calculation`
+        Sibling calculation-revision repository whose revisions are assessed by
+        verification reports stored here.
+    :func:`~application.modelo.list_verification_reports`
+        Read-side application service that loads reports through this repository
+        boundary.
 """
 
 from __future__ import annotations

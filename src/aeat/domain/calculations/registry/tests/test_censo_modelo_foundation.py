@@ -103,6 +103,30 @@ def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
     assert is_active_censo_modelo("037") is False
 
 
+def test_modelo_145_registry_presence_does_not_change_censo_036_037_contracts() -> None:
+    authority = resources().modelos.authority
+    modelo_145_snapshot = authority.snapshot("145", filing_year=2026, period="comunicacion")
+    active_036 = resolve_censo_modelo_work_unit_foundation(modelo="036", period="alta")
+    historical_037 = resolve_censo_modelo_foundation(CensoModeloFoundationCommand(modelo="037"))
+
+    assert modelo_145_snapshot.modelo.id == "145"
+    assert active_036 is not None
+    assert active_036.modelo == "036"
+    assert active_036.role is CensoModeloRole.ACTIVE_FOUNDATION
+    assert active_036.event_kind is CensoModeloEventKind.ALTA
+    assert active_036.event_kinds == tuple(CensoModeloEventKind(kind) for kind in CENSO_MODELO_EVENT_KINDS)
+    assert active_036.active_work_unit_allowed is True
+    assert active_036.superseded_by is None
+    assert historical_037.modelo == "037"
+    assert historical_037.role is CensoModeloRole.HISTORICAL_METADATA
+    assert historical_037.event_kind is None
+    assert historical_037.event_kinds == ()
+    assert historical_037.active_work_unit_allowed is False
+    assert historical_037.superseded_by == "036"
+    with pytest.raises(RegistrySnapshotError, match="not present in the calculation registry"):
+        authority.validate_modelo("037")
+
+
 def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_source() -> None:
     authority = resources().modelos.authority
 

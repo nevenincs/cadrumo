@@ -13,7 +13,7 @@ from .._ids import CasillaId, validated_casilla_id
 from .._schema import RegistrySnapshot
 from .._snapshot import build_snapshot
 from .._validate import RegistryValidator
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -151,15 +151,8 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
 # ---------------------------------------------------------------------------
 
 
-def _snapshot_2024(filing_year: int = 2024):
-    modelo, catalogues = _committed_modelo("123")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=filing_year,
-        period="1T",
-    )
+def _snapshot_2024(filing_year: int = 2024) -> RegistrySnapshot:
+    return _committed_snapshot("123", filing_year, "1T")
 
 
 def _calculate_2024(

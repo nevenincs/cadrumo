@@ -27,6 +27,17 @@ emits :class:`~entrypoints.cli._diagnostics_payloads.RunHealthResult`,
 :class:`~entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
 and :class:`~entrypoints.cli._diagnostics_payloads.LlmUsageResult`
 through :func:`_emit_envelope`.
+
+See Also:
+    :mod:`~application.diagnostics_run_health`
+        Application service layer that builds the local-only diagnostic
+        reports exposed by this CLI group.
+    :mod:`~entrypoints.cli._diagnostics_payloads`
+        Typed JSON payload schemas emitted by these diagnostics commands.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        Nested telemetry subcommand group for the default-off remote tier.
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Encrypted local run-timing store read by the application diagnostics.
 """
 
 from __future__ import annotations

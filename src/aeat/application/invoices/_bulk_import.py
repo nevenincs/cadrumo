@@ -19,6 +19,17 @@ CSV row number and the failing field, and the remaining valid rows are still
 applied -- partial-success semantics matching the ledger CSV import and bulk
 classify pattern (``no-silent-under-declaration``: a bad row is reported, never
 silently dropped).
+
+See Also:
+    :func:`~application.invoices.import_invoices_from_rows`
+        Public application facade for applying validated bulk rows.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Single catalogue writer invoked for every accepted row.
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Manual single-invoice path with the same writer and idempotent identity.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Evidence-confirm path that also delegates the final invoice write to
+        the catalogue writer.
 """
 
 from __future__ import annotations
@@ -32,6 +43,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
@@ -323,8 +335,6 @@ def import_invoices_from_rows(
     number and the failing field name; the remaining valid rows still import
     (partial-success semantics).
     """
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     catalogue = repo.load()
     existing_ids = set(catalogue.invoices)

@@ -1,28 +1,10 @@
 """Typed ``--json`` payload schemas for config CLI commands.
 
-Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the
-JSON-contract test suite can enumerate every config-command surface this
-module covers.
-
-Field sets match the production payload dicts constructed in
-:mod:`_config` and its config submodules at their emit
-sites. Optional fields cover multi-branch payload shapes (e.g.
-repair.quarantine has a no-active-profile branch, a dry-run preview branch, and
-a live branch; config.status has several readiness states).
-
-All sequence fields use ``list`` rather than ``tuple`` because
-``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
-
-The application services remain the source of profile, auth, apoderado, and
-repair semantics: :mod:`user_profile`,
-:mod:`auth`, :mod:`diagnostics`,
-:mod:`repair_integrity`, and
-:mod:`workflow`.
-These payload classes document and validate only the CLI transport shapes that
-enter :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+Every registered class is a strict :class:`OutputSchema` transport shape for a
+config command result. Field sets match the production emit sites in
+:mod:`_config` and its submodules; sequence fields use ``list`` so JSON-mode
+pydantic dumps stay arrays. Application services remain authoritative for
+profile, auth, apoderado, repair, diagnostics, and workflow semantics.
 """
 
 from __future__ import annotations
@@ -36,9 +18,7 @@ from ._schemas import OutputSchema, register_schema
 if TYPE_CHECKING:
     from ...application.auth import AuthClearResult, AuthConfigureResult
 
-# ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
-# ---------------------------------------------------------------------------
 
 
 class QuarantineNamespacePayload(OutputSchema):
@@ -115,9 +95,7 @@ class ProfileFactPayload(OutputSchema):
     value: str
 
 
-# ---------------------------------------------------------------------------
 # P05 — repair verb result schemas
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.repair.logs")
@@ -198,9 +176,7 @@ class RepairConnectivityResult(OutputSchema):
     status: dict[str, object]
 
 
-# ---------------------------------------------------------------------------
 # P06 — config and profile verb result schemas
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.profile.list")
@@ -453,9 +429,7 @@ class ConfigResetResult(OutputSchema):
     removed_auth_session: bool
 
 
-# ---------------------------------------------------------------------------
 # P07 — auth and bucket verb result schemas
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.auth.providers")
@@ -639,9 +613,7 @@ class BucketHistoryResult(OutputSchema):
     events: list[dict[str, object]]
 
 
-# ---------------------------------------------------------------------------
 # Profile wizard / lifecycle verb result schemas
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.profile.create")
@@ -747,9 +719,7 @@ class ConfigProfileRenameResult(OutputSchema):
     display_name: str
 
 
-# ---------------------------------------------------------------------------
 # Sealed bucket-archive result schemas (backup / restore / inspect)
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.profile.archive.export")
@@ -806,9 +776,7 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
     size_bytes: int
 
 
-# ---------------------------------------------------------------------------
 # Repair verb result schemas (profile / integrity sub-app)
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.repair.profile")
@@ -863,9 +831,7 @@ class RepairIntegrityRegistryResult(OutputSchema):
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
-# ---------------------------------------------------------------------------
 # Apoderado verb result schemas
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.auth.apoderado.status")
@@ -930,9 +896,7 @@ class ApoderadoScopesListResult(OutputSchema):
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
-# ---------------------------------------------------------------------------
 # Certificate source registry verb result schemas
-# ---------------------------------------------------------------------------
 
 
 class CertificateSourcePayloadEntry(OutputSchema):
@@ -1029,9 +993,7 @@ class CertificateSourceSecretMutationPayload(OutputSchema):
 register_schema("config.auth.certificate.secret.remove")(CertificateSourceSecretMutationPayload)
 
 
-# ---------------------------------------------------------------------------
 # Auth diagnostics verb result schemas
-# ---------------------------------------------------------------------------
 
 
 @register_schema("config.auth.diagnostics.list")
@@ -1077,9 +1039,7 @@ class AuthDiagnosticsReportResult(OutputSchema):
     reported_at: str
 
 
-# ---------------------------------------------------------------------------
 # Descendiente verb result schemas
-# ---------------------------------------------------------------------------
 
 
 class ProfileDescendientePayload(OutputSchema):

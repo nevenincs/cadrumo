@@ -36,6 +36,8 @@ See Also:
         Builds and integrity-verifies the review package this module signs.
     :class:`~adapters.persistence.storage.SecureObjectRepository`
         Encrypted substrate the private key is persisted through.
+    :class:`~adapters.persistence.storage.SensitivityClass`
+        Storage classification policy used for the persisted signing keypair.
 """
 
 from __future__ import annotations
@@ -57,7 +59,10 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from pydantic import BaseModel, Field, field_validator
 
+from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
+from ...adapters.persistence.storage import SensitivityClass
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
 from ...core.errors import AeatError
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
@@ -200,11 +205,6 @@ def ensure_review_package_signing_keypair(
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _signing_key_object_key(bucket_id)
     existing = repository.load(
         _NAMESPACE.namespace,
@@ -249,16 +249,16 @@ def load_review_package_signing_keypair(
 ) -> ReviewPackageSigningKeypair:
     """Load the profile's existing Ed25519 signing keypair.
 
+    Args:
+        bucket_id: The profile bucket whose signing keypair is loaded.
+        repository: The bucket's
+            :class:`~adapters.persistence.storage.SecureObjectRepository`.
+
     Raises:
         ReviewPackageSigningKeyNotFoundError: If no keypair has been minted
             yet for ``bucket_id``. Call
             :func:`ensure_review_package_signing_keypair` first.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _signing_key_object_key(bucket_id)
     record = repository.load(
         _NAMESPACE.namespace,
@@ -369,8 +369,6 @@ def verify_review_package_signature(
         :func:`~application.modelo.assert_review_package_verifies` first
         and test this function's boolean themselves.
     """
-    from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
-
     try:
         result = verify_corpus_bundle(package_path)
     except (CorpusBundleError, CorpusManifestTamperError):
@@ -401,8 +399,6 @@ def _package_manifest_sha256(package_path: Path) -> str:
     cached value, and is available even when the caller only needs the digest
     rather than the full review-specific verification result.
     """
-    from ...core.corpus_manifest import verify_corpus_bundle
-
     return verify_corpus_bundle(package_path).manifest.manifest_sha256
 
 

@@ -18,7 +18,7 @@ from .. import (
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -127,22 +127,8 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
-    modelo, catalogues = _committed_modelo("193")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
-    modelo_123, _ = _committed_modelo("123")
-    snapshot_123 = build_snapshot(
-        modelo_123,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-    )
+    snapshot = _committed_snapshot("193", 2025, "0A")
+    snapshot_123 = _committed_snapshot("123", 2025, "1T")
 
     modelo_123_outputs = {casilla.id for casilla in snapshot_123.revision.casillas}
     relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
@@ -151,22 +137,8 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
 
 
 def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -> None:
-    modelo, catalogues = _committed_modelo("193")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
-    modelo_123, _ = _committed_modelo("123")
-    snapshot_123 = build_snapshot(
-        modelo_123,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-    )
+    snapshot = _committed_snapshot("193", 2025, "0A")
+    snapshot_123 = _committed_snapshot("123", 2025, "1T")
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}

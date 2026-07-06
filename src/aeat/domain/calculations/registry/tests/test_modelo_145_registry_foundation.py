@@ -15,6 +15,20 @@ from .._support_matrix import build_support_matrix
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REVISION_ID = "2012-01-31-y-siguientes"
+_FORBIDDEN_M145_SURFACES = frozenset(
+    {
+        "aeat_electronic_tramite",
+        "deadline",
+        "electronic_tramite",
+        "filing",
+        "live_read",
+        "live-read",
+        "portal",
+        "receipt",
+        "submit",
+        "tramite",
+    }
+)
 _DR145_ROW_RE = re.compile(
     r"^(?P<number>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+(?P<type>A|An|Num)\s+(?P<text>.+)$",
 )
@@ -79,9 +93,10 @@ def test_modelo_145_loads_as_local_payer_communication_not_filing() -> None:
     assert not revision.filing_schedules
     assert not revision.deadline_windows
     assert not revision.live_cross_references
-    assert "filing" not in surfaces
-    assert "deadline" not in surfaces
-    assert "portal" not in surfaces
+    assert surfaces.isdisjoint(_FORBIDDEN_M145_SURFACES)
+    for link in revision.application_links:
+        surface_text = f"{link.id} {link.surface}".replace("-", "_")
+        assert not any(surface.replace("-", "_") in surface_text for surface in _FORBIDDEN_M145_SURFACES)
 
 
 def test_modelo_145_casillas_and_parity_cite_official_sources() -> None:
