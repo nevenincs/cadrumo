@@ -51,6 +51,17 @@ def test_apoderado_scopes_list() -> None:
     assert "GENERAL" in result.output
 
 
+def test_apoderado_service_importable_and_has_cli_callers() -> None:
+    from .....application.auth import ApoderadoService
+    from .._apoderado import apoderado_scopes_list
+
+    service = ApoderadoService()
+    scope_codes = service.catalogue.code_set()
+
+    assert callable(apoderado_scopes_list)
+    assert "GENERALNT" in scope_codes
+
+
 def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) -> None:
     """status/configure/clear succeed against the active profile.
 
