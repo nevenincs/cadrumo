@@ -21,12 +21,30 @@ readiness resolver:
   registry binding source); and
 
 that neither ``fincas`` nor ``inventory`` is a member of the closed
-:class:`~aeat.core.BindingSourceKind` taxonomy — so neither can appear in the
+:class:`~core.BindingSourceKind` taxonomy — so neither can appear in the
 enrolled, deferred, or reserved source sets (all ``frozenset[BindingSourceKind]``),
 the structural guarantee that they are not enrolled in the live mesh — while the
 live novel-source boundary gate (``assert_no_novel_source_kinds``) stays green on
 a revision carrying an accepted source, unaffected by the provisioned-but-blocked
 readiness surface.
+
+See Also:
+    :class:`~application.aggregation._source_fincas.FincasSourceReadinessResolver`
+        Blocked resolver adapter for the fincas source surface.
+    :class:`~application.aggregation._source_inventory.InventorySourceReadinessResolver`
+        Blocked resolver adapter for the inventory source surface.
+    :func:`~domain.fincas.fincas_source_readiness`
+        Domain readiness fact supplying the fincas blocking reason.
+    :func:`~application.inventory.inventory_source_readiness`
+        Application readiness fact supplying the inventory blocking reason.
+    :class:`~application.aggregation.CalculationSourceDiagnostic`
+        Diagnostic envelope carrying the ``source_domain_not_ready`` advisory.
+    :func:`~application.aggregation._source_mesh.merge_source_resolutions`
+        Merge path proving blocked readiness contributes no source-owned values.
+    :func:`~application.modelo.assert_no_novel_source_kinds`
+        Live boundary gate that remains unaffected by these non-enrolled surfaces.
+    :mod:`~domain.calculations.registry.tests.test_source_enrollment`
+        Registry-side source inventory guard for enrolled/deferred/reserved kinds.
 """
 
 from __future__ import annotations
