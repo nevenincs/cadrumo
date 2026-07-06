@@ -239,9 +239,9 @@ Build the missing calculation engines for 714 (Patrimonio), 151 (Beckham flat-ra
 
 Complete the declared-but-unwired modelo-210-2025-calculation link, then enroll IRNR via two consecutive annual rental-income groupings (weak cross-renta) per A5; TRLIRNR RDLeg 5/2004.
 
-- [ ] `W06.P23.S62` - complete the declared-but-unwired modelo-210-2025-calculation engine link so a real IRNR calculation runs per A5-210 (TRLIRNR RDLeg 5/2004) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_210.py`.
-- [ ] `W06.P23.S63` - write the M210 >=2-renta E2E test using two consecutive annual rental-income groupings via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_210_annual_continuity.py`.
-- [ ] `W06.P23.S64` - enroll M210 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W06.P23.S62` - complete the declared-but-unwired modelo-210-2025-calculation engine link so a real IRNR calculation runs per A5-210 (TRLIRNR RDLeg 5/2004) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_210.py`.
+- [x] `W06.P23.S63` - write the M210 >=2-renta E2E test using two consecutive annual rental-income groupings via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_210_annual_continuity.py`.
+- [x] `W06.P23.S64` - enroll M210 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W06.P24` - Modelo 714 (Patrimonio, ENGINE-BUILD-THEN-CALC)
 
@@ -265,10 +265,10 @@ Build the crypto obligation-trigger engine per A5 (Ley 58/2003 DA13 + Orden HFP/
 
 Build the Beckham flat-rate engine per A5 (Ley 35/2006 art.93), then enroll the flat-rate calculation across two renta years.
 
-- [ ] `W06.P26.S73` - build the Beckham flat-rate impatriate engine per A5-151 (Ley 35/2006 art.93) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_151.py`.
-- [ ] `W06.P26.S74` - declare the modelo-151 calculation application-link surface in the registry (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/151/`.
-- [ ] `W06.P26.S75` - write the M151 >=2-renta E2E test asserting the flat-rate calculation across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_151_flat_rate_continuity.py`.
-- [ ] `W06.P26.S76` - enroll M151 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W06.P26.S73` - build the Beckham flat-rate impatriate engine per A5-151 (Ley 35/2006 art.93) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_151.py`.
+- [x] `W06.P26.S74` - declare the modelo-151 calculation application-link surface in the registry (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/151/`.
+- [x] `W06.P26.S75` - write the M151 >=2-renta E2E test asserting the flat-rate calculation across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_151_flat_rate_continuity.py`.
+- [x] `W06.P26.S76` - enroll M151 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ## Wave `W07` - Informativas, censo, and IAE
 
@@ -278,15 +278,15 @@ Enroll the remaining informativa/structural modelos 347, 184, 720, 036, 840 into
 
 Enroll the declaracion anual de operaciones con terceras personas via year-over-year data-fidelity and provenance roundtrip across two renta years.
 
-- [ ] `W07.P27.S77` - write the M347 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of operaciones-con-terceros across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_347_fidelity_continuity.py`.
-- [ ] `W07.P27.S78` - enroll M347 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W07.P27.S77` - write the M347 data-fidelity E2E test asserting year-over-year fidelity and provenance roundtrip of operaciones-con-terceros across two renta years via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_347_fidelity_continuity.py`.
+- [x] `W07.P27.S78` - enroll M347 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W07.P28` - Modelo 184 (atribucion de rentas, DATA-FIDELITY-CROSS-RENTA)
 
 Enroll the entidades-en-atribucion-de-rentas informativa across two renta years; build RegistryModeloObservation member rows directly (operator-keyed, no source adapter).
 
-- [ ] `W07.P28.S79` - write the M184 data-fidelity E2E test building atribucion-de-rentas member RegistryModeloObservation rows directly and asserting year-over-year fidelity across two renta years (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_184_fidelity_continuity.py`.
-- [ ] `W07.P28.S80` - enroll M184 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W07.P28.S79` - write the M184 data-fidelity E2E test building atribucion-de-rentas member RegistryModeloObservation rows directly and asserting year-over-year fidelity across two renta years (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_184_fidelity_continuity.py`.
+- [x] `W07.P28.S80` - enroll M184 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W07.P29` - Modelo 720 (bienes en el extranjero, THRESHOLD/CONTINUITY-CROSS-RENTA)
 
@@ -300,8 +300,8 @@ Enroll the declaracion de bienes en el extranjero via the A3 prior-year asset-ba
 
 Enroll the declaracion censal via obligation-set continuity across two annual contexts (alta year N / modificacion year N+1), not a numeric carry.
 
-- [ ] `W07.P30.S84` - write the M036 obligation-continuity E2E test asserting the censo obligation-set carries across alta year N and modificacion year N+1 via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_036_obligation_continuity.py`.
-- [ ] `W07.P30.S85` - enroll M036 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W07.P30.S84` - write the M036 obligation-continuity E2E test asserting the censo obligation-set carries across alta year N and modificacion year N+1 via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_036_obligation_continuity.py`.
+- [x] `W07.P30.S85` - enroll M036 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W07.P31` - Modelo 840 (IAE, THRESHOLD/CONTINUITY-CROSS-RENTA)
 
