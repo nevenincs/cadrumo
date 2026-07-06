@@ -886,3 +886,158 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
         with pytest.raises(StoredTransactionDriftError) as exc_info:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
         assert isinstance(exc_info.value.original_exception, ValidationError)
+
+
+def test_load_then_save_reuses_the_memoized_hash_for_an_unchanged_row(
+    tmp_path: Path,
+) -> None:
+    """The SAME repository instance's load-then-save skips re-serializing an untouched row.
+
+    Proves the O3 write-path cache (``2026-07-06-ledger-perf-optimization-adr``)
+    is actually consulted, not merely present: after ``load()`` populates
+    ``_serialized_hash_cache`` keyed by ``id(transaction)``, saving the exact
+    catalogue that ``load()`` returned must reach the cache-hit branch in
+    ``_reconcile`` -- proven by monkeypatching ``_serialise_transaction`` to
+    raise if it is ever called for the untouched row and asserting the row's
+    revision stays byte-identical.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        unchanged = _transaction(
+            provider_id="provider-row-unchanged-cache",
+            amount=Decimal("42.00"),
+            description="Untouched row",
+            classification=BusinessClassification.BUSINESS,
+        )
+        repo.save(TransactionCatalogue.from_transactions([unchanged]))
+
+        before = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=unchanged.transaction_id,
+        )
+
+        reload_repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        loaded = reload_repo.load()
+        assert loaded.transactions[unchanged.transaction_id] is not unchanged
+
+        original_serialise = reload_repo._serialise_transaction
+
+        def _fail_if_called(transaction: Transaction) -> bytes:
+            raise AssertionError(
+                "the cache-hit branch must skip _serialise_transaction for an untouched, "
+                "already-loaded row -- reaching this would mean the memoized hash was not consulted",
+            )
+
+        reload_repo._serialise_transaction = _fail_if_called  # type: ignore[method-assign]
+        try:
+            reload_repo.save(loaded)
+        finally:
+            reload_repo._serialise_transaction = original_serialise  # type: ignore[method-assign]
+
+        after = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=unchanged.transaction_id,
+        )
+
+    assert after.revision_id == before.revision_id
+    assert after.payload_hash == before.payload_hash
+
+
+def test_cache_miss_on_content_edited_replacement_instance_still_detects_the_change(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology proof: a content-edited row is NEVER served from a stale cache entry.
+
+    ``Transaction`` is strict-frozen, so an edit (``model_copy(update=...)``)
+    always produces a NEW object -- its ``id()`` is absent from
+    ``_serialized_hash_cache`` (a genuine cache miss), so ``_reconcile`` must
+    fall through to fresh serialize-and-hash and detect the real content
+    change, even though the row shares the SAME repository instance that
+    loaded the original.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        original = _transaction(
+            provider_id="provider-row-edited",
+            amount=Decimal("60.00"),
+            description="Row that gets edited",
+            classification=BusinessClassification.BUSINESS,
+        )
+        repo.save(TransactionCatalogue.from_transactions([original]))
+
+        before = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=original.transaction_id,
+        )
+
+        reload_repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        loaded = reload_repo.load()
+        loaded_transaction = loaded.transactions[original.transaction_id]
+        edited = loaded_transaction.model_copy(
+            update={
+                "group_label": "edited-after-load",
+                "modified_at": datetime(2024, 5, 1, 8, 0, tzinfo=UTC),
+            },
+        )
+        assert edited is not loaded_transaction
+        assert edited.transaction_id == loaded_transaction.transaction_id
+
+        reload_repo.save(TransactionCatalogue.from_transactions([edited]))
+
+        after = _transaction_secure_row(
+            profile.repository,
+            bucket_id=profile.bucket_id,
+            transaction_id=original.transaction_id,
+        )
+
+    assert after.revision_id != before.revision_id
+    assert after.payload_hash != before.payload_hash
+    assert after.previous_revision_id == before.revision_id
+
+
+def test_loaded_envelope_bytes_equal_fresh_serialization_of_the_same_instance(
+    tmp_path: Path,
+) -> None:
+    """Pins the O3 equivalence assumption: stored bytes == fresh re-serialization.
+
+    The cache is only sound if the plaintext envelope bytes ``load()``
+    persisted at write time are byte-identical to what
+    ``_serialise_transaction`` would recompute for the SAME loaded instance
+    (``2026-07-06-ledger-perf-optimization-adr``, "O3 equivalence
+    assumption, pinned by test"). This directly proves that equality, not
+    just the cache's observable skip-behaviour.
+    """
+
+    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        txn = _transaction(
+            provider_id="provider-row-equivalence",
+            amount=Decimal("77.00"),
+            description="Equivalence pin",
+            classification=BusinessClassification.BUSINESS,
+        )
+        repo.save(TransactionCatalogue.from_transactions([txn]))
+
+        object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
+        stored_record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert stored_record is not None
+
+        reload_repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        loaded = reload_repo.load()
+        loaded_transaction = loaded.transactions[txn.transaction_id]
+
+        fresh_bytes = reload_repo._serialise_transaction(loaded_transaction)
+
+    assert fresh_bytes == stored_record.payload
