@@ -1,8 +1,8 @@
 """Calculate-path advisory wiring for the annual prorrata-general regularización.
 
-Exercises :func:`~aeat.application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`
+Exercises :func:`~application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`
 against a REAL registry-loaded Modelo 303 revision and a REAL encrypted
-:class:`~aeat.application.calculations.CalculationObservationRepository` inside
+:class:`~application.calculations.CalculationObservationRepository` inside
 a genuine bucket runtime (``isolated_runtime_profile``) — no mocks, no stubs.
 The pure LIVA arts. 104-105 math itself is proven in
 ``domain/iva/tests/test_prorrata_regularizacion.py`` and the pure advisory
@@ -10,6 +10,20 @@ projection in ``application/calculations/tests/test_prorrata_regularizacion.py``
 this module proves the projection is actually WIRED into the calculate-path
 advisory fan-out, which was the gap the review found (the builder shipped with
 zero production callers).
+
+See Also:
+    :mod:`~application.modelo._prorrata_regularizacion_advisory`
+        Collector under test for the calculate-path prorrata advisory fan-out.
+    :func:`~application.calculations._prorrata_regularizacion.build_prorrata_missing_provisional_advisory`
+        Pure missing-carry builder used by the mid-year unresolved-register
+        regression.
+    :func:`~application.calculations._prorrata_regularizacion.derive_prorrata_applicability`
+        Fail-closed-to-visible projection that decides whether prorrata applies.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Bucket-persisted register input for active-prorrata coverage.
+    :class:`~application.calculations.CalculationObservationRepository`
+        Real encrypted observation store used for prior-year definitive carry
+        lookup.
 """
 
 from __future__ import annotations
