@@ -5,6 +5,22 @@ definitive prorrata. This module locates that percentage in the prior Modelo 303
 settlement observation and trusts it only after the observation's registry
 revision stamp re-confirms against the law-determined revision for the source
 period.
+
+See Also:
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Register record populated with the carried-prior-definitive percentage,
+        provenance, and source-observation identity.
+    :class:`~core.ProrrataProvisionalProvenance`
+        Closed provenance axis whose ``CARRIED_PRIOR_DEFINITIVA`` member marks
+        the normal LIVA art. 105.Uno seed path.
+    :class:`~application.calculations.CalculationObservationRepository`
+        Local observation catalogue scanned for prior Modelo 303 settlement
+        observations.
+    :func:`~domain.calculations.registry.select_revision`
+        Law-determined revision resolver used to re-confirm the stored
+        ``stamped_revision_id`` before trusting the carry.
+    :class:`~application.calculations.CrossPeriodCleanStateBlocker`
+        Blocker vocabulary reused for revision-divergent seed findings.
 """
 
 from __future__ import annotations
