@@ -1,7 +1,7 @@
 """Ed25519 corpus-bundle signing + signature-verify roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.core.corpus_manifest._bundle_signing` end to end against a
-REAL checksummed corpus bundle (:func:`~aeat.core.corpus_manifest.build_corpus_bundle`)
+Exercises :mod:`~core.corpus_manifest._bundle_signing` end to end against a
+REAL checksummed corpus bundle (:func:`~core.corpus_manifest.build_corpus_bundle`)
 and a REAL on-disk keypair file (no mocks, fakes, or stubs): mint a maintainer
 keypair, confirm the private key is persisted as a real file that a fresh
 process can reload, sign a bundle, verify the signature, then tamper the
@@ -12,6 +12,24 @@ Mirrors the anti-tautology discipline already established in
 one profile bucket's review package instead of a maintainer-published corpus
 bundle) and ``test_bundle.py`` (the checksum-integrity layer this module signs
 on top of).
+
+See Also:
+    :class:`~core.corpus_manifest.SignedCorpusBundle`
+        Signature envelope binding a bundle manifest digest to the signer.
+    :func:`~core.corpus_manifest.sign_corpus_bundle`
+        Signs only bundles that pass the checksum-manifest verifier first.
+    :func:`~core.corpus_manifest.verify_corpus_bundle_signature`
+        Boolean authenticity check that re-runs checksum integrity before Ed25519.
+    :func:`~core.corpus_manifest.assert_corpus_bundle_signature_verifies`
+        Raising install-time assertion for signed corpus bundles.
+    :func:`~core.corpus_manifest.generate_corpus_signing_keypair`
+        Maintainer keypair minting and on-disk persistence path covered here.
+    :func:`~core.corpus_manifest.verify_corpus_bundle`
+        Integrity layer whose manifest digest is signed by this feature.
+    :mod:`~application.modelo._review_package_signing`
+        Sibling Ed25519 authenticity layer for review-package ZIPs.
+    :mod:`~core.corpus_manifest.tests.test_bundle`
+        Checksum-integrity bundle coverage that this signing test builds on.
 """
 
 from __future__ import annotations
