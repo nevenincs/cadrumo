@@ -4,9 +4,9 @@ Exercises the destructive-action-adjacent protocol for the reversible
 lifecycle pair: ``confirmed=True`` is required for ``archive``; the
 active bucket cannot be archived; a happy-path archive composes the
 same soft-tombstone primitive ``delete`` uses (via
-:func:`~aeat.application.user_profile.delete_profile_with_lifecycle_span`)
+:func:`~application.user_profile.delete_profile_with_lifecycle_span`)
 but never removes the bucket directory, so ``restore`` (via
-:func:`~aeat.application.user_profile.reactivate_profile_with_lifecycle_span`)
+:func:`~application.user_profile.reactivate_profile_with_lifecycle_span`)
 can bring the same bucket back with its data intact.
 
 Authority: ``composition-service-no-parallel-write-path`` — archive/restore
@@ -14,6 +14,24 @@ compose the existing soft-tombstone / reactivate primitives rather than
 re-implementing bucket lifecycle transitions. Real encrypted-SQL storage,
 real plaintext manifest, real bucket-event-history catalogue throughout —
 no mocks, per ``aeat-roundtrip-discipline``.
+
+See Also:
+    :class:`~application.bucket_maintenance.BucketMaintenanceService`
+        Composition service whose reversible archive/restore lifecycle contract
+        this module exercises.
+    :class:`~application.bucket_maintenance.ArchiveBucketCommand`
+        Service command that requires explicit confirmation before dormancy.
+    :class:`~application.bucket_maintenance.RestoreBucketCommand`
+        Symmetric service command that refuses non-archived or unknown buckets.
+    :func:`~application.user_profile.delete_profile_with_lifecycle_span`
+        Soft-tombstone primitive composed by archive without removing the bucket
+        directory.
+    :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`
+        Reactivation primitive composed by restore.
+    ``2026-05-12-cli-workflow-redesign-bucket-adr`` and
+    ``2026-06-03-bucket-sealed-archive-adr``
+        Bucket-maintenance lifecycle and composition-pattern decisions that
+        govern the service surface.
 """
 
 from __future__ import annotations
