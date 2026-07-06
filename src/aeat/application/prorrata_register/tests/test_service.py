@@ -67,3 +67,56 @@ def test_record_aeat_autorizada_preserves_sector_and_regime(tmp_path: Path) -> N
     assert entry.provisional_percentage == Decimal("58")
     assert entry.provisional_provenance is ProrrataProvisionalProvenance.AEAT_AUTORIZADA
     assert entry.authorisation_reference == "AEAT-AUTH-2026-SECTOR-02"
+
+
+def test_record_inicio_actividad_persists_proposed_override(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = ProrrataRegisterRepository(objects=profile.repository)
+        service = ProrrataRegisterService(repository=repository)
+        service.declare(
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                provisional_percentage=Decimal("80"),
+                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_observation_ref="303:2025:4T",
+            ),
+        )
+
+        updated = service.record_inicio_actividad(
+            ejercicio=2026,
+            provisional_percentage=Decimal("55"),
+            proposal_reference="INICIO-036-2026-0003",
+        )
+        loaded = repository.load()
+
+    assert updated == loaded
+    assert len(loaded.entries) == 1
+    entry = loaded.entry_for(2026)
+    assert entry is not None
+    assert entry.regime is ProrrataRegisterRegime.GENERAL
+    assert entry.provisional_percentage == Decimal("55")
+    assert entry.provisional_provenance is ProrrataProvisionalProvenance.INICIO_ACTIVIDAD
+    assert entry.authorisation_reference == "INICIO-036-2026-0003"
+    assert entry.source_observation_ref is None
+
+
+def test_record_inicio_actividad_preserves_sector_and_regime(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = ProrrataRegisterRepository(objects=profile.repository)
+        service = ProrrataRegisterService(repository=repository)
+
+        updated = service.record_inicio_actividad(
+            ejercicio=2026,
+            provisional_percentage=Decimal("52"),
+            proposal_reference="INICIO-036-2026-SECTOR-04",
+            sector_id="formacion",
+            regime=ProrrataRegisterRegime.ESPECIAL,
+        )
+
+    entry = updated.entry_for(2026, sector_id="formacion")
+    assert entry is not None
+    assert entry.regime is ProrrataRegisterRegime.ESPECIAL
+    assert entry.provisional_percentage == Decimal("52")
+    assert entry.provisional_provenance is ProrrataProvisionalProvenance.INICIO_ACTIVIDAD
+    assert entry.authorisation_reference == "INICIO-036-2026-SECTOR-04"

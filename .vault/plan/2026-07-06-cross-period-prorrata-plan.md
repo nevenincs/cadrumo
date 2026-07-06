@@ -67,7 +67,7 @@ The carried_prior_definitiva seed via select_revision + stamped_revision_id re-c
 The art-105.Dos aeat_autorizada and art-105.Tres inicio_actividad override entries with authorisation reference, the single declared precedence ladder, and the observation cross-check surfaces.
 
 - [x] `W02.P04.S14` - add the aeat_autorizada override entry recording the art-105.Dos AEAT-authorised provisional percentage plus its authorisation reference; `src/aeat/application/prorrata_register/__init__.py`.
-- [ ] `W02.P04.S15` - add the inicio_actividad override entry recording the art-105.Tres (via art-111.Dos) inicio-de-actividades proposed percentage plus its reference; `src/aeat/application/prorrata_register/__init__.py`.
+- [x] `W02.P04.S15` - add the inicio_actividad override entry recording the art-105.Tres (via art-111.Dos) inicio-de-actividades proposed percentage plus its reference; `src/aeat/application/prorrata_register/__init__.py`.
 - [ ] `W02.P04.S16` - wire the single declared precedence ladder into the register in-force-percentage lookup so authorised/inicio provenance outranks the carried prior definitive; `src/aeat/application/prorrata_register/__init__.py`.
 - [ ] `W02.P04.S17` - surface a BLOCKING divergence finding when a carried_prior_definitiva entry contradicts the prior observation, and an informational notice naming the provenance when an aeat_autorizada or inicio_actividad entry legitimately differs from the prior definitive (never silence); `src/aeat/application/prorrata_register/_seed.py`.
 - [ ] `W02.P04.S18` - add tests for override precedence and both observation cross-check surfaces (blocking contradiction vs informational regulated-difference notice); `src/aeat/application/prorrata_register/tests/test_overrides.py`.
