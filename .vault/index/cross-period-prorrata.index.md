@@ -51,6 +51,11 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W07-P10-S42]]'
   - '[[2026-07-06-cross-period-prorrata-W07-P10-S43]]'
   - '[[2026-07-06-cross-period-prorrata-W07-P10-S44]]'
+  - '[[2026-07-06-cross-period-prorrata-W07-P11-S45]]'
+  - '[[2026-07-06-cross-period-prorrata-W07-P11-S46]]'
+  - '[[2026-07-06-cross-period-prorrata-W07-P12-S47]]'
+  - '[[2026-07-06-cross-period-prorrata-W07-P12-S48]]'
+  - '[[2026-07-06-cross-period-prorrata-W07-P12-S49]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -117,6 +122,11 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W07-P10-S42` - add a typed prorrata_regularizacion selector contract and selector-registry construction gate so the source is a legal DataBindingDefinition.source before any TOML binding is declared
 - `2026-07-06-cross-period-prorrata-W07-P10-S43` - provision the Modelo 303 casilla 44 prorrata_regularizacion binding rows for current registry revisions, convert the target from manual to bound only with legal/source citations and formula-consumption implications proven
 - `2026-07-06-cross-period-prorrata-W07-P10-S44` - ground the Modelo 390 annual regularizacion target, declare its future prorrata_regularizacion binding/export grounding, keep box 522 manual until S45/S46 materialise values, and include 522 in the annual deductible total formula
+- `2026-07-06-cross-period-prorrata-W07-P11-S45` - design and implement the calculation-order seam that exposes current-year prorrata volume, definitive percentage, and deductible-total values to the prorrata_regularizacion resolver without reimplementing formula business logic
+- `2026-07-06-cross-period-prorrata-W07-P11-S46` - implement the prorrata_regularizacion live source resolver with binding values, unresolved diagnostics, and provenance from the register or stamped prior observation plus current-year registry values
+- `2026-07-06-cross-period-prorrata-W07-P12-S47` - enroll prorrata regularizacion in live source mesh
+- `2026-07-06-cross-period-prorrata-W07-P12-S48` - re-ratify bienes inversion remaining source blocker
+- `2026-07-06-cross-period-prorrata-W07-P12-S49` - run W07 promotion close review
 
 ### plan
 
