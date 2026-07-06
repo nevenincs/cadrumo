@@ -1,4 +1,19 @@
-"""Prorrata settlement filing writes definitive register state."""
+"""Prorrata settlement filing writes definitive register state.
+
+See Also:
+    :func:`~application.modelo._revision_persistence.persist_filed_revision`
+        Filing transition that co-emits the settlement register write.
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+        Encrypted profile repository receiving the definitive prorrata state.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Per-ejercicio row updated with definitive percentage and annual volumes.
+    :class:`~domain.modelos.CalculationRevision`
+        Verified Modelo 303 revision whose casilla observations supply the
+        settlement values.
+    :class:`~domain.modelos.TransactionRevisionParticipationIndex`
+        Sibling filing co-write whose atomicity pattern the prorrata writeback
+        follows.
+"""
 
 from __future__ import annotations
 
