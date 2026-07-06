@@ -8,6 +8,26 @@ revision is finalized, the blocking guard refuses destructive edits to its sourc
 rows (behavior contract). These two mechanisms are complementary: the block protects finalized
 filings, the staleness sweep is the defense-in-depth that catches any drift that
 reaches a snapshot-backed revision.
+
+See Also:
+    :func:`~application.aggregation.compute_ledger_filing_snapshot`
+        Transaction-aware capture of contributor fingerprints for a revision.
+    :func:`~application.aggregation.evaluate_ledger_filing_staleness`
+        Runtime comparison between a stored snapshot and the live ledger
+        catalogue.
+    :func:`~application.aggregation.stale_filed_revisions`
+        System-level sweep that reports finalized snapshot-backed revisions whose
+        ledger contributors drifted.
+    :func:`~application.ledger.update_manual_transaction_fields`
+        Ledger mutation path whose finalized-modelo write guard is exercised.
+    :class:`~domain.modelos.CalculationRevision`
+        Revision record that carries the optional ledger filing snapshot.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Live ledger catalogue used to recompute contributor fingerprints.
+    Governing vault records
+        ``2026-06-02-modelo-filing-ledger-snapshot-adr`` defines immutable
+        snapshot-backed revisions; ``2026-06-10-ledger-modelo-crossref-adr``
+        keeps inverse transaction-to-modelo references derived and auditable.
 """
 
 from __future__ import annotations
