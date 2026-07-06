@@ -5,6 +5,22 @@ Mirrors the coverage shape of ``dev/registry/matrix/tests/test_manager.py``
 ground-truth coverage for the fields that probe does not carry: declared
 casilla renames, deprecation (support-removal) decisions, and AEAT-portal
 cross-references.
+
+See Also:
+    :func:`~domain.calculations.registry.build_support_matrix`
+        Production builder that derives each row from loaded registry authority.
+    :class:`~domain.calculations.registry.ModeloEntry`
+        Typed per-modelo support row asserted by these tests.
+    :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
+        Query-service envelope returned by the registry discovery surface.
+    :func:`~application.modelo.registry_support_matrix`
+        Application facade used by the operator CLI without re-reading the
+        authority directly.
+    :mod:`~entrypoints.cli._modelo_support_matrix_payloads`
+        JSON payload schemas for the ``modelo.support_matrix`` command.
+    :mod:`~dev.registry.matrix`
+        Contributor-facing capability matrix mirrored by this production
+        support surface.
 """
 
 from __future__ import annotations
