@@ -8,9 +8,9 @@ that exposes those values without copying formula business logic into the
 resolver layer.
 
 See Also:
-    :func:`~application.modelo._calculation_actions._materialise_prorrata_regularizacion_current_year_values`
+    :func:`~application.modelo._calculation_source_staging.materialise_prorrata_regularizacion_current_year_values`
         No-persist engine materialisation seam under test.
-    :data:`~application.modelo._calculation_actions._PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS`
+    :data:`~application.modelo._calculation_source_staging._PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS`
         Canonical source-value order consumed by the resolver.
     :class:`~domain.calculations.registry._bindings._ProrrataRegularizacionSelector`
         Registry selector contract that declares the source casilla set.
@@ -35,9 +35,9 @@ from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import WorkUnit, derive_work_unit_id
-from .._calculation_actions import (
+from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
-    _materialise_prorrata_regularizacion_current_year_values,
+    materialise_prorrata_regularizacion_current_year_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -102,8 +102,8 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
-    materialised = _materialise_prorrata_regularizacion_current_year_values(
-        snapshot=snapshot,
+    materialised = materialise_prorrata_regularizacion_current_year_values(
+        registry_snapshot=snapshot,
         work_unit=work_unit,
         casilla_inputs={
             _SOPORTADO_INTERIORES_ID: _MANUAL_FOURTH_QUARTER_INPUT_IVA,
