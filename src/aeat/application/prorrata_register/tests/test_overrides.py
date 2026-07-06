@@ -23,17 +23,17 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from aeat.application.calculations import CalculationObservationRepository
-from aeat.application.calculations._cross_period_models import CrossPeriodCleanStateBlocker
-from aeat.application.prorrata_register import ProrrataRegisterService
-from aeat.application.prorrata_register._seed import cross_check_prorrata_entry_against_prior_observation
-from aeat.core import Modelo, ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import CasillaId, validated_casilla_id
-from aeat.domain.prorrata_register import ProrrataRegisterEntry
-from aeat.tests.registry_observations import registry_grounded_modelo_observation
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....core import Modelo, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.prorrata_register import ProrrataRegisterEntry
+from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations import CalculationObservationRepository
+from ...calculations._cross_period_models import CrossPeriodCleanStateBlocker
+from .. import ProrrataRegisterService
+from .._seed import cross_check_prorrata_entry_against_prior_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

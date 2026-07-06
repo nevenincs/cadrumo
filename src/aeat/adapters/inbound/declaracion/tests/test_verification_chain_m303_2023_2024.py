@@ -52,14 +52,6 @@ _M303_SYNTHETIC_CLOSURE_CASES: tuple[tuple[CasillaId, str, CasillaId, str, str],
         "Orden HAC/819/2024 art. 1 §6: box 71 = box 69 - box 70 + box 109; c70=0 and c109=0",
     ),
 )
-_M303_SYNTHETIC_CLOSURE_CASE_IDS: tuple[str, ...] = (
-    "box-64-suma-resultados",
-    "box-66-atribuible-estado",
-    "box-69-resultado-autoliquidacion",
-    "box-71-resultado-final",
-)
-
-
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     _M303_2023_ONWARDS_PARAMS,
@@ -93,21 +85,11 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     )
 
 
-@pytest.mark.parametrize(
-    "target_casilla,target_label,base_casilla,base_label,formula_context",
-    _M303_SYNTHETIC_CLOSURE_CASES,
-    ids=_M303_SYNTHETIC_CLOSURE_CASE_IDS,
-)
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_synthetic_closure_boxes(
     pdf_stem: str,
     year: int,
     period: str,
-    target_casilla: CasillaId,
-    target_label: str,
-    base_casilla: CasillaId,
-    base_label: str,
-    formula_context: str,
 ) -> None:
     """Engine M303 2023+ closure boxes match extracted values and synthetic zero relations.
 
@@ -118,20 +100,21 @@ def test_verification_chain_m303_engine_recomputes_synthetic_closure_boxes(
     """
     extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
-    target_value = _assert_m303_engine_matches_extracted_decimal(
-        pdf_stem=pdf_stem,
-        engine_values=engine_values,
-        extracted=extracted,
-        casilla_id=target_casilla,
-        label=target_label,
-        formula_context=formula_context,
-    )
-    base_value = engine_values.get(base_casilla)
-    assert isinstance(base_value, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine {base_label} missing or non-Decimal: {base_value!r}"
-    )
-    assert target_value == base_value, (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine {target_label} {target_value!r} != "
-        f"engine {base_label} {base_value!r}\n"
-        f"  ({formula_context} in corpus PDFs)"
-    )
+    for target_casilla, target_label, base_casilla, base_label, formula_context in _M303_SYNTHETIC_CLOSURE_CASES:
+        target_value = _assert_m303_engine_matches_extracted_decimal(
+            pdf_stem=pdf_stem,
+            engine_values=engine_values,
+            extracted=extracted,
+            casilla_id=target_casilla,
+            label=target_label,
+            formula_context=formula_context,
+        )
+        base_value = engine_values.get(base_casilla)
+        assert isinstance(base_value, Decimal), (
+            f"VERIFIED-FAIL [{pdf_stem}]: engine {base_label} missing or non-Decimal: {base_value!r}"
+        )
+        assert target_value == base_value, (
+            f"VERIFIED-FAIL [{pdf_stem}]: engine {target_label} {target_value!r} != "
+            f"engine {base_label} {base_value!r}\n"
+            f"  ({formula_context} in corpus PDFs)"
+        )

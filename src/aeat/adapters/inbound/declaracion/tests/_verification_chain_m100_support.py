@@ -68,10 +68,6 @@ _M100_CLOSURE_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
     _casilla_id("0585"),
     _casilla_id("0586"),
 )
-_M100_CORPUS_YEARS: tuple[int, ...] = (2021, 2022, 2023)
-_M100_CORPUS_YEAR_IDS: tuple[str, ...] = tuple(f"{year}-0A" for year in _M100_CORPUS_YEARS)
-
-
 def _parse_m100_corpus(year: int, label: str) -> dict[CasillaId, object]:
     pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
     try:

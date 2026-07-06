@@ -1,4 +1,19 @@
-"""Foreign-asset re-declaration advisory helpers for Modelo 720 and 721."""
+"""Foreign-asset re-declaration advisory helpers for Modelo 720 and 721.
+
+See Also:
+    :mod:`~core._foreign_asset_obligation`
+        Declares the per-bloque declaration floors and re-declaration deltas
+        consumed by these advisory checks.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Registry-grounded observation envelope accepted as prior, current, and
+        current-declaration evidence.
+    :mod:`~application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity`
+        Exercises the Modelo 720 prior-year baseline advisory path with real
+        observations and enrollment evidence.
+    :mod:`~application.calculations.tests.test_modelo_721_cripto_extranjero_fidelity`
+        Exercises the Modelo 721 token baseline sibling through the same
+        advisory mechanism.
+"""
 
 from __future__ import annotations
 
@@ -55,6 +70,10 @@ def modelo_720_redeclaration_advisory_findings(
     ``current_declaration_observation`` is the current filed/declarable row set.
     When omitted, the current evidence is also treated as the current declaration,
     so a correctly present row produces no advisory.
+
+    See Also:
+        :func:`~core._foreign_asset_obligation.foreign_asset_declaration_threshold`
+            Supplies the strict per-obligation-block re-declaration delta.
     """
     return _redeclaration_advisory_findings(
         modelo="720",
@@ -71,7 +90,13 @@ def modelo_721_redeclaration_advisory_findings(
     current_observation: RegistryModeloObservation,
     current_declaration_observation: RegistryModeloObservation | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
-    """Return non-blocking M721 re-declaration advisories for omitted grown tokens."""
+    """Return non-blocking M721 re-declaration advisories for omitted grown tokens.
+
+    See Also:
+        :class:`~core._foreign_asset_obligation.ForeignAssetObligationGroup`
+            Provides the ``MONEDAS_VIRTUALES`` group used for the Modelo 721
+            re-declaration threshold.
+    """
     return _redeclaration_advisory_findings(
         modelo="721",
         prior_positions=_modelo_721_positions(prior_observation),

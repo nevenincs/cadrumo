@@ -22,6 +22,7 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ....core.errors import AeatError
 from ....core.external_constants import UTF_8_ENCODING
@@ -40,6 +41,9 @@ from ..storage import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
+
+if TYPE_CHECKING:  # pragma: no cover - storage type import only
+    from ..storage import SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -168,11 +172,30 @@ class ProrrataRegisterRepository:
         Args:
             register: Register document to encrypt and write.
         """
-        self._save_unlocked(register)
+        self._objects.save_many((self.to_secure_object_write(register),))
         _log.info(
             "saved %d prorrata register entries to secure object %s",
             len(register.entries),
             self._object_key,
+        )
+
+    def to_secure_object_write(self, register: ProrrataRegister) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``register`` without committing it.
+
+        The filing persistence path co-emits the settled prorrata register with
+        the filed revision and filing catalogue in one secure-object transaction,
+        mirroring the participation-index write pattern.
+        """
+        from ..storage import SecureObjectWrite
+
+        written_at = now()
+        return SecureObjectWrite(
+            namespace=_REGISTER_NAMESPACE,
+            object_key=self._object_key,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_REGISTER_SECURE_OBJECT_VERSION,
+            written_at=written_at,
+            payload=register.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     def upsert_entry(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
@@ -199,14 +222,7 @@ class ProrrataRegisterRepository:
         return updated
 
     def _save_unlocked(self, register: ProrrataRegister) -> None:
-        self._objects.save(
-            namespace=_REGISTER_NAMESPACE,
-            object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=_REGISTER_SECURE_OBJECT_VERSION,
-            written_at=now(),
-            payload=register.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        self._objects.save_many((self.to_secure_object_write(register),))
 
     @property
     def _object_key(self) -> str:

@@ -1,4 +1,12 @@
-"""Modelo 840 IAE net-turnover exemption semantics."""
+"""Modelo 840 IAE net-turnover exemption semantics.
+
+See Also:
+    :data:`~core.external_constants.MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR`
+        Legal threshold constant for the strict art. 82.1.c INCN gate.
+    :mod:`~application.calculations.tests.test_modelo_840_iae_continuity`
+        Multi-year enrollment proof that persists two annual assessments through
+        the real calculation observation store.
+"""
 
 from __future__ import annotations
 
@@ -24,6 +32,10 @@ class Modelo840IaeExemptionAssessment(BaseModel):
     The assessment covers only the art. 82.1.c ``importe neto de la cifra de
     negocios`` exemption. Other art. 82 exemptions, such as the natural-person
     and first-two-period exemptions, are separate legal pathways.
+
+    See Also:
+        :class:`Modelo840IaeExemptionStatus`
+            Closed status vocabulary carried by each annual assessment.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -52,6 +64,10 @@ def assess_modelo_840_iae_cifra_negocios_exemption(
 
     TRLRHL art. 82.1.c exempts the covered entities only when their net turnover
     is below 1,000,000 EUR. Equality is outside the exemption.
+
+    See Also:
+        :class:`Modelo840IaeExemptionAssessment`
+            Frozen result carrier returned by this assessment helper.
     """
     status = (
         Modelo840IaeExemptionStatus.EXEMPT

@@ -72,8 +72,8 @@ def _forbidden_marker_sites(tree: ast.AST) -> list[tuple[int, str]]:
 
 def _skip_inventory_sites(tree: ast.AST) -> _SkipInventorySites:
     """Return skip/xfail shortcut sites and unit/live marker intersections."""
-    module_markers = _module_execution_markers(tree)
     aliases = _skip_alias_inventory(tree)
+    module_markers = _module_execution_markers(tree, aliases)
     forbidden_sites: list[tuple[int, str]] = []
     unit_live_intersections: list[tuple[int, str]] = []
 
@@ -103,7 +103,7 @@ def _skip_inventory_sites(tree: ast.AST) -> _SkipInventorySites:
                 forbidden_sites.append((node.lineno, exception_name))
 
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            markers = module_markers | _decorator_execution_markers(node)
+            markers = module_markers | _decorator_execution_markers(node, aliases)
             if {_UNIT_EXECUTION_MARKER, _LIVE_EXECUTION_MARKER} <= markers:
                 unit_live_intersections.append((node.lineno, node.name))
 
@@ -174,10 +174,11 @@ def _function_context_by_lineno(tree: ast.AST) -> dict[int, tuple[str, ...]]:
 
 def _unit_context_by_lineno(tree: ast.AST) -> dict[int, bool]:
     """Return whether each source line belongs to a unit-selected test context."""
-    module_is_unit = _UNIT_EXECUTION_MARKER in _module_execution_markers(tree)
+    aliases = _skip_alias_inventory(tree)
+    module_is_unit = _UNIT_EXECUTION_MARKER in _module_execution_markers(tree, aliases)
     module_has_unit_items = module_is_unit or any(
         isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
-        and _UNIT_EXECUTION_MARKER in _decorator_execution_markers(node)
+        and _UNIT_EXECUTION_MARKER in _decorator_execution_markers(node, aliases)
         for node in ast.walk(tree)
     )
     context: dict[int, bool] = {}
@@ -189,7 +190,7 @@ def _unit_context_by_lineno(tree: ast.AST) -> dict[int, bool]:
         child_unit = inherited_unit
         child_inside_item = inside_item
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            child_unit = inherited_unit or _UNIT_EXECUTION_MARKER in _decorator_execution_markers(node)
+            child_unit = inherited_unit or _UNIT_EXECUTION_MARKER in _decorator_execution_markers(node, aliases)
             child_inside_item = True
         for child in ast.iter_child_nodes(node):
             visit(child, child_unit, child_inside_item)
@@ -326,8 +327,10 @@ def _canonical_pytest_call_name(
     return call_name
 
 
-def _module_execution_markers(tree: ast.AST) -> set[str]:
+def _module_execution_markers(tree: ast.AST, aliases: _SkipAliasInventory | None = None) -> set[str]:
     """Return module-level execution markers from a ``pytestmark = [...]`` assignment."""
+    if aliases is None:
+        aliases = _skip_alias_inventory(tree)
     markers: set[str] = set()
     body = tree.body if isinstance(tree, ast.Module) else ()
     for node in body:
@@ -337,20 +340,43 @@ def _module_execution_markers(tree: ast.AST) -> set[str]:
             continue
         values: list[ast.expr] = list(node.value.elts) if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
         for value in values:
-            name = qualified_name(value)
-            if name.startswith("pytest.mark."):
-                markers.add(name.removeprefix("pytest.mark."))
+            marker = _execution_marker_name(value, aliases.pytest_aliases, aliases.pytest_mark_aliases)
+            if marker is not None:
+                markers.add(marker)
     return markers
 
 
-def _decorator_execution_markers(node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> set[str]:
+def _decorator_execution_markers(
+    node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+    aliases: _SkipAliasInventory | None = None,
+) -> set[str]:
     """Return pytest execution marker names attached directly to a test item."""
+    if aliases is None:
+        aliases = _skip_alias_inventory(ast.Module(body=[], type_ignores=[]))
     markers: set[str] = set()
     for decorator in node.decorator_list:
-        name = qualified_name(decorator)
-        if name.startswith("pytest.mark."):
-            markers.add(name.removeprefix("pytest.mark."))
+        marker = _execution_marker_name(decorator, aliases.pytest_aliases, aliases.pytest_mark_aliases)
+        if marker is not None:
+            markers.add(marker)
     return markers
+
+
+def _execution_marker_name(
+    expr: ast.expr,
+    pytest_aliases: set[str],
+    pytest_mark_aliases: set[str],
+) -> str | None:
+    """Return the pytest marker name from an execution-marker expression."""
+    name = qualified_name(expr)
+    for alias in pytest_aliases:
+        prefix = f"{alias}.mark."
+        if name.startswith(prefix):
+            return name.removeprefix(prefix)
+    for alias in pytest_mark_aliases:
+        prefix = f"{alias}."
+        if name.startswith(prefix):
+            return name.removeprefix(prefix)
+    return None
 
 
 def _unit_live_marker_intersections(tree: ast.AST) -> list[tuple[int, str]]:
@@ -578,6 +604,23 @@ def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInvento
     assert not violations, "Tests cannot be marked both unit and aeat_live:\n" + "\n".join(violations)
 
 
+def test_unit_live_detector_rejects_pytest_alias_execution_markers() -> None:
+    """Aliased pytest execution markers must not hide unit/live intersections."""
+    tree = ast.parse(
+        """
+import pytest as pt
+
+pytestmark = [pt.mark.unit]
+
+@pt.mark.aeat_live
+def test_live_unit():
+    pass
+"""
+    )
+
+    assert _unit_live_marker_intersections(tree) == [(7, "test_live_unit")]
+
+
 def test_project_tests_outside_source_tree_do_not_skip() -> None:
     """Project tests outside ``src/aeat`` must not self-skip or xfail."""
     violations: list[str] = []
@@ -627,6 +670,21 @@ def test_unit_contract():
     assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree) == [
         (4, "pytest.importorskip"),
     ]
+
+
+def test_unit_skip_detector_rejects_imported_mark_alias_unit_context() -> None:
+    """Imported pytest.mark aliases must still mark unit-selected skip sites."""
+    tree = ast.parse(
+        """
+from pytest import mark as pytest_mark
+
+@pytest_mark.unit
+def test_unit_contract():
+    pytest.skip("service unavailable")
+"""
+    )
+
+    assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree) == [(6, "pytest.skip")]
 
 
 def test_discovery_found_modules() -> None:

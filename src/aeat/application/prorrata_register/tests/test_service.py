@@ -20,11 +20,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from aeat.application.prorrata_register import ProrrataRegisterService
-from aeat.core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from aeat.domain.prorrata_register import ProrrataRegisterEntry
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.prorrata_register import ProrrataRegisterEntry
+from ....tests.secure_sql import isolated_runtime_profile
+from .. import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

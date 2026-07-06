@@ -66,6 +66,10 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     assert set(values.keys()) == _M303_CURRENT_PROFILE_CASILLAS
+    for casilla_id, value in values.items():
+        assert isinstance(value, Decimal), (
+            f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, got {value!r}"
+        )
 
     # Stable casillas: formula-consistent values derived from _generate.py fixtures.
     expected_c46 = exp[_M303_CASILLA_C46]

@@ -9,14 +9,30 @@ then applies the target
 ``ledger_iva_aggregation`` bindings, and surfaces source diagnostics for ledger
 rows that no declared binding consumes.
 
+When the bucket's cross-period prorrata register resolves an active
+``general`` provisional percentage for the filing year, the aggregation result
+carries :class:`IvaLedgerProrrataApportionment`. The binding resolver applies
+that percentage only to deducible IVA cuota bindings; bases and output IVA
+cuotas stay unapportioned.
+
 The repository-backed entry point constructs a
 :class:`~domain.transactions.TransactionCatalogueRepository` for the active
 bucket when none is supplied. Pre-classified callers can use
 :class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
 to run the same validation and registry binding path.
 
-Related: :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`, and
-:mod:`~._renta_gasto_ledger` for the sibling Renta ledger projections.
+See Also:
+    :mod:`~domain.prorrata_register`
+        Per-ejercicio carry home for the provisional percentage consumed by
+        the IVA ledger apportionment.
+    :class:`~application.aggregation._modelo_bindings.LedgerIvaAggregationSourceResolver`
+        Source-mesh adapter that calls this projection and records prorrata
+        apportionment provenance.
+    :mod:`~application.aggregation.tests.test_iva_ledger_prorrata_apportionment`
+        Regression coverage proving the active provisional percentage reduces
+        deducible cuotas without reducing bases.
+    :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`, :mod:`~._renta_gasto_ledger`
+        Sibling Renta ledger projections.
 """
 
 from __future__ import annotations
@@ -89,8 +105,8 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce IVA observations.
 
     The first five values are shared with
-    :class:`application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
-    through :mod:`._shared_issue_reasons` so cross-ledger telemetry can
+    :class:`~application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
+    through :mod:`~application.aggregation._shared_issue_reasons` so cross-ledger telemetry can
     group upstream filter rejections under one key. The remaining values
     are IVA-specific.
     """
@@ -135,7 +151,15 @@ class ProrrataLedgerReference(BaseModel):
 
 
 class IvaLedgerProrrataApportionment(BaseModel):
-    """General-prorrata percentage applied to deducible ledger IVA cuotas."""
+    """General-prorrata percentage applied to deducible ledger IVA cuotas.
+
+    See Also:
+        :class:`~core.ProrrataProvisionalProvenance`
+            Regulated source of the provisional percentage carried on this
+            apportionment.
+        :func:`resolve_iva_ledger_binding_values`
+            Applies the percentage after registry selector resolution.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -259,6 +283,11 @@ def aggregate_iva_ledger_observations_from_repositories(
     """Load the bucket-local transaction catalogue and project IVA observations.
 
     Returns an :class:`IvaLedgerAggregation`.
+
+    See Also:
+        :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+            Repository consulted for the active general-prorrata provisional
+            percentage when no explicit repository is supplied.
     """
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
@@ -489,7 +518,24 @@ def resolve_iva_ledger_binding_values(
     *,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
 ) -> dict[BindingId, Decimal]:
-    """Resolve IVA ledger bindings, applying general-prorrata to deducible cuotas only."""
+    """Resolve IVA ledger bindings, applying general-prorrata to deducible cuotas only.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose IVA ledger bindings are
+            resolved.
+        observations: Typed :class:`IvaLedgerObservation` rows to aggregate.
+        prorrata_apportionment: Optional
+            :class:`IvaLedgerProrrataApportionment` applied only to deducible
+            cuota bindings.
+
+    See Also:
+        :func:`~domain.calculations.registry.resolve_ledger_iva_aggregation_binding_values`
+            Registry selector resolver that produces the unapportioned binding
+            values before this wrapper applies prorrata.
+        :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+            Source record for the active provisional percentage represented by
+            :class:`IvaLedgerProrrataApportionment`.
+    """
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     if prorrata_apportionment is None or prorrata_apportionment.percentage == _HUNDRED:
         return binding_values
@@ -867,7 +913,7 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
     flow). The final flow that lands on the observation is recomputed
     once the effective :class:`IvaCategory` is resolved via
     :func:`derive_flow_for_classification`, which routes reverse-charge
-    categories to :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
+    categories to :attr:`~domain.iva.IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
     preserving ``REPERCUTIDO``/``SOPORTADO`` for every other category.
     """
     invoice_kind = _invoice_kind_for(direction)

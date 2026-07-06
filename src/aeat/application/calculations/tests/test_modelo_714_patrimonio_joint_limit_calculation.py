@@ -4,6 +4,20 @@ This test drives the real registry calculation path for Modelo 714 across two
 renta years. Each year saves real local Modelo 100 observations, resolves the
 M714 same-year M100 relations through the local relation resolver, then runs
 the M714 formula engine through casilla 40.
+
+See Also:
+    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+        Resolves the same-year Modelo 100 relation values this enrollment feeds
+        into the Patrimonio art.31 formula chain.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Evaluates the registry snapshot after the relation values and manual
+        Modelo 714 inputs are assembled.
+    :class:`~application.calculations.EnrollmentRecorder`
+        Captures the two distinct renta years asserted against the authorization
+        manifest.
+    :mod:`~domain.calculations.registry.tests.test_modelo_714_registry`
+        Registry-level proof for the same art.31 relations and calculation
+        chain.
 """
 
 from __future__ import annotations

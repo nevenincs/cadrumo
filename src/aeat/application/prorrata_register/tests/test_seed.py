@@ -24,23 +24,23 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from aeat.adapters.persistence.storage.crypto import (
+from ....adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from aeat.adapters.persistence.storage.sql import SecureObjectRow
-from aeat.adapters.persistence.storage.sql.engine import get_engine
-from aeat.adapters.persistence.storage.sql.session import session_scope
-from aeat.application.calculations import CalculationObservationRepository
-from aeat.application.calculations._cross_period_models import CrossPeriodCleanStateBlocker
-from aeat.application.calculations._observations_repository import observation_key_for_token
-from aeat.application.prorrata_register._seed import evaluate_carried_prior_definitiva_seed
-from aeat.core import Modelo, ProrrataProvisionalProvenance
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import CasillaId, validated_casilla_id
-from aeat.tests.registry_observations import registry_grounded_modelo_observation
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.engine import get_engine
+from ....adapters.persistence.storage.sql.session import session_scope
+from ....core import Modelo, ProrrataProvisionalProvenance
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations import CalculationObservationRepository
+from ...calculations._cross_period_models import CrossPeriodCleanStateBlocker
+from ...calculations._observations_repository import observation_key_for_token
+from .._seed import evaluate_carried_prior_definitiva_seed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
