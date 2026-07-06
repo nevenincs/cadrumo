@@ -1,4 +1,24 @@
-"""Tests for the topic catalogue loader and i18n key coverage."""
+"""Tests for the topic catalogue loader and i18n key coverage.
+
+The suite pins :mod:`~core.topics` as a backend catalogue resource: topic TOML
+files load into strict :class:`~core.topics.Topic` records, their locale keys
+resolve through :func:`~core.i18n.tr`, their legal references resolve against
+the committed registry authority, and the package exports no CLI/rendering
+surface.
+
+See Also:
+    :class:`~core.topics.TopicCatalogue`
+        Closed catalogue loaded from ``registry/aeat/topics``.
+    :class:`~core.resources._repos.topics.TopicCatalogueRepository`
+        Resource repository consumed by tests and application registry services.
+    :mod:`~application.registry._corpus`
+        Registry citation projection service that consumes topic records for
+        operator-facing reports.
+    Governing vault records
+        ``2026-05-08-aeat-cli-gap-closure-plan`` introduced the conceptual topic
+        catalogue, while ``2026-05-13-cli-workflow-redesign-epic-plan`` moved
+        topic exposure under registry-owned citation services.
+"""
 
 from __future__ import annotations
 
