@@ -687,6 +687,21 @@ def _resolve_prorrata_regularizacion_binding_values(
     }
 
 
+def _modelo_303_target_inputs(
+    revision: ModeloRevision,
+    *,
+    binding_values: Mapping[BindingId, Decimal],
+    modelo: str,
+) -> dict[CasillaId, Decimal]:
+    if modelo != Modelo.M303.value:
+        return {}
+    binding_by_output = _prorrata_bindings_by_output(revision)
+    binding_id = binding_by_output.get(_OUTPUT_MODELO_303_CASILLA_44)
+    if binding_id is None or binding_id not in binding_values:
+        return {}
+    return {CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: binding_values[binding_id]}
+
+
 class ProrrataRegularizacionSourceResolver:
     """Resolve annual prorrata-general regularisation bindings from governed carries."""
 
@@ -746,8 +761,16 @@ class ProrrataRegularizacionSourceResolver:
             dict.fromkeys(
                 (
                     *_missing_current_year_casillas(current_year_values),
-                    *self._missing_current_year_casilla_ids,
-                    *self._unresolved_current_year_casilla_ids,
+                    *(
+                        casilla_id
+                        for casilla_id in self._missing_current_year_casilla_ids
+                        if casilla_id not in current_year_values
+                    ),
+                    *(
+                        casilla_id
+                        for casilla_id in self._unresolved_current_year_casilla_ids
+                        if casilla_id not in current_year_values
+                    ),
                 )
             )
         )
@@ -796,10 +819,16 @@ class ProrrataRegularizacionSourceResolver:
             declared_volume_con_derecho=current_year_values[_VOLUMEN_CON_DERECHO_ID],
         )
         if not applicability.applies:
+            zero_values = {binding_id: _ZERO for binding_id in declared_binding_ids}
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
-                binding_values={binding_id: _ZERO for binding_id in declared_binding_ids},
+                binding_values=zero_values,
+                bound_inputs_by_casilla_id=_modelo_303_target_inputs(
+                    snapshot.revision,
+                    binding_values=zero_values,
+                    modelo=context.modelo,
+                ),
                 provenance=(current_provenance,),
             )
 
@@ -856,6 +885,11 @@ class ProrrataRegularizacionSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
+            bound_inputs_by_casilla_id=_modelo_303_target_inputs(
+                snapshot.revision,
+                binding_values=binding_values,
+                modelo=context.modelo,
+            ),
             unresolved_binding_ids=unresolved,
             diagnostics=diagnostics,
             provenance=provenance,

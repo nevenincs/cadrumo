@@ -785,3 +785,30 @@ tests; `vault check frontmatter --feature cross-period-prorrata`,
 `vault plan check 2026-07-06-cross-period-prorrata-plan` are clean after
 rebuilding the feature index. `vault plan status` reports 49 of 49 steps
 complete with no missing exec records.
+
+## S49 Follow-up Execution: Source-period feed
+
+Implemented the `cross-period-prorrata-source-period-feed` follow-up in the
+working tree. The live `ProrrataRegularizacionSourceResolver` now attempts a
+governed Modelo 303 filed-observation feed for the selector-declared
+`1T`/`2T`/`3T`/`4T` source periods before declaring the binding unresolved. The
+feed reads `CalculationObservationRepository`, reconfirms each observation's
+stamped registry revision through the existing revision-carry gate, folds the
+regularised-period deductible-total source values in selector order, and reads
+the annual volume/definitive-percentage source casillas from the settlement
+period. It then merges those source-period values with the active-snapshot
+materialisation so the active M303 path remains available while annual M390 can
+consume filed M303 observations.
+
+Resolution: `s49-source-period-materialisation` is implemented for the declared
+M303 source-period feed, and `s49-m390-cross-modelo-feed` is implemented for the
+annual M390 binding path when the M303 source corpus is complete. The remaining
+known cross-period-prorrata blockers are `s49-m303-casilla-44-target-consumption`
+and `s49-bienes-inversion-remaining-blocker`.
+
+Verification inventory: focused ruff passed for the changed prorrata resolver,
+calculation action hub, and prorrata tests. The focused prorrata/source-kind
+pytest slice passed with 37 tests, including the M390 mesh test that saves
+stamped M303 source-period observations and asserts
+`modelo-390-prorrata-regularizacion-anual` resolves to the bundled AEAT manual
+oracle value.
