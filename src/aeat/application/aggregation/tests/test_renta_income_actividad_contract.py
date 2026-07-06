@@ -5,15 +5,19 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot, resolve_ledger_renta_income_aggregation_binding_values
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....domain.calculations.registry import (
+    DataBindingDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    resolve_ledger_renta_income_aggregation_binding_values,
+)
 from ....domain.transactions import BusinessClassification, TransactionCatalogue
 from .._modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from .._renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
@@ -30,10 +34,60 @@ from ._renta_income_aggregation_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_M130_INCOME_SOURCE_REFS = ("aeat-modelo-130-instructions",)
+_M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_M130_INGRESOS_LEGAL_REFS = (
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-95",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+)
+_M130_RETENCIONES_LEGAL_REFS = (
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-95",
+)
 
-@cache
-def _m130_2026_q1_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+
+def _m130_renta_income_binding(
+    binding_id: str,
+    *,
+    fact: str,
+    legal_refs: tuple[str, ...],
+) -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=binding_id,
+        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        selector={"modelo": "130", "target_casilla_id": "01", "fact": fact},
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=legal_refs,
+        source_refs=_M130_INCOME_SOURCE_REFS,
+    )
+
+
+def _m130_2026_q1_revision() -> ModeloRevision:
+    return ModeloRevision(
+        id="2019-y-siguientes",
+        valid_from=date(2019, 1, 1),
+        period_selector=PeriodSelector(year_from=2019, periods=("1T", "2T", "3T", "4T")),
+        legal_refs=_M130_INGRESOS_LEGAL_REFS,
+        source_refs=_M130_INCOME_SOURCE_REFS,
+        bindings=(
+            _m130_renta_income_binding(
+                _M130_INGRESOS_BINDING,
+                fact="ingresos_integros_sum",
+                legal_refs=_M130_INGRESOS_LEGAL_REFS,
+            ),
+            _m130_renta_income_binding(
+                _M130_RETENCIONES_BINDING,
+                fact="withheld_amount_sum",
+                legal_refs=_M130_RETENCIONES_LEGAL_REFS,
+            ),
+        ),
+    )
 
 
 @pytest.fixture
@@ -163,7 +217,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     assert observation.taxable_base_amount == Decimal("2000.00")
     assert observation.withheld_amount == Decimal("300.00")
 
-    revision = _m130_2026_q1_snapshot().revision
+    revision = _m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("2000.00")
     assert resolved[_M130_RETENCIONES_BINDING] == Decimal("300.00")
@@ -182,13 +236,12 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
     )
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
-    snapshot = _m130_2026_q1_snapshot()
     context = CalculationSourceContext(
         bucket_id="test",
         modelo="130",
         filing_year=2026,
         period=_period(2026, "1T"),
-        revision=snapshot.revision,
+        revision=_m130_2026_q1_revision(),
     )
 
     resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)

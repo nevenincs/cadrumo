@@ -530,6 +530,13 @@ IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR: Final[Decimal] = Decimal("3005.06")
 #: An obligation block is declarable iff its aggregate valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
+#: IAE art. 82.1.c net-turnover exemption ceiling for Modelo 840 threshold
+#: continuity. Binding provision: TRLRHL RDL 2/2004 art. 82.1.c ("importe
+#: neto de la cifra de negocios inferior a 1.000.000 de euros"). The gate is
+#: STRICTLY BELOW this amount; an INCN equal to 1,000,000.00 EUR is not within
+#: the turnover-based exemption.
+MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR: Final[Decimal] = Decimal("1000000.00")
+
 #: Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764) annual exemption cap for
 #: foreign-work income of maritime and other qualifying workers.
 #: The exempt amount is the lesser of the proportional daily salary for

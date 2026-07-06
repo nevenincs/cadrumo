@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
@@ -15,9 +14,15 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.i18n import Translatable as tr
-from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.calculations.registry import (
+    CasillaId,
+    DataBindingDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    validated_casilla_id,
+)
 from ....domain.categories import (
     CategoryCitation,
     CategoryCitationSource,
@@ -62,9 +67,36 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-@cache
-def _m100_2025_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=binding_id,
+        source=BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        selector={
+            "modelo": "100",
+            "period": "0A",
+            "target_casilla_id": casilla_id,
+            "fact": "deductible_amount_sum",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
+        source_refs=("aeat-renta-2025-manual-parte1",),
+    )
+
+
+def _m100_2025_renta_expense_revision() -> ModeloRevision:
+    return ModeloRevision(
+        id="2025",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
+        legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
+        source_refs=("aeat-renta-2025-manual-parte1",),
+        bindings=(
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0186-deductible", "0186"),
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0192-deductible", "0192"),
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0199-deductible", "0199"),
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0203-deductible", "0203"),
+        ),
+    )
 
 
 _ANNUAL_2025 = _period(2025, "0A")
@@ -265,7 +297,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = _m100_2025_snapshot()
+    revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -275,7 +307,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
+            revision=revision,
         ),
     )
     binding_values = resolution.binding_values
@@ -312,7 +344,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = _m100_2025_snapshot()
+    revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -322,7 +354,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
+            revision=revision,
         ),
     )
 
@@ -349,7 +381,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
         objects=secure_objects,
     )
 
-    snapshot = _m100_2025_snapshot()
+    revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -359,7 +391,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
+            revision=revision,
         ),
     )
 

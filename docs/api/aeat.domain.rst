@@ -31,6 +31,7 @@ Subpackages
    aeat.domain.manuals
    aeat.domain.modelos
    aeat.domain.portals
+   aeat.domain.prorrata_register
    aeat.domain.renta
    aeat.domain.retention
    aeat.domain.submission

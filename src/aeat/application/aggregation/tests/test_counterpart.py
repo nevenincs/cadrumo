@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core import Period
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.external_constants import M347_THRESHOLD_EUR
-from ....core.resources import resources
-from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
 from .._counterpart import (
     COUNTERPART_MODELO_KIND_CATALOGUE,
     CounterpartAggregation,
@@ -29,52 +29,131 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_M349_LEGAL_REFS = (
+    "orden-eha-769-2010:art-1",
+    "ley-58-2003:art-93",
+    "rd-1624-1992:art-79",
+    "rd-1624-1992:art-80",
+    "ley-37-1992:art-9-bis",
+    "ley-37-1992:art-13",
+    "ley-37-1992:art-15",
+    "ley-37-1992:art-25",
+    "ley-37-1992:art-26",
+    "ley-37-1992:art-27",
+    "ley-37-1992:art-69",
+    "ley-37-1992:art-70",
+    "ley-37-1992:art-80",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-86",
+)
+_M349_SOURCE_REFS = (
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-procedure",
+    "aeat-modelo-349-instructions",
+    "boe-modelo-349-form-2010",
+)
+_M349_COLLECTIBLE_CLAVES = ("E", "M", "H", "A", "T", "S", "I", "R", "D", "C")
+_M349_PAYABLE_CLAVES = ("A", "I", "T")
 
 
-def _binding_by_id(revision: ModeloRevision, binding_id: str) -> DataBindingDefinition:
-    try:
-        return next(binding for binding in revision.bindings if binding.id == binding_id)
-    except StopIteration as exc:
-        raise AssertionError(f"binding {binding_id!r} not found in revision {revision.id!r}") from exc
-
-
-def _binding_with_source(
-    binding: DataBindingDefinition,
+def _m349_summary_binding(
+    binding_id: str,
     source: BindingSourceKind,
     *,
-    binding_id: str,
+    fact: str,
+    claves: tuple[str, ...],
 ) -> DataBindingDefinition:
-    payload = binding.model_dump(mode="python")
-    payload["id"] = binding_id
-    payload["source"] = source
-    return DataBindingDefinition.model_validate(payload)
+    return DataBindingDefinition(
+        id=binding_id,
+        source=source,
+        selector={
+            "fact": fact,
+            "claves": claves,
+            "rectification_scope": "exclude_rectifications",
+        },
+        aggregation=BindingAggregation(
+            op=BindingAggregationOp.COUNT_DISTINCT if fact == "operator_count" else BindingAggregationOp.SUM,
+        ),
+        legal_refs=_M349_LEGAL_REFS,
+        source_refs=_M349_SOURCE_REFS,
+    )
+
+
+def _m349_invoice_owned_revision() -> ModeloRevision:
+    return ModeloRevision(
+        id="2020-y-siguientes",
+        valid_from=date(2020, 1, 1),
+        period_selector=PeriodSelector(year_from=2020, periods=("1T",)),
+        legal_refs=_M349_LEGAL_REFS,
+        source_refs=_M349_SOURCE_REFS,
+        bindings=(
+            _m349_summary_binding(
+                "iva-349-declarante-numero-operadores",
+                BindingSourceKind.COLLECTIBLE_INVOICE,
+                fact="operator_count",
+                claves=_M349_COLLECTIBLE_CLAVES,
+            ),
+            _m349_summary_binding(
+                "iva-349-declarante-importe-operaciones",
+                BindingSourceKind.COLLECTIBLE_INVOICE,
+                fact="base_sum",
+                claves=_M349_COLLECTIBLE_CLAVES,
+            ),
+            _m349_summary_binding(
+                "iva-349-declarante-numero-operadores-adquisicion",
+                BindingSourceKind.PAYABLE_INVOICE,
+                fact="operator_count",
+                claves=_M349_PAYABLE_CLAVES,
+            ),
+            _m349_summary_binding(
+                "iva-349-declarante-importe-operaciones-adquisicion",
+                BindingSourceKind.PAYABLE_INVOICE,
+                fact="base_sum",
+                claves=_M349_PAYABLE_CLAVES,
+            ),
+        ),
+    )
+
+
+def _revision_without_counterpart_sources() -> ModeloRevision:
+    return ModeloRevision(
+        id="counterpart-empty-test",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        legal_refs=("ley-37-1992:art-1",),
+        source_refs=("test-counterpart-no-source",),
+    )
 
 
 def _m349_revision_with_live_invoice_and_reserved_counterpart_sources() -> ModeloRevision:
-    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+    revision = _m349_invoice_owned_revision()
     reserved_bindings = (
-        _binding_with_source(
-            _binding_by_id(snapshot.revision, "iva-349-declarante-numero-operadores"),
+        _m349_summary_binding(
+            "reserved-ledger-numero-operadores",
             BindingSourceKind.LEDGER_TRANSACTION,
-            binding_id="reserved-ledger-numero-operadores",
+            fact="operator_count",
+            claves=_M349_COLLECTIBLE_CLAVES,
         ),
-        _binding_with_source(
-            _binding_by_id(snapshot.revision, "iva-349-declarante-importe-operaciones"),
+        _m349_summary_binding(
+            "reserved-ledger-importe-operaciones",
             BindingSourceKind.LEDGER_TRANSACTION,
-            binding_id="reserved-ledger-importe-operaciones",
+            fact="base_sum",
+            claves=_M349_COLLECTIBLE_CLAVES,
         ),
-        _binding_with_source(
-            _binding_by_id(snapshot.revision, "iva-349-declarante-numero-operadores-adquisicion"),
+        _m349_summary_binding(
+            "reserved-purchase-numero-operadores-adquisicion",
             BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-            binding_id="reserved-purchase-numero-operadores-adquisicion",
+            fact="operator_count",
+            claves=_M349_PAYABLE_CLAVES,
         ),
-        _binding_with_source(
-            _binding_by_id(snapshot.revision, "iva-349-declarante-importe-operaciones-adquisicion"),
+        _m349_summary_binding(
+            "reserved-purchase-importe-operaciones-adquisicion",
             BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-            binding_id="reserved-purchase-importe-operaciones-adquisicion",
+            fact="base_sum",
+            claves=_M349_PAYABLE_CLAVES,
         ),
     )
-    return snapshot.revision.model_copy(update={"bindings": snapshot.revision.bindings + reserved_bindings})
+    return revision.model_copy(update={"bindings": revision.bindings + reserved_bindings})
 
 
 def _m349_invoice_owned_binding_ids(revision: ModeloRevision) -> frozenset[str]:
@@ -304,7 +383,6 @@ class TestCounterpartSourceResolver:
         assert not (set(resolution.binding_values) & _m349_invoice_owned_binding_ids(revision))
 
     def test_resolver_does_not_claim_current_invoice_owned_m349_bindings(self) -> None:
-        snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
         observations = (
             _obs(
                 nif="DE123456789",
@@ -330,7 +408,7 @@ class TestCounterpartSourceResolver:
                 modelo="349",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision=snapshot.revision,
+                revision=_m349_invoice_owned_revision(),
             ),
         )
 
@@ -343,8 +421,6 @@ class TestCounterpartSourceResolver:
         assert resolution.provenance == ()
 
     def test_resolver_silent_when_revision_declares_no_counterpart_source(self) -> None:
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
-
         observation = _obs(
             nif="DE123456789",
             op_kind=OperationKind349.INTRA_DELIVERY.value,
@@ -359,7 +435,7 @@ class TestCounterpartSourceResolver:
                 modelo="303",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision=snapshot.revision,
+                revision=_revision_without_counterpart_sources(),
             ),
         )
 

@@ -20,6 +20,7 @@ Submodules
    aeat.domain.modelos._errors
    aeat.domain.modelos._filing_record
    aeat.domain.modelos._filing_repository
+   aeat.domain.modelos._iae_exemption
    aeat.domain.modelos._ids
    aeat.domain.modelos._ledger_filing_snapshot
    aeat.domain.modelos._m232_row_materialisation

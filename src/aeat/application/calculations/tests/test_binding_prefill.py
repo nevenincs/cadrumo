@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -73,11 +74,16 @@ _M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-perio
 _M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
+@cache
+def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+
+
 def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obligation(
     tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+        snapshot = _snapshot("130", 2026, "1T")
         empty_report = resolve_bindings_from_local_store(
             snapshot,
             repository=CalculationObservationRepository(),
@@ -122,7 +128,7 @@ def _calculate_303_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+    snapshot = _snapshot("303", filing_year, period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         # Autoconsumo (LIVA art. 9) is zero for the standard
@@ -214,7 +220,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                 source_kind="app_filing",
             )
 
-        snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
+        snapshot = _snapshot("390", 2025, "0A")
 
         # The ordinary M390←M303 annual totals are relation_prefill; the
         # compensation carry partition is owned by iva_compensation_annual_partition.
@@ -304,7 +310,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
                 source_observation_key="303:2025:4T:history-source",
             ),
         )
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+        snapshot = _snapshot("303", 2026, "1T")
 
         recurrence, report = extract_modelo_303_local_iva_compensation_recurrence(
             snapshot,
@@ -325,7 +331,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
 
 def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -> None:
     """Secure IVA history must not emit an ungrounded casilla observation."""
-    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    snapshot = _snapshot("303", 2025, "4T")
     casillas = {item.id: item for item in snapshot.revision.casillas}
     assert _M303_RESULTADO_CASILLA in casillas, "real M303 registry must declare the oracle casilla"
     casillas_without_resultado = {
@@ -386,7 +392,7 @@ def test_iva_history_observation_only_claims_formula_provenance_for_exact_casill
 
 
 def test_iva_history_observation_rejects_mismatched_formula_operand_projection() -> None:
-    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    snapshot = _snapshot("303", 2025, "4T")
     casillas = {item.id: item for item in snapshot.revision.casillas}
     formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 
