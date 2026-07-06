@@ -4,6 +4,19 @@ These tests exercise the source-mesh resolver without enrolling it in the mesh:
 the resolver consumes current-year registry values supplied by the S45
 materialisation seam, then sources the provisional percentage from the real
 encrypted prorrata register or a stamped prior Modelo 303 observation.
+
+See Also:
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
+        Live resolver under test for the deferred prorrata regularización source.
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+        Encrypted profile-scoped carry store used by the register-backed branch.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Typed provisional-percentage carry record consumed by the resolver.
+    :class:`~application.aggregation.CalculationSourceContext`
+        Source-mesh context passed into resolver execution.
+    ``2026-07-05-cross-period-prorrata-adr`` and
+    ``2026-07-06-cross-period-prorrata-reference``
+        Accepted carry model and implementation guardrails for this source.
 """
 
 from __future__ import annotations
