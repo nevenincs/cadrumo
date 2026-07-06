@@ -1,9 +1,24 @@
-"""Real-behavior tests for :func:`aeat.core.decimal.format_decimal`.
+"""Real-behavior tests for :func:`~core.decimal.format_decimal`.
 
 Values are derived from the Decimal type contract and the four original
 caller contracts (no external numeric oracle required for string formatting
 of well-known inputs).  Tests are NOT tautological because the expected
 strings are computed independently of the implementation.
+
+See Also:
+    :mod:`~core.decimal._format`
+        Canonical formatter module that replaced the four former local helper
+        copies.
+    :class:`~core.errors.DecimalFormatError`
+        Typed core error raised when ``None`` is passed without a
+        ``none_value`` policy.
+    :class:`~decimal.Decimal`
+        Standard-library value contract whose fixed-point formatting and
+        ``normalize`` behaviour these cases pin.
+    Governing vault records
+        ``2026-05-28-codebase-solidification-W01-P05-S151`` and
+        ``2026-05-30-codebase-solidification-W03-P18-S358`` document the
+        canonical decimal helper consolidation and enrollment.
 """
 
 from __future__ import annotations
