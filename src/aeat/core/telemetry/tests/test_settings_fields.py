@@ -1,9 +1,19 @@
-"""Tests for the telemetry-posture fields on :class:`~aeat.core.config.Settings`.
+"""Tests for the telemetry-posture fields on :class:`~core.config.Settings`.
 
 Confirms the default-off posture and that each field reads its documented
 environment variable, mirroring the coverage
 ``aeat_evidence_cloud_upload_permitted`` / ``aeat_evidence_gestor_mode`` carry
 for the sibling off-host consent gate.
+
+See Also:
+    :class:`~core.telemetry.TelemetryTier`:
+        Closed tier enum parsed from ``AEAT_TELEMETRY_TIER``.
+    :func:`~core.telemetry.telemetry_emit_permitted`:
+        Consent gate that consumes the settings fields under test.
+    :func:`~application.diagnostics_telemetry.build_telemetry_status_report`:
+        Read-only application projection of the configured telemetry posture.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`:
+        CLI surface that previews and overrides these fields per invocation.
 """
 
 from __future__ import annotations
