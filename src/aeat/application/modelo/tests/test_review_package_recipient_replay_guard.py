@@ -1,14 +1,23 @@
 """Recipient replay-guard ledger: encrypted roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_recipient_replay_guard`
-against a REAL encrypted :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
-``BUCKET_DEK_V1`` bucket, no mocks or fakes): mark a nonce consumed, confirm the
-ledger roundtrips through the encrypted boundary with strict equality, confirm
-the ledger is real ciphertext at rest, confirm a second ``mark_consumed`` for
-the same nonce is refused as a replay, and confirm a corrupted on-disk payload
-is refused at load (the anti-tautology proof required by
-``aeat-roundtrip-discipline``).
+Exercises :mod:`~application.modelo._review_package_recipient_replay_guard`
+against a REAL encrypted
+:class:`~adapters.persistence.storage.SecureObjectRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
+``BUCKET_DEK_V1`` bucket, no mocks or fakes): mark a nonce consumed, confirm
+the ledger roundtrips through the encrypted boundary with strict equality,
+confirm the ledger is real ciphertext at rest, confirm a second
+``mark_consumed`` for the same nonce is refused as a replay, and confirm a
+corrupted on-disk payload is refused at load (the anti-tautology proof required
+by ``aeat-roundtrip-discipline``).
+
+See Also:
+    :class:`~application.modelo.RecipientReplayGuardRepository`:
+        Encrypted consumed-nonce ledger under test.
+    :class:`~application.modelo.RecipientEncryptedPackage`:
+        Transport envelope carrying the ``envelope_nonce_hex`` replay token.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_decrypt`:
+        CLI composition point that consumes the nonce after decryption.
 """
 
 from __future__ import annotations
