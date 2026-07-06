@@ -20,7 +20,12 @@ from pydantic import BaseModel, ValidationError
 from ....core import freeze_toml, read_toml
 from . import _loader_locales
 from ._errors import RegistryLoadError, RegistryValidationError
-from ._loader_cache import registry_disk_cache_enabled
+from ._loader_cache import (
+    BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    is_bundled_registry_root,
+    registry_disk_cache_enabled,
+)
 from ._schema import (
     LegalParameter,
     LegalReference,
@@ -960,7 +965,7 @@ _registry_fingerprint_cache: dict[Path, tuple[float, _RegistryPathFingerprints, 
 
 
 def clear_fingerprint_cache() -> None:
-    """Clear the 1-second TTL registry-tree fingerprint cache."""
+    """Clear the TTL-backed registry-tree fingerprint cache."""
     _registry_fingerprint_cache.clear()
 
 
@@ -984,24 +989,41 @@ def _collect_registry_tree_fingerprints_for_cache(
     directory-mode ``modelos/<id>/manifest.toml`` plus its
     ``revisions/*.toml`` siblings. It also includes directory mtimes
     under the registry root so add/remove/rename layout changes invalidate
-    the one-second fingerprint cache before a stale file list can be reused.
-    It also covers every multi-year-renta
-    ``authorization.d/<modelo>.toml`` fragment, which the authority reads at
-    the same registry root: per ``aeat-registry-authority-flow`` the
-    authorization surface must invalidate the registry cache when it
-    changes, so adding, editing, or removing an enrollment fragment reliably
-    re-derives every per-modelo capability rather than serving a stale
-    authorization. Fresh fingerprints key on every TOML file; the TTL cache
-    also rechecks directory fingerprints so structural edits do not reuse a
-    stale file list.
+    the fingerprint cache before a stale file list can be reused. It also
+    covers every multi-year-renta ``authorization.d/<modelo>.toml``
+    fragment, which the authority reads at the same registry root: per
+    ``aeat-registry-authority-flow`` the authorization surface must
+    invalidate the registry cache when it changes, so adding, editing, or
+    removing an enrollment fragment reliably re-derives every per-modelo
+    capability rather than serving a stale authorization. Fresh
+    fingerprints key on every TOML file; the TTL cache also rechecks
+    directory fingerprints so structural edits do not reuse a stale file
+    list.
+
+    The TTL window is longer for the package-bundled registry tree
+    (:data:`BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`) than for a mutable
+    authoring tree (:data:`MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS`), and a
+    bundled-tree cache hit skips the directory-mtime walk entirely rather
+    than recomputing it only to compare it against the cached copy: within
+    that window the walk is redundant work repeated on every calculate,
+    snapshot, and revision lookup in quick succession. See
+    :mod:`._loader_cache` for the TTL values and the bundled-root predicate.
     """
     import time
 
     now = time.time()
+    bundled = use_cache and is_bundled_registry_root(resolved)
+    ttl = BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS if bundled else MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS
+
+    if bundled and resolved in _registry_fingerprint_cache:
+        cached_time, _cached_directories, cached_val = _registry_fingerprint_cache[resolved]
+        if now - cached_time < ttl:
+            return cached_val
+
     directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
     if use_cache and resolved in _registry_fingerprint_cache:
         cached_time, cached_directories, cached_val = _registry_fingerprint_cache[resolved]
-        if now - cached_time < 1.0:
+        if now - cached_time < ttl:
             if cached_directories == directory_fingerprints:
                 return cached_val
             _registry_fingerprint_cache.pop(resolved, None)
