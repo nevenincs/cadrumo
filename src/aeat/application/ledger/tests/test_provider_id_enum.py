@@ -1,4 +1,23 @@
-"""Real-behavior tests for LedgerProviderID enum coverage."""
+"""Real-behavior tests for ledger provider ID dispatch coverage.
+
+The ledger import service accepts provider IDs as operator text, normalises them
+through :class:`~application.ledger._actions_import.LedgerProviderID`, and then
+dispatches to the concrete inbound financial provider implementations. These
+tests pin the enum's public strings, alias handling, and unknown-provider
+diagnostic surface.
+
+See Also:
+    :class:`~application.ledger._actions_import.LedgerProviderID`
+        Canonical set of ledger import provider IDs accepted by the service.
+    :func:`~application.ledger._actions_import._resolve_financial_provider`
+        Resolver that maps provider IDs to concrete parser implementations.
+    :mod:`~adapters.inbound.financial.providers`
+        Provider package supplying CSV, OFX, XLSX, and N26 PDF parsers.
+    ``2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr``
+        Decision trail for the shipped bank-statement provider catalogue.
+    ``2026-04-14-n26-data-source-adr``
+        Decision that introduced the N26 PDF provider into the import surface.
+"""
 
 from __future__ import annotations
 
