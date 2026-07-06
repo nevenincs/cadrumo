@@ -6,6 +6,16 @@ validation failure (unknown field rejected) or a real schema-registry refusal
 the anti-tautology proof for the allowlist: a sensitive field must be
 impossible to attach to the payload, not merely absent from today's producer
 code.
+
+See Also:
+    :class:`~core.telemetry.TelemetryEventPayload`:
+        Closed payload model whose fields are the transmission allowlist.
+    :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`:
+        Registry that declares which counter and timing keys may be remote.
+    :func:`~core.telemetry.build_telemetry_payload`:
+        Builder that rejects unregistered metric keys before emission.
+    :class:`~core.telemetry.TelemetrySchemaError`:
+        Authoring-time refusal for producers that skip registry enrollment.
 """
 
 from __future__ import annotations
