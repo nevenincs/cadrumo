@@ -1,4 +1,20 @@
-"""Modelo 303 parser boundary tests for the 2023-2024 printed template."""
+"""Modelo 303 parser boundary tests for the 2023-2024 printed template.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public declaration-copy parser boundary exercised across the current
+        Modelo 303 corpus fixtures.
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303`
+        Single-fixture parser boundary check for the same current profile.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
+        Shared 2023-2024 corpus parameters and expected profile casilla set.
+    :mod:`~adapters.inbound.declaracion.tests.test_verification_chain_m303_2023_2024`
+        Engine verification chain that consumes the same parsed current-template
+        specimens after this parser boundary is green.
+    :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`
+        Typed parser observation whose values and registry snapshot reference
+        are asserted by this corpus sweep.
+"""
 
 from __future__ import annotations
 
@@ -45,6 +61,14 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     Ground truth is derived from the synthetic fixture values in _generate.py.
     Each specimen uses formula-consistent values: c46 = c27 - c45, c69 = c46.
     Box 37 (intracomunitarias) is always 0.00; compensation boxes are all 0.00.
+
+    See Also:
+        :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_current_expected`
+            Current-template expected values consumed by this parametrized
+            corpus test.
+        :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
+            Corpus specimen ids and current-profile casilla membership asserted
+            at the parser boundary.
     """
     exp = _M303_2023_2024_EXPECTED[pdf_stem]
 
