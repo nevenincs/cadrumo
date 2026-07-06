@@ -27,6 +27,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from decimal import Decimal
 
 from ...adapters.persistence.profile.prorrata_register import (
@@ -34,8 +35,10 @@ from ...adapters.persistence.profile.prorrata_register import (
 )
 from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.prorrata_register import (
+    ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
+    resolve_provisional_percentage,
 )
 
 
@@ -139,8 +142,42 @@ class ProrrataRegisterService:
         """
         return self._repository.load().entry_for(ejercicio, sector_id=sector_id)
 
+    def resolve_provisional(
+        self,
+        ejercicio: int,
+        *,
+        sector_id: str | None = None,
+        candidate_entries: Iterable[ProrrataRegisterEntry] = (),
+    ) -> ProrrataProvisionalResolution:
+        """Resolve the in-force provisional percentage through the single declared ladder.
+
+        The persisted register carries at most one entry per ``(ejercicio,
+        sector)``. Seed and override flows can supply same-key transient
+        candidates so the application lookup still resolves through the domain
+        ladder (`AEAT_AUTORIZADA` > `INICIO_ACTIVIDAD` >
+        `CARRIED_PRIOR_DEFINITIVA`) rather than open-coding precedence here.
+
+        Args:
+            ejercicio: Filing year to resolve.
+            sector_id: Sector identifier, or ``None`` for the whole-entity entry.
+            candidate_entries: Additional same-key entries from seed/override
+                resolution that have not necessarily been persisted yet.
+
+        Returns:
+            The domain :class:`ProrrataProvisionalResolution`.
+        """
+        register = self._repository.load()
+        persisted = tuple(
+            entry for entry in register.entries if entry.ejercicio == ejercicio and entry.sector_id == sector_id
+        )
+        transient = tuple(
+            entry for entry in candidate_entries if entry.ejercicio == ejercicio and entry.sector_id == sector_id
+        )
+        return resolve_provisional_percentage((*persisted, *transient))
+
 
 __all__ = [
+    "ProrrataProvisionalResolution",
     "ProrrataRegister",
     "ProrrataRegisterEntry",
     "ProrrataRegisterRepository",
