@@ -20,12 +20,17 @@ single quarter is a correctness defect (the silent-zero-base ADR).
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, validated_casilla_id
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ...domain.calculations.registry import IvaLedgerObservation
 from ...domain.iva import (
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaFlowDirection,
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
     compute_regularizacion_prorrata_anual,
@@ -39,6 +44,20 @@ CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
     "44",
     surface="annual prorrata regularizacion Modelo 303 casilla",
 )
+
+_LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
+_CON_DERECHO_OUTPUT_CATEGORIES: frozenset[IvaCategory] = frozenset(
+    {
+        IvaCategory.DOMESTIC_GENERAL_21,
+        IvaCategory.DOMESTIC_REDUCED_10,
+        IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        IvaCategory.DOMESTIC_ZERO,
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+    },
+)
+_CON_DERECHO_EXEMPTION_ARTICLES: frozenset[IvaExemptionArticle] = frozenset({IvaExemptionArticle.ART_20_UNO_26})
 
 
 class ProrrataRegularizacionFeedProjection(BaseModel):
@@ -58,6 +77,106 @@ class ProrrataRegularizacionFeedProjection(BaseModel):
     modelo_303_casilla_44_id: CasillaId = CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
     modelo_303_casilla_44_value: Decimal | None = None
     modelo_390_regularizacion_anual_value: Decimal | None = None
+
+
+class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
+    """Ledger-side annual volume rollup used only as a divergence advisory.
+
+    Declared annual volume casillas remain the filing authority. This projection
+    records the currently classifiable ledger output-volume view so settlement
+    can warn when it contradicts those declared values.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    declared_volume_total: Decimal
+    declared_volume_con_derecho: Decimal
+    declared_volume_sin_derecho: Decimal
+    ledger_volume_total: Decimal
+    ledger_volume_con_derecho: Decimal
+    ledger_volume_sin_derecho: Decimal
+    included_ledger_ids: tuple[str, ...] = ()
+
+    @property
+    def diverges(self) -> bool:
+        return (
+            self.declared_volume_total != self.ledger_volume_total
+            or self.declared_volume_con_derecho != self.ledger_volume_con_derecho
+            or self.declared_volume_sin_derecho != self.ledger_volume_sin_derecho
+        )
+
+
+def build_prorrata_declared_volume_divergence_advisory(
+    *,
+    declared_volume_total: Decimal,
+    declared_volume_con_derecho: Decimal,
+    ledger_observations: Iterable[IvaLedgerObservation],
+    ejercicio_periods: Iterable[Period],
+    regularizacion_year: int,
+) -> tuple[ProrrataDeclaredVolumeLedgerRollup, CalculationSourceDiagnostic | None]:
+    """Compare declared annual prorrata volumes with the ledger rollup.
+
+    The rollup is deliberately advisory-only: it uses the existing IVA ledger
+    observation stream and the supplied ejercicio periods'
+    :meth:`Period.contains` boundary, but it does not replace the operator's
+    declared annual volume casillas because some art-104 exclusions still need
+    explicit classification.
+    """
+    periods = tuple(ejercicio_periods)
+    if not periods:
+        raise ValueError("ejercicio_periods must contain at least one Period")
+
+    ledger_volume_con_derecho = Decimal("0")
+    ledger_volume_sin_derecho = Decimal("0")
+    included_ledger_ids: list[str] = []
+    for observation in ledger_observations:
+        if not any(period.contains(observation.transaction_date) for period in periods):
+            continue
+        volume_side = _prorrata_volume_side(observation)
+        if volume_side is None:
+            continue
+        included_ledger_ids.append(observation.ledger_id)
+        if volume_side == "con_derecho":
+            ledger_volume_con_derecho += observation.base_amount
+        else:
+            ledger_volume_sin_derecho += observation.base_amount
+
+    declared_volume_sin_derecho = declared_volume_total - declared_volume_con_derecho
+    rollup = ProrrataDeclaredVolumeLedgerRollup(
+        declared_volume_total=declared_volume_total,
+        declared_volume_con_derecho=declared_volume_con_derecho,
+        declared_volume_sin_derecho=declared_volume_sin_derecho,
+        ledger_volume_total=ledger_volume_con_derecho + ledger_volume_sin_derecho,
+        ledger_volume_con_derecho=ledger_volume_con_derecho,
+        ledger_volume_sin_derecho=ledger_volume_sin_derecho,
+        included_ledger_ids=tuple(sorted(included_ledger_ids)),
+    )
+    if not rollup.diverges:
+        return rollup, None
+
+    diagnostic = CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND,
+        message=(
+            f"Volúmenes anuales de prorrata declarados para {regularizacion_year} difieren del rollup "
+            f"IVA de libro: declarado con derecho {declared_volume_con_derecho}, sin derecho "
+            f"{declared_volume_sin_derecho}; libro con derecho {ledger_volume_con_derecho}, "
+            f"sin derecho {ledger_volume_sin_derecho}. Las casillas declaradas conservan la autoridad."
+        ),
+    )
+    return rollup, diagnostic
+
+
+def _prorrata_volume_side(observation: IvaLedgerObservation) -> str | None:
+    if observation.flow_direction is not IvaFlowDirection.REPERCUTIDO:
+        return None
+    if observation.category is IvaCategory.DOMESTIC_EXEMPT:
+        if observation.exemption_article in _CON_DERECHO_EXEMPTION_ARTICLES:
+            return "con_derecho"
+        return "sin_derecho"
+    if observation.category in _CON_DERECHO_OUTPUT_CATEGORIES:
+        return "con_derecho"
+    return None
 
 
 def project_prorrata_regularizacion_feed(
@@ -163,7 +282,9 @@ def build_prorrata_regularizacion_advisory(
 
 __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
+    "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
+    "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_regularizacion_advisory",
     "project_prorrata_regularizacion_feed",
 ]
