@@ -198,9 +198,7 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
             },
         ],
     )
-    rows = _decode_invoice_payload(raw)
-    assert len(rows) == 1
-    row = rows[0]
+    (row,) = _decode_invoice_payload(raw)
     # TypedDict at runtime is just a dict — verify field access works
     assert row.get("kind") == "received"
     assert row.get("currency") == "EUR"
@@ -235,10 +233,9 @@ def test_parse_invoice_payload_end_to_end_json() -> None:
             ],
         },
     )
-    invoices = parse_invoice_payload(raw, default_kind="received")
-    assert len(invoices) == 1
-    assert isinstance(invoices[0], Invoice)
-    assert invoices[0].invoice_number == "F2024-001"
+    (invoice,) = parse_invoice_payload(raw, default_kind="received")
+    assert isinstance(invoice, Invoice)
+    assert invoice.invoice_number == "F2024-001"
 
 
 # ---------------------------------------------------------------------------
