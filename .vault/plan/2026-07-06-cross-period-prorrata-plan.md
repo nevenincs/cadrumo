@@ -120,7 +120,7 @@ Derive prorrata applicability fail-closed-to-visible, emit the per-period missin
 - [x] `W05.P08.S33` - emit a per-period calculate advisory naming the missing carry (first ejercicio records the inicio-actividad percentage, otherwise seed or record the prior definitive) whenever prorrata applies and no provisional percentage resolves through the ladder; `src/aeat/application/calculations/_prorrata_regularizacion.py`.
 - [x] `W05.P08.S34` - add the settlement-period verify ADVISORY predicate so the gate never grants verified_complete with zero findings on an applies-but-unresolved prorrata, mirroring the Modelo 200 implies_nonzero worked example (no-silent-under-declaration); `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/verification_expectations/`.
 - [x] `W05.P08.S35` - add tests proving a mixed trader can no longer silently deduct 100% in-year, silently skip casilla 44, or silently zero the deducible side, while a fully-taxable trader keeps the art-94 full-deduction default untouched; `src/aeat/application/calculations/tests/test_prorrata_regularizacion.py`.
-- [ ] `W05.P08.S36` - verify-close the silent-zero-base deferred prorrata volume rows (W01.P02.S03/S04 of the silent-zero-base plan) with an exec record referencing this feature's cross-period model as their resolution; `.vault/exec/2026-06-19-silent-zero-base-aggregation/`.
+- [x] `W05.P08.S36` - verify-close the silent-zero-base deferred prorrata volume rows (W01.P02.S03/S04 of the silent-zero-base plan) with an exec record referencing this feature's cross-period model as their resolution; `.vault/exec/2026-06-19-silent-zero-base-aggregation/`.
 
 ## Wave `W06` - Deferred axes (schema slots from birth) and close review
 
