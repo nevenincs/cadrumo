@@ -1,10 +1,22 @@
-"""Real-repository coverage for :class:`_MemoizedTransactionCatalogueRepository`.
+"""Real-repository coverage for
+:class:`~application.modelo._calculation_actions._MemoizedTransactionCatalogueRepository`.
 
 The wrapper is exercised against the encrypted SQL-backed
 :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 Cache assertions use a second concrete repository as the storage oracle after
 the first read, so the tests do not replace the repository implementation or
 count calls.
+
+See Also:
+    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
+        Repository port whose full, date-range, partition, and save methods the
+        wrapper preserves.
+    :class:`~domain.transactions.LedgerDatePartition`
+        Period partition result cached by exact ``(start, end)`` window.
+    :mod:`~application.aggregation._renta_income_ledger`
+        Cumulative M130/M100 income consumers that share period partitions.
+    :mod:`~application.aggregation._renta_gasto_ledger`
+        Companion M130 gasto consumer that requests the same cumulative window.
 """
 
 from __future__ import annotations
