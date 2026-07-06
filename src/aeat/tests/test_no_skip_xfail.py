@@ -325,7 +325,7 @@ def _add_pytest_assignment_aliases(
     pytest_mark_aliases: set[str],
     pytest_shortcut_aliases: dict[str, str],
 ) -> None:
-    """Record aliases assigned from pytest.mark or skip/xfail shortcut helpers."""
+    """Record aliases assigned from pytest, pytest.mark, or skip/xfail shortcut helpers."""
     if isinstance(node, ast.Assign):
         targets = node.targets
         value = node.value
@@ -337,6 +337,9 @@ def _add_pytest_assignment_aliases(
     value_name = qualified_name(value)
     target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
     if not target_names:
+        return
+    if value_name in pytest_aliases:
+        pytest_aliases.update(target_names)
         return
     if _is_pytest_mark_alias_value(value_name, pytest_aliases, pytest_mark_aliases):
         pytest_mark_aliases.update(target_names)
@@ -589,6 +592,28 @@ pytestmark = [pt.mark.{"xfail"}]
     )
 
     assert _forbidden_marker_sites(tree) == [(5, _pytest_name("skip")), (7, _pytest_name("mark", "xfail"))]
+
+
+def test_skip_detector_rejects_assigned_pytest_module_alias_shortcuts() -> None:
+    """Assigned pytest module aliases must still reject skip and xfail shortcuts."""
+    tree = ast.parse(
+        f"""
+import pytest
+
+pt = pytest
+pt2: object = pt
+
+def test_alias_shortcut():
+    pt2.{"skip"}("shortcut")
+
+pytestmark = [pt2.mark.{"xfail"}]
+"""
+    )
+
+    assert set(_forbidden_marker_sites(tree)) == {
+        (8, _pytest_name("skip")),
+        (10, _pytest_name("mark", "xfail")),
+    }
 
 
 def test_skip_detector_rejects_pytest_imported_shortcut_aliases() -> None:
