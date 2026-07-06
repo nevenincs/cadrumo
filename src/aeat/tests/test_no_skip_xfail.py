@@ -306,6 +306,7 @@ def _skip_alias_inventory(tree: ast.AST) -> _SkipAliasInventory:
                     skiptest_aliases[alias.asname or alias.name] = "SkipTest"
                 elif node.module == "unittest" and alias.name == "case":
                     unittest_case_aliases.add(alias.asname or alias.name)
+        _add_pytest_assignment_aliases(node, pytest_aliases, pytest_mark_aliases, pytest_shortcut_aliases)
 
     return _SkipAliasInventory(
         pytest_aliases=pytest_aliases,
@@ -315,6 +316,43 @@ def _skip_alias_inventory(tree: ast.AST) -> _SkipAliasInventory:
         unittest_case_aliases=unittest_case_aliases,
         skiptest_aliases=skiptest_aliases,
     )
+
+
+def _add_pytest_assignment_aliases(
+    node: ast.AST,
+    pytest_aliases: set[str],
+    pytest_mark_aliases: set[str],
+    pytest_shortcut_aliases: dict[str, str],
+) -> None:
+    """Record aliases assigned from pytest.mark or skip/xfail shortcut helpers."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign) and node.value is not None:
+        targets = [node.target]
+        value = node.value
+    else:
+        return
+    value_name = qualified_name(value)
+    target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
+    if not target_names:
+        return
+    if _is_pytest_mark_alias_value(value_name, pytest_aliases, pytest_mark_aliases):
+        pytest_mark_aliases.update(target_names)
+    shortcut_name = _canonical_pytest_call_name(value_name, pytest_aliases, pytest_shortcut_aliases)
+    if shortcut_name in _FORBIDDEN_CALLS:
+        pytest_shortcut_aliases.update({target_name: shortcut_name for target_name in target_names})
+
+
+def _is_pytest_mark_alias_value(
+    value_name: str,
+    pytest_aliases: set[str],
+    pytest_mark_aliases: set[str],
+) -> bool:
+    """Return True when an expression resolves to pytest.mark."""
+    if value_name in pytest_mark_aliases:
+        return True
+    return any(value_name == f"{alias}.mark" for alias in pytest_aliases)
 
 
 def _canonical_skiptest_exception_name(
@@ -549,6 +587,31 @@ pytestmark = [pytest_mark.{"skipif"}(True)]
     )
 
     assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skipif"))]
+
+
+def test_skip_detector_rejects_assigned_pytest_mark_and_shortcut_aliases() -> None:
+    """Assigned pytest aliases must still reject skip and xfail shortcuts."""
+    tree = ast.parse(
+        f"""
+import pytest as pt
+
+pytest_mark = pt.mark
+skip_now = pt.{"skip"}
+xfail_now = pt.{"xfail"}
+
+pytestmark = [pytest_mark.{"skipif"}(True)]
+
+def test_shortcut_aliases():
+    skip_now("shortcut")
+    xfail_now("shortcut")
+"""
+    )
+
+    assert set(_forbidden_marker_sites(tree)) == {
+        (8, _pytest_name("mark", "skipif")),
+        (11, _pytest_name("skip")),
+        (12, _pytest_name("xfail")),
+    }
 
 
 def test_skip_detector_rejects_unittest_skiptest_raises() -> None:
