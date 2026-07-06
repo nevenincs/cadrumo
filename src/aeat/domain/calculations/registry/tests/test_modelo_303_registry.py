@@ -415,6 +415,13 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # set, so both interior reverse-charge bindings resolve to zero.
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0"),
+        # No criterio-de-caja rows in this observation set (every observation
+        # carries the default NONE treatment), so the art. 163 decies
+        # informational bindings for casillas 62/63/74/75 resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
 
 
@@ -477,9 +484,7 @@ def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44
     }
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM
     assert {"ley-37-1992:art-104", "ley-37-1992:art-105"}.issubset(binding.legal_refs)
-    assert {"aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"}.issubset(
-        binding.source_refs
-    )
+    assert {"aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"}.issubset(binding.source_refs)
     citations_by_source = {citation.source_ref: citation for citation in binding.source_citations}
     assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
 
@@ -499,12 +504,12 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
 def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions[revision_id]
-    refs_by_formula_id = {
-        formula.id: set(expression_casilla_refs(formula.expression)) for formula in revision.formulas
-    }
+    refs_by_formula_id = {formula.id: set(expression_casilla_refs(formula.expression)) for formula in revision.formulas}
 
     assert all(formula.target_casilla_id != _M303_PRORRATA_REGULARIZACION_CASILLA for formula in revision.formulas)
-    assert all(formula.target_casilla_id != _M303_BIENES_INVERSION_REGULARIZACION_CASILLA for formula in revision.formulas)
+    assert all(
+        formula.target_casilla_id != _M303_BIENES_INVERSION_REGULARIZACION_CASILLA for formula in revision.formulas
+    )
 
     cuota_deducible_total = next(
         formula for formula in revision.formulas if formula.target_casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
@@ -666,6 +671,12 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         # No autoconsumo promotor in this period; zero disables the formula path.
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
     bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -820,6 +831,12 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
     bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -877,6 +894,12 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
 
     def _run(base: Decimal) -> Decimal:
@@ -945,6 +968,12 @@ def test_modelo_303_prorrata_defaults_to_100_when_no_volume_data() -> None:
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
     bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, zero_bindings)
     result = calculate_registry_snapshot(
