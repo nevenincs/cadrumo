@@ -43,6 +43,20 @@ Legal grounding: DA-18 letra d Ley 58/2003 LGT (obligation); Ley 11/2021
 DA-10 (enabling statute); RD 1065/2007 art. 42-quater (reglamentary development,
 €50,000 initial threshold, €20,000 re-declaration delta); Orden HFP/886/2023
 arts. 1-3 (form approval, filing period January–March following ejercicio).
+
+See Also:
+    :mod:`~application.calculations._foreign_asset_redeclaration`
+        Shared M720/M721 re-declaration advisory implementation exercised here.
+    :func:`~application.calculations._foreign_asset_redeclaration.modelo_721_redeclaration_advisory_findings`
+        Modelo 721 advisory entry point pinned by the grown/omitted BTC case.
+    :class:`~application.calculations._observations_repository.CalculationObservationRepository`
+        Real repository used for the two-year observation roundtrip.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Registry-grounded modelo observation envelope persisted by the test.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Typed casilla row carrying legal and source provenance.
+    :mod:`~application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity`
+        Modelo 720 threshold-continuity sibling over foreign asset classes.
 """
 
 from __future__ import annotations
