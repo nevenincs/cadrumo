@@ -1,4 +1,24 @@
-"""Shared Cl@ve Permanente provider test harness."""
+"""Shared Cl@ve Permanente provider test harness.
+
+The helpers in this module provide recording browser/page stand-ins for the
+protocol-level Cl@ve Permanente tests. They exercise the same browser-session
+shape used by the provider while keeping credential handling, selector
+navigation, invalid-credential, and SMS-elevation branches deterministic.
+
+See Also:
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+        Provider under test for DNI/NIE + password AEAT read-path login.
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+        Public session detail shape asserted by the protocol and live probes.
+    :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente`
+        Protocol-level suite that consumes these recording browser sessions.
+    :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente_live`
+        Live Playwright probe that validates the same provider against AEAT's
+        real Cl@ve Permanente surface.
+    ``2026-06-04-repo-health-triage-live-auth-split-invariants-audit``
+        Live-auth invariant record for central session gating and encrypted
+        provider metadata persistence.
+"""
 
 from __future__ import annotations
 
