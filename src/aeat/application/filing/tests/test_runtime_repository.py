@@ -1,4 +1,25 @@
-"""Tests for filing application runtime repository helpers."""
+"""Tests for filing application runtime repository helpers.
+
+The tests pin explicit-or-active bucket id resolution and the refusal path for
+an unready secure-object runtime without replacing storage with fakes. This
+keeps the application filing boundary honest: helper imports stay cheap at
+module load time, while runtime repository construction still validates the
+active bucket session before returning storage.
+
+See Also:
+    :func:`~application.filing._runtime_repository.resolve_application_filing_bucket_id`
+        Helper under test for explicit bucket ids and active-profile fallback.
+    :func:`~application.filing._runtime_repository.secure_objects_for_application_filing_bucket`
+        Runtime storage factory wrapper whose unready-bucket refusal is covered.
+    :func:`~core.resolve_repository_bucket_id`
+        Shared resolver that normalizes explicit-or-active repository bucket ids.
+    :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`
+        Secure-object factory reached only when runtime storage is requested.
+    :mod:`~adapters.persistence.profile._filing_runtime`
+        Adapter-layer sibling helper with the same bucket-resolution shape.
+    ``2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit``
+        Review record that accepted this helper and its real-behavior coverage.
+"""
 
 from __future__ import annotations
 
