@@ -32,6 +32,7 @@ from __future__ import annotations
 import getpass
 import os
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
@@ -45,6 +46,27 @@ _log = get_logger(__name__)
 _SYSTEMROOT_ENV_VAR: Final[str] = "SYSTEMROOT"
 _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
 _ICACLS_TIMEOUT_SECONDS: Final[float] = 10.0
+
+
+def _run_permission_command(
+    args: Sequence[str],
+    *,
+    timeout: float = _ICACLS_TIMEOUT_SECONDS,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        list(args),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=timeout,
+    )
+
+
+def _restrict_posix_file_permissions(path: Path) -> None:
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        _log.debug("restrict_file_permissions: chmod failed on %s", path, exc_info=True)
 
 
 def restrict_file_permissions(path: Path) -> None:
@@ -90,18 +112,14 @@ def restrict_file_permissions(path: Path) -> None:
                 candidates.insert(0, f"{userdomain}\\{username}")
             result: subprocess.CompletedProcess[str] | None = None
             for candidate in candidates:
-                result = subprocess.run(
+                result = _run_permission_command(
                     [
                         str(icacls_path),
                         str(path),
                         "/inheritance:r",
                         "/grant:r",
                         f"{candidate}:(F)",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                    timeout=_ICACLS_TIMEOUT_SECONDS,
+                    ]
                 )
                 if result.returncode == 0:
                     return
@@ -130,10 +148,7 @@ def restrict_file_permissions(path: Path) -> None:
         return
     if os.name != "posix":
         return
-    try:
-        os.chmod(path, 0o600)
-    except OSError:
-        _log.debug("restrict_file_permissions: chmod failed on %s", path, exc_info=True)
+    _restrict_posix_file_permissions(path)
 
 
 __all__ = ["restrict_file_permissions"]
