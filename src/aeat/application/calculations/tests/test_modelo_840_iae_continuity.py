@@ -35,9 +35,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core._casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry._bindings import RegistryModeloObservation
-from ....domain.modelos._iae_exemption import (
+from ....core import (
+    CasillaId,
+    validated_casilla_id,
+)
+from ....domain.calculations.registry import RegistryModeloObservation
+from ....domain.modelos import (
     Modelo840IaeExemptionAssessment,
     Modelo840IaeExemptionStatus,
     assess_modelo_840_iae_cifra_negocios_exemption,

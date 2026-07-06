@@ -34,8 +34,7 @@ from ...core import Modelo, ProrrataProvisionalProvenance, ProrrataRegisterRegim
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId, select_revision, validated_casilla_id
 from ...domain.prorrata_register import ProrrataRegisterEntry
-from ..calculations import CalculationObservationRepository
-from ..calculations._cross_period_models import CrossPeriodCleanStateBlocker
+from ..calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
     "iva.prorrata-porcentaje",

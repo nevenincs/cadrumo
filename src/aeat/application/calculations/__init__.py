@@ -134,6 +134,7 @@ from ._observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
     observation_key,
+    observation_key_for_token,
 )
 from ._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
@@ -220,6 +221,7 @@ __all__ = [
     "iva_wallet_decision_key",
     "m111_no_retenciones_periods_for_bucket",
     "observation_key",
+    "observation_key_for_token",
     "partition_cross_period_requirements_by_activity_start",
     "project_prorrata_regularizacion_feed",
     "query_iva_wallet_balance",

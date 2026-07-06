@@ -110,6 +110,7 @@ from ._action_errors import (
 )
 from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
+from ._binding_resolution import resolve_available_bound_inputs_by_casilla_id
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -423,6 +424,7 @@ from ._review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
+from ._revision_persistence import persist_filed_revision
 from ._selectors import (
     ModeloCalculationRevisionCandidate,
     ModeloCalculationRevisionDefault,
@@ -820,6 +822,7 @@ __all__ = [
     "modelo_work_profile_preflight_report",
     "open_review_only_workspace",
     "parse_casilla_value_spreadsheet",
+    "persist_filed_revision",
     "persist_filed_revision_observation",
     "pre_activity_period_refusal",
     "preview_maritime_exemption_for_active_profile",
@@ -857,6 +860,7 @@ __all__ = [
     "require_persisted_iva_compensation_decision_matches_revision",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
+    "resolve_available_bound_inputs_by_casilla_id",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_100_borrador_bindings",
