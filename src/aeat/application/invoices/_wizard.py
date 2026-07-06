@@ -46,6 +46,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...core.errors import CoreValidationError
 from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,
@@ -129,12 +130,18 @@ def _validate_invoice_number(raw: str) -> str:
 
 def _validate_invoice_date(raw: str) -> date:
     try:
-        return date.fromisoformat(raw.strip())
+        value = parse_iso8601_date(raw)
     except ValueError as exc:
         raise _WizardFieldError(
             field="invoice_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         ) from exc
+    if value is None:
+        raise _WizardFieldError(
+            field="invoice_date",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        )
+    return value
 
 
 def _validate_taxable_base(raw: str) -> Decimal:

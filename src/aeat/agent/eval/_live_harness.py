@@ -332,6 +332,7 @@ async def run_live_session_async(
     narrations: list[LiveNarrationRecord] = []
     elicitations: list[LiveElicitationRecord] = []
 
+    # KWARGS-ANY-RATIONALE-MCP-REQUEST-CONTEXT: the MCP SDK request context is generic over session metadata.
     async def _on_elicitation(
         context: RequestContext[ClientSession, Any],
         params: mcp_types.ElicitRequestParams,
