@@ -10,6 +10,20 @@ These tests assert:
    remain in aeat.domain.deadlines._profiles or aeat.domain.contribuyente._keys.
    A fresh Python interpreter imports those domain modules and asserts the
    application wizard catalogue was not loaded as an import-time side effect.
+
+See Also:
+    :mod:`~core.wizard_catalogue`
+        Core registry slot this test expects domain code to consume.
+    :mod:`~application.wizard._catalogue`
+        Application-owned descriptor catalogue that registers into the core slot.
+    :mod:`~domain.contribuyente._keys`
+        Domain registry that must receive pushed profile keys without pulling
+        upward into the application wizard layer.
+    ``2026-06-02-wizard-registration-bootstrap-adr``
+        DB-17 decision that centralised wizard/profile-key registration.
+    ``2026-06-03-wizard-catalogue-startup-ordering-adr``
+        Composition-root decision that prevents order-dependent registration
+        failures.
 """
 
 from __future__ import annotations
