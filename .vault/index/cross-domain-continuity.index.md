@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
   - '[[2026-05-26-cross-domain-continuity-P01-S06]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W01-P07-S233]]'
   - '[[2026-05-26-cross-domain-continuity-W03-P14-S223]]'
   - '[[2026-05-26-cross-domain-continuity-W04-P19-S398]]'
+  - '[[2026-05-26-cross-domain-continuity-W05-P24-S287]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S113]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S114]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S115]]'
@@ -216,6 +217,8 @@ related:
   - '[[2026-06-04-cross-domain-continuity-research]]'
   - '[[2026-07-01-cross-domain-continuity-audit]]'
   - '[[2026-07-02-cross-domain-continuity-audit]]'
+  - '[[2026-07-06-cross-domain-continuity-adr]]'
+  - '[[2026-07-06-cross-domain-continuity-research]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -229,6 +232,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `verification-predicate-strategy` | (**status:** `accepted`)
 - `2026-05-27-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `ledger-classification-rule-engine` | (**status:** `accepted`)
 - `2026-05-27-profile-portability-adr` - `cross-domain-continuity` adr: `profile-portability` | (**status:** `accepted`)
+- `2026-07-06-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `iva cash accounting treatment for modelo 303` | (**status:** `accepted`)
 
 ### audit
 
@@ -440,6 +444,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P45-S358` - R9-TOMAS-HIGH royalties SGAE guidance gap
 - `2026-05-26-cross-domain-continuity-W01-P07-S233` - R7-INES-7 fix period token notation inconsistency in overview backlog
 - `2026-05-26-cross-domain-continuity-W09-P41-S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer
+- `2026-05-26-cross-domain-continuity-W05-P24-S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer
 
 ### plan
 
@@ -448,3 +453,4 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 ### research
 
 - `2026-06-04-cross-domain-continuity-research` - `cross-domain-continuity` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.
+- `2026-07-06-cross-domain-continuity-research` - `cross-domain-continuity` research: `iva cash accounting treatment for modelo 303`

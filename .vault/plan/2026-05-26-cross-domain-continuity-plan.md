@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-domain-continuity'
 date: '2026-05-26'
-modified: '2026-07-04'
+modified: '2026-07-06'
 tier: L4
 related:
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -284,8 +284,8 @@ ledger classify accepts BUSINESS PERSONAL MIXED but no enums for entrega intraco
 - [x] `W05.P24.S93` - extend ledger classify CLI to accept new axes; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W05.P24.S94` - wire new iva_category and counterparty_eu_member_state axes into IVA aggregation so Modelo 303 casillas 59 and 60 receive their bases; `casilla 62 EXCLUDED from scope (it is the criterio de caja box per art 75 LIVA not an intracom box); also handle the R12 nuance where B2B services to EU customers resolve to DOMESTIC_NOT_SUBJECT not INTRA_COMMUNITY_SUPPLY; `src/aeat/application/aggregation/_iva_ledger.py`.
 - [x] `W05.P24.S95` - regression test that an autonomo with intra-community GOODS supply (INTRA_COMMUNITY_SUPPLY iva_category, counterparty_eu_member_state set to a non-ES EU state) populates casilla 59 correctly; `anti-tautology proof mutating counterparty_eu_member_state to ES triggers DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION rejection; separate scenario for DOMESTIC_NOT_SUBJECT (R12 B2B services like Marc IT to DE) confirms it does NOT feed casilla 59 per ADR D4; `src/aeat/application/aggregation/test_intracom_export.py`.
-- [ ] `W05.P24.S281` - Criterio de caja ledger axis: add criterio_caja IvaCategory variant and wire casilla 62; `separate from intracom/export S94 scope; `src/aeat/application/aggregation/_iva_ledger.py`.
-- [ ] `W05.P24.S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer; `cite Ley 37/1992 articles 25 21 163 quinquies 75; blocks S91 implementation; `.vault/adr/`.
+- [ ] `W05.P24.S281` - Criterio de caja ledger axis: add independent cash-accounting regime/payment evidence axis (not an IvaCategory variant) and wire Modelo 303 informational casillas 62/63/74/75 plus settlement timing per accepted ADR; `src/aeat/application/aggregation/_iva_ledger.py`.
+- [x] `W05.P24.S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer; `cite Ley 37/1992 articles 25 21 163 quinquies 75; blocks S91 implementation; `.vault/adr/`.
 
 ### Phase `W05.P25` - bulk classify CSV-driven and rule-engine
 
