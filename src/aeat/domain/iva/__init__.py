@@ -138,6 +138,8 @@ from ._saturation import (
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
     IvaCatalogue,
     IvaCategory,
     IvaCitation,
@@ -169,6 +171,8 @@ __all__ = [
     "InputClassification",
     "InvoiceKind",
     "IossFilerRole",
+    "IvaCashAccountingPaymentEvidence",
+    "IvaCashAccountingTreatment",
     "IvaCatalogue",
     "IvaCatalogueError",
     "IvaCategory",

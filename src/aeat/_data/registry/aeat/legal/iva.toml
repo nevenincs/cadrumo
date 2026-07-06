@@ -1585,3 +1585,137 @@ applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 review_status = "reviewed"
+
+[legal."ley-37-1992:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a75"
+document_id = "BOE-A-1992-28740"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a75"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
+required_text = [
+    "Artículo 75. Devengo del impuesto.",
+    "Se devengará el Impuesto",
+]
+
+[legal."ley-37-1992:art-163-decies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163decies"
+document_id = "BOE-A-1992-28740"
+article = "163-decies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163decies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 decies LIVA: requisitos subjetivos para aplicar el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 decies. Requisitos subjetivos de aplicación.",
+    "régimen especial del criterio de caja",
+]
+
+[legal."ley-37-1992:art-163-undecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163undecies"
+document_id = "BOE-A-1992-28740"
+article = "163-undecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163undecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 undecies. Condiciones para la aplicación del régimen especial del criterio de caja.",
+    "opten por su aplicación",
+]
+
+[legal."ley-37-1992:art-163-duodecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163duodecies"
+document_id = "BOE-A-1992-28740"
+article = "163-duodecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163duodecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 duodecies LIVA: ambito objetivo y operaciones excluidas del regimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversion del sujeto pasivo e importaciones."
+required_text = [
+    "Artículo 163 duodecies. Requisitos objetivos de aplicación.",
+    "Quedan excluidas del régimen especial del criterio de caja",
+]
+
+[legal."ley-37-1992:art-163-terdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163terdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-terdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163terdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 terdecies LIVA: devengo por cobro total o parcial, fallback de 31 de diciembre del ano siguiente, acreditacion del cobro, y nacimiento del derecho a deducir por pago para sujetos acogidos."
+required_text = [
+    "Artículo 163 terdecies. Contenido del régimen especial del criterio de caja.",
+    "momento del cobro total o parcial",
+    "31 de diciembre del año inmediato posterior",
+]
+
+[legal."ley-37-1992:art-163-quaterdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quaterdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-quaterdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quaterdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del regimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
+required_text = [
+    "Artículo 163 quaterdecies. Efectos de la renuncia o exclusión del régimen especial del criterio de caja.",
+    "operaciones efectuadas durante su vigencia",
+]
+
+[legal."ley-37-1992:art-163-quinquiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quinquiesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-quinquiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quinquiesdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 quinquiesdecies LIVA: nacimiento del derecho a la deduccion por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 quinquiesdecies. Operaciones afectadas por el régimen especial del criterio de caja.",
+    "momento del pago total o parcial",
+]
