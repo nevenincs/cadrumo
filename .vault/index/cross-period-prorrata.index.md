@@ -17,6 +17,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S08]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S09]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S10]]'
+  - '[[2026-07-06-cross-period-prorrata-W02-P03-S11]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
@@ -48,6 +49,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W01-P02-S08` - add the strict save/load/equality roundtrip test with every defaultable field populated non-default, using the real EphemeralMasterKeyProvider and SQLite engine (aeat-roundtrip-discipline)
 - `2026-07-06-cross-period-prorrata-W01-P02-S09` - add the anti-tautology corrupt-payload proof: mutate the on-disk register to delete a field, reload, assert ValidationError or strict inequality surfaces
 - `2026-07-06-cross-period-prorrata-W02-P03-S10` - implement the seed function: resolve the prior settlement revision via select_revision(M303, ejercicio-1, settlement period), read the iva.prorrata-porcentaje observation, and re-confirm its stamped_revision_id before seeding the carried_prior_definitiva entry
+- `2026-07-06-cross-period-prorrata-W02-P03-S11` - make a divergent stamped_revision_id block the seed with a REGISTRY_REVISION_DIVERGENCE-class finding and a missing legacy stamp surface a non-blocking advisory, never silence (carried-observations-stamp-their-revision)
 
 ### plan
 
