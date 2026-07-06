@@ -8,6 +8,21 @@ skip/xfail markers or shortcut calls. Import-time skips and
 Live modules are deselected by marker and collection-level opt-in. Once selected,
 they must not self-skip; only the central live gate support may emit skip
 markers. No item may carry both ``unit`` and ``aeat_live`` markers.
+
+See Also:
+    :mod:`~tests.test_mock_inventory`
+        Companion production-test guard for mock and test-double shortcuts.
+    :mod:`~tests.test_monkeypatch_inventory`
+        Companion production-test guard for monkeypatch mutation shortcuts.
+    :func:`~tests._inventory.discover_test_control_modules`
+        Source-tree deterministic test-control surface walked by this gate.
+    :func:`~tests._inventory.project_test_control_modules`
+        Project-level test-control surface checked for skip and xfail shortcuts.
+    :class:`_SkipInventorySites`
+        AST-level detector result carrying forbidden sites and unit/live marker
+        intersections.
+    :class:`_SkipPolicyInventory`
+        Formatted policy violation aggregate consumed by the public assertions.
 """
 
 from __future__ import annotations
