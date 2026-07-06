@@ -40,6 +40,8 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W04-P07-S31]]'
   - '[[2026-07-06-cross-period-prorrata-W05-P08-S32]]'
   - '[[2026-07-06-cross-period-prorrata-W05-P08-S33]]'
+  - '[[2026-07-06-cross-period-prorrata-W05-P08-S34]]'
+  - '[[2026-07-06-cross-period-prorrata-W05-P08-S35]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -95,6 +97,8 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W04-P07-S31` - defer bienes-inversion unblock record pending source promotion
 - `2026-07-06-cross-period-prorrata-W05-P08-S32` - derive prorrata applicability evidence
 - `2026-07-06-cross-period-prorrata-W05-P08-S33` - emit missing prorrata carry advisory
+- `2026-07-06-cross-period-prorrata-W05-P08-S34` - add the settlement-period verify ADVISORY predicate so the gate never grants verified_complete with zero findings on an applies-but-unresolved prorrata, mirroring the Modelo 200 implies_nonzero worked example (no-silent-under-declaration)
+- `2026-07-06-cross-period-prorrata-W05-P08-S35` - add tests proving a mixed trader can no longer silently deduct 100% in-year, silently skip casilla 44, or silently zero the deducible side, while a fully-taxable trader keeps the art-94 full-deduction default untouched
 
 ### plan
 

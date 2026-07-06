@@ -429,3 +429,28 @@ Residual gate inventory: `ruff check` is clean for the touched application test.
 The focused prorrata verification advisory test passes sequentially with 4 tests,
 the adjacent M303 advisory slice passes sequentially with 8 tests, and
 `vault check features --feature cross-period-prorrata` is clean.
+
+## S35 Review
+
+Reviewed the `W05.P08.S35` regression coverage after re-grounding it against the
+S32 applicability projection, the S33 missing-carry diagnostic, the S34 M303
+verification predicate, and the existing annual prorrata regularizacion
+calculation tests. The step is correctly test-only: production behavior already
+landed in S32-S34, so S35 names the non-silence contracts and proves them through
+real helper and predicate evaluation tests.
+
+The new calculation tests prove that a mixed trader with declared sin-derecho
+annual volume and no provisional carry gets a missing-carry advisory instead of
+a silent 100 percent in-year default; that a zero-percent definitive prorrata
+still emits the casilla-44 regularizacion advisory instead of silently zeroing
+the deducible side; and that a fully-taxable no-volume filing leaves the Art. 94
+full-deduction default quiet. The S34 shipped-predicate test remains the
+verify-time proof that a declared-volume settlement cannot silently skip casilla
+44 with zero findings.
+
+Findings: no open S35 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched calculation test.
+The expanded prorrata regularizacion calculation test file passes sequentially
+with 11 tests, and the adjacent missing-carry plus M303 verify-advisory slice
+passes sequentially with 19 tests.
