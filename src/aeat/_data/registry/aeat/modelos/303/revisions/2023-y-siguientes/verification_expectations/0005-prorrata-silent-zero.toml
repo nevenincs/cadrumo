@@ -1,0 +1,19 @@
+# Prorrata settlement silent-under-declaration ADVISORY.
+#
+# Casilla 44 is the annual settlement regularizacion for the definitive
+# prorrata percentage (LIVA art. 105.Cuatro) and remains manual while the
+# `PRORRATA_REGULARIZACION` source feed is deferred. When annual prorrata
+# volumes are declared, a zero/absent casilla 44 would otherwise let the verify
+# gate grant verified_complete with no finding even though the provisional
+# carry and annual regularizacion must be confirmed.
+#
+# ADVISORY (non-blocking): a zero regularizacion can be legitimate once the
+# operator has confirmed the provisional carry and definitive calculation, so
+# the verify gate prompts rather than refuses. The Art. 94 full-deduction
+# default stays untouched because fully-taxable filings leave the annual
+# prorrata volume antecedent absent/zero.
+[[revisions.2023-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
+expression = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]

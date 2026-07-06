@@ -401,3 +401,31 @@ projection, calculation facade, advisory coordinator, advisory collector, and
 test files. The missing-carry plus model advisory test slice passes sequentially
 with 10 tests, and the adjacent applicability plus prorrata regularización
 calculation slices pass sequentially with 14 tests.
+
+## S34 Review
+
+Reviewed the `W05.P08.S34` settlement verify advisory after re-grounding it
+against the W05/P08 plan row, the cross-period prorrata ADR, the live M303
+verification expectation layout, and the existing `implies_nonzero` predicate
+runtime. The change adds a single fragmented M303 2023 verification predicate:
+when `iva.prorrata-volumen-total` is positive and casilla `44` is zero/absent,
+verification emits an ADVISORY finding rather than returning a zero-finding
+`verified_complete` result.
+
+The predicate deliberately stays within existing verification conventions. It
+does not add a new predicate operator to compare annual total and con-derecho
+volumes, does not promote `PRORRATA_REGULARIZACION`, and does not touch
+`_source_mesh.py` or any resolver/validator convention. The non-blocking shape is
+appropriate because casilla 44 can legitimately net to zero once the provisional
+carry and definitive percentage are confirmed; the gate's job here is visibility,
+not refusal. The focused application test loads the shipped M303 revision and
+proves the warning fires for declared annual prorrata volume with zero casilla
+44, stays silent when casilla 44 is non-zero, and leaves the Art. 94 no-volume
+full-deduction default untouched.
+
+Findings: no open S34 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched application test.
+The focused prorrata verification advisory test passes sequentially with 4 tests,
+the adjacent M303 advisory slice passes sequentially with 8 tests, and
+`vault check features --feature cross-period-prorrata` is clean.
