@@ -1,4 +1,24 @@
-"""Unit tests for :mod:`aeat.domain.portals._registry`."""
+"""Unit tests for :mod:`~domain.portals._registry`.
+
+The suite pins :data:`~domain.portals.PORTAL_REGISTRY` as the frozen
+``Portal`` → :class:`~domain.portals.PortalMetadata` authority, checks lookup
+helpers such as :func:`~domain.portals.get_portal` and
+:func:`~domain.portals.portals_for_modelo`, and verifies registry finalisation
+reports through logging rather than process stdio.
+
+See Also:
+    :mod:`~domain.portals._registry`
+        Registry assembly and invariant enforcement under test.
+    :class:`~domain.portals.Portal`
+        Closed portal identifier enum that defines registry closure.
+    :class:`~domain.portals.PortalCategory`
+        Category axis used by ``portals_for_modelo`` and
+        ``portals_by_category``.
+    Governing vault records
+        ``2026-04-17-portal-catalogue-adr`` defines the frozen portal catalogue;
+        ``2026-05-26-aeat-sede-constants-centralization-adr`` keeps portal host
+        and Sede route constants schema-owned.
+"""
 
 from __future__ import annotations
 
