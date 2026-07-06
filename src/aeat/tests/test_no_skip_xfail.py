@@ -561,10 +561,16 @@ def _skip_policy_inventory_for_module_trees(
     )
 
 
-def _skip_policy_inventory_for_source(relative_path: str, source: str) -> _SkipPolicyInventory:
+def _skip_policy_inventory_for_source(
+    relative_path: str,
+    source: str,
+    *,
+    is_test_module: bool = False,
+) -> _SkipPolicyInventory:
     """Return policy violations for one in-memory source module."""
     tree = ast.parse(source, filename=relative_path)
-    return _skip_policy_inventory_for_module_trees(((relative_path, tree),))
+    test_modules = frozenset({relative_path}) if is_test_module else None
+    return _skip_policy_inventory_for_module_trees(((relative_path, tree),), test_module_relatives=test_modules)
 
 
 def _shortcut_violation_name_counts(violations: Iterable[str]) -> Counter[str]:
@@ -796,57 +802,52 @@ def test_skip_policy_rejects_forbidden_shortcut_shapes(
 
 def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
     """Support-file skips are allowed only in the central live-gate helper functions."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 def requires_live_enabled():
-    {_pytest_name("skip")}("live only")
+    pytest.skip("live only")
 
 def requires_live_google_enabled():
-    {_pytest_name("skip")}("google live only")
+    pytest.skip("google live only")
 
 def rogue_helper():
-    {_pytest_name("skip")}("shortcut")
+    pytest.skip("shortcut")
 """
-    )
+    inventory = _skip_policy_inventory_for_source(_LIVE_GATE_SUPPORT_RELATIVE, source)
 
-    assert _forbidden_marker_sites_for_relative(_LIVE_GATE_SUPPORT_RELATIVE, tree) == [(11, _pytest_name("skip"))]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
 
 
 def test_skip_detector_rejects_live_module_local_skip() -> None:
     """Live test modules are marker-gated; selected live tests must not self-skip."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 pytestmark = [pytest.mark.aeat_live]
 
 def test_live_service():
-    {_pytest_name("skip")}("service unavailable")
+    pytest.skip("service unavailable")
 """
-    )
+    inventory = _skip_policy_inventory_for_source("src/aeat/application/live/tests/test_service_live.py", source)
 
-    assert _forbidden_marker_sites(tree) == [(7, _pytest_name("skip"))]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
 
 
 def test_skip_detector_allows_only_collection_live_skip_marker() -> None:
     """The collection hook may mark aeat_live items skipped; other support skips fail."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 def pytest_collection_modifyitems(config, items):
-    skip_marker = {_pytest_name("mark", "skip")}(reason="live disabled")
+    skip_marker = pytest.mark.skip(reason="live disabled")
 
 def rogue_helper():
-    pytestmark = [{_pytest_name("mark", "skip")}]
+    pytestmark = [pytest.mark.skip]
 """
-    )
+    inventory = _skip_policy_inventory_for_source(_LIVE_CONFTST_RELATIVE, source)
 
-    assert _forbidden_marker_sites_for_relative(_LIVE_CONFTST_RELATIVE, tree) == [
-        (8, _pytest_name("mark", "skip")),
-    ]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.mark.skip": 1})
 
 
 def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInventory) -> None:
@@ -858,8 +859,7 @@ def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInvento
 
 def test_unit_live_detector_rejects_pytest_alias_execution_markers() -> None:
     """Aliased pytest execution markers must not hide unit/live intersections."""
-    tree = ast.parse(
-        """
+    source = """
 import pytest as pt
 
 pytestmark = [pt.mark.unit]
@@ -868,15 +868,14 @@ pytestmark = [pt.mark.unit]
 def test_live_unit():
     pass
 """
-    )
+    inventory = _skip_policy_inventory_for_source("dev/tests/test_live_unit.py", source, is_test_module=True)
 
-    assert _unit_live_marker_intersections(tree) == [(7, "test_live_unit")]
+    assert _shortcut_violation_name_counts(inventory.unit_live_violations) == Counter({"test_live_unit": 1})
 
 
 def test_unit_live_detector_rejects_annotated_and_augmented_pytestmark() -> None:
     """Annotated and augmented pytestmark assignments are still module markers."""
-    annotated_tree = ast.parse(
-        """
+    annotated_source = """
 import pytest as pt
 
 pytestmark: list[object] = [pt.mark.unit]
@@ -885,9 +884,7 @@ pytestmark: list[object] = [pt.mark.unit]
 def test_annotated_live_unit():
     pass
 """
-    )
-    augmented_tree = ast.parse(
-        """
+    augmented_source = """
 import pytest as pt
 
 pytestmark = []
@@ -897,10 +894,23 @@ pytestmark += [pt.mark.unit]
 def test_augmented_live_unit():
     pass
 """
+    annotated_inventory = _skip_policy_inventory_for_source(
+        "dev/tests/test_annotated_live_unit.py",
+        annotated_source,
+        is_test_module=True,
+    )
+    augmented_inventory = _skip_policy_inventory_for_source(
+        "dev/tests/test_augmented_live_unit.py",
+        augmented_source,
+        is_test_module=True,
     )
 
-    assert _unit_live_marker_intersections(annotated_tree) == [(7, "test_annotated_live_unit")]
-    assert _unit_live_marker_intersections(augmented_tree) == [(8, "test_augmented_live_unit")]
+    assert _shortcut_violation_name_counts(annotated_inventory.unit_live_violations) == Counter(
+        {"test_annotated_live_unit": 1}
+    )
+    assert _shortcut_violation_name_counts(augmented_inventory.unit_live_violations) == Counter(
+        {"test_augmented_live_unit": 1}
+    )
 
 
 def test_project_tests_outside_source_tree_do_not_skip() -> None:
@@ -918,27 +928,25 @@ def test_project_tests_outside_source_tree_do_not_skip() -> None:
 
 def test_unit_skip_detector_ignores_integration_only_skip_sites() -> None:
     """An integration-only skip in a mixed module is not selected by ``-m unit``."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 @pytest.mark.integration
 def test_live_service():
-    {_pytest_name("skip")}("service unavailable")
+    pytest.skip("service unavailable")
 
 @pytest.mark.unit
 def test_unit_contract():
     assert compute() == 1
 """
-    )
+    tree = ast.parse(source)
 
     assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_mixed.py", tree) == []
 
 
 def test_unit_skip_detector_rejects_module_level_skip_when_unit_item_exists() -> None:
     """Import-time skips affect unit items even when the module marker is per-test."""
-    tree = ast.parse(
-        """
+    source = """
 import pytest
 
 pytest.importorskip("optional_dependency")
@@ -947,26 +955,27 @@ pytest.importorskip("optional_dependency")
 def test_unit_contract():
     assert compute() == 1
 """
-    )
+    tree = ast.parse(source)
 
-    assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree) == [
-        (4, "pytest.importorskip"),
-    ]
+    assert Counter(name for _, name in _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree)) == (
+        Counter({"pytest.importorskip": 1})
+    )
 
 
 def test_unit_skip_detector_rejects_imported_mark_alias_unit_context() -> None:
     """Imported pytest.mark aliases must still mark unit-selected skip sites."""
-    tree = ast.parse(
-        """
+    source = """
 from pytest import mark as pytest_mark
 
 @pytest_mark.unit
 def test_unit_contract():
     pytest.skip("service unavailable")
 """
-    )
+    tree = ast.parse(source)
 
-    assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree) == [(6, "pytest.skip")]
+    assert Counter(name for _, name in _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree)) == (
+        Counter({"pytest.skip": 1})
+    )
 
 
 def test_discovery_found_modules() -> None:
