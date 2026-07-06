@@ -19,6 +19,8 @@ for the behavior contract stream-reconfigure tests landed there.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -42,14 +44,16 @@ class _BareExceptInventory(NamedTuple):
     try_nodes: list[ast.Try]
 
 
-def _bare_except_locations() -> list[tuple[str, int, str]]:
+def _bare_except_locations(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[tuple[str, int, str]]:
     """Return (file, lineno, shape) for every bare-except in test files.
 
     Uses the shared test-module inventory so fixtures stay outside this ratchet.
+    When supplied, the session AST cache amortises parses for ``src/aeat`` paths
+    while project-level paths outside that tree still fall back to per-path parse.
     """
     findings: list[tuple[str, int, str]] = []
     for path in sorted(set(discover_test_modules()) | set(project_test_control_modules())):
-        tree = ast_for_path(path)
+        tree = ast_for_path(path, source_tree_ast)
         if tree is None:
             continue
         findings.extend(_bare_except_locations_for_tree(repo_relative(path), tree))
@@ -154,7 +158,7 @@ def _is_noop_handler_body(body: list[ast.stmt]) -> bool:
     )
 
 
-def test_no_bare_except_in_test_surface() -> None:
+def test_no_bare_except_in_test_surface(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Zero bare-except or ``except Exception: pass`` shapes in test files.
 
     Every test file under ``src/aeat/`` is parsed with the standard AST
@@ -165,7 +169,7 @@ def test_no_bare_except_in_test_surface() -> None:
     Uses the shared per-file AST cache so the parse cost is amortised across
     the full ratchet suite.
     """
-    findings = _bare_except_locations()
+    findings = _bare_except_locations(source_tree_ast)
 
     if findings:
         lines = "\n".join(f"  {path}:{lineno}  [{shape}]" for path, lineno, shape in findings)
