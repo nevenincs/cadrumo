@@ -22,6 +22,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
@@ -39,12 +43,6 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.application_adapter_exports import (
-    BucketEventHistoryRepository,
-    CalculationRevisionCatalogueRepository,
-    ModeloRecordCatalogueRepository,
-    WorkUnitCatalogueRepository,
-)
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
