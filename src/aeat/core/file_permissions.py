@@ -12,8 +12,8 @@ and tries both ``DOMAIN\\user`` and ``user`` candidate names so it works
 on standalone machines and domain-joined hosts.
 
 The helper is shared between
-:mod:`adapters.outbound.aeat.auth._authenticator` and
-:mod:`adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
+:mod:`~adapters.outbound.aeat.auth._authenticator` and
+:mod:`~adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
 discipline cannot diverge between the two session writers.
 
 This module is a compatibility/public hardening primitive for plaintext files;
@@ -25,6 +25,17 @@ permission tightening an authorization decision.
 The public :func:`restrict_file_permissions` entry point accepts a
 :class:`~pathlib.Path` target and deliberately returns ``None`` even when the
 best-effort hardening step cannot be applied.
+
+See Also:
+    :func:`~core.file_permissions.restrict_file_permissions`
+        Public entry point used by legacy/plaintext session writers.
+    :mod:`~adapters.outbound.aeat.auth._authenticator`
+        FNMT-backed browser-session writer that shares this hardening helper.
+    :mod:`~adapters.outbound.aeat.auth._clave_movil`
+        Cl@ve Móvil provider whose active session persistence now uses secure
+        objects instead of plaintext storage-state files.
+    ``2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit``
+        Review that fixed silent POSIX failure swallowing and bounded ACL calls.
 """
 
 from __future__ import annotations
@@ -72,7 +83,7 @@ def _restrict_posix_file_permissions(path: Path) -> None:
 def restrict_file_permissions(path: Path) -> None:
     r"""Best-effort restrict ``path`` to the operator's user account.
 
-    POSIX: calls :func:`os.chmod` with mode ``0o600``.
+    POSIX: calls :func:`~os.chmod` with mode ``0o600``.
 
     Windows: shells out to ``icacls.exe`` to strip inherited ACLs and
     grant ``F`` (Full control) to the operator's account only. Tries
