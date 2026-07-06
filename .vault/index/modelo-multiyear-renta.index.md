@@ -28,6 +28,19 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S19]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S20]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P04-S21]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P05-S22]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P05-S23]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P06-S24]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P06-S25]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P06-S26]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P07-S27]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W02-P07-S28]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W03-P08-S29]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W03-P08-S30]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W03-P09-S31]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W03-P09-S32]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W03-P10-S33]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W03-P10-S34]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
@@ -74,6 +87,19 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W01-P04-S19` - author the A5-151 engine-build ADR for the Beckham flat-rate regime and six-year window grounded in Ley 35/2006 art.93 (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W01-P04-S20` - author the A5-210 engine-wiring ADR for the IRNR calculation surface grounded in TRLIRNR RDLeg 5/2004 (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W01-P04-S21` - author the A5-721 data-fidelity and obligation-trigger ADR grounded in Ley 58/2003 DA18 and Orden HFP/886/2023 (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W02-P05-S22` - reconcile the M130 multi-year enrollment test that drives two renta years through real adapters and records the manifest-matched filing_year set
+- `2026-06-02-modelo-multiyear-renta-W02-P05-S23` - reconcile the M130 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W02-P06-S24` - reconcile the M100 general-base negative carry prior-year binding from previous_filing casilla 1391 into current-year casilla 1388 per A4-M100
+- `2026-06-02-modelo-multiyear-renta-W02-P06-S25` - reconcile the M100 two-renta enrollment test proving the general-base negative saldo wiring through real calculate and manifest evidence
+- `2026-06-02-modelo-multiyear-renta-W02-P06-S26` - reconcile the M100 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W02-P07-S27` - reconcile the M131 modules continuity enrollment test across two renta years via real adapters and manifest evidence
+- `2026-06-02-modelo-multiyear-renta-W02-P07-S28` - reconcile the M131 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W03-P08-S29` - reconcile the 111->190 two-renta reconciliation enrollment test using real withholding feeder observations and annual manifest evidence
+- `2026-06-02-modelo-multiyear-renta-W03-P08-S30` - reconcile the M190 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W03-P09-S31` - reconcile the 115->180 two-renta reconciliation enrollment test using real arrendamiento feeder observations and annual manifest evidence
+- `2026-06-02-modelo-multiyear-renta-W03-P09-S32` - reconcile the M180 authorization manifest entry with renta_years matching the recorded year-set
+- `2026-06-02-modelo-multiyear-renta-W03-P10-S33` - reconcile the 123->193 two-renta reconciliation enrollment test using real capital-mobiliario feeder observations and annual manifest evidence
+- `2026-06-02-modelo-multiyear-renta-W03-P10-S34` - reconcile the M193 authorization manifest entry with renta_years matching the recorded year-set
 
 ### plan
 

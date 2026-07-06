@@ -93,23 +93,23 @@ Enroll the IRPF income-tax calculation modelos 130, 100, and 131 into the gate v
 
 Extend the existing M130 carry-forward continuity reference into a second renta year so the recorder captures two distinct filing_years for the autonomo estimacion directa pago-fraccionado.
 
-- [ ] `W02.P05.S22` - extend the M130 carry-forward continuity test so a second renta year (2024+2025) is computed via real adapters and the recorder captures two distinct filing_years (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_130_carry_forward_continuity.py`.
-- [ ] `W02.P05.S23` - enroll M130 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W02.P05.S22` - reconcile the M130 multi-year enrollment test that drives two renta years through real adapters and records the manifest-matched filing_year set; `src/aeat/application/calculations/tests/test_modelo_130_multiyear_renta_enrollment.py`.
+- [x] `W02.P05.S23` - reconcile the M130 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/130.toml`.
 
 ### Phase `W02.P06` - Modelo 100 (IRPF declaracion anual, CALC-CROSS-RENTA)
 
 Enroll the annual Renta with a prior-year cross-renta hook (saldos/deducciones pendientes, filing_year_delta=-1) per A4; capital-loss 4yr carry under Ley 35/2006 art.49.
 
-- [ ] `W02.P06.S24` - author the M100 prior-year cross-renta binding (saldos/deducciones pendientes, filing_year_delta=-1) in the registry per A4-M100 (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/100/`.
-- [ ] `W02.P06.S25` - write the M100 >=2-renta E2E test asserting the prior-year capital-loss carry resolves into the current-year casilla via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_100_carry_forward_continuity.py`.
-- [ ] `W02.P06.S26` - enroll M100 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W02.P06.S24` - reconcile the M100 general-base negative carry prior-year binding from previous_filing casilla 1391 into current-year casilla 1388 per A4-M100; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/bindings/0020-renta-2024-base-liquidable-negativa-anterior.toml; src/aeat/_data/registry/aeat/modelos/100/revisions/2025/bindings/0048-renta-2025-base-liquidable-negativa-anterior.toml; src/aeat/_data/registry/aeat/modelos/100/revisions/2024/casillas/1332-1388.toml; src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas/1387-1388.toml`.
+- [x] `W02.P06.S25` - reconcile the M100 two-renta enrollment test proving the general-base negative saldo wiring through real calculate and manifest evidence; `src/aeat/application/calculations/tests/test_modelo_100_multiyear_renta_enrollment.py`.
+- [x] `W02.P06.S26` - reconcile the M100 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/100.toml`.
 
 ### Phase `W02.P07` - Modelo 131 (IRPF estimacion objetiva, CALC-CROSS-RENTA)
 
 Enroll the modulos pago fraccionado across two renta years for the estimacion objetiva autonomo, asserting the rendimiento de modulos cross-year carry.
 
-- [ ] `W02.P07.S27` - write the M131 >=2-renta E2E test asserting the rendimiento-de-modulos cross-year continuity via real adapters for two adjacent renta years (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_131_carry_forward_continuity.py`.
-- [ ] `W02.P07.S28` - enroll M131 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W02.P07.S27` - reconcile the M131 modules continuity enrollment test across two renta years via real adapters and manifest evidence; `src/aeat/application/calculations/tests/test_modelo_131_carry_forward_continuity.py`.
+- [x] `W02.P07.S28` - reconcile the M131 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/131.toml`.
 
 ## Wave `W03` - IRPF retenciones to annual resumenes reconciliation
 
@@ -119,22 +119,22 @@ Enroll the quarterly-to-annual reconciliation chains 111->190, 115->180, 123->19
 
 Enroll the 111->190 chain: quarterly (1T-4T) retenciones del trabajo feeders reconciled against the annual resumen 190 across two renta years.
 
-- [ ] `W03.P08.S29` - write the 111->190 reconciliation E2E test driving quarterly (1T-4T) retenciones-del-trabajo feeders and the annual 190 resumen across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_190_annual_reconciliation.py`.
-- [ ] `W03.P08.S30` - enroll M190 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W03.P08.S29` - reconcile the 111->190 two-renta reconciliation enrollment test using real withholding feeder observations and annual manifest evidence; `src/aeat/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py`.
+- [x] `W03.P08.S30` - reconcile the M190 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/190.toml`.
 
 ### Phase `W03.P09` - Modelo 180 reconciled from Modelo 115 (RECONCILIATION-CROSS-RENTA)
 
 Enroll the 115->180 chain: quarterly retenciones sobre arrendamientos feeders reconciled against the annual resumen 180 across two renta years.
 
-- [ ] `W03.P09.S31` - write the 115->180 reconciliation E2E test driving quarterly retenciones-sobre-arrendamientos feeders and the annual 180 resumen across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_180_annual_reconciliation.py`.
-- [ ] `W03.P09.S32` - enroll M180 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W03.P09.S31` - reconcile the 115->180 two-renta reconciliation enrollment test using real arrendamiento feeder observations and annual manifest evidence; `src/aeat/application/calculations/tests/test_modelo_180_115_reconciliation_continuity.py`.
+- [x] `W03.P09.S32` - reconcile the M180 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/180.toml`.
 
 ### Phase `W03.P10` - Modelo 193 reconciled from Modelo 123 (RECONCILIATION-CROSS-RENTA)
 
 Enroll the 123->193 chain: retenciones sobre capital mobiliario feeders reconciled against the annual resumen 193 across two renta years.
 
-- [ ] `W03.P10.S33` - write the 123->193 reconciliation E2E test driving retenciones-sobre-capital-mobiliario feeders and the annual 193 resumen across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_193_annual_reconciliation.py`.
-- [ ] `W03.P10.S34` - enroll M193 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W03.P10.S33` - reconcile the 123->193 two-renta reconciliation enrollment test using real capital-mobiliario feeder observations and annual manifest evidence; `src/aeat/application/calculations/tests/test_modelo_193_123_reconciliation_continuity.py`.
+- [x] `W03.P10.S34` - reconcile the M193 authorization manifest entry with renta_years matching the recorded year-set; `src/aeat/_data/registry/aeat/authorization.d/193.toml`.
 
 ## Wave `W04` - IVA modelos
 
