@@ -1,7 +1,7 @@
-"""Tests for :func:`aeat.core.identity.validate_spanish_tax_id`.
+"""Tests for :func:`~core.identity.validate_spanish_tax_id`.
 
-The sibling :func:`aeat.core.identity.validate_identity` parser (covered by
-``test_documents.py``) returns an :class:`aeat.core.identity.IdentityDocument`
+The sibling :func:`~core.identity.validate_identity` parser (covered by
+``test_documents.py``) returns an :class:`~core.identity.IdentityDocument`
 member; ``validate_spanish_tax_id`` returns the canonical identifier string and
 is the surface the encrypted master-key NIF canary, invoice counterparty checks,
 the PDF sanitiser, and the registry schema scalars consume. A non-resident
@@ -14,6 +14,20 @@ with ``0``/``1``/``2`` and applying the AEAT control-letter table
 ``TRWAGMYFPDXBNJZSQVHLCKE`` indexed by ``number % 23`` — the same algorithm as a
 NIF. The known-good check letters asserted below are computed from that table,
 not copied from a validator run.
+
+See Also:
+    :mod:`~core.identity._tax_id`
+        Canonical string validator and shared NIF/NIE check-letter helper under
+        test.
+    :mod:`~core.identity._documents`
+        Document-kind parser that shares the same Spanish identifier algorithm.
+    :mod:`~domain.calculations.registry._schema_scalars`
+        Registry schema consumer that re-raises identity validation failures as
+        registry validation errors.
+    Governing vault records
+        ``2026-05-13-identity-adr`` places Spanish tax-id validation in core as
+        a security primitive; ``2026-05-30-identity-primitives-reference``
+        tracks ``SubjectTaxId`` as the pydantic-ready alias for this validator.
 """
 
 from __future__ import annotations
