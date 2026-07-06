@@ -1,10 +1,10 @@
 """Corpus-fidelity gate for the ledger operator-testimonial corpus.
 
 Imports the raw bank-export corpus through the real
-:class:`aeat.adapters.inbound.financial.providers._csv.CsvProvider`, applies the
+:class:`~adapters.inbound.financial.providers.CsvProvider`, applies the
 ground-truth oracle classification (``ground-truth.manifest.json``), wires a
-corpus-local ECB-rate snapshot into :class:`aeat.domain.currency.CurrencyNormalizationService`
-for the foreign-currency rows, builds strict :class:`aeat.domain.transactions.Transaction`
+corpus-local ECB-rate snapshot into :class:`~domain.currency.CurrencyNormalizationService`
+for the foreign-currency rows, builds strict :class:`~domain.transactions.Transaction`
 records, and runs the real aggregation pipelines.
 
 The oracle states each row's expected typed facts and target bucket; the
@@ -12,6 +12,21 @@ pipelines independently route and gate from the typed fields. The assertions
 verify routing/gating/normalization (the system under test) against the oracle's
 independent expectation -- they do NOT re-compute registry tax formulas
 (per ``no-tautological-calculation-tests``).
+
+See Also:
+    Fixture corpus
+        ``tests/fixtures/financial/ledger-corpus`` contains the raw bank-export
+        files and ground-truth manifest consumed by this gate.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Strict transaction collection passed to the aggregation pipelines.
+    :func:`~application.aggregation.aggregate_iva_ledger_observations`
+        IVA projection path checked for gating and category/flow fidelity.
+    :func:`~application.aggregation.aggregate_renta_income_ledger`
+        M130 income projection path checked for trabajo/capital exclusions.
+    Governing vault records
+        ``2026-06-02-ledger-operator-hardening-adr`` defines the raw-corpus +
+        typed-oracle contract; ``2026-06-02-ledger-fx-conversion-adr`` grounds
+        the ECB conversion seam used for foreign-currency rows.
 """
 
 from __future__ import annotations
