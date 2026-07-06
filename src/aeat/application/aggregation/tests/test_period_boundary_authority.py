@@ -3,15 +3,32 @@
 The CLI ledger surface (``--filter period=``+``--filter year=`` /
 ``--period``+``--year``) and the modelo calculation snapshot
 (``aggregation_period_for_modelo``) are two spellings of the same
-``(year, AEAT-token)`` input that MUST both resolve to the same :class:`Period`
-and its fully-closed :meth:`Period.contains` boundary. No parallel period
+``(year, AEAT-token)`` input that MUST both resolve to the same :class:`~core.Period`
+and its fully-closed :meth:`~core.Period.contains` boundary. No parallel period
 boundary implementation is permitted.
 
 This module pins that convergence: for every canonical span token, the CLI
 transport and the calc-engine transport produce an *identical* ``Period``
 object. It also pins the secure-storage invariant: the filter is a
 pure in-memory selection predicate that adds no plaintext persistence surface;
-the rows it selects ride the encrypted :class:`SecureObjectRepository`.
+the rows it selects ride the encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`.
+
+See Also:
+    :func:`~entrypoints.cli._common._canonical_period`
+        ``--period`` / ``--year`` transport that constructs the core period
+        directly from separated operator inputs.
+    :func:`~entrypoints.cli._common._filter_canonical_period`
+        ``--filter period=`` / ``--filter year=`` transport that reuses the
+        same canonical resolver.
+    :func:`~application.aggregation.aggregation_period_for_modelo`
+        Calculation-snapshot transport that must converge on the same
+        :class:`~core.Period` boundary.
+    :class:`~core.StandardPeriodCode`
+        Canonical AEAT token vocabulary filtered here to span-bearing tokens.
+    Governing vault records
+        ``2026-06-10-ledger-filter-period-adr`` and
+        ``2026-06-10-ledger-filter-period-research`` ratify the single
+        ``Period.contains`` boundary and deletion of legacy calendar notation.
 """
 
 from __future__ import annotations
@@ -91,7 +108,7 @@ def test_both_transports_route_through_one_period_boundary() -> None:
 
     Forbids a parallel boundary implementation: for the same (year, token) the
     CLI ``(--year, AEAT token)`` resolution and the calc-engine translator must
-    produce the *identical* :class:`Period` date span, so neither side can drift
+    produce the *identical* :class:`~core.Period` date span, so neither side can drift
     to a private boundary shape. There is no intermediate calendar string on the
     CLI side — the pair builds the Period directly.
     """
@@ -121,7 +138,7 @@ def test_period_filter_is_a_closed_in_memory_boundary_predicate() -> None:
     """The boundary authority is a closed in-memory predicate.
 
     The period filter selects rows that already ride the per-profile encrypted
-    bucket-scoped :class:`SecureObjectRepository`; the
+    bucket-scoped :class:`~adapters.persistence.storage.SecureObjectRepository`; the
     filter itself must add no plaintext persistence. Pin the runtime contract:
     the predicate answers solely from the resolved period span and the candidate
     date, including both closed endpoints and rejecting neighbouring dates.
