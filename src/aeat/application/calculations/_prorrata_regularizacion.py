@@ -40,7 +40,14 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    BindingSourceKind,
+    CasillaId,
+    Period,
+    ProrrataRegisterRegime,
+    validated_casilla_id,
+)
 from ...domain.calculations.registry import IvaLedgerObservation
 from ...domain.iva import (
     IvaCategory,
@@ -50,6 +57,7 @@ from ...domain.iva import (
     RegularizacionProrrataResult,
     compute_regularizacion_prorrata_anual,
 )
+from ...domain.prorrata_register import ProrrataRegisterEntry
 from ..aggregation import CalculationSourceDiagnostic
 
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
@@ -127,6 +135,69 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
             or self.declared_volume_con_derecho != self.ledger_volume_con_derecho
             or self.declared_volume_sin_derecho != self.ledger_volume_sin_derecho
         )
+
+
+class ProrrataApplicabilityProjection(BaseModel):
+    """Fail-closed-to-visible prorrata applicability evidence for one ejercicio.
+
+    Prorrata applies when the taxpayer has an active register entry or the
+    ejercicio shows exempt-without-right operations through declared annual
+    volumes or the ledger rollup. This projection is deliberately pure; later
+    steps turn an applicable-but-unresolved state into calculate/verify
+    diagnostics.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    applies: bool
+    register_active: bool
+    declared_volume_sin_derecho: Decimal
+    ledger_volume_sin_derecho: Decimal
+    evidence_kinds: tuple[str, ...] = ()
+
+
+def derive_prorrata_applicability(
+    *,
+    register_entries: Iterable[ProrrataRegisterEntry] = (),
+    declared_volume_total: Decimal | None = None,
+    declared_volume_con_derecho: Decimal | None = None,
+    ledger_rollup: ProrrataDeclaredVolumeLedgerRollup | None = None,
+) -> ProrrataApplicabilityProjection:
+    """Derive whether prorrata applies for an ejercicio.
+
+    The rule is intentionally fail-closed-to-visible: any active register entry
+    (``general`` or ``especial``), any positive declared sin-derecho annual
+    volume, or any positive ledger-projected sin-derecho annual volume means
+    prorrata applies and later steps must not silently assume a full-deduction
+    default.
+    """
+    if (declared_volume_total is None) != (declared_volume_con_derecho is None):
+        raise ValueError("declared_volume_total and declared_volume_con_derecho must be supplied together")
+
+    entries = tuple(register_entries)
+    register_active = any(entry.regime is not ProrrataRegisterRegime.NINGUNA for entry in entries)
+    declared_volume_sin_derecho = (
+        Decimal("0")
+        if declared_volume_total is None or declared_volume_con_derecho is None
+        else declared_volume_total - declared_volume_con_derecho
+    )
+    ledger_volume_sin_derecho = Decimal("0") if ledger_rollup is None else ledger_rollup.ledger_volume_sin_derecho
+
+    evidence: list[str] = []
+    if register_active:
+        evidence.append("register_active")
+    if declared_volume_sin_derecho > Decimal("0"):
+        evidence.append("declared_sin_derecho_volume")
+    if ledger_volume_sin_derecho > Decimal("0"):
+        evidence.append("ledger_sin_derecho_volume")
+
+    return ProrrataApplicabilityProjection(
+        applies=bool(evidence),
+        register_active=register_active,
+        declared_volume_sin_derecho=declared_volume_sin_derecho,
+        ledger_volume_sin_derecho=ledger_volume_sin_derecho,
+        evidence_kinds=tuple(evidence),
+    )
 
 
 def build_prorrata_declared_volume_divergence_advisory(
@@ -314,9 +385,11 @@ def build_prorrata_regularizacion_advisory(
 
 __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
+    "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
     "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_regularizacion_advisory",
+    "derive_prorrata_applicability",
     "project_prorrata_regularizacion_feed",
 ]

@@ -346,3 +346,28 @@ Blocker: same non-authored `_source_mesh.py` WIP as S30, plus the prerequisite
 Follow-up: after S30 lands the live prorrata regularización source, record the
 bienes-inversión casilla-43 automatic feed unblock in the source-mesh disposition
 surface while preserving the existing promotion dependency.
+
+## S32 Review
+
+Reviewed the `W05.P08.S32` applicability projection after re-grounding it against
+the cross-period prorrata ADR, the W05/P08 plan row, the prorrata register domain
+model, the current declared-volume ledger rollup, and the calculate-path advisory
+tests. The change adds a pure calculation-layer projection:
+`derive_prorrata_applicability` returns `applies=True` when the register carries
+any non-`NINGUNA` entry, when declared annual volumes imply positive sin-derecho
+volume, or when the ledger rollup projects positive sin-derecho volume.
+
+The change is deliberately diagnostic-neutral: S32 only derives applicability
+evidence and does not yet emit the missing-carry calculate advisory or settlement
+verify advisory owned by S33/S34. It does not touch source-kind promotion,
+`_source_mesh.py`, registry bindings, resolver conventions, validator
+conventions, or registry selector shape. The existing prorrata regression file
+has peer WIP, so the tests landed in a new focused file instead of editing that
+dirty file.
+
+Findings: no open S32 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched projection and
+new test file. The new applicability test file passes sequentially with 6 tests,
+and the adjacent prorrata regularización calculation test file passes
+sequentially with 8 tests.
