@@ -3,9 +3,11 @@ generated: true
 tags:
   - '#index'
   - '#modelo-multiyear-renta'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S09]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W01-P03-S10]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
@@ -25,6 +27,11 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 ### audit
 
 - `2026-06-02-modelo-multiyear-renta-audit` - `modelo-multiyear-renta` audit: `multi-year-renta campaign-close honesty review`
+
+### exec
+
+- `2026-06-02-modelo-multiyear-renta-W01-P03-S09` - maintain the hard-cut no-baseline authorization meta-test over the live canonical fleet, printing authorized N/FLEET_SIZE with the UNAUTHORIZED id list (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W01-P03-S10` - cross-check each recorded year-set equals the manifest renta_years claim, contains >=2 distinct years, and calls the enrollment contract (vaultspec-high-executor)
 
 ### plan
 
