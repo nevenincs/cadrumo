@@ -660,7 +660,6 @@ convention = "google"
 "src/aeat/tests/test_any_return_rationale_markers.py" = ["S105", "S106"]
 "src/aeat/tests/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
 "src/aeat/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
-"src/aeat/tests/test_ratchet_extensions_and_marker_completion.py" = ["S105", "S106"]
 # OAuth / mTLS / clave-pin fixture authoring uses literal credential
 # shape examples (e.g., the example access_token "ya29.fake-bearer"
 # documented in the AEAT auth ADR); they are not real credentials.
