@@ -5,7 +5,7 @@ non-interactive fallback for when extraction (evidence extract / vision OCR)
 is unavailable or insufficient: every invoice field is supplied up front as a
 CLI option, each field is validated independently (a malformed NIF and a
 malformed date are BOTH reported in one refusal), the write delegates to
-:func:`aeat.application.invoices.create_catalogue_invoice` (the sole
+:func:`~application.invoices.create_catalogue_invoice` (the sole
 sanctioned writer), and a retry with identical fields is a guarded idempotent
 no-op rather than a duplicate error.
 
@@ -14,6 +14,16 @@ and real invoice records. No mocks, stubs, or monkeypatch. Runs against an
 isolated in-process CliRunner, so "non-blocking" is proven directly: the
 runner supplies no stdin, and a command that tried to prompt would hang or
 raise -- these tests completing at all is the non-interactivity proof.
+
+See Also:
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Application facade that validates every manual-entry field.
+    :class:`~domain.invoices.Invoice`
+        Domain invoice record persisted by the wizard path.
+    :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
+        Bucket-scoped encrypted repository used for the real round trip.
+    :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_wizard`
+        CLI command handler covered by these integration tests.
 """
 
 from __future__ import annotations
@@ -96,7 +106,7 @@ def test_wizard_created_invoice_roundtrips_through_encrypted_boundary() -> None:
     A second, independently constructed :class:`InvoiceCatalogueRepository`
     instance loads the SAME encrypted bucket store (no in-process cache reuse),
     proving the invoice created via the wizard persists faithfully across the
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` boundary.
+    :class:`~adapters.persistence.storage.SecureObjectRepository` boundary.
     Strict pydantic equality is asserted against the invoice retained from the
     original wizard call.
     """
