@@ -19,12 +19,14 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, Modelo
+from ....core import BindingSourceKind, Modelo, ProrrataRegisterRegime
 from ....core.resources import resources
 from ....domain.calculations.registry import validated_casilla_id
+from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
+from ...calculations import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA, CalculationObservationRepository
+from ...prorrata_register import ProrrataRegisterRepository
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -39,8 +41,8 @@ _PORCENTAJE_ID = validated_casilla_id("iva.prorrata-porcentaje", surface="test c
 _CUOTA_DEDUCIBLE_TOTAL_ID = validated_casilla_id("iva.cuota-deducible-total", surface="test casilla id")
 
 
-def _revision():
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=_YEAR, period="4T")
+def _revision(*, period: str = "4T"):
+    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=_YEAR, period=period)
     return snapshot.revision
 
 
@@ -165,6 +167,39 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
         )
 
     assert diagnostics == ()
+
+
+def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_path: Path) -> None:
+    """An active general-prorrata register entry with no ladder value is visible in 1T."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        obs_repo = CalculationObservationRepository(objects=profile.repository)
+        ProrrataRegisterRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+            ProrrataRegister(
+                entries=(
+                    ProrrataRegisterEntry(
+                        ejercicio=_YEAR,
+                        regime=ProrrataRegisterRegime.GENERAL,
+                    ),
+                ),
+            ),
+        )
+
+        diagnostics = collect_prorrata_regularizacion_diagnostics(
+            _revision(period="1T"),
+            {},
+            modelo=Modelo.M303.value,
+            period_token="1T",
+            filing_year=_YEAR,
+            bucket_id=_BUCKET,
+            observation_repository=obs_repo,
+        )
+
+    assert len(diagnostics) == 1
+    diagnostic = diagnostics[0]
+    assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
+    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    assert "definitiva del ejercicio anterior" in diagnostic.message
+    assert "por defecto" in diagnostic.message
 
 
 def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:

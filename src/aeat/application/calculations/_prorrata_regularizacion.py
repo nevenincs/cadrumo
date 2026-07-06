@@ -57,7 +57,7 @@ from ...domain.iva import (
     RegularizacionProrrataResult,
     compute_regularizacion_prorrata_anual,
 )
-from ...domain.prorrata_register import ProrrataRegisterEntry
+from ...domain.prorrata_register import ProrrataProvisionalResolution, ProrrataRegisterEntry
 from ..aggregation import CalculationSourceDiagnostic
 
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
@@ -197,6 +197,41 @@ def derive_prorrata_applicability(
         declared_volume_sin_derecho=declared_volume_sin_derecho,
         ledger_volume_sin_derecho=ledger_volume_sin_derecho,
         evidence_kinds=tuple(evidence),
+    )
+
+
+def build_prorrata_missing_provisional_advisory(
+    *,
+    applicability: ProrrataApplicabilityProjection,
+    provisional_resolution: ProrrataProvisionalResolution,
+    ejercicio: int,
+    first_ejercicio: bool = False,
+) -> CalculationSourceDiagnostic | None:
+    """Build the visible advisory for an applicable prorrata with no provisional percentage.
+
+    This is the per-period no-silent-under-declaration warning. It does not
+    fabricate a percentage: an applicable-but-unresolved prorrata tells the
+    operator to record the inicio-de-actividad percentage for a first ejercicio
+    or seed/record the prior definitive percentage for subsequent ejercicios.
+    """
+    if not applicability.applies or provisional_resolution.resolved:
+        return None
+
+    operator_action = (
+        "registre el porcentaje provisional de inicio de actividad"
+        if first_ejercicio
+        else "siembre o registre la prorrata definitiva del ejercicio anterior"
+    )
+    evidence = ", ".join(applicability.evidence_kinds) or "prorrata_applicability"
+    message = (
+        f"Prorrata aplicable en {ejercicio} sin porcentaje provisional resuelto "
+        f"({evidence}). {operator_action}; no se aplica un porcentaje por defecto."
+    )
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+        message=message,
+        casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     )
 
 
@@ -389,6 +424,7 @@ __all__ = [
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
     "build_prorrata_declared_volume_divergence_advisory",
+    "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
     "derive_prorrata_applicability",
     "project_prorrata_regularizacion_feed",

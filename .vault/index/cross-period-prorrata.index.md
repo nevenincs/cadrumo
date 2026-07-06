@@ -39,6 +39,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W04-P07-S30]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P07-S31]]'
   - '[[2026-07-06-cross-period-prorrata-W05-P08-S32]]'
+  - '[[2026-07-06-cross-period-prorrata-W05-P08-S33]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -93,6 +94,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W04-P07-S30` - defer prorrata source-mesh promotion pending peer WIP
 - `2026-07-06-cross-period-prorrata-W04-P07-S31` - defer bienes-inversion unblock record pending source promotion
 - `2026-07-06-cross-period-prorrata-W05-P08-S32` - derive prorrata applicability evidence
+- `2026-07-06-cross-period-prorrata-W05-P08-S33` - emit missing prorrata carry advisory
 
 ### plan
 

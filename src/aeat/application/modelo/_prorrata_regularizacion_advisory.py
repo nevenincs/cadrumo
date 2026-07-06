@@ -15,11 +15,13 @@ through a profile-scoped store.
 
 Per that ADR's first-slice decision, the automatic feed stays
 ``DEFERRED`` (``BindingSourceKind.PRORRATA_REGULARIZACION``) until the
-provisional-carry store lands. In the meantime this collector closes the
-no-silent-under-declaration gap at the settlement period: it reads the
-CURRENT year's own registry-computed prorrata figures (never a fabricated
-value) and looks up the PRIOR year's persisted ``iva.prorrata-porcentaje``
-observation from the local
+provisional-carry store lands. In the meantime this collector closes two
+no-silent-under-declaration gaps. First, for every period, it reads the
+profile-scoped prorrata register and raises a missing-carry advisory when
+prorrata applies but the provisional percentage ladder is unresolved. Second,
+at the settlement period, it reads the CURRENT year's own registry-computed
+prorrata figures (never a fabricated value) and looks up the PRIOR year's
+persisted ``iva.prorrata-porcentaje`` observation from the local
 :class:`~application.calculations.CalculationObservationRepository` — the
 same same-modelo prior-filing lookup pattern
 :mod:`~application.modelo._prior_payment_advisory` already uses for the
@@ -35,8 +37,8 @@ than silently dropping the check.
 The register's LIVA art. 105.Cuatro "último período de liquidación del año
 natural" timing means the regularización is due once a year, at the
 settlement period (the fourth quarter or the annual period for Modelo 303
-filers); this collector only inspects the revision on those periods so a
-mid-year quarter does not raise noise for a compute that is not yet due.
+filers); the proposed-casilla-44 regularización branch only runs on those
+periods, while the missing-provisional-carry branch is intentionally per-period.
 
 See Also:
     :mod:`~application.modelo._calculation_diagnostics`:
@@ -59,10 +61,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import Modelo
+from ...core import BindingSourceKind, Modelo
 from ...domain.calculations.registry import CasillaId, ModeloRevision
+from ...domain.prorrata_register import ProrrataRegisterError
 from ..aggregation import CalculationSourceDiagnostic
-from ..calculations import CalculationObservationRepository, build_prorrata_regularizacion_advisory
+from ..calculations import (
+    CalculationObservationRepository,
+    build_prorrata_missing_provisional_advisory,
+    build_prorrata_regularizacion_advisory,
+    derive_prorrata_applicability,
+)
+from ..prorrata_register import ProrrataRegisterRepository
 from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 __all__ = ["collect_prorrata_regularizacion_diagnostics"]
@@ -125,6 +134,7 @@ def collect_prorrata_regularizacion_diagnostics(
     period_token: str,
     filing_year: int,
     observation_repository: CalculationObservationRepository,
+    bucket_id: str | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return the annual prorrata-general regularización advisory for one calculation.
 
@@ -150,6 +160,9 @@ def collect_prorrata_regularizacion_diagnostics(
             calculated (e.g. ``"4T"``, ``"1T"``, ``"0A"``).
         filing_year: The filing year regularised (the year whose prior
             ejercicio's percentage is looked up).
+        bucket_id: Optional bucket identifier for loading the profile-scoped
+            prorrata register. When supplied, unresolved provisional register
+            state emits a per-period missing-carry advisory before settlement.
         observation_repository: The local
             :class:`~application.calculations.CalculationObservationRepository`
             scanned for the prior-year definitive-percentage carry.
@@ -162,8 +175,16 @@ def collect_prorrata_regularizacion_diagnostics(
     """
     if modelo != Modelo.M303.value:
         return ()
+
+    missing_carry_diagnostics = _missing_carry_diagnostics(
+        revision,
+        casilla_values,
+        modelo=modelo,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+    )
     if period_token not in _SETTLEMENT_PERIOD_TOKENS:
-        return ()
+        return missing_carry_diagnostics
 
     volumen_total_id = _casilla_id_for_role(revision, _VOLUMEN_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
     volumen_con_derecho_id = _casilla_id_for_role(revision, _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE, modelo_id=modelo)
@@ -189,20 +210,19 @@ def collect_prorrata_regularizacion_diagnostics(
         porcentaje_id=porcentaje_id,
     )
     if prorrata_provisional_pct is None:
-        return (
-            CalculationSourceDiagnostic(
-                reason="official_box_unpopulated",
-                source_kind=_PENDING_PROVISIONAL_SOURCE_KIND,
-                message=(
-                    "Operaciones exentas sin derecho a deducción detectadas en el ejercicio "
-                    f"{filing_year} (prorrata general, LIVA arts. 104-105): la regularización de "
-                    "casilla 44 no puede comprobarse automáticamente porque no consta el porcentaje "
-                    f"de prorrata definitivo de {filing_year - 1} en este equipo. Compruebe manualmente "
-                    "si procede una regularización antes de presentar."
-                ),
-                casilla_id=porcentaje_id,
+        pending_diagnostic = CalculationSourceDiagnostic(
+            reason="official_box_unpopulated",
+            source_kind=_PENDING_PROVISIONAL_SOURCE_KIND,
+            message=(
+                "Operaciones exentas sin derecho a deducción detectadas en el ejercicio "
+                f"{filing_year} (prorrata general, LIVA arts. 104-105): la regularización de "
+                "casilla 44 no puede comprobarse automáticamente porque no consta el porcentaje "
+                f"de prorrata definitivo de {filing_year - 1} en este equipo. Compruebe manualmente "
+                "si procede una regularización antes de presentar."
             ),
+            casilla_id=porcentaje_id,
         )
+        return missing_carry_diagnostics or (pending_diagnostic,)
 
     _result, diagnostic = build_prorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
@@ -212,5 +232,47 @@ def collect_prorrata_regularizacion_diagnostics(
         regularizacion_year=filing_year,
     )
     if diagnostic is None:
+        return missing_carry_diagnostics
+    return (*missing_carry_diagnostics, diagnostic)
+
+
+def _missing_carry_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    filing_year: int,
+    bucket_id: str | None,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    if bucket_id is None:
         return ()
-    return (diagnostic,)
+
+    volumen_total_id = _casilla_id_for_role(revision, _VOLUMEN_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
+    volumen_con_derecho_id = _casilla_id_for_role(revision, _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE, modelo_id=modelo)
+    declared_volume_total = casilla_values.get(volumen_total_id) if volumen_total_id is not None else None
+    declared_volume_con_derecho = (
+        casilla_values.get(volumen_con_derecho_id) if volumen_con_derecho_id is not None else None
+    )
+
+    try:
+        register = ProrrataRegisterRepository(bucket_id=bucket_id).load()
+    except ProrrataRegisterError as exc:
+        return (
+            CalculationSourceDiagnostic(
+                reason="storage_degraded",
+                source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+                message=(f"prorrata register could not be read (bucket {bucket_id!r}): {exc}"),
+            ),
+        )
+
+    applicability = derive_prorrata_applicability(
+        register_entries=register.entries_for_ejercicio(filing_year),
+        declared_volume_total=declared_volume_total,
+        declared_volume_con_derecho=declared_volume_con_derecho,
+    )
+    diagnostic = build_prorrata_missing_provisional_advisory(
+        applicability=applicability,
+        provisional_resolution=register.resolve_provisional(filing_year),
+        ejercicio=filing_year,
+    )
+    return () if diagnostic is None else (diagnostic,)
