@@ -100,6 +100,7 @@ from ._post_filing_event import (
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
 )
+from ._prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ._refund_election import RefundElection
 from ._rescate_type import RescateType
 from ._result_disposition import (
@@ -174,6 +175,8 @@ __all__: list[str] = [
     "PeriodError",
     "PeriodKind",
     "PostFilingEventKind",
+    "ProrrataProvisionalProvenance",
+    "ProrrataRegisterRegime",
     "RefundElection",
     "RegistryPeriodCode",
     "RescateType",

@@ -1,4 +1,26 @@
-"""Typer registrations for Modelo 145 local communication commands."""
+"""Typer registrations for Modelo 145 local communication commands.
+
+The command group is a thin transport boundary for local payer communication
+records. It parses Typer arguments, resolves the active bucket, delegates all
+stateful work to the application Modelo 145 service, and emits typed envelopes
+through the sibling rendering/payload modules.
+
+See Also:
+    :func:`~application.modelo.create_m145_communication_record`
+        Application service used by the ``create`` command.
+    :func:`~application.modelo.validate_m145_communication_record`
+        Application validation service used by the ``validate`` command.
+    :func:`~application.modelo.export_m145_communication_record`
+        Application export service used by the ``export`` command.
+    :func:`~application.modelo.mark_m145_communication_record_delivered_to_payer`
+        Local payer-delivery transition wired by this CLI group.
+    :mod:`~entrypoints.cli._modelo_m145_parsing`
+        CLI-only parsing helpers for casilla assignments and actor labels.
+    :mod:`~entrypoints.cli._modelo_m145_rendering`
+        Text/JSON envelope emitters for the registered commands.
+    :mod:`~entrypoints.cli._modelo_payloads_m145`
+        Typed JSON payload schemas registered for Modelo 145 CLI operations.
+"""
 
 from __future__ import annotations
 

@@ -9,8 +9,8 @@ stubs. The pure art-109 math itself is proven in
 projection in
 ``application/calculations/tests/test_bienes_inversion_regularizacion.py``; this
 module proves the register is actually READ on the live calculate path, which
-was the gap the first-slice ADR left open (the register and the pure projection
-shipped, but nothing called them from ``_calculation_diagnostics``).
+is the integration point between the persisted register and
+``_calculation_diagnostics``.
 """
 
 from __future__ import annotations

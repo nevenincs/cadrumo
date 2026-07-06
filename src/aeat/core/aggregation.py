@@ -75,7 +75,7 @@ class BindingAggregation(BaseModel):
     closed :class:`BindingAggregationOp` set is the only key real binding
     aggregation mappings carry in the registry authoring tree. The model is
     strict and frozen, matching the registry schema's
-    :data:`core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
+    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
     a stray extra key is rejected at registry-build validation rather than
     silently re-parsed at resolve time.
     """
@@ -129,7 +129,7 @@ class RelationAggregation(BaseModel):
     aggregation mappings carry in the registry authoring tree (every relation
     declares ``aggregation = {op = "copy" | "sum"}`` or none). The model is strict
     and frozen, matching the registry schema's
-    :data:`core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
+    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
     stray extra key is rejected at registry-build validation rather than silently
     re-parsed at resolve time. This is the relation sibling of
     :class:`BindingAggregation`; the two op axes are deliberately separate.
@@ -166,8 +166,8 @@ class PeriodKind(StrEnum):
     is forbidden).
 
     This lightweight cadence enum is an aggregation/deadline taxonomy, not the
-    public :class:`core.Period` classifier. Concrete filing-period values
-    should use :class:`core.Period` and its exported ``PeriodKind``, which
+    public :class:`~core.Period` classifier. Concrete filing-period values
+    should use :class:`~core.Period` and its exported ``PeriodKind``, which
     also distinguishes instalment and extended registry tokens.
     """
 
@@ -213,7 +213,7 @@ class RowSetGroupingKind(StrEnum):
 class BindingSourceKind(StrEnum):
     """The single canonical closed set of binding/source-mesh tokens.
 
-    Every :class:`domain.calculations.registry.DataBindingDefinition`
+    Every :class:`~domain.calculations.registry.DataBindingDefinition`
     declares exactly one ``source`` drawn from the registry-declared subset of
     this enum. The same enum also carries mesh-only source decisions such as
     :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
@@ -444,7 +444,7 @@ so the registry stays the single source of truth for ledger readiness.
 class BindingTypedEnumKind(StrEnum):
     """The closed set of substrate enum-class names a binding value bridges.
 
-    A :class:`domain.calculations.registry.DataBindingDefinition` whose
+    A :class:`~domain.calculations.registry.DataBindingDefinition` whose
     value bridges a closed-membership substrate axis declares ``typed_enum`` =
     one of these members. Each value is the NAME of the closed enum class a
     consumer routes the binding value through:
@@ -459,8 +459,9 @@ class BindingTypedEnumKind(StrEnum):
     annotation token that was previously a bare ``str`` in
     ``DataBindingDefinition.typed_enum``. Those tokens live in registry TOML and
     flow through operator-facing surfaces (``bindings list`` table, the
-    :class:`ModeloBindingQueryRow` projection, the borrador resolver, the
-    Sheets-pull router); a :class:`~enum.StrEnum` serialises to its value, so
+    :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
+    projection, the borrador resolver, the Sheets-pull router); a
+    :class:`~enum.StrEnum` serialises to its value, so
     narrowing the field from ``str | None`` to this enum changes the static type
     without changing any stored, compared, or emitted string (the
     modelo-enum-hardening precedent). Do NOT rename a stored token.
@@ -468,7 +469,7 @@ class BindingTypedEnumKind(StrEnum):
     Declared in :mod:`core` as a closed value set per the architecture
     contract; the loader hydrates the registry TOML's raw token to its member at
     the schema boundary (see
-    :meth:`domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
+    :meth:`~domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
     It is the closed-set *annotation* on the binding, distinct from the engine
     ``input_channel`` (how a formula consumes the value); a binding may carry a
     ``typed_enum`` yet still be a numeric ``decimal`` channel.

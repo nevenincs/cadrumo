@@ -268,7 +268,7 @@ def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants() -> Non
 
     Cataluña, like every CCAA except Madrid, has no wired override, so the
     autonómico aggregate must equal the estatal one for the identical
-    descendientes facts — the ADR's documented mirror-estatal default.
+    descendientes facts.
     """
     for year in _ENGINE_FILING_YEARS:
         snapshot = _snapshot(year)

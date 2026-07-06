@@ -4798,6 +4798,7 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
+    error_profile_prorrata_register_record: 'A cross-period IVA prorrata register record is structurally invalid.'
   fail:
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
@@ -5376,6 +5377,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_profile_prorrata_register_validation: 'A cross-period IVA prorrata register record failed validation.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

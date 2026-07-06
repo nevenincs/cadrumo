@@ -1,11 +1,11 @@
-"""Tests for the Claude plugin materialiser.
+"""Tests for the plugin materialiser.
 
-Asserts the plugin layout target (ADR "Plugin generation") re-materialises the
-single authored harness source as a schema-shaped Claude plugin over a real
+Asserts the plugin layout re-materialises the single authored harness source as
+a schema-shaped plugin over a real
 filesystem ``tmp_path``: a ``.claude-plugin/plugin.json`` manifest carrying the
 required publication fields, a top-level ``skills/`` and ``agents/`` tree, and an
 ``.mcp.json`` declaring the stdio ``aeat-mcp`` server. The agent frontmatter maps
-to Claude-native fields and NEVER carries the vaultspec ``mode:`` field. Where the
+to plugin-native fields and never carries the vaultspec ``mode:`` field. Where the
 ``claude`` CLI is on PATH, the emitted tree is additionally asserted to pass
 ``claude plugin validate --strict``; the structural assertions always run so the
 suite never silently degrades to a validator-only skip.

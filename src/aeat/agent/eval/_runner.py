@@ -148,7 +148,8 @@ def _check_response_provenance(
     inspects the decoded JSON ``observations`` rows from a real
     ``modelo.work.calculate`` CLI/MCP dispatch - the payload the operator
     actually reads - and proves the CLI/MCP boundary relayed the registry's
-    ``legal_refs``/``source_refs`` rather than dropping them on the way out
+    ``legal_refs``/``source_refs`` and computed-casilla ``formula_id`` rather
+    than dropping them on the way out
     (the real repro: a real M130 calculate returned correct casilla values
     but no ``legal_refs``/``formula_id`` at the CLI layer).
 
@@ -165,15 +166,38 @@ def _check_response_provenance(
         )
         return False
     ungrounded = 0
+    expected_computed = set(scenario.expected_computed_casillas)
+    expected_computed_seen: set[str] = set()
+    computed_without_formula: list[str] = []
     for observation in response_observations:
         legal_refs = _observation_field(observation, "legal_refs")
         source_refs = _observation_field(observation, "source_refs")
         if not legal_refs or not source_refs:
             ungrounded += 1
+        casilla_id = _observation_field(observation, "casilla_id")
+        if casilla_id is None or str(casilla_id) not in expected_computed:
+            continue
+        casilla_id_text = str(casilla_id)
+        expected_computed_seen.add(casilla_id_text)
+        formula_id = _observation_field(observation, "formula_id")
+        if not formula_id:
+            computed_without_formula.append(casilla_id_text)
     if ungrounded:
         failures.append(
             f"{ungrounded} observation(s) in the {scenario.modelo} {scenario.period} calculate RESPONSE "
             "payload lack legal_refs/source_refs",
+        )
+        return False
+    missing_computed = sorted(expected_computed - expected_computed_seen)
+    if computed_without_formula or missing_computed:
+        details: list[str] = []
+        if computed_without_formula:
+            details.append("missing formula_id: " + ", ".join(sorted(computed_without_formula)))
+        if missing_computed:
+            details.append("absent from RESPONSE observations: " + ", ".join(missing_computed))
+        failures.append(
+            f"{scenario.modelo} {scenario.period} calculate RESPONSE payload lacks computed-casilla "
+            f"formula provenance ({'; '.join(details)})",
         )
         return False
     return True

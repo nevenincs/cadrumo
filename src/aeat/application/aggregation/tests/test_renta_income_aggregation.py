@@ -273,6 +273,87 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     assert observation_ids_q2 == {q1_tx1.transaction_id, q1_tx2.transaction_id, q2_only.transaction_id}
 
 
+def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+
+    An archived row is ignored before the in-window income classifier runs.
+    When that row falls outside the requested cumulative window, the
+    repository-backed partition reports it as ``OUTSIDE_PERIOD`` instead of
+    dropping it before aggregation.
+    """
+    in_window = _income_transaction("row-in-window", value_date=date(2024, 2, 1), amount=Decimal("500.00"))
+    archived_out_of_window = _income_transaction(
+        "row-archived-out-of-window",
+        value_date=date(2024, 5, 10),
+        amount=Decimal("900.00"),
+        lifecycle_state=TransactionLifecycleState.ARCHIVED,
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((in_window, archived_out_of_window)))
+
+    result = aggregate_renta_income_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
+    assert len(result.issues) == 1
+    assert result.issues[0].transaction_id == archived_out_of_window.transaction_id
+    assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+
+
+def test_repository_backed_aggregation_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The partitioned result matches the full-scan result for declared values.
+
+    The same multi-period catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and casilla totals/provenance must match; only the
+    out-of-window issue taxonomy can differ.
+    """
+    q1_row = _income_transaction("row-q1", value_date=date(2024, 2, 1), amount=Decimal("500.00"))
+    q3_row = _income_transaction("row-q3", value_date=date(2024, 8, 1), amount=Decimal("700.00"))
+    archived_q3_row = _income_transaction(
+        "row-q3-archived",
+        value_date=date(2024, 9, 1),
+        amount=Decimal("300.00"),
+        lifecycle_state=TransactionLifecycleState.ARCHIVED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((q1_row, q3_row, archived_q3_row))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(catalogue)
+
+    partitioned = aggregate_renta_income_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+    full_scan = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    # Declared-value invariance: observations and casilla aggregation identical
+    # (as sets: full-scan iterates catalogue insertion order, partitioned
+    # iterates sorted ids).
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
+    assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
+    assert {o.transaction_id for o in partitioned.observations} == {q1_row.transaction_id}
+
+    # Permitted delta: out-of-window issue taxonomy. Full-scan silently drops
+    # the archived row (no issue); partitioned coarsens both out-of-window ids
+    # to OUTSIDE_PERIOD.
+    partitioned_issue_ids = {i.transaction_id for i in partitioned.issues}
+    assert partitioned_issue_ids == {q3_row.transaction_id, archived_q3_row.transaction_id}
+    assert all(i.reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+
+    full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
+    assert full_scan_issue_ids == {q3_row.transaction_id}
+    assert archived_q3_row.transaction_id not in full_scan_issue_ids
+
+
 def test_casilla_01_target_matches_expected_binding_contract() -> None:
     """Every observation targets casilla 01 — structural pin for the binding contract."""
     transactions = [

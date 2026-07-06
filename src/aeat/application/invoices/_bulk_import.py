@@ -46,6 +46,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
 from ._creation import build_catalogue_invoice, create_catalogue_invoice
@@ -147,9 +148,12 @@ def _cell_text(value: object) -> str:
 
 def _parse_row_date(raw: str, *, row_number: int, field: str) -> date:
     try:
-        return date.fromisoformat(raw)
+        value = parse_iso8601_date(raw)
     except ValueError as exc:
         raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}") from exc
+    if value is None:
+        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}")
+    return value
 
 
 def _parse_row_decimal(raw: str, *, row_number: int, field: str) -> Decimal:

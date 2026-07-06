@@ -3,13 +3,13 @@
 Covers the ``m210_convenio_lob_advisory`` non-blocking
 :class:`~aeat.domain.modelos.ModeloVerificationFinding` this module surfaces
 whenever a Modelo 210 rate actually applies a matched treaty override row (per
-the accepted ``2026-06-30-convenio-doble-imposicion-adr`` D2 ruling: "Treaty
-eligibility (residence certificate, limitation-of-benefits) is surfaced as a
-non-blocking advisory Notice, never silently trusted").
+the treaty-eligibility policy: residence-certificate and
+limitation-of-benefits checks surface as non-blocking advisory notices rather
+than being silently trusted).
 
-The advisory MUST fire for every treaty-country persona with a matched
+The advisory must fire for every treaty-country persona with a matched
 override row (GB/general FLAT, MA/interest CEILING, DE/interest EXEMPT,
-AR/pension ALLOCATION_DOMESTIC_TARIFF) and MUST NOT fire for a domestic
+AR/pension ALLOCATION_DOMESTIC_TARIFF) and must not fire for a domestic
 resident with no ``country_of_fiscal_residence``, nor for a treaty country
 whose declared ``tipo_renta`` has no matching override row (the missing-row
 BLOCKING branch is a separate concern owned by

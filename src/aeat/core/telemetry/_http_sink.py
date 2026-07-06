@@ -53,6 +53,8 @@ from typing import TYPE_CHECKING
 
 import httpx
 
+from ..external_constants import UTF_8_ENCODING
+
 if TYPE_CHECKING:
     from ._schema import TelemetryEventPayload
 
@@ -112,7 +114,7 @@ class HttpTelemetrySink:
         try:
             response = httpx.post(
                 self._endpoint,
-                content=payload.model_dump_json().encode("utf-8"),
+                content=payload.model_dump_json().encode(UTF_8_ENCODING),
                 headers={"content-type": "application/json"},
                 timeout=self._timeout_s,
             )

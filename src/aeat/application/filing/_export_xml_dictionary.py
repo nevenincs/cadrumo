@@ -1,4 +1,25 @@
-"""XML-dictionary declaration export renderer."""
+"""XML-dictionary declaration export renderer.
+
+Renders approved declaration drafts through registry ``xml_dictionary`` export
+layouts. The renderer reuses the official AEAT dictionary and XSD source refs
+resolved by the registry schema provider, then writes only a local XML payload
+for the draft export path.
+
+See Also:
+    :func:`~application.filing.export_draft`
+        Draft export service that selects this renderer for XML dictionary
+        layouts.
+    :class:`~domain.filing.ModeloDraft`
+        Approved declaration draft whose casilla and header values are rendered.
+    :class:`~domain.calculations.registry.ExportLayoutDefinition`
+        Registry export layout carrying dictionary and XSD source references.
+    :class:`~domain.calculations.registry.XmlDictionaryEntry`
+        Parsed dictionary row consumed while projecting XML fields.
+    :func:`~domain.calculations.registry.xml_dictionary_entries`
+        Registry helper that reads the official dictionary source.
+    :class:`~application.filing.runtime.RegistrySchemaAccessor`
+        Runtime schema provider that resolves source roots and references.
+"""
 
 from __future__ import annotations
 
@@ -36,7 +57,21 @@ def render_xml_dictionary_layout(
     headers: dict[str, str],
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
-    """Render an XML-dictionary layout for an approved declaration draft."""
+    """Render an XML-dictionary layout for an approved declaration draft.
+
+    Args:
+        layout: Registry
+            :class:`~domain.calculations.registry.ExportLayoutDefinition`
+            whose format is ``xml_dictionary``.
+        draft: Approved :class:`~domain.filing.ModeloDraft` supplying casilla
+            values, modelo, and period metadata.
+        headers: Normalized declaration header values such as identity fields.
+        schema_provider: :class:`~application.filing.runtime.RegistrySchemaAccessor`
+            that resolves dictionary and XSD source references.
+
+    Returns:
+        UTF-8 XML declaration bytes for the local export artefact.
+    """
     entries = xml_dictionary_entries(layout, source_root=schema_provider.source_root, sources=schema_provider.sources)
     xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
     version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)

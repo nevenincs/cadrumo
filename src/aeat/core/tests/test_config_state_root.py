@@ -10,11 +10,10 @@ chain — no mocks, no monkeypatching of the unit under test. The
 deterministically, and env-provided base directories use the host-absolute
 ``tmp_path`` fixture so the foreign-platform branches resolve on any host.
 
-This module carries two Step surfaces: the derived-substrate cascade
-(``W01.P01.S03`` — the token, log, secret, blob and audit roots follow the
-installed base through the existing state-root validators) and the fresh-install
-roundtrip proof (``W01.P01.S04`` — installed storage resolves off the platform
-directory and never off ``PROJECT_ROOT``, checkout unchanged).
+The tests cover both the derived-substrate cascade and the fresh-install
+roundtrip: token, log, secret, blob, and audit roots follow the installed base,
+installed storage resolves off the platform directory, and checkout storage
+remains under ``PROJECT_ROOT``.
 """
 
 from __future__ import annotations

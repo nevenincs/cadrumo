@@ -5,6 +5,24 @@ that dispatcher under its size budget while preserving the existing registry op
 names. Dispatch still lives in ``_formula_runtime``; this module owns the
 Modelo 131 estimación-objetiva módulos Fase 1ª-3ª evaluators and advisory flag
 helpers.
+
+See Also:
+    :mod:`~domain.calculations.registry._formula_runtime`
+        Central formula dispatcher that routes M131 operation names here.
+    :mod:`~domain.calculations.registry._formula_runtime_ops`
+        Shared numeric-casilla, parameter, and arithmetic helpers used by these
+        evaluators.
+    :class:`~domain.calculations.registry.FormulaExpression`
+        Registry-authored operation graph consumed by each evaluator.
+    :class:`~domain.calculations.registry.ParameterDefinition`
+        Keyed-bracket and scalar parameter rows that carry the módulo tables and
+        index rates.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Public calculation entry point that records these evaluator results in
+        registry calculation provenance.
+    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
+        Advisory predicates that surface untabled or conflicting M131 módulo
+        results instead of allowing silent zeros.
 """
 
 from __future__ import annotations

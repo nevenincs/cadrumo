@@ -98,8 +98,8 @@ def _authority():
     return resources().modelos.authority
 
 
-def test_canonical_fleet_is_seventy_two_distinct_modelos() -> None:
-    """The canonical fleet — the gate's denominator — is exactly 72 distinct ids.
+def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:
+    """The canonical fleet — the gate's denominator — is exactly 73 distinct ids.
 
     62 is the count of registry-loadable modelo directories under
     ``src/aeat/_data/registry/aeat/modelos/`` today (verified against the live
@@ -152,11 +152,14 @@ def test_canonical_fleet_is_seventy_two_distinct_modelos() -> None:
     :data:`aeat.core.UNMODELED_OBLIGATIONS` reaching EMPTY — when the final tail
     592 (envases de plástico, Orden HFP/1314/2022), 576 (IEDMT, Orden
     EHA/3851/2007), 121 and 122 (cesión/regularización de la deducción por familia
-    numerosa/discapacidad, Orden HFP/105/2017) were promoted windowless.
+    numerosa/discapacidad, Orden HFP/105/2017) were promoted windowless. It
+    became 73 when Modelo 145 was added as a registry-backed local payer
+    communication, out of scope for the overview filing calendar but still part
+    of the authorization fleet denominator.
     """
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 72
+    assert FLEET_SIZE == 73
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:

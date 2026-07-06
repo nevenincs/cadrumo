@@ -28,7 +28,7 @@ See Also:
         Pure builder that folds the
         :class:`~domain.calculations.registry.ValidatedRegistryAuthority` into
         typed rows.
-    :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
+    :class:`~domain.calculations.registry._query_reports.ModeloSupportMatrixReport`
         Query-service envelope returned by
         :meth:`~domain.calculations.registry.RegistryQueryService.support_matrix`.
     :func:`~application.modelo.registry_support_matrix`

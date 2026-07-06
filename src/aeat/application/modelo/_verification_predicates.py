@@ -1,4 +1,21 @@
-"""Registry-authored predicate runtime for modelo verification."""
+"""Registry-authored predicate runtime for modelo verification.
+
+The verification action feeds this module predicate rows from the selected
+:class:`~domain.calculations.registry.RegistrySnapshot`. The runtime evaluates
+blocking and advisory DSL expressions against calculated casilla values,
+profile state, and typed unresolved calculation outcomes, then returns
+operator-facing verification findings.
+
+See Also:
+    :mod:`~application.modelo._verification_actions`
+        Verification workflow that resolves the snapshot and persists reports.
+    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
+        Registry-authored predicate records evaluated here.
+    :class:`~domain.calculations.registry.RegistryCalculationUnresolvedOutcome`
+        Typed unresolved engine outcomes converted into verification findings.
+    :class:`~domain.modelos.ModeloVerificationFinding`
+        Finding records returned to the verification report.
+"""
 
 from __future__ import annotations
 
@@ -325,7 +342,7 @@ def _evaluate_predicate_expression(
     """Return True when the predicate holds, False when it is violated.
 
     Supports the DSL operators registered in
-    :data:`~aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
+    :data:`~domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
@@ -349,7 +366,7 @@ def _evaluate_predicate_expression(
     An expression that does not match any registered pattern is treated as
     holding (i.e. unknown predicates do not block the operator). The
     authoring-time validator in
-    :mod:`~aeat.domain.calculations.registry._validate_surfaces` is the gate
+    :mod:`~domain.calculations.registry._validate_surfaces` is the gate
     against typos reaching this branch.
     """
     expr = expression.strip()
@@ -779,12 +796,12 @@ def _evaluate_verification_predicates(
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
 
     ``predicates`` are
-    :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
+    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
     entries from the selected registry snapshot. The returned records are
-    :class:`~aeat.domain.modelos.ModeloVerificationFinding` values.
+    :class:`~domain.modelos.ModeloVerificationFinding` values.
 
     ``text_values`` carries operator-entered raw strings (e.g.
-    :attr:`~aeat.domain.modelos.CalculationRevision.input_values_by_casilla_id`),
+    :attr:`~domain.modelos.CalculationRevision.input_values_by_casilla_id`),
     independent of the Decimal ``casilla_values`` projection. It defaults to an
     empty mapping and is consumed by text-aware ADVISORY operators such as
     ``casilla_equals_implies_nonzero``; every other operator ignores it.
@@ -795,7 +812,7 @@ def _evaluate_verification_predicates(
     WARNING-severity ADVISORY finding and the verified-complete grant remains
     possible if no blocking findings exist.
 
-    ``profile`` is a :class:`~aeat.domain.deadlines.TaxpayerProfile` threaded
+    ``profile`` is a :class:`~domain.deadlines.TaxpayerProfile` threaded
     through to support profile-state-aware predicate operators such as
     ``profile_field_required`` and ``profile_flag_enabled``. Casilla-only
     operators ignore the parameter.

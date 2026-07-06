@@ -215,7 +215,7 @@ class SecureObjectRepository:
         raises :class:`SessionExpiredError` (translated by the CLI
         error decorator into a refusal that names ``aeat config
         unlock`` as the next action). On a fresh session,
-        calls :meth:`BucketSession.touch` to roll the deadline
+        calls :meth:`~adapters.persistence.storage.BucketSession.touch` to roll the deadline
         forward by the configured idle window — the operator's
         active session remains usable for the next window's
         duration without re-authentication.
@@ -469,7 +469,9 @@ class SecureObjectRepository:
 
         Args:
             namespace: The storage namespace whose rows are listed.
-            expected_class: Sensitivity class all rows in this namespace must carry.
+            expected_class: The
+                :class:`~adapters.persistence.storage.SensitivityClass`
+                all rows in this namespace must carry.
             max_supported_version: Expected row ``schema_version``; any different
                 version is treated as unreadable.
         """

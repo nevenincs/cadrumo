@@ -1,4 +1,23 @@
-"""Output emitters for Modelo 145 communication CLI commands."""
+"""Output emitters for Modelo 145 communication CLI commands.
+
+Renderers for the local payer communication command group. They project
+application Modelo 145 records, validation reports, and export results into the
+central CLI envelope format for both text and JSON output.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_m145_cli`
+        Typer command group that calls these emitters.
+    :mod:`~entrypoints.cli._modelo_payloads_m145`
+        Typed payload classes returned by the JSON envelope.
+    :func:`~entrypoints.cli._common._emit_envelope`
+        Shared CLI output path used by each emitter in this module.
+    :class:`~application.modelo.M145CommunicationRecord`
+        Application record rendered by record mutation emitters.
+    :class:`~application.modelo.M145CommunicationValidationResult`
+        Application validation result rendered by validation emitters.
+    :class:`~application.modelo.M145CommunicationExportResult`
+        Application export result rendered by export emitters.
+"""
 
 from __future__ import annotations
 

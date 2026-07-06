@@ -18,9 +18,9 @@ _SOURCE_ROOT = REPO_ROOT / "src"
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>aeat\.[\w.*]+)\s*->\s*(?P<target>aeat\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 840  # bumped: filing-amendment repository ports-inversion (W03.P08.S11, +4)
-_APPLICATION_SOURCE_MODULE_BASELINE = 77
-_DOMAIN_TO_ADAPTERS_BASELINE = 70  # bumped: filing-amendment repository domain roundtrip test edge (W03.P08.S11, +1)
+_APPLICATION_TO_ADAPTERS_BASELINE = 840  # filing-amendment repository ports-inversion increment (+4)
+_APPLICATION_SOURCE_MODULE_BASELINE = 78  # prorrata register application adapter pin
+_DOMAIN_TO_ADAPTERS_BASELINE = 70  # filing-amendment repository domain roundtrip test increment (+1)
 
 
 @dataclass(frozen=True)
@@ -108,15 +108,13 @@ def test_domain_to_adapters_pin_count_does_not_grow() -> None:
 
 
 def test_zero_production_domain_to_adapters_edges() -> None:
-    """The ports-inversion campaign seam is closed: no PRODUCTION domain module
-    may pin a domain -> adapters ignore edge in any contract.
+    """No production domain module may pin a domain -> adapters ignore edge.
 
     Every production domain repository now sits behind a Protocol port with its
-    concrete class under ``adapters.persistence.profile`` (arch-remediation-ports
-    -inversion, W04.P10.S19). Only test-file roundtrip / anti-tautology edges —
+    concrete class under ``adapters.persistence.profile``. Only test-file roundtrip / anti-tautology edges —
     which legitimately construct the concrete adapter to exercise the encrypted
     boundary — may remain. A production domain -> adapters edge reappearing here
-    is a seam regression and must fail loudly, not ratchet.
+    is an architecture regression and must fail loudly, not ratchet.
     """
     production_domain_adapter_edges = tuple(
         edge

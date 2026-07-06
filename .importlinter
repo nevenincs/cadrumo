@@ -733,6 +733,7 @@ ignore_imports =
     aeat.application.modelo._borrador_binding -> aeat.adapters.**
     aeat.application.modelo._m036_lifecycle -> aeat.adapters.**
     aeat.application.modelo._reconcile -> aeat.adapters.**
+    aeat.application.prorrata_register -> aeat.adapters.**
     aeat.application.registry -> aeat.adapters.**
     aeat.application.repair_integrity -> aeat.adapters.**
     aeat.application.review.conftest -> aeat.adapters.**

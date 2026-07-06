@@ -58,6 +58,7 @@ from ...domain.iva import (
 )
 from ...domain.transactions import (
     BusinessClassification,
+    OutOfWindowTransactionStub,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -250,15 +251,39 @@ def aggregate_iva_ledger_observations_from_repositories(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # NOT pre-filtered by date range (issue #408): unlike the annual-only
-    # ``_renta_ledger`` first-slice path, this aggregation's ``OUTSIDE_PERIOD``
-    # issue is a genuine diagnostic over the FULL persisted catalogue -- an
-    # operator querying one quarter needs to see that a catalogue transaction
-    # from a different period exists and was excluded, not have it silently
-    # vanish before the classifier ever runs. Pre-filtering with
-    # ``load_for_date_range`` would make that diagnostic unreachable, which is
-    # an observable behaviour change, not a no-op.
-    return aggregate_iva_ledger_observations(repository.load(), period=period)
+    # Only the in-window subset is decrypted and classified. Out-of-window
+    # catalogue rows come from the plaintext date index and are reported
+    # uniformly as ``OUTSIDE_PERIOD`` because decrypted-field gates cannot run
+    # for those rows. A period with no calendar span falls back to the
+    # unfiltered load.
+    if not period.has_date_span():
+        return aggregate_iva_ledger_observations(repository.load(), period=period)
+    partition = repository.partition_by_date_range(period.start_date, period.end_date)
+    result = aggregate_iva_ledger_observations(partition.in_window, period=period)
+    return result.model_copy(
+        update={"issues": (*result.issues, *_out_of_window_issues(partition.out_of_window))},
+    )
+
+
+def _out_of_window_issues(
+    stubs: Iterable[OutOfWindowTransactionStub],
+) -> tuple[IvaLedgerAggregationIssue, ...]:
+    """Return one uniform ``OUTSIDE_PERIOD`` issue per out-of-window catalogue stub.
+
+    Diagnosed from the plaintext ``(transaction_id, filing_date)`` stub alone:
+    the row was never decrypted, so no other gate (currency, direction,
+    business classification, ...) can be evaluated for it. The detail records
+    the date fact and that classification did not run.
+    """
+    return tuple(
+        IvaLedgerAggregationIssue(
+            transaction_id=stub.transaction_id,
+            reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            detail=f"filing date {stub.filing_date.isoformat()} is outside the requested period; "
+            "excluded by period before classification",
+        )
+        for stub in stubs
+    )
 
 
 def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerObservation:

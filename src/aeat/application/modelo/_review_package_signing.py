@@ -64,6 +64,7 @@ from ...adapters.persistence.storage import SensitivityClass
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
 
@@ -236,7 +237,7 @@ def ensure_review_package_signing_keypair(
         classification=SensitivityClass.SECRET,
         schema_version=_NAMESPACE.schema_version,
         written_at=keypair.created_at,
-        payload=keypair.model_dump_json().encode("utf-8"),
+        payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
         write_provenance="application.modelo.review_package_signing.ensure_keypair",
     )
     return keypair

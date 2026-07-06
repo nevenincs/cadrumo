@@ -236,20 +236,20 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: frozenset(
         {
-            # buckets event-history repository ports-inversion (W01.P03.S05):
+            # buckets event-history repository ports-inversion:
             # the concrete BucketEventHistoryRepository defers the storage-substrate
             # import from the persistence adapter (was domain._event_repository).
             ImportEdge("adapters.persistence.profile.buckets", "adapters.persistence.storage"),
-            # filing amendment repository ports-inversion (W03.P08.S11): the concrete
+            # filing amendment repository ports-inversion: the concrete
             # ModeloAmendmentRepository defers the storage-substrate import from the
             # persistence adapter (was domain.filing._complementaria_repository).
             ImportEdge("adapters.persistence.profile.filing_amendments", "adapters.persistence.storage"),
-            # modelos_calculation catalogue repository ports-inversion (W04.P09.S15):
+            # modelos_calculation catalogue repository ports-inversion:
             # the concrete CalculationRevisionCatalogueRepository defers the
             # storage-substrate import from the persistence adapter
             # (was domain.modelos._calculation_repository).
             ImportEdge("adapters.persistence.profile.modelos_calculation", "adapters.persistence.storage"),
-            # transactions catalogue repository ports-inversion (W02.P07.S09):
+            # transactions catalogue repository ports-inversion:
             # the concrete TransactionCatalogueRepository defers the storage-substrate
             # imports from the persistence adapter (was domain.transactions._repository).
             ImportEdge("adapters.persistence.profile.transactions", "adapters.persistence.storage"),
@@ -421,7 +421,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.APPLICATION_DEFERRAL: frozenset(
         {
-            # buckets event-history repository ports-inversion (W01.P03.S05):
+            # buckets event-history repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
             # persistence-adapter home (was a domain.buckets deferral).
             ImportEdge("application.auth._operator", "adapters.persistence.profile.buckets"),
@@ -429,13 +429,13 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.buckets"),
             ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.buckets"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.profile.buckets"),
-            # modelos_calculation catalogue repository ports-inversion (W04.P09.S15):
+            # modelos_calculation catalogue repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
             # persistence-adapter home (was a domain.modelos deferral).
             ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.modelos_calculation"),
             ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.modelos_calculation"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_calculation"),
-            # transactions catalogue repository ports-inversion (W02.P07.S09): the
+            # transactions catalogue repository ports-inversion: the
             # concrete TransactionCatalogueRepository moved to the persistence adapter,
             # so these deferred consumers now defer-import it from the adapter home.
             # The calculation-observation repository remains deferred because importing
@@ -780,7 +780,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6: filing-amendment repository deferral sites (W03.P08.S11)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 35,
     UnsanctionedClass.APPLICATION_DEFERRAL: 516,  # +13: certificate-source registry operator verbs (#591 slice)
 }

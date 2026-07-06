@@ -1,4 +1,14 @@
-"""Developer CLI for the per-modelo registry support/capability matrix."""
+"""Developer CLI for the per-modelo registry support/capability matrix.
+
+See Also:
+    :func:`~dev.registry.matrix.manager.build_capability_matrix`
+        Probe used by the ``report`` command.
+    :func:`~dev.registry.matrix.manager.render_matrix_table`
+        Text renderer used when ``--json`` is not requested.
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Operator-facing support-matrix command built on the production query
+        service.
+"""
 
 from __future__ import annotations
 

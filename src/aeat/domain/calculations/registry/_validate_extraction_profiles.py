@@ -97,10 +97,12 @@ def validate_bbox_anchor_consistency(
 ) -> list[str]:
     """Registry-level defense-in-depth for bbox_anchor field/strategy consistency.
 
-    The :class:`ExtractionTargetDefinition` model_validator enforces this at
-    construction time; this function provides an additional snapshot-build check
-    so that targets loaded from TOML that somehow bypass the in-memory validator
-    (e.g. via future schema migration tools) are caught at registry validation.
+    The
+    :class:`~domain.calculations.registry._schema_extraction.ExtractionTargetDefinition`
+    model validator enforces this at construction time; this function provides
+    an additional snapshot-build check so that targets loaded from TOML that
+    somehow bypass the in-memory validator (e.g. via future schema migration
+    tools) are caught at registry validation.
     """
     if target.match_strategy == "bbox_anchored" and target.bbox_anchor is None:
         return [

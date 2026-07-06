@@ -1,9 +1,9 @@
 """A source-backed binding with no live resolver cannot silently calculate zero.
 
-This is the application-layer, live-mesh half of the W04.P08 source-connectivity
-gate. It joins the committed registry source inventory
+This is the application-layer live-mesh source-connectivity gate. It joins the
+committed registry source inventory
 (``RegistryQueryService.source_inventory`` — the domain-side report) against the
-LIVE enrolled resolver set (``BUCKET_AGGREGATION_OWNED_SOURCES``, derived from
+live enrolled resolver set (``BUCKET_AGGREGATION_OWNED_SOURCES``, derived from
 every enrolled resolver's ``owned_sources`` plus the pre-mesh tiers and
 ``manual_input``) and the disposition taxonomy
 (``build_binding_source_dispositions``), and proves three anti-silent-zero

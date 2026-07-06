@@ -1,10 +1,28 @@
 """IVA wallet payload schemas split from the main modelo registry.
 
-These strict :class:`OutputSchema` subclasses are registered through
-:func:`register_schema` and re-exported by :mod:`_modelo_payloads` so the
-IVA wallet CLI keeps one payload import surface. The application/modelo
-facade remains authoritative for wallet balance, seed, and override behavior;
-this module only pins the JSON transport shapes.
+These strict :class:`~entrypoints.cli._schemas.OutputSchema` subclasses are
+registered through :func:`~entrypoints.cli._schemas.register_schema` and
+re-exported by :mod:`~entrypoints.cli._modelo_payloads` so the IVA wallet CLI
+keeps one payload import surface. The application/calculations facade remains
+authoritative for wallet balance queries; the application/modelo facade remains
+authoritative for seed and override behavior. This module only pins the JSON
+transport shapes.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_iva_wallet_cli`
+        Typer command group that emits these payload classes.
+    :func:`~application.calculations.query_iva_wallet_balance`
+        Application query that supplies :class:`IvaWalletBalanceResult`.
+    :func:`~application.modelo.seed_iva_compensation_period_for_bucket`
+        Seed service projected by :class:`IvaWalletSeedResult`.
+    :func:`~application.modelo.record_iva_compensation_override_for_bucket`
+        Override recorder projected by :class:`IvaWalletOverrideResult`.
+    :class:`~domain.iva_compensation.IvaWalletBalanceReport`
+        Domain balance summary converted into the balance payload.
+    :class:`~domain.iva_compensation.IvaCompensationPeriodState`
+        Persisted period-state record returned by seed operations.
+    :class:`~domain.iva_compensation.IvaCompensationReconciliationDecision`
+        Persisted wallet-authority decision returned by override operations.
 """
 
 from __future__ import annotations

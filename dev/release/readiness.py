@@ -19,6 +19,22 @@ Two severities distinguish a hard release blocker from an advisory note:
 See `docs/_release_checklist.yaml` (the `audit_state_gate` section) for the
 checklist item this gate implements, and `RELEASING.md` for where it sits in
 the per-release sequence.
+
+See Also:
+    :class:`ReadinessReport`
+        Aggregate verdict returned by :func:`build_report` and serialized by
+        the CLI.
+    :func:`check_version_surfaces_agree`
+        Blocking local version-surface parity check.
+    :func:`check_changelog_is_ready`
+        Blocking changelog presence and merge-marker check.
+    :func:`check_latest_packaging_smoke_evidence`
+        Advisory packaging-smoke evidence check for the current checkout.
+    :func:`check_no_open_release_blockers`
+        GitHub-backed audit-state blocker check that degrades when live state
+        cannot be read.
+    :func:`main`
+        CLI entrypoint used by the release readiness recipe.
 """
 
 from __future__ import annotations

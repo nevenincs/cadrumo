@@ -1,4 +1,33 @@
-"""Typed report contracts for registry query surfaces."""
+"""Typed report contracts for registry query surfaces.
+
+These frozen pydantic DTOs are emitted by
+:class:`~domain.calculations.registry.RegistryQueryService` for read-only
+registry introspection: modelo listings, revision descriptions, casilla
+details, binding selector projections, formula dependency rows, support-matrix
+summaries, and the registry-wide binding-source inventory.
+
+The contracts stay in the domain layer and are deliberately not CLI payload
+schemas. Application facades return these reports unchanged; CLI modules then
+project them into strict ``--json`` envelopes. The source-inventory report is
+also intentionally disposition-free: it records the committed
+:class:`~core.BindingSourceKind` declarations and leaves enrolled/deferred/
+reserved mesh classification to application-layer gates.
+
+See Also:
+    :class:`~domain.calculations.registry.RegistryQueryService`
+        Builder of every report class defined here.
+    :mod:`~application.modelo._registry_discovery`
+        Application facade used by CLI discovery commands.
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Typer command group that renders these reports to text and JSON.
+    :mod:`~entrypoints.cli._modelo_payloads`
+        CLI-side ``OutputSchema`` projections for discovery command envelopes.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Revision record from which casilla, binding, and formula rows are
+        projected.
+    :class:`~domain.calculations.registry._support_matrix.ModeloEntry`
+        Support-matrix row carried by :class:`ModeloSupportMatrixReport`.
+"""
 
 from __future__ import annotations
 

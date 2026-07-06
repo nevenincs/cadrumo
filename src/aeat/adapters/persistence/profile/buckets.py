@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventHistoryPersistenceError
@@ -210,7 +211,7 @@ class BucketEventHistoryRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
 

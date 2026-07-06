@@ -1,16 +1,21 @@
 """Public ``parse_declaracion`` entry points for declaration-copy PDFs.
 
 Parsing is registry-profile-driven: template detection resolves the
-modelo/year/revision coordinate, then a :class:`RegistrySnapshot` supplies the
-single ``declaracion_pdf`` :class:`ExtractionProfileDefinition` used to extract
-casillas. There is deliberately no per-modelo extractor class registry here.
+modelo/year/revision coordinate, then a
+:class:`~domain.calculations.registry.RegistrySnapshot` supplies the single
+``declaracion_pdf``
+:class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+used to extract casillas. There is deliberately no per-modelo extractor class
+registry here.
 
 When callers do not supply a snapshot, the parser loads one through
-:class:`ValidatedRegistryAuthority`. The snapshot's :class:`ModeloRevision`
-owns the canonical casilla declarations and the returned
-:class:`InboundDeclaracionObservation` stamps the exact :class:`RegistrySnapshotRef`.
-The bytes entry point keeps decrypted live-read PDF content in memory rather
-than materialising a plaintext temporary file.
+:class:`~domain.calculations.registry.ValidatedRegistryAuthority`. The
+snapshot's :class:`~domain.calculations.registry.ModeloRevision` owns the
+canonical casilla declarations and the returned
+:class:`~adapters.inbound.declaracion.InboundDeclaracionObservation` stamps the
+exact :class:`~domain.calculations.registry.RegistrySnapshotRef`. The bytes
+entry point keeps decrypted live-read PDF content in memory rather than
+materialising a plaintext temporary file.
 """
 
 from __future__ import annotations
@@ -660,7 +665,7 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
 
     Returns a tuple with one list of word dicts per page in source order.
     Each dict has ``text``, ``x0``, ``x1``, ``top``, ``bottom`` keys from
-    pdfplumber's :meth:`Page.extract_words`.  Empty pages yield an empty list.
+    pdfplumber's ``Page.extract_words``. Empty pages yield an empty list.
     """
     import pdfplumber
 
@@ -680,7 +685,7 @@ def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[_PdfWord], .
     """Extract per-page word-position dicts from in-memory PDF bytes.
 
     Mirrors :func:`_extract_pages_words` but opens an in-memory
-    :class:`io.BytesIO` stream so decrypted declaration bytes never have to be
+    :class:`~io.BytesIO` stream so decrypted declaration bytes never have to be
     written to a plaintext scratch file to satisfy ``pdfplumber.open``.
     """
     import pdfplumber

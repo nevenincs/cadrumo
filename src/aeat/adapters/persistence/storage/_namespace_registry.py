@@ -335,6 +335,17 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+PROFILE_PRORRATA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_prorrata_register",
+    namespace="aeat.persistence.profile.prorrata_register",
+    owner="aeat.adapters.persistence.profile.prorrata_register",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="repair_integrity_decisions",
     namespace="aeat.application.repair_integrity.decisions",
@@ -1062,6 +1073,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         PROFILE_ASSETS_LEDGER_NAMESPACE,
         PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
         PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
+        PROFILE_PRORRATA_REGISTER_NAMESPACE,
         REPAIR_INTEGRITY_DECISION_NAMESPACE,
         APPLICATION_FILING_HISTORY_NAMESPACE,
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -1164,6 +1176,7 @@ __all__ = [
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
     "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
+    "PROFILE_PRORRATA_REGISTER_NAMESPACE",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "SECRET_RECORD_SCHEMA_VERSION",
     "SECURE_OBJECT_CATALOGUE_KEY",

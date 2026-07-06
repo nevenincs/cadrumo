@@ -5041,6 +5041,7 @@ errors:
       évhez és időszakhoz.
     modelo_work_selector: A modelo munkavalaszto hibazott.
     modelo_work_selector_unit_not_found: A kiválasztott modelo munkaegység nem található.
+    error_profile_prorrata_register_record: 'Egy időszakok közötti áfa-arányosítási nyilvántartás szerkezetileg érvénytelen.'
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -5623,6 +5624,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_profile_prorrata_register_validation: 'Egy időszakok közötti áfa-arányosítási nyilvántartás nem ment át az ellenőrzésen.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

@@ -4,12 +4,11 @@ Every send-path assertion here runs against a real loopback
 ``ThreadingHTTPServer`` (mirroring the pattern in
 ``adapters/outbound/llm/_providers/tests/test_gemini.py``) or a real closed
 port for the transport-failure case -- never a mocked ``httpx`` client. This
-proves the default-inert and consent-gated invariants
-``2026-07-04-remote-telemetry-adr`` and the follow-up transport slice require:
-no configured endpoint means no send, a refused consent gate never reaches
-the sink at all (composed through :func:`emit_telemetry_event`), a fully
-permitted invocation POSTs exactly the allowlisted payload, and a transport
-failure never escapes to the caller.
+proves the default-inert and consent-gated invariants: no configured endpoint
+means no send, a refused consent gate never reaches the sink at all (composed
+through :func:`emit_telemetry_event`), a fully permitted invocation POSTs
+exactly the allowlisted payload, and a transport failure never escapes to the
+caller.
 """
 
 from __future__ import annotations
@@ -89,7 +88,7 @@ def _stop_loopback_server(server: ThreadingHTTPServer, thread: threading.Thread)
 
 
 def test_no_configured_endpoint_never_sends() -> None:
-    """A sink built without an endpoint is permanently inert, per the ADR default."""
+    """A sink built without an endpoint is permanently inert."""
     server, thread, events = _run_loopback_server()
     try:
         # Deliberately construct the sink with ``endpoint=None`` even though a

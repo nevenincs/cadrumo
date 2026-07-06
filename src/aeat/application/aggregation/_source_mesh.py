@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Literal, NamedTuple, Protocol, runtime_checkable
@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Period
+from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -580,10 +581,9 @@ class CalculationSourceResolution(BaseModel):
                 return value
             row_value = item.get("value")
             if item.get("value_kind") == "decimal":
-                try:
-                    row_value = Decimal(str(row_value))
-                except InvalidOperation as exc:
-                    raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid") from exc
+                row_value = coerce_decimal(row_value)
+                if row_value is None:
+                    raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
             normalized[(item.get("binding_id"), item.get("row_index"))] = row_value
         return normalized
 

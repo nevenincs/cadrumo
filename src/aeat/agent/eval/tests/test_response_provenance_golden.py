@@ -50,7 +50,7 @@ from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from .. import load_scenario, run_golden_scenario
+from .. import GoldenScenario, load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -225,6 +225,16 @@ def _dispatch_real_m130_calculate(
     return tuple(observations)
 
 
+def _expected_computed_observations(
+    scenario: GoldenScenario,
+    observations: tuple[Mapping[str, Any], ...],
+) -> tuple[Mapping[str, Any], ...]:
+    expected = set(scenario.expected_computed_casillas)
+    computed = tuple(obs for obs in observations if str(obs["casilla_id"]) in expected)
+    assert {str(obs["casilla_id"]) for obs in computed} == expected
+    return computed
+
+
 def test_m130_calculate_response_payload_carries_provenance(runtime_profile: TestRuntimeProfile) -> None:
     """A real dispatched M130 calculate RESPONSE payload is provenance-complete.
 
@@ -247,6 +257,7 @@ def test_m130_calculate_response_payload_carries_provenance(runtime_profile: Tes
 
     assert result.response_provenance_present, result.failures
     assert all(obs["legal_refs"] and obs["source_refs"] for obs in observations)
+    assert all(obs["formula_id"] for obs in _expected_computed_observations(scenario, observations))
 
 
 def test_runner_rejects_a_response_with_provenance_stripped(runtime_profile: TestRuntimeProfile) -> None:
@@ -276,6 +287,60 @@ def test_runner_rejects_a_response_with_provenance_stripped(runtime_profile: Tes
     assert not result.passed
     assert not result.response_provenance_present
     assert any("lack legal_refs/source_refs" in failure for failure in result.failures)
+
+
+def test_runner_rejects_expected_computed_response_rows_without_formula_id(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Anti-tautology: expected computed response rows without formula_id MUST fail."""
+    scenario = load_scenario(_SCENARIO_PATH)
+    observations = _dispatch_real_m130_calculate(
+        runtime_profile,
+        filing_year=scenario.filing_year,
+        period=scenario.period,
+    )
+    expected = set(scenario.expected_computed_casillas)
+    stripped = tuple(
+        {**dict(obs), "formula_id": None} if str(obs["casilla_id"]) in expected else dict(obs)
+        for obs in observations
+    )
+
+    result = run_golden_scenario(
+        scenario,
+        valid_commands=_valid_commands(),
+        response_observations=stripped,
+    )
+
+    assert not result.passed
+    assert not result.response_provenance_present
+    assert any("formula provenance" in failure and "formula_id" in failure for failure in result.failures)
+
+
+def test_runner_allows_formula_id_absent_outside_expected_computed_rows(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Negative control: input/manual response rows do not need formula_id."""
+    scenario = load_scenario(_SCENARIO_PATH)
+    observations = _dispatch_real_m130_calculate(
+        runtime_profile,
+        filing_year=scenario.filing_year,
+        period=scenario.period,
+    )
+    expected = set(scenario.expected_computed_casillas)
+    outside_expected = tuple(obs for obs in observations if str(obs["casilla_id"]) not in expected)
+    assert outside_expected, "real M130 response must include input/manual rows outside the computed contract"
+    stripped = tuple(
+        {**dict(obs), "formula_id": None} if str(obs["casilla_id"]) not in expected else dict(obs)
+        for obs in observations
+    )
+
+    result = run_golden_scenario(
+        scenario,
+        valid_commands=_valid_commands(),
+        response_observations=stripped,
+    )
+
+    assert result.response_provenance_present, result.failures
 
 
 def test_response_provenance_dimension_holds_trivially_when_not_dispatched() -> None:

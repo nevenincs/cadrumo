@@ -1,4 +1,26 @@
-"""Modelo-specific adjustment helpers for calculation actions."""
+"""Modelo-specific adjustment helpers for calculation actions.
+
+These private helpers keep model-specific edge cases out of the generic
+calculation action path: M131 fixed-record data-base projections, M390/M303
+cross-period reconciliation refusal, and M349 row-template/display suppression.
+They operate on the already resolved registry snapshot and preserve the typed
+observation contract that the calculation action persists.
+
+See Also:
+    :func:`~application.modelo.calculate_modelo_revision`
+        Application calculation action that calls these adjustment helpers.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry engine whose output is adjusted before persistence.
+    :class:`~domain.calculations.registry.RegistrySnapshot`
+        Law-determined snapshot used for relation and period requirements.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Revision whose export layouts, bindings, and relations drive the
+        model-specific adjustments.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Provenance-bearing observation rows filtered with M349 template fields.
+    :class:`~domain.modelos.WorkUnit`
+        Modelo, filing year, and period context selecting each adjustment.
+"""
 
 from __future__ import annotations
 

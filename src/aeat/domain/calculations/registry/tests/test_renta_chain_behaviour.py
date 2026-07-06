@@ -517,8 +517,7 @@ def test_art52_tiered_purely_individual_aportacion_capped_at_1500() -> None:
     """0468 tiered formula: a purely-individual aportación is capped at the EUR 1.500
 
     general sub-limit, NOT the combined EUR 10.000/30% ceiling — the exact
-    art. 52.1.b) boundary the flat formula silently over-granted (issue #574
-    Phase 2b). This is the boundary the art. 52 advisory
+    art. 52.1.b) boundary the flat formula silently over-granted. This is the boundary the art. 52 advisory
     (``_art52_reduccion_advisory_finding``) flags for the still-MANUAL
     2021-2023 revisions; here the 2025 formula is asserted to compute the
     correct capped value directly.
@@ -548,7 +547,7 @@ def test_art52_tiered_purely_individual_aportacion_capped_at_1500() -> None:
         expected=(
             _expected_output(target_casilla_id=_C0467, value=Decimal("3000.00")),
             # Tiered formula caps the purely-individual pool at EUR 1.500, not
-            # the combined EUR 10.000 the flat pre-Phase-2b formula silently
+            # the combined EUR 10.000 the earlier flat formula silently
             # granted (min(3000, 10000, 17400) would have yielded 3,000).
             _expected_output(target_casilla_id=_C0468, value=Decimal("1500.00")),
             _expected_output(target_casilla_id=_C0500, value=Decimal("56500.00")),

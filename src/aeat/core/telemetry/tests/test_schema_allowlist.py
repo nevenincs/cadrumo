@@ -3,8 +3,8 @@
 Every assertion here constructs a real ``pydantic`` model and observes a real
 validation failure (unknown field rejected) or a real schema-registry refusal
 (unregistered metric key rejected) -- never a mocked scrub function. This is
-the anti-tautology proof the ADR requires: a sensitive field must be
-IMPOSSIBLE to attach to the payload, not merely absent from today's producer
+the anti-tautology proof for the allowlist: a sensitive field must be
+impossible to attach to the payload, not merely absent from today's producer
 code.
 """
 

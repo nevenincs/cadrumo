@@ -212,8 +212,8 @@ class CsvProvider(FinancialProvider):
     Detects the bank layout by scoring the first ten rows of the
     decoded text against every entry in :data:`CSV_LAYOUTS`, then
     streams the data rows through :func:`build_raw_transaction`. The
-    decoder honours :attr:`core.config.Settings.financial_default_csv_encoding`
-    as the preferred encoding before falling back to a fixed
+    decoder honours the ``financial_default_csv_encoding`` setting as the
+    preferred encoding before falling back to a fixed
     UTF-8 / CP-1252 / ISO-8859-1 sequence.
 
     CSV layouts can provide either a source-signed amount or an explicit

@@ -1,7 +1,7 @@
-"""Tests for the Claude marketplace materialiser.
+"""Tests for the marketplace materialiser.
 
-Asserts the marketplace layout target (ADR "Marketplace") emits, in ONE call,
-the ``.claude-plugin/marketplace.json`` manifest and the plugin tree its
+Asserts the marketplace layout emits, in one call, the
+``.claude-plugin/marketplace.json`` manifest and the plugin tree its
 ``plugins[].source`` points at, so the marketplace and the plugin it serves
 cannot drift: the served plugin is byte-identical to a standalone
 ``materialise_plugin`` emission, and the checked-in scaffold under

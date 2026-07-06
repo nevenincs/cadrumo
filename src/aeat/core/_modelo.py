@@ -84,6 +84,7 @@ class Modelo(StrEnum):
     M136 = "136"
     M140 = "140"
     M143 = "143"
+    M145 = "145"
     M149 = "149"
     M150 = "150"
     M151 = "151"
@@ -237,6 +238,7 @@ UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
 #: overview obligation calendar, each with the recorded reason it is not scheduled.
 _REGISTRY_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M036: "registration form, not a periodic self-assessment the calendar schedules",
+    Modelo.M145: "local IRPF payer communication, not an AEAT filing/calendar obligation",
     Modelo.M151: "IRPF impatriado special regime, outside the autonomo/PYME core",
     Modelo.M714: "Impuesto sobre el Patrimonio, outside the IRPF/IVA/IS core",
     Modelo.M840: "Impuesto sobre Actividades Economicas, most taxpayers exempt (INCN < 1M)",

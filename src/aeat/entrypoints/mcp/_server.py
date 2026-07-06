@@ -42,6 +42,7 @@ import uuid
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from ...core.external_constants import UTF_8_ENCODING
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
     build_corpus_search_payload,
@@ -256,7 +257,7 @@ def _run_subprocess_tool(
         argv,
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding=UTF_8_ENCODING,
         errors="replace",
         check=False,
         stdin=subprocess.DEVNULL,

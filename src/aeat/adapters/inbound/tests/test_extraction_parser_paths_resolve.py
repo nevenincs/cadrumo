@@ -2,17 +2,17 @@
 
 The domain registry validator (:func:`validate_dotted_callable`) checks only the
 STRUCTURAL shape of a ``parser =`` dotted path, so the domain registry validation
-stays free of any ``adapters`` coupling (the ports-inversion seam — the domain
+stays free of any ``adapters`` coupling (the ports-inversion boundary: the domain
 must not name or import a parser module, even by string). This gate enforces the
-other half — that every ``parser =`` path declared anywhere in the bundled
+other half: every ``parser =`` path declared anywhere in the bundled
 registry resolves to a real callable under a sanctioned parser authority — from
 the adapter layer, where importing ``aeat.adapters.inbound`` parsers is legal.
 
 The registry is bundled, shipped data, so a CI gate is the authoritative
 resolution check: a ``parser =`` path that is structurally valid but names a
 non-existent / non-callable target, or a target outside the sanctioned parser
-authorities, fails here. This is the adapter-owned complement the ports-inversion
-ADR's post-close honesty-review note (finding F1) calls for.
+authorities, fails here. This is the adapter-owned complement to the
+ports-inversion boundary.
 """
 
 from __future__ import annotations

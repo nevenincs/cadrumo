@@ -32,9 +32,9 @@ from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app as config_app
 
-_CERT_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_CERT_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
 
 
 def _create_profile() -> None:

@@ -113,7 +113,7 @@ from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import IdentityError, validate_spanish_tax_id
-from ...core.parsing import parse_date
+from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
@@ -625,7 +625,9 @@ def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDra
     if invoice_date is not None:
         return invoice_date
     if draft.invoice_date is not None:
-        return date.fromisoformat(draft.invoice_date)
+        parsed = parse_iso8601_date(draft.invoice_date)
+        if parsed is not None:
+            return parsed
     raise PurchaseInvoiceEvidenceInputError(
         "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
         "override was supplied",

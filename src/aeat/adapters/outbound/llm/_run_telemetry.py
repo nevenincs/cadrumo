@@ -55,6 +55,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
 from ....core.time import now
 from ._errors import LLMCacheError
@@ -189,7 +190,7 @@ class LLMRunTelemetryRecorder:
             expected_class=SensitivityClass.DIAGNOSTIC,
             max_supported_version=_RUN_TELEMETRY_VERSION,
         ):
-            decoded = json.loads(stored.payload.decode("utf-8"))
+            decoded = json.loads(stored.payload.decode(UTF_8_ENCODING))
             if decoded.get("logical_root") != self._logical_root():
                 continue
             record = LLMRunRecord.model_validate_json(json.dumps(decoded["record"]))

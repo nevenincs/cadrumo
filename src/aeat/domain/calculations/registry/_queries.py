@@ -94,7 +94,8 @@ class RegistryQueryService:
                 both narrows to modelos that satisfy each.
 
         Returns:
-            A :class:`ModeloListReport` containing the matching rows.
+            A :class:`~domain.calculations.registry._query_reports.ModeloListReport`
+            containing the matching rows.
         """
         rows = [
             ModeloListRow(
@@ -124,9 +125,9 @@ class RegistryQueryService:
         contract).
 
         Returns:
-            A :class:`RegistrySourceInventoryReport` whose rows are sorted by the
-            source kind's string value; each row's sites are sorted by
-            ``(modelo, revision_id)``.
+            A :class:`~domain.calculations.registry._query_reports.RegistrySourceInventoryReport`
+            whose rows are sorted by the source kind's string value; each row's
+            sites are sorted by ``(modelo, revision_id)``.
         """
         sites_by_source: dict[BindingSourceKind, list[RegistrySourceSite]] = defaultdict(list)
         for modelo in self._authority.modelos:
@@ -162,8 +163,8 @@ class RegistryQueryService:
         ``no-dormant-source-resolvers`` / ``no-silent-under-declaration``).
 
         Returns:
-            A :class:`ModeloSupportMatrixReport` whose entries are sorted by
-            ``modelo_id``.
+            A :class:`~domain.calculations.registry._query_reports.ModeloSupportMatrixReport`
+            whose entries are sorted by ``modelo_id``.
         """
         return ModeloSupportMatrixReport(entries=build_support_matrix(self._authority))
 
@@ -192,7 +193,8 @@ class RegistryQueryService:
                 today when ``None``.
 
         Returns:
-            A :class:`ModeloDescribeReport` for the resolved revision.
+            A :class:`~domain.calculations.registry._query_reports.ModeloDescribeReport`
+            for the resolved revision.
 
         Raises:
             ``RegistryValidationError``: When ``modelo`` is not registered,
@@ -239,7 +241,7 @@ class RegistryQueryService:
         period: str,
         as_of: date | None = None,
     ) -> ModeloDescribeReport:
-        """Return a :class:`ModeloDescribeReport` for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`~domain.calculations.registry._query_reports.ModeloDescribeReport` for a scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
@@ -307,8 +309,8 @@ class RegistryQueryService:
                 given physical form page or sub-form.
 
         Returns:
-            A :class:`ModeloCasillasReport` for the resolved revision, containing
-            the filtered casilla rows.
+            A :class:`~domain.calculations.registry._query_reports.ModeloCasillasReport`
+            for the resolved revision, containing the filtered casilla rows.
 
         Raises:
             ``RegistryValidationError``: When the modelo or period is not
@@ -357,7 +359,7 @@ class RegistryQueryService:
         required: bool | None = None,
         form_number: str | None = None,
     ) -> ModeloCasillasReport:
-        """Return a :class:`ModeloCasillasReport` for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`~domain.calculations.registry._query_reports.ModeloCasillasReport` for a scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
@@ -418,7 +420,8 @@ class RegistryQueryService:
             as_of: Optional calendar date for validity gating.
 
         Returns:
-            A :class:`ModeloCasillaDetailReport` for the addressed casilla.
+            A :class:`~domain.calculations.registry._query_reports.ModeloCasillaDetailReport`
+            for the addressed casilla.
 
         Raises:
             ``RegistryValidationError``: When the modelo or period is not
@@ -437,7 +440,7 @@ class RegistryQueryService:
         period: str,
         as_of: date | None = None,
     ) -> ModeloCasillaDetailReport:
-        """Return a :class:`ModeloCasillaDetailReport` for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`~domain.calculations.registry._query_reports.ModeloCasillaDetailReport` for a scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
@@ -462,7 +465,8 @@ class RegistryQueryService:
         period string when the caller already holds the decomposed values.
 
         Returns:
-            A :class:`ModeloBindingsReport` for the requested filing scope.
+            A :class:`~domain.calculations.registry._query_reports.ModeloBindingsReport`
+            for the requested filing scope.
         """
         definition = self._authority.validate_modelo(modelo.strip())
         snapshot = self._authority.snapshot(
@@ -488,7 +492,7 @@ class RegistryQueryService:
         period: str,
         as_of: date | None = None,
     ) -> ModeloFormulasReport:
-        """Return a :class:`ModeloFormulasReport` for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`~domain.calculations.registry._query_reports.ModeloFormulasReport` for a scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
@@ -525,7 +529,7 @@ class RegistryQueryService:
         filing_year: int,
         as_of: date | None = None,
     ) -> ModeloBindingsReport:
-        """Return a :class:`ModeloBindingsReport` for the revision that covers ``filing_year``.
+        """Return a :class:`~domain.calculations.registry._query_reports.ModeloBindingsReport` for ``filing_year``.
 
         ``bindings`` with no period resolves the *latest* revision,
         which for a multi-revision modelo (e.g. Modelo 100, one
@@ -585,7 +589,8 @@ class RegistryQueryService:
             as_of: Optional calendar date for validity gating.
 
         Returns:
-            A :class:`ModeloBindingsReport` for the resolved revision.
+            A :class:`~domain.calculations.registry._query_reports.ModeloBindingsReport`
+            for the resolved revision.
 
         Raises:
             ``RegistryValidationError``: When the modelo or period is not
@@ -622,7 +627,8 @@ class RegistryQueryService:
             as_of: Optional calendar date for validity gating.
 
         Returns:
-            A :class:`ModeloFormulasReport` for the resolved revision.
+            A :class:`~domain.calculations.registry._query_reports.ModeloFormulasReport`
+            for the resolved revision.
 
         Raises:
             ``RegistryValidationError``: When the modelo or period is not

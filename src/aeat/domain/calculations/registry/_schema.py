@@ -752,14 +752,16 @@ class DataBindingDefinition(RegistryModel):
     closed-membership substrate axis — ``"censo_event_kind"`` (M036), ``"CCAA"``
     and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"`` (M200) —
     and surfaced by the operator-facing ``bindings list`` CLI table
-    (``_modelo_discovery_cli.py``), the :class:`ModeloBindingQueryRow` query
-    projection, the borrador binding resolver, and the Sheets-pull edit router.
+    (``_modelo_discovery_cli.py``), the
+    :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
+    query projection, the borrador binding resolver, and the Sheets-pull edit router.
     Because a :class:`~enum.StrEnum` serialises to its value, those ``str``
     consumers stay byte-compatible. It is the closed-set *annotation* on the
     binding, distinct from the ``input_channel`` (how a formula consumes the
     value); a binding may carry a ``typed_enum`` yet still be a numeric
     ``decimal`` channel. The loader's raw TOML token is hydrated to its member
-    by :meth:`_coerce_typed_enum` at the boundary (an unknown token raises).
+    by :meth:`~domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`
+    at the boundary (an unknown token raises).
     Gated by
     ``test_schema_hygiene.py::test_renta_typed_binding_candidates_declare_substrate_enum_class``.
     """
@@ -862,12 +864,15 @@ class DataBindingDefinition(RegistryModel):
         """Validate the hydrated selector against its source family's schema at construction.
 
         Dispatches on :attr:`source` through the discriminated-union selector
-        table (``_BINDING_SELECTOR_REGISTRY`` in :mod:`._bindings`, surfaced by
-        :func:`._bindings.selector_model_for_source`): the raw authoring mapping
+        table (``_BINDING_SELECTOR_REGISTRY`` in
+        :mod:`~domain.calculations.registry._bindings`, surfaced by
+        :func:`~domain.calculations.registry._bindings.selector_model_for_source`):
+        the raw authoring mapping
         is hydrated into the per-family model and re-validated the moment the
         binding is constructed, promoting the
         selector-shape half of the former snapshot-build-only gate
-        (:func:`._bindings.validate_binding_selector_shape`) up into the model.
+        (:func:`~domain.calculations.registry._bindings.validate_binding_selector_shape`)
+        up into the model.
 
         This strictly TIGHTENS validation: a misshapen selector (an unknown key,
         a retired key name, an out-of-set ``fact`` literal) now fails at
@@ -879,11 +884,14 @@ class DataBindingDefinition(RegistryModel):
         A source absent from the selector registry is mesh-only or unregistered
         and is refused as a registry binding source.
 
-        The accessor and validator are imported lazily because :mod:`._bindings`
+        The accessor and validator are imported lazily because
+        :mod:`~domain.calculations.registry._bindings`
         imports :class:`DataBindingDefinition` from this module; the lazy import
         breaks the cycle, matching the snapshot-build validators
         (``_validate_reference_sections``, ``_validate_registry_scope``). The
-        shared :func:`._binding_selector_utils.selector_against_model` runs the
+        shared
+        :func:`~domain.calculations.registry._binding_selector_utils.selector_against_model`
+        runs the
         SAME normalisation and emits the SAME diagnostic the build gate does, so
         a construction-time refusal and a build-time refusal carry identical
         text.

@@ -53,6 +53,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 from ._review_package_signing import (
     ReviewPackageSigningKeypair,
@@ -121,7 +122,7 @@ def _counter_signed_message(*, signature_hex: str, note: str) -> bytes:
     ambiguously (e.g. ``sig="ab"`` + ``note="cd"`` colliding with
     ``sig="abc"`` + ``note="d"``).
     """
-    return signature_hex.encode("ascii") + b"\x00" + note.encode("utf-8")
+    return signature_hex.encode("ascii") + b"\x00" + note.encode(UTF_8_ENCODING)
 
 
 def counter_sign_review_package(
