@@ -812,3 +812,35 @@ pytest slice passed with 37 tests, including the M390 mesh test that saves
 stamped M303 source-period observations and asserts
 `modelo-390-prorrata-regularizacion-anual` resolves to the bundled AEAT manual
 oracle value.
+
+## S49 Follow-up Execution: M303 casilla 44 target consumption
+
+Implemented the `cross-period-prorrata-m303-target-consumption` follow-up in
+the working tree. The live prorrata regularizacion resolver now projects the
+Modelo 303 output binding into the existing `bound_inputs_by_casilla_id`
+surface for casilla `[44]`; this keeps casilla `[44]` manual in the registry and
+avoids introducing a new resolver convention or a formula-owned target cycle.
+
+The Modelo 303 total deductible formula now consumes casilla `[44]` in both
+registry revisions (`2009-y-siguientes` and `2023-y-siguientes`), matching the
+official Modelo 303 structure where `[45]` includes `[44]`. The downstream
+`iva.resultado-regimen-general` formula continues to consume only the total
+devengada and total deducible casillas, so the target projection remains the
+single source of the regularizacion value.
+
+Resolution: `s49-m303-casilla-44-target-consumption` is implemented and
+verified. The remaining known cross-period-prorrata blocker is
+`s49-bienes-inversion-remaining-blocker`.
+
+Verification inventory: focused ruff passed for the changed prorrata resolver,
+calculation action hub, prorrata mesh tests, resolver tests, timing tests,
+source-kind taxonomy tests, and Modelo 303 registry tests. The focused
+pytest slice passed with 44 tests, including the M303 mesh assertion that
+casilla `[44]` is populated through `bound_inputs_by_casilla_id` and the
+registry assertion that casilla `[44]` flows into total deductible without
+becoming a formula target. `vaultspec-core vault feature index --feature
+cross-period-prorrata`, `vaultspec-core vault check frontmatter --feature
+cross-period-prorrata`, `vaultspec-core vault check features --feature
+cross-period-prorrata`, and `vaultspec-core vault plan check
+2026-07-06-cross-period-prorrata-plan` are clean. `vaultspec-core vault plan
+status 2026-07-06-cross-period-prorrata-plan` reports 49 of 49 steps complete.
