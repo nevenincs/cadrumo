@@ -10,10 +10,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-
-if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ....adapters.persistence.storage import SecureObjectRepository
-
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -59,6 +55,9 @@ from .. import (
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....adapters.persistence.storage import SecureObjectRepository
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(

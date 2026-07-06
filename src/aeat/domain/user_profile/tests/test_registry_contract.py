@@ -17,10 +17,10 @@ from .. import (
     validate_user_profile_registry_contract,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
 if TYPE_CHECKING:  # pragma: no cover
     from .._schema import ProfileSchemaDefinition
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_100_ANUALIDADES_YEARS = (2021, 2022, 2023)
 

@@ -35,12 +35,12 @@ from .._impersonation import (
     describe_impersonation_target,
     resolve_impersonated_credentials,
 )
-
-if TYPE_CHECKING:
-    from google.oauth2.credentials import Credentials
 from .._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+if TYPE_CHECKING:
+    from google.oauth2.credentials import Credentials
 
 _TARGET_PRINCIPAL = "aeat-export@example-project.iam.gserviceaccount.com"
 
