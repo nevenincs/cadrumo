@@ -194,6 +194,7 @@ Provision capital-goods regularizacion tests from the real bienes-inversion pers
 - [x] `W06.P09.S19` - Replace memoized transaction test-export repository import with the real persistence adapter source; `src/aeat/application/modelo/tests/test_memoized_transaction_catalogue_repository.py`.
 - [x] `W06.P09.S20` - Replace renta income aggregation test-export repository imports with real persistence adapter sources; `src/aeat/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py, src/aeat/application/aggregation/tests/test_impatriado_income_ledger.py`.
 - [x] `W06.P09.S21` - Replace LLM telemetry test-export imports with real adapter sources; `src/aeat/application/ledger/tests/test_llm_classify_run_telemetry.py, src/aeat/application/tests/test_diagnostics_telemetry.py`.
+- [x] `W06.P09.S22` - Replace ledger evidence test-export storage imports with real adapter sources; `src/aeat/application/ledger/tests/test_evidence_draft.py`.
 
 ## Description
 
