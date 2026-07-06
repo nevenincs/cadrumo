@@ -13,9 +13,7 @@ These tests verify:
 
 from __future__ import annotations
 
-import ast
 import importlib
-import inspect
 
 import pytest
 
@@ -45,10 +43,12 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     can check with ``isinstance(typed, SetupAnswers)`` where SetupAnswers is the
     core class.
     """
+    from ...application.wizard import _catalogue as catalogue
     from ..setup_answers import SetupAnswers
     from ..wizard_catalogue import get_setup_flow
 
     setup_flow = get_setup_flow()
+    assert setup_flow is catalogue.SETUP_FLOW
     assert setup_flow.answers_model is SetupAnswers, (
         f"SETUP_FLOW.answers_model is {setup_flow.answers_model!r}; expected aeat.core.setup_answers.SetupAnswers"
     )
@@ -71,31 +71,32 @@ def test_profiles_imports_setup_answers_from_core() -> None:
     assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not aeat.core.setup_answers.SetupAnswers"
 
 
-def test_profiles_no_deferred_application_imports() -> None:
-    """_profiles.py must contain no deferred imports from aeat.application.wizard."""
-    # Parse the source AST and look for Import / ImportFrom nodes that
-    # reference aeat.application.wizard inside any function body.
-    profiles_path = inspect.getfile(importlib.import_module("aeat.domain.deadlines._profiles"))
-    with open(profiles_path, encoding="utf-8") as fh:
-        source = fh.read()
-    tree = ast.parse(source, filename=profiles_path)
+def test_profiles_import_purity_uses_core_projection_slot() -> None:
+    """Importing _profiles must bind core projection objects without loading the application wizard."""
+    import subprocess
+    import sys
+    import textwrap
 
-    deferred_violations: list[str] = []
-    for node in ast.walk(tree):
-        # Only flag imports that are *inside* a function definition.
-        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            continue
-        for child in ast.walk(node):
-            if isinstance(child, ast.ImportFrom):
-                if child.module and "application.wizard" in child.module:
-                    deferred_violations.append(f"line {child.lineno}: from {child.module} import ...")
-            elif isinstance(child, ast.Import):
-                for alias in child.names:
-                    if "application.wizard" in alias.name:
-                        deferred_violations.append(f"line {child.lineno}: import {alias.name}")
+    script = textwrap.dedent("""\
+        import importlib
+        import sys
 
-    assert not deferred_violations, "_profiles.py contains deferred application.wizard imports:\n" + "\n".join(
-        deferred_violations,
+        profiles = importlib.import_module("aeat.domain.deadlines._profiles")
+        from aeat.core.setup_answers import SetupAnswers, project_answers
+
+        assert profiles.SetupAnswers is SetupAnswers
+        assert profiles.project_answers is project_answers
+        leaked = sorted(name for name in sys.modules if name.startswith("aeat.application.wizard"))
+        assert leaked == [], leaked
+    """)
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, (
+        f"_profiles import purity check failed.\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
 
 
