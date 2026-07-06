@@ -10,6 +10,8 @@ context managers or injectable runtime boundaries instead.
 from __future__ import annotations
 
 import ast
+from collections import Counter
+from collections.abc import Iterable
 from typing import NamedTuple
 
 import pytest
@@ -254,15 +256,10 @@ def _canonical_patch_name(
     return name
 
 
-@pytest.fixture(scope="module")
-def patch_inventory() -> list[str]:
-    """Return monkeypatch machinery violations from deterministic test controls."""
+def _patch_inventory_for_module_trees(module_trees: Iterable[tuple[str, ast.AST]]) -> list[str]:
+    """Return formatted monkeypatch policy violations for parsed modules."""
     violations: list[str] = []
-    for module_path in all_test_control_modules():
-        relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
-        if tree is None:
-            continue
+    for relative, tree in module_trees:
         sites = _patch_inventory_sites(tree)
         for lineno, method, target in sites.mutation_sites:
             violations.append(f"{relative}:{lineno}: monkeypatch.{method}(target={target!r})")
@@ -271,6 +268,29 @@ def patch_inventory() -> list[str]:
         for lineno, name in sites.reference_sites:
             violations.append(f"{relative}:{lineno}: {name}")
     return violations
+
+
+def _patch_inventory_for_source(relative_path: str, source: str) -> list[str]:
+    """Return formatted monkeypatch policy violations for one in-memory source module."""
+    tree = ast.parse(source, filename=relative_path)
+    return _patch_inventory_for_module_trees(((relative_path, tree),))
+
+
+def _patch_violation_suffix_counts(violations: Iterable[str]) -> Counter[str]:
+    """Return policy violation suffix counts independent of source line numbers."""
+    return Counter(violation.rsplit(": ", maxsplit=1)[-1] for violation in violations)
+
+
+@pytest.fixture(scope="module")
+def patch_inventory() -> list[str]:
+    """Return monkeypatch machinery violations from deterministic test controls."""
+    module_trees: list[tuple[str, ast.AST]] = []
+    for module_path in all_test_control_modules():
+        tree = ast_for_path(module_path)
+        if tree is None:
+            continue
+        module_trees.append((repo_relative(module_path), tree))
+    return _patch_inventory_for_module_trees(module_trees)
 
 
 def test_no_monkeypatch_fixture_or_context_usage(
@@ -282,36 +302,36 @@ def test_no_monkeypatch_fixture_or_context_usage(
     )
 
 
-def test_monkeypatch_detector_rejects_fixture_argument_and_mutation_call() -> None:
-    """Fixture-driven mutation must be reported as both reference and mutation."""
-    tree = ast.parse(
-        """
-def test_env_mutation(monkeypatch):
-    monkeypatch.setenv("AEAT_TEST_SETTING", "1")
-"""
-    )
-
-    assert _mutation_sites(tree) == [(3, "setenv", "AEAT_TEST_SETTING")]
-    assert _monkeypatch_reference_sites(tree) == [(2, "argument monkeypatch"), (3, "name monkeypatch")]
-
-
-def test_monkeypatch_detector_rejects_stored_attribute_mutation_call() -> None:
-    """Stashing monkeypatch on another object must not hide mutation verbs."""
-    tree = ast.parse(
-        """
+@pytest.mark.parametrize(
+    ("source", "expected_violations"),
+    (
+        pytest.param(
+            """
+def test_attr_mutation(monkeypatch):
+    monkeypatch.setattr(service_module, "settings", object())
+    monkeypatch.setattr("pkg.module.factory", object())
+""",
+            Counter(
+                {
+                    "argument monkeypatch": 1,
+                    "name monkeypatch": 2,
+                    "monkeypatch.setattr(target='settings')": 1,
+                    "monkeypatch.setattr(target='factory')": 1,
+                }
+            ),
+            id="fixture-mutation-targets",
+        ),
+        pytest.param(
+            """
 class MutatingHarness:
     def test_env_mutation(self):
         self.monkeypatch.setenv("AEAT_TEST_SETTING", "1")
-"""
-    )
-
-    assert _mutation_sites(tree) == [(4, "setenv", "AEAT_TEST_SETTING")]
-
-
-def test_monkeypatch_detector_rejects_monkeypatch_imports_and_type_refs() -> None:
-    """Imported MonkeyPatch types and internal modules must not bypass detection."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"monkeypatch.setenv(target='AEAT_TEST_SETTING')": 1}),
+            id="stored-fixture-mutation",
+        ),
+        pytest.param(
+            """
 from pytest import MonkeyPatch
 from _pytest.monkeypatch import MonkeyPatch as PytestMonkeyPatch
 from _pytest.monkeypatch import notset
@@ -322,56 +342,44 @@ import pytest
 
 def test_type_references(context: MonkeyPatch, qualified: pytest.MonkeyPatch):
     pass
-"""
-    )
-
-    assert set(_monkeypatch_reference_sites(tree)) == {
-        (2, "import pytest.MonkeyPatch"),
-        (3, "import _pytest.monkeypatch.MonkeyPatch"),
-        (4, "import _pytest.monkeypatch.notset"),
-        (5, "import _pytest.monkeypatch"),
-        (6, "import _pytest.monkeypatch"),
-        (7, "import private_pytest"),
-        (10, "name MonkeyPatch"),
-        (10, "pytest.MonkeyPatch"),
-    }
-
-
-def test_monkeypatch_detector_rejects_explicit_context_factory() -> None:
-    """Explicit MonkeyPatch factories are still mutation machinery."""
-    tree = ast.parse(
-        """
+""",
+            Counter(
+                {
+                    "import pytest.MonkeyPatch": 1,
+                    "import _pytest.monkeypatch.MonkeyPatch": 1,
+                    "import _pytest.monkeypatch.notset": 1,
+                    "import _pytest.monkeypatch": 2,
+                    "import private_pytest": 1,
+                    "name MonkeyPatch": 1,
+                    "pytest.MonkeyPatch": 1,
+                }
+            ),
+            id="imports-and-type-references",
+        ),
+        pytest.param(
+            """
 import pytest
 
 def test_context_factory():
     with pytest.MonkeyPatch.context():
         pass
-"""
-    )
-
-    assert _explicit_patch_context_sites(tree) == [(5, "pytest.MonkeyPatch.context")]
-
-
-def test_monkeypatch_detector_rejects_pytest_alias_context_factory() -> None:
-    """Aliasing pytest must not hide explicit MonkeyPatch contexts."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"pytest.MonkeyPatch.context()": 1, "pytest.MonkeyPatch": 1}),
+            id="public-context-factory",
+        ),
+        pytest.param(
+            """
 import pytest as pt
 
 def test_context_factory():
     with pt.MonkeyPatch.context():
         pass
-"""
-    )
-
-    assert _explicit_patch_context_sites(tree) == [(5, "pytest.MonkeyPatch.context")]
-    assert _monkeypatch_reference_sites(tree) == [(5, "pytest.MonkeyPatch")]
-
-
-def test_monkeypatch_detector_rejects_internal_context_factory() -> None:
-    """Internal _pytest MonkeyPatch contexts are still patch machinery."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"pytest.MonkeyPatch.context()": 1, "pytest.MonkeyPatch": 1}),
+            id="public-alias-context-factory",
+        ),
+        pytest.param(
+            """
 from _pytest import monkeypatch as internal_monkeypatch
 import _pytest as private_pytest
 import _pytest.monkeypatch as monkeypatch_module
@@ -381,28 +389,19 @@ def test_context_factory():
         with internal_monkeypatch.MonkeyPatch.context():
             with monkeypatch_module.MonkeyPatch.context():
                 pass
-"""
-    )
-
-    assert _explicit_patch_context_sites(tree) == [
-        (7, "_pytest.monkeypatch.MonkeyPatch.context"),
-        (8, "_pytest.monkeypatch.MonkeyPatch.context"),
-        (9, "_pytest.monkeypatch.MonkeyPatch.context"),
-    ]
-    assert set(_monkeypatch_reference_sites(tree)) == {
-        (2, "import _pytest.monkeypatch"),
-        (3, "import private_pytest"),
-        (4, "import _pytest.monkeypatch"),
-        (7, "_pytest.monkeypatch.MonkeyPatch"),
-        (8, "_pytest.monkeypatch.MonkeyPatch"),
-        (9, "_pytest.monkeypatch.MonkeyPatch"),
-    }
-
-
-def test_monkeypatch_detector_rejects_direct_monkeypatch_alias_contexts() -> None:
-    """Direct MonkeyPatch import aliases must still resolve to patch machinery."""
-    tree = ast.parse(
-        """
+""",
+            Counter(
+                {
+                    "import _pytest.monkeypatch": 2,
+                    "import private_pytest": 1,
+                    "_pytest.monkeypatch.MonkeyPatch.context()": 3,
+                    "_pytest.monkeypatch.MonkeyPatch": 3,
+                }
+            ),
+            id="internal-context-factories",
+        ),
+        pytest.param(
+            """
 from pytest import MonkeyPatch as PublicPatch
 from _pytest.monkeypatch import MonkeyPatch as InternalPatch
 
@@ -410,21 +409,29 @@ def test_context_factory(public: PublicPatch, internal: InternalPatch):
     with PublicPatch.context():
         with InternalPatch.context():
             pass
-"""
-    )
+""",
+            Counter(
+                {
+                    "import pytest.MonkeyPatch": 1,
+                    "import _pytest.monkeypatch.MonkeyPatch": 1,
+                    "pytest.MonkeyPatch.context()": 1,
+                    "_pytest.monkeypatch.MonkeyPatch.context()": 1,
+                    "pytest.MonkeyPatch": 2,
+                    "_pytest.monkeypatch.MonkeyPatch": 2,
+                }
+            ),
+            id="direct-alias-context-factories",
+        ),
+    ),
+)
+def test_monkeypatch_policy_rejects_forbidden_patch_shapes(
+    source: str,
+    expected_violations: Counter[str],
+) -> None:
+    """MonkeyPatch machinery must fail through the same policy path as real files."""
+    violations = _patch_inventory_for_source("dev/tests/test_monkeypatch_policy.py", source)
 
-    assert _explicit_patch_context_sites(tree) == [
-        (6, "pytest.MonkeyPatch.context"),
-        (7, "_pytest.monkeypatch.MonkeyPatch.context"),
-    ]
-    assert set(_monkeypatch_reference_sites(tree)) == {
-        (2, "import pytest.MonkeyPatch"),
-        (3, "import _pytest.monkeypatch.MonkeyPatch"),
-        (5, "pytest.MonkeyPatch"),
-        (5, "_pytest.monkeypatch.MonkeyPatch"),
-        (6, "pytest.MonkeyPatch"),
-        (7, "_pytest.monkeypatch.MonkeyPatch"),
-    }
+    assert _patch_violation_suffix_counts(violations) == expected_violations
 
 
 def test_discovery_found_modules() -> None:
