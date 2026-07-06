@@ -28,7 +28,8 @@ See Also:
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import NamedTuple
 
@@ -307,6 +308,7 @@ def _skip_alias_inventory(tree: ast.AST) -> _SkipAliasInventory:
                 elif node.module == "unittest" and alias.name == "case":
                     unittest_case_aliases.add(alias.asname or alias.name)
         _add_pytest_assignment_aliases(node, pytest_aliases, pytest_mark_aliases, pytest_shortcut_aliases)
+        _add_unittest_assignment_aliases(node, unittest_aliases, unittest_case_aliases)
         _add_skiptest_assignment_aliases(node, unittest_aliases, unittest_case_aliases, skiptest_aliases)
 
     return _SkipAliasInventory(
@@ -357,6 +359,41 @@ def _is_pytest_mark_alias_value(
     if value_name in pytest_mark_aliases:
         return True
     return any(value_name == f"{alias}.mark" for alias in pytest_aliases)
+
+
+def _add_unittest_assignment_aliases(
+    node: ast.AST,
+    unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
+) -> None:
+    """Record aliases assigned from unittest or unittest.case modules."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign) and node.value is not None:
+        targets = [node.target]
+        value = node.value
+    else:
+        return
+    target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
+    if not target_names:
+        return
+    value_name = qualified_name(value)
+    if value_name in unittest_aliases:
+        unittest_aliases.update(target_names)
+    elif _is_unittest_case_alias_value(value_name, unittest_aliases, unittest_case_aliases):
+        unittest_case_aliases.update(target_names)
+
+
+def _is_unittest_case_alias_value(
+    value_name: str,
+    unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
+) -> bool:
+    """Return True when an expression resolves to unittest.case."""
+    if value_name in unittest_case_aliases:
+        return True
+    return any(value_name == f"{alias}.case" for alias in unittest_aliases)
 
 
 def _add_skiptest_assignment_aliases(
@@ -499,27 +536,55 @@ def _unit_live_marker_intersections(tree: ast.AST) -> list[tuple[int, str]]:
     return _skip_inventory_sites(tree).unit_live_intersections
 
 
+def _skip_policy_inventory_for_module_trees(
+    module_trees: Iterable[tuple[str, ast.AST]],
+    *,
+    test_module_relatives: frozenset[str] | None = None,
+) -> _SkipPolicyInventory:
+    """Return formatted skip policy violations for already parsed modules."""
+    test_modules = test_module_relatives or frozenset()
+    shortcut_violations: list[str] = []
+    unit_live_violations: list[str] = []
+
+    for relative, tree in module_trees:
+        inventory = _skip_inventory_sites(tree)
+        sites = _filter_forbidden_marker_sites_for_relative(relative, tree, inventory.forbidden_sites)
+        for lineno, marker_or_call_name in sites:
+            shortcut_violations.append(f"{relative}:{lineno}: {marker_or_call_name}")
+        if relative in test_modules:
+            for lineno, item_name in inventory.unit_live_intersections:
+                unit_live_violations.append(f"{relative}:{lineno}: {item_name}")
+
+    return _SkipPolicyInventory(
+        shortcut_violations=shortcut_violations,
+        unit_live_violations=unit_live_violations,
+    )
+
+
+def _skip_policy_inventory_for_source(relative_path: str, source: str) -> _SkipPolicyInventory:
+    """Return policy violations for one in-memory source module."""
+    tree = ast.parse(source, filename=relative_path)
+    return _skip_policy_inventory_for_module_trees(((relative_path, tree),))
+
+
+def _shortcut_violation_name_counts(violations: Iterable[str]) -> Counter[str]:
+    """Return canonical violation names from formatted policy messages."""
+    return Counter(violation.rsplit(": ", maxsplit=1)[-1] for violation in violations)
+
+
 @pytest.fixture(scope="module")
 def skip_policy_inventory() -> _SkipPolicyInventory:
     """Return skip/xfail and unit/live policy violations for test controls."""
-    shortcut_violations: list[str] = []
-    unit_live_violations: list[str] = []
-    test_modules = frozenset(discover_test_modules())
+    module_trees: list[tuple[str, ast.AST]] = []
     for module_path in discover_test_control_modules():
         relative = repo_relative(module_path)
         tree = ast_for_path(module_path)
         if tree is None:
             continue
-        inventory = _skip_inventory_sites(tree)
-        sites = _filter_forbidden_marker_sites_for_relative(relative, tree, inventory.forbidden_sites)
-        for lineno, marker_or_call_name in sites:
-            shortcut_violations.append(f"{relative}:{lineno}: {marker_or_call_name}")
-        if module_path in test_modules:
-            for lineno, item_name in inventory.unit_live_intersections:
-                unit_live_violations.append(f"{relative}:{lineno}: {item_name}")
-    return _SkipPolicyInventory(
-        shortcut_violations=shortcut_violations,
-        unit_live_violations=unit_live_violations,
+        module_trees.append((relative, tree))
+    return _skip_policy_inventory_for_module_trees(
+        module_trees,
+        test_module_relatives=frozenset(repo_relative(path) for path in discover_test_modules()),
     )
 
 
@@ -594,26 +659,89 @@ pytestmark = [pt.mark.{"xfail"}]
     assert _forbidden_marker_sites(tree) == [(5, _pytest_name("skip")), (7, _pytest_name("mark", "xfail"))]
 
 
-def test_skip_detector_rejects_assigned_pytest_module_alias_shortcuts() -> None:
-    """Assigned pytest module aliases must still reject skip and xfail shortcuts."""
-    tree = ast.parse(
-        f"""
+@pytest.mark.parametrize(
+    ("source", "expected_violations"),
+    (
+        pytest.param(
+            """
 import pytest
 
 pt = pytest
 pt2: object = pt
 
 def test_alias_shortcut():
-    pt2.{"skip"}("shortcut")
+    pt2.skip("shortcut")
 
-pytestmark = [pt2.mark.{"xfail"}]
-"""
-    )
+pytestmark = [pt2.mark.xfail]
+""",
+            Counter({"pytest.skip": 1, "pytest.mark.xfail": 1}),
+            id="assigned-pytest-module",
+        ),
+        pytest.param(
+            """
+import pytest as pt
 
-    assert set(_forbidden_marker_sites(tree)) == {
-        (8, _pytest_name("skip")),
-        (10, _pytest_name("mark", "xfail")),
-    }
+pytest_mark = pt.mark
+skip_now = pt.skip
+xfail_now = pt.xfail
+
+pytestmark = [pytest_mark.skipif(True)]
+
+def test_shortcut_aliases():
+    skip_now("shortcut")
+    xfail_now("shortcut")
+""",
+            Counter({"pytest.mark.skipif": 1, "pytest.skip": 1, "pytest.xfail": 1}),
+            id="assigned-pytest-mark-and-shortcuts",
+        ),
+        pytest.param(
+            """
+import unittest
+import unittest.case as unittest_case
+
+UnitSkip = unittest.SkipTest
+CaseSkip = unittest_case.SkipTest
+DirectSkip = UnitSkip
+
+def test_unit_alias_raise():
+    raise UnitSkip("missing dependency")
+
+def test_case_alias_raise():
+    raise CaseSkip("missing dependency")
+
+def test_transitive_alias_raise():
+    raise DirectSkip("missing dependency")
+""",
+            Counter({"unittest.SkipTest": 2, "unittest.case.SkipTest": 1}),
+            id="assigned-unittest-skiptest",
+        ),
+        pytest.param(
+            """
+import unittest
+
+unit = unittest
+case_mod = unit.case
+case_mod2: object = case_mod
+
+def test_unit_module_alias_raise():
+    raise unit.SkipTest("missing dependency")
+
+def test_case_module_alias_raise():
+    raise case_mod2.SkipTest("missing dependency")
+""",
+            Counter({"unittest.SkipTest": 1, "unittest.case.SkipTest": 1}),
+            id="assigned-unittest-module",
+        ),
+    ),
+)
+def test_skip_policy_rejects_assigned_skip_aliases(
+    source: str,
+    expected_violations: Counter[str],
+) -> None:
+    """Assigned aliases must still fail through the real policy inventory path."""
+    inventory = _skip_policy_inventory_for_source("dev/tests/test_assigned_skip_aliases.py", source)
+
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == expected_violations
 
 
 def test_skip_detector_rejects_pytest_imported_shortcut_aliases() -> None:
@@ -641,31 +769,6 @@ pytestmark = [pytest_mark.{"skipif"}(True)]
     )
 
     assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skipif"))]
-
-
-def test_skip_detector_rejects_assigned_pytest_mark_and_shortcut_aliases() -> None:
-    """Assigned pytest aliases must still reject skip and xfail shortcuts."""
-    tree = ast.parse(
-        f"""
-import pytest as pt
-
-pytest_mark = pt.mark
-skip_now = pt.{"skip"}
-xfail_now = pt.{"xfail"}
-
-pytestmark = [pytest_mark.{"skipif"}(True)]
-
-def test_shortcut_aliases():
-    skip_now("shortcut")
-    xfail_now("shortcut")
-"""
-    )
-
-    assert set(_forbidden_marker_sites(tree)) == {
-        (8, _pytest_name("mark", "skipif")),
-        (11, _pytest_name("skip")),
-        (12, _pytest_name("xfail")),
-    }
 
 
 def test_skip_detector_rejects_unittest_skiptest_raises() -> None:
@@ -733,35 +836,6 @@ def test_direct_case_skip_alias_raise():
         (14, "unittest.case.SkipTest"),
         (17, "SkipTest"),
     ]
-
-
-def test_skip_detector_rejects_assigned_unittest_skiptest_aliases() -> None:
-    """Assigned SkipTest aliases are still deterministic skips."""
-    tree = ast.parse(
-        """
-import unittest
-import unittest.case as unittest_case
-
-UnitSkip = unittest.SkipTest
-CaseSkip = unittest_case.SkipTest
-DirectSkip = UnitSkip
-
-def test_unit_alias_raise():
-    raise UnitSkip("missing dependency")
-
-def test_case_alias_raise():
-    raise CaseSkip("missing dependency")
-
-def test_transitive_alias_raise():
-    raise DirectSkip("missing dependency")
-"""
-    )
-
-    assert set(_forbidden_marker_sites(tree)) == {
-        (10, "unittest.SkipTest"),
-        (13, "unittest.case.SkipTest"),
-        (16, "unittest.SkipTest"),
-    }
 
 
 def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
