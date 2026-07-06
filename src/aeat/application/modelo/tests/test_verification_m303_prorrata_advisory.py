@@ -1,4 +1,19 @@
-"""M303 prorrata settlement silent-under-declaration verification advisory tests."""
+"""M303 prorrata settlement silent-under-declaration verification advisory tests.
+
+See Also:
+    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
+        Registry-authored predicate type loaded from the M303 fragmented
+        revision.
+    :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
+        Verification predicate evaluator exercised directly by these tests.
+    :class:`~domain.modelos.ModeloVerificationFindingKind`
+        Finding-kind enum proving the guard remains advisory, not blocking.
+    :func:`~application.modelo.tests._verification_substance_support._workflow_profile`
+        Real workflow-profile fixture used by the predicate evaluator.
+    :mod:`~application.modelo.tests.test_prorrata_regularizacion_advisory`
+        Calculate-path prorrata advisory regression that complements this
+        settlement verify gate.
+"""
 
 from __future__ import annotations
 
