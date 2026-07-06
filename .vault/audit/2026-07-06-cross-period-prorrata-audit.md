@@ -28,21 +28,22 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `cross-period-prorrata` audit: `S10-S15 seed/override review`
+# `cross-period-prorrata` audit: `S10-S16 seed/override review`
 
 ## Scope
 
-Reviewed the `W02.P03.S10` through `W02.P04.S15` seed/override implementation and vault
+Reviewed the `W02.P03.S10` through `W02.P04.S16` seed/override implementation and vault
 closure artifacts: the carried-prior-definitive seed helper, the evaluation
 surface for blocking/advisory findings, source-observation identity recording on
 the carried entry, the committed real-observation seed tests, the legacy
 field-absent observation compatibility needed to exercise the missing-stamp
 advisory, the AEAT-authorised and inicio-de-actividades override recording
-services, the S10/S11/S12/S13/S14/S15 exec records, the plan checkbox mutations
-performed by the vault CLI, and the rebuilt feature index. The review checked
-intent alignment with the accepted prorrata ADR, the period-revision carry rule,
-the existing anti-tautology null-refusal proof, and the plan boundary that leaves
-precedence wiring and observation cross-check surfaces to the next rows.
+services, the application in-force lookup that delegates to the single domain
+precedence ladder, the S10/S11/S12/S13/S14/S15/S16 exec records, the plan
+checkbox mutations performed by the vault CLI, and the rebuilt feature index.
+The review checked intent alignment with the accepted prorrata ADR, the
+period-revision carry rule, the existing anti-tautology null-refusal proof, and
+the plan boundary that leaves observation cross-check surfaces to the next row.
 
 ## Findings
 
@@ -50,5 +51,5 @@ No open findings.
 
 ## Recommendations
 
-- Continue with `W02.P04.S16` for in-force precedence lookup wiring.
+- Continue with `W02.P04.S17` for observation cross-check blocker/notice surfaces.
 - Do not treat this narrow seed review as the campaign close honesty audit.

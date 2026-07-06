@@ -22,6 +22,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S13]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S14]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S15]]'
+  - '[[2026-07-06-cross-period-prorrata-W02-P04-S16]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
@@ -39,7 +40,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 
 ### audit
 
-- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10-S15 seed/override review`
+- `2026-07-06-cross-period-prorrata-audit` - `cross-period-prorrata` audit: `S10-S16 seed/override review`
 
 ### exec
 
@@ -58,6 +59,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W02-P03-S13` - add tests for the seed happy path, divergence-blocks, and missing-stamp-advises paths against real filed observations
 - `2026-07-06-cross-period-prorrata-W02-P04-S14` - add the aeat_autorizada override entry recording the art-105.Dos AEAT-authorised provisional percentage plus its authorisation reference
 - `2026-07-06-cross-period-prorrata-W02-P04-S15` - add the inicio_actividad override entry recording the art-105.Tres (via art-111.Dos) inicio-de-actividades proposed percentage plus its reference
+- `2026-07-06-cross-period-prorrata-W02-P04-S16` - wire the single declared precedence ladder into the register in-force-percentage lookup so authorised/inicio provenance outranks the carried prior definitive
 
 ### plan
 

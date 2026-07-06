@@ -120,3 +120,93 @@ def test_record_inicio_actividad_preserves_sector_and_regime(tmp_path: Path) -> 
     assert entry.provisional_percentage == Decimal("52")
     assert entry.provisional_provenance is ProrrataProvisionalProvenance.INICIO_ACTIVIDAD
     assert entry.authorisation_reference == "INICIO-036-2026-SECTOR-04"
+
+
+def test_resolve_provisional_uses_ladder_for_authorised_candidate(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = ProrrataRegisterRepository(objects=profile.repository)
+        service = ProrrataRegisterService(repository=repository)
+        service.declare(
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                provisional_percentage=Decimal("80"),
+                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_observation_ref="303:2025:4T",
+            ),
+        )
+        authorised = ProrrataRegisterEntry(
+            ejercicio=2026,
+            regime=ProrrataRegisterRegime.GENERAL,
+            provisional_percentage=Decimal("63"),
+            provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
+            authorisation_reference="AEAT-AUTH-2026-0009",
+        )
+
+        resolution = service.resolve_provisional(2026, candidate_entries=(authorised,))
+
+    assert resolution.resolved
+    assert resolution.percentage == Decimal("63")
+    assert resolution.provenance is ProrrataProvisionalProvenance.AEAT_AUTORIZADA
+
+
+def test_resolve_provisional_uses_ladder_for_inicio_candidate(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = ProrrataRegisterRepository(objects=profile.repository)
+        service = ProrrataRegisterService(repository=repository)
+        service.declare(
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                provisional_percentage=Decimal("80"),
+                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_observation_ref="303:2025:4T",
+            ),
+        )
+        inicio = ProrrataRegisterEntry(
+            ejercicio=2026,
+            regime=ProrrataRegisterRegime.GENERAL,
+            provisional_percentage=Decimal("55"),
+            provisional_provenance=ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
+            authorisation_reference="INICIO-036-2026-0005",
+        )
+
+        resolution = service.resolve_provisional(2026, candidate_entries=(inicio,))
+
+    assert resolution.resolved
+    assert resolution.percentage == Decimal("55")
+    assert resolution.provenance is ProrrataProvisionalProvenance.INICIO_ACTIVIDAD
+
+
+def test_resolve_provisional_filters_candidates_to_requested_sector(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = ProrrataRegisterRepository(objects=profile.repository)
+        service = ProrrataRegisterService(repository=repository)
+        service.declare(
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                sector_id="comercio",
+                provisional_percentage=Decimal("80"),
+                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_observation_ref="303:2025:4T",
+            ),
+        )
+        other_sector = ProrrataRegisterEntry(
+            ejercicio=2026,
+            regime=ProrrataRegisterRegime.GENERAL,
+            sector_id="arrendamiento",
+            provisional_percentage=Decimal("63"),
+            provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
+            authorisation_reference="AEAT-AUTH-2026-0010",
+        )
+
+        resolution = service.resolve_provisional(
+            2026,
+            sector_id="comercio",
+            candidate_entries=(other_sector,),
+        )
+
+    assert resolution.resolved
+    assert resolution.percentage == Decimal("80")
+    assert resolution.provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
