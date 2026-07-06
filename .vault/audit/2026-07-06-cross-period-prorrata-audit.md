@@ -276,3 +276,33 @@ Residual gate inventory: the new JSON payload parses cleanly and its
 oracle enrollment test module passes when selected with the integration marker
 (`2 passed`); the initial unmarked invocation was deselected by the repository's
 default `-m unit` pytest configuration.
+
+## S29 Review
+
+Reviewed the `W04.P07.S29` oracle proof after re-grounding it against the
+corrected S28 payload, the W04/P07 plan row, the cross-period prorrata ADR, the
+current prorrata projection code, and the Modelo 303 registry runtime tests. The
+new test is a real registry/domain path: it loads the bundled AEAT Manual
+practico IVA oracle, computes the current-year definitive percentage through the
+M303 2025 `4T` registry snapshot with the manual's annual volume inputs, computes
+the prior-year provisional percentage from the manual's prior-year volumes, and
+feeds the existing application projection with the manual's first-three-quarter
+input IVA subtotal.
+
+The test compares only against AEAT manual figures: definitive percentage `56`,
+first-three-quarter deduction `934.40`, correct first-three-quarter deduction
+`716.80`, excess deduction `217.60`, casilla 44 standalone regularización
+`-217.60`, fourth-quarter current deduction `89.60`, fourth-quarter net effect
+`-128.00`, and annual deduction `806.40`. It explicitly prevents conflating the
+standalone casilla 44 amount with the manual's net fourth-quarter deduction. The
+diff is test-only and does not promote `PRORRATA_REGULARIZACION`, edit
+`_source_mesh.py`, or introduce a source kind, resolver convention, validator
+convention, or registry selector shape.
+
+Findings: no open S29 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the new oracle test. The new
+oracle test passes sequentially with 1 test, the adjacent prorrata regularización
+calculation test file passes sequentially with 8 tests, and the external oracle
+enrollment test module passes when selected with the integration marker
+(`2 passed`).
