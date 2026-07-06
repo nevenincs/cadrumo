@@ -1,4 +1,33 @@
-"""Staged source-resolution helpers for bucket aggregation calculations."""
+"""Staged source-resolution helpers for bucket aggregation calculations.
+
+These helpers let source resolvers that depend on current-year registry values
+run the registry engine once without persisting a calculation revision. The
+staged values feed prorrata and bienes-inversion regularizacion resolvers and
+add diagnostics for source kinds that would otherwise default to a silent zero.
+
+See Also:
+    :func:`~application.modelo._calculation_actions.calculate_modelo_revision_from_bucket_aggregation`
+        Bucket-backed calculate path that composes these staging helpers.
+    :class:`~application.aggregation.CalculationSourceResolution`
+        Source-mesh envelope merged and diagnosed by this module.
+    :func:`~application.aggregation.merge_source_resolutions`
+        Merge primitive used after staged prorrata and bienes-inversion
+        resolutions are produced.
+    :func:`~application.aggregation.collect_unhandled_source_diagnostics`
+        Diagnostic sweep used to surface declared-but-unhandled source kinds.
+    :class:`~application.calculations.ProrrataRegularizacionSourceResolver`
+        Resolver fed by materialised current-year prorrata registry values.
+    :class:`~application.calculations.BienesInversionRegularizacionSourceResolver`
+        Dependent capital-goods resolver composed with the staged prorrata pass.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry engine invoked without persistence to materialise current-year
+        casilla values for staged resolvers.
+    Governing vault records
+        ``2026-05-20-calculation-source-connectivity-adr`` and
+        ``2026-06-10-calculation-engine-foundations-audit`` define the
+        source-mesh design and no-dormant-source-resolver audit that govern
+        these staging helpers.
+"""
 
 from __future__ import annotations
 
