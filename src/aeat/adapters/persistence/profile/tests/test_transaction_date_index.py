@@ -18,7 +18,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import delete, event, select
 from sqlalchemy import inspect as sa_inspect
 
 from .....domain.transactions import (
@@ -73,6 +73,10 @@ def _transaction(*, provider_id: str, filing_date: date, amount: Decimal, descri
             "group_label": None,
         },
     )
+
+
+def _normalise_sql(statement: str) -> str:
+    return " ".join(statement.lower().split())
 
 
 def test_date_index_table_carries_only_non_sensitive_routing_columns(
@@ -355,7 +359,10 @@ def test_date_index_updates_when_filing_date_changes(
         moved_raw = original_txn.raw.model_copy(
             update={"booked_date": date(2024, 8, 20), "value_date": date(2024, 8, 20)}
         )
-        moved_txn = original_txn.model_copy(update={"raw": moved_raw})
+        moved_payload = original_txn.model_dump(mode="python")
+        moved_payload["raw"] = moved_raw
+        moved_payload.pop("transaction_id")
+        moved_txn = Transaction.model_validate(moved_payload)
         repo.save(TransactionCatalogue.from_transactions([moved_txn]))
 
         engine = profile.repository.engine
@@ -403,6 +410,80 @@ def test_partition_by_date_range_splits_in_window_and_out_of_window(
     out_of_window_projection = partition.out_of_window[0]
     assert out_of_window_projection.transaction_id == outside_q2.transaction_id
     assert out_of_window_projection.filing_date == date(2024, 4, 1)
+    assert partition.out_of_window_summary is not None
+    assert partition.out_of_window_summary.count == 1
+    assert partition.out_of_window_summary.min_filing_date == date(2024, 4, 1)
+    assert partition.out_of_window_summary.max_filing_date == date(2024, 4, 1)
+
+
+def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
+    tmp_path: Path,
+) -> None:
+    """The complete-index partition uses one batch read for in-window secure rows."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        inside_jan = _transaction(
+            provider_id="row-batch-jan",
+            filing_date=date(2024, 1, 10),
+            amount=Decimal("10.00"),
+            description="batch jan",
+        )
+        inside_mar = _transaction(
+            provider_id="row-batch-mar",
+            filing_date=date(2024, 3, 31),
+            amount=Decimal("20.00"),
+            description="batch mar",
+        )
+        outside_apr = _transaction(
+            provider_id="row-batch-apr",
+            filing_date=date(2024, 4, 1),
+            amount=Decimal("30.00"),
+            description="batch apr",
+        )
+        outside_dec = _transaction(
+            provider_id="row-batch-dec",
+            filing_date=date(2024, 12, 20),
+            amount=Decimal("40.00"),
+            description="batch dec",
+        )
+        repo.save(TransactionCatalogue.from_transactions([inside_jan, inside_mar, outside_apr, outside_dec]))
+
+        statements: list[str] = []
+
+        def collect_statement(_conn: object, _cursor: object, statement: str, *_args: object) -> None:
+            statements.append(_normalise_sql(statement))
+
+        engine = profile.repository.engine
+        event.listen(engine, "before_cursor_execute", collect_statement)
+        try:
+            partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
+                date(2024, 1, 1), date(2024, 3, 31)
+            )
+        finally:
+            event.remove(engine, "before_cursor_execute", collect_statement)
+
+    expected_in_window = {inside_jan.transaction_id, inside_mar.transaction_id}
+    expected_out_of_window = {outside_apr.transaction_id, outside_dec.transaction_id}
+    assert partition.index_complete is True
+    assert set(partition.in_window.transactions) == expected_in_window
+    assert partition.in_window.transactions[inside_jan.transaction_id] == inside_jan
+    assert partition.in_window.transactions[inside_mar.transaction_id] == inside_mar
+    assert {row.transaction_id for row in partition.out_of_window} == expected_out_of_window
+    assert {row.filing_date for row in partition.out_of_window} == {date(2024, 4, 1), date(2024, 12, 20)}
+    assert partition.out_of_window_summary is not None
+    assert partition.out_of_window_summary.count == 2
+    assert partition.out_of_window_summary.min_filing_date == date(2024, 4, 1)
+    assert partition.out_of_window_summary.max_filing_date == date(2024, 12, 20)
+
+    secure_object_selects = [
+        statement for statement in statements if "from secure_objects" in statement and statement.startswith("select")
+    ]
+    batch_selects = [statement for statement in secure_object_selects if "object_key in" in statement]
+    point_key_selects = [statement for statement in secure_object_selects if "object_key =" in statement]
+
+    assert len(batch_selects) == 1
+    assert len(point_key_selects) == 1, "only the membership-index lookup should use a point secure-object read"
 
 
 def test_partition_by_date_range_matches_full_load_filtered_in_memory(
@@ -436,6 +517,11 @@ def test_partition_by_date_range_matches_full_load_filtered_in_memory(
 
     assert set(partition.in_window.transactions) == expected_in_window
     assert {projection.transaction_id for projection in partition.out_of_window} == expected_out_of_window
+    out_of_window_dates = tuple(projection.filing_date for projection in partition.out_of_window)
+    assert partition.out_of_window_summary is not None
+    assert partition.out_of_window_summary.count == len(expected_out_of_window)
+    assert partition.out_of_window_summary.min_filing_date == min(out_of_window_dates)
+    assert partition.out_of_window_summary.max_filing_date == max(out_of_window_dates)
     # Every out-of-window projection's filing date matches the real decrypted date.
     for out_of_window_projection in partition.out_of_window:
         real_transaction = full.transactions[out_of_window_projection.transaction_id]
@@ -504,6 +590,10 @@ def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
     assert len(partition.out_of_window) == 1
     assert partition.out_of_window[0].transaction_id == outside.transaction_id
     assert partition.out_of_window[0].filing_date == date(2024, 6, 1)
+    assert partition.out_of_window_summary is not None
+    assert partition.out_of_window_summary.count == 1
+    assert partition.out_of_window_summary.min_filing_date == date(2024, 6, 1)
+    assert partition.out_of_window_summary.max_filing_date == date(2024, 6, 1)
 
 
 def test_date_index_removes_row_for_deleted_transaction(

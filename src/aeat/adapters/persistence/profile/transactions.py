@@ -54,6 +54,7 @@ See Also:
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
@@ -71,6 +72,7 @@ from ....domain.transactions import (
     LedgerDatePartition,
     LedgerStorageError,
     OutOfWindowTransactionStub,
+    OutOfWindowTransactionSummary,
     StoredTransactionDriftError,
     Transaction,
     TransactionCatalogue,
@@ -358,8 +360,8 @@ class TransactionCatalogueRepository:
         Reads the plaintext, non-sensitive :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
         routing rows for this bucket to select the candidate transaction ids
         whose filing date (``value_date`` or ``booked_date``) falls in the
-        window, then decrypts only those rows via a targeted per-id
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.load` --
+        window, then decrypts only those rows via one targeted batch
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many` --
         never a full-namespace scan-and-decrypt of every row in the bucket.
 
         The index is a derived, rebuildable cache: correctness never depends
@@ -393,32 +395,7 @@ class TransactionCatalogueRepository:
                 transaction for transaction in full_catalogue.values() if start <= _filing_date(transaction) <= end
             )
 
-        from ..storage import Envelope, SensitivityClass
-
-        transactions: list[Transaction] = []
-        for transaction_id in sorted(candidate_ids):
-            record = self._objects.load(
-                TX_BUCKET_NAMESPACE,
-                transaction_object_key(self._bucket_id, transaction_id),
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=_TX_CATALOGUE_VERSION,
-            )
-            if record is None:
-                # Index named an id the encrypted store no longer has (a race
-                # between a concurrent delete and this read); skip rather than
-                # fail the whole read -- the membership-index subset check
-                # above already bounds this to a rare edge, not a stale index.
-                continue
-            try:
-                envelope = Envelope[Transaction].model_validate_json(record.payload)
-            except ValidationError as exc:
-                _log.error(
-                    "transaction row schema drift bucket_id=%s (date-range read)",
-                    self._bucket_id,
-                    exc_info=True,
-                )
-                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            transactions.append(envelope.payload)
+        transactions = self._load_transactions_by_ids(candidate_ids, read_context="date-range read")
         _log.debug(
             "loaded transaction catalogue via date index bucket_id=%s window=%s..%s entries=%d",
             self._bucket_id,
@@ -437,8 +414,8 @@ class TransactionCatalogueRepository:
         rows for this bucket -- the index row count and id set must exactly
         match the encrypted membership index -- before trusting the index for
         a partition. On a completeness match, only the in-window transaction
-        ids are decrypted (a targeted per-id
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.load`);
+        ids are decrypted through one targeted batch
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many`;
         out-of-window ids are reported as plaintext
         :class:`~domain.transactions.OutOfWindowTransactionStub` rows (id +
         filing date only, never decrypted). On a completeness MISMATCH -- a
@@ -498,38 +475,14 @@ class TransactionCatalogueRepository:
             return LedgerDatePartition(
                 in_window=TransactionCatalogue.from_transactions(in_window),
                 out_of_window=tuple(out_of_window),
+                out_of_window_summary=OutOfWindowTransactionSummary.from_stubs(out_of_window),
                 index_complete=False,
             )
-
-        from ..storage import Envelope, SensitivityClass
 
         in_window_ids = {
             transaction_id for transaction_id, filing_date in index_rows.items() if start <= filing_date <= end
         }
-        transactions: list[Transaction] = []
-        for transaction_id in sorted(in_window_ids):
-            record = self._objects.load(
-                TX_BUCKET_NAMESPACE,
-                transaction_object_key(self._bucket_id, transaction_id),
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=_TX_CATALOGUE_VERSION,
-            )
-            if record is None:
-                # Index named an id the encrypted store no longer has (a race
-                # between a concurrent delete and this read); skip rather than
-                # fail the whole read -- the completeness gate above already
-                # bounds this to a rare edge, not a stale index.
-                continue
-            try:
-                envelope = Envelope[Transaction].model_validate_json(record.payload)
-            except ValidationError as exc:
-                _log.error(
-                    "transaction row schema drift bucket_id=%s (partition read)",
-                    self._bucket_id,
-                    exc_info=True,
-                )
-                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            transactions.append(envelope.payload)
+        transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
 
         out_of_window_stubs = tuple(
             OutOfWindowTransactionStub(transaction_id=transaction_id, filing_date=filing_date)
@@ -547,8 +500,50 @@ class TransactionCatalogueRepository:
         return LedgerDatePartition(
             in_window=TransactionCatalogue.from_transactions(transactions),
             out_of_window=out_of_window_stubs,
+            out_of_window_summary=OutOfWindowTransactionSummary.from_stubs(out_of_window_stubs),
             index_complete=True,
         )
+
+    def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
+        """Load selected transaction rows through one targeted secure-object batch."""
+        from ..storage import Envelope
+        from ..storage.crypto import secure_object_key_digest
+
+        selected_ids = tuple(sorted(transaction_ids))
+        if not selected_ids:
+            return []
+
+        transaction_id_by_digest = {
+            secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)): transaction_id
+            for transaction_id in selected_ids
+        }
+        transactions_by_id: dict[str, Transaction] = {}
+        records = self._objects.load_many(
+            TX_BUCKET_NAMESPACE,
+            (transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids),
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        for record in records:
+            transaction_id = transaction_id_by_digest.get(bytes(record.object_key))
+            if transaction_id is None:
+                continue
+            try:
+                envelope = Envelope[Transaction].model_validate_json(record.payload)
+            except ValidationError as exc:
+                _log.error(
+                    "transaction row schema drift bucket_id=%s (%s)",
+                    self._bucket_id,
+                    read_context,
+                    exc_info=True,
+                )
+                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+            transactions_by_id[transaction_id] = envelope.payload
+        return [
+            transactions_by_id[transaction_id]
+            for transaction_id in selected_ids
+            if transaction_id in transactions_by_id
+        ]
 
     def _all_date_index_rows(self) -> dict[str, date]:
         """Return every ``{transaction_id: filing_date}`` this bucket's date index records."""
