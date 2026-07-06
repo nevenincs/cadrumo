@@ -28,6 +28,22 @@ The escala is Beckham-specific by legal basis (art. 93.2.e).2.º) and structure 
 a single unified table with no autonomic split — not by its top rate: for 2025
 the general IRPF savings top (art. 66+76) is also 30% after Ley 7/2024. The
 oracle pins the art. 93 bracket amounts/thresholds, guarding the table structure.
+
+See Also:
+    :class:`~domain.calculations.registry.ParameterDefinition`
+        Registry parameter record that carries the bracket table under test.
+    :class:`~domain.calculations.registry.BracketEntry`
+        Per-band cumulative cuota and marginal-rate rows asserted here.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Revision container that splits the 2015 and 2025 Modelo 151 schemas.
+    :func:`~domain.calculations.registry._formula_runtime._resolve_bracket`
+        Runtime bracket resolver exercised directly by these oracle checks.
+    :exc:`~domain.calculations.registry.RegistryValidationError`
+        Raised when the required filing-period axis is missing.
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test helper that loads the committed registry definition.
+    :mod:`~application.calculations.tests.test_modelo_151_beckham_cuota_continuity`
+        Application-level companion for the Modelo 151 cuota calculation chain.
 """
 
 from __future__ import annotations
