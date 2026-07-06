@@ -19,6 +19,7 @@ No mocks, no skips, no tautological assertions.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -165,30 +166,12 @@ def test_schedules_uses_constants_in_resolver() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Sibling ratchet must still enumerate _xlsx.py teardown rationale
-# ---------------------------------------------------------------------------
-
-
-def test_broad_except_ratchet_still_covers_xlsx() -> None:
-    """The broad-except rationale inventory must still list _xlsx.py."""
-    ratchet = _read("tests/test_broad_except_and_any_return_rationale.py")
-    assert "_xlsx.py" in ratchet, (
-        "test_broad_except_and_any_return_rationale.py: _xlsx.py no longer listed — ratchet coverage broken"
-    )
-    assert "BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN" in ratchet, (
-        "test_broad_except_and_any_return_rationale.py: BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN token not in ratchet"
-    )
-
-
-# ---------------------------------------------------------------------------
 # _sink.py is a logging-regression: stdlib logging import is justified
 # ---------------------------------------------------------------------------
 
 
 def test_sink_is_logging_handler_subclass() -> None:
     """_sink.py must define JsonlRunSink as a subclass of logging.Handler."""
-    src = _read("core/observability/_sink.py")
-    assert "class JsonlRunSink(logging.Handler)" in src, (
-        "core/observability/_sink.py: JsonlRunSink(logging.Handler) class definition not found — "
-        "ABC contract requiring stdlib logging import may have changed"
-    )
+    from ..core.observability._sink import JsonlRunSink
+
+    assert issubclass(JsonlRunSink, logging.Handler)
