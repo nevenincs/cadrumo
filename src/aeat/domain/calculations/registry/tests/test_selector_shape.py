@@ -287,6 +287,27 @@ def test_bienes_inversion_regularizacion_selector_accepts_canonical_m303_casilla
     }
 
 
+def test_bienes_inversion_regularizacion_selector_accepts_canonical_m390_casilla_63_shape() -> None:
+    """Modelo 390's annual capital-goods target consumes the same register source."""
+
+    binding = _binding(
+        source="bienes_inversion_regularizacion",
+        selector={
+            "source_modelo": "303",
+            "regularizacion_output": "modelo_390_casilla_63",
+        },
+        binding_id="bienes-inversion-regularizacion-modelo-390-casilla-63",
+    )
+
+    assert validate_binding_selector_shape(binding) == []
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == ()
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "regularizacion_output": "modelo_390_casilla_63",
+    }
+
+
 def test_prorrata_regularizacion_selector_rejects_uncanonical_inputs() -> None:
     """The construction gate refuses partial or non-annual regularisation selectors."""
 

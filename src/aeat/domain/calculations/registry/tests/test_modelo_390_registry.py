@@ -59,6 +59,9 @@ _M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resu
 _M390_PRORRATA_REGULARIZACION_CASILLA: CasillaId = _casilla_id(
     "iva.anual.regularizacion-prorrata-definitiva",
 )
+_M390_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.regularizacion-bienes-inversion",
+)
 _M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
     "iva.anual.reconciliacion.devengada-303",
 )
@@ -258,6 +261,8 @@ def test_modelo_390_construct_links_filing_workbook_parity() -> None:
     assert "ley-37-1992:art-161" in construct.legal_refs
     assert "ley-37-1992:art-104" in construct.legal_refs
     assert "ley-37-1992:art-105" in construct.legal_refs
+    assert "ley-37-1992:art-107" in construct.legal_refs
+    assert "ley-37-1992:art-110" in construct.legal_refs
 
 
 def test_modelo_390_construct_requires_recargo_grounding() -> None:
@@ -392,6 +397,45 @@ def test_modelo_390_declares_prorrata_regularizacion_annual_field() -> None:
     assert field.signed is True
 
 
+def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field() -> None:
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    bindings = {binding.id: binding for binding in revision.bindings}
+    export_fields = {
+        field.id: field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+    }
+
+    casilla = casillas[_M390_BIENES_INVERSION_REGULARIZACION_CASILLA]
+    assert casilla.number == "63"
+    assert casilla.input_kind is InputKind.BOUND
+    assert casilla.binding == "modelo-390-bienes-inversion-regularizacion-casilla-63"
+    assert "ley-37-1992:art-107" in casilla.legal_refs
+    assert "ley-37-1992:art-110" in casilla.legal_refs
+    assert casilla.export_refs == ("modelo-390-page-04-casilla-63",)
+    assert casillas[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA].number == "662"
+
+    binding = bindings["modelo-390-bienes-inversion-regularizacion-casilla-63"]
+    assert binding.source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == ()
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "regularizacion_output": "modelo_390_casilla_63",
+    }
+    assert "ley-37-1992:art-107" in binding.legal_refs
+    assert "ley-37-1992:art-110" in binding.legal_refs
+
+    field = export_fields["modelo-390-page-04-casilla-63"]
+    assert field.casilla_id == _M390_BIENES_INVERSION_REGULARIZACION_CASILLA
+    assert field.offset == 625
+    assert field.length == 17
+    assert field.signed is True
+
+
 def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula() -> None:
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
@@ -400,6 +444,7 @@ def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula() -> 
     )
 
     assert _M390_PRORRATA_REGULARIZACION_CASILLA in set(expression_casilla_refs(formula.expression))
+    assert _M390_BIENES_INVERSION_REGULARIZACION_CASILLA in set(expression_casilla_refs(formula.expression))
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:

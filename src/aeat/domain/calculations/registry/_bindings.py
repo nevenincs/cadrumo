@@ -576,7 +576,7 @@ class _BienesInversionRegularizacionSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: Literal["303"]
-    regularizacion_output: Literal["modelo_303_casilla_43"]
+    regularizacion_output: Literal["modelo_303_casilla_43", "modelo_390_casilla_63"]
 
 
 class _IvaCompensationAnnualPartitionSelector(BaseModel):

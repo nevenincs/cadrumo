@@ -886,3 +886,41 @@ feature index --feature cross-period-prorrata`,
 `vaultspec-core vault plan check 2026-07-06-cross-period-prorrata-plan` are
 clean. `vaultspec-core vault plan status
 2026-07-06-cross-period-prorrata-plan` reports 49 of 49 steps complete.
+
+## S49 Follow-up Execution: Bienes inversion M390 target closure
+
+Supersedes the M390 deferral in the preceding S49 follow-up record. A fresh
+target-grounding pass against the current bundled Modelo 390 record designs
+found the governed annual target: current AEAT 2023, 2024, and 2025 record
+design extracts declare page 4 casilla `[63]` as `Regularización de
+inversiones`, immediately before casilla `[522]` for prorrata definitive
+percentage regularization. The same current authority confirms casilla `[662]`
+is `Cuotas pendientes de compensación generadas en el ejercicio`, so the
+bienes-inversion target is `[63]`, not `[662]`.
+
+Implemented the missing Modelo 390 binding target without adding a source kind
+or resolver convention. The existing `bienes_inversion_regularizacion` selector
+now accepts output `modelo_390_casilla_63`; the Modelo 390 registry declares
+`iva.anual.regularizacion-bienes-inversion` as bound casilla `[63]`, exports it
+at record-design offset 625, and includes it in
+`iva.anual.cuota-deducible-total` before the prorrata `[522]` adjustment. The
+existing resolver now maps the same register-backed art. 109/art. 110 projection
+to both M303 `[43]` and M390 `[63]`. For M390, where the definitive prorrata
+percentage is not itself a native annual casilla, the resolver reads a stamped
+current-year M303 4T observation for `iva.prorrata-porcentaje`; missing or
+revision-refused observations keep the binding unresolved rather than fabricating
+a percentage.
+
+Resolution: `s49-bienes-inversion-remaining-blocker` is structurally closed for
+both declared filing targets. M303 `[43]` remains live through the materialised
+current-year registry value seam; M390 `[63]` is live when the current-year M303
+settlement observation is present and stamped. M390 `[662]` remains owned by the
+IVA compensation annual partition.
+
+Verification inventory: focused ruff passed for the changed resolver, selector,
+registry tests, and calculation tests. The focused pytest slice passed with 59
+tests, including the registry assertion that M390 `[63]` is bound/exported and
+included in annual deductible total while `[662]` stays compensation, and the
+real secure-register plus encrypted-observation resolver test proving
+`modelo-390-bienes-inversion-regularizacion-casilla-63` populates
+`iva.anual.regularizacion-bienes-inversion`.
