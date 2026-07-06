@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-06'
 tier: L3
 related:
   - '[[2026-06-30-cpdefix-calculation-allgreen-audit]]'
@@ -169,6 +169,27 @@ Harden the Modelo 130 casilla 02 gasto path so explicit actividad-economica tran
 - [x] `W04.P07.S12` - Revalidate current M130 gasto actividad-economica eligibility against production aggregation; `src/aeat/application/aggregation/_renta_gasto_ledger.py`.
 - [x] `W04.P07.S13` - Cover unclassified actividad-economica gasto and reviewed exclusion behavior with real aggregation tests; `src/aeat/application/aggregation/tests/test_renta_gasto_aggregation.py`.
 - [x] `W04.P07.S14` - Record focused verification evidence for the post-completion M130 gasto edge; `.vault/exec/2026-07-05-cpdefix-followup-allgreen/`.
+
+## Wave `W05` - Shared Worktree Resync
+
+Reconcile cpdefix follow-up tracking after concurrent agents relocated source-mesh enrollment tests, preserving no-reexport import hygiene and focused verification evidence before further dispatch.
+
+### Phase `W05.P08` - Relocated Source-Mesh Enrollment
+
+Keep the moved regularizacion enrollment tests grounded on real source imports and verify their current mesh behavior without absorbing unrelated shared worktree edits.
+
+- [x] `W05.P08.S15` - Verify relocated regularizacion source-mesh enrollment gates after the no-reexport cleanup; `src/aeat/application/modelo/tests/test_bienes_inversion_regularizacion_source_mesh_enrollment.py, src/aeat/application/modelo/tests/test_prorrata_regularizacion_source_mesh_enrollment.py`.
+- [x] `W05.P08.S16` - Resync relocated regularizacion source-mesh enrollment tests and remove test-export repository import; `src/aeat/application/modelo/tests/test_bienes_inversion_regularizacion_source_mesh_enrollment.py`.
+
+## Wave `W06` - No-Reexport Source Provision
+
+Remove remaining campaign-owned test provisioning through the application adapter export bundle where a concrete real adapter source is available, preserving real-behavior gates for the calculation surface.
+
+### Phase `W06.P09` - Bienes-Inversion Repository Source
+
+Provision capital-goods regularizacion tests from the real bienes-inversion persistence adapter instead of the test-export bundle and verify the calculation/advisory behavior.
+
+- [x] `W06.P09.S17` - Replace bienes-inversion test-export repository imports with the real persistence adapter source; `src/aeat/application/calculations/tests/test_bienes_inversion_regularizacion.py, src/aeat/application/modelo/tests/test_bienes_inversion_advisory.py`.
 
 ## Description
 

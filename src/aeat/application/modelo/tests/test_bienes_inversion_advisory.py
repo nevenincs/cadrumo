@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind
 from ....domain.bienes_inversion import (
     BienInversionDisposal,
@@ -27,7 +28,6 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from ....tests.application_adapter_exports import BienesInversionIvaRegisterRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
