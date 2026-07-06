@@ -1,4 +1,19 @@
-"""Override precedence and prior-observation cross-check tests."""
+"""Override precedence and prior-observation cross-check tests.
+
+See Also:
+    :class:`~application.prorrata_register.ProrrataRegisterService`
+        Application facade whose persisted-plus-transient resolver path proves
+        authorised and inicio candidates outrank the carried prior definitive.
+    :func:`~application.prorrata_register._seed.cross_check_prorrata_entry_against_prior_observation`
+        Prior-observation guard under test for blocking carried contradictions
+        and advisory regulated override differences.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Register row type used to build carried, authorised, and inicio
+        candidate entries with provenance.
+    :class:`~application.calculations.CalculationObservationRepository`
+        Encrypted observation catalogue populated with the prior Modelo 303
+        settlement percentage used by the cross-checks.
+"""
 
 from __future__ import annotations
 
