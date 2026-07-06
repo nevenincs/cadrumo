@@ -66,6 +66,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import AeatError
+from ..external_constants import UTF_8_ENCODING
 from ..file_permissions import restrict_file_permissions
 from ..time import now as _utc_now
 from ..time import validate_utc_aware as _validate_utc_aware
@@ -227,7 +228,7 @@ def generate_corpus_signing_keypair(
     )
     resolved = private_key_path.resolve()
     resolved.parent.mkdir(parents=True, exist_ok=True)
-    resolved.write_text(keypair.model_dump_json(), encoding="utf-8")
+    resolved.write_text(keypair.model_dump_json(), encoding=UTF_8_ENCODING)
     restrict_file_permissions(resolved)
     return keypair
 
@@ -250,7 +251,7 @@ def load_corpus_signing_keypair(private_key_path: Path) -> CorpusSigningKeypair:
         raise CorpusBundleSigningKeyNotFoundError(
             f"no corpus signing keypair found at {private_key_path}; call generate_corpus_signing_keypair() first",
         )
-    raw = private_key_path.read_text(encoding="utf-8")
+    raw = private_key_path.read_text(encoding=UTF_8_ENCODING)
     try:
         return CorpusSigningKeypair.model_validate_json(raw)
     except (ValueError, ValidationError) as exc:

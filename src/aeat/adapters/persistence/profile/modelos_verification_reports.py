@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.modelos import (
@@ -130,7 +131,7 @@ class VerificationReportCatalogueRepository:
             )
         if record is None:
             return VerificationReportCatalogue()
-        envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             _LOGGER.error(
                 "verification-report catalogue classification mismatch",
@@ -188,7 +189,7 @@ class VerificationReportCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
 

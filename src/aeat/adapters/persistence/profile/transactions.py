@@ -63,6 +63,7 @@ from sqlalchemy import delete, select, update
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now, validate_utc_aware
@@ -145,7 +146,7 @@ def _decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | Non
     ``application/aggregation/tests/test_ledger_scale_benchmark.py``).
     """
     try:
-        decoded = json.loads(payload.decode("utf-8"))
+        decoded = json.loads(payload.decode(UTF_8_ENCODING))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
     return decoded if isinstance(decoded, dict) else None
@@ -762,7 +763,7 @@ class TransactionCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=_TransactionIndex(transaction_ids=tuple(sorted(transaction_ids))),
         )
-        return envelope.model_dump_json().encode("utf-8")
+        return envelope.model_dump_json().encode(UTF_8_ENCODING)
 
     def _serialise_transaction(self, transaction: Transaction) -> bytes:
         """Serialise one transaction into stable encrypted-row envelope bytes.
@@ -779,7 +780,7 @@ class TransactionCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=transaction,
         )
-        return envelope.model_dump_json().encode("utf-8")
+        return envelope.model_dump_json().encode(UTF_8_ENCODING)
 
 
 __all__ = [
