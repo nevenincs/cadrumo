@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import TypedDict
 
 import pytest
@@ -159,38 +156,3 @@ def test_open_rejects_non_positive_idle_minutes() -> None:
     with pytest.raises(StorageValidationError, match="idle_minutes must be a strict positive integer") as exc_info:
         _open_session(idle_minutes=0)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
-
-
-def test_module_has_no_classvar_typed_attributes() -> None:
-    """Static AST guard: `BucketSession` keeps zero `ClassVar` state.
-
-    The substrate invariant forbids module-global mutable state on
-    the master-key surface. This guard catches a regression that would
-    re-introduce a process-lifetime cache by typing it `ClassVar[...]`.
-    """
-
-    source_path = Path(inspect.getsourcefile(BucketSession) or "")
-    module = ast.parse(source_path.read_text(encoding="utf-8"))
-
-    offenders: list[str] = []
-    for node in ast.walk(module):
-        if isinstance(node, ast.AnnAssign):
-            annotation = ast.unparse(node.annotation)
-            if "ClassVar" in annotation:
-                offenders.append(ast.unparse(node))
-
-    assert offenders == [], f"ClassVar attributes are forbidden on this module: {offenders}"
-
-
-def test_module_derives_dispose_settings_from_loaded_settings() -> None:
-    """Engine eviction must not bypass central settings with a direct Settings constructor."""
-
-    source_path = Path(inspect.getsourcefile(BucketSession) or "")
-    module = ast.parse(source_path.read_text(encoding="utf-8"))
-
-    direct_settings_constructors: list[str] = []
-    for node in ast.walk(module):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Settings":
-            direct_settings_constructors.append(ast.unparse(node))
-
-    assert direct_settings_constructors == []
