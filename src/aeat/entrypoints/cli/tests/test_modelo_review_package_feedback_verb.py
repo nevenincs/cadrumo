@@ -13,6 +13,26 @@ encrypt -> import -> verify -> journal-attach chain independently. Also proves
 the feedback envelope on disk never carries a private key, and that a feedback
 package with no counter-signed receipt imports as unstructured feedback with no
 journal attach.
+
+See Also:
+    :func:`~application.modelo.import_feedback_package`
+        Application import primitive that decrypts and verifies feedback envelopes.
+    :func:`~application.modelo.encrypt_feedback_package_for_originator`
+        Application primitive behind the CLI ``encrypt-feedback`` verb.
+    :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`
+        Journal hook asserted after verified countersignature import.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Encrypted recipient public-key registry used to address the originator.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_encrypt_feedback`
+        CLI verb that seals feedback for the originator.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_import_feedback`
+        CLI verb that opens feedback and attaches verified countersignatures.
+    :class:`~domain.buckets.BucketEventType`
+        Bucket-event enum whose collaboration event is asserted here.
+    :class:`CasillaId`
+        Typed casilla ids used to seed the exportable Modelo 111 revision.
+    :class:`Period`
+        Typed filing period used to resolve the review-package work target.
 """
 
 from __future__ import annotations
