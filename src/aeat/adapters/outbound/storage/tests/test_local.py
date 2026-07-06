@@ -218,16 +218,14 @@ class _PutKwargs(TypedDict):
     content_hash: str
 
 
-_INVALID_STORAGE_KEY_CASES: tuple[tuple[str, _PutKwargs, str, str, dict[str, str] | None], ...] = (
+_INVALID_STORAGE_KEY_CASES: tuple[tuple[_PutKwargs, str, str, dict[str, str] | None], ...] = (
     (
-        "blank-namespace",
         {"namespace": "", "object_key_hmac": "abcdef0123456789", "payload": b"x", "content_hash": "sha256-x"},
         "namespace must not be blank",
         "adapters.outbound.storage.local.errors.namespace_blank",
         None,
     ),
     (
-        "forbidden-namespace",
         {
             "namespace": "with/slash",
             "object_key_hmac": "abcdef0123456789",
@@ -239,7 +237,6 @@ _INVALID_STORAGE_KEY_CASES: tuple[tuple[str, _PutKwargs, str, str, dict[str, str
         {"namespace": "with/slash"},
     ),
     (
-        "blank-content-hash",
         {
             "namespace": "ledger_transaction",
             "object_key_hmac": "abcdef0123456789",
@@ -253,16 +250,26 @@ _INVALID_STORAGE_KEY_CASES: tuple[tuple[str, _PutKwargs, str, str, dict[str, str
 )
 
 
-def test_put_rejects_invalid_storage_keys(provider: LocalFileSystemProvider) -> None:
-    for case_id, put_kwargs, match, message, context in _INVALID_STORAGE_KEY_CASES:
-        with pytest.raises(OutboundStorageValidationError, match=match) as raised:
-            provider.put(**put_kwargs, label="x")
-        translated_message = raised.value.translated_message
-        if translated_message is None:
-            pytest.fail(f"{case_id}: expected a translated_message on the raised error")
-        assert translated_message == message, case_id
-        assert raised.value.context == context, case_id
-        assert resolve_error_message(raised.value) == tr(translated_message, **(raised.value.context or {})), case_id
+@pytest.mark.parametrize(
+    ("put_kwargs", "match", "message", "context"),
+    _INVALID_STORAGE_KEY_CASES,
+    ids=("blank-namespace", "forbidden-namespace", "blank-content-hash"),
+)
+def test_put_rejects_invalid_storage_keys(
+    provider: LocalFileSystemProvider,
+    put_kwargs: _PutKwargs,
+    match: str,
+    message: str,
+    context: dict[str, str] | None,
+) -> None:
+    with pytest.raises(OutboundStorageValidationError, match=match) as raised:
+        provider.put(**put_kwargs, label="x")
+    translated_message = raised.value.translated_message
+    if translated_message is None:
+        pytest.fail("expected a translated_message on the raised error")
+    assert translated_message == message
+    assert raised.value.context == context
+    assert resolve_error_message(raised.value) == tr(translated_message, **(raised.value.context or {}))
 
 
 def test_get_rejects_non_object_sidecar_with_localized_integrity_error(provider: LocalFileSystemProvider) -> None:
