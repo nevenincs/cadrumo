@@ -62,6 +62,17 @@ source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prorrata-regularizacion-anual"
+source = "prorrata_regularizacion"
+selector = { source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_390_regularizacion_anual" }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }

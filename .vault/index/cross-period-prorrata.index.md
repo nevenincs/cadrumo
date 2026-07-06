@@ -50,6 +50,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W06-P09-S41]]'
   - '[[2026-07-06-cross-period-prorrata-W07-P10-S42]]'
   - '[[2026-07-06-cross-period-prorrata-W07-P10-S43]]'
+  - '[[2026-07-06-cross-period-prorrata-W07-P10-S44]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -115,6 +116,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W06-P09-S41` - record the `PRORRATA_REGULARIZACION` real-source provisioning blocker
 - `2026-07-06-cross-period-prorrata-W07-P10-S42` - add a typed prorrata_regularizacion selector contract and selector-registry construction gate so the source is a legal DataBindingDefinition.source before any TOML binding is declared
 - `2026-07-06-cross-period-prorrata-W07-P10-S43` - provision the Modelo 303 casilla 44 prorrata_regularizacion binding rows for current registry revisions, convert the target from manual to bound only with legal/source citations and formula-consumption implications proven
+- `2026-07-06-cross-period-prorrata-W07-P10-S44` - ground the Modelo 390 annual regularizacion target, declare its future prorrata_regularizacion binding/export grounding, keep box 522 manual until S45/S46 materialise values, and include 522 in the annual deductible total formula
 
 ### plan
 

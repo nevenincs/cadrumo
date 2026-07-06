@@ -240,6 +240,31 @@ def test_prorrata_regularizacion_selector_accepts_canonical_m303_casilla_44_shap
     }
 
 
+def test_prorrata_regularizacion_selector_accepts_canonical_m390_annual_shape() -> None:
+    """Modelo 390's annual target consumes the same annual prorrata source."""
+
+    binding = _binding(
+        source="prorrata_regularizacion",
+        selector={
+            "source_modelo": "303",
+            "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+            "source_periods": ("1T", "2T", "3T", "4T"),
+            "regularizacion_output": "modelo_390_regularizacion_anual",
+        },
+        binding_id="prorrata-regularizacion-modelo-390-anual",
+    )
+
+    assert validate_binding_selector_shape(binding) == []
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == _PRORRATA_REGULARIZACION_SOURCE_IDS
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+        "source_periods": ("1T", "2T", "3T", "4T"),
+        "regularizacion_output": "modelo_390_regularizacion_anual",
+    }
+
+
 def test_prorrata_regularizacion_selector_rejects_uncanonical_inputs() -> None:
     """The construction gate refuses partial or non-annual regularisation selectors."""
 
@@ -286,7 +311,7 @@ def test_prorrata_regularizacion_selector_rejects_uncanonical_inputs() -> None:
                 "regularizacion_output": "modelo_390-annual",
             },
             "bad-prorrata-output",
-            ("regularizacion_output", "modelo_303_casilla_44"),
+            ("regularizacion_output", "modelo_303_casilla_44", "modelo_390_regularizacion_anual"),
         ),
     )
     for selector, binding_id, expected_substrings in cases:

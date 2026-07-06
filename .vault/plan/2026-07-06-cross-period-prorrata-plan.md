@@ -146,7 +146,7 @@ Make prorrata_regularizacion a legal registry-declared source before any mesh pr
 
 - [x] `W07.P10.S42` - add a typed prorrata_regularizacion selector contract and selector-registry construction gate so the source is a legal DataBindingDefinition.source before any TOML binding is declared; `src/aeat/domain/calculations/registry/_bindings.py; src/aeat/domain/calculations/registry/tests/test_selector_shape.py`.
 - [x] `W07.P10.S43` - provision the Modelo 303 casilla 44 prorrata_regularizacion binding rows for current registry revisions, convert the target from manual to bound only with legal/source citations and formula-consumption implications proven; `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/; src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/; src/aeat/domain/calculations/registry/tests/`.
-- [ ] `W07.P10.S44` - ground the claimed Modelo 390 annual regularizacion target and either provision a canonical prorrata_regularizacion binding target with export/legal references or record an ADR-backed exclusion before promotion; `src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/; .vault/adr/; src/aeat/domain/calculations/registry/tests/`.
+- [x] `W07.P10.S44` - ground the Modelo 390 annual regularizacion target, declare its future prorrata_regularizacion binding/export grounding, keep box 522 manual until S45/S46 materialise values, and include 522 in the annual deductible total formula; `src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/; src/aeat/domain/calculations/registry/tests/`.
 
 ### Phase `W07.P11` - Resolver timing and value materialisation
 

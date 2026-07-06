@@ -618,3 +618,57 @@ resolver timing (`W07.P11.S45`), resolver materialisation (`W07.P11.S46`), live
 enrollment and carve-out removal (`W07.P12.S47`), bienes-inversion dependency
 reconciliation (`W07.P12.S48`), and close review (`W07.P12.S49`). No production
 code changed in this reconciliation.
+
+## S44 Review
+
+Reviewed the `W07.P10.S44` Modelo 390 target grounding after re-running semantic
+discovery, checking the current plan status, and confirming the bundled AEAT
+Modelo 390 2025 record design. The official design carries page `04000` field
+`[522]` at offset `642`, length `17`, type `N`, labelled as regularizacion by
+application of the definitive prorrata percentage. The repaired change
+provisions that target as manual
+`iva.anual.regularizacion-prorrata-definitiva`, declares the future
+`prorrata_regularizacion` binding row with the existing selector contract,
+extends only the existing selector output literal set, adds the export-layout
+field plus construct and calculation-completeness manifest coverage, and enrolls
+box `[522]` in the annual deductible formula.
+
+The initial review found no new source kind, resolver convention, or validator
+convention. A later follow-up finding below superseded its safety conclusion:
+the first S44 draft made box `[522]` live-bound before the resolver existed and
+left the annual deductible formula without box `[522]`.
+
+Findings: the follow-up S44 finding below was open until the repair that keeps
+box `[522]` manual, retains the binding row only as future grounding, and adds
+box `[522]` to the annual deductible formula.
+
+Repair gate inventory: `ruff check` is clean for the touched Python files, the
+focused M390 registry/manual-worked-example/selector pytest slice passes, and
+the cross-period-prorrata frontmatter, feature-index, and plan checks are clean
+after rebuilding the feature index.
+
+### s44-m390-prorrata-target | high | bound 522 currently materialises as zero and box 64 ignores nonzero regularizacion
+
+Follow-up review found S44 is not safe to commit as drafted. The new M390 box 522
+casilla is `input_kind = "bound"` against `modelo-390-prorrata-regularizacion-anual`
+while `prorrata_regularizacion` is still deferred and not observation-backed; the
+registry initial-value path therefore defaults the missing casilla input to
+`Decimal("0")` instead of producing an unresolved outcome. A direct calculation
+probe with all other M390 carry bindings neutral and the prorrata binding omitted
+materialised `iva.anual.regularizacion-prorrata-definitiva = 0` with no unresolved
+outcome. The annual deductible-total formula also still sums only soportado
+interiores, soportado importaciones, and autorepercutido intracomunitaria; a
+nonzero 522 from the future resolver will not flow into box 64 `Suma de
+deducciones` or box 65 `Resultado régimen general`. S44 must either keep the
+target manual/unresolved until S45/S46 or co-land the resolver/unresolved handling
+and update the M390 deductible-total formula to consume the annual prorrata
+regularizacion.
+
+Resolution: S44 was repaired as target provisioning only. Box `[522]`
+`iva.anual.regularizacion-prorrata-definitiva` remains `input_kind = "manual"`
+with no live casilla binding, while `modelo-390-prorrata-regularizacion-anual`
+stays declared as the future `prorrata_regularizacion` selector/export grounding.
+`modelo-390-iva-anual-cuota-deducible-total` now includes box `[522]`, and the
+focused regression proves a nonzero operator-supplied `[522]` raises box `[64]`
+and lowers box `[65]`. Automatic value materialisation remains deferred to
+`W07.P11.S45` and `W07.P11.S46`.
