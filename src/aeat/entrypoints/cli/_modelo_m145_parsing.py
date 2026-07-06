@@ -1,4 +1,19 @@
-"""CLI argument parsing helpers for Modelo 145 communication commands."""
+"""CLI argument parsing helpers for Modelo 145 communication commands.
+
+The helpers keep raw Typer values out of the application layer by converting
+``--casilla`` assignments, period tokens, notes, and actor labels into the
+strict backend create-command DTO.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_m145_cli`
+        Typer command group that calls these parsing helpers.
+    :class:`~application.modelo.M145CommunicationCreateCommand`
+        Backend DTO produced by :func:`m145_create_command_from_cli`.
+    :class:`~application.modelo.M145CommunicationPeriod`
+        Closed period-token type accepted by the CLI option and backend DTO.
+    :mod:`~entrypoints.cli._modelo_m145_rendering`
+        Sibling output boundary that emits results after parsed commands run.
+"""
 
 from __future__ import annotations
 

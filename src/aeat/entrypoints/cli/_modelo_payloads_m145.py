@@ -1,4 +1,26 @@
-"""Modelo 145 local communication payload schemas."""
+"""Modelo 145 local communication payload schemas.
+
+Strict :class:`~entrypoints.cli._schemas.OutputSchema` projections for the
+``aeat app modelo m145`` commands. The payloads translate application DTOs into
+stable JSON envelopes while preserving registry legal/source references and
+local communication state.
+
+See Also:
+    :func:`~entrypoints.cli._schemas.register_schema`
+        Central CLI schema registry used for each Modelo 145 operation name.
+    :mod:`~entrypoints.cli._modelo_m145_cli`
+        Typer command group that emits these payloads.
+    :mod:`~entrypoints.cli._modelo_m145_rendering`
+        Renderer that converts application results into these payload classes.
+    :class:`~application.modelo.M145CommunicationRecord`
+        Persisted record projected by :class:`M145CommunicationRecordPayload`.
+    :class:`~application.modelo.M145CommunicationValidationResult`
+        Backend validation result represented by
+        :class:`M145CommunicationValidationResultPayload`.
+    :class:`~application.modelo.M145CommunicationExportResult`
+        Backend export result represented by
+        :class:`M145CommunicationExportResultPayload`.
+"""
 
 from __future__ import annotations
 
