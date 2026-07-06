@@ -37,6 +37,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W01-P07-S233]]'
   - '[[2026-05-26-cross-domain-continuity-W03-P14-S223]]'
   - '[[2026-05-26-cross-domain-continuity-W04-P19-S398]]'
+  - '[[2026-05-26-cross-domain-continuity-W05-P24-S281]]'
   - '[[2026-05-26-cross-domain-continuity-W05-P24-S287]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S113]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S114]]'
@@ -444,6 +445,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P45-S358` - R9-TOMAS-HIGH royalties SGAE guidance gap
 - `2026-05-26-cross-domain-continuity-W01-P07-S233` - R7-INES-7 fix period token notation inconsistency in overview backlog
 - `2026-05-26-cross-domain-continuity-W09-P41-S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer
+- `2026-05-26-cross-domain-continuity-W05-P24-S281` - Implement Modelo 303 cash-accounting IVA axis
 - `2026-05-26-cross-domain-continuity-W05-P24-S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer
 
 ### plan
