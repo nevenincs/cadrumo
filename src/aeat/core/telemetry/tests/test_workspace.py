@@ -2,6 +2,14 @@
 
 Proves the hash is deterministic per storage-root path, differs across
 distinct paths, and never carries the raw path or any identity value.
+
+See Also:
+    :func:`~core.telemetry.workspace_hash`:
+        Pseudonymous deployment-id helper under test.
+    :class:`~core.telemetry.TelemetryEventPayload`:
+        Payload contract that carries the derived ``workspace_hash``.
+    :class:`~core.config.Settings`:
+        Source of the local storage root used as hash input.
 """
 
 from __future__ import annotations
