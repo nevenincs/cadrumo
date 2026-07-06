@@ -113,3 +113,21 @@ Findings: no open S21 implementation findings.
 
 Residual gate inventory: `ruff check` is clean for the new regression file, and
 the new regression passes sequentially.
+
+## S22 Review
+
+Reviewed the `W03.P05.S22` field-flow regression. The new test records a real
+repository-backed sale and purchase, captures the shared IVA ledger binding
+values before any prorrata register exists, then records an active `general`
+entry with a carried prior definitive provisional percentage and re-runs the
+same aggregation path. The assertions prove the active apportionment carrier is
+present, the deducible cuota binding is lower than the baseline value, the
+matching deducible base binding stays equal to baseline, and an output IVA cuota
+binding stays equal to baseline. The test therefore proves the provisional
+percentage bites on the intended field flow without hand-computing the expected
+reduced cuota or introducing a parallel formula.
+
+Findings: no open S22 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the prorrata apportionment
+regression file, and the full file passes sequentially.
