@@ -1,4 +1,29 @@
-"""Registry loader cache predicates."""
+"""Registry loader cache predicates.
+
+This module centralizes the small policy decisions that keep registry loading
+fast without hiding live TOML edits. Bundled registry roots receive a short
+fingerprint TTL, mutable authoring roots keep the stricter window, and pytest
+disables the cross-process disk pickle so xdist workers cannot share stale
+compiled registry state.
+
+See Also:
+    :mod:`~domain.calculations.registry._loader`
+        Registry TOML loader that consumes these TTL and disk-cache predicates.
+    :func:`~core.resources.bundled_path`
+        Resource boundary used to identify the package-bundled registry root.
+    :func:`~domain.calculations.registry.tests.test_loader_cache_isolation.test_registry_disk_cache_disabled_under_pytest`
+        Real-behavior gate for the pytest disk-cache refusal path.
+    :func:`~domain.calculations.registry.tests.test_loader_cache_isolation.test_is_bundled_registry_root_rejects_a_mutable_authoring_tree`
+        Coverage for bundled-root versus mutable-authoring-tree separation.
+    :func:`~domain.calculations.registry.tests.test_loader_cache_isolation.test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl`
+        Coverage for the longer bundled-root fingerprint TTL window.
+    :func:`~conftest._isolate_registry_caches`
+        Session fixture that clears registry caches around pytest runs.
+    Governing vault records
+        ``2026-05-20-registry-authority-flow-adr`` and
+        ``2026-06-02-registry-loader-boundary-audit`` govern the authority
+        boundary and loader-extraction cache invalidation behavior.
+"""
 
 from __future__ import annotations
 
