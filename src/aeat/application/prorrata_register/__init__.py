@@ -88,6 +88,37 @@ class ProrrataRegisterService:
         )
         return self.declare(entry)
 
+    def record_inicio_actividad(
+        self,
+        *,
+        ejercicio: int,
+        provisional_percentage: Decimal,
+        proposal_reference: str,
+        sector_id: str | None = None,
+        regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL,
+    ) -> ProrrataRegister:
+        """Record an art. 105.Tres inicio-de-actividades proposed prorrata override.
+
+        Args:
+            ejercicio: Filing year whose provisional prorrata is proposed for inicio.
+            provisional_percentage: Proposed provisional deduction percentage.
+            proposal_reference: Operator-held reference for the inicio proposal.
+            sector_id: Optional sector identifier for sectores diferenciados.
+            regime: Prorrata regime in force for the entry. Defaults to general.
+
+        Returns:
+            The updated :class:`ProrrataRegister`.
+        """
+        entry = ProrrataRegisterEntry(
+            ejercicio=ejercicio,
+            regime=regime,
+            sector_id=sector_id,
+            provisional_percentage=provisional_percentage,
+            provisional_provenance=ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
+            authorisation_reference=proposal_reference,
+        )
+        return self.declare(entry)
+
     def list_all(self) -> ProrrataRegister:
         """Return the full active-profile register.
 
