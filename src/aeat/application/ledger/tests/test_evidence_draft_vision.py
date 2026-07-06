@@ -16,6 +16,7 @@ import pytest
 
 from ....core.config import load_settings
 from ....tests.secure_sql import TestRuntimeProfile
+from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import InvoiceDraft
 from .._evidence_draft_vision import (
     LocalVisionInvoiceFieldExtractor,
@@ -64,12 +65,12 @@ class TestParseVisionExtractionResponse:
         assert parsed.invoice_number == "2026-0142"
 
     def test_no_json_object_refuses(self) -> None:
-        with pytest.raises(Exception, match="no parsable JSON object"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no parsable JSON object"):
             parse_vision_extraction_response("I could not read the image clearly.")
 
     def test_schema_violation_refuses(self) -> None:
         """A non-string field value (e.g. a nested object) fails strict schema validation."""
-        with pytest.raises(Exception, match="schema validation"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="schema validation"):
             parse_vision_extraction_response('{"supplier_tax_id": {"nested": "object"}}')
 
 

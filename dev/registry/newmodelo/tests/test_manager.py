@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.domain.calculations.registry import RegistryLoadError
+
 from ..checklist import CHECKLIST, render_checklist
 from ..manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
 
@@ -191,7 +193,7 @@ def test_scaffolded_tree_loads_as_a_valid_directory_mode_modelo_definition(tmp_p
     # (TODO tax_domain, cadence, dates) and must not validate as-is: a scaffold
     # that "passes" the loader with all-TODO content would be a false green.
     modelo_root = tmp_path / _THROWAWAY_MODELO_ID
-    with pytest.raises(Exception):  # noqa: B017 - any RegistryLoadError/ValidationError proves the TODOs are unfilled
+    with pytest.raises(RegistryLoadError):
         load_modelo_directory(modelo_root)
 
 
