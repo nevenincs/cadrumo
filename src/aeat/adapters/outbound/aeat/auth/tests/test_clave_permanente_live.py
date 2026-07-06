@@ -9,6 +9,23 @@ separate "explicitly enabled full login" escalation because no operator
 interaction is required. Everything here stays dry-run by default per
 ``AEAT_LIVE_TESTS_ENABLED``; the tool never submits, only authenticates for
 subsequent reads.
+
+See Also:
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+        Live provider exercised for fresh login, verify, encrypted persistence,
+        and resume.
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+        Provider-specific session payload asserted after live authentication.
+    :func:`~adapters.outbound.aeat.browser.default_browser_session_factory`
+        Central Playwright backend used by the live probe.
+    :class:`~adapters.outbound.aeat.browser.BrowserSession`
+        Browser runtime whose context construction owns storage-state injection.
+    :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente`
+        Protocol-level companion suite covering deterministic provider branches.
+    ``2026-06-04-live-auth-decomposition-adr`` and
+    ``2026-06-04-repo-health-triage-live-auth-split-invariants-audit``
+        Custody-boundary records for live gates, read-only posture, and
+        encrypted provider metadata.
 """
 
 from __future__ import annotations
