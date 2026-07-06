@@ -14,7 +14,7 @@ related:
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
 ---
 
-# `cross-period-prorrata` adr: `Cross-period prorrata model: provisional carry, in-year apportionment, settlement regularisation` | (**status:** `proposed`)
+# `cross-period-prorrata` adr: `Cross-period prorrata model: provisional carry, in-year apportionment, settlement regularisation` | (**status:** `accepted`)
 
 ## Problem Statement
 
