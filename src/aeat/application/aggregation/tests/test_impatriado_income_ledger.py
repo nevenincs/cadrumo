@@ -288,6 +288,109 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
     assert result.issues[0].transaction_id == out_of_period.transaction_id
 
 
+def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+    tmp_path: Path,
+) -> None:
+    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+
+    A wrong-direction outgoing row is ignored by the in-window classifier
+    because this aggregation owns incoming rows. When that same row falls
+    outside the requested ejercicio, the repository-backed partition reports
+    it as ``OUTSIDE_PERIOD`` instead of dropping it before aggregation.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        in_year = _impatriado_transaction(
+            "row-in-year",
+            amount=Decimal("20000.00"),
+            source_jurisdiction="ES",
+            value_date=date(2024, 3, 1),
+        )
+        wrong_direction_out_of_year = _impatriado_transaction(
+            "row-wrong-direction-out-of-year",
+            amount=Decimal("15000.00"),
+            source_jurisdiction="ES",
+            value_date=date(2025, 2, 1),
+            direction=TransactionDirection.OUTGOING,
+        )
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((in_year, wrong_direction_out_of_year)))
+
+        result = aggregate_impatriado_income_ledger_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_ANNUAL_2024,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
+        )
+
+    assert {o.transaction_id for o in result.observations} == {in_year.transaction_id}
+    assert len(result.issues) == 1
+    assert result.issues[0].transaction_id == wrong_direction_out_of_year.transaction_id
+    assert result.issues[0].reason is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+
+
+def test_repository_backed_aggregation_partition_matches_full_scan(
+    tmp_path: Path,
+) -> None:
+    """The partitioned result matches the full-scan result for declared values.
+
+    The same multi-year catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and casilla totals/provenance must match; only the
+    out-of-window issue taxonomy can differ. The full-scan path keeps the
+    foreign-source reason, while the partition reports it as
+    ``OUTSIDE_PERIOD``.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        in_year = _impatriado_transaction(
+            "row-parity-in-year",
+            amount=Decimal("20000.00"),
+            source_jurisdiction="ES",
+            value_date=date(2024, 3, 1),
+        )
+        out_of_year = _impatriado_transaction(
+            "row-parity-out-of-year",
+            amount=Decimal("10000.00"),
+            source_jurisdiction="ES",
+            value_date=date(2025, 1, 15),
+        )
+        foreign_out_of_year = _impatriado_transaction(
+            "row-parity-foreign-out-of-year",
+            amount=Decimal("5000.00"),
+            source_jurisdiction="FR",
+            value_date=date(2023, 6, 1),
+        )
+        catalogue = TransactionCatalogue.from_transactions((in_year, out_of_year, foreign_out_of_year))
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(catalogue)
+
+        partitioned = aggregate_impatriado_income_ledger_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_ANNUAL_2024,
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
+        )
+        full_scan = aggregate_impatriado_income_ledger(catalogue, bucket_id=_BUCKET_ID, period=_ANNUAL_2024)
+
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
+    assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
+    assert {o.transaction_id for o in partitioned.observations} == {in_year.transaction_id}
+
+    partitioned_issue_ids = {i.transaction_id for i in partitioned.issues}
+    assert partitioned_issue_ids == {out_of_year.transaction_id, foreign_out_of_year.transaction_id}
+    assert all(i.reason is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+
+    full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
+    assert full_scan_issue_ids == {out_of_year.transaction_id, foreign_out_of_year.transaction_id}
+    full_scan_by_id = {i.transaction_id: i for i in full_scan.issues}
+    assert (
+        full_scan_by_id[out_of_year.transaction_id].reason
+        is ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    )
+    assert (
+        full_scan_by_id[foreign_out_of_year.transaction_id].reason
+        is ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED
+    )
+
+
 def test_registry_binding_definition_validates_and_rejects_wrong_casilla() -> None:
     """The build-time validator accepts the shipped binding and rejects an off-target one."""
     revision = load_modelo_directory(_M151_REGISTRY_DIR).revisions["2015-y-siguientes"]

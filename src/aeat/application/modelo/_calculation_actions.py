@@ -135,7 +135,7 @@ from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
-    from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepositoryProtocol
+    from ...domain.transactions import LedgerDatePartition, TransactionCatalogue, TransactionCatalogueRepositoryProtocol
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceResolution,
@@ -160,6 +160,7 @@ class BucketAggregationCalculationResult:
 
     revision: CalculationRevision
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+
 
 def calculate_modelo_revision(
     work_unit_id: str,
@@ -435,36 +436,36 @@ class _MemoizedTransactionCatalogueRepository:
     resolution; see the module docstring) and delegates straight through so
     the wrapper stays a strict read-through cache, not a write cache.
 
-    :meth:`load_for_date_range` is ALSO memoized, keyed by the exact
-    ``(start, end)`` window, so two resolvers that request the identical
-    window in one calculate invocation would share one targeted scan instead
-    of each independently re-scanning. A resolver requesting a distinct
-    window would get its own cache entry rather than colliding with an
-    unrelated one.
+    :meth:`load_for_date_range` and :meth:`partition_by_date_range` are ALSO
+    memoized, each keyed by the exact ``(start, end)`` window, so two
+    resolvers that request the identical window in one calculate invocation
+    share one targeted scan instead of each independently re-scanning. A
+    resolver requesting a distinct window gets its own cache entry rather
+    than colliding with an unrelated one.
 
-    As of issue #599, NO ledger resolver currently calls
-    ``load_for_date_range``: every one of the five, including
-    :class:`LedgerRentaExpenseAggregationSourceResolver` (the last holdout),
-    now calls ``load`` and reads the FULL catalogue, because each
-    aggregator's ``OUTSIDE_PERIOD`` diagnostic requires visibility into
-    catalogue rows outside the requested window to avoid silently dropping a
-    legitimately in-scope row (a no-silent-under-declaration violation — see
-    #599). The range-load memoization branch, the underlying
-    :meth:`~TransactionCatalogueRepositoryProtocol.load_for_date_range`
-    method, and the plaintext
-    :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow` index
-    it reads are deliberately RETAINED, not dead code: they are the
-    foundation a deferred #408 perf redesign (index-served diagnostics,
-    pending a design decision on reordering classification gates or widening
-    the index) would build on.
+    As of issue #408 Path A / O2 (``2026-07-05-ledger-latency-budget-adr``),
+    four of the five ledger resolvers (IVA, M130/M100 income, M130 gasto,
+    impatriado) call :meth:`partition_by_date_range`, which decrypts only the
+    in-window subset and reports the out-of-window remainder as plaintext
+    stubs -- the M130 income and gasto resolvers request the IDENTICAL
+    cumulative window in one calculate invocation, so
+    ``_partition_catalogues`` memoization is load-bearing here, not
+    incidental. :class:`LedgerRentaExpenseAggregationSourceResolver` (the
+    #599 first-slice path) still calls ``load`` and reads the FULL catalogue,
+    because its effective filing date prefers the linked invoice's issue
+    date over the transaction's own date, so the transaction-date index is
+    the wrong pre-filter key for it (excluded from Path A pending #599).
+    ``load_for_date_range`` itself has no current caller; its cache branch is
+    retained alongside the method for any future direct caller.
     """
 
-    __slots__ = ("_catalogue", "_date_range_catalogues", "_repository")
+    __slots__ = ("_catalogue", "_date_range_catalogues", "_partition_catalogues", "_repository")
 
     def __init__(self, repository: TransactionCatalogueRepositoryProtocol) -> None:
         self._repository = repository
         self._catalogue: TransactionCatalogue | None = None
         self._date_range_catalogues: dict[tuple[date, date], TransactionCatalogue] = {}
+        self._partition_catalogues: dict[tuple[date, date], LedgerDatePartition] = {}
 
     @property
     def bucket_id(self) -> str:
@@ -488,6 +489,15 @@ class _MemoizedTransactionCatalogueRepository:
         if cached is None:
             cached = self._repository.load_for_date_range(start, end)
             self._date_range_catalogues[key] = cached
+        return cached
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        """Return the cached partition, computing it from storage at most once per exact window."""
+        key = (start, end)
+        cached = self._partition_catalogues.get(key)
+        if cached is None:
+            cached = self._repository.partition_by_date_range(start, end)
+            self._partition_catalogues[key] = cached
         return cached
 
     def save(self, catalogue: TransactionCatalogue) -> None:
@@ -971,6 +981,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         revision=revision,
         source_diagnostics=source_diagnostics,
     )
+
 
 def _merge_detail_row_binding_values(
     source_binding_values: Mapping[BindingId, Decimal],

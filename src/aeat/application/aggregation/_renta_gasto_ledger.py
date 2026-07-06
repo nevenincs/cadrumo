@@ -33,7 +33,7 @@ that are constraint-shape-divergent from the M130 quarterly cumulative gasto sum
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -48,6 +48,7 @@ from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     BusinessClassification,
+    OutOfWindowTransactionStub,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -186,14 +187,37 @@ def aggregate_renta_gasto_ledger_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # NOT pre-filtered by date range (issue #408): this aggregation's
-    # ``OUTSIDE_PERIOD`` issue is a genuine diagnostic over the FULL persisted
-    # catalogue -- a catalogue transaction outside the cumulative window must
-    # still surface as a reported issue, not silently vanish before the
-    # classifier ever sees it (mirrors the M130 income sibling; see
-    # ``test_repository_backed_aggregation_emits_casilla_01_sum``).
-    transactions = repository.load()
-    return aggregate_renta_gasto_ledger(transactions, bucket_id=bucket_id, period=period)
+    # Only the cumulative in-window subset is decrypted and classified. The
+    # out-of-window remainder comes from the plaintext date index and is
+    # reported uniformly as ``OUTSIDE_PERIOD``.
+    resolved_period = _resolve_quarterly_period(period)
+    cumulative_start = date(resolved_period.year, 1, 1)
+    cumulative_end = resolved_period.end_date
+    partition = repository.partition_by_date_range(cumulative_start, cumulative_end)
+    result = aggregate_renta_gasto_ledger(partition.in_window, bucket_id=bucket_id, period=period)
+    return result.model_copy(
+        update={"issues": (*result.issues, *_out_of_window_gasto_issues(partition.out_of_window))},
+    )
+
+
+def _out_of_window_gasto_issues(
+    stubs: Iterable[OutOfWindowTransactionStub],
+) -> tuple[RentaGastoLedgerAggregationIssue, ...]:
+    """Return one uniform ``OUTSIDE_PERIOD`` issue per out-of-window catalogue stub.
+
+    Diagnosed from the plaintext ``(transaction_id, filing_date)`` stub alone:
+    the row was never decrypted, so no other gate (direction, currency,
+    business classification, ``irpf_category``, ...) can be evaluated for it.
+    """
+    return tuple(
+        RentaGastoLedgerAggregationIssue(
+            transaction_id=stub.transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            detail=f"filing date {stub.filing_date.isoformat()} is outside the cumulative gasto window; "
+            "excluded by period before classification",
+        )
+        for stub in stubs
+    )
 
 
 def aggregate_renta_gasto_ledger(

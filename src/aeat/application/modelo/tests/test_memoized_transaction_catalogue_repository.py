@@ -166,6 +166,42 @@ def test_full_load_and_date_range_caches_are_independent(
     assert _transaction_ids(february_load) == {february_transaction.transaction_id}
 
 
+def test_partition_cache_is_keyed_by_exact_window(
+    runtime_profile: TestRuntimeProfile,
+    repository: TransactionCatalogueRepository,
+) -> None:
+    """The partition cache is keyed like ``load_for_date_range``'s, and independent from it.
+
+    Regression coverage for #408 Path A / O2: the M130 income and gasto
+    resolvers request the IDENTICAL cumulative window via
+    :meth:`~_MemoizedTransactionCatalogueRepository.partition_by_date_range`
+    in one calculate invocation, so this cache is load-bearing, not
+    incidental.
+    """
+    january_transaction = _transaction("provider-row-1", date(2024, 1, 15))
+    added_january_transaction = _transaction("provider-row-2", date(2024, 1, 25))
+    april_transaction = _transaction("provider-row-3", date(2024, 4, 10))
+    repository.save(_catalogue(january_transaction, april_transaction))
+    memoized = _MemoizedTransactionCatalogueRepository(repository)
+    january_window = (date(2024, 1, 1), date(2024, 1, 31))
+
+    first_january_partition = memoized.partition_by_date_range(*january_window)
+    _repository(runtime_profile).save(
+        _catalogue(january_transaction, added_january_transaction, april_transaction),
+    )
+    repeated_january_partition = memoized.partition_by_date_range(*january_window)
+    april_partition = memoized.partition_by_date_range(date(2024, 4, 1), date(2024, 4, 30))
+
+    assert repeated_january_partition is first_january_partition
+    assert _transaction_ids(repeated_january_partition.in_window) == {january_transaction.transaction_id}
+    assert _transaction_ids(april_partition.in_window) == {april_transaction.transaction_id}
+    live_january_partition = _repository(runtime_profile).partition_by_date_range(*january_window)
+    assert _transaction_ids(live_january_partition.in_window) == {
+        january_transaction.transaction_id,
+        added_january_transaction.transaction_id,
+    }
+
+
 def test_exists_save_and_bucket_id_delegate_to_concrete_repository(
     runtime_profile: TestRuntimeProfile,
     repository: TransactionCatalogueRepository,

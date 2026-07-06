@@ -428,6 +428,82 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     assert result_q2.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == expected_q2
 
 
+def test_repository_backed_aggregation_coarsens_previously_silent_out_of_window_rows_to_outside_period(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Out-of-window rows surface as ``OUTSIDE_PERIOD`` diagnostics.
+
+    A wrong-direction incoming row is ignored before the in-window gasto
+    classifier runs because this aggregation owns outgoing rows. When that row
+    falls outside the requested cumulative window, the repository-backed
+    partition reports it as ``OUTSIDE_PERIOD`` instead of dropping it before
+    aggregation.
+    """
+    in_window = _gasto_transaction("row-in-window", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
+    wrong_direction_out_of_window = _gasto_transaction(
+        "row-wrong-direction-out-of-window",
+        value_date=date(2024, 5, 10),
+        taxable_base=Decimal("90.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((in_window, wrong_direction_out_of_window)))
+
+    result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
+    assert len(result.issues) == 1
+    assert result.issues[0].transaction_id == wrong_direction_out_of_window.transaction_id
+    assert result.issues[0].reason is RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD
+
+
+def test_repository_backed_aggregation_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The partitioned result matches the full-scan result for declared values.
+
+    The same multi-period catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and casilla totals/provenance must match; only the
+    out-of-window issue taxonomy can differ.
+    """
+    q1_row = _gasto_transaction("row-q1", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = _gasto_transaction("row-q3", value_date=date(2024, 8, 1), taxable_base=Decimal("70.00"))
+    wrong_direction_q3_row = _gasto_transaction(
+        "row-q3-wrong-direction",
+        value_date=date(2024, 9, 1),
+        taxable_base=Decimal("30.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+    catalogue = TransactionCatalogue.from_transactions((q1_row, q3_row, wrong_direction_q3_row))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(catalogue)
+
+    partitioned = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+    full_scan = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
+    assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
+    assert {o.transaction_id for o in partitioned.observations} == {q1_row.transaction_id}
+
+    partitioned_issue_ids = {i.transaction_id for i in partitioned.issues}
+    assert partitioned_issue_ids == {q3_row.transaction_id, wrong_direction_q3_row.transaction_id}
+    assert all(i.reason is RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in partitioned.issues)
+
+    full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
+    assert full_scan_issue_ids == {q3_row.transaction_id}
+    assert wrong_direction_q3_row.transaction_id not in full_scan_issue_ids
+
+
 def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_binding() -> None:
     """The real M130 revision binds casilla 02 to the gasto source and sums the bases.
 
