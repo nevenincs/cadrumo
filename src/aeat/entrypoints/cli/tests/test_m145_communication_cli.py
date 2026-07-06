@@ -1,4 +1,19 @@
-"""Real CLI tests for Modelo 145 local communication commands."""
+"""Real CLI tests for Modelo 145 local communication commands.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_m145_cli`
+        Thin Typer command registration under test.
+    :mod:`~entrypoints.cli._modelo_m145_parsing`
+        Parser boundary used before backend delegation.
+    :mod:`~entrypoints.cli._modelo_m145_rendering`
+        Rendering boundary used after backend delegation.
+    :class:`~application.modelo.M145CommunicationRecordState`
+        Backend state enum asserted after command transitions.
+    :func:`~application.modelo.read_m145_communication_record`
+        Backend read path used to verify real command effects.
+    :mod:`~entrypoints.cli.tests.envelope_helpers`
+        Schema-envelope helper used to inspect CLI JSON output.
+"""
 
 from __future__ import annotations
 
