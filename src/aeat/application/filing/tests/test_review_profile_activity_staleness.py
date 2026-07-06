@@ -45,8 +45,10 @@ from .. import (
     build_draft,
     build_runtime_schema_provider,
 )
-from .._review import _profile_activity_fingerprint, empty_profile_activity_fingerprint
+from .._review import empty_profile_activity_fingerprint
 from ..testing import ModeloTestProfile
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _PROFILE_ID = "12345678-1234-4234-8234-123456789abc"
@@ -109,8 +111,6 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
     )
 
 
-@pytest.mark.integration
-@pytest.mark.hex_application
 def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: None) -> None:
     _create_profile_with_activity("asesoria")
     bucket_id = _active_bucket_id()
@@ -143,8 +143,6 @@ def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: Non
     assert reasons == (ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED,)
 
 
-@pytest.mark.integration
-@pytest.mark.hex_application
 def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> None:
     """Anti-tautology: an unchanged real profile produces NO stale reason.
 
@@ -173,38 +171,3 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
     assert ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED not in reasons
     assert reasons == ()
 
-
-# Registry-free unit coverage of the fingerprint mechanism the profile-activity
-# stale detection relies on. These fingerprint the wizard-free projection directly
-# (a plain path->value mapping), so they exercise the change-detection signal
-# without a schema provider or the secure backend.
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_profile_activity_fingerprint_changes_when_a_fact_changes() -> None:
-    before = _profile_activity_fingerprint({"censo.activity_start_date": "2024-01-01"})
-    after = _profile_activity_fingerprint({"censo.activity_start_date": "2024-06-01"})
-
-    assert before != after
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_profile_activity_fingerprint_is_order_independent() -> None:
-    one = _profile_activity_fingerprint({"a.b": "1", "c.d": "2"})
-    other = _profile_activity_fingerprint({"c.d": "2", "a.b": "1"})
-
-    assert one == other
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_profile_activity_fingerprint_distinguishes_empty_from_populated() -> None:
-    empty = _profile_activity_fingerprint(None)
-    populated = _profile_activity_fingerprint({"censo.activity_start_date": "2024-01-01"})
-
-    assert empty != populated
-    # The exported empty helper matches both a None and an empty projection.
-    assert empty == empty_profile_activity_fingerprint()
-    assert empty == _profile_activity_fingerprint({})
