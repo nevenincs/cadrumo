@@ -1,4 +1,26 @@
-"""Live source-mesh enrollment for ``bienes_inversion_regularizacion``."""
+"""Live source-mesh enrollment for ``bienes_inversion_regularizacion``.
+
+This test exercises the application mesh path, not the advisory projection in
+isolation: the mesh materialises current-year registry prorrata values, calls
+the real bienes-inversión resolver, and binds Modelo 303 casilla 43.
+
+See Also:
+    :class:`~application.aggregation.CalculationSourceResolution`
+        Source-mesh result envelope whose owned sources, binding values, and
+        diagnostics are asserted by this enrollment gate.
+    :func:`~application.modelo._calculation_actions._resolve_bucket_source_mesh`
+        Calculate-path mesh entry point that enrolls the bienes-inversión
+        resolver.
+    :mod:`~application.calculations._bienes_inversion_regularizacion`
+        Projection and live resolver for the capital-goods IVA regularización
+        source kind.
+    :mod:`~application.modelo._bienes_inversion_advisory`
+        Earlier advisory wiring that kept casilla 43 visible before hard
+        source-mesh promotion.
+    ``2026-07-01-iva-bienes-inversion-regularizacion-adr`` and
+    ``2026-07-06-cross-period-prorrata-audit``
+        Decision and close-review records governing the M303 live enrollment.
+"""
 
 from __future__ import annotations
 
