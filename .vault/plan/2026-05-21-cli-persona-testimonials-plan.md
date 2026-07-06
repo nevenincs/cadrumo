@@ -1,121 +1,112 @@
 ---
 tags:
   - '#plan'
-  - '#cli-persona-testimonials'
+  - '#cli-persona-testimonials-legacy'
 date: '2026-05-21'
-modified: '2026-06-30'
+modified: '2026-07-06'
 tier: L2
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
   - '[[2026-05-20-cli-persona-testimonials-research]]'
   - '[[2026-05-20-test-fidelity-sweep-audit]]'
   - '[[2026-05-21-cli-persona-testimonials-audit]]'
-  - '[[2026-05-21-cli-persona-testimonials-audit]]'
   - '[[2026-06-04-cli-persona-testimonials-adr]]'
+  - '[[2026-06-30-cli-persona-testimonials-plan]]'
 ---
 
-# `cli-persona-testimonials` `cli-persona-testimonial-remediation-plan` plan
+# `cli-persona-testimonials` initial remediation plan
 
-Brief description of the proposed feature, change, or refactor.
+## Description
 
-## Proposed Changes
+Initial remediation campaign driven by the operator-persona testimonial swarm
+and the test-fidelity sweep. Each phase records a bounded remediation cluster
+from the May campaign. Later open-ended testimonial intake continues in
+`2026-06-30-cli-persona-testimonials-plan`; this document is retained as the
+historical L2 closure tracker for the original wave.
 
-Describe what work needs to be done at a high level. Reference `{adr}`s,
-`{research}`, `{reference}`, and other plan or reference files where
-appropriate so implementation remains grounded in architectural decisions.
+Source artifacts: `2026-05-20-cli-persona-testimonials-audit`,
+`2026-05-20-cli-persona-testimonials-research`, and
+`2026-05-20-test-fidelity-sweep-audit`.
 
 ## Steps
 
-The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
+### Phase `P01` - i18n naked-string remediation
 
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks.
+Eliminate operator-facing naked strings from the CLI surfaces identified by the
+initial testimonial and locale-fidelity sweeps.
 
-Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates.
+- [x] `P01.S01` - Close ledger import naked-string cluster C, task 519, commit 9ec797b5f; `src/aeat/entrypoints/cli`.
+- [x] `P01.S02` - Close CLI boundary errors and locale-scanner cluster D, commit 46889d841; `src/aeat/entrypoints/cli`.
+- [x] `P01.S03` - Close censo sync naked-string cluster E, commit 6903944a9; `src/aeat/entrypoints/cli`.
+- [x] `P01.S04` - Close IdentityError NIF NIE CIF naked-string cluster A, commit 5e30ffd18; `src/aeat`.
+- [x] `P01.S05` - Close app-live verify portals borrador naked-string cluster F, commit 7502b3ec1; `src/aeat/entrypoints/cli`.
+- [x] `P01.S06` - Close modelo-work BadParameter naked-string cluster B, commit 70715be3a; `src/aeat/entrypoints/cli`.
+- [x] `P01.S07` - Close startup bucket-history and auth-diagnostic singleton strings, commit 7afd19aed; `src/aeat/entrypoints/cli`.
+
+### Phase `P02` - bucket isolation and workflow correctness
+
+Close bucket binding and workflow diagnostics that could confuse taxpayer
+context or leak internal representations.
+
+- [x] `P02.S08` - Bind modelo work create to the active profile bucket, task 513, commit d870a936c; `src/aeat/application/modelo`.
+- [x] `P02.S09` - Replace work verify NO_PENDING_OBLIGATION raw repr leak, task 516, delegated to cli-workflow-redesign and resolved by commit 0775cfb63; `src/aeat/entrypoints/cli`.
+
+### Phase `P03` - profile lifecycle and session
+
+Close active-profile lifecycle behavior after profile deletion and logout.
+
+- [x] `P03.S10` - Enforce switch lockout after delete or logout of the active profile, task 515, delegated to cli-workflow-redesign and resolved by commit 623795a8d; `src/aeat/application/user_profile`.
+
+### Phase `P04` - calculation-engine binding gaps
+
+Ensure registry calculations receive declaration metadata and profile-sourced
+bindings without caller-side duplication.
+
+- [x] `P04.S11` - Populate declaration year and period from work-unit metadata, task 517, closed by `2026-05-22-cli-persona-testimonials-P04-S01`; `src/aeat/application/modelo`.
+- [x] `P04.S12` - Auto-resolve profile-sourced bindings and keep estimacion-directa enum Decimal behavior, task 521, closed by `2026-05-22-cli-persona-testimonials-P04-S02`; `src/aeat/application/modelo`.
+
+### Phase `P05` - CLI UX and display
+
+Align operator-facing profile names, workflow discovery, and ledger/modelo
+diagnostics with the UX clusters reproduced by the persona campaign.
+
+- [x] `P05.S13` - Display profile names instead of UUIDs across operator surfaces, task 518, delegated and closed by `2026-05-22-cli-persona-testimonials-P05-S01`; `src/aeat/entrypoints/cli`.
+- [x] `P05.S14` - Close CLI UX polish cluster for revision discovery, classify echo, ledger guidance, and state-aware overview wording, task 520, closed by `2026-05-22-cli-persona-testimonials-P05-S02`; `src/aeat/entrypoints/cli`.
+
+### Phase `P06` - tooling and follow-ups
+
+Close locale tooling decisions, registry drift follow-up, and translated error
+fallbacks found during the testimonial campaign.
+
+- [x] `P06.S15` - Decide aeat.locales ErrorCode message_key scope, task 522, recorded in `2026-05-21-cli-persona-testimonials-audit`; `.vault/audit`.
+- [x] `P06.S16` - Translate aeat config google error wrappers, task 523, commits 6491aeceb and 8e0f15b7b; `src/aeat/locales`.
+- [x] `P06.S17` - Audit help-text vocabulary drift, task 524, commit aede996da; `src/aeat/entrypoints/cli`.
+- [x] `P06.S18` - Reconcile Modelo 200 casilla 00592 registry drift, task 514, closed by `2026-05-22-cli-persona-testimonials-P06-S04`; `src/aeat/_data/registry/aeat/modelos/200`.
+- [x] `P06.S19` - Translate errors registry fallback wave and extend scanner coverage, task 525, closed by concurrent parity and locale-honesty gates; `src/aeat/locales`.
+
+### Phase `P07` - revision-year temporal validation
+
+Close the fresh persona repair that caught incompatible `--revision` and
+`--year` combinations during work-unit creation.
+
+- [x] `P07.S20` - Reject work create when the supplied revision does not cover the filing year, closed by `2026-05-27-fresh-cli-persona-repair-S171`, commit a0d7daa27; `src/aeat/entrypoints/cli`.
 
 ## Parallelization
 
-State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelised when they share no hard
-interdependency.
+The original May work ran as a swarm campaign. P01 through P06 were
+independent remediation clusters once shared locale and profile-identity
+decisions were established. P07 was a later fresh-persona repair linked back to
+this plan for continuity.
+
+New persona waves are no longer scheduled here. Use
+`2026-06-30-cli-persona-testimonials-plan` for continuation work.
 
 ## Verification
 
-State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
+This plan is complete when all Step rows are checked and the cited exec records
+or commits remain discoverable in the vault and git history.
 
-The plan is complete when every Step in every Wave is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
+Required checks for this archival repair:
 
-For tier-specific verification cadence, see the convention ADR
-authorising this plan via the `related:` frontmatter.
-
-## Context
-
-## Intent
-
-Remediation campaign driven by the operator-persona testimonial swarm
-and the test-fidelity sweep. Each phase is a remediation wave; granular
-execution state is maintained in the coordinator task list (task ids
-cross-referenced per step). Complexity tier: L2 (Phases > Steps).
-
-Source artefacts: ``2026-05-20-cli-persona-testimonials-audit``,
-``2026-05-20-cli-persona-testimonials-research``,
-``2026-05-20-test-fidelity-sweep-audit``.
-
-## P01 — i18n naked-string remediation — COMPLETE
-
-Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
-~45 locale keys translated es/en/ca/hu via the `aeat.locales` CLI.
-
-- [x] S01 Cluster C — ledger import (9ec797b5f) — task #519
-- [x] S02 Cluster D — CLI boundary errors + locale-scanner extension (46889d841)
-- [x] S03 Cluster E — censo sync (6903944a9)
-- [x] S04 Cluster A — IdentityError NIF/NIE/CIF (5e30ffd18)
-- [x] S05 Cluster F — app-live verify/portals/borrador (7502b3ec1)
-- [x] S06 Cluster B — modelo-work BadParameter (70715be3a)
-- [x] S07 singletons — startup / bucket-history / auth-diagnostic (7afd19aed)
-
-## P02 — bucket isolation & workflow correctness
-
-- [x] S01 modelo work create binds to active profile bucket (d870a936c) — task #513
-- [x] S02 work verify NO_PENDING_OBLIGATION raw-repr leak — task #516 — DELEGATED to `cli-workflow-redesign`; RESOLVED by their commit 0775cfb63 (bug-inventory B2).
-
-## P03 — profile-lifecycle & session
-
-- [x] S01 delete/logout active profile → switch lockout — task #515 — DELEGATED to `cli-workflow-redesign`; RESOLVED by their commit 623795a8d (BLOCKER B1, cluster A).
-
-## P04 — calculation-engine binding gaps
-
-- [ ] S01 engine populates decl.ejercicio/decl.periodo from work-unit metadata — task #517
-- [ ] S02 profile-sourced bindings auto-resolve; estimacion-directa enum/Decimal — task #521
-
-## P05 — CLI UX & display
-
-- [~] S01 profile display name instead of UUID across surfaces — task #518 — DELEGATED to `cli-workflow-redesign` (profile-uuid-identity ADR, plan Wave W01). Tracking only.
-- [ ] S02 CLI UX polish cluster (revision discoverability, classify echo, etc.) — task #520 (cross-check against `cli-workflow-redesign` bug-inventory clusters D/E before executing)
-
-## P06 — tooling & follow-ups
-
-- [x] S01 aeat.locales ErrorCode message_key scope decision — task #522 — investigated; decision persisted in `2026-05-21-cli-persona-testimonials-audit`. Remediation split to S05.
-- [x] S02 i18n aeat config google error wrappers — task #523 (6491aeceb + 8e0f15b7b) — _google_refusal helper + 14 cli.config.google.errors.* keys × 4 locales.
-- [x] S03 audit help-text vocabulary drift (aede996da) — task #524
-- [ ] S04 registry drift: modelo-200 casilla 00592 — task #514 (concurrent #476 campaign)
-- [x] S05 errors.* registry-fallback translation wave (+ scanner extension) — task #525 — RESOLVED: scanner generalisation landed in _ast_scanner.py; ~375 errors.* + wizard.setup.verifier.* keys translated across all 4 locales by a concurrent campaign; parity + locale-honesty gates green.
-
-## Maintenance
-
-This plan is the durable wave tracker; the coordinator task list is the
-live granular tracker. Update both as steps complete: check the step
-here, mark the task completed, and record the commit SHA.
+- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-21-cli-persona-testimonials-plan.md`
+- `uv run --no-sync vaultspec-core vault plan status .vault/plan/2026-05-21-cli-persona-testimonials-plan.md`
