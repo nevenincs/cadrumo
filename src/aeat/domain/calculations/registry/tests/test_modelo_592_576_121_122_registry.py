@@ -11,6 +11,20 @@ taxpayer's IVA period, 576's is per-matriculación (delegated to Orden
 EHA/1981/2005), and 121/122 remit to the annual IRPF campaign — none a fixed
 calendar window, so no date is fabricated. Scheduling/applicability-grade:
 declaration-header casillas only, no bundled diseño de registro.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for the committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :class:`~core.TaxDomain`
+        Closed tax-family enum extended for the plastico and IEDMT registrations.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership reached after this final-tail promotion.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Former residual obligation set that this tail reduces to empty.
+    :mod:`~domain.calculations.registry.tests.test_modelo_iva_batch4_registry`
+        Sibling registry-foundation coverage for windowless IVA promotions.
 """
 
 from __future__ import annotations
