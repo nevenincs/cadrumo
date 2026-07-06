@@ -1,11 +1,25 @@
 """Encrypted roundtrip coverage for calculation-revision source-mesh provenance.
 
 Exercises the ``source_provenance`` field on
-:class:`~aeat.domain.modelos.CalculationRevision`: the
+:class:`~domain.modelos.CalculationRevision`: the
 resolver-to-source-object-to-fingerprint trace must survive the real encrypted
 ``SecureObjectRepository`` -> SQLite -> decrypt cycle with strict model equality,
 and a corrupted on-disk payload must be refused on load so the field's
 constraints are proven non-tautological.
+
+See Also:
+    :class:`~domain.modelos.CalculationSourceRef`
+        Domain provenance row whose non-default fields are round-tripped here.
+    :func:`~domain.modelos.derive_calculation_revision_id`
+        Content-addressed id derivation that deliberately excludes provenance.
+    :class:`~adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`
+        Encrypted catalogue repository exercised by the save/load cycle.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Secure SQL-backed object boundary used for the corruption proof.
+    :func:`~application.modelo._revision_persistence.persist_calculation_revision`
+        Application writer that threads source provenance into persisted revisions.
+    :func:`~application.modelo._revision_persistence._source_provenance_trace_sha256`
+        Bucket-event digest over source provenance used by the live writer.
 """
 
 from __future__ import annotations
