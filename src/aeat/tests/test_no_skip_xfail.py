@@ -356,6 +356,23 @@ def _canonical_pytest_call_name(
     return call_name
 
 
+def _pytestmark_assignment_value(node: ast.stmt) -> ast.expr | None:
+    """Return the value assigned to module-level pytestmark, if any."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign):
+        targets = [node.target]
+        value = node.value
+    else:
+        return None
+    if value is None:
+        return None
+    if any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in targets):
+        return value
+    return None
+
+
 def _module_execution_markers(tree: ast.AST, aliases: _SkipAliasInventory | None = None) -> set[str]:
     """Return module-level execution markers from a ``pytestmark = [...]`` assignment."""
     if aliases is None:
@@ -363,11 +380,10 @@ def _module_execution_markers(tree: ast.AST, aliases: _SkipAliasInventory | None
     markers: set[str] = set()
     body = tree.body if isinstance(tree, ast.Module) else ()
     for node in body:
-        if not isinstance(node, ast.Assign):
+        value = _pytestmark_assignment_value(node)
+        if value is None:
             continue
-        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets):
-            continue
-        values: list[ast.expr] = list(node.value.elts) if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
+        values: list[ast.expr] = list(value.elts) if isinstance(value, ast.List | ast.Tuple) else [value]
         for value in values:
             marker = _execution_marker_name(value, aliases.pytest_aliases, aliases.pytest_mark_aliases)
             if marker is not None:
@@ -679,6 +695,36 @@ def test_live_unit():
     )
 
     assert _unit_live_marker_intersections(tree) == [(7, "test_live_unit")]
+
+
+def test_unit_live_detector_rejects_annotated_and_augmented_pytestmark() -> None:
+    """Annotated and augmented pytestmark assignments are still module markers."""
+    annotated_tree = ast.parse(
+        """
+import pytest as pt
+
+pytestmark: list[object] = [pt.mark.unit]
+
+@pt.mark.aeat_live
+def test_annotated_live_unit():
+    pass
+"""
+    )
+    augmented_tree = ast.parse(
+        """
+import pytest as pt
+
+pytestmark = []
+pytestmark += [pt.mark.unit]
+
+@pt.mark.aeat_live
+def test_augmented_live_unit():
+    pass
+"""
+    )
+
+    assert _unit_live_marker_intersections(annotated_tree) == [(7, "test_annotated_live_unit")]
+    assert _unit_live_marker_intersections(augmented_tree) == [(8, "test_augmented_live_unit")]
 
 
 def test_project_tests_outside_source_tree_do_not_skip() -> None:
