@@ -187,6 +187,7 @@ def _seed_from_source(
         sector_id=sector_id,
         provisional_percentage=source.percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        source_observation_ref=_source_observation_ref(source),
     )
     return ProrrataPriorDefinitivaSeed(
         entry=entry,
@@ -239,6 +240,10 @@ def _missing_legacy_stamp_finding(
         stamped_revision_id=None,
         selected_revision_id=selected_revision_id,
     )
+
+
+def _source_observation_ref(source: _PriorSettlementObservation) -> str:
+    return f"{Modelo.M303.value}:{source.source_filing_year}:{source.source_period}"
 
 
 def _prior_settlement_observations(
