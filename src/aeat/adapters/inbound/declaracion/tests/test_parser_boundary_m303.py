@@ -1,4 +1,15 @@
-"""Modelo 303 parser boundary corpus tests."""
+"""Modelo 303 parser boundary corpus tests.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public declaration-copy parser boundary exercised by this fixture.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
+        Shared current and historical Modelo 303 profile casilla expectations.
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_2023_2024`
+        Parametrized current-template corpus sweep for the same profile family.
+    :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`
+        Observation aggregate returned by the parser and asserted here.
+"""
 
 from __future__ import annotations
 
