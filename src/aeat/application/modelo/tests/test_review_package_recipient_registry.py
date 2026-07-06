@@ -1,13 +1,24 @@
 """Recipient fingerprint registry: encrypted roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_recipient_registry`
-against a REAL encrypted :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
+Exercises :mod:`~application.modelo._review_package_recipient_registry`
+against a REAL encrypted
+:class:`~adapters.persistence.storage.SecureObjectRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): add a recipient, confirm the
 register roundtrips through the encrypted boundary with strict equality,
 confirm the register is real ciphertext at rest, confirm duplicate/missing-id
-refusal, and confirm a corrupted on-disk payload is refused at load
-(the anti-tautology proof required by ``aeat-roundtrip-discipline``).
+refusal, and confirm a corrupted on-disk payload is refused at load (the
+anti-tautology proof required by ``aeat-roundtrip-discipline``).
+
+See Also:
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`:
+        Encrypted public-key trust register under test.
+    :class:`~application.modelo.RecipientFingerprintRegister`:
+        Strict register model roundtripped through the secure object store.
+    :mod:`~application.modelo._review_package_recipient_encryption`:
+        Consumer that encrypts review packages to registered public keys.
+    :mod:`~entrypoints.cli._config._collab`:
+        CLI surface that lets operators add, list, and remove recipients.
 """
 
 from __future__ import annotations
