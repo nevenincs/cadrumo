@@ -1,4 +1,17 @@
-"""Service-error and logging tests for Modelo 145 local communication records."""
+"""Service-error and logging tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend service whose error and log vocabulary is constrained here.
+    :class:`~application.modelo.M145CommunicationServiceError`
+        Base service error registered in the central error catalogue.
+    :class:`~application.modelo.M145CommunicationRecordValidationError`
+        Typed validation refusal raised for invalid local communication records.
+    :class:`~application.modelo.M145CommunicationRecordTransitionError`
+        Typed transition refusal raised for invalid lifecycle moves.
+    :func:`~core.errors.get_registered_error_code`
+        Central error-code lookup asserted for the M145 error hierarchy.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,17 @@
-"""Real service-flow tests for Modelo 145 local communication records."""
+"""Real service-flow tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend service implementing the local record lifecycle exercised here.
+    :class:`~application.modelo.M145CommunicationCreateCommand`
+        Create-command DTO used to start the service flow.
+    :class:`~application.modelo.M145CommunicationRecordState`
+        State vocabulary asserted across delivery and completion transitions.
+    :func:`~application.modelo.create_m145_communication_record`
+        Public facade entry point for creating the local communication record.
+    :func:`~application.modelo.export_m145_communication_record`
+        Registry-backed export step in the end-to-end local flow.
+"""
 
 from __future__ import annotations
 
