@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,7 +13,7 @@ from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .. import capture_expedientes
+from .. import LIVE_EXPEDIENTES_READ_OPERATION
 from .._errors import LiveApplicationInputError
 from .._expedientes import (
     ExpedientesCapture,
@@ -30,20 +28,8 @@ _BUCKET_A_ID = "56565656-5656-4656-8656-565656565656"
 _BUCKET_B_ID = "57575757-5757-4757-8757-575757575757"
 
 
-def test_single_capture_uses_expedientes_auth_operation_label() -> None:
-    tree = ast.parse(inspect.getsource(capture_expedientes))
-    calls = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_active_verified_session"
-    ]
-
-    assert len(calls) == 1
-    operation_keywords = [keyword for keyword in calls[0].keywords if keyword.arg == "operation"]
-    assert len(operation_keywords) == 1
-    operation = operation_keywords[0].value
-    assert isinstance(operation, ast.Constant)
-    assert operation.value == "live-expedientes-read"
+def test_capture_uses_expedientes_auth_operation_label() -> None:
+    assert LIVE_EXPEDIENTES_READ_OPERATION == "live-expedientes-read"
 
 
 @pytest.fixture

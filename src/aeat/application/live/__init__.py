@@ -194,6 +194,8 @@ from ._snapshot_base import (
     SnapshotRepository,
 )
 
+LIVE_EXPEDIENTES_READ_OPERATION = "live-expedientes-read"
+
 
 @dataclass(frozen=True, slots=True)
 class JustificanteCaptureOutcome:
@@ -238,7 +240,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     """
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
-    session, settings = await _active_verified_session(operation="live-expedientes-read")
+    session, settings = await _active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
     async with (
         _shared_playwright(session) as playwright,
         _open_declarations_register(session, settings=settings, playwright=playwright) as register,
@@ -271,7 +273,7 @@ async def capture_expedientes_bulk(
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
     resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in _resources().modelos.all())
-    session, settings = await _active_verified_session(operation="live-expedientes-read")
+    session, settings = await _active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
     service = ExpedientesService(settings=settings)
     snapshot_ids: list[str] = []
     failures: list[ExpedientesBulkCaptureFailureRow] = []
@@ -534,6 +536,7 @@ __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
+    "LIVE_EXPEDIENTES_READ_OPERATION",
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
     "Borrador100SnapshotService",
