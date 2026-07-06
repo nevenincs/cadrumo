@@ -1,4 +1,23 @@
-"""Tests for the canonical core money primitive."""
+"""Tests for the canonical core money primitive.
+
+These cases pin :data:`~core.money.CENT` and :func:`~core.money.round_to_cents`
+as the euro-cent boundary used by AEAT calculation surfaces. The expected
+values are independently enumerated to prove :data:`~decimal.ROUND_HALF_UP`
+behaviour, including the negative half-cent cases where banker's rounding would
+drift.
+
+See Also:
+    :mod:`~core.money`
+        Canonical ``Decimal`` money primitive module under test.
+    :class:`~decimal.Decimal`
+        Value type quantized to the two-decimal euro-cent exponent.
+    :data:`~decimal.ROUND_HALF_UP`
+        Rounding mode required at filed-money boundaries.
+    Governing vault records
+        ``2026-05-28-codebase-solidification-adr`` and
+        ``2026-05-30-codebase-solidification-W03-P18-S358`` record the recurring
+        hardening and decimal/money canonical-enrollment decisions.
+"""
 
 from __future__ import annotations
 
