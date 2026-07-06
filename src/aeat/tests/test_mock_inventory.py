@@ -37,6 +37,8 @@ See Also:
 from __future__ import annotations
 
 import ast
+from collections import Counter
+from collections.abc import Iterable
 from typing import NamedTuple
 
 import pytest
@@ -49,11 +51,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _FORBIDDEN_TEST_CONTROL_IMPORTS = ("unittest.mock", "unittest", "mock", "pytest_mock")
 _FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "spy", "dummy")
 _PYTEST_MOCK_FIXTURE_NAME = "mocker"
-
-
-def _pytest_mock_fixture_method(name: str) -> str:
-    """Return a pytest-mock fixture method call target for detector snippets."""
-    return f"{_PYTEST_MOCK_FIXTURE_NAME}.{name}"
 
 
 class _TestControlInventorySites(NamedTuple):
@@ -235,19 +232,16 @@ def _is_test_double_name(name: str) -> bool:
     )
 
 
-@pytest.fixture(scope="module")
-def test_control_inventory() -> _TestControlInventoryViolations:
-    """Return all mock/test-double policy violations from one test-control inventory pass."""
+def _test_control_inventory_for_module_trees(
+    module_trees: Iterable[tuple[str, ast.AST]],
+) -> _TestControlInventoryViolations:
+    """Return formatted test-control policy violations for parsed modules."""
     test_control_and_pytest_mock_usage: list[str] = []
     test_double_imports: list[str] = []
     test_double_bindings: list[str] = []
     test_double_definitions: list[str] = []
 
-    for module_path in all_test_control_modules():
-        relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
-        if tree is None:
-            continue
+    for relative, tree in module_trees:
         sites = _test_control_inventory_sites(tree)
         for lineno, banned_module in sites.test_control_imports:
             test_control_and_pytest_mock_usage.append(f"{relative}:{lineno}: import {banned_module}")
@@ -268,6 +262,29 @@ def test_control_inventory() -> _TestControlInventoryViolations:
     )
 
 
+def _test_control_inventory_for_source(relative_path: str, source: str) -> _TestControlInventoryViolations:
+    """Return formatted test-control policy violations for one in-memory source module."""
+    tree = ast.parse(source, filename=relative_path)
+    return _test_control_inventory_for_module_trees(((relative_path, tree),))
+
+
+def _violation_suffix_counts(violations: Iterable[str]) -> Counter[str]:
+    """Return policy violation suffix counts independent of source line numbers."""
+    return Counter(violation.rsplit(": ", maxsplit=1)[-1] for violation in violations)
+
+
+@pytest.fixture(scope="module")
+def test_control_inventory() -> _TestControlInventoryViolations:
+    """Return all mock/test-double policy violations from one test-control inventory pass."""
+    module_trees: list[tuple[str, ast.AST]] = []
+    for module_path in all_test_control_modules():
+        tree = ast_for_path(module_path)
+        if tree is None:
+            continue
+        module_trees.append((repo_relative(module_path), tree))
+    return _test_control_inventory_for_module_trees(module_trees)
+
+
 def test_no_mock_imports_or_pytest_mock_fixture_refs(
     test_control_inventory: _TestControlInventoryViolations,
 ) -> None:
@@ -277,22 +294,49 @@ def test_no_mock_imports_or_pytest_mock_fixture_refs(
     assert not violations, "Banned mock-library or pytest-mock fixture usage found:\n" + "\n".join(violations)
 
 
-def test_pytest_mock_fixture_detector_rejects_mocker_argument_and_usage() -> None:
-    """The mock inventory must catch pytest-mock usage that has no import site."""
-    tree = ast.parse(
-        f"""
+@pytest.mark.parametrize(
+    (
+        "source",
+        "expected_usage",
+        "expected_imports",
+        "expected_bindings",
+        "expected_definitions",
+    ),
+    (
+        pytest.param(
+            """
+import unittest
+import unittest.mock as mock_lib
+from unittest import mock
+import mock
+import pytest_mock
+""",
+            Counter(
+                {
+                    "import unittest": 1,
+                    "import unittest.mock": 2,
+                    "import mock": 1,
+                    "import pytest_mock": 1,
+                }
+            ),
+            Counter({"mock": 3, "pytest_mock": 1}),
+            Counter(),
+            Counter(),
+            id="banned-mock-imports",
+        ),
+        pytest.param(
+            """
 def test_uses_pytest_mock_fixture(mocker):
-    {_pytest_mock_fixture_method("patch")}("aeat.module.boundary")
-"""
-    )
-
-    assert _pytest_mock_fixture_sites(tree) == [(2, "argument mocker"), (3, "name mocker")]
-
-
-def test_test_double_name_detector_rejects_mock_named_helpers() -> None:
-    """Mock-named helpers are test doubles even without importing a mock library."""
-    tree = ast.parse(
-        """
+    mocker.patch("aeat.module.boundary")
+""",
+            Counter({"argument mocker": 1, "name mocker": 1}),
+            Counter(),
+            Counter({"mocker": 1}),
+            Counter(),
+            id="pytest-mock-fixture",
+        ),
+        pytest.param(
+            """
 from helpers import MockRepository as ConcreteRepository
 
 MockService = object()
@@ -320,61 +364,49 @@ class MockTransport:
 
 def mock_response_factory():
     return object()
-"""
-    )
-
-    assert _forbidden_test_double_imports(tree) == [(2, "MockRepository")]
-    assert set(_forbidden_test_double_assignments(tree)) == {
-        (4, "MockService"),
-        (5, "mock_result"),
-        (7, "mock_client"),
-        (10, "mock_client"),
-        (11, "fake_service"),
-        (13, "mock_row"),
-        (16, "mock_resource"),
-        (21, "mock_error"),
-    }
-    assert _forbidden_test_double_definitions(tree) == [(24, "MockTransport"), (27, "mock_response_factory")]
-
-
-def test_test_double_name_detector_rejects_comprehension_targets() -> None:
-    """Comprehension bindings must not hide mock/fake/stub/dummy helper names."""
-    tree = ast.parse(
-        """
+""",
+            Counter(),
+            Counter({"MockRepository": 1}),
+            Counter(
+                {
+                    "MockService": 1,
+                    "mock_result": 1,
+                    "mock_client": 2,
+                    "fake_service": 1,
+                    "mock_row": 1,
+                    "mock_resource": 1,
+                    "mock_error": 1,
+                }
+            ),
+            Counter({"MockTransport": 1, "mock_response_factory": 1}),
+            id="mock-named-helpers",
+        ),
+        pytest.param(
+            """
 items = [mock_row for mock_row in rows]
 mapping = {fake_key: value for fake_key, value in rows}
 total = sum(stub.value for stub in rows)
 chosen = next((item for item in rows if (dummy_value := item.value)), None)
-"""
-    )
-
-    assert set(_forbidden_test_double_assignments(tree)) == {
-        (2, "mock_row"),
-        (3, "fake_key"),
-        (4, "stub"),
-        (5, "dummy_value"),
-    }
-
-
-def test_test_double_name_detector_rejects_augmented_assignment_targets() -> None:
-    """Augmented assignments still bind forbidden test-double names."""
-    tree = ast.parse(
-        """
+""",
+            Counter(),
+            Counter(),
+            Counter({"mock_row": 1, "fake_key": 1, "stub": 1, "dummy_value": 1}),
+            Counter(),
+            id="comprehension-targets",
+        ),
+        pytest.param(
+            """
 mock_count += 1
 state.fake_counter += 1
-"""
-    )
-
-    assert set(_forbidden_test_double_assignments(tree)) == {
-        (2, "mock_count"),
-        (3, "fake_counter"),
-    }
-
-
-def test_test_double_name_detector_rejects_spy_named_helpers() -> None:
-    """Spy-named helpers are test doubles just like mock/fake/stub/dummy helpers."""
-    tree = ast.parse(
-        """
+""",
+            Counter(),
+            Counter(),
+            Counter({"mock_count": 1, "fake_counter": 1}),
+            Counter(),
+            id="augmented-assignment-targets",
+        ),
+        pytest.param(
+            """
 from helpers import SpyClient
 
 spy_result = object()
@@ -385,21 +417,15 @@ class SpyTransport:
 
 def spy_response_factory():
     return object()
-"""
-    )
-
-    assert _forbidden_test_double_imports(tree) == [(2, "SpyClient")]
-    assert set(_forbidden_test_double_assignments(tree)) == {
-        (4, "spy_result"),
-        (5, "spy_service"),
-    }
-    assert _forbidden_test_double_definitions(tree) == [(7, "SpyTransport"), (10, "spy_response_factory")]
-
-
-def test_test_double_name_detector_rejects_suffix_named_helpers() -> None:
-    """Suffix-style test-double names must not bypass prefix detection."""
-    tree = ast.parse(
-        """
+""",
+            Counter(),
+            Counter({"SpyClient": 1}),
+            Counter({"spy_result": 1, "spy_service": 1}),
+            Counter({"SpyTransport": 1, "spy_response_factory": 1}),
+            id="spy-named-helpers",
+        ),
+        pytest.param(
+            """
 from helpers import ClientFake, Repository_Stub as Repository
 
 client_fake = object()
@@ -411,16 +437,29 @@ class TransportSpy:
 
 def repositoryMock():
     return object()
-"""
-    )
+""",
+            Counter(),
+            Counter({"ClientFake": 1, "Repository_Stub": 1}),
+            Counter({"client_fake": 1, "transportStub": 1, "repository_dummy": 1}),
+            Counter({"TransportSpy": 1, "repositoryMock": 1}),
+            id="suffix-named-helpers",
+        ),
+    ),
+)
+def test_test_control_policy_rejects_forbidden_test_double_shapes(
+    source: str,
+    expected_usage: Counter[str],
+    expected_imports: Counter[str],
+    expected_bindings: Counter[str],
+    expected_definitions: Counter[str],
+) -> None:
+    """Banned mocks and test-double names must fail through the real policy path."""
+    inventory = _test_control_inventory_for_source("dev/tests/test_mock_policy.py", source)
 
-    assert _forbidden_test_double_imports(tree) == [(2, "ClientFake"), (2, "Repository_Stub")]
-    assert set(_forbidden_test_double_assignments(tree)) == {
-        (4, "client_fake"),
-        (5, "transportStub"),
-        (6, "repository_dummy"),
-    }
-    assert _forbidden_test_double_definitions(tree) == [(8, "TransportSpy"), (11, "repositoryMock")]
+    assert _violation_suffix_counts(inventory.test_control_and_pytest_mock_usage) == expected_usage
+    assert _violation_suffix_counts(inventory.test_double_imports) == expected_imports
+    assert _violation_suffix_counts(inventory.test_double_bindings) == expected_bindings
+    assert _violation_suffix_counts(inventory.test_double_definitions) == expected_definitions
 
 
 def test_no_fake_stub_or_dummy_imports(
