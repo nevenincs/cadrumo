@@ -24,87 +24,73 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SEDE_DIR = Path(__file__).parent.parent
 
-_CHECKED_MODULES = (
-    "_declarations.py",
-    "_iva_compensation_wallet.py",
-    "_groi_check.py",
-    "_nif_iva_check.py",
-    "_censo_live.py",
-    "_walker.py",
-)
-
 _WAIT_LITERALS = {PLAYWRIGHT_WAIT_DOMCONTENTLOADED, PLAYWRIGHT_WAIT_NETWORKIDLE}
 
 
-def _collect_string_literals(source: str) -> list[tuple[int, str]]:
-    """Return ``(lineno, value)`` for every string constant in *source*."""
+def _production_modules() -> tuple[Path, ...]:
+    return tuple(
+        path
+        for path in sorted(_SEDE_DIR.glob("*.py"))
+        if path.name not in {"__init__.py", "_browser_constants.py"}
+    )
+
+
+def _wait_state_argument_literals(source: str) -> tuple[tuple[int, str], ...]:
+    """Return string literals passed to Playwright wait-state arguments."""
     tree = ast.parse(source)
     results: list[tuple[int, str]] = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            results.append((node.lineno, node.value))
-    return results
+        if not isinstance(node, ast.Call):
+            continue
+
+        if _is_wait_for_load_state_call(node):
+            for argument in node.args[:1]:
+                if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+                    results.append((argument.lineno, argument.value))
+
+        for keyword in node.keywords:
+            if keyword.arg != "wait_until":
+                continue
+            if isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str):
+                results.append((keyword.value.lineno, keyword.value.value))
+
+    return tuple(results)
 
 
-def test_playwright_wait_domcontentloaded_value() -> None:
-    """The constant equals the Playwright API string it represents."""
+def _is_wait_for_load_state_call(node: ast.Call) -> bool:
+    func = node.func
+    if isinstance(func, ast.Attribute):
+        return func.attr == "wait_for_load_state"
+    return isinstance(func, ast.Name) and func.id == "wait_for_load_state"
 
-    assert PLAYWRIGHT_WAIT_DOMCONTENTLOADED == "domcontentloaded"
 
-
-def test_playwright_wait_networkidle_value() -> None:
-    """The constant equals the Playwright API string it represents."""
-
-    assert PLAYWRIGHT_WAIT_NETWORKIDLE == "networkidle"
+@pytest.mark.parametrize(
+    ("constant", "expected"),
+    (
+        (PLAYWRIGHT_WAIT_DOMCONTENTLOADED, "domcontentloaded"),
+        (PLAYWRIGHT_WAIT_NETWORKIDLE, "networkidle"),
+    ),
+)
+def test_playwright_wait_constant_values(constant: str, expected: str) -> None:
+    """The constants equal the Playwright API strings they represent."""
+    assert constant == expected
 
 
 def test_no_bare_wait_state_literals_in_sede_modules() -> None:
-    """No sede adapter module may contain bare ``"domcontentloaded"`` or
-    ``"networkidle"`` string literals; callers must import the constants
-    from ``_browser_constants``.
+    """No sede adapter wait-state call may pass bare Playwright state strings.
 
-    Anti-tautology: the test scans real source ASTs so it catches any
-    future regression that re-introduces a bare literal.
+    The test scans only ``wait_for_load_state(...)`` and ``wait_until=...``
+    call arguments so comments, docstrings, log messages, and stage labels
+    cannot create false positives.
     """
 
     offenders: list[str] = []
-    for module_name in _CHECKED_MODULES:
-        path = _SEDE_DIR / module_name
+    for path in _production_modules():
         source = path.read_text(encoding="utf-8")
-        for lineno, value in _collect_string_literals(source):
+        for lineno, value in _wait_state_argument_literals(source):
             if value in _WAIT_LITERALS:
-                offenders.append(f"{module_name}:{lineno}: bare literal {value!r}")
+                offenders.append(f"{path.name}:{lineno}: bare wait-state literal {value!r}")
 
     assert offenders == [], (
         "Bare Playwright wait-state literals found; import from _browser_constants instead:\n" + "\n".join(offenders)
     )
-
-
-def test_browser_constants_module_imports_are_present() -> None:
-    """Each checked module exposes the wait-state constants via import.
-
-    Verifies that ``_WAIT_DOMCONTENTLOADED`` or ``_WAIT_NETWORKIDLE``
-    appear as names in the module's AST (they are local aliases), giving
-    a lightweight structural proof that the import block is wired.
-    """
-
-    for module_name in _CHECKED_MODULES:
-        path = _SEDE_DIR / module_name
-        source = path.read_text(encoding="utf-8")
-        tree = ast.parse(source)
-
-        # Collect all names imported from _browser_constants in this module.
-        imported: set[str] = set()
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
-                continue
-            if node.module and node.module.endswith("_browser_constants"):
-                for alias in node.names:
-                    imported.add(alias.asname or alias.name)
-
-        # Modules that only need one constant need not import the other.
-        # The real guard is the literal-scan above; this test just confirms
-        # the import block exists at all in each checked module.
-        assert imported, (
-            f"{module_name} does not import anything from _browser_constants; add the relevant PLAYWRIGHT_WAIT_* import"
-        )
