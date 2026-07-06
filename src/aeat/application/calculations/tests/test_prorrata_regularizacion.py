@@ -1,4 +1,16 @@
-"""Deferred-source advisory projection for the annual prorrata regularización."""
+"""Deferred-source advisory projection for the annual prorrata regularización.
+
+See Also:
+    :mod:`~application.calculations._prorrata_regularizacion`
+        Projection module under test: casilla-44 advisory, M390 feed proposal,
+        and declared-volume ledger divergence rollup.
+    :func:`~domain.iva.compute_regularizacion_prorrata_anual`
+        Pure domain computation whose signed result the projection carries.
+    :class:`~domain.calculations.registry.IvaLedgerObservation`
+        Typed ledger row used to prove advisory-only annual volume divergence.
+    :class:`~application.aggregation.CalculationSourceDiagnostic`
+        Diagnostic envelope asserted by the deferred source and divergence tests.
+"""
 
 from __future__ import annotations
 

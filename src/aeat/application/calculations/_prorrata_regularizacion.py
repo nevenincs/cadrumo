@@ -16,6 +16,21 @@ the promotion step gated on the provisional-carry store, per ADR
 comes from the full-year volume rollup fed to
 :func:`~domain.iva.compute_prorrata_definitiva_anual`; deriving it from a
 single quarter is a correctness defect (the silent-zero-base ADR).
+
+See Also:
+    :func:`~domain.iva.compute_regularizacion_prorrata_anual`
+        Pure LIVA art. 105.Cuatro computation consumed by this projection.
+    :mod:`~application.modelo._prorrata_regularizacion_advisory`
+        Calculate-path collector that calls this advisory projection from
+        Modelo 303 values and prior-year observations.
+    :mod:`~application.aggregation._iva_ledger`
+        Source of typed IVA ledger observations used for declared-volume
+        divergence checks.
+    :mod:`~domain.prorrata_register`
+        Cross-period carry home for provisional and definitive prorrata
+        percentages.
+    :mod:`~application.calculations.tests.test_prorrata_regularizacion`
+        Focused regressions for deferred-feed and ledger-divergence behavior.
 """
 
 from __future__ import annotations
@@ -68,6 +83,10 @@ class ProrrataRegularizacionFeedProjection(BaseModel):
     Modelo 390 annual regularización field. Both come from the same
     :class:`RegularizacionProrrataResult`, preserving the registry's declared
     annual-volume authority for the definitive percentage.
+
+    See Also:
+        :func:`project_prorrata_regularizacion_feed`
+            Constructs this carrier from the pure annual regularización result.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -85,6 +104,10 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
     Declared annual volume casillas remain the filing authority. This projection
     records the currently classifiable ledger output-volume view so settlement
     can warn when it contradicts those declared values.
+
+    See Also:
+        :func:`build_prorrata_declared_volume_divergence_advisory`
+            Builds this rollup and the optional non-blocking diagnostic.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -118,9 +141,14 @@ def build_prorrata_declared_volume_divergence_advisory(
 
     The rollup is deliberately advisory-only: it uses the existing IVA ledger
     observation stream and the supplied ejercicio periods'
-    :meth:`Period.contains` boundary, but it does not replace the operator's
+    :meth:`~core.Period.contains` boundary, but it does not replace the operator's
     declared annual volume casillas because some art-104 exclusions still need
     explicit classification.
+
+    See Also:
+        :class:`~domain.calculations.registry.IvaLedgerObservation`
+            Typed ledger observation stream classified into con-derecho and
+            sin-derecho output volumes.
     """
     periods = tuple(ejercicio_periods)
     if not periods:
@@ -193,6 +221,10 @@ def project_prorrata_regularizacion_feed(
     and does not promote the deferred source kind; it only turns the pure
     art-105 result into the two proposed filing values that later mesh promotion
     can consume.
+
+    See Also:
+        :class:`ProrrataRegularizacionFeedProjection`
+            Structured carrier for the two proposed filing values.
     """
     result = compute_regularizacion_prorrata_anual(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
