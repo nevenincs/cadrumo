@@ -94,6 +94,7 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W07-P30-S85]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P31-S86]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P31-S87]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W07-P32-S89]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-audit]]'
   - '[[2026-06-02-modelo-multiyear-renta-plan]]'
@@ -206,6 +207,7 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W07-P30-S85` - enroll M036 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
 - `2026-06-02-modelo-multiyear-renta-W07-P31-S86` - write the M840 threshold-continuity E2E test asserting the 1M-per-year cifra-de-negocios exemption across two annual contexts via real adapters (vaultspec-standard-executor)
 - `2026-06-02-modelo-multiyear-renta-W07-P31-S87` - enroll M840 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
+- `2026-06-02-modelo-multiyear-renta-W07-P32-S89` - investigate and implement or explicitly supersede the Modelo 721 per-custodian prior-year baseline binding promised by the accepted ADR
 
 ### plan
 

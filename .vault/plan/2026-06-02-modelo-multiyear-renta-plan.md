@@ -314,7 +314,7 @@ Enroll the Impuesto sobre Actividades Economicas via the 1M-per-year cifra-de-ne
 
 Track explicit follow-up work discovered during enrollment closeout where the live green path does not yet discharge a narrower ADR mechanism.
 
-- [ ] `W07.P32.S89` - investigate and implement or explicitly supersede the Modelo 721 per-custodian prior-year baseline binding promised by the accepted ADR; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
+- [x] `W07.P32.S89` - investigate and implement or explicitly supersede the Modelo 721 per-custodian prior-year baseline binding promised by the accepted ADR; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py, src/aeat/domain/calculations/registry/tests/test_modelo_721_registry.py, src/aeat/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py, .vault/adr/2026-06-02-modelo-721-cripto-data-fidelity-adr.md`.
 
 ## Parallelization
 

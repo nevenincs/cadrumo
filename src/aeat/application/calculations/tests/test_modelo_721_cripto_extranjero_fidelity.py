@@ -358,6 +358,16 @@ def _year_n_plus_1_observation_without_eth() -> RegistryModeloObservation:
     )
 
 
+def test_row_set_multiplicity_is_preserved_only_in_ordered_observations() -> None:
+    """Repeated M721 row casillas cannot be represented by the scalar casilla_values view."""
+    observation = _year_n_observation()
+
+    assert _values_for(observation, _MONEDA_CLAVE_TOKEN_CASILLA) == (Decimal("1"), Decimal("2"))
+    assert _values_for(observation, _MONEDA_SALDO_CASILLA) == (_BTC_N, _ETH_N)
+    assert observation.casilla_values[_MONEDA_CLAVE_TOKEN_CASILLA] == Decimal("2")
+    assert observation.casilla_values[_MONEDA_SALDO_CASILLA] == _ETH_N
+
+
 def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """Year-N (2023) M721 casilla values survive the encrypted-SQL roundtrip unchanged.
 

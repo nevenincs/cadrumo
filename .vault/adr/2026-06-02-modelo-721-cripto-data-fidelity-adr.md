@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
-modified: '2026-06-30'
+modified: '2026-07-06'
 related:
   - "[[2026-06-02-modelo-721-cripto-data-fidelity-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
@@ -45,18 +45,23 @@ because it actively misleads.
   advisory re-declaration mechanism. RD 1065/2007 art. 42-quater gives 721 the same
   two-threshold structure as 720's arts. 42-bis / 42-ter / 54-bis: >€50.000 initial
   obligation, re-declare only if the 31-December aggregate rose >€20.000 over the
-  last-declared baseline. The A3 / 720 mechanism therefore transfers to 721 verbatim,
-  with the asset-class axis replaced by a per-custodian axis.
-- **The cross-year hook is the verified A3 shape.** `_PreviousModeloSelector` supports
-  `filing_year_delta = -1` and the singular `source_output` + `op = "copy"` copy
-  shape, and forbids any `grouping` key. 721's per-custodian baseline is authored the
-  same way 720's three fixed per-category bindings replace a dynamic grouping kind.
-- **The re-declaration trigger inherits A3's open design point.** No existing
-  verification predicate operator expresses a cross-year-baseline delta; the closed
-  operator set is single-filing only. The advisory must be ADVISORY (never blocking)
-  per `no-silent-under-declaration`, and the new operator (or derived-casilla
-  formulation) must register against `KNOWN_VERIFICATION_PREDICATE_OPERATORS` to
-  preserve the silent-pass guard.
+  last-declared baseline. The legal threshold mechanism therefore transfers to 721,
+  but the implementation channel differs because 721's per-custodian/token axis is a
+  repeated row set rather than 720's closed asset-class scalar set.
+- **The original previous-filing copy hook is superseded.** This ADR previously
+  described a `source_output` + `op = "copy"` previous-filing selector for the 721
+  per-custodian baseline. The live `_PreviousModeloSelector` rejects `source_output`
+  in favor of `source_casilla_id`, and direct previous-filing resolution folds the
+  `casilla_values` mapping to scalar `Decimal` values. Modelo 721 repeats the same
+  token casillas across custodian/token rows, so that mapping loses row identity. The
+  faithful hook is the row-observation advisory path over ordered
+  `RegistryModeloObservation.observations`; a registry-level row-set previous-filing
+  binding would require a new selector/schema decision.
+- **The re-declaration trigger is implemented as an advisory helper.** The advisory
+  stays ADVISORY (never blocking) per `no-silent-under-declaration`, but it is not
+  represented as a registry predicate operator. The current implementation compares
+  prior, current-evidence, and current-declaration row observations and emits a
+  warning when a grown custodian/token position is absent from the declaration.
 - **Scope is narrower than the prior research claimed.** Only crypto held abroad
   through a **third-party custodian** (foreign exchanges, custodial-wallet providers)
   is 721-declarable. Self-custody / exclusive-key cold wallets are out of scope. The
@@ -82,22 +87,24 @@ because it actively misleads.
 - **No calculation engine.** 721 is a 720-twin: zero formulas. Any temptation to model
   a crypto valuation calculation is out of scope; the declarable value is the operator-
   supplied 31-December aggregate, not a computed figure.
-- **No schema change.** The mechanism reuses the verified A3 binding and predicate
-  shapes, which need no schema extension. The per-custodian fan-out is authored as
-  fixed rows / bindings on the filing, not a new `RowSetGroupingKind` member.
+- **No hidden schema change.** The landed mechanism does not widen registry binding
+  selectors. It therefore must not encode 721 row-set continuity as a scalar
+  `previous_filing` binding. If a future campaign wants registry-level row-set
+  previous-filing, it needs a dedicated ADR and schema/resolver work rather than
+  reviving the retired `source_output` wording.
 - **The advisory MUST stay ADVISORY.** Growth ≤ €20.000 legitimately need not be
   re-declared. A BLOCKING_RULE would refuse legal filings.
-- **Parent-feature stability.** This mechanism consumes (i) the previous-filing binding
-  subsystem (mature), (ii) the verification-predicate subsystem (mature), (iii) the A3
-  / 720 mechanism it twins (decided in the sibling ADR), and (iv) the foundational
-  gate's non-calculation two-year-context recorder mode. 721 is a *consumer* of all
-  four; it builds none of them. The only new surfaces are registry data, two registry
-  threshold parameters, and (shared with A3) at most one advisory operator.
+- **Parent-feature stability.** This mechanism consumes (i) ordered
+  `RegistryModeloObservation` storage, (ii) the shared foreign-asset threshold
+  constants, (iii) the 720 sibling's legal threshold concept, and (iv) the foundational
+  gate's non-calculation two-year-context recorder mode. 721 builds no calculation
+  engine and no registry selector extension. The new surfaces are registry data, two
+  registry threshold parameters, and the advisory helper over real row observations.
 
 ## Implementation
 
-A legal-correction-first, registry-data-only mechanism in six parts; no calculation
-engine and no schema change.
+A legal-correction-first data-fidelity mechanism in six parts; no calculation engine
+and no hidden schema change.
 
 **(1) Correct the legal corpus (W06 step one).** In
 `src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml`: replace the
@@ -126,37 +133,38 @@ section + per-custodian/per-token detail records). All `legal_refs`:
 threshold-logic oracle single authoritative values to assert against (satisfying
 `no-tautological-calculation-tests`).
 
-**(4) Prior-year per-custodian baseline binding.** A `previous_filing` binding with
-`source_modelo = "721"`, `filing_year_delta = -1`, `period = "0A"`, a singular
-`source_output` naming the per-custodian prior-year aggregate, and
-`aggregation = { op = "copy" }` — the verified A3 copy shape. The per-custodian fan-out
-follows 720's fixed-binding pattern, not a dynamic grouping.
+**(4) Superseded prior-year per-custodian baseline binding.** Do not author a Modelo
+721 `previous_filing` binding with `source_output`. That key is rejected by the live
+selector grammar, and a scalar `source_casilla_id` copy would collapse repeated
+custodian/token rows through `casilla_values`. The accepted implementation preserves
+the prior-year baseline as ordered row observations and compares custodian/token
+positions in the application advisory helper. A future registry-native row-set
+baseline needs a new ADR because it is a schema/resolver extension, not the A3 scalar
+copy shape.
 
-**(5) ADVISORY re-declaration predicate.** Per custodian, surface an ADVISORY finding
-when the prior-year baseline resolved a non-zero value, the current-year custodian
-aggregate exceeds the baseline by more than the €20.000 parameter, and the custodian
-is absent from the current declaration. Holds trivially when the antecedent baseline is
-≤ 0 (first-time declaration never trips it). Grounded with `legal_refs`. The evaluator
-choice (new operator vs derived casilla) is inherited from the A3 ADR and resolved
-once for both modelos; whichever path is chosen must register against
-`KNOWN_VERIFICATION_PREDICATE_OPERATORS`.
+**(5) ADVISORY re-declaration helper.** Per custodian/token position, surface an
+ADVISORY finding when the prior-year baseline resolved a non-zero row position, the
+current-year evidence exceeds that position by more than the €20.000 parameter, and
+the same position is absent from the current declaration. Holds trivially when the
+antecedent baseline is ≤ 0 (first-time declaration never trips it). Grounded with
+`legal_refs` and `source_refs` from the foreign-asset threshold authority.
 
 **(6) Two-year enrollment test.** A real-adapter test (no mocks) cloning
 `test_modelo_130_carry_forward_continuity.py`: Year N declares a custodian at €60.000
 (> €50.000); Year N+1 firing leg €85.000 (+€25.000 > €20.000 → advisory fires); Year
 N+1 control leg a custodian growing ≤ €20.000 (advisory does not fire). Asserts the
-per-custodian baseline auto-resolves N→N+1 and the recorder observes two distinct
-renta years.
+ordered row observations survive N→N+1, the advisory helper fires only for the
+missing grown token, and the recorder observes two distinct renta years.
 
 ## Rationale
 
 Twinning 720 is chosen because 721's statutory structure (art. 42-quater) is identical
-to 720's (arts. 42-bis/ter/54-bis), and the A3 mechanism was already verified
-constructable against the live schema. Reusing it verbatim avoids re-litigating the
-binding and predicate shapes and keeps the two informativas governed by one mechanism,
-reducing drift. The per-custodian axis is the only substantive difference and needs no
-new schema because, like 720's closed asset-class set, the custodians on a filing are
-authored as fixed rows rather than a dynamic grouping kind.
+to 720's (arts. 42-bis/ter/54-bis). The legal threshold concept transfers, but the
+implementation channel does not transfer verbatim: 720 has a closed asset-class set
+that can be represented by scalar casilla bindings, while 721 has repeated
+custodian/token rows that must retain ordered row identity. Using the row-observation
+advisory path preserves the shared legal mechanism without pretending the scalar
+previous-filing resolver can carry row-set baselines.
 
 Correcting the legal corpus first is non-negotiable because the registry's fichero
 offsets are derived from the diseño de registro in the order's BOE document; building
@@ -180,11 +188,14 @@ re-derived formula.
 - **A reviewed-but-wrong legal source is corrected before it propagates.** Catching it
   at the ADR stage prevents a registry built against models 172/173's layout — a defect
   that would have been expensive to unwind after casilla authoring.
-- **One mechanism governs two modelos.** 720 and 721 share the prior-year-baseline +
-  advisory shape, so a future change to the mechanism touches both consistently.
-- **Dependency on the A3 evaluator decision and the foundational recorder mode.** 721
-  cannot fully land until A3's predicate-operator choice is resolved and the
-  foundational gate's non-calculation recorder mode exists. 721 builds neither.
+- **One legal mechanism governs two modelos, with two implementation channels.** 720
+  uses scalar previous-filing bindings for its closed legal blocks; 721 uses ordered
+  row observations for custodian/token continuity. A future change to the legal
+  threshold concept must check both channels explicitly.
+- **The stale `source_output` clause is closed, not implemented.** 721 no longer
+  depends on an A3 predicate-operator decision. It depends on preserving ordered
+  observation rows and keeping the advisory helper wired to real prior/current
+  evidence.
 - **Scope-narrowing risk.** Excluding self-custody is correct per art. 42-quater, but
   the casilla author must not import the prior research's "Section C" self-custody
   fields. The corrected fichero (from HFP/886/2023) is the authority; the test must
@@ -195,8 +206,9 @@ re-derived formula.
   source-registry owner so the `reviewed` stamp is re-applied after correction.
 
 This is a mechanism ADR co-backing the multi-year-renta campaign plan, twinning the A3
-/ 720 mechanism. It owns 721's cross-year behaviour and the legal-corpus correction it
-depends on, and nothing more.
+/ 720 legal threshold mechanism while superseding the obsolete scalar `source_output`
+binding proposal for 721. It owns 721's cross-year behaviour and the legal-corpus
+correction it depends on, and nothing more.
 
 ## Codification candidates
 
