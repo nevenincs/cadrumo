@@ -27,30 +27,44 @@ def _isolated_storage(tmp_path: Path):
             dispose_engine(settings)
 
 
-def test_resolve_filing_repository_bucket_id_accepts_explicit_or_active_bucket(tmp_path: Path) -> None:
-    cases = (
-        ("explicit", f"  {_EXPLICIT_BUCKET_ID}  ", _ACTIVE_BUCKET_ID, _EXPLICIT_BUCKET_ID),
-        ("active", None, _ACTIVE_BUCKET_ID, _ACTIVE_BUCKET_ID),
-    )
-    for case_id, bucket_id, active_profile, expected in cases:
-        with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_profile):
-            assert resolve_filing_repository_bucket_id(bucket_id) == expected, case_id
+@pytest.mark.parametrize(
+    ("bucket_id", "active_profile", "expected"),
+    (
+        pytest.param(f"  {_EXPLICIT_BUCKET_ID}  ", _ACTIVE_BUCKET_ID, _EXPLICIT_BUCKET_ID, id="explicit"),
+        pytest.param(None, _ACTIVE_BUCKET_ID, _ACTIVE_BUCKET_ID, id="active"),
+    ),
+)
+def test_resolve_filing_repository_bucket_id_accepts_explicit_or_active_bucket(
+    tmp_path: Path,
+    bucket_id: str | None,
+    active_profile: str,
+    expected: str,
+) -> None:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_profile):
+        assert resolve_filing_repository_bucket_id(bucket_id) == expected
 
 
-def test_resolve_filing_repository_bucket_id_rejects_unresolved_bucket(tmp_path: Path) -> None:
-    cases = (
-        ("blank-explicit", "  ", _ACTIVE_BUCKET_ID, "blank_explicit_bucket_id"),
-        ("missing-active", None, None, "missing_active_profile_bucket"),
-    )
-    for case_id, bucket_id, active_profile, expected_reason in cases:
-        with (
-            override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_profile),
-            pytest.raises(ModeloDraftError) as raised,
-        ):
-            resolve_filing_repository_bucket_id(bucket_id)
+@pytest.mark.parametrize(
+    ("bucket_id", "active_profile", "expected_reason"),
+    (
+        pytest.param("  ", _ACTIVE_BUCKET_ID, "blank_explicit_bucket_id", id="blank-explicit"),
+        pytest.param(None, None, "missing_active_profile_bucket", id="missing-active"),
+    ),
+)
+def test_resolve_filing_repository_bucket_id_rejects_unresolved_bucket(
+    tmp_path: Path,
+    bucket_id: str | None,
+    active_profile: str | None,
+    expected_reason: str,
+) -> None:
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_profile),
+        pytest.raises(ModeloDraftError) as raised,
+    ):
+        resolve_filing_repository_bucket_id(bucket_id)
 
-        assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket", case_id
-        assert raised.value.context == {"reason": expected_reason}, case_id
+    assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
+    assert raised.value.context == {"reason": expected_reason}
 
 
 def test_secure_objects_for_filing_bucket_refuses_unready_runtime(tmp_path: Path) -> None:
