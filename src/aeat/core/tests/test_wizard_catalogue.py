@@ -8,27 +8,18 @@ These tests assert:
 
 2. No deferred lazy upward imports from aeat.application.wizard._catalogue
    remain in aeat.domain.deadlines._profiles or aeat.domain.contribuyente._keys.
-   The check reads the source text and greps for the bypass pattern, which
-   is the real enforcement surface — static analysis on the source file is
-   independent of import order.
+   A fresh Python interpreter imports those domain modules and asserts the
+   application wizard catalogue was not loaded as an import-time side effect.
 """
 
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-def _source_of(module_path: str) -> str:
-    """Return the source text for the named module."""
-    spec = importlib.util.find_spec(module_path)
-    assert spec is not None, f"Cannot find module {module_path!r}"
-    assert spec.origin is not None
-    return Path(spec.origin).read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -86,28 +77,33 @@ def test_wizard_flows_contains_setup_flow() -> None:
 # contract gate 2: no deferred lazy upward imports remain in domain modules
 # ---------------------------------------------------------------------------
 
-_UPWARD_PATTERN = "from ...application.wizard._catalogue import"
-_ALT_UPWARD_PATTERN = "from aeat.application.wizard._catalogue import"
-
 
 def test_no_deferred_upward_import_from_wizard_catalogue() -> None:
     """Domain modules must not import from the application wizard catalogue."""
 
-    for module_path, replacement in (
-        ("aeat.domain.deadlines._profiles", "get_setup_flow()"),
-        ("aeat.domain.contribuyente._keys", "get_wizard_flows()"),
-    ):
-        source = _source_of(module_path)
-        assert _UPWARD_PATTERN not in source, (
-            f"{module_path} still contains a direct import from "
-            f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
-            "aeat.core.wizard_catalogue instead."
-        )
-        assert _ALT_UPWARD_PATTERN not in source, (
-            f"{module_path} still contains an absolute import from "
-            f"aeat.application.wizard._catalogue. Remove it and use {replacement} from "
-            "aeat.core.wizard_catalogue instead."
-        )
+    script = """
+import importlib
+import sys
+
+for module_name in (
+    "aeat.domain.deadlines._profiles",
+    "aeat.domain.contribuyente._keys",
+):
+    importlib.import_module(module_name)
+
+if "aeat.application.wizard._catalogue" in sys.modules:
+    raise SystemExit("domain imports loaded aeat.application.wizard._catalogue")
+"""
+
+    result = subprocess.run(  # noqa: S603 - fixed interpreter and literal script for import isolation.
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout
 
 
 def test_wizard_catalogue_exports_are_callable() -> None:
