@@ -1,0 +1,83 @@
+"""Application service for the cross-period IVA prorrata register.
+
+Thin orchestration over
+:class:`adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`:
+the caller declares a per-ejercicio prorrata entry, lists the register, and reads
+one entry by ``(ejercicio, sector)`` key. The register is authoritative
+profile-scoped state; this service owns no calculation, only the declare/list/get
+surface. The LIVA arts. 102-106 compute substrate lives in the pure domain module
+:mod:`domain.iva`, and the precedence-ladder resolution lives in
+:mod:`domain.prorrata_register`.
+
+The seed from the stamped prior settlement observation (art. 105.Uno), the
+provenance-tagged art. 105.Dos/Tres overrides, and the settlement write-back are
+built on top of this facade in later waves; this module is only the persistence
+surface they compose over.
+
+See Also:
+    :mod:`domain.prorrata_register`
+        Pure register records and the precedence-ladder resolver.
+    :mod:`adapters.persistence.profile.prorrata_register`
+        FINANCIAL secure-object repository that stores the profile-scoped
+        register singleton.
+    :mod:`domain.iva`
+        Legal IVA prorrata substrate that supplies the definitive percentage
+        and the art. 105.Cuatro regularisation cuota.
+"""
+
+from __future__ import annotations
+
+from ...adapters.persistence.profile.prorrata_register import (
+    ProrrataRegisterRepository,
+)
+from ...domain.prorrata_register import (
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+)
+
+
+class ProrrataRegisterService:
+    """Declare, list, and read cross-period prorrata entries on the active profile."""
+
+    def __init__(self, *, repository: ProrrataRegisterRepository | None = None) -> None:
+        """Initialise the service, defaulting to the active-bucket register repository."""
+        self._repository = repository if repository is not None else ProrrataRegisterRepository()
+
+    def declare(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
+        """Atomically add or replace ``entry`` by its ``(ejercicio, sector)`` key.
+
+        Args:
+            entry: The per-ejercicio prorrata entry to persist.
+
+        Returns:
+            The updated :class:`ProrrataRegister`.
+        """
+        return self._repository.upsert_entry(entry)
+
+    def list_all(self) -> ProrrataRegister:
+        """Return the full active-profile register.
+
+        Returns:
+            A :class:`ProrrataRegister`; empty when nothing has been declared.
+        """
+        return self._repository.load()
+
+    def get(self, ejercicio: int, *, sector_id: str | None = None) -> ProrrataRegisterEntry | None:
+        """Return the entry for a ``(ejercicio, sector)`` key, or ``None`` when absent.
+
+        Args:
+            ejercicio: Filing year to look up.
+            sector_id: Sector identifier, or ``None`` for the whole-entity entry.
+
+        Returns:
+            The matching :class:`ProrrataRegisterEntry`, or ``None``.
+        """
+        return self._repository.load().entry_for(ejercicio, sector_id=sector_id)
+
+
+__all__ = [
+    "ProrrataRegister",
+    "ProrrataRegisterEntry",
+    "ProrrataRegisterRepository",
+    "ProrrataRegisterService",
+]
