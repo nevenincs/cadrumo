@@ -10,6 +10,7 @@ legal_refs = [
     "ley-37-1992:art-21",
     "ley-37-1992:art-22",
     "ley-37-1992:art-25",
+    "ley-37-1992:art-75",
     "ley-37-1992:art-84",
     "ley-37-1992:art-88",
     "ley-37-1992:art-90",
@@ -31,6 +32,11 @@ legal_refs = [
     "ley-37-1992:art-109",
     "ley-37-1992:art-110",
     "ley-37-1992:art-161",
+    "ley-37-1992:art-163-decies",
+    "ley-37-1992:art-163-undecies",
+    "ley-37-1992:art-163-duodecies",
+    "ley-37-1992:art-163-terdecies",
+    "ley-37-1992:art-163-quinquiesdecies",
 ]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 casilla_ids = [
@@ -86,6 +92,10 @@ bindings = [
     "modelo-303-iva-repercutido-reducido-base",
     "modelo-303-iva-repercutido-super-reducido-base",
     "modelo-303-iva-soportado-interiores-base",
+    "modelo-303-criterio-caja-entregas-art75-base",
+    "modelo-303-criterio-caja-entregas-art75-cuota",
+    "modelo-303-criterio-caja-adquisiciones-base",
+    "modelo-303-criterio-caja-adquisiciones-cuota",
     "modelo-303-bienes-inversion-regularizacion-casilla-43",
     "modelo-303-prorrata-regularizacion-casilla-44",
 ]

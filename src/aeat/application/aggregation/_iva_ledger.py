@@ -62,6 +62,7 @@ from ...domain.calculations.registry import (
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
+    IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
@@ -126,6 +127,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
     DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_counterparty_on_intra_community_transaction"
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
+    CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
 
 
 class IvaLedgerAggregationIssue(BaseModel):
@@ -207,6 +209,7 @@ class IvaLedgerCandidate(BaseModel):
     iva_amount: Decimal
     input_kind: IvaLedgerInputKind = IvaLedgerInputKind.ORDINARY_OPERATION
     prorrata_reference_id: _LedgerId | None = None
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
@@ -357,6 +360,7 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
         base_amount=candidate.base_amount,
         iva_amount=candidate.iva_amount,
         prorrata_reference_id=candidate.prorrata_reference_id,
+        cash_accounting_treatment=candidate.cash_accounting_treatment,
     )
 
 
@@ -489,8 +493,7 @@ def aggregate_iva_ledger_observations(
             issues.append(outcome.prorrata_issue)
         if outcome.prorrata_reference is not None:
             prorrata_references.append(outcome.prorrata_reference)
-        if outcome.observation is not None:
-            observations.append(outcome.observation)
+        observations.extend(outcome.observations)
     return IvaLedgerAggregation(
         period=resolved_period,
         observations=tuple(observations),
@@ -590,7 +593,7 @@ class _IvaTransactionOutcome:
     """
 
     gate_issue: IvaLedgerAggregationIssue | None = None
-    observation: IvaLedgerObservation | None = None
+    observations: tuple[IvaLedgerObservation, ...] = ()
     prorrata_reference: ProrrataLedgerReference | None = None
     prorrata_issue: IvaLedgerAggregationIssue | None = None
 
@@ -603,6 +606,18 @@ _NON_DECLARABLE_IVA_CATEGORIES = frozenset(
         IvaCategory.RECARGO_EQUIVALENCIA,
         IvaCategory.UNKNOWN,
         IvaCategory.ERRONEOUS_INVOICE,
+    },
+)
+
+_CASH_ACCOUNTING_EXCLUDED_CATEGORIES = frozenset(
+    {
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        IvaCategory.IMPORT_THIRD_COUNTRY,
+        IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        IvaCategory.OPERACION_NO_SUJETA,
     },
 )
 
@@ -623,8 +638,10 @@ def _classify_iva_transaction(
     ``prorrata_issue`` alongside the observation.
     """
     transaction_id = transaction.transaction_id
-    operation_date = transaction.raw.value_date or transaction.raw.booked_date
-    if not resolved_period.contains(operation_date):
+    ledger_date = transaction.raw.value_date or transaction.raw.booked_date
+    operation_date = transaction.cash_accounting_operation_date or ledger_date
+    cash_treatment = transaction.cash_accounting_treatment
+    if cash_treatment is IvaCashAccountingTreatment.NONE and not resolved_period.contains(operation_date):
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -729,6 +746,21 @@ def _classify_iva_transaction(
     else:
         effective_category = _RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]
 
+    if (
+        cash_treatment is not IvaCashAccountingTreatment.NONE
+        and effective_category in _CASH_ACCOUNTING_EXCLUDED_CATEGORIES
+    ):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY,
+                detail=(
+                    f"iva_category {effective_category.value!r} is excluded from the cash-accounting regime "
+                    "under Ley 37/1992 art. 163 duodecies"
+                ),
+            ),
+        )
+
     # Recompute the IVA flow now the effective category is known. The
     # direction-only screen above only rejects non-settlement directions;
     # the canonical flow routes reverse-charge categories
@@ -750,7 +782,36 @@ def _classify_iva_transaction(
         base_amount=base_amount,
         iva_amount=iva_amount,
     )
-    observation = IvaLedgerObservation(
+    if cash_treatment is not IvaCashAccountingTreatment.NONE:
+        observations = _cash_accounting_observations(
+            transaction,
+            resolved_period=resolved_period,
+            operation_date=operation_date,
+            category=effective_category,
+            rate_kind=rate_kind,
+            flow_direction=flow_direction,
+            proportionality=proportionality,
+            full_base_amount=base_amount,
+            full_iva_amount=iva_amount,
+            linked_prorrata_id=linked_prorrata_id,
+        )
+        if not observations:
+            return _IvaTransactionOutcome(
+                gate_issue=IvaLedgerAggregationIssue(
+                    transaction_id=transaction_id,
+                    reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+                    detail=(
+                        "cash-accounting operation date, payment evidence dates, and fallback date "
+                        f"are outside {resolved_period}"
+                    ),
+                ),
+            )
+        return _IvaTransactionOutcome(
+            observations=observations,
+            prorrata_reference=prorrata_reference,
+            prorrata_issue=prorrata_issue,
+        )
+    observation = _iva_observation(
         ledger_id=transaction.transaction_id,
         transaction_date=operation_date,
         category=effective_category,
@@ -763,10 +824,117 @@ def _classify_iva_transaction(
         prorrata_reference_id=linked_prorrata_id,
     )
     return _IvaTransactionOutcome(
-        observation=observation,
+        observations=(observation,),
         prorrata_reference=prorrata_reference,
         prorrata_issue=prorrata_issue,
     )
+
+
+def _iva_observation(
+    *,
+    ledger_id: str,
+    transaction_date: date,
+    category: IvaCategory,
+    exemption_article: IvaExemptionArticle | None,
+    rate_kind: IvaRateKind,
+    flow_direction: IvaFlowDirection,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+    recargo_amount: Decimal = Decimal("0"),
+    prorrata_reference_id: str | None = None,
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
+) -> IvaLedgerObservation:
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=transaction_date,
+        category=category,
+        exemption_article=exemption_article,
+        rate_kind=rate_kind,
+        flow_direction=flow_direction,
+        base_amount=base_amount,
+        iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
+        prorrata_reference_id=prorrata_reference_id,
+        cash_accounting_treatment=cash_accounting_treatment,
+    )
+
+
+def _cash_accounting_observations(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+    operation_date: date,
+    category: IvaCategory,
+    rate_kind: IvaRateKind,
+    flow_direction: IvaFlowDirection,
+    proportionality: Decimal,
+    full_base_amount: Decimal,
+    full_iva_amount: Decimal,
+    linked_prorrata_id: str | None,
+) -> tuple[IvaLedgerObservation, ...]:
+    observations: list[IvaLedgerObservation] = []
+    for payment_date, base_amount, iva_amount, recargo_amount in _cash_accounting_settlement_parts(transaction):
+        if not resolved_period.contains(payment_date):
+            continue
+        observations.append(
+            _iva_observation(
+                ledger_id=transaction.transaction_id,
+                transaction_date=payment_date,
+                category=category,
+                exemption_article=transaction.exemption_article,
+                rate_kind=rate_kind,
+                flow_direction=flow_direction,
+                base_amount=base_amount * proportionality,
+                iva_amount=iva_amount * proportionality,
+                recargo_amount=recargo_amount * proportionality,
+                prorrata_reference_id=linked_prorrata_id,
+            ),
+        )
+    if resolved_period.contains(operation_date):
+        observations.append(
+            _iva_observation(
+                ledger_id=transaction.transaction_id,
+                transaction_date=operation_date,
+                category=category,
+                exemption_article=transaction.exemption_article,
+                rate_kind=rate_kind,
+                flow_direction=flow_direction,
+                base_amount=full_base_amount,
+                iva_amount=full_iva_amount,
+                cash_accounting_treatment=transaction.cash_accounting_treatment,
+            ),
+        )
+    return tuple(observations)
+
+
+def _cash_accounting_settlement_parts(
+    transaction: Transaction,
+) -> tuple[tuple[date, Decimal, Decimal, Decimal], ...]:
+    assert transaction.cash_accounting_operation_date is not None
+    assert transaction.taxable_base is not None
+    assert transaction.iva_amount is not None
+    parts = [
+        (
+            evidence.payment_date,
+            evidence.taxable_base,
+            evidence.iva_amount,
+            evidence.recargo_amount,
+        )
+        for evidence in transaction.cash_accounting_payment_evidence
+    ]
+    paid_base = sum((part[1] for part in parts), Decimal("0"))
+    paid_iva = sum((part[2] for part in parts), Decimal("0"))
+    paid_recargo = sum((part[3] for part in parts), Decimal("0"))
+    recargo_amount = transaction.recargo_amount or Decimal("0")
+    remainder = (
+        transaction.taxable_base - paid_base,
+        transaction.iva_amount - paid_iva,
+        recargo_amount - paid_recargo,
+    )
+    if any(amount > Decimal("0") for amount in remainder):
+        fallback_date = date(transaction.cash_accounting_operation_date.year + 1, 12, 31)
+        parts.append((fallback_date, *remainder))
+    return tuple(sorted(parts, key=lambda part: part[0]))
 
 
 def _resolve_iva_prorrata_attachment(

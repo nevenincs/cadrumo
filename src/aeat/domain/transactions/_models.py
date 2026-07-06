@@ -27,6 +27,8 @@ from ...core.time import now
 from .._identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
 )
@@ -635,6 +637,19 @@ class Transaction(BaseModel):
             when the category is
             :attr:`IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED`.
             ``None`` otherwise.
+        cash_accounting_treatment: Independent criterio-de-caja axis.
+            It never replaces ``iva_category``: the operation remains
+            domestic/export/intracom/etc. and this field only records
+            whether the taxpayer's special regime or a supplier's
+            special regime changes IVA timing.
+        cash_accounting_operation_date: Art. 75 general-devengo
+            operation date for cash-accounting informational reporting.
+            Required whenever ``cash_accounting_treatment`` is not
+            ``NONE`` so the aggregator never silently reuses a bank
+            movement date as the legal devengo projection.
+        cash_accounting_payment_evidence: Total or partial
+            collection/payment events that settle affected base/cuota
+            under LIVA arts. 163 terdecies / quinquiesdecies.
         fx_rate: ECB reference rate applied at import time to convert
             ``raw.amount`` from ``raw.currency`` to EUR.  The rate is
             expressed as a multiplier: ``raw.amount * fx_rate =
@@ -697,6 +712,9 @@ class Transaction(BaseModel):
     iva_category: IvaCategory | None = None
     exemption_article: IvaExemptionArticle | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    cash_accounting_operation_date: date | None = None
+    cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
@@ -746,6 +764,7 @@ class Transaction(BaseModel):
         "iva_category",
         "exemption_article",
         "counterparty_eu_member_state",
+        "cash_accounting_treatment",
         mode="before",
     )
     @classmethod
@@ -766,8 +785,23 @@ class Transaction(BaseModel):
             "iva_category": IvaCategory,
             "exemption_article": IvaExemptionArticle,
             "counterparty_eu_member_state": EUMemberState,
+            "cash_accounting_treatment": IvaCashAccountingTreatment,
         }
         return enum_by_field[info.field_name or ""](value)
+
+    @field_validator("cash_accounting_operation_date", mode="before")
+    @classmethod
+    def _parse_cash_accounting_operation_date(cls, value: object) -> object:
+        if isinstance(value, str):
+            return date.fromisoformat(value)
+        return value
+
+    @field_validator("cash_accounting_payment_evidence", mode="before")
+    @classmethod
+    def _coerce_cash_accounting_payment_evidence(cls, value: object) -> object:
+        if value is None:
+            return ()
+        return value
 
     @field_validator(
         "business_pct",
@@ -920,6 +954,53 @@ class Transaction(BaseModel):
             actual = self.iva_category.value if self.iva_category is not None else None
             raise TransactionValidationError(
                 f"exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; got iva_category {actual!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_cash_accounting_axis(self) -> Self:
+        """Keep cash-accounting timing evidence independent and complete."""
+        if self.cash_accounting_treatment is IvaCashAccountingTreatment.NONE:
+            if self.cash_accounting_operation_date is not None or self.cash_accounting_payment_evidence:
+                raise TransactionValidationError(
+                    "cash_accounting_operation_date/payment_evidence require a non-NONE cash_accounting_treatment",
+                )
+            return self
+        if self.cash_accounting_operation_date is None:
+            raise TransactionValidationError(
+                "cash_accounting_operation_date is required when cash_accounting_treatment is not NONE",
+            )
+        if not self.cash_accounting_payment_evidence:
+            raise TransactionValidationError(
+                "cash_accounting_payment_evidence is required for cash-accounting operations; "
+                "wholly unpaid fallback-only operations are not yet represented",
+            )
+        if self.taxable_base is None or self.iva_amount is None:
+            raise TransactionValidationError(
+                "cash-accounting operations require taxable_base and iva_amount facts",
+            )
+        if (
+            self.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+            and self.direction is not TransactionDirection.OUTGOING
+        ):
+            raise TransactionValidationError(
+                "supplier-regime cash-accounting treatment is only valid on received/purchase rows",
+            )
+        fallback_date = date(self.cash_accounting_operation_date.year + 1, 12, 31)
+        total_base = sum((evidence.taxable_base for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
+        total_iva = sum((evidence.iva_amount for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
+        total_recargo = sum(
+            (evidence.recargo_amount for evidence in self.cash_accounting_payment_evidence),
+            Decimal("0"),
+        )
+        recargo_amount = self.recargo_amount or Decimal("0")
+        if total_base > self.taxable_base or total_iva > self.iva_amount or total_recargo > recargo_amount:
+            raise TransactionValidationError(
+                "cash_accounting_payment_evidence totals must not exceed taxable_base, iva_amount, or recargo_amount",
+            )
+        if any(evidence.payment_date > fallback_date for evidence in self.cash_accounting_payment_evidence):
+            raise TransactionValidationError(
+                "cash_accounting_payment_evidence cannot fall after the 31 December statutory fallback date",
             )
         return self
 
