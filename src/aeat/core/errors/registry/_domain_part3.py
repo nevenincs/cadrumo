@@ -107,6 +107,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.prorrata_register.ProrrataRegisterError",
+        ErrorCode(
+            code="ERROR_PROFILE_PRORRATA_REGISTER_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_prorrata_register_record",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.prorrata_register.ProrrataRegisterValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_prorrata_register_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.contribuyente.inventory.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
