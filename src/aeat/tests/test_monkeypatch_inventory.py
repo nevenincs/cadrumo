@@ -110,7 +110,7 @@ def _patch_inventory_sites(tree: ast.AST) -> _PatchInventorySites:
             func = node.func
             if isinstance(func, ast.Attribute) and func.attr in _MUTATION_VERBS:
                 caller = func.value
-                if isinstance(caller, ast.Name) and caller.id == "monkeypatch":
+                if _is_monkeypatch_mutation_caller(caller):
                     target = _target_name_from_args(node)
                     mutation_sites.append((node.lineno, func.attr, target))
             name = _canonical_patch_name(
@@ -144,6 +144,13 @@ def _patch_inventory_sites(tree: ast.AST) -> _PatchInventorySites:
 def _patch_import_sites(tree: ast.AST) -> list[tuple[int, str]]:
     """Return direct pytest MonkeyPatch and internal monkeypatch imports."""
     return _patch_alias_inventory(tree).import_sites
+
+
+def _is_monkeypatch_mutation_caller(caller: ast.expr) -> bool:
+    """Return True when a mutation verb is invoked on a monkeypatch object."""
+    if isinstance(caller, ast.Name):
+        return caller.id == "monkeypatch"
+    return isinstance(caller, ast.Attribute) and caller.attr == "monkeypatch"
 
 
 def _patch_alias_inventory(tree: ast.AST) -> _PatchAliasInventory:
@@ -262,6 +269,19 @@ def test_env_mutation(monkeypatch):
 
     assert _mutation_sites(tree) == [(3, "setenv", "AEAT_TEST_SETTING")]
     assert _monkeypatch_reference_sites(tree) == [(2, "argument monkeypatch"), (3, "name monkeypatch")]
+
+
+def test_monkeypatch_detector_rejects_stored_attribute_mutation_call() -> None:
+    """Stashing monkeypatch on another object must not hide mutation verbs."""
+    tree = ast.parse(
+        """
+class MutatingHarness:
+    def test_env_mutation(self):
+        self.monkeypatch.setenv("AEAT_TEST_SETTING", "1")
+"""
+    )
+
+    assert _mutation_sites(tree) == [(4, "setenv", "AEAT_TEST_SETTING")]
 
 
 def test_monkeypatch_detector_rejects_monkeypatch_imports_and_type_refs() -> None:
