@@ -22,7 +22,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import BindingSourceKind
+from pydantic import BaseModel
+
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, validated_casilla_id
 from ...domain.iva import (
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
@@ -33,7 +35,63 @@ from ..aggregation import CalculationSourceDiagnostic
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
 #: block, "Regularización prorrata por porcentaje definitivo - Cuota"
 #: (LIVA art. 105.Cuatro).
-CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA = "44"
+CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
+    "44",
+    surface="annual prorrata regularizacion Modelo 303 casilla",
+)
+
+
+class ProrrataRegularizacionFeedProjection(BaseModel):
+    """Structured proposed feeds for annual prorrata-general regularización.
+
+    The first slice keeps ``prorrata_regularizacion`` deferred, so these values
+    are proposed feeds for the operator-confirmed Modelo 303 casilla 44 and the
+    Modelo 390 annual regularización field. Both come from the same
+    :class:`RegularizacionProrrataResult`, preserving the registry's declared
+    annual-volume authority for the definitive percentage.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    result: RegularizacionProrrataResult
+    operaciones_sin_derecho_deduccion: Decimal
+    modelo_303_casilla_44_id: CasillaId = CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    modelo_303_casilla_44_value: Decimal | None = None
+    modelo_390_regularizacion_anual_value: Decimal | None = None
+
+
+def project_prorrata_regularizacion_feed(
+    *,
+    cuotas_soportadas_deducibles: Decimal,
+    prorrata_provisional_pct: Decimal,
+    prorrata_definitiva_pct: Decimal,
+    operaciones_sin_derecho_deduccion: Decimal,
+) -> ProrrataRegularizacionFeedProjection:
+    """Project the annual regularización onto the M303 and M390 filing targets.
+
+    ``prorrata_definitiva_pct`` is supplied by the registry-computed annual
+    volume casillas. This helper deliberately does not recompute that percentage
+    and does not promote the deferred source kind; it only turns the pure
+    art-105 result into the two proposed filing values that later mesh promotion
+    can consume.
+    """
+    result = compute_regularizacion_prorrata_anual(
+        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
+        prorrata_provisional_pct=prorrata_provisional_pct,
+        prorrata_definitiva_pct=prorrata_definitiva_pct,
+    )
+    proposed_value = (
+        result.importe
+        if operaciones_sin_derecho_deduccion > Decimal("0")
+        and result.direccion is not RegularizacionProrrataDireccion.NINGUNA
+        else None
+    )
+    return ProrrataRegularizacionFeedProjection(
+        result=result,
+        operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
+        modelo_303_casilla_44_value=proposed_value,
+        modelo_390_regularizacion_anual_value=proposed_value,
+    )
 
 
 def build_prorrata_regularizacion_advisory(
@@ -77,12 +135,14 @@ def build_prorrata_regularizacion_advisory(
         :class:`RegularizacionProrrataResult`; the diagnostic is ``None`` when
         there is nothing to regularise.
     """
-    result = compute_regularizacion_prorrata_anual(
+    projection = project_prorrata_regularizacion_feed(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
         prorrata_provisional_pct=prorrata_provisional_pct,
         prorrata_definitiva_pct=prorrata_definitiva_pct,
+        operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
     )
-    if operaciones_sin_derecho_deduccion <= Decimal("0") or result.direccion is RegularizacionProrrataDireccion.NINGUNA:
+    result = projection.result
+    if projection.modelo_303_casilla_44_value is None:
         return result, None
 
     sentido = "deducción complementaria" if result.direccion is RegularizacionProrrataDireccion.DEDUCCION else "ingreso"
@@ -91,7 +151,7 @@ def build_prorrata_regularizacion_advisory(
         f"para {regularizacion_year}: prorrata provisional {prorrata_provisional_pct}% "
         f"→ definitiva {prorrata_definitiva_pct}% ({sentido}). "
         f"Regularización propuesta para casilla {CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA}: "
-        f"{result.importe}. Confirme el valor antes de presentar."
+        f"{projection.modelo_303_casilla_44_value}. Confirme el valor antes de presentar."
     )
     diagnostic = CalculationSourceDiagnostic(
         reason="official_box_unpopulated",
@@ -103,5 +163,7 @@ def build_prorrata_regularizacion_advisory(
 
 __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
+    "ProrrataRegularizacionFeedProjection",
     "build_prorrata_regularizacion_advisory",
+    "project_prorrata_regularizacion_feed",
 ]

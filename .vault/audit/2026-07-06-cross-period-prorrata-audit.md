@@ -151,3 +151,22 @@ Findings: no open S23 implementation findings.
 Residual gate inventory: `ruff check` is clean for the parity regression file,
 the targeted S23 regression passes sequentially, and the full parity file passes
 sequentially.
+
+## S24 Review
+
+Reviewed the `W04.P06.S24` settlement projection change after re-grounding the
+step against the cross-period prorrata ADR, the scope ADR, and the current
+registry/advisory code. The diff keeps `PRORRATA_REGULARIZACION` deferred and
+does not touch `_source_mesh.py`, registry source kinds, resolver conventions,
+validator conventions, or registry selector shapes. The new
+`ProrrataRegularizacionFeedProjection` is a structured wrapper over the existing
+`compute_regularizacion_prorrata_anual` result, exposing the same proposed value
+for Modelo 303 casilla 44 and the Modelo 390 annual regularización field while
+leaving the definitive percentage under registry-declared annual-volume
+authority.
+
+Findings: no open S24 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched calculation
+projection, facade, and test files, and the prorrata regularización calculation
+test file plus the model-level advisory regression pass sequentially.
