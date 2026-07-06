@@ -75,7 +75,7 @@ from ...domain.iva import (
 )
 from ...domain.transactions import (
     BusinessClassification,
-    OutOfWindowTransactionStub,
+    OutOfWindowTransactionSummary,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -223,7 +223,12 @@ class IvaLedgerCandidate(BaseModel):
 
 
 class IvaLedgerAggregation(BaseModel):
-    """IVA observations produced from one bucket-local transaction catalogue."""
+    """IVA observations produced from one bucket-local transaction catalogue.
+
+    ``out_of_window_summary`` is only populated by repository-backed date
+    partitions. Full-catalogue aggregation continues to emit row-level issues
+    because every transaction is already loaded for classification.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -232,6 +237,7 @@ class IvaLedgerAggregation(BaseModel):
     prorrata_references: Sequence[ProrrataLedgerReference] = Field(default_factory=tuple)
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None
     issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
+    out_of_window_summary: OutOfWindowTransactionSummary | None = None
 
     @field_validator("observations")
     @classmethod
@@ -317,29 +323,11 @@ def aggregate_iva_ledger_observations_from_repositories(
         period=period,
         prorrata_apportionment=prorrata_apportionment,
     )
-    return result.model_copy(
-        update={"issues": (*result.issues, *_out_of_window_issues(partition.out_of_window))},
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
+        partition.out_of_window,
     )
-
-
-def _out_of_window_issues(
-    stubs: Iterable[OutOfWindowTransactionStub],
-) -> tuple[IvaLedgerAggregationIssue, ...]:
-    """Return one uniform ``OUTSIDE_PERIOD`` issue per out-of-window catalogue stub.
-
-    Diagnosed from the plaintext ``(transaction_id, filing_date)`` stub alone:
-    the row was never decrypted, so no other gate (currency, direction,
-    business classification, ...) can be evaluated for it. The detail records
-    the date fact and that classification did not run.
-    """
-    return tuple(
-        IvaLedgerAggregationIssue(
-            transaction_id=stub.transaction_id,
-            reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {stub.filing_date.isoformat()} is outside the requested period; "
-            "excluded by period before classification",
-        )
-        for stub in stubs
+    return result.model_copy(
+        update={"out_of_window_summary": out_of_window_summary},
     )
 
 

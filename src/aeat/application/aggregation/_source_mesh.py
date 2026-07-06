@@ -24,7 +24,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal, NamedTuple, Protocol, runtime_checkable
+from typing import Literal, NamedTuple, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -417,11 +417,67 @@ class CalculationSourceDiagnostic(BaseModel):
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     casilla_id: CasillaId | None = None
+    out_of_window_count: int | None = Field(default=None, ge=1)
+    out_of_window_min_filing_date: date | None = None
+    out_of_window_max_filing_date: date | None = None
 
     @model_validator(mode="before")
     @classmethod
     def _set_binding_source(cls, value: object) -> object:
         return _infer_binding_source(value)
+
+    @model_validator(mode="after")
+    def _validate_out_of_window_summary(self) -> Self:
+        summary_fields = (
+            self.out_of_window_count,
+            self.out_of_window_min_filing_date,
+            self.out_of_window_max_filing_date,
+        )
+        if all(value is None for value in summary_fields):
+            return self
+        if any(value is None for value in summary_fields):
+            raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_incomplete")
+        if self.out_of_window_max_filing_date < self.out_of_window_min_filing_date:
+            raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid")
+        return self
+
+
+def out_of_window_summary_message(
+    *,
+    count: int,
+    min_filing_date: date,
+    max_filing_date: date,
+) -> str:
+    """Return the standard source-diagnostic message for summarized period exclusions."""
+    return (
+        f"{count} ledger transaction(s) have filing dates outside the requested period "
+        f"({min_filing_date.isoformat()}..{max_filing_date.isoformat()}); "
+        "excluded by period before classification"
+    )
+
+
+def out_of_window_summary_source_diagnostic(
+    *,
+    source_kind: str,
+    resolver_id: str,
+    count: int,
+    min_filing_date: date,
+    max_filing_date: date,
+) -> CalculationSourceDiagnostic:
+    """Build one structured source diagnostic for summarized ``OUTSIDE_PERIOD`` rows."""
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=source_kind,
+        resolver_id=resolver_id,
+        message=out_of_window_summary_message(
+            count=count,
+            min_filing_date=min_filing_date,
+            max_filing_date=max_filing_date,
+        ),
+        out_of_window_count=count,
+        out_of_window_min_filing_date=min_filing_date,
+        out_of_window_max_filing_date=max_filing_date,
+    )
 
 
 class CalculationSourceProvenance(BaseModel):
@@ -1024,6 +1080,8 @@ __all__ = [
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
+    "out_of_window_summary_message",
+    "out_of_window_summary_source_diagnostic",
     "precedence_ladder_sources",
     "storage_degradation_resolution",
 ]

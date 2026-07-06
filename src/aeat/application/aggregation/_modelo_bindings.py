@@ -64,7 +64,11 @@ from ...domain.invoices import (
     invoice_line_to_iva_observation,
 )
 from ...domain.renta import RentaDeductibleExpenseObservation
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
+from ...domain.transactions import (
+    OutOfWindowTransactionSummary,
+    TransactionCatalogueRepositoryProtocol,
+    TransactionPersistenceError,
+)
 from ...domain.usage_ratios import UsageRatioPersistenceError
 from ._errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
@@ -97,6 +101,7 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    out_of_window_summary_source_diagnostic,
     storage_degradation_resolution,
 )
 
@@ -195,7 +200,12 @@ class LedgerIvaAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             source_transaction_ids=tuple(sorted(transaction_ids)),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_iva_aggregation",
@@ -398,7 +408,12 @@ class LedgerRentaIncomeAggregationSourceResolver:
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_renta_income_aggregation",
@@ -498,7 +513,12 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_impatriado_income_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_impatriado_income_aggregation",
@@ -584,7 +604,12 @@ class LedgerRentaGastoAggregationSourceResolver:
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_renta_gasto_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_renta_gasto_aggregation",
@@ -722,6 +747,25 @@ def _m303_standard_domestic_invoice_in_period(
         invoice.bucket_id == context.bucket_id
         and period.contains(invoice.issued_at)
         and invoice.counterparty_country.strip().upper() == "ES"
+    )
+
+
+def _out_of_window_summary_diagnostics(
+    summary: OutOfWindowTransactionSummary | None,
+    *,
+    source_kind: str,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    if summary is None:
+        return ()
+    return (
+        out_of_window_summary_source_diagnostic(
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            count=summary.count,
+            min_filing_date=summary.min_filing_date,
+            max_filing_date=summary.max_filing_date,
+        ),
     )
 
 
