@@ -97,3 +97,19 @@ Residual gate inventory: `ruff check` is clean for the touched implementation
 and resolver-test files. The targeted prorrata provenance resolver regression,
 the full ledger source-mesh resolver test file, and the IVA ledger aggregation
 test file all pass sequentially.
+
+## S21 Review
+
+Reviewed the `W03.P05.S21` regression. The new test records a fully taxable
+domestic purchase in the real encrypted transaction repository, captures the
+shared IVA ledger aggregation and canonical binding payload before any prorrata
+register exists, then records a `ninguna` prorrata-register entry for the same
+ejercicio and re-runs the same repository-backed path. It asserts byte-identical
+aggregation JSON and binding payload bytes across the two runs, so the no-prorrata
+regime preserves the previous full-deduction behavior without a hand-computed
+cuota oracle. No production code or source taxonomy changed.
+
+Findings: no open S21 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the new regression file, and
+the new regression passes sequentially.
