@@ -1,15 +1,39 @@
 """Collaboration bucket-event audit-tag emission: real encrypted-catalogue proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_collab_audit` against
-a REAL encrypted :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`-backed
-:class:`~aeat.adapters.persistence.profile.buckets.BucketEventHistoryRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
+Exercises :mod:`~application.modelo._review_package_collab_audit` against
+a REAL encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`-backed
+:class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks): every collaboration boundary (recipient
 registered/removed, package encrypted/decrypted, review-only workspace
 opened, package counter-signed) appends a typed
-:class:`~aeat.domain.buckets.BucketEvent` that survives the encrypted
+:class:`~domain.buckets.BucketEvent` that survives the encrypted
 save/load roundtrip with the exact event type, object type, and payload this
 module promises.
+
+See Also:
+    :func:`~application.modelo.emit_collab_recipient_registered_event`
+        Audit event emitted when a trusted recipient is registered.
+    :func:`~application.modelo.emit_collab_package_encrypted_event`
+        Trust-boundary event emitted when a package is sealed for a recipient.
+    :func:`~application.modelo.emit_collab_package_decrypted_event`
+        Privacy event emitted after decrypted package bytes are read.
+    :func:`~application.modelo.emit_collab_review_only_workspace_opened_event`
+        Privacy event emitted when the review-only workspace opens.
+    :func:`~application.modelo.emit_collab_package_counter_signed_event`
+        Collaboration event emitted when the recipient counter-signs.
+    :class:`~domain.buckets.BucketEventType`
+        Closed event enum whose collaboration and privacy members are asserted.
+    :class:`~domain.buckets.BucketEventObjectType`
+        Object-type enum asserted on the emitted audit entries.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 transport primitive whose encryption event is audited.
+    :func:`~application.modelo.counter_sign_review_package`
+        Counter-signature primitive whose event is audited.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Provenance row embedded in the signed review package fixture.
+    :class:`Period`
+        Typed filing period used to derive the work-unit identifiers.
 """
 
 from __future__ import annotations
