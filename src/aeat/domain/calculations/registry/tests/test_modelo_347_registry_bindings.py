@@ -1,4 +1,19 @@
-"""Modelo 347 counterpart-source registry binding tests."""
+"""Modelo 347 counterpart-source registry binding tests.
+
+See Also:
+    :func:`~domain.calculations.registry._invoice_bindings.resolve_invoice_binding_values`
+        Scalar invoice-source resolver whose thresholded M347 summary output is asserted.
+    :class:`~domain.calculations.registry._invoice_bindings.InvoiceObservation`
+        Typed observation carrier used to model collectible and payable counterpart totals.
+    :func:`~domain.calculations.registry._binding_selector_utils.selector_as_dict`
+        Selector normalizer used to verify the committed summary binding records.
+    :class:`~core.BindingSourceKind`
+        Canonical source-kind taxonomy proving the route is invoice-owned.
+    :data:`~core.external_constants.M347_THRESHOLD_EUR`
+        Legal declaration floor applied by the summary binding test.
+    :class:`~application.invoices._source_resolver.InvoiceCatalogueSourceResolver`
+        Application resolver that projects domestic invoices into the same binding route.
+"""
 
 from __future__ import annotations
 
