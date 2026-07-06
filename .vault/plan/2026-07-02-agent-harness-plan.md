@@ -3,23 +3,13 @@ tags:
   - '#plan'
   - '#agent-harness'
 date: '2026-07-02'
-modified: '2026-07-04'
+modified: '2026-07-06'
 tier: L2
 related:
   - '[[2026-07-01-agent-harness-adr]]'
   - '[[2026-07-01-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-content-review-audit]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `agent-harness` plan
 
@@ -71,6 +61,7 @@ Build the nine-category golden-eval catalogue (cat 1,3,4,5,7,8,9 landed; 2 and 6
 - [x] `P06.S17` - status:done (commit df75c1b63) - category 8 golden scenario wiring confirmation_for_tool into a run so a CONFIRM-tier step is not auto-approved even with an auto-yes flag; `src/aeat/agent/eval/tests/test_confirmation_gate_golden.py`.
 - [x] `P06.S18` - status:done (commit df75c1b63) - category 9 golden scenario wiring faithfulness_check against a real captured calculate JSON, advisory off-handoff and hard-block at export, grounded against the M130 oracle figure to avoid false positives; `src/aeat/agent/eval/tests/test_faithfulness_golden.py`.
 - [x] `P06.S19` - status:done (pre-existing) - determinism-replay pinning test confirming byte-identical trajectory replay excluding scenario-declared non-deterministic fields; `src/aeat/agent/eval/tests/test_tool_call_replay.py`.
+- [x] `P06.S22` - harden category 3 response provenance so expected computed response rows require formula_id; `src/aeat/agent/eval/_runner.py; src/aeat/agent/eval/tests/test_response_provenance_golden.py`.
 
 ### Phase `P07` - D5/D6 - deferred Tier-A and Tier-B skill authoring
 
