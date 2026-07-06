@@ -1,4 +1,19 @@
-"""Prorrata apportionment regressions for the shared IVA ledger path."""
+"""Prorrata apportionment regressions for the shared IVA ledger path.
+
+See Also:
+    :func:`~application.aggregation._iva_ledger.aggregate_iva_ledger_observations_from_repositories`
+        Repository-backed aggregation path that loads the active prorrata
+        register and emits the apportionment carrier under test.
+    :func:`~application.aggregation._iva_ledger.resolve_iva_ledger_binding_values`
+        Binding resolver wrapper that applies prorrata only to deducible cuota
+        bindings.
+    :mod:`~domain.prorrata_register`
+        Register model used to record ``NINGUNA`` and active ``GENERAL``
+        scenarios in these regressions.
+    :class:`~application.aggregation._modelo_bindings.LedgerIvaAggregationSourceResolver`
+        Production source-mesh route that threads the same aggregation and
+        binding resolver.
+"""
 
 from __future__ import annotations
 
