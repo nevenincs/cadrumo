@@ -1,10 +1,9 @@
 """Approval-basis staleness coverage for the invoice calculation source.
 
 Exercises the ``invoice_catalogue_fingerprint`` added to
-:class:`~aeat.domain.filing.ModeloApprovalBasis` (calculation-source-connectivity
-ADR, Phase 9 / W04.P09.S49): an ``APROBADO`` draft must go stale with
+:class:`~aeat.domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
 :attr:`~aeat.application.filing.ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED`
-when the bucket's upstream issued/received invoices change, and must NOT be flagged
+when the bucket's upstream issued/received invoices change, and must not be flagged
 when they are unchanged. The invoice catalogue is a calculation source resolved
 through the source mesh; before this fingerprint only the ledger transaction
 catalogue was covered, so an invoice edit could silently invalidate a filing draft.

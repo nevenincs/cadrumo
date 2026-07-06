@@ -1,11 +1,10 @@
 """Approval-basis staleness coverage for the prior-filing observation source.
 
 Exercises the ``prior_filing_observations_fingerprint`` added to
-:class:`~aeat.domain.filing.ModeloApprovalBasis` (calculation-source-connectivity
-ADR, Phase 9 / W05.P10.S62): an ``APROBADO`` draft must go stale with
+:class:`~aeat.domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
 :attr:`~aeat.application.filing.ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED`
 when the bucket's prior filed observations change (the ``previous_filing`` carry
-and relation fold-in source), and must NOT be flagged when they are unchanged.
+and relation fold-in source), and must not be flagged when they are unchanged.
 
 The digest is self-loaded from the bucket's
 :class:`~aeat.application.calculations.CalculationObservationRepository` — a
@@ -158,4 +157,3 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
 
     assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons
     assert reasons == ()
-
