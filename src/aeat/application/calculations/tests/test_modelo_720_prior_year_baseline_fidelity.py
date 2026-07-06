@@ -31,6 +31,20 @@ Legal grounding: RD 1065/2007 arts. 42-bis (cuentas), 42-ter (valores),
 54-bis (inmuebles); DA 18ª Ley 58/2003 LGT (obligation); Orden HAP/72/2013
 arts. 1-2 (form layout); €50,000 initial threshold = art. 2.1; €20,000 re-
 declaration delta = arts. 42-bis.5 / 42-ter.5 / 54-bis.7.
+
+See Also:
+    :mod:`~application.calculations._foreign_asset_redeclaration`
+        Shared M720/M721 re-declaration advisory implementation exercised here.
+    :func:`~application.calculations._foreign_asset_redeclaration.modelo_720_redeclaration_advisory_findings`
+        Modelo 720 advisory entry point pinned by the grown/omitted cuentas case.
+    :class:`~application.calculations._observations_repository.CalculationObservationRepository`
+        Real repository used for the two-year observation roundtrip.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Registry-grounded modelo observation envelope persisted by the test.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Typed casilla row carrying legal and source provenance.
+    :mod:`~application.calculations.tests.test_modelo_721_cripto_extranjero_fidelity`
+        Modelo 721 threshold-continuity sibling over the virtual-currency axis.
 """
 
 from __future__ import annotations
