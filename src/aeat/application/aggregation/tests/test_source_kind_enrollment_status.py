@@ -119,11 +119,7 @@ def test_dependency_triggers_reference_a_real_deferred_or_enrolled_kind() -> Non
         )
 
 
-def test_bienes_inversion_deferral_is_re_ratified_after_prorrata_promotion() -> None:
-    """The casilla-43 source no longer waits only on prorrata_regularizacion."""
-    target = DEFERRED_SOURCE_KIND_TARGETS[BindingSourceKind.BIENES_INVERSION_REGULARIZACION]
-
-    assert target.promotion_depends_on is None
-    assert "bienes-inversion source resolver" in target.trigger
-    assert "Modelo 303 casilla 43 / Modelo 390 regularizacion binding targets" in target.trigger
-    assert "LIVA arts. 107-110" in target.trigger
+def test_bienes_inversion_regularizacion_is_not_deferred_after_live_m303_promotion() -> None:
+    """The casilla-43 source must not remain deferred after live M303 enrollment."""
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION not in DEFERRED_SOURCE_KIND_TARGETS
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION not in DEFERRED_SOURCE_KINDS
