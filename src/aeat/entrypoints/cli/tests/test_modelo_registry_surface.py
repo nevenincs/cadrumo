@@ -1,4 +1,25 @@
-"""Modelo registry/discovery CLI surface tests split from ``test_modelo``."""
+"""Modelo registry/discovery CLI surface integration tests.
+
+The suite pins the ``aeat app modelo`` discovery and work-calculation ingress
+surface: help discoverability, canonical period tokens, describe/casillas/formulas
+queries, binding and relation guidance, typed override-key validation, and JSON
+payload redaction. It exercises the live Typer tree against the real registry
+query and calculation helper paths rather than scanning command source.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Typer registration for list, describe, casillas, formulas, and bindings
+        discovery commands.
+    :class:`~domain.calculations.registry.RegistryQueryService`
+        Typed registry introspection service behind the discovery surface.
+    :func:`~entrypoints.cli._modelo._missing_binding_guidance`
+        Work-calculate refusal helper that turns registry missing-input errors
+        into operator guidance.
+    Governing vault records
+        ``2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`` locks
+        the bindings discovery surface; the modelo calculate-engine wiring ADR
+        wires ``work calculate`` to registry truth.
+"""
 
 from __future__ import annotations
 
