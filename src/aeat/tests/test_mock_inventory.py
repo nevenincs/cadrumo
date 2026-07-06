@@ -38,7 +38,8 @@ from __future__ import annotations
 
 import ast
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -274,11 +275,11 @@ def _violation_suffix_counts(violations: Iterable[str]) -> Counter[str]:
 
 
 @pytest.fixture(scope="module")
-def test_control_inventory() -> _TestControlInventoryViolations:
+def test_control_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _TestControlInventoryViolations:
     """Return all mock/test-double policy violations from one test-control inventory pass."""
     module_trees: list[tuple[str, ast.AST]] = []
     for module_path in all_test_control_modules():
-        tree = ast_for_path(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
         if tree is None:
             continue
         module_trees.append((repo_relative(module_path), tree))
