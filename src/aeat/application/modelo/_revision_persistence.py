@@ -12,22 +12,27 @@ The filing path runs here only after its caller has passed readiness, workflow,
 and clean-state gates. It records the local/internal filing transition: create a
 current :class:`ModeloRecord`, supersede any prior current filing for the work
 target, move calculation revisions into ``PRESENTADO`` states, and co-emit
-the :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` writes
-plus cross-period observation projections. It never submits to AEAT and never
-turns the non-official ``app_filing`` carry projection into filing-grade external
-evidence.
+the :class:`~domain.modelos.TransactionRevisionParticipationIndex` writes,
+cross-period observation projections, and Modelo 303 settlement prorrata
+register writeback. It never submits to AEAT and never turns the non-official
+``app_filing`` carry projection into filing-grade external evidence.
 
 See Also:
-    :func:`aeat.application.modelo.file_modelo_revision`:
+    :func:`~application.modelo.file_modelo_revision`:
         Orchestrates preconditions and result-disposition resolution before
         delegating successful mutations here.
-    :func:`aeat.application.modelo.import_external_filing_evidence`:
+    :func:`~application.modelo.import_external_filing_evidence`:
         Separate import boundary that creates current records with
-        :class:`~aeat.domain.modelos.ExternalEvidence`; this persistence helper
+        :class:`~domain.modelos.ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
-    :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`:
+        Profile-scoped encrypted repository co-emitted for Modelo 303
+        settlement prorrata writeback.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`:
+        Typed row updated with definitive percentage and annual volume inputs.
 """
 
 from __future__ import annotations
@@ -194,7 +199,7 @@ def persist_calculation_revision(
     persisted with a new calculation revision.
 
     The ``source_provenance`` tuple carries the resolver-level source-mesh trace
-    (:class:`~aeat.domain.modelos.CalculationSourceRef` rows projected from the
+    (:class:`~domain.modelos.CalculationSourceRef` rows projected from the
     calculation source mesh) so the persisted revision records which resolver
     mesh and which upstream source objects produced it. It is additive and does
     NOT participate in ``derive_calculation_revision_id``.
@@ -314,7 +319,7 @@ def _build_filed_participation_writes(
 
     For each ``source_transaction_id`` of the filed revision, load that
     transaction's
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    :class:`~domain.modelos.TransactionRevisionParticipationIndex`, upsert
     the ``PRESENTADO`` participation carrying the ``filing_record_id``
     (replacing the prior verified entry for the same revision in place), and
     return the resulting ``SecureObjectWrite`` so the caller co-emits them in
@@ -453,13 +458,13 @@ def persist_filed_revision(
 
     When ``calculation_observation_repository`` is supplied, the filed revision's
     observations are co-emitted with ``MODELO_FILED`` through
-    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`,
+    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`,
     so later calculations can carry them through the ``previous_filing`` resolver.
     The record is stamped with NON-official ``app_filing`` and never satisfies the
     cross-period clean-state filing gate; use
-    :func:`aeat.application.modelo.import_external_filing_evidence` when the
+    :func:`~application.modelo.import_external_filing_evidence` when the
     current record must carry
-    :class:`~aeat.domain.modelos.ExternalEvidence`.
+    :class:`~domain.modelos.ExternalEvidence`.
 
     ``refunded`` is resolved once at the calculate/file boundary by
     ``resolve_modelo_result_disposition``. For refunded Modelo 303 filings
@@ -468,8 +473,10 @@ def persist_filed_revision(
     the default ``False`` preserves standard carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
 
     For Modelo 303 settlement periods, the filed definitive prorrata percentage
-    and annual volume inputs are also co-emitted to the profile prorrata
-    register in the same secure-object save as the filing catalogue and filed
+    and annual volume inputs are also co-emitted to the profile
+    :class:`~domain.prorrata_register.ProrrataRegister` through
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+    in the same secure-object save as the filing catalogue and filed
     calculation revision.
     """
     calculation_revision_id = target.calculation_revision_id

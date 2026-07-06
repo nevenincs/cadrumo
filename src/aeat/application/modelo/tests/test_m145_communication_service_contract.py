@@ -1,4 +1,18 @@
-"""Modelo 145 local communication backend ownership tests."""
+"""Modelo 145 local communication backend ownership tests.
+
+See Also:
+    :mod:`~application.modelo._m145_communication`
+        Registry-backed ownership contract under test.
+    :class:`~application.modelo.M145CommunicationServiceContract`
+        Immutable contract returned by the service builder.
+    :class:`~application.modelo.M145CommunicationAction`
+        Closed action vocabulary for the non-filing local workflow.
+    :func:`~application.modelo.build_m145_communication_service_contract`
+        Public facade builder that refuses filing-like registry drift.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision whose application links and export layouts ground the
+        contract.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,18 @@
-"""Shared M100 verification-chain test support."""
+"""Shared M100 verification-chain test support.
+
+See Also:
+    :mod:`~adapters.inbound.declaracion.tests.test_verification_chain_m100_corpus_limited`
+        Active M100 engine-verification consumer for the corpus-limited verdict.
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m100`
+        Parser boundary corpus sweep that establishes the same extracted
+        casilla surface before engine verification consumes it.
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public declaration-copy parser used by the shared corpus loader.
+    :class:`~domain.calculations.registry.CasillaId`
+        Typed casilla key carried by the expected sets and parsed-value mapping.
+    :exc:`~adapters.inbound.declaracion.DeclaracionParseError`
+        Parser failure converted into a corpus-specific ``PARSER-GAP`` failure.
+"""
 
 from __future__ import annotations
 
@@ -69,6 +83,14 @@ _M100_CLOSURE_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
     _casilla_id("0586"),
 )
 def _parse_m100_corpus(year: int, label: str) -> dict[CasillaId, object]:
+    """Parse one M100 annual corpus specimen for verification-chain consumers.
+
+    See Also:
+        :func:`~adapters.inbound.declaracion.parse_declaracion`
+            Parser entry point invoked with explicit Modelo 100 annual context.
+        :class:`~domain.calculations.registry.CasillaId`
+            Mapping key type returned to engine-verification assertions.
+    """
     pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
     try:
         filing = parse_declaracion(

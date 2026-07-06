@@ -19,6 +19,8 @@ for the behavior contract stream-reconfigure tests landed there.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -42,14 +44,16 @@ class _BareExceptInventory(NamedTuple):
     try_nodes: list[ast.Try]
 
 
-def _bare_except_locations() -> list[tuple[str, int, str]]:
+def _bare_except_locations(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[tuple[str, int, str]]:
     """Return (file, lineno, shape) for every bare-except in test files.
 
     Uses the shared test-module inventory so fixtures stay outside this ratchet.
+    When supplied, the session AST cache amortises parses for ``src/aeat`` paths
+    while project-level paths outside that tree still fall back to per-path parse.
     """
     findings: list[tuple[str, int, str]] = []
     for path in sorted(set(discover_test_modules()) | set(project_test_control_modules())):
-        tree = ast_for_path(path)
+        tree = ast_for_path(path, source_tree_ast)
         if tree is None:
             continue
         findings.extend(_bare_except_locations_for_tree(repo_relative(path), tree))
@@ -97,11 +101,10 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
                 if alias.name in {"BaseException", "Exception"}:
                     names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Assign):
-            target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
-            if target_names:
-                alias_assignments.append((qualified_name(node.value), target_names))
+            for target in node.targets:
+                alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
-            alias_assignments.append((qualified_name(node.value), (node.target.id,)))
+            alias_assignments.extend(_broad_alias_assignments_from_target(node.target, node.value))
 
     changed = True
     while changed:
@@ -114,6 +117,24 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
                     names.add(target_name)
                     changed = True
     return _BareExceptInventory(broad_names=names, try_nodes=try_nodes)
+
+
+def _broad_alias_assignments_from_target(
+    target: ast.expr,
+    value: ast.expr,
+) -> list[tuple[str, tuple[str, ...]]]:
+    """Return broad-exception alias assignments from one target/value pair."""
+    if isinstance(target, ast.Name):
+        if isinstance(value, ast.Tuple | ast.List | ast.Set):
+            return [(qualified_name(element), (target.id,)) for element in value.elts]
+        return [(qualified_name(value), (target.id,))]
+    if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
+        assignments: list[tuple[str, tuple[str, ...]]] = []
+        for target_element, value_element in zip(target.elts, value.elts, strict=False):
+            if isinstance(target_element, ast.Name):
+                assignments.append((qualified_name(value_element), (target_element.id,)))
+        return assignments
+    return []
 
 
 def _contains_broad_exception_root(node: ast.AST, broad_names: set[str]) -> bool:
@@ -137,7 +158,7 @@ def _is_noop_handler_body(body: list[ast.stmt]) -> bool:
     )
 
 
-def test_no_bare_except_in_test_surface() -> None:
+def test_no_bare_except_in_test_surface(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Zero bare-except or ``except Exception: pass`` shapes in test files.
 
     Every test file under ``src/aeat/`` is parsed with the standard AST
@@ -148,7 +169,7 @@ def test_no_bare_except_in_test_surface() -> None:
     Uses the shared per-file AST cache so the parse cost is amortised across
     the full ratchet suite.
     """
-    findings = _bare_except_locations()
+    findings = _bare_except_locations(source_tree_ast)
 
     if findings:
         lines = "\n".join(f"  {path}:{lineno}  [{shape}]" for path, lineno, shape in findings)
@@ -189,6 +210,66 @@ except (ValueError, AliasedException):
         "bare except:",
         "except py_builtins.BaseException: pass",
         "except broad exception: pass",
+    ]
+
+
+def test_detector_rejects_tuple_assigned_alias_noop_broad_exception_handlers() -> None:
+    """Tuple-assigned broad aliases must not hide no-op exception handlers."""
+    tree = ast.parse(
+        """
+import builtins
+
+ErrorAlias, NarrowAlias = Exception, ValueError
+BaseAlias, OtherAlias = builtins.BaseException, RuntimeError
+
+try:
+    raise RuntimeError("boom")
+except ErrorAlias:
+    pass
+
+try:
+    raise RuntimeError("boom")
+except (ValueError, BaseAlias):
+    ...
+"""
+    )
+
+    assert [shape for _, _, shape in _bare_except_locations_for_tree("snippet.py", tree)] == [
+        "except ErrorAlias: pass",
+        "except broad exception: pass",
+    ]
+
+
+def test_detector_rejects_container_alias_noop_broad_exception_handlers() -> None:
+    """Exception containers assigned to names must not hide broad no-op handlers."""
+    tree = ast.parse(
+        """
+import builtins
+
+ErrorHandlers = (ValueError, Exception)
+BuiltinsHandlers: tuple[type[BaseException], ...] = (RuntimeError, builtins.BaseException)
+NarrowHandlers = (ValueError, RuntimeError)
+
+try:
+    raise RuntimeError("boom")
+except ErrorHandlers:
+    pass
+
+try:
+    raise RuntimeError("boom")
+except NarrowHandlers:
+    pass
+
+try:
+    raise RuntimeError("boom")
+except BuiltinsHandlers:
+    ...
+"""
+    )
+
+    assert [shape for _, _, shape in _bare_except_locations_for_tree("snippet.py", tree)] == [
+        "except ErrorHandlers: pass",
+        "except BuiltinsHandlers: pass",
     ]
 
 

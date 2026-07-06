@@ -1,15 +1,15 @@
 """Feedback-package round trip and countersign-attach-to-journal proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_feedback` end to end
+Exercises :mod:`~application.modelo._review_package_feedback` end to end
 against a REAL two-bucket runtime
-(:func:`~aeat.tests.secure_sql.isolated_two_bucket_runtime` -- two genuine
+(:func:`~tests.secure_sql.isolated_two_bucket_runtime` -- two genuine
 ``BUCKET_DEK_V1`` buckets, no mocks or fakes): the originator (taxpayer) signs
 and hands off a review package, mints their own X25519 encryption keypair, the
 accountant counter-signs the operator's signature and seals a
-:class:`~aeat.application.modelo.FeedbackPackage` back to the originator using
+:class:`~application.modelo.FeedbackPackage` back to the originator using
 the EXACT SAME X25519 ECIES primitive
-(:func:`~aeat.application.modelo.encrypt_review_package_for_recipient` /
-:func:`~aeat.application.modelo.decrypt_review_package_for_recipient`) the
+(:func:`~application.modelo.encrypt_review_package_for_recipient` /
+:func:`~application.modelo.decrypt_review_package_for_recipient`) the
 forward direction already proves, and the originator imports the feedback,
 verifies both signature layers against their own locally-held archive, and
 attaches the verified countersignature to their own bucket-event journal.
@@ -17,6 +17,26 @@ attaches the verified countersignature to their own bucket-event journal.
 Also proves the anti-tautology contract: a tampered feedback envelope, a
 tampered archive, an edited note, and a forged counter-signature all refuse
 loudly rather than silently importing unverified feedback.
+
+See Also:
+    :func:`~application.modelo.build_feedback_package`
+        Constructs the feedback payload these tests encrypt and import.
+    :func:`~application.modelo.encrypt_feedback_package_for_originator`
+        Seals feedback with the originator's recipient-encryption key.
+    :func:`~application.modelo.decrypt_feedback_package_from_originator_envelope`
+        Opens the return envelope before import verification.
+    :func:`~application.modelo.import_feedback_package`
+        Re-verifies both signature layers before accepting feedback.
+    :func:`~application.modelo.counter_sign_review_package`
+        Produces the counter-signed receipt carried by structured feedback.
+    :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`
+        Attaches verified countersignatures to the originator's journal.
+    :class:`~domain.buckets.BucketEventType`
+        Closed event enum asserted for the collaboration audit entry.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Registry observation rows embedded in the signed review package.
+    :class:`Period`
+        Typed filing period used to derive the work-unit identifiers.
 """
 
 from __future__ import annotations

@@ -97,8 +97,8 @@ from ...aggregation import (
 from ...modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
+    resolve_available_bound_inputs_by_casilla_id,
 )
-from ...modelo._binding_resolution import resolve_available_bound_inputs_by_casilla_id
 from ...user_profile import UserProfileLifecycleRepository
 from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository

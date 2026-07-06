@@ -70,6 +70,18 @@ input_kind = "manual"
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
 
+[[revisions."2013-y-siguientes".casillas]]
+id = "inmuebles.valoracion"
+number = "inmuebles.valoracion"
+label = "Valoracion de bienes inmuebles o derechos reales situados en el extranjero"
+section = ["detalle", "inmuebles", "valoracion"]
+data_type = "money"
+semantic_role = "foreign_real_estate_valuation"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
 # Per-asset / per-account / per-real-estate declaration threshold per
 # RD 1065/2007 art. 42 bis–quater: only foreign accounts, securities,
 # and real estate exceeding €50,000 (sum of opening/closing/4Q balances

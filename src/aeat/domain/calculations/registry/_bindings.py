@@ -561,6 +561,13 @@ _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS: tuple[CasillaId, ...] = (
     "iva.compensacion-pendiente-periodos-posteriores",
 )
 _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+_PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
+    "iva.cuota-deducible-total",
+    "iva.prorrata-volumen-con-derecho",
+    "iva.prorrata-volumen-total",
+    "iva.prorrata-porcentaje",
+)
+_PRORRATA_REGULARIZACION_SOURCE_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 
 
 class _IvaCompensationAnnualPartitionSelector(BaseModel):
@@ -593,6 +600,36 @@ class _IvaCompensationAnnualPartitionSelector(BaseModel):
         return value
 
 
+class _ProrrataRegularizacionSelector(BaseModel):
+    """Selector for Modelo 303 casilla 44 annual prorrata regularisation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: Literal["303"]
+    source_casilla_ids: tuple[CasillaId, ...]
+    source_periods: tuple[str, ...]
+    regularizacion_output: Literal["modelo_303_casilla_44"]
+
+    @field_validator("source_casilla_ids")
+    @classmethod
+    def _source_casilla_ids_match_prorrata_inputs(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if value != _PRORRATA_REGULARIZACION_SOURCE_IDS:
+            raise RegistryValidationError(
+                "prorrata_regularizacion selector must declare the Modelo 303 deductible-total, "
+                "annual prorrata volume, and definitive-percentage casilla ids in canonical order",
+            )
+        return value
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != _PRORRATA_REGULARIZACION_SOURCE_PERIODS:
+            raise RegistryValidationError(
+                "prorrata_regularizacion selector must declare source_periods ('1T', '2T', '3T', '4T')",
+            )
+        return value
+
+
 def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
     """Return typed source casilla ids declared by binding families that have them."""
     if binding.source == BindingSourceKind.PREVIOUS_FILING:
@@ -601,6 +638,8 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
         return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
+    if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
+        return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
     return ()
 
 
@@ -612,6 +651,8 @@ def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
         return _relation_prefill_selector(binding).source_modelo
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
         return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_modelo
+    if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
+        return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_modelo
     return None
 
 
@@ -787,6 +828,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.PREVIOUS_FILING: _PreviousModeloSelector,
     BindingSourceKind.RELATION_PREFILL: _RelationPrefillSelector,
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
+    BindingSourceKind.PRORRATA_REGULARIZACION: _ProrrataRegularizacionSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
@@ -873,6 +915,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _validate_selector_only(
         _IvaCompensationAnnualPartitionSelector,
     ),
+    BindingSourceKind.PRORRATA_REGULARIZACION: _validate_selector_only(_ProrrataRegularizacionSelector),
     # The three invoice-shaped sources run the stricter invoice validator (the
     # union of the prior dual path: selector-shape + counterpart fact/op
     # invariants + the two invoice-only scalar-shape guards). ledger_transaction

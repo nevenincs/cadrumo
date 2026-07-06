@@ -84,6 +84,7 @@ def test_modelo_721_revision_uses_boe_layout_sources_and_applicability_chain() -
     all_modelo_strings = set(_strings(modelo.model_dump(mode="json")))
     assert "aeat-dr-721" not in all_modelo_strings
     assert "boe-modelo-721-2023-form" not in all_modelo_strings
+    assert "ley-11-2021:da-10" not in all_modelo_strings
     assert "boe-modelo-721-2023-form" not in catalogues.sources
     assert catalogues.sources["aeat-modelo-721-procedure"].evidence_tier == "official_source_guidance"
 
@@ -119,3 +120,43 @@ def test_modelo_721_casillas_are_grounded_in_original_and_amended_boe_layouts() 
         assert "boe-modelo-721-2023-layout" in casilla.source_refs
         assert "boe-modelo-721-2024-layout" in casilla.source_refs
         assert "aeat-dr-721" not in casilla.source_refs
+
+
+def test_modelo_721_threshold_continuity_has_registry_parameters_without_calculation_surface() -> None:
+    modelo, revision, _ = _modelo_721()
+
+    link_ids_by_surface = {link.surface: link.id for link in revision.application_links}
+    expected_link_ids_by_surface = {
+        "portal": "modelo-721-portal",
+        "filing": "modelo-721-filing",
+        "extractor": "modelo-721-extractor",
+        "verification": "modelo-721-verification",
+        "deadline": "modelo-721-deadline",
+    }
+
+    assert "calculation" not in link_ids_by_surface
+    assert "modelo-721-calculation" not in revision.constructs[0].application_links
+    assert expected_link_ids_by_surface.items() <= link_ids_by_surface.items()
+    assert {parameter.id for parameter in revision.parameters} >= {
+        "modelo-721-asset-declaration-threshold-eur",
+        "modelo-721-redeclaration-increment-threshold-eur",
+    }
+    assert modelo.id == "721"
+
+
+def test_modelo_721_redeclaration_is_not_authored_as_scalar_previous_filing_binding() -> None:
+    """M721 token continuity is row-set advisory evidence, not scalar previous_filing.
+
+    The previous_filing resolver folds a casilla-value mapping to one Decimal per
+    binding. Modelo 721 repeats the same token casillas per custodian/token row, so
+    a scalar binding would lose the row identity needed for the re-declaration
+    baseline. Reintroducing this as registry previous_filing requires a row-set
+    selector, not the retired source_output key.
+    """
+    _, revision, _ = _modelo_721()
+
+    previous_filing_bindings = [binding.id for binding in revision.bindings if binding.source == "previous_filing"]
+    all_binding_strings = set(_strings(tuple(binding.model_dump(mode="json") for binding in revision.bindings)))
+
+    assert previous_filing_bindings == []
+    assert "source_output" not in all_binding_strings

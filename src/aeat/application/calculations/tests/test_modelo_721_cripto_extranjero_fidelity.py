@@ -19,9 +19,8 @@ threshold per art. 42-quater), a new declaration is required in N+1 even if
 the filer would otherwise be below threshold. This mirrors the M720 A3
 re-declaration trigger for bienes y derechos.
 
-This module covers the data-fidelity layer:
+This module covers the data-fidelity and advisory-trigger layer:
 
-**Data-fidelity roundtrip (IMPLEMENTED):**
 - Year N (2023): custodian Coinbase (US) holding BTC at €60,000 and ETH at
   €55,000 at 31 December 2023. Both exceed the €50,000 initial threshold.
 - Year N+1 (2024): same custodian/tokens, BTC grown to €87,000 (+€27,000 >
@@ -29,21 +28,35 @@ This module covers the data-fidelity layer:
 - Observations persist via the real CalculationObservationRepository and reload
   with strict pydantic equality. Token identity (custodio + moneda.clave-token)
   survives the roundtrip unchanged — the cross-year baseline resolver's anchor.
+- The advisory helper fires when the grown BTC custodian+token pair is absent
+  from the current declaration, and stays silent when the required token is
+  present or the delta stays below the €20,000 re-declaration threshold.
 - Anti-tautology: omitting the saldo-31-diciembre casilla produces strict
   inequality, proving the roundtrip assertions are not vacuously true.
 
-The ADVISORY predicate (fires when the €20,000 re-declaration increment is
-exceeded but the custodian+token pair is absent from the current declaration)
-is deferred — it depends on the A3 advisory operator infrastructure.
-
-Evidence class: DATA_FIDELITY. The two-year per-custodian/per-token roundtrip
-together with valuation isolation and identity continuity constitute the real
-≥2-renta threshold-continuity contract.
+Evidence class: THRESHOLD_CONTINUITY. The two-year per-custodian/per-token
+roundtrip together with valuation isolation, identity continuity, and the
+advisory trigger constitute the current real ≥2-renta threshold-continuity
+contract.
 
 Legal grounding: DA-18 letra d Ley 58/2003 LGT (obligation); Ley 11/2021
 DA-10 (enabling statute); RD 1065/2007 art. 42-quater (reglamentary development,
 €50,000 initial threshold, €20,000 re-declaration delta); Orden HFP/886/2023
 arts. 1-3 (form approval, filing period January–March following ejercicio).
+
+See Also:
+    :mod:`~application.calculations._foreign_asset_redeclaration`
+        Shared M720/M721 re-declaration advisory implementation exercised here.
+    :func:`~application.calculations._foreign_asset_redeclaration.modelo_721_redeclaration_advisory_findings`
+        Modelo 721 advisory entry point pinned by the grown/omitted BTC case.
+    :class:`~application.calculations._observations_repository.CalculationObservationRepository`
+        Real repository used for the two-year observation roundtrip.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Registry-grounded modelo observation envelope persisted by the test.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Typed casilla row carrying legal and source provenance.
+    :mod:`~application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity`
+        Modelo 720 threshold-continuity sibling over foreign asset classes.
 """
 
 from __future__ import annotations
@@ -54,13 +67,17 @@ from pathlib import Path
 
 import pytest
 
-from ....core._casilla_id import CasillaId, validated_casilla_id
-from ....core._foreign_asset_obligation import ForeignAssetObligationGroup, foreign_asset_declaration_threshold
-from ....domain.calculations.registry._bindings import (
+from ....core import (
+    CasillaId,
+    ForeignAssetObligationGroup,
+    foreign_asset_declaration_threshold,
+    validated_casilla_id,
+)
+from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
 )
-from ....domain.modelos._verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
 from .._foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
@@ -77,7 +94,7 @@ _MODELO = "721"
 _YEAR_N = 2023
 _YEAR_N_PLUS_1 = 2024
 
-#: Context label for the EnrollmentRecorder (non-calculation / data-fidelity mode).
+#: Context label for the EnrollmentRecorder (non-calculation / threshold-continuity mode).
 _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annual-cycles"
 
 #: Initial declaration threshold per RD 1065/2007 art. 42-quater (same structure
@@ -341,6 +358,16 @@ def _year_n_plus_1_observation_without_eth() -> RegistryModeloObservation:
     )
 
 
+def test_row_set_multiplicity_is_preserved_only_in_ordered_observations() -> None:
+    """Repeated M721 row casillas cannot be represented by the scalar casilla_values view."""
+    observation = _year_n_observation()
+
+    assert _values_for(observation, _MONEDA_CLAVE_TOKEN_CASILLA) == (Decimal("1"), Decimal("2"))
+    assert _values_for(observation, _MONEDA_SALDO_CASILLA) == (_BTC_N, _ETH_N)
+    assert observation.casilla_values[_MONEDA_CLAVE_TOKEN_CASILLA] == Decimal("2")
+    assert observation.casilla_values[_MONEDA_SALDO_CASILLA] == _ETH_N
+
+
 def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """Year-N (2023) M721 casilla values survive the encrypted-SQL roundtrip unchanged.
 
@@ -580,14 +607,14 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     """EnrollmentRecorder proves both annual cycles and matches the authorization manifest.
 
     Drives the real CalculationObservationRepository for both ejercicios (2023, 2024),
-    records each through record_context_year (non-calculation / data-fidelity mode),
+    records each through record_context_year (non-calculation / threshold-continuity mode),
     and calls assert_enrollment_matches_manifest. The manifest entry
     (authorization.d/721.toml) must declare renta_years = [2023, 2024] in the same
     commit as this test.
 
-    Evidence class: DATA_FIDELITY. The two-year per-custodian/per-token roundtrip
-    (fidelity + valuation isolation + token identity continuity + delta check)
-    constitutes the ≥2-renta threshold-continuity contract for M721.
+    Evidence class: THRESHOLD_CONTINUITY. The two-year per-custodian/per-token
+    roundtrip plus advisory-trigger assertions constitute the current
+    threshold-continuity contract for M721.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()

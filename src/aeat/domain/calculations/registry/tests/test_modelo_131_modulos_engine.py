@@ -18,6 +18,20 @@ cuantía/índice constants via the shared ``_expected_modulos`` helper (an
 independent reproduction, not a re-derivation of the formula under test's own
 intermediate output). The 5 por ciento reducción general (Fase 4ª) is grounded
 in the same Orden's disposición adicional primera.
+
+See Also:
+    :mod:`~domain.calculations.registry.tests._modelo_131_modulos_engine_support`
+        Shared independent coefficient tables and oracle arithmetic.
+    :mod:`~domain.calculations.registry._formula_runtime_m131`
+        Extracted M131 módulos formula evaluators exercised here.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry runtime entry point used to calculate the committed snapshot.
+    :class:`~domain.calculations.registry.ParameterDefinition`
+        Registry-authored módulo coefficient and índice tables under test.
+    :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine_food`
+        Split food and hospitality activity coverage using the same helpers.
+    :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine_retail_services`
+        Split retail, repair, transport, and service activity coverage.
 """
 
 from __future__ import annotations

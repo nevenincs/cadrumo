@@ -1,4 +1,17 @@
-"""``aeat app modelo support-matrix`` verb tests."""
+"""``aeat app modelo support-matrix`` verb tests.
+
+See Also:
+    :func:`~entrypoints.cli._modelo_discovery_cli._register_support_matrix_command`
+        Typer registration for the operator-facing command covered here.
+    :func:`~entrypoints.cli._modelo_discovery_cli._support_matrix_entry_payload`
+        Transport mapper from registry rows to CLI payload rows.
+    :class:`~entrypoints.cli._modelo_support_matrix_payloads.ModeloSupportMatrixResult`
+        Registered JSON result schema asserted by the envelope checks.
+    :func:`~application.modelo.registry_support_matrix`
+        Application facade called by the CLI command.
+    :mod:`~domain.calculations.registry.tests.test_support_matrix`
+        Domain support-matrix coverage for the same row semantics.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,17 @@
-"""Real-runtime state transition tests for Modelo 145 local communication records."""
+"""Real-runtime state transition tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend service implementing delivery and completion transitions.
+    :class:`~application.modelo.M145CommunicationRecordState`
+        State enum for created, delivered-to-payer, and locally-completed rows.
+    :func:`~application.modelo.mark_m145_communication_record_delivered_to_payer`
+        Public facade transition to payer-delivered state.
+    :func:`~application.modelo.mark_m145_communication_record_locally_completed`
+        Public facade transition to local-completion state.
+    :func:`~application.modelo.read_m145_communication_record`
+        Read-back path proving transitions persist in the encrypted store.
+"""
 
 from __future__ import annotations
 

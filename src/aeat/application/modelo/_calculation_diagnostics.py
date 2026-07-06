@@ -151,6 +151,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             modelo=modelo,
             period_token=period_token,
             filing_year=filing_year,
+            bucket_id=bucket_id,
             observation_repository=observation_repository,
         )
     )

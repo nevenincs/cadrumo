@@ -1,16 +1,29 @@
 """Approval-basis staleness coverage for the prior-filing observation source.
 
 Exercises the ``prior_filing_observations_fingerprint`` added to
-:class:`~aeat.domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
-:attr:`~aeat.application.filing.ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED`
+:class:`~domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
+:attr:`~application.filing.ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED`
 when the bucket's prior filed observations change (the ``previous_filing`` carry
 and relation fold-in source), and must not be flagged when they are unchanged.
 
 The digest is self-loaded from the bucket's
-:class:`~aeat.application.calculations.CalculationObservationRepository` — a
+:class:`~application.calculations.CalculationObservationRepository` — a
 bucket-keyed, enumerable store — so change-detection is reproducible at approve
 and refresh time with only ``bucket_id`` in scope, without running the source
 mesh or resolving any relation in the review layer.
+
+See Also:
+    :func:`~application.filing.compute_current_approval_basis`
+        Builds the current review fingerprints, including prior observations.
+    :func:`~application.filing.approval_stale_reasons`
+        Compares the stored basis with the current prior-observation digest.
+    :func:`~application.filing.empty_prior_filing_observations_fingerprint`
+        Supplies the explicit empty-source fingerprint used by tests and
+        overrides.
+    :func:`~application.filing._review._prior_filing_observations_fingerprint`
+        Stable, order-independent digest over stored prior-observation payloads.
+    :mod:`~application.filing.tests.test_review_profile_activity_staleness`
+        Sister approval-basis coverage for another self-loaded source surface.
 """
 
 from __future__ import annotations

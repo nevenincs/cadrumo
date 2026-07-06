@@ -102,6 +102,11 @@ from ._filing_record import (
     derive_filing_record_id,
 )
 from ._filing_repository import ModeloRecordPersistenceError, upsert_filing_record
+from ._iae_exemption import (
+    Modelo840IaeExemptionAssessment,
+    Modelo840IaeExemptionStatus,
+    assess_modelo_840_iae_cifra_negocios_exemption,
+)
 from ._ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ._ledger_filing_snapshot import (
     LedgerEvidenceRow,
@@ -189,6 +194,8 @@ __all__ = (
     "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
     "Modelo349RectificacionRow",
+    "Modelo840IaeExemptionAssessment",
+    "Modelo840IaeExemptionStatus",
     "ModeloCode",
     "ModeloDetailRow",
     "ModeloError",
@@ -219,6 +226,7 @@ __all__ = (
     "WorkUnitPersistenceError",
     "WorkUnitState",
     "assert_revision_snapshot_evidence_coverage",
+    "assess_modelo_840_iae_cifra_negocios_exemption",
     "compute_dt12_reduccion_plan_pensiones",
     "compute_sal_reserva_especial_dotacion",
     "derive_calculation_revision_id",

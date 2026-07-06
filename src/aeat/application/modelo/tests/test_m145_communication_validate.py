@@ -1,4 +1,17 @@
-"""Real-runtime validation tests for Modelo 145 local communication records."""
+"""Real-runtime validation tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend validation service under test.
+    :func:`~application.modelo.validate_m145_communication_record`
+        Public facade validator exercised by this module.
+    :class:`~application.modelo.M145CommunicationValidationIssueKind`
+        Typed validation issue vocabulary asserted for malformed records.
+    :class:`~domain.calculations.registry.CasillaDefinition`
+        Registry casilla definitions that drive required-field validation.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Active Modelo 145 revision whose legal and source refs are preserved.
+"""
 
 from __future__ import annotations
 

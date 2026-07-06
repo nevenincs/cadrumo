@@ -1,3 +1,20 @@
+"""Regression coverage for row-indexed calculation replay payloads.
+
+See Also:
+    :func:`~application.modelo._calculation_resolution.build_calculation_replay_payloads`
+        Helper under test, separating scalar binding overrides from structured
+        row-binding replay values.
+    :class:`~application.modelo._calculation_resolution.CalculationReplayPayloads`
+        Persisted replay bundle that stores ``row_binding_values`` beside
+        scalar calculation inputs.
+    :class:`~application.aggregation.CalculationSourceResolution`
+        Source-mesh envelope that carries row-indexed Modelo 720 values into
+        the calculate path.
+    :class:`~domain.modelos.CalculationRevision`
+        Draft calculation record whose content hash and replay surface include
+        the row-binding values.
+"""
+
 from __future__ import annotations
 
 from datetime import date

@@ -1,4 +1,17 @@
-"""Bucket-event tests for Modelo 145 local communication records."""
+"""Bucket-event tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend service that emits communication-specific bucket events.
+    :class:`~domain.buckets.BucketEvent`
+        Bucket-local audit record asserted by this module.
+    :class:`~domain.buckets.BucketEventType`
+        Event-type vocabulary for create, export, delivery, and completion.
+    :class:`~domain.buckets.BucketEventObjectType`
+        Object-type vocabulary proving events name communication records.
+    :func:`~application.modelo.export_m145_communication_record`
+        Export operation whose event payload is checked here.
+"""
 
 from __future__ import annotations
 

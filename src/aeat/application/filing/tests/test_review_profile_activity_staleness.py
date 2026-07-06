@@ -1,18 +1,30 @@
 """Approval-basis staleness coverage for the taxpayer profile-activity source.
 
 Exercises the ``profile_activity_fingerprint`` added to
-:class:`~aeat.domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
-:attr:`~aeat.application.filing.ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED`
-when a taxpayer-profile fact that scopes relation resolution changes (activity-start
-date, m111 no-retenciones attestations, declared income categories), and must not be
-flagged when the profile is unchanged.
+:class:`~domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale
+with
+:attr:`~application.filing.ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED`
+when a taxpayer-profile fact that scopes relation resolution changes
+(activity-start date, m111 no-retenciones attestations, declared income
+categories), and must not be flagged when the profile is unchanged.
 
 The digest is self-loaded from the bucket's
-:class:`~aeat.application.user_profile.ProfileRepository` via the wizard-free
-canonical projection (:func:`~aeat.application.user_profile.record_to_path_values`)
-— the same projection the relation resolver reads — so change-detection is
+:class:`~application.user_profile.ProfileRepository` via the wizard-free
+canonical projection (:func:`~application.user_profile.record_to_path_values`),
+the same projection the relation resolver reads, so change-detection is
 reproducible at approve and refresh time with only ``bucket_id`` in scope, without
 running the source mesh.
+
+See Also:
+    :func:`~application.filing.compute_current_approval_basis`
+        Builds the current review fingerprints, including profile activity.
+    :func:`~application.filing.approval_stale_reasons`
+        Compares the stored basis with the current profile-activity digest.
+    :func:`~application.filing.empty_profile_activity_fingerprint`
+        Supplies the explicit empty-source fingerprint used by tests and
+        overrides.
+    :mod:`~application.filing.tests.test_review_prior_filing_staleness`
+        Sister approval-basis coverage for another self-loaded source surface.
 """
 
 from __future__ import annotations
@@ -58,10 +70,11 @@ _TAX_ID = "12345678Z"
 def _profile_storage(tmp_path: Path) -> Iterator[None]:
     """Isolate the encrypted profile store and bootstrap profile creation.
 
-    The self-load path (:func:`ProfileRepository.load`) needs a genuinely
-    provisioned profile: bucket directory, plaintext manifest, wrapped DEK, and
-    encrypted record. The tests mint that profile through the same application
-    create span used by the CLI rather than a partial record write.
+    The self-load path
+    (:meth:`~application.user_profile.ProfileRepository.load`) needs a
+    genuinely provisioned profile: bucket directory, plaintext manifest, wrapped
+    DEK, and encrypted record. The tests mint that profile through the same
+    application create span used by the CLI rather than a partial record write.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_PROFILE_ID):
         yield

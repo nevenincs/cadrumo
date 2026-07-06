@@ -1,4 +1,20 @@
-"""Tests for committed Modelo 220/222 IS-consolidation registry foundations."""
+"""Tests for committed Modelo 220/222 IS-consolidation registry foundations.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Bundled-registry loader used to inspect the promoted definitions.
+    :class:`~domain.calculations.registry.RegistryValidator`
+        Registry integrity gate proving the committed Modelo 220/222 TOML is
+        loadable.
+    :func:`~domain.calculations.registry.bundled_authority`
+        Deadline-window authority used for the legal plazo assertions.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Central set these promoted IS-consolidation modelos must leave.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical modeled-obligation fleet that must include both forms.
+    :class:`~domain.calculations.registry.ModeloEntry`
+        Support-matrix row type that reports registry-backed modelo coverage.
+"""
 
 from __future__ import annotations
 

@@ -7,6 +7,20 @@ RGAT art 54.6 — neither RGAT article is bundled, so no fixed date is fabricate
 All five are scheduling/applicability-grade: declaration-header casillas only, no
 bundled diseño de registro, no fabricated form casilla. Each orden's approval (art
 1) and plazo article are cross-checked against the bundled BOE corpus at build.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for the committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :func:`~domain.calculations.registry._authority.bundled_authority`
+        Authority facade used to resolve the annual windows and windowless cases.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership these five informativas extend.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Former recognized-unmodeled set reduced by this Batch-3 promotion.
+    :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch2_registry`
+        Sibling M182-template informativa promotion with annual/monthly windows.
 """
 
 from __future__ import annotations

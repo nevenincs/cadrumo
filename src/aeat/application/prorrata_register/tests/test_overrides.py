@@ -30,8 +30,7 @@ from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
-from ...calculations._cross_period_models import CrossPeriodCleanStateBlocker
+from ...calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker
 from .. import ProrrataRegisterService
 from .._seed import cross_check_prorrata_entry_against_prior_observation
 

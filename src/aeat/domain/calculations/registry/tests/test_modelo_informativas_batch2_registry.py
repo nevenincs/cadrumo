@@ -1,12 +1,24 @@
 """Tests for the six Batch-2 declaración-informativa registry foundations.
 
 Modelos 165, 233, 156 (annual, January plazo) and 038, 185, 186 (monthly plazo)
-were promoted from ``UNMODELED_OBLIGATIONS`` to registry-loadable definitions.
+were promoted from :data:`~core.UNMODELED_OBLIGATIONS` to registry-loadable definitions.
 Each is approved by a bundled orden whose approval (art 1) and plazo (art 4 or 6)
 articles are cross-checked against the bundled BOE corpus at build. These
 revisions are scheduling/applicability-grade (declaration-header casillas only):
 no authoritative diseño de registro is bundled for any of the six, so no numbered
 form casilla is fabricated.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :func:`~domain.calculations.registry._authority.bundled_authority`
+        Authority facade used to resolve annual and monthly deadline windows.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership these six informativas extend.
+    :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch3_registry`
+        Follow-on informativa promotion with annual and windowless deadline shapes.
 """
 
 from __future__ import annotations

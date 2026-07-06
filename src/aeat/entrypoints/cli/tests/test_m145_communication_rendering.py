@@ -1,4 +1,17 @@
-"""Rendering-boundary tests for Modelo 145 communication CLI output."""
+"""Rendering-boundary tests for Modelo 145 communication CLI output.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_m145_rendering`
+        Rendering boundary under test for text lines and JSON payloads.
+    :mod:`~entrypoints.cli._modelo_payloads_m145`
+        Typed payload schemas returned by the renderer.
+    :func:`~entrypoints.cli._common._emit_envelope`
+        Central CLI envelope path used by the emitters.
+    :class:`~application.modelo.M145CommunicationRecord`
+        Backend record projected into mutation output.
+    :class:`~application.modelo.M145CommunicationExportResult`
+        Backend export DTO rendered into text and JSON output.
+"""
 
 from __future__ import annotations
 

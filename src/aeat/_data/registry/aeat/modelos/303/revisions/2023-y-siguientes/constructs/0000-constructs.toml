@@ -28,6 +28,7 @@ legal_refs = [
     "rd-596-2016",
     "ley-37-1992:art-102",
     "ley-37-1992:art-104",
+    "ley-37-1992:art-105",
     "ley-37-1992:art-107",
     "ley-37-1992:art-108",
     "ley-37-1992:art-109",
@@ -81,6 +82,7 @@ casilla_ids = [
     "iva.prorrata-volumen-total",
     "iva.prorrata-porcentaje",
     "iva.regularizacion-inversiones",
+    "44",
     "158",
     "21",
     "24",
@@ -136,6 +138,7 @@ bindings = [
     "modelo-303-iva-repercutido-reducido-base",
     "modelo-303-iva-repercutido-super-reducido-base",
     "modelo-303-iva-soportado-interiores-base",
+    "modelo-303-prorrata-regularizacion-casilla-44",
 ]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]

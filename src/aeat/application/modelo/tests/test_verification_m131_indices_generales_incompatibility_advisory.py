@@ -22,6 +22,20 @@ silently dropped, per no-silent-under-declaration. Two internal advisory-
 support flag casillas (``modulos-pequena-dimension-ignorado-flag``,
 ``modulos-temporada-inicio-actividad-conflicto-flag``) carry the 1/0 signal
 the ``advisory_when_positive`` operator reads.
+
+See Also:
+    :func:`~domain.calculations.registry._formula_runtime_m131.evaluate_m131_resolve_modulos_indices_generales`
+        Formula op whose structural incompatibility handling feeds these flags.
+    :data:`~domain.calculations.registry._formula_runtime_m131._M131_EPIGRAFES_INDICE_ESPECIAL`
+        Epígrafe set that makes the b.1 pequeña-dimensión índice ignored.
+    :func:`~application.modelo._verification_actions._evaluate_advisory_predicate_fires`
+        Verification DSL evaluator for the ``advisory_when_positive`` checks.
+    :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
+        Converts fired advisory predicates into warning findings.
+    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
+        Registry predicate model loaded from the bundled M131 revision.
+    :mod:`~domain.calculations.registry.tests._modelo_131_modulos_engine_support`
+        Independent expected-value support for the same índices-correctores cascade.
 """
 
 from __future__ import annotations

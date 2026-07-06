@@ -1,15 +1,29 @@
 """Real-behavior CLI tests for ``aeat app diagnostics telemetry``.
 
 Exercises ``status`` and ``flush`` end to end against the real CLI, the real
-:func:`~aeat.application.diagnostics_telemetry` composition, real encrypted
+:mod:`~application.diagnostics_telemetry` composition, real encrypted
 SQLite persistence in an isolated storage root, and (for the fully-permitted
 send case) a real loopback HTTP server -- never a mocked transport. Proves:
 the default-off posture; ``flush --dry-run`` (the CLI default) never performs
 a network call regardless of posture; a sensitive/free-text field structurally
 cannot appear in the previewed payload because
-:class:`~aeat.core.telemetry.TelemetryEventPayload` has no such field
+:class:`~core.telemetry.TelemetryEventPayload` has no such field
 (``extra="forbid"``); and only a fully-permitted, explicitly acknowledged
 ``--no-dry-run`` invocation with a configured endpoint actually transmits.
+
+See Also:
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        CLI transport that implements the status and flush commands.
+    :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
+        Application payload builder exercised through the CLI dry-run path.
+    :func:`~application.diagnostics_telemetry.flush_telemetry`
+        Application send path exercised by the acknowledged non-dry-run case.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed allowlisted payload shape rendered by the CLI.
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Real local telemetry source seeded by the tests.
+    :func:`~tests.cli_runner.invoke_cached_cli`
+        Shared Typer runner used for the end-to-end CLI calls.
 """
 
 from __future__ import annotations

@@ -15,7 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR
 
 

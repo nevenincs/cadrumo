@@ -28,6 +28,7 @@ deterministic test-control surface. The test asserts this inventory stays at zer
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -59,14 +60,16 @@ def _is_tautological_assert(node: ast.AST) -> bool:
         return False
     test = node.test
 
-    if _literal_truthiness(test) is True or _is_not_literal_falsey(test):
+    if _literal_truthiness(test) is True or _is_not_literal_falsey(test) or _is_tautological_boolop(test):
         return True
 
-    if isinstance(test, ast.Compare) and len(test.ops) == 1:
+    if isinstance(test, ast.Compare):
+        if _is_tautological_compare_chain(test):
+            return True
+        if len(test.ops) != 1:
+            return False
         left = test.left
         right = test.comparators[0]
-        if _is_tautological_compare(left, test.ops[0], right):
-            return True
         if _is_tautological_membership(left, test.ops[0], right):
             return True
 
@@ -94,6 +97,16 @@ def _is_not_literal_falsey(node: ast.AST) -> bool:
     return isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not) and _literal_truthiness(node.operand) is False
 
 
+def _is_tautological_boolop(node: ast.AST) -> bool:
+    """Return True when a boolean expression is structurally guaranteed truthy."""
+    if not isinstance(node, ast.BoolOp):
+        return False
+    truthiness = tuple(_literal_truthiness(value) for value in node.values)
+    if isinstance(node.op, ast.Or):
+        return any(value is True for value in truthiness)
+    return isinstance(node.op, ast.And) and all(value is True for value in truthiness)
+
+
 def _is_tautological_compare(left: ast.expr, op: ast.cmpop, right: ast.expr) -> bool:
     """Return True for one structurally guaranteed-pass comparison."""
     if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
@@ -110,6 +123,15 @@ def _is_tautological_compare(left: ast.expr, op: ast.cmpop, right: ast.expr) -> 
         return isinstance(op, ast.Eq | ast.Is)
 
     return False
+
+
+def _is_tautological_compare_chain(node: ast.Compare) -> bool:
+    """Return True when every adjacent comparison is guaranteed to pass."""
+    lefts = [node.left, *node.comparators[:-1]]
+    return all(
+        _is_tautological_compare(left, op, right)
+        for left, op, right in zip(lefts, node.ops, node.comparators, strict=True)
+    )
 
 
 def _is_tautological_membership(left: ast.expr, op: ast.cmpop, right: ast.expr) -> bool:
@@ -163,18 +185,20 @@ def _tautological_sites(
     return hits
 
 
-def test_no_tautological_assertions() -> None:
+def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No deterministic test-control module may contain tautological assertions.
 
     Uses the shared test-control module inventory so the existing fixtures-dir
-    exclusion stays intact.
+    exclusion stays intact. The session AST cache amortises parse cost for the
+    ``src/aeat`` test-control surface; project-level test controls outside that
+    tree still fall back to per-path parsing.
     """
     modules = all_test_control_modules()
     violations: list[str] = []
 
     for module_path in modules:
         relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
         if tree is None:
             continue
         for lineno, snippet in _tautological_sites(module_path, tree):
@@ -212,6 +236,12 @@ def test_detection_is_non_trivial() -> None:
         "assert True is not False",
         "assert x == x",
         "assert x is x",
+        "assert 1 == 1 == 1",
+        "assert 1 != 2 != 1",
+        "assert x == x == x",
+        "assert True or x",
+        'assert x or "fallback"',
+        'assert True and 1 and "x"',
         "assert x in (x,)",
         "assert x in [x]",
         "assert x in {x}",
@@ -234,6 +264,12 @@ def test_detection_is_non_trivial() -> None:
         "assert x",
         "assert x == y",
         "assert x != x",
+        "assert x == x == y",
+        "assert x != y != x",
+        "assert x or y",
+        "assert True and x",
+        "assert x and 1",
+        'assert "x" in haystack or "y" in haystack',
         "assert len(x) == len(y)",
         "assert x in [y]",
         "assert x in values",

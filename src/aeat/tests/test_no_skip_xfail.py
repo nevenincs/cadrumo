@@ -8,12 +8,28 @@ skip/xfail markers or shortcut calls. Import-time skips and
 Live modules are deselected by marker and collection-level opt-in. Once selected,
 they must not self-skip; only the central live gate support may emit skip
 markers. No item may carry both ``unit`` and ``aeat_live`` markers.
+
+See Also:
+    :mod:`~tests.test_mock_inventory`
+        Companion production-test guard for mock and test-double shortcuts.
+    :mod:`~tests.test_monkeypatch_inventory`
+        Companion production-test guard for monkeypatch mutation shortcuts.
+    :func:`~tests._inventory.discover_test_control_modules`
+        Source-tree deterministic test-control surface walked by this gate.
+    :func:`~tests._inventory.project_test_control_modules`
+        Project-level test-control surface checked for skip and xfail shortcuts.
+    :class:`_SkipInventorySites`
+        AST-level detector result carrying forbidden sites and unit/live marker
+        intersections.
+    :class:`_SkipPolicyInventory`
+        Formatted policy violation aggregate consumed by the public assertions.
 """
 
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import NamedTuple
 
@@ -33,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _FORBIDDEN_MARKERS = frozenset({"skip", "skipif", "xfail"})
 _FORBIDDEN_CALL_NAMES = frozenset({"importorskip", "skip", "xfail"})
 _FORBIDDEN_CALLS = frozenset({f"pytest.{name}" for name in _FORBIDDEN_CALL_NAMES})
-_FORBIDDEN_EXCEPTIONS = frozenset({"SkipTest", "unittest.SkipTest"})
+_FORBIDDEN_EXCEPTIONS = frozenset({"SkipTest", "unittest.SkipTest", "unittest.case.SkipTest"})
 _LIVE_EXECUTION_MARKER = "aeat_live"
 _UNIT_EXECUTION_MARKER = "unit"
 _LIVE_GATE_SUPPORT_RELATIVE = "src/aeat/tests/live_gate.py"
@@ -52,6 +68,7 @@ class _SkipAliasInventory(NamedTuple):
     pytest_mark_aliases: set[str]
     pytest_shortcut_aliases: dict[str, str]
     unittest_aliases: set[str]
+    unittest_case_aliases: set[str]
     skiptest_aliases: dict[str, str]
 
 
@@ -97,6 +114,7 @@ def _skip_inventory_sites(tree: ast.AST) -> _SkipInventorySites:
             exception_name = _canonical_skiptest_exception_name(
                 qualified_name(exception_expr),
                 aliases.unittest_aliases,
+                aliases.unittest_case_aliases,
                 aliases.skiptest_aliases,
             )
             if exception_name in _FORBIDDEN_EXCEPTIONS:
@@ -265,6 +283,7 @@ def _skip_alias_inventory(tree: ast.AST) -> _SkipAliasInventory:
     pytest_mark_aliases: set[str] = set()
     pytest_shortcut_aliases: dict[str, str] = {}
     unittest_aliases = {"unittest"}
+    unittest_case_aliases: set[str] = set()
     skiptest_aliases: dict[str, str] = {}
 
     for node in ast.walk(tree):
@@ -274,29 +293,141 @@ def _skip_alias_inventory(tree: ast.AST) -> _SkipAliasInventory:
                     pytest_aliases.add(alias.asname or alias.name)
                 elif alias.name == "unittest":
                     unittest_aliases.add(alias.asname or alias.name)
+                elif alias.name == "unittest.case":
+                    unittest_case_aliases.add(alias.asname or alias.name)
         elif isinstance(node, ast.ImportFrom) and node.module == "pytest":
             for alias in node.names:
                 if alias.name == "mark":
                     pytest_mark_aliases.add(alias.asname or alias.name)
                 elif alias.name in _FORBIDDEN_CALL_NAMES:
                     pytest_shortcut_aliases[alias.asname or alias.name] = f"pytest.{alias.name}"
-        elif isinstance(node, ast.ImportFrom) and node.module == "unittest":
+        elif isinstance(node, ast.ImportFrom) and node.module in {"unittest", "unittest.case"}:
             for alias in node.names:
                 if alias.name == "SkipTest":
                     skiptest_aliases[alias.asname or alias.name] = "SkipTest"
+                elif node.module == "unittest" and alias.name == "case":
+                    unittest_case_aliases.add(alias.asname or alias.name)
+        _add_pytest_assignment_aliases(node, pytest_aliases, pytest_mark_aliases, pytest_shortcut_aliases)
+        _add_unittest_assignment_aliases(node, unittest_aliases, unittest_case_aliases)
+        _add_skiptest_assignment_aliases(node, unittest_aliases, unittest_case_aliases, skiptest_aliases)
 
     return _SkipAliasInventory(
         pytest_aliases=pytest_aliases,
         pytest_mark_aliases=pytest_mark_aliases,
         pytest_shortcut_aliases=pytest_shortcut_aliases,
         unittest_aliases=unittest_aliases,
+        unittest_case_aliases=unittest_case_aliases,
         skiptest_aliases=skiptest_aliases,
     )
+
+
+def _add_pytest_assignment_aliases(
+    node: ast.AST,
+    pytest_aliases: set[str],
+    pytest_mark_aliases: set[str],
+    pytest_shortcut_aliases: dict[str, str],
+) -> None:
+    """Record aliases assigned from pytest, pytest.mark, or skip/xfail shortcut helpers."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign) and node.value is not None:
+        targets = [node.target]
+        value = node.value
+    else:
+        return
+    value_name = qualified_name(value)
+    target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
+    if not target_names:
+        return
+    if value_name in pytest_aliases:
+        pytest_aliases.update(target_names)
+        return
+    if _is_pytest_mark_alias_value(value_name, pytest_aliases, pytest_mark_aliases):
+        pytest_mark_aliases.update(target_names)
+    shortcut_name = _canonical_pytest_call_name(value_name, pytest_aliases, pytest_shortcut_aliases)
+    if shortcut_name in _FORBIDDEN_CALLS:
+        pytest_shortcut_aliases.update({target_name: shortcut_name for target_name in target_names})
+
+
+def _is_pytest_mark_alias_value(
+    value_name: str,
+    pytest_aliases: set[str],
+    pytest_mark_aliases: set[str],
+) -> bool:
+    """Return True when an expression resolves to pytest.mark."""
+    if value_name in pytest_mark_aliases:
+        return True
+    return any(value_name == f"{alias}.mark" for alias in pytest_aliases)
+
+
+def _add_unittest_assignment_aliases(
+    node: ast.AST,
+    unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
+) -> None:
+    """Record aliases assigned from unittest or unittest.case modules."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign) and node.value is not None:
+        targets = [node.target]
+        value = node.value
+    else:
+        return
+    target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
+    if not target_names:
+        return
+    value_name = qualified_name(value)
+    if value_name in unittest_aliases:
+        unittest_aliases.update(target_names)
+    elif _is_unittest_case_alias_value(value_name, unittest_aliases, unittest_case_aliases):
+        unittest_case_aliases.update(target_names)
+
+
+def _is_unittest_case_alias_value(
+    value_name: str,
+    unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
+) -> bool:
+    """Return True when an expression resolves to unittest.case."""
+    if value_name in unittest_case_aliases:
+        return True
+    return any(value_name == f"{alias}.case" for alias in unittest_aliases)
+
+
+def _add_skiptest_assignment_aliases(
+    node: ast.AST,
+    unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
+    skiptest_aliases: dict[str, str],
+) -> None:
+    """Record aliases assigned from unittest SkipTest spellings."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign) and node.value is not None:
+        targets = [node.target]
+        value = node.value
+    else:
+        return
+    target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
+    if not target_names:
+        return
+    exception_name = _canonical_skiptest_exception_name(
+        qualified_name(value),
+        unittest_aliases,
+        unittest_case_aliases,
+        skiptest_aliases,
+    )
+    if exception_name in _FORBIDDEN_EXCEPTIONS:
+        skiptest_aliases.update({target_name: exception_name for target_name in target_names})
 
 
 def _canonical_skiptest_exception_name(
     exception_name: str,
     unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
     skiptest_aliases: dict[str, str],
 ) -> str:
     """Return canonical SkipTest exception names for unittest aliases."""
@@ -306,6 +437,11 @@ def _canonical_skiptest_exception_name(
     for alias in unittest_aliases:
         if exception_name == f"{alias}.SkipTest":
             return "unittest.SkipTest"
+        if exception_name == f"{alias}.case.SkipTest":
+            return "unittest.case.SkipTest"
+    for alias in unittest_case_aliases:
+        if exception_name == f"{alias}.SkipTest":
+            return "unittest.case.SkipTest"
     return exception_name
 
 
@@ -327,6 +463,23 @@ def _canonical_pytest_call_name(
     return call_name
 
 
+def _pytestmark_assignment_value(node: ast.stmt) -> ast.expr | None:
+    """Return the value assigned to module-level pytestmark, if any."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign):
+        targets = [node.target]
+        value = node.value
+    else:
+        return None
+    if value is None:
+        return None
+    if any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in targets):
+        return value
+    return None
+
+
 def _module_execution_markers(tree: ast.AST, aliases: _SkipAliasInventory | None = None) -> set[str]:
     """Return module-level execution markers from a ``pytestmark = [...]`` assignment."""
     if aliases is None:
@@ -334,11 +487,10 @@ def _module_execution_markers(tree: ast.AST, aliases: _SkipAliasInventory | None
     markers: set[str] = set()
     body = tree.body if isinstance(tree, ast.Module) else ()
     for node in body:
-        if not isinstance(node, ast.Assign):
+        value = _pytestmark_assignment_value(node)
+        if value is None:
             continue
-        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets):
-            continue
-        values: list[ast.expr] = list(node.value.elts) if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
+        values: list[ast.expr] = list(value.elts) if isinstance(value, ast.List | ast.Tuple) else [value]
         for value in values:
             marker = _execution_marker_name(value, aliases.pytest_aliases, aliases.pytest_mark_aliases)
             if marker is not None:
@@ -384,27 +536,61 @@ def _unit_live_marker_intersections(tree: ast.AST) -> list[tuple[int, str]]:
     return _skip_inventory_sites(tree).unit_live_intersections
 
 
-@pytest.fixture(scope="module")
-def skip_policy_inventory() -> _SkipPolicyInventory:
-    """Return skip/xfail and unit/live policy violations for test controls."""
+def _skip_policy_inventory_for_module_trees(
+    module_trees: Iterable[tuple[str, ast.AST]],
+    *,
+    test_module_relatives: frozenset[str] | None = None,
+) -> _SkipPolicyInventory:
+    """Return formatted skip policy violations for already parsed modules."""
+    test_modules = test_module_relatives or frozenset()
     shortcut_violations: list[str] = []
     unit_live_violations: list[str] = []
-    test_modules = frozenset(discover_test_modules())
-    for module_path in discover_test_control_modules():
-        relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
-        if tree is None:
-            continue
+
+    for relative, tree in module_trees:
         inventory = _skip_inventory_sites(tree)
         sites = _filter_forbidden_marker_sites_for_relative(relative, tree, inventory.forbidden_sites)
         for lineno, marker_or_call_name in sites:
             shortcut_violations.append(f"{relative}:{lineno}: {marker_or_call_name}")
-        if module_path in test_modules:
+        if relative in test_modules:
             for lineno, item_name in inventory.unit_live_intersections:
                 unit_live_violations.append(f"{relative}:{lineno}: {item_name}")
+
     return _SkipPolicyInventory(
         shortcut_violations=shortcut_violations,
         unit_live_violations=unit_live_violations,
+    )
+
+
+def _skip_policy_inventory_for_source(
+    relative_path: str,
+    source: str,
+    *,
+    is_test_module: bool = False,
+) -> _SkipPolicyInventory:
+    """Return policy violations for one in-memory source module."""
+    tree = ast.parse(source, filename=relative_path)
+    test_modules = frozenset({relative_path}) if is_test_module else None
+    return _skip_policy_inventory_for_module_trees(((relative_path, tree),), test_module_relatives=test_modules)
+
+
+def _shortcut_violation_name_counts(violations: Iterable[str]) -> Counter[str]:
+    """Return canonical violation names from formatted policy messages."""
+    return Counter(violation.rsplit(": ", maxsplit=1)[-1] for violation in violations)
+
+
+@pytest.fixture(scope="module")
+def skip_policy_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _SkipPolicyInventory:
+    """Return skip/xfail and unit/live policy violations for test controls."""
+    module_trees: list[tuple[str, ast.AST]] = []
+    for module_path in discover_test_control_modules():
+        relative = repo_relative(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
+        if tree is None:
+            continue
+        module_trees.append((relative, tree))
+    return _skip_policy_inventory_for_module_trees(
+        module_trees,
+        test_module_relatives=frozenset(repo_relative(path) for path in discover_test_modules()),
     )
 
 
@@ -418,98 +604,142 @@ def test_no_skip_or_xfail_shortcuts(skip_policy_inventory: _SkipPolicyInventory)
     )
 
 
-def test_skip_detector_rejects_import_time_pytest_skip() -> None:
-    """Import-time dependency skips must not bypass deterministic collection."""
-    tree = ast.parse(
-        f"""
+@pytest.mark.parametrize(
+    ("source", "expected_violations"),
+    (
+        pytest.param(
+            """
 import pytest
 
-{_pytest_name("importorskip")}("optional_dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("importorskip"))]
-
-
-def test_skip_detector_rejects_module_level_pytestmark_skip() -> None:
-    """Module-level pytestmark skips must not bypass decorator detection."""
-    tree = ast.parse(
-        f"""
+pytest.importorskip("optional_dependency")
+""",
+            Counter({"pytest.importorskip": 1}),
+            id="import-time-pytest-skip",
+        ),
+        pytest.param(
+            """
 import pytest
 
-pytestmark = [{_pytest_name("mark", "skip")}]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skip"))]
-
-
-def test_skip_detector_rejects_param_level_skip_or_xfail_marks() -> None:
-    """Parametrized case marks are still deterministic skip / xfail shortcuts."""
-    tree = ast.parse(
-        f"""
+pytestmark = [pytest.mark.skip]
+""",
+            Counter({"pytest.mark.skip": 1}),
+            id="module-pytestmark-skip",
+        ),
+        pytest.param(
+            """
 import pytest
 
 CASES = [
-    pytest.param("skip-case", marks={_pytest_name("mark", "skip")}(reason="shortcut")),
-    pytest.param("xfail-case", marks={_pytest_name("mark", "xfail")}(reason="shortcut")),
+    pytest.param("skip-case", marks=pytest.mark.skip(reason="shortcut")),
+    pytest.param("xfail-case", marks=pytest.mark.xfail(reason="shortcut")),
 ]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [
-        (5, _pytest_name("mark", "skip")),
-        (6, _pytest_name("mark", "xfail")),
-    ]
-
-
-def test_skip_detector_rejects_pytest_module_alias_shortcuts() -> None:
-    """Aliasing pytest must not hide skip / xfail shortcuts."""
-    tree = ast.parse(
-        f"""
+""",
+            Counter({"pytest.mark.skip": 1, "pytest.mark.xfail": 1}),
+            id="param-level-skip-xfail-marks",
+        ),
+        pytest.param(
+            """
 import pytest as pt
 
 def test_alias_shortcut():
-    pt.{"skip"}("shortcut")
+    pt.skip("shortcut")
 
-pytestmark = [pt.mark.{"xfail"}]
-"""
-    )
+pytestmark = [pt.mark.xfail]
+""",
+            Counter({"pytest.skip": 1, "pytest.mark.xfail": 1}),
+            id="pytest-module-alias",
+        ),
+        pytest.param(
+            """
+import pytest
 
-    assert _forbidden_marker_sites(tree) == [(5, _pytest_name("skip")), (7, _pytest_name("mark", "xfail"))]
+pt = pytest
+pt2: object = pt
 
+def test_alias_shortcut():
+    pt2.skip("shortcut")
 
-def test_skip_detector_rejects_pytest_imported_shortcut_aliases() -> None:
-    """Directly imported pytest shortcuts must not bypass dotted-name detection."""
-    tree = ast.parse(
-        f"""
-from pytest import importorskip, {"skip"} as pytest_skip
+pytestmark = [pt2.mark.xfail]
+""",
+            Counter({"pytest.skip": 1, "pytest.mark.xfail": 1}),
+            id="assigned-pytest-module",
+        ),
+        pytest.param(
+            """
+import pytest as pt
+
+pytest_mark = pt.mark
+skip_now = pt.skip
+xfail_now = pt.xfail
+
+pytestmark = [pytest_mark.skipif(True)]
+
+def test_shortcut_aliases():
+    skip_now("shortcut")
+    xfail_now("shortcut")
+""",
+            Counter({"pytest.mark.skipif": 1, "pytest.skip": 1, "pytest.xfail": 1}),
+            id="assigned-pytest-mark-and-shortcuts",
+        ),
+        pytest.param(
+            """
+import unittest
+import unittest.case as unittest_case
+
+UnitSkip = unittest.SkipTest
+CaseSkip = unittest_case.SkipTest
+DirectSkip = UnitSkip
+
+def test_unit_alias_raise():
+    raise UnitSkip("missing dependency")
+
+def test_case_alias_raise():
+    raise CaseSkip("missing dependency")
+
+def test_transitive_alias_raise():
+    raise DirectSkip("missing dependency")
+""",
+            Counter({"unittest.SkipTest": 2, "unittest.case.SkipTest": 1}),
+            id="assigned-unittest-skiptest",
+        ),
+        pytest.param(
+            """
+import unittest
+
+unit = unittest
+case_mod = unit.case
+case_mod2: object = case_mod
+
+def test_unit_module_alias_raise():
+    raise unit.SkipTest("missing dependency")
+
+def test_case_module_alias_raise():
+    raise case_mod2.SkipTest("missing dependency")
+""",
+            Counter({"unittest.SkipTest": 1, "unittest.case.SkipTest": 1}),
+            id="assigned-unittest-module",
+        ),
+        pytest.param(
+            """
+from pytest import importorskip, skip as pytest_skip
 
 pytest_skip("shortcut")
 importorskip("optional_dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("skip")), (5, _pytest_name("importorskip"))]
-
-
-def test_skip_detector_rejects_imported_pytest_mark_aliases() -> None:
-    """Imported pytest.mark aliases must still reject skip and xfail marks."""
-    tree = ast.parse(
-        f"""
+""",
+            Counter({"pytest.skip": 1, "pytest.importorskip": 1}),
+            id="imported-pytest-shortcut-aliases",
+        ),
+        pytest.param(
+            """
 from pytest import mark as pytest_mark
 
-pytestmark = [pytest_mark.{"skipif"}(True)]
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(4, _pytest_name("mark", "skipif"))]
-
-
-def test_skip_detector_rejects_unittest_skiptest_raises() -> None:
-    """SkipTest raises must not bypass the pytest skip shortcut guard."""
-    tree = ast.parse(
-        """
+pytestmark = [pytest_mark.skipif(True)]
+""",
+            Counter({"pytest.mark.skipif": 1}),
+            id="imported-pytest-mark-alias",
+        ),
+        pytest.param(
+            """
 import unittest
 from unittest import SkipTest
 
@@ -518,16 +748,12 @@ def test_direct_skiptest_raise():
 
 def test_qualified_skiptest_raise():
     raise unittest.SkipTest("missing dependency")
-"""
-    )
-
-    assert _forbidden_marker_sites(tree) == [(6, "SkipTest"), (9, "unittest.SkipTest")]
-
-
-def test_skip_detector_rejects_aliased_unittest_skiptest_raises() -> None:
-    """Aliased unittest.SkipTest raises are still deterministic skips."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"SkipTest": 1, "unittest.SkipTest": 1}),
+            id="unittest-skiptest-raises",
+        ),
+        pytest.param(
+            """
 import unittest as unit_test
 from unittest import SkipTest as UnitSkip
 
@@ -536,65 +762,92 @@ def test_direct_skiptest_alias_raise():
 
 def test_qualified_skiptest_alias_raise():
     raise unit_test.SkipTest("missing dependency")
-"""
-    )
+""",
+            Counter({"SkipTest": 1, "unittest.SkipTest": 1}),
+            id="aliased-unittest-skiptest-raises",
+        ),
+        pytest.param(
+            """
+import unittest
+import unittest.case as unittest_case
+from unittest import case as unit_case
+from unittest.case import SkipTest as CaseSkip
 
-    assert _forbidden_marker_sites(tree) == [(6, "SkipTest"), (9, "unittest.SkipTest")]
+def test_qualified_unittest_case_raise():
+    raise unittest.case.SkipTest("missing dependency")
+
+def test_imported_case_module_raise():
+    raise unittest_case.SkipTest("missing dependency")
+
+def test_imported_case_attr_raise():
+    raise unit_case.SkipTest("missing dependency")
+
+def test_direct_case_skip_alias_raise():
+    raise CaseSkip("missing dependency")
+""",
+            Counter({"unittest.case.SkipTest": 3, "SkipTest": 1}),
+            id="unittest-case-skiptest-raises",
+        ),
+    ),
+)
+def test_skip_policy_rejects_forbidden_shortcut_shapes(
+    source: str,
+    expected_violations: Counter[str],
+) -> None:
+    """Skip, xfail, and SkipTest shortcuts must fail through the real policy path."""
+    inventory = _skip_policy_inventory_for_source("dev/tests/test_forbidden_skip_shapes.py", source)
+
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == expected_violations
 
 
 def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
     """Support-file skips are allowed only in the central live-gate helper functions."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 def requires_live_enabled():
-    {_pytest_name("skip")}("live only")
+    pytest.skip("live only")
 
 def requires_live_google_enabled():
-    {_pytest_name("skip")}("google live only")
+    pytest.skip("google live only")
 
 def rogue_helper():
-    {_pytest_name("skip")}("shortcut")
+    pytest.skip("shortcut")
 """
-    )
+    inventory = _skip_policy_inventory_for_source(_LIVE_GATE_SUPPORT_RELATIVE, source)
 
-    assert _forbidden_marker_sites_for_relative(_LIVE_GATE_SUPPORT_RELATIVE, tree) == [(11, _pytest_name("skip"))]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
 
 
 def test_skip_detector_rejects_live_module_local_skip() -> None:
     """Live test modules are marker-gated; selected live tests must not self-skip."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 pytestmark = [pytest.mark.aeat_live]
 
 def test_live_service():
-    {_pytest_name("skip")}("service unavailable")
+    pytest.skip("service unavailable")
 """
-    )
+    inventory = _skip_policy_inventory_for_source("src/aeat/application/live/tests/test_service_live.py", source)
 
-    assert _forbidden_marker_sites(tree) == [(7, _pytest_name("skip"))]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
 
 
 def test_skip_detector_allows_only_collection_live_skip_marker() -> None:
     """The collection hook may mark aeat_live items skipped; other support skips fail."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 def pytest_collection_modifyitems(config, items):
-    skip_marker = {_pytest_name("mark", "skip")}(reason="live disabled")
+    skip_marker = pytest.mark.skip(reason="live disabled")
 
 def rogue_helper():
-    pytestmark = [{_pytest_name("mark", "skip")}]
+    pytestmark = [pytest.mark.skip]
 """
-    )
+    inventory = _skip_policy_inventory_for_source(_LIVE_CONFTST_RELATIVE, source)
 
-    assert _forbidden_marker_sites_for_relative(_LIVE_CONFTST_RELATIVE, tree) == [
-        (8, _pytest_name("mark", "skip")),
-    ]
+    assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.mark.skip": 1})
 
 
 def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInventory) -> None:
@@ -606,8 +859,7 @@ def test_unit_tests_are_not_live_gated(skip_policy_inventory: _SkipPolicyInvento
 
 def test_unit_live_detector_rejects_pytest_alias_execution_markers() -> None:
     """Aliased pytest execution markers must not hide unit/live intersections."""
-    tree = ast.parse(
-        """
+    source = """
 import pytest as pt
 
 pytestmark = [pt.mark.unit]
@@ -616,9 +868,49 @@ pytestmark = [pt.mark.unit]
 def test_live_unit():
     pass
 """
+    inventory = _skip_policy_inventory_for_source("dev/tests/test_live_unit.py", source, is_test_module=True)
+
+    assert _shortcut_violation_name_counts(inventory.unit_live_violations) == Counter({"test_live_unit": 1})
+
+
+def test_unit_live_detector_rejects_annotated_and_augmented_pytestmark() -> None:
+    """Annotated and augmented pytestmark assignments are still module markers."""
+    annotated_source = """
+import pytest as pt
+
+pytestmark: list[object] = [pt.mark.unit]
+
+@pt.mark.aeat_live
+def test_annotated_live_unit():
+    pass
+"""
+    augmented_source = """
+import pytest as pt
+
+pytestmark = []
+pytestmark += [pt.mark.unit]
+
+@pt.mark.aeat_live
+def test_augmented_live_unit():
+    pass
+"""
+    annotated_inventory = _skip_policy_inventory_for_source(
+        "dev/tests/test_annotated_live_unit.py",
+        annotated_source,
+        is_test_module=True,
+    )
+    augmented_inventory = _skip_policy_inventory_for_source(
+        "dev/tests/test_augmented_live_unit.py",
+        augmented_source,
+        is_test_module=True,
     )
 
-    assert _unit_live_marker_intersections(tree) == [(7, "test_live_unit")]
+    assert _shortcut_violation_name_counts(annotated_inventory.unit_live_violations) == Counter(
+        {"test_annotated_live_unit": 1}
+    )
+    assert _shortcut_violation_name_counts(augmented_inventory.unit_live_violations) == Counter(
+        {"test_augmented_live_unit": 1}
+    )
 
 
 def test_project_tests_outside_source_tree_do_not_skip() -> None:
@@ -636,27 +928,25 @@ def test_project_tests_outside_source_tree_do_not_skip() -> None:
 
 def test_unit_skip_detector_ignores_integration_only_skip_sites() -> None:
     """An integration-only skip in a mixed module is not selected by ``-m unit``."""
-    tree = ast.parse(
-        f"""
+    source = """
 import pytest
 
 @pytest.mark.integration
 def test_live_service():
-    {_pytest_name("skip")}("service unavailable")
+    pytest.skip("service unavailable")
 
 @pytest.mark.unit
 def test_unit_contract():
     assert compute() == 1
 """
-    )
+    tree = ast.parse(source)
 
     assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_mixed.py", tree) == []
 
 
 def test_unit_skip_detector_rejects_module_level_skip_when_unit_item_exists() -> None:
     """Import-time skips affect unit items even when the module marker is per-test."""
-    tree = ast.parse(
-        """
+    source = """
 import pytest
 
 pytest.importorskip("optional_dependency")
@@ -665,26 +955,27 @@ pytest.importorskip("optional_dependency")
 def test_unit_contract():
     assert compute() == 1
 """
-    )
+    tree = ast.parse(source)
 
-    assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree) == [
-        (4, "pytest.importorskip"),
-    ]
+    assert Counter(name for _, name in _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree)) == (
+        Counter({"pytest.importorskip": 1})
+    )
 
 
 def test_unit_skip_detector_rejects_imported_mark_alias_unit_context() -> None:
     """Imported pytest.mark aliases must still mark unit-selected skip sites."""
-    tree = ast.parse(
-        """
+    source = """
 from pytest import mark as pytest_mark
 
 @pytest_mark.unit
 def test_unit_contract():
     pytest.skip("service unavailable")
 """
-    )
+    tree = ast.parse(source)
 
-    assert _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree) == [(6, "pytest.skip")]
+    assert Counter(name for _, name in _forbidden_unit_marker_sites_for_relative("dev/tests/test_unit.py", tree)) == (
+        Counter({"pytest.skip": 1})
+    )
 
 
 def test_discovery_found_modules() -> None:

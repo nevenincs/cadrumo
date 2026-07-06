@@ -1,4 +1,17 @@
-"""Real-runtime export tests for Modelo 145 local communication records."""
+"""Real-runtime export tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo._m145_communication_records`
+        Backend service that validates and renders the local record.
+    :func:`~application.modelo.export_m145_communication_record`
+        Public facade export function exercised by these tests.
+    :class:`~application.modelo.M145CommunicationExportResult`
+        Export result DTO carrying payload bytes and source refs.
+    :class:`~domain.calculations.registry.ResolvedExportLayout`
+        Registry-resolved fixed-width layout used to assert byte slices.
+    :class:`~domain.calculations.registry.ExportFieldDefinition`
+        Field metadata that anchors offsets, lengths, and padding behavior.
+"""
 
 from __future__ import annotations
 

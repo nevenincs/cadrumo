@@ -5,6 +5,24 @@ ingresos a cuenta) approved by Orden EHA/3290/2008 (BOE-A-2008-18497), with the
 current form layout carried by Orden HAC/56/2024. The trimestral filing plazo is
 grounded in Orden EHA/3290/2008 art 4: the first twenty natural days of April,
 July, October and January for the immediately preceding natural quarter.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for the committed registry definition and legal catalogue.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :func:`~domain.calculations.registry._authority.bundled_authority`
+        Authority facade used to resolve the trimestral deadline windows.
+    :func:`~domain.calculations.registry._snapshot.build_snapshot`
+        Snapshot builder feeding the Modelo 216 formula runtime proof.
+    :func:`~domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
+        Formula evaluator used to verify the retained-total arithmetic.
+    :class:`~domain.calculations.registry._ids.CasillaId`
+        Typed casilla identifier used for the Modelo 216 calculation inputs.
+    :class:`~core.TaxDomain`
+        Closed tax-family enum whose IRNR member classifies the registration.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Former recognized-unmodeled set reduced by the Modelo 216 promotion.
 """
 
 from __future__ import annotations

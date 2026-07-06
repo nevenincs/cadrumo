@@ -40,6 +40,14 @@ from ...domain.prorrata_register import (
     ProrrataRegisterEntry,
     resolve_provisional_percentage,
 )
+from ._seed import (
+    ProrrataPriorDefinitivaSeed,
+    ProrrataPriorDefinitivaSeedEvaluation,
+    ProrrataSeedFinding,
+    cross_check_prorrata_entry_against_prior_observation,
+    evaluate_carried_prior_definitiva_seed,
+    seed_carried_prior_definitiva_entry,
+)
 
 
 class ProrrataRegisterService:
@@ -177,9 +185,15 @@ class ProrrataRegisterService:
 
 
 __all__ = [
+    "ProrrataPriorDefinitivaSeed",
+    "ProrrataPriorDefinitivaSeedEvaluation",
     "ProrrataProvisionalResolution",
     "ProrrataRegister",
     "ProrrataRegisterEntry",
     "ProrrataRegisterRepository",
     "ProrrataRegisterService",
+    "ProrrataSeedFinding",
+    "cross_check_prorrata_entry_against_prior_observation",
+    "evaluate_carried_prior_definitiva_seed",
+    "seed_carried_prior_definitiva_entry",
 ]
