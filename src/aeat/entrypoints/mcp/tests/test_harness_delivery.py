@@ -90,8 +90,8 @@ def test_floor_text_embeds_both_the_rules_and_the_active_persona() -> None:
 
 
 def test_floor_payload_carries_the_off_host_consent_disclosure() -> None:
-    # ADR R9: the off-host privacy disclosure rides on every floor load, for
-    # every persona (and the un-personified session), so it can never be skipped.
+    # The off-host privacy disclosure rides on every floor load, for every
+    # persona and the un-personified session, so it can never be skipped.
     from .._harness_tools import off_host_consent_text
 
     for persona in (None, AgentPersona.VERIFIER, AgentPersona.MODELO_PREPARER):
