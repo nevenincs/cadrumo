@@ -1,4 +1,19 @@
-"""Tests for committed Modelo 117/126/128/136 registry foundations."""
+"""Tests for committed Modelo 117/126/128/136 registry foundations.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Bundled-registry loader used to validate the promoted definitions.
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_snapshot`
+        Snapshot fixture used for committed-form arithmetic tests.
+    :class:`~domain.calculations.registry.RegistryValidator`
+        Registry integrity gate proving each promoted TOML tree is loadable.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Formula runtime entry point used for official form arithmetic.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision carrier whose construct-owned formulas are asserted.
+    :class:`~domain.calculations.registry.CasillaId`
+        Typed casilla identifier used for arithmetic inputs and expectations.
+"""
 
 from __future__ import annotations
 
