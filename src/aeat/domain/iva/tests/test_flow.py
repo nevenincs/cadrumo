@@ -1,4 +1,27 @@
-"""Tests for the IvaFlowDirection codification."""
+"""Tests for the IVA flow-direction and settlement-side codification.
+
+The suite pins :class:`~domain.iva.IvaFlowDirection`,
+:class:`~domain.iva.IvaSettlementSide`,
+:func:`~domain.iva.derive_flow_for_classification`, and the Modelo 303
+devengada binding formula against the LIVA-backed flow taxonomy. It verifies
+that repercutido, soportado, and inversión del sujeto pasivo stay aligned across
+the domain substrate, registry legal excerpts, and modelo aggregation bindings.
+
+See Also:
+    :mod:`~domain.iva._flow`
+        Flow-direction enum, settlement-side mapping, and canonical predicates
+        under test.
+    :mod:`~application.aggregation._iva_ledger`
+        Ledger aggregation consumer that recomputes effective IVA flow for
+        modelo observations.
+    :mod:`~domain.calculations.registry._bindings`
+        Registry binding resolver layer that consumes typed IVA aggregation
+        dimensions.
+    Governing vault records
+        ``2026-05-20-calculation-source-connectivity-adr`` identifies the IVA
+        flow axis as part of the calculation substrate; the silent-zero-base
+        aggregation audit records the M303 flow-direction binding checks.
+"""
 
 from __future__ import annotations
 
