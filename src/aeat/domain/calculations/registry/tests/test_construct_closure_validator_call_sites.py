@@ -1,4 +1,20 @@
-"""Construct closure evidence validation."""
+"""Construct closure evidence validation.
+
+The modelo validator must route
+:class:`~domain.calculations.registry.ConstructDefinition` rows through the
+same official-source evidence gate as the revision-closure dispatcher, so a
+layout-only source cannot make a construct filing-grade.
+
+See Also:
+    :func:`~domain.calculations.registry._validate_constructs.validate_construct_closure`
+        Construct grounding gate exercised through the public validator.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Modelo-level validator whose call path this regression pins.
+    ``2026-05-04-calculation-authority-evidence-tiering-adr``
+        Decision that separates official source guidance from layout authority.
+    ``2026-05-15-catalogue-validation-audit``
+        Audit trail for construct source-ref closure validation.
+"""
 
 from __future__ import annotations
 
