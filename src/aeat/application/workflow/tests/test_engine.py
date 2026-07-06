@@ -19,11 +19,12 @@ Playwright walkers without falsifying their record shape.
 
 from __future__ import annotations
 
-import ast
+import inspect
 from datetime import date
-from pathlib import Path
 
 import pytest
+
+import aeat.application.workflow._engine as engine_module
 
 from ....core.errors import (
     ErrorCategory,
@@ -49,15 +50,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
-    tree = ast.parse((Path(__file__).parents[1] / "_engine.py").read_text(encoding="utf-8"))
-    forbidden: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith(("aeat.adapters.outbound.aeat", "adapters.outbound.aeat")):
-                forbidden.append(node.module)
-        elif isinstance(node, ast.Import):
-            forbidden.extend(alias.name for alias in node.names if alias.name.startswith("aeat.adapters.outbound.aeat"))
-    assert forbidden == []
+    bound_outbound_modules = {
+        name: value.__name__
+        for name, value in vars(engine_module).items()
+        if inspect.ismodule(value) and value.__name__.startswith("aeat.adapters.outbound.aeat")
+    }
+
+    assert bound_outbound_modules == {}
 
 
 # ── Happy path ─────────────────────────────────────────────────────────
