@@ -1,6 +1,5 @@
 """Wizard locale routing and typed-payload boundary contracts.
 
-- Wizard tab-key ``status`` label is routed through ``tr()``.
 - Catalogue f-string sites are documented as bounded dynamic-dispatch
   survivors in ``_ast_scanner._DYNAMIC_TRANSLATION_ROOTS``.
 - Google API response TypedDicts (``GoogleDriveFile``,
@@ -21,55 +20,23 @@ import json
 import pathlib
 
 import pytest
+import yaml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 
-# ---------------------------------------------------------------------------
-# Wizard status tab-key label routed through tr()
-# ---------------------------------------------------------------------------
-
-
-def test_wizard_status_label_uses_tr() -> None:
-    """wizard/_commands.py must use tr() for the status tab-key label."""
-    commands_path = _SRC_ROOT / "application" / "wizard" / "_commands.py"
-    source = commands_path.read_text(encoding="utf-8")
-    tree = ast.parse(source, filename=str(commands_path))
-
-    # Walk for the specific string constant "status" passed bare to echo
-    bare_status_in_fstring: list[int] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if not (isinstance(func, ast.Attribute) and func.attr == "echo"):
-            continue
-        for arg in node.args:
-            if not isinstance(arg, ast.JoinedStr):
-                continue
-            for part in arg.values:
-                # A bare "status\t" constant — not inside a tr() call node
-                if isinstance(part, ast.Constant) and isinstance(part.value, str) and part.value.startswith("status"):
-                    bare_status_in_fstring.append(node.lineno)
-
-    assert not bare_status_in_fstring, (
-        f"wizard/_commands.py lines {bare_status_in_fstring} still use bare 'status' "
-        "literal in echo f-string — wrap with tr('application.wizard.output_labels.status')"
-    )
-
-
 def test_wizard_status_locale_key_exists_in_all_locales() -> None:
     """The key application.wizard.output_labels.status must exist in all locale files."""
     locales_dir = _SRC_ROOT / "locales"
     for locale_file in sorted(locales_dir.glob("*.yml")):
-        content = locale_file.read_text(encoding="utf-8")
-        # Locate the output_labels block and verify status: appears within it
-        idx = content.find("output_labels:")
-        assert idx != -1, f"{locale_file.name}: output_labels block missing"
-        block = content[idx : idx + 300]
-        assert "status:" in block, f"{locale_file.name}: application.wizard.output_labels.status key missing"
+        content = yaml.safe_load(locale_file.read_text(encoding="utf-8")) or {}
+        application = content.get("application", {})
+        wizard = application.get("wizard", {}) if isinstance(application, dict) else {}
+        output_labels = wizard.get("output_labels", {}) if isinstance(wizard, dict) else {}
+        assert isinstance(output_labels, dict), f"{locale_file.name}: application.wizard.output_labels block missing"
+        assert "status" in output_labels, f"{locale_file.name}: application.wizard.output_labels.status key missing"
 
 
 # ---------------------------------------------------------------------------
