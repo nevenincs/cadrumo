@@ -44,6 +44,7 @@ _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
 _SETTLEMENT_PERIODS: Final[tuple[str, ...]] = ("4T", "0A")
 _SETTLEMENT_PERIOD_ORDER: Final[dict[str, int]] = {period: index for index, period in enumerate(_SETTLEMENT_PERIODS)}
 _MISSING_LEGACY_REVISION_STAMP = "missing_legacy_revision_stamp"
+_REGULATED_OVERRIDE_DIFFERENCE = "regulated_prorrata_override_difference"
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,7 +61,7 @@ class ProrrataPriorDefinitivaSeed:
 
 @dataclass(frozen=True, slots=True)
 class ProrrataSeedFinding:
-    """Operator-visible seed blocker or advisory."""
+    """Operator-visible seed/cross-check blocker or advisory."""
 
     code: str
     blocking: bool
@@ -191,6 +192,64 @@ def seed_carried_prior_definitiva_entry(
     ).seed
 
 
+def cross_check_prorrata_entry_against_prior_observation(
+    entry: ProrrataRegisterEntry,
+    *,
+    observation_repository: CalculationObservationRepository | None = None,
+) -> tuple[ProrrataSeedFinding, ...]:
+    """Cross-check a register entry against the prior definitive observation.
+
+    A carried-prior-definitive entry must match the prior Modelo 303 settlement
+    observation because art. 105.Uno is the normal carry rule. AEAT-authorised
+    and inicio-de-actividades entries are regulated alternatives: when they
+    differ from the prior definitive, the difference is surfaced as a
+    non-blocking notice that names the provenance rather than being silenced.
+    """
+    if entry.provisional_percentage is None or entry.provisional_provenance is None:
+        return ()
+
+    evaluation = evaluate_carried_prior_definitiva_seed(
+        ejercicio=entry.ejercicio,
+        observation_repository=observation_repository,
+        sector_id=entry.sector_id,
+    )
+    seed = evaluation.seed
+    if seed is None:
+        return evaluation.findings
+
+    selected_revision_id = _selected_revision_id_from_findings(
+        evaluation.findings,
+        fallback=seed.stamped_revision_id,
+    )
+    if entry.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA:
+        contradiction_detail = _carried_entry_contradiction_detail(entry, seed.entry)
+        if contradiction_detail is None:
+            return evaluation.findings
+        return (
+            *evaluation.findings,
+            _carried_entry_contradiction_finding(
+                seed,
+                selected_revision_id=selected_revision_id,
+                detail=contradiction_detail,
+            ),
+        )
+
+    if (
+        entry.provisional_provenance
+        in {ProrrataProvisionalProvenance.AEAT_AUTORIZADA, ProrrataProvisionalProvenance.INICIO_ACTIVIDAD}
+        and entry.provisional_percentage != seed.entry.provisional_percentage
+    ):
+        return (
+            *evaluation.findings,
+            _regulated_override_difference_finding(
+                entry,
+                seed,
+                selected_revision_id=selected_revision_id,
+            ),
+        )
+    return evaluation.findings
+
+
 def _seed_from_source(
     *,
     ejercicio: int,
@@ -212,6 +271,81 @@ def _seed_from_source(
         source_period=source.source_period,
         source_casilla_id=_PRORRATA_PORCENTAJE_CASILLA,
         stamped_revision_id=source.stamped_revision_id,
+    )
+
+
+def _carried_entry_contradiction_detail(
+    entry: ProrrataRegisterEntry,
+    seed_entry: ProrrataRegisterEntry,
+) -> str | None:
+    details: list[str] = []
+    if entry.provisional_percentage != seed_entry.provisional_percentage:
+        details.append(
+            f"entry percentage {entry.provisional_percentage} differs from prior observation "
+            f"{seed_entry.provisional_percentage}"
+        )
+    if entry.source_observation_ref != seed_entry.source_observation_ref:
+        details.append(
+            f"entry source_observation_ref {entry.source_observation_ref!r} differs from "
+            f"prior observation {seed_entry.source_observation_ref!r}"
+        )
+    return "; ".join(details) if details else None
+
+
+def _selected_revision_id_from_findings(
+    findings: tuple[ProrrataSeedFinding, ...],
+    *,
+    fallback: str | None,
+) -> str | None:
+    for finding in findings:
+        if finding.selected_revision_id is not None:
+            return finding.selected_revision_id
+    return fallback
+
+
+def _carried_entry_contradiction_finding(
+    seed: ProrrataPriorDefinitivaSeed,
+    *,
+    selected_revision_id: str | None,
+    detail: str,
+) -> ProrrataSeedFinding:
+    return ProrrataSeedFinding(
+        code=CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE.value,
+        blocking=True,
+        message=(
+            "carried_prior_definitiva register entry contradicts the prior Modelo 303 "
+            f"settlement observation: {detail}. Reconcile the register entry with "
+            f"{seed.source_filing_year} {seed.source_period} before carrying the provisional percentage."
+        ),
+        source_modelo=seed.source_modelo,
+        source_filing_year=seed.source_filing_year,
+        source_period=seed.source_period,
+        stamped_revision_id=seed.stamped_revision_id,
+        selected_revision_id=selected_revision_id,
+    )
+
+
+def _regulated_override_difference_finding(
+    entry: ProrrataRegisterEntry,
+    seed: ProrrataPriorDefinitivaSeed,
+    *,
+    selected_revision_id: str | None,
+) -> ProrrataSeedFinding:
+    provenance = entry.provisional_provenance
+    assert provenance is not None
+    return ProrrataSeedFinding(
+        code=_REGULATED_OVERRIDE_DIFFERENCE,
+        blocking=False,
+        message=(
+            f"{provenance.value} provisional prorrata {entry.provisional_percentage} differs from "
+            f"prior definitive {seed.entry.provisional_percentage}; this is the regulated art. 105 "
+            "override case and is recorded for operator visibility."
+        ),
+        source_modelo=seed.source_modelo,
+        source_filing_year=seed.source_filing_year,
+        source_period=seed.source_period,
+        stamped_revision_id=seed.stamped_revision_id,
+        selected_revision_id=selected_revision_id,
     )
 
 
@@ -304,6 +438,7 @@ __all__ = [
     "ProrrataPriorDefinitivaSeed",
     "ProrrataPriorDefinitivaSeedEvaluation",
     "ProrrataSeedFinding",
+    "cross_check_prorrata_entry_against_prior_observation",
     "evaluate_carried_prior_definitiva_seed",
     "seed_carried_prior_definitiva_entry",
 ]
