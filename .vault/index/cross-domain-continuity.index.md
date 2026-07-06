@@ -72,6 +72,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S272]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S285]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S286]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S288]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S289]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S290]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
@@ -449,6 +450,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W05-P24-S281` - Implement Modelo 303 cash-accounting IVA axis
 - `2026-05-26-cross-domain-continuity-W05-P24-S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer
 - `2026-05-26-cross-domain-continuity-W09-P41-S251` - Resolve Cataluna 2024 autonomic tariff discrepancy
+- `2026-05-26-cross-domain-continuity-W09-P41-S288` - Close duplicate criterio de caja cash-accounting split
 
 ### plan
 
