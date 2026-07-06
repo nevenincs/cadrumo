@@ -16,8 +16,11 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import json
 import pathlib
+import subprocess
+import sys
 
 import pytest
 import yaml
@@ -239,47 +242,37 @@ def test_parse_invoice_payload_end_to_end_json() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Orphan __init__ modules carry intent documentation
+# Orphan __init__ modules remain namespace containers
 # ---------------------------------------------------------------------------
 
 
-def test_application_storage_init_has_intent_docstring() -> None:
-    """aeat.application.storage.__init__ must document its namespace-container intent."""
-    init_path = _SRC_ROOT / "application" / "storage" / "__init__.py"
-    content = init_path.read_text(encoding="utf-8")
-    assert "namespace" in content.lower(), (
-        "aeat.application.storage.__init__ is docstring-only and must document its namespace-container intent"
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "aeat.application.storage",
+        "aeat.domain.calculations",
+    ],
+)
+def test_namespace_init_modules_document_intent_without_reexports(module_name: str) -> None:
+    """Namespace package roots must document intent and expose no public aggregation API."""
+    module = importlib.import_module(module_name)
+
+    assert "namespace" in (module.__doc__ or "").lower(), (
+        f"{module_name} must document its namespace-container intent"
     )
-
-
-def test_domain_calculations_init_has_intent_docstring() -> None:
-    """aeat.domain.calculations.__init__ must document its namespace-container intent."""
-    init_path = _SRC_ROOT / "domain" / "calculations" / "__init__.py"
-    content = init_path.read_text(encoding="utf-8")
-    assert "namespace" in content.lower(), (
-        "aeat.domain.calculations.__init__ is docstring-only and must document its namespace-container intent"
+    probe = subprocess.run(  # noqa: S603 - static module list under this test's control.
+        [
+            sys.executable,
+            "-c",
+            (
+                "import importlib, json; "
+                f"module = importlib.import_module({module_name!r}); "
+                "print(json.dumps(sorted(name for name in vars(module) if not name.startswith('_'))))"
+            ),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
-
-
-def test_application_storage_init_has_no_explicit_imports() -> None:
-    """aeat.application.storage.__init__ must contain no import statements."""
-    init_path = _SRC_ROOT / "application" / "storage" / "__init__.py"
-    content = init_path.read_text(encoding="utf-8")
-    tree = ast.parse(content, filename=str(init_path))
-    import_nodes = [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
-    assert not import_nodes, (
-        f"aeat.application.storage.__init__ contains {len(import_nodes)} import statement(s) "
-        "— this is a namespace container and must not re-export anything"
-    )
-
-
-def test_domain_calculations_init_has_no_explicit_imports() -> None:
-    """aeat.domain.calculations.__init__ must contain no import statements."""
-    init_path = _SRC_ROOT / "domain" / "calculations" / "__init__.py"
-    content = init_path.read_text(encoding="utf-8")
-    tree = ast.parse(content, filename=str(init_path))
-    import_nodes = [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
-    assert not import_nodes, (
-        f"aeat.domain.calculations.__init__ contains {len(import_nodes)} import statement(s) "
-        "— this is a namespace container and must not re-export anything"
-    )
+    public_exports = json.loads(probe.stdout)
+    assert public_exports == [], f"{module_name} unexpectedly re-exports public names: {public_exports}"
