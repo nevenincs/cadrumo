@@ -4,6 +4,24 @@ The value tokens are asserted against the TRLIRNR / treaty vocabulary the
 registry stores (``tipo_renta`` casilla tokens and the override-kind tokens the
 ``treaties/`` authoring tree will carry); a drift in a stored token would be a
 boundary-hydration break, so the tests pin the exact strings.
+
+See Also:
+    :mod:`~core._irnr`
+        Core closed-axis declarations for IRNR income type and treaty override
+        semantics.
+    :class:`~core.TipoRentaIrnr`
+        Typed income-category axis hydrated from registry ``tipo_renta`` tokens.
+    :class:`~core.ConvenioOverrideKind`
+        Typed treaty override-kind axis whose ``carries_rate`` partition is
+        asserted here.
+    :class:`~domain.calculations.registry.ConvenioAuthority`
+        Cross-cutting treaty authority that consumes these enum members.
+    :func:`~domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
+        IRNR rate-resolution path that hydrates and branches on the same axes.
+    Governing vault records
+        ``2026-05-27-m210-irnr-full-engine-adr`` and
+        ``2026-06-30-convenio-doble-imposicion-adr`` ground the typed treaty
+        override framework and the Modelo 210 IRNR rate surface.
 """
 
 from __future__ import annotations
