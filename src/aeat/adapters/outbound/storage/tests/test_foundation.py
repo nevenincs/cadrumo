@@ -135,10 +135,9 @@ def test_remote_mirror_object_manifest_rejects_malformed_revision_ancestor_id() 
     with pytest.raises(ValidationError) as exc_info:
         _remote_object_manifest(revision_ancestor_ids=("short",))
 
-    errors = exc_info.value.errors()
-    assert len(errors) == 1
-    assert errors[0]["loc"] == ("revision_ancestor_ids", 0)
-    assert errors[0]["type"] == "string_too_short"
+    (error,) = exc_info.value.errors()
+    assert error["loc"] == ("revision_ancestor_ids", 0)
+    assert error["type"] == "string_too_short"
 
 
 def test_storage_error_hierarchy_unified() -> None:
