@@ -200,27 +200,16 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
                 "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
             ),
         ),
-        # IVA regularización kinds: dependency-triggered, not dateless. LIVA
-        # arts. 107-110 capital-goods regularización (casilla 43) promotes once
-        # the prorrata regularización source lands, consuming the same definitive
-        # percentage.
+        # IVA capital-goods regularizacion (LIVA arts. 107-110, casilla 43)
+        # remains advisory-backed after prorrata_regularizacion promotion until
+        # its own live resolver and registry binding target are governed.
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: DeferredSourceTarget(
             owning_adr="2026-07-01-iva-bienes-inversion-regularizacion-adr",
             trigger=(
-                "Promote once the prorrata-definitiva source lands; it consumes the same annual definitive "
-                "percentage as prorrata regularización (LIVA arts. 107-110, casilla 43)."
-            ),
-            promotion_depends_on=BindingSourceKind.PRORRATA_REGULARIZACION,
-        ),
-        # LIVA arts. 104-105 annual prorrata-general regularización por porcentaje
-        # definitivo (casilla 44) stays operator-confirmable until the
-        # provisional-carry store is wired and the source is promoted to a live
-        # mesh binding on the iva_compensation_annual_partition precedent.
-        BindingSourceKind.PRORRATA_REGULARIZACION: DeferredSourceTarget(
-            owning_adr="2026-07-01-iva-complexity-hardening-scope-adr",
-            trigger=(
-                "Promote to a live mesh binding on the iva_compensation_annual_partition precedent once the "
-                "provisional-carry store plus Q4 regularisation is proven end to end (LIVA arts. 104-105, casilla 44)."
+                "Promote only after a governed bienes-inversion source resolver declares and proves the "
+                "Modelo 303 casilla 43 / Modelo 390 regularizacion binding targets, maps profile-scoped "
+                "capital-goods register rows to the current-year definitive prorrata percentage, and "
+                "handles the art. 110 disposal cap facts without silently omitting LIVA arts. 107-110 cases."
             ),
         ),
     },
@@ -252,8 +241,9 @@ class CallerOverrideDisposition(StrEnum):
         LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
             the invoice families). A caller override is REJECTED so the persisted
             revision faithfully reflects the sources it aggregates.
-        CARRY: Carry-style sources (previous_filing, relation_prefill, and the
-            IVA-compensation annual partition). A caller override of an
+        CARRY: Carry-style sources (previous_filing, relation_prefill, the
+            IVA-compensation annual partition, and prorrata regularizacion).
+            A caller override of an
             automatically-carried prior value is legitimate and must reach the
             engine, so these are EXCLUDED from the post-merge caller-override
             guard.
@@ -309,6 +299,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.PREVIOUS_FILING,
                 BindingSourceKind.RELATION_PREFILL,
                 BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+                BindingSourceKind.PRORRATA_REGULARIZACION,
             },
         ),
         disposition=CallerOverrideDisposition.CARRY,

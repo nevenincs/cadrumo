@@ -5,18 +5,19 @@ Modelo 303 casilla 43 / the Modelo 390 regularización field: the ordinary annua
 art-109 comparison for in-window, non-disposed goods
 (:func:`build_bienes_inversion_regularizacion_advisory`), and the art-110 single
 ("única") disposal regularización for a good disposed of during the filing year
-(:func:`build_bienes_inversion_transmision_advisory`). In the first slice the
-``bienes_inversion_regularizacion`` source kind is DEFERRED (the automatic annual
-feed is blocked on the separately-deferred prorrata-definitiva source), so the
-annual projection produces an advisory — never a silent zero — carrying the
-proposed casilla-43 value the operator confirms. The art-110 disposal projection
-carries no such pending state (every disposal fact is already on the register), so
-its advisory always names a concrete proposed figure.
+(:func:`build_bienes_inversion_transmision_advisory`). The
+``bienes_inversion_regularizacion`` source kind is still DEFERRED while its own
+source resolver and registry binding targets are designed; the annual projection
+therefore produces an advisory — never a silent zero — carrying the proposed
+casilla-43 value the operator confirms. The art-110 disposal projection carries
+no such pending state (every disposal fact is already on the register), so its
+advisory always names a concrete proposed figure.
 
 Both are pure functions over the register; neither is yet wired into the live
-calculate MESH BINDING (that promotion is gated on the prorrata-definitiva source,
-per ADR ``2026-07-01-iva-bienes-inversion-regularizacion``) — they are wired into
-the calculate-path ADVISORY collector
+calculate MESH BINDING (that promotion needs a governed casilla-43/M390 binding
+target and per-good source mapping, per ADR
+``2026-07-01-iva-bienes-inversion-regularizacion``) — they are wired into the
+calculate-path ADVISORY collector
 (:mod:`application.modelo._bienes_inversion_advisory`).
 """
 

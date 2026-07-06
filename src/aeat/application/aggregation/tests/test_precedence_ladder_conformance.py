@@ -13,8 +13,8 @@ drifts from the frozen aggregation-taxonomy behaviour, one of these assertions
 fails. The frozen memberships asserted here are the aggregation-taxonomy
 behaviour this suite preserves (the deterministic ledger / invoice resolvers
 are LOCK; the carry sources — previous_filing, relation_prefill,
-iva-compensation annual partition — are CARRY); they are the behavioural
-anchor, not a restatement of the ladder literal.
+iva-compensation annual partition, and prorrata regularizacion — are CARRY);
+they are the behavioural anchor, not a restatement of the ladder literal.
 """
 
 from __future__ import annotations
@@ -94,6 +94,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
                 BindingSourceKind.PREVIOUS_FILING,
                 BindingSourceKind.RELATION_PREFILL,
                 BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+                BindingSourceKind.PRORRATA_REGULARIZACION,
             },
         )
         == CALLER_OVERRIDABLE_CARRY_SOURCES
