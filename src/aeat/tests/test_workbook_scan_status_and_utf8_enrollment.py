@@ -9,10 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ..adapters.persistence.storage.bucket._layout import bucket_paths
-from ..adapters.persistence.storage.sql._secure_object_records import SecureObjectRawRow
-from ..domain.calculations.registry import WorkbookArtefactReport, WorkbookKind
-from ..domain.calculations.registry._workbook_parity_types import WorkbookScanStatus
+from ..adapters.persistence.storage.bucket import bucket_paths
+from ..adapters.persistence.storage.sql import SecureObjectRawRow
+from ..domain.calculations.registry import WorkbookArtefactReport, WorkbookKind, WorkbookScanStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

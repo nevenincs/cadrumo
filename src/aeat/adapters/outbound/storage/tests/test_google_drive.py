@@ -6,8 +6,10 @@ constructed. They use no Drive API doubles or patched dependencies.
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
+import json
+import subprocess
+import sys
+import textwrap
 from typing import Any
 
 import pytest
@@ -24,15 +26,42 @@ def _provider() -> GoogleDriveProvider:
     return GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="aeat-vault")
 
 
-def test_google_drive_module_does_not_construct_settings_at_import_time() -> None:
-    tree = ast.parse(Path(__file__).parent.parent.joinpath("_google_drive.py").read_text(encoding="utf-8"))
-    offenders = [
-        node.lineno
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"Settings", "_Settings"}
-    ]
+def test_google_drive_explicit_constructor_does_not_build_google_client() -> None:
+    probe = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import json
+                import sys
 
-    assert offenders == []
+                from aeat.adapters.outbound.storage._google_drive import GoogleDriveProvider
+
+                provider = GoogleDriveProvider(
+                    credentials=object(),
+                    root_folder_id="drive-root",
+                    vault_folder_name="aeat-vault",
+                )
+                watched = (
+                    "googleapiclient.discovery",
+                    "googleapiclient.http",
+                )
+                print(json.dumps({"root_folder_id": provider.root_folder_id, **{name: name in sys.modules for name in watched}}, sort_keys=True))
+                """
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert probe.returncode == 0, probe.stderr
+    assert json.loads(probe.stdout) == {
+        "googleapiclient.discovery": False,
+        "googleapiclient.http": False,
+        "root_folder_id": "drive-root",
+    }
 
 
 def test_google_drive_provider_rejects_blank_constructor_values_with_localized_message() -> None:

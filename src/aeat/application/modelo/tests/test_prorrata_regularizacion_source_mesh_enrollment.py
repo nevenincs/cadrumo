@@ -39,14 +39,14 @@ from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...modelo._calculation_actions import _resolve_bucket_source_mesh
+from .._calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ORACLE_PATH = Path(
     bundled_path("corpus", "manual_oracles", "modelo-303-prorrata-general-regularizacion.json"),
 )
-_BUCKET_ID = "prorrata-source-mesh-enrollment"
+_BUCKET_ID = "88888888-8888-4888-8888-888888888888"
 _FILING_YEAR = 2025
 _PRIOR_YEAR = _FILING_YEAR - 1
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")

@@ -173,6 +173,6 @@ def test_schedules_resolver_accepts_registry_dotted_profile_paths() -> None:
 
 def test_sink_is_logging_handler_subclass() -> None:
     """_sink.py must define JsonlRunSink as a subclass of logging.Handler."""
-    from ..core.observability._sink import JsonlRunSink
+    from ..core.observability import JsonlRunSink
 
     assert issubclass(JsonlRunSink, logging.Handler)

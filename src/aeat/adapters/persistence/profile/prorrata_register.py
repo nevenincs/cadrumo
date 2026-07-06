@@ -22,7 +22,6 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from ....core.errors import AeatError
 from ....core.external_constants import UTF_8_ENCODING
@@ -36,14 +35,12 @@ from ....domain.prorrata_register import (
 from ..storage import (
     PROFILE_PRORRATA_REGISTER_NAMESPACE,
     SecureObjectRepository,
+    SecureObjectWrite,
     SensitivityClass,
     secure_object_logical_path,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
-
-if TYPE_CHECKING:  # pragma: no cover - storage type import only
-    from ..storage import SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -186,8 +183,6 @@ class ProrrataRegisterRepository:
         the filed revision and filing catalogue in one secure-object transaction,
         mirroring the participation-index write pattern.
         """
-        from ..storage import SecureObjectWrite
-
         written_at = now()
         return SecureObjectWrite(
             namespace=_REGISTER_NAMESPACE,

@@ -125,29 +125,34 @@ def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProf
     assert b"profile" not in on_disk
 
 
+@pytest.mark.parametrize(
+    ("payload", "message", "cause_type", "detail"),
+    (
+        (b"{not-json", None, ValidationError, "Invalid JSON"),
+        (b"\xff", "invalid UTF-8", UnicodeDecodeError, None),
+    ),
+)
 def test_load_malformed_secure_object_raises_persistence_error(
     _runtime_profile: TestRuntimeProfile,
+    payload: bytes,
+    message: str | None,
+    cause_type: type[BaseException],
+    detail: str | None,
 ) -> None:
     """Malformed encrypted payload bytes stay on the domain persistence surface."""
-    cases: tuple[tuple[str, bytes, str | None, type[BaseException], str | None], ...] = (
-        ("invalid-json", b"{not-json", None, ValidationError, "Invalid JSON"),
-        ("non-utf8", b"\xff", "invalid UTF-8", UnicodeDecodeError, None),
+    _runtime_profile.repository.save(
+        namespace="aeat.domain.usage_ratios",
+        object_key=usage_ratios_object_key(_BUCKET_A_ID),
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=_SECURE_OBJECT_WRITTEN_AT,
+        payload=payload,
     )
-
-    for case_id, payload, message, cause_type, detail in cases:
-        _runtime_profile.repository.save(
-            namespace="aeat.domain.usage_ratios",
-            object_key=usage_ratios_object_key(_BUCKET_A_ID),
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=_SECURE_OBJECT_WRITTEN_AT,
-            payload=payload,
-        )
-        with pytest.raises(UsageRatioPersistenceError, match=message) as exc_info:
-            load_usage_ratios(bucket_id=_BUCKET_A_ID)
-        assert isinstance(exc_info.value.__cause__, cause_type), case_id
-        if detail is not None:
-            assert detail in str(exc_info.value), case_id
+    with pytest.raises(UsageRatioPersistenceError, match=message) as exc_info:
+        load_usage_ratios(bucket_id=_BUCKET_A_ID)
+    assert isinstance(exc_info.value.__cause__, cause_type)
+    if detail is not None:
+        assert detail in str(exc_info.value)
 
 
 def test_load_inner_classification_mismatch_raises_persistence_error(

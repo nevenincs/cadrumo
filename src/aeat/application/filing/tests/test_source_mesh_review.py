@@ -35,11 +35,11 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core import Period
 from ....domain.invoices import Invoice, InvoiceCatalogue
 from ....domain.iva import InvoiceKind
 from ....domain.submission import ModeloDraftStatus
-from ....tests.application_adapter_exports import InvoiceCatalogueRepository
 from ....tests.secure_sql import TestRuntimeProfile
 from ...invoices import build_catalogue_invoice
 from .. import (

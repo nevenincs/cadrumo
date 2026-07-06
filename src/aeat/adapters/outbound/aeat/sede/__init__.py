@@ -66,6 +66,7 @@ Navigation flow:
 
 from __future__ import annotations
 
+from ._censo import CensoParseError
 from ._censo_live import (
     G313_LAUNCHER_URL,
     censo_fact_set_to_mapping,
@@ -144,6 +145,7 @@ __all__ = [
     "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
     "BrowserAdapterTypeError",
+    "CensoParseError",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "Expediente",

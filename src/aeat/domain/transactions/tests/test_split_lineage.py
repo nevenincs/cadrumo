@@ -58,25 +58,31 @@ def test_derive_split_group_id_is_amount_order_independent() -> None:
     assert first == second
 
 
-def test_derive_split_group_id_differs_on_input_change() -> None:
+@pytest.mark.parametrize(
+    ("parent_transaction_id", "child_amounts", "child_narratives"),
+    (
+        (_CHILD_A, (Decimal("10.00"),), ("rent",)),
+        (_PARENT, (Decimal("10.01"),), ("rent",)),
+        (_PARENT, (Decimal("10.00"),), ("utilities",)),
+    ),
+)
+def test_derive_split_group_id_differs_on_input_change(
+    parent_transaction_id: str,
+    child_amounts: tuple[Decimal, ...],
+    child_narratives: tuple[str, ...],
+) -> None:
     baseline = derive_split_group_id(
         parent_transaction_id=_PARENT,
         child_amounts=(Decimal("10.00"),),
         child_narratives=("rent",),
     )
-    cases: tuple[tuple[str, str, tuple[Decimal, ...], tuple[str, ...]], ...] = (
-        ("parent", _CHILD_A, (Decimal("10.00"),), ("rent",)),
-        ("amount", _PARENT, (Decimal("10.01"),), ("rent",)),
-        ("narrative", _PARENT, (Decimal("10.00"),), ("utilities",)),
-    )
 
-    for label, parent_transaction_id, child_amounts, child_narratives in cases:
-        changed = derive_split_group_id(
-            parent_transaction_id=parent_transaction_id,
-            child_amounts=child_amounts,
-            child_narratives=child_narratives,
-        )
-        assert baseline != changed, label
+    changed = derive_split_group_id(
+        parent_transaction_id=parent_transaction_id,
+        child_amounts=child_amounts,
+        child_narratives=child_narratives,
+    )
+    assert baseline != changed
 
 
 def test_split_lineage_constructs_parent_role() -> None:
@@ -95,22 +101,28 @@ def test_split_lineage_constructs_parent_role() -> None:
     assert lineage.sibling_transaction_ids == (_CHILD_A, _CHILD_B)  # sorted
 
 
-def test_split_lineage_rejects_invalid_payloads() -> None:
-    cases: tuple[tuple[str, str, SplitRole, tuple[str, ...], str], ...] = (
-        ("non-hex-group-id", "g" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase hex"),
-        ("uppercase-group-id", "A" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase"),
-        ("empty-siblings", "0" * 64, SplitRole.PARENT, (), "at least one sibling"),
-        ("duplicate-siblings", "0" * 64, SplitRole.CHILD, (_CHILD_A, _CHILD_A), "unique"),
-        ("short-sibling-id", "0" * 64, SplitRole.CHILD, ("abc",), "64-character"),
-    )
-
-    for _label, split_group_id, role, sibling_transaction_ids, expected_match in cases:
-        with pytest.raises(ValidationError, match=expected_match):
-            SplitLineage(
-                split_group_id=split_group_id,
-                role=role,
-                sibling_transaction_ids=sibling_transaction_ids,
-            )
+@pytest.mark.parametrize(
+    ("split_group_id", "role", "sibling_transaction_ids", "expected_match"),
+    (
+        ("g" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase hex"),
+        ("A" * 64, SplitRole.PARENT, (_CHILD_A,), "lowercase"),
+        ("0" * 64, SplitRole.PARENT, (), "at least one sibling"),
+        ("0" * 64, SplitRole.CHILD, (_CHILD_A, _CHILD_A), "unique"),
+        ("0" * 64, SplitRole.CHILD, ("abc",), "64-character"),
+    ),
+)
+def test_split_lineage_rejects_invalid_payloads(
+    split_group_id: str,
+    role: SplitRole,
+    sibling_transaction_ids: tuple[str, ...],
+    expected_match: str,
+) -> None:
+    with pytest.raises(ValidationError, match=expected_match):
+        SplitLineage(
+            split_group_id=split_group_id,
+            role=role,
+            sibling_transaction_ids=sibling_transaction_ids,
+        )
 
 
 def test_split_lineage_sorts_sibling_ids() -> None:

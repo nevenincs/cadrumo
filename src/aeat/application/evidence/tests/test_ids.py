@@ -20,26 +20,36 @@ class _EvidenceHolder(BaseModel):
     evidence_id: EvidenceId
 
 
-def test_ids_accept_canonical_sha256_hex_digest() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("holder", "field_name", "payload"),
+    (
         (_BundleHolder, "bundle_id", b"bundle-payload"),
         (_EvidenceHolder, "evidence_id", b"evidence-payload"),
-    )
+    ),
+)
+def test_ids_accept_canonical_sha256_hex_digest(
+    holder: type[BaseModel],
+    field_name: str,
+    payload: bytes,
+) -> None:
+    digest = hashlib.sha256(payload).hexdigest()
+    instance = holder.model_validate({field_name: digest})
+    assert getattr(instance, field_name) == digest
 
-    for holder, field_name, payload in cases:
-        digest = hashlib.sha256(payload).hexdigest()
-        instance = holder.model_validate({field_name: digest})
-        assert getattr(instance, field_name) == digest, field_name
 
-
-def test_ids_reject_noncanonical_digest_shapes() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("holder", "field_name", "raw_id"),
+    (
         (_BundleHolder, "bundle_id", "A" * 64),
         (_BundleHolder, "bundle_id", "a" * 63),
         (_BundleHolder, "bundle_id", "a" * 65),
         (_EvidenceHolder, "evidence_id", "z" * 64),
-    )
-
-    for holder, field_name, raw_id in cases:
-        with pytest.raises(ValidationError):
-            holder.model_validate({field_name: raw_id})
+    ),
+)
+def test_ids_reject_noncanonical_digest_shapes(
+    holder: type[BaseModel],
+    field_name: str,
+    raw_id: str,
+) -> None:
+    with pytest.raises(ValidationError):
+        holder.model_validate({field_name: raw_id})

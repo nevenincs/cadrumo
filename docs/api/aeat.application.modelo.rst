@@ -33,6 +33,7 @@ Submodules
    aeat.application.modelo._calculation_preparation
    aeat.application.modelo._calculation_resolution
    aeat.application.modelo._calculation_source_policy
+   aeat.application.modelo._calculation_source_staging
    aeat.application.modelo._data_inventory
    aeat.application.modelo._decimal_parsing
    aeat.application.modelo._dt12_advisory

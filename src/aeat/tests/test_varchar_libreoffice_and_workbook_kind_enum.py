@@ -8,8 +8,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import create_engine, inspect
 
-from ..adapters.persistence.storage.sql._orm import SecureObjectRow
-from ..adapters.persistence.storage.sql._secure_object_schema import ensure_quarantine_table
+from ..adapters.persistence.storage.sql import SecureObjectRow, ensure_quarantine_table
 from ..domain.calculations.registry import WorkbookKind, WorkbookRunnerAvailability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

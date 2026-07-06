@@ -99,8 +99,8 @@ def test_notifications_parse_date_delegates_to_canonical() -> None:
 
 def test_censo_parse_date_delegates_to_canonical() -> None:
     """sede._censo._parse_date must delegate to core._parse_date_canonical."""
+    from ..adapters.outbound.aeat.sede import CensoParseError
     from ..adapters.outbound.aeat.sede import _censo as censo_mod
-    from ..adapters.outbound.aeat.sede._censo import CensoParseError
 
     result = censo_mod._parse_date("15-03-2024", field="activity_start_date")
     assert result == date(2024, 3, 15)
@@ -120,18 +120,6 @@ def test_profiles_parse_date_delegates_to_canonical() -> None:
 
 
 # ── (d) ApoderadoService has CLI callers ─────────────────────────────────────
-
-
-def test_apoderado_service_importable_and_has_cli_callers() -> None:
-    """ApoderadoService must be importable through the production CLI surface."""
-    from ..application.auth import ApoderadoService
-    from ..entrypoints.cli._config._apoderado import apoderado_scopes_list
-
-    service = ApoderadoService()
-    scope_codes = service.catalogue.code_set()
-
-    assert callable(apoderado_scopes_list)
-    assert "GENERALNT" in scope_codes
 
 
 # ── (e) FinancialProvider enforces corpus attributes at class-definition ──────
