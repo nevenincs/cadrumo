@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 from decimal import Decimal
 
 import pytest
@@ -15,7 +14,6 @@ from ....domain.calculations.registry import (
     load_modelo_directory,
     resolve_foreign_asset_binding_row_values,
 )
-from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
@@ -770,13 +768,34 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
 
 
 def test_service_surface_has_no_cli_dependency() -> None:
-    source = "\n".join(
-        [
-            inspect.getsource(aggregation._service),
-            inspect.getsource(aggregation.PerModeloAggregationCommand),
-            inspect.getsource(aggregation.PerModeloAggregationResult),
-        ],
+    import subprocess
+    import sys
+    import textwrap
+
+    script = textwrap.dedent("""\
+        import importlib
+        import sys
+
+        for module_name in (
+            "aeat.application.aggregation",
+            "aeat.application.aggregation._service",
+        ):
+            importlib.import_module(module_name)
+
+        leaked = sorted(
+            name
+            for name in sys.modules
+            if name == "typer" or name.startswith("typer.") or name.startswith("aeat.entrypoints.cli")
+        )
+        assert leaked == [], leaked
+    """)
+    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
 
-    assert "typer" not in source.lower()
-    assert "entrypoints.cli" not in source
+    assert result.returncode == 0, (
+        f"aggregation service imported a CLI-only dependency.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
