@@ -1,61 +1,47 @@
-"""AST guard test: master-key providers carry zero ClassVar mutable state.
+"""Master-key providers carry zero ClassVar mutable state.
 
 The profile-bucket lifecycle substrate invariant forbids any
 module-global or class-level mutable state that could
 survive a bucket switch. Cache state moves to the per-bucket
 :class:`BucketSession` instance.
 
-Walks the AST of ``_master_key.py`` and asserts that
-:class:`KeyringMasterKeyProvider` and :class:`FileFallbackMasterKeyProvider`
-declare zero class-level annotations naming :class:`typing.ClassVar`.
-This is the regression gate for the master-key substrate invariant.
+Asserts directly against the imported provider classes that they declare
+zero class-level annotations naming :class:`typing.ClassVar`. This is the
+regression gate for the master-key substrate invariant.
 """
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
+from typing import ClassVar, get_origin
 
 import pytest
 
-from ......core.external_constants import UTF_8_ENCODING
+from .._master_key import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_GUARDED_PROVIDERS = frozenset(
-    {
-        "KeyringMasterKeyProvider",
-        "FileFallbackMasterKeyProvider",
-    },
+_GUARDED_PROVIDERS = (
+    KeyringMasterKeyProvider,
+    FileFallbackMasterKeyProvider,
 )
 
 
-def _is_classvar_annotation(node: ast.AST) -> bool:
-    """Return whether ``node`` is a ClassVar[...] annotation."""
-    if isinstance(node, ast.Subscript):
-        return _is_classvar_annotation(node.value)
-    if isinstance(node, ast.Attribute):
-        return node.attr == "ClassVar"
-    if isinstance(node, ast.Name):
-        return node.id == "ClassVar"
+def _is_classvar_annotation(annotation: object) -> bool:
+    """Return whether ``annotation`` is a ClassVar[...] annotation."""
+    if get_origin(annotation) is ClassVar:
+        return True
+    if isinstance(annotation, str):
+        return annotation == "ClassVar" or annotation.startswith("ClassVar[") or ".ClassVar[" in annotation
     return False
 
 
 def test_master_key_providers_carry_zero_classvar_state() -> None:
     """The guarded providers must declare no ClassVar-annotated attributes."""
-    module_path = Path(__file__).parent.parent / "_master_key.py"
-    tree = ast.parse(module_path.read_text(encoding=UTF_8_ENCODING), filename=str(module_path))
-
     violations: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.ClassDef):
-            continue
-        if node.name not in _GUARDED_PROVIDERS:
-            continue
-        for stmt in node.body:
-            if isinstance(stmt, ast.AnnAssign) and _is_classvar_annotation(stmt.annotation):
-                target = ast.unparse(stmt.target) if hasattr(ast, "unparse") else "<attr>"
-                violations.append(f"{node.name}:{stmt.lineno}: ClassVar attribute {target}")
+    for provider in _GUARDED_PROVIDERS:
+        for name, annotation in provider.__annotations__.items():
+            if _is_classvar_annotation(annotation):
+                violations.append(f"{provider.__name__}: ClassVar attribute {name}")
 
     assert violations == [], (
         "Master-key providers must not carry ClassVar mutable state; "
