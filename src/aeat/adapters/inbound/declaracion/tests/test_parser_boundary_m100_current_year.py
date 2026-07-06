@@ -9,6 +9,19 @@ bundled AEAT-published Diseño de Registro field dictionaries for ejercicio
 2024 and 2025 (see ``corpus/aeat_official/disenos_registro/modelo_100/files/``),
 per the ``verification_source = "synthetic_from_aeat_published_text"``
 grounding tier the registry profile declares.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public declaration-copy parser exercised against the current-year
+        synthetic fixtures.
+    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+        Registry-owned ``declaracion_pdf`` profile contract asserted here.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m100_current_support`
+        Shared typed expected-casilla set for the 2024/2025 fixtures.
+    ``tests/fixtures/justificantes/_generate_modelo_100_current.py``
+        Fixture generator that stamps the expected printed values.
+    ``2026-07-05-modelo-130-100-continuity-audit``
+        Current-year M100 declaration coverage, including casilla 0604.
 """
 
 from __future__ import annotations
