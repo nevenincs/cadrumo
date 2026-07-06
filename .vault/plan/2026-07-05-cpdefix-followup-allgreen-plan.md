@@ -191,6 +191,7 @@ Provision capital-goods regularizacion tests from the real bienes-inversion pers
 
 - [x] `W06.P09.S17` - Replace bienes-inversion test-export repository imports with the real persistence adapter source; `src/aeat/application/calculations/tests/test_bienes_inversion_regularizacion.py, src/aeat/application/modelo/tests/test_bienes_inversion_advisory.py`.
 - [x] `W06.P09.S18` - Replace invoice test-export repository imports with the real persistence adapter source; `src/aeat/application/invoices/tests/test_bulk_import.py, src/aeat/application/filing/tests/test_source_mesh_review.py`.
+- [x] `W06.P09.S19` - Replace memoized transaction test-export repository import with the real persistence adapter source; `src/aeat/application/modelo/tests/test_memoized_transaction_catalogue_repository.py`.
 
 ## Description
 

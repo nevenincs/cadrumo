@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -37,7 +38,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.application_adapter_exports import TransactionCatalogueRepository
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
 from .._calculation_actions import _MemoizedTransactionCatalogueRepository
 
