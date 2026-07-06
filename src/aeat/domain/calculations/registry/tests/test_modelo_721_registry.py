@@ -142,3 +142,21 @@ def test_modelo_721_threshold_continuity_has_registry_parameters_without_calcula
         "modelo-721-redeclaration-increment-threshold-eur",
     }
     assert modelo.id == "721"
+
+
+def test_modelo_721_redeclaration_is_not_authored_as_scalar_previous_filing_binding() -> None:
+    """M721 token continuity is row-set advisory evidence, not scalar previous_filing.
+
+    The previous_filing resolver folds a casilla-value mapping to one Decimal per
+    binding. Modelo 721 repeats the same token casillas per custodian/token row, so
+    a scalar binding would lose the row identity needed for the re-declaration
+    baseline. Reintroducing this as registry previous_filing requires a row-set
+    selector, not the retired source_output key.
+    """
+    _, revision, _ = _modelo_721()
+
+    previous_filing_bindings = [binding.id for binding in revision.bindings if binding.source == "previous_filing"]
+    all_binding_strings = set(_strings(tuple(binding.model_dump(mode="json") for binding in revision.bindings)))
+
+    assert previous_filing_bindings == []
+    assert "source_output" not in all_binding_strings
