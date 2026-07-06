@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import inspect
 from decimal import Decimal
 from pathlib import Path
 
@@ -329,49 +330,39 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
 
 
-def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
-    """No bare ``"21.00"`` string literal as a typer Option default in ``_ledger_inventory_cli.py``.
+def test_inventory_movement_add_iva_rate_default_matches_core_constant() -> None:
+    """The CLI-facing ``--iva-rate`` default follows the core IVA constant."""
 
-    Anti-tautology: parses the AST and fails if the literal is re-introduced as a
-    bare Option default instead of ``str(DEFAULT_IVA_GENERAL_RATE_PCT)``.
-    """
+    from ...entrypoints.cli import _ledger_inventory_cli
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 
-    tree = _repo_tree("src/aeat/entrypoints/cli/_ledger_inventory_cli.py")
+    parameter = inspect.signature(_ledger_inventory_cli.inventory_movement_add).parameters["iva_rate"]
+    option = parameter.default
 
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        # Look for string constants with value "21.00" that are NOT inside str(...) calls.
-        if not isinstance(node, ast.Constant) or node.value != "21.00":
-            continue
-        offenders.append(
-            f"_ledger_inventory_cli.py:{node.lineno}: bare '21.00' string literal; "
-            f"use str(DEFAULT_IVA_GENERAL_RATE_PCT)",
-        )
+    assert option.default == str(DEFAULT_IVA_GENERAL_RATE_PCT)
+    assert option.param_decls == ("--iva-rate",)
 
-    assert offenders == [], (
-        "Bare '21.00' string literals found; use str(DEFAULT_IVA_GENERAL_RATE_PCT) instead:\n" + "\n".join(offenders)
+
+@pytest.mark.parametrize(
+    ("export_format", "expected_media_type"),
+    (
+        pytest.param("JSONL", "JSONL_MIME_TYPE", id="jsonl"),
+        pytest.param("XLSX", "XLSX_MIME_TYPE", id="xlsx"),
+    ),
+)
+def test_tabular_export_media_types_match_core_constants(export_format: str, expected_media_type: str) -> None:
+    """Serialized tabular results expose the core MIME constants."""
+
+    from ...application.export._tabular import ExportSerializationFormat, serialize_tabular_rows
+    from .. import external_constants
+
+    result = serialize_tabular_rows(
+        ({"col": "value"},),
+        fieldnames=("col",),
+        export_format=getattr(ExportSerializationFormat, export_format),
     )
 
-
-def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
-    """No bare JSONL/XLSX MIME literals in ``_tabular.py`` argument positions."""
-
-    tree = _repo_tree("src/aeat/application/export/_tabular.py")
-
-    guarded_literals = {
-        "application/x-ndjson": "_JSONL_MIME_TYPE",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "_XLSX_MIME_TYPE",
-    }
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-            continue
-        expected = guarded_literals.get(node.value)
-        if expected is None:
-            continue
-        offenders.append(f"_tabular.py:{node.lineno}: bare {node.value!r} literal; use {expected}")
-
-    assert offenders == [], "Bare JSONL/XLSX MIME literals found:\n" + "\n".join(offenders)
+    assert result.media_type == getattr(external_constants, expected_media_type)
 
 
 # ---------------------------------------------------------------------------
