@@ -430,6 +430,48 @@ def _settled_prorrata_register_entry(
     )
 
 
+def _new_local_filing_record(
+    *,
+    filing_record_id: str,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    notes: str | None,
+    actor: str,
+    now: datetime,
+) -> ModeloRecord:
+    return ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=target.work_unit_id,
+        calculation_revision_id=target.calculation_revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=now,
+        filed_by=actor.strip(),
+        notes=notes.strip() if notes else None,
+        aeat_accepted=False,
+        status=ModeloRecordStatus.VIGENTE,
+        source_transaction_ids=target.source_transaction_ids,
+    )
+
+
+def _filed_calculation_revision(
+    *,
+    target: CalculationRevision,
+    actor: str,
+    now: datetime,
+) -> CalculationRevision:
+    return target.model_copy(
+        update={
+            "state": CalculationRevisionState.PRESENTADO,
+            "filed_at": now,
+            "filed_by": actor.strip(),
+            "updated_at": now,
+        },
+    )
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -494,20 +536,13 @@ def persist_filed_revision(
         period=work_unit.period,
     )
 
-    new_filing = ModeloRecord(
+    new_filing = _new_local_filing_record(
         filing_record_id=new_filing_id,
-        work_unit_id=target.work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        filed_at=now,
-        filed_by=actor.strip(),
-        notes=notes.strip() if notes else None,
-        aeat_accepted=False,
-        status=ModeloRecordStatus.VIGENTE,
-        source_transaction_ids=target.source_transaction_ids,
+        target=target,
+        work_unit=work_unit,
+        notes=notes,
+        actor=actor,
+        now=now,
     )
 
     revisions = calculation_repository.load()
@@ -534,14 +569,7 @@ def persist_filed_revision(
             revisions = upsert_calculation_revision(revisions, superseded_revision)
 
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
-    filed_target = target.model_copy(
-        update={
-            "state": CalculationRevisionState.PRESENTADO,
-            "filed_at": now,
-            "filed_by": actor.strip(),
-            "updated_at": now,
-        },
-    )
+    filed_target = _filed_calculation_revision(target=target, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_target)
 
     participation_repo = _participation_index_repository(participation_index_repository, bucket_id=work_unit.bucket_id)
