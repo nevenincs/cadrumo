@@ -1,4 +1,25 @@
-"""Tests for the registry-backed LIVA art. 161 recargo de equivalencia substrate."""
+"""Tests for the registry-backed LIVA art. 161 recargo substrate.
+
+The suite pins :func:`~domain.iva.load_recargo_rates` and
+:func:`~domain.iva.recargo_rate_for` to the bundled legal-parameter catalogue,
+its BOE excerpt, and the closed :class:`~domain.iva.IvaRateKind` tier mapping.
+It protects the recargo de equivalencia ladder as legal data, not as inline
+Python constants.
+
+See Also:
+    :mod:`~domain.iva._recargo_equivalencia`
+        Registry-backed loader and frozen rate record under test.
+    :mod:`~domain.iva._saturation`
+        IVA-category saturation policy that surfaces recargo as operator-derived
+        rather than silently deriving a domestic rate.
+    :mod:`~application.calculations.tests.test_modelo_303_special_case_casilla_routing`
+        Ledger aggregation regression proving retailer-side recargo purchases
+        are surfaced instead of silently deducted.
+    Governing vault records
+        ``2026-06-19-silent-zero-base-aggregation-adr`` records the supplier-side
+        recargo model and M303 binding path; the legal-grounding centralization
+        audit lists the LIVA art. 161 ladder as registry-clean.
+"""
 
 from __future__ import annotations
 
