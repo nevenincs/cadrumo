@@ -28,6 +28,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S19]]'
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S20]]'
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S21]]'
+  - '[[2026-07-06-cross-period-prorrata-W03-P05-S22]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -71,6 +72,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W03-P05-S19` - thread the register's active-general provisional percentage into the shared LedgerIvaAggregationSourceResolver deducible-cuota path so it apportions the deducible cuotas (art-104.Uno + 105.Uno), leaving bases unapportioned
 - `2026-07-06-cross-period-prorrata-W03-P05-S20` - carry the applied percentage and its provenance on the binding value provenance and the casilla observation trail (binding-values-carry-provenance)
 - `2026-07-06-cross-period-prorrata-W03-P05-S21` - add a byte-identical regression proving a non-prorrata (fully-taxable) taxpayer's deducible aggregation is unchanged from today
+- `2026-07-06-cross-period-prorrata-W03-P05-S22` - add a field-flows test proving the provisional percentage actually reduces the deducible cuotas for a prorrata taxpayer (the apportionment bites, not dead wiring)
 
 ### plan
 
