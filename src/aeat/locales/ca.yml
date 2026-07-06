@@ -5115,6 +5115,7 @@ errors:
     modelo_work_selector: El selector de treball de modelo ha fallat.
     modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
       seleccionada.
+    error_profile_prorrata_register_record: 'Un registre de prorrata d''IVA entre períodes no és estructuralment vàlid.'
   fail:
     censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -5737,6 +5738,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_profile_prorrata_register_validation: 'Un registre de prorrata d''IVA entre períodes no ha superat la validació.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'

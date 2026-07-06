@@ -14,6 +14,16 @@ related:
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `cross-period-prorrata` plan
 
 ## Wave `W01` - Register foundation (the carry home)
@@ -24,10 +34,10 @@ Land the per-ejercicio ProrrataRegister typed model and its encrypted profile-sc
 
 The ProrrataRegister aggregate, per-ejercicio entry model, closed regime and provenance enums, and the pure precedence-ladder resolver, mirroring domain/bienes_inversion shapes.
 
-- [ ] `W01.P01.S01` - declare the closed ProrrataRegime (general | especial | none) and ProrrataProvisionalProvenance (carried_prior_definitiva | aeat_autorizada | inicio_actividad) StrEnums in core per the closed-value-set-in-core rule, Spanish stems; `src/aeat/core/__init__.py`.
-- [ ] `W01.P01.S02` - declare the strict ProrrataRegisterEntry pydantic model (ejercicio, regime, sector axis, provisional percentage + provenance + optional authorisation reference, definitive percentage + volume inputs once settled, source-observation identity) mirroring domain/bienes_inversion shapes; `src/aeat/domain/prorrata_register/__init__.py`.
-- [ ] `W01.P01.S03` - declare the ProrrataRegister aggregate holding one entry per (ejercicio, sector) with regime and sector axes present from birth so especial and sectores land without migration (no-legacy-compatibility); `src/aeat/domain/prorrata_register/__init__.py`.
-- [ ] `W01.P01.S04` - implement the pure precedence-ladder resolver (authorised/inicio provenance > carried prior definitive > no value) returning the in-force provisional percentage or None, never a fabricated default, with unit tests over the ladder; `src/aeat/domain/prorrata_register/tests/test_prorrata_register.py`.
+- [x] `W01.P01.S01` - declare the closed ProrrataRegime (general | especial | none) and ProrrataProvisionalProvenance (carried_prior_definitiva | aeat_autorizada | inicio_actividad) StrEnums in core per the closed-value-set-in-core rule, Spanish stems; `src/aeat/core/__init__.py`.
+- [x] `W01.P01.S02` - declare the strict ProrrataRegisterEntry pydantic model (ejercicio, regime, sector axis, provisional percentage + provenance + optional authorisation reference, definitive percentage + volume inputs once settled, source-observation identity) mirroring domain/bienes_inversion shapes; `src/aeat/domain/prorrata_register/__init__.py`.
+- [x] `W01.P01.S03` - declare the ProrrataRegister aggregate holding one entry per (ejercicio, sector) with regime and sector axes present from birth so especial and sectores land without migration (no-legacy-compatibility); `src/aeat/domain/prorrata_register/__init__.py`.
+- [x] `W01.P01.S04` - implement the pure precedence-ladder resolver (authorised/inicio provenance > carried prior definitive > no value) returning the in-force provisional percentage or None, never a fabricated default, with unit tests over the ladder; `src/aeat/domain/prorrata_register/tests/test_prorrata_register.py`.
 
 ### Phase `W01.P02` - Encrypted persistence and roundtrip discipline
 
