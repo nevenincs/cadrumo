@@ -54,22 +54,27 @@ class TestNewErrorClassesRegistered:
         (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
     )
 
-    def test_error_classes_are_aeat_errors_with_registered_codes(self) -> None:
-        for error_cls, expected_code in self._ERROR_CASES:
-            assert issubclass(error_cls, AeatError), error_cls.__name__
-            code = get_registered_error_code(error_cls)
-            assert code.code == expected_code
+    @pytest.mark.parametrize(("error_cls", "expected_code"), _ERROR_CASES)
+    def test_error_classes_are_aeat_errors_with_registered_codes(
+        self,
+        error_cls: type[AeatError],
+        expected_code: str,
+    ) -> None:
+        assert issubclass(error_cls, AeatError), error_cls.__name__
+        code = get_registered_error_code(error_cls)
+        assert code.code == expected_code
 
-    def test_envelope_roundtrip(self) -> None:
+    @pytest.mark.parametrize(("error_cls", "_expected_code"), _ERROR_CASES)
+    def test_envelope_roundtrip(self, error_cls: type[AeatError], _expected_code: str) -> None:
         """An instance can be built into an ErrorEnvelope without raising."""
-        for error_cls, _expected_code in self._ERROR_CASES:
-            try:
-                instance = error_cls()
-            except TypeError:
-                instance = error_cls("test message")
-            envelope = build_error_envelope(instance)
-            assert envelope.code == get_registered_error_code(error_cls).code
-            assert envelope.message, error_cls.__name__
+        del _expected_code
+        try:
+            instance = error_cls()
+        except TypeError:
+            instance = error_cls("test message")
+        envelope = build_error_envelope(instance)
+        assert envelope.code == get_registered_error_code(error_cls).code
+        assert envelope.message, error_cls.__name__
 
 
 # ---------------------------------------------------------------------------
@@ -83,30 +88,39 @@ class TestAdvisoryPredicateDecimalNarrowing:
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
     _INVALID_THR_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "notadecimal"])'
 
-    def test_advisory_ratio_predicate_decimal_threshold_cases(self) -> None:
-        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
-
-        cases = (
-            (
-                self._INVALID_THR_EXPR,
+    @pytest.mark.parametrize(
+        ("expression", "values", "expected"),
+        (
+            pytest.param(
+                _INVALID_THR_EXPR,
                 {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
                 False,
+                id="invalid-threshold",
             ),
-            (
-                self._VALID_EXPR,
+            pytest.param(
+                _VALID_EXPR,
                 {"num_id": decimal.Decimal("2"), "den_id": decimal.Decimal("1")},
                 True,
+                id="ratio-meets-threshold",
             ),
-            (
-                self._VALID_EXPR,
+            pytest.param(
+                _VALID_EXPR,
                 {"num_id": decimal.Decimal("0.1"), "den_id": decimal.Decimal("1")},
                 False,
+                id="ratio-below-threshold",
             ),
-        )
+        ),
+    )
+    def test_advisory_ratio_predicate_decimal_threshold_cases(
+        self,
+        expression: str,
+        values: dict[str, decimal.Decimal],
+        expected: bool,
+    ) -> None:
+        from ..application.modelo._verification_actions import _evaluate_advisory_predicate_fires
 
-        for expression, values, expected in cases:
-            result = _evaluate_advisory_predicate_fires(expression, values)
-            assert result is expected, expression
+        result = _evaluate_advisory_predicate_fires(expression, values)
+        assert result is expected, expression
 
 
 class TestResultSummaryNarrowing:
@@ -189,10 +203,10 @@ class TestLedgerBulkClassifyNarrowing:
             BusinessClassification.BUSINESS,
             BusinessClassification.PERSONAL,
         ]
-        assert len(failures) == 1
-        assert failures[0].row_index == 1
-        assert failures[0].transaction_id == "tx-invalid"
-        assert "NOT_A_CLASSIFICATION" in failures[0].reason
+        (failure,) = failures
+        assert failure.row_index == 1
+        assert failure.transaction_id == "tx-invalid"
+        assert "NOT_A_CLASSIFICATION" in failure.reason
 
     def test_parse_loop_reports_malformed_row_without_dropping_later_rows(self) -> None:
         from ..application.ledger._actions_classification import _parse_bulk_classify_rows
@@ -208,7 +222,7 @@ class TestLedgerBulkClassifyNarrowing:
         )
 
         assert [row.transaction_id for _idx, row, _provided_columns in parsed_rows] == ["tx-valid"]
-        assert len(failures) == 1
-        assert failures[0].row_index == 0
-        assert failures[0].transaction_id == "tx-extra"
-        assert failures[0].reason == "bulk classify CSV row has more cells than header columns"
+        (failure,) = failures
+        assert failure.row_index == 0
+        assert failure.transaction_id == "tx-extra"
+        assert failure.reason == "bulk classify CSV row has more cells than header columns"
