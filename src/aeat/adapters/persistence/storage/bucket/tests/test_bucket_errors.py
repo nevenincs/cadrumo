@@ -30,25 +30,30 @@ _BUCKET_ERROR_CLASSES: tuple[type[BucketError], ...] = (
 )
 
 
-def test_every_class_inherits_from_aeat_error() -> None:
-    for error_cls in _BUCKET_ERROR_CLASSES:
-        assert issubclass(error_cls, AeatError), error_cls.__name__
+@pytest.mark.parametrize("error_cls", _BUCKET_ERROR_CLASSES, ids=lambda cls: cls.__name__)
+def test_every_class_inherits_from_aeat_error(error_cls: type[BucketError]) -> None:
+    assert issubclass(error_cls, AeatError)
 
 
-def test_every_class_has_a_registered_code() -> None:
-    for error_cls in _BUCKET_ERROR_CLASSES:
-        code = get_registered_error_code(error_cls)
-        assert code.code in ERROR_REGISTRY, error_cls.__name__
+@pytest.mark.parametrize("error_cls", _BUCKET_ERROR_CLASSES, ids=lambda cls: cls.__name__)
+def test_every_class_has_a_registered_code(error_cls: type[BucketError]) -> None:
+    code = get_registered_error_code(error_cls)
+    assert code.code in ERROR_REGISTRY
 
 
-def test_default_suggestions_reference_operator_commands() -> None:
-    cases = (
-        (NoActiveBucketError, "aeat config profile list"),
-        (BucketLockedError, "aeat config switch NAME"),
-    )
-    for error_cls, expected_suggestion in cases:
-        code = get_registered_error_code(error_cls)
-        assert code.default_suggestion == expected_suggestion, error_cls.__name__
+@pytest.mark.parametrize(
+    ("error_cls", "expected_suggestion"),
+    (
+        pytest.param(NoActiveBucketError, "aeat config profile list", id="no-active-bucket"),
+        pytest.param(BucketLockedError, "aeat config switch NAME", id="bucket-locked"),
+    ),
+)
+def test_default_suggestions_reference_operator_commands(
+    error_cls: type[BucketError],
+    expected_suggestion: str,
+) -> None:
+    code = get_registered_error_code(error_cls)
+    assert code.default_suggestion == expected_suggestion
 
 
 def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:
@@ -58,14 +63,17 @@ def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:
     assert error.context == {"bucket_id": "bucket-001", "holding_pid": 4242}
 
 
-def test_bucket_id_payload_carries_bucket_id() -> None:
-    for error in (
-        BucketAlreadyPresentError(bucket_id="bucket-001"),
-        BucketLockedError(bucket_id="bucket-001"),
-        RecoveryUnavailableError(bucket_id="bucket-001"),
-    ):
-        assert error.bucket_id == "bucket-001", type(error).__name__
-        assert error.context == {"bucket_id": "bucket-001"}
+@pytest.mark.parametrize(
+    "error",
+    (
+        pytest.param(BucketAlreadyPresentError(bucket_id="bucket-001"), id="already-present"),
+        pytest.param(BucketLockedError(bucket_id="bucket-001"), id="locked"),
+        pytest.param(RecoveryUnavailableError(bucket_id="bucket-001"), id="recovery-unavailable"),
+    ),
+)
+def test_bucket_id_payload_carries_bucket_id(error: BucketError) -> None:
+    assert error.bucket_id == "bucket-001"
+    assert error.context == {"bucket_id": "bucket-001"}
 
 
 def test_each_registry_code_is_distinct() -> None:
