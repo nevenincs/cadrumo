@@ -20,7 +20,6 @@ Assertions
 from __future__ import annotations
 
 import importlib.util
-import inspect
 import sys
 from datetime import date
 from pathlib import Path
@@ -101,28 +100,23 @@ def test_notifications_parse_date_delegates_to_canonical() -> None:
 def test_censo_parse_date_delegates_to_canonical() -> None:
     """sede._censo._parse_date must delegate to core._parse_date_canonical."""
     from ..adapters.outbound.aeat.sede import _censo as censo_mod
+    from ..adapters.outbound.aeat.sede._censo import CensoParseError
 
-    # Source-code inspection: the function body must reference _parse_date_canonical.
-    src = inspect.getsource(censo_mod._parse_date)
-    assert "_parse_date_canonical" in src, (
-        "_censo._parse_date must call _parse_date_canonical (the core helper); found unexpected implementation."
-    )
-    # Behavioral check: a valid date parses correctly.
     result = censo_mod._parse_date("15-03-2024", field="activity_start_date")
     assert result == date(2024, 3, 15)
+    with pytest.raises(CensoParseError, match="activity_start_date"):
+        censo_mod._parse_date("2024-03-15", field="activity_start_date")
 
 
 def test_profiles_parse_date_delegates_to_canonical() -> None:
     """domain.deadlines._profiles._parse_date must delegate to core._parse_date_canonical."""
+    from ..domain.deadlines import ProfileError
     from ..domain.deadlines import _profiles as profiles_mod
 
-    src = inspect.getsource(profiles_mod._parse_date)
-    assert "_parse_date_canonical" in src, (
-        "_profiles._parse_date must call _parse_date_canonical; found unexpected implementation."
-    )
-    # Behavioral check: ISO-8601 date parses correctly.
     result = profiles_mod._parse_date("2024-03-15")
     assert result == date(2024, 3, 15)
+    with pytest.raises(ProfileError, match="expected ISO-8601"):
+        profiles_mod._parse_date("15-03-2024")
 
 
 # ── (d) ApoderadoService has CLI callers ─────────────────────────────────────
