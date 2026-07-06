@@ -1,10 +1,10 @@
 """Ed25519 review-package signing + signature-verify roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_signing` end to end
+Exercises :mod:`~application.modelo._review_package_signing` end to end
 against a REAL built-and-checksummed review package
-(:func:`~aeat.application.modelo.build_review_package`) and a REAL encrypted
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
+(:func:`~application.modelo.build_review_package`) and a REAL encrypted
+:class:`~adapters.persistence.storage.SecureObjectRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): mint a keypair, confirm the
 private key is persisted only as ciphertext, sign a package, verify the
 signature, then tamper the package/manifest and confirm verification fails.
@@ -12,6 +12,24 @@ signature, then tamper the package/manifest and confirm verification fails.
 Mirrors the anti-tautology discipline already established in
 ``test_review_package.py``: every negative-path test names the exact way the
 system deviates from "clean" before asserting the refusal.
+
+See Also:
+    :mod:`~application.modelo._review_package_signing`
+        Ed25519 authenticity layer exercised by the roundtrip and tamper cases.
+    :mod:`~application.modelo._review_package`
+        Checksum-manifest package builder whose integrity guarantee is verified
+        before signature validation.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Encrypted per-bucket storage boundary for the signing private key.
+    :mod:`~application.modelo._review_package_counter_sign`
+        Accountant receipt layer that signs over this module's original
+        signature bytes.
+    :mod:`~core.corpus_manifest._bundle_signing`
+        Corpus-bundle signing analogue that reuses the same manifest-digest
+        signing pattern.
+    ``2026-07-04-recipient-encryption-adr``
+        Collaboration-envelope decision that keeps signing, counter-signing,
+        and recipient encryption as distinct layers.
 """
 
 from __future__ import annotations
