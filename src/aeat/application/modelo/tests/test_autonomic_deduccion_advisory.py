@@ -16,6 +16,16 @@ from the identical fact set (via the shared
 ``_madrid_nacimiento_adopcion_candidate_weighted_count`` primitive), proving
 the verify-path advisory is not fabricating a number independent of the
 calculate path.
+
+See Also:
+    :func:`~application.modelo._autonomic_deduccion_advisory._madrid_nacimiento_adopcion_eligibility_advisory_finding`:
+        Verify-path advisory under test.
+    :func:`~application.modelo._profile_binding.inject_derived_autonomic_deduccion_facts`:
+        Calculate-path fail-closed injector this advisory complements.
+    :class:`~domain.calculations.registry.RegistrySnapshot`:
+        Registry authority used to resolve the casilla-1039 semantic role.
+    :class:`CasillaId`:
+        Canonical casilla identifier type for the advisory finding.
 """
 
 from __future__ import annotations
