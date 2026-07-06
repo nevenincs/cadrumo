@@ -6,6 +6,19 @@ operator-declared seed casillas, while the definitive percentage and deductible
 total are computed registry outputs. These tests pin the no-persist engine pass
 that exposes those values without copying formula business logic into the
 resolver layer.
+
+See Also:
+    :func:`~application.modelo._calculation_actions._materialise_prorrata_regularizacion_current_year_values`
+        No-persist engine materialisation seam under test.
+    :data:`~application.modelo._calculation_actions._PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS`
+        Canonical source-value order consumed by the resolver.
+    :class:`~domain.calculations.registry._bindings._ProrrataRegularizacionSelector`
+        Registry selector contract that declares the source casilla set.
+    :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
+        Downstream resolver that consumes these materialised values.
+    ``2026-07-06-cross-period-prorrata-audit`` and
+    ``2026-07-06-cross-period-prorrata-plan``
+        S45 review and W07.P11 calculation-order plan context.
 """
 
 from __future__ import annotations
