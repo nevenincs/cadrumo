@@ -19,6 +19,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId, select_revision, validated_casilla_id
 from ...domain.prorrata_register import ProrrataRegisterEntry
 from ..calculations import CalculationObservationRepository
+from ..calculations._cross_period_models import CrossPeriodCleanStateBlocker
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
     "iva.prorrata-porcentaje",
@@ -26,6 +27,7 @@ _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
 )
 _SETTLEMENT_PERIODS: Final[tuple[str, ...]] = ("4T", "0A")
 _SETTLEMENT_PERIOD_ORDER: Final[dict[str, int]] = {period: index for index, period in enumerate(_SETTLEMENT_PERIODS)}
+_MISSING_LEGACY_REVISION_STAMP = "missing_legacy_revision_stamp"
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,7 +39,39 @@ class ProrrataPriorDefinitivaSeed:
     source_filing_year: int
     source_period: str
     source_casilla_id: CasillaId
-    stamped_revision_id: str
+    stamped_revision_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ProrrataSeedFinding:
+    """Operator-visible seed blocker or advisory."""
+
+    code: str
+    blocking: bool
+    message: str
+    source_modelo: str
+    source_filing_year: int
+    source_period: str
+    stamped_revision_id: str | None
+    selected_revision_id: str | None
+
+    @property
+    def advisory(self) -> bool:
+        """Whether this finding is a non-blocking advisory."""
+        return not self.blocking
+
+
+@dataclass(frozen=True, slots=True)
+class ProrrataPriorDefinitivaSeedEvaluation:
+    """Seed resolution plus any blockers or advisories surfaced while resolving it."""
+
+    seed: ProrrataPriorDefinitivaSeed | None
+    findings: tuple[ProrrataSeedFinding, ...] = ()
+
+    @property
+    def blocked(self) -> bool:
+        """Whether any finding blocks trusting the seed."""
+        return any(finding.blocking for finding in self.findings)
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,8 +79,65 @@ class _PriorSettlementObservation:
     percentage: Decimal
     source_filing_year: int
     source_period: str
-    stamped_revision_id: str
+    stamped_revision_id: str | None
     captured_at: datetime
+
+
+def evaluate_carried_prior_definitiva_seed(
+    *,
+    ejercicio: int,
+    observation_repository: CalculationObservationRepository | None = None,
+    sector_id: str | None = None,
+) -> ProrrataPriorDefinitivaSeedEvaluation:
+    """Evaluate the carried-prior-definitive seed and surface blocker/advisory findings.
+
+    Divergent or unreconfirmable revision stamps produce a blocking
+    ``registry_revision_divergence`` finding and no seed. A missing legacy stamp
+    is a non-blocking advisory: the prior observation can seed the register, but
+    the operator-visible finding records that the legacy source could not be
+    re-confirmed.
+    """
+    repository = observation_repository if observation_repository is not None else CalculationObservationRepository()
+    prior_year = ejercicio - 1
+    for source in _prior_settlement_observations(repository, prior_year=prior_year):
+        try:
+            selected_revision = select_revision(
+                resources().modelos.get(Modelo.M303.value),
+                filing_year=source.source_filing_year,
+                period=source.source_period,
+            )
+        except Exception as exc:
+            return ProrrataPriorDefinitivaSeedEvaluation(
+                seed=None,
+                findings=(
+                    _registry_revision_divergence_finding(
+                        source,
+                        selected_revision_id=None,
+                        detail=f"revision selection failed: {type(exc).__name__}",
+                    ),
+                ),
+            )
+        if source.stamped_revision_id is None or source.stamped_revision_id == "":
+            return ProrrataPriorDefinitivaSeedEvaluation(
+                seed=_seed_from_source(ejercicio=ejercicio, source=source, sector_id=sector_id),
+                findings=(_missing_legacy_stamp_finding(source, selected_revision_id=selected_revision.id),),
+            )
+        if source.stamped_revision_id != selected_revision.id:
+            return ProrrataPriorDefinitivaSeedEvaluation(
+                seed=None,
+                findings=(
+                    _registry_revision_divergence_finding(
+                        source,
+                        selected_revision_id=selected_revision.id,
+                        detail="stamped revision differs from the law-determined revision",
+                    ),
+                ),
+            )
+        return ProrrataPriorDefinitivaSeedEvaluation(
+            seed=_seed_from_source(ejercicio=ejercicio, source=source, sector_id=sector_id),
+            findings=(),
+        )
+    return ProrrataPriorDefinitivaSeedEvaluation(seed=None, findings=())
 
 
 def seed_carried_prior_definitiva_entry(
@@ -61,9 +152,10 @@ def seed_carried_prior_definitiva_entry(
     settlement-period observation carrying ``iva.prorrata-porcentaje`` and that
     observation's ``stamped_revision_id`` still matches the law-determined
     revision selected for its source ``(M303, ejercicio - 1, settlement period)``.
-    Divergent or unreconfirmable observations are not trusted by this first seed
-    builder; the following plan rows add the operator-facing blocker/advisory
-    surfaces for those cases.
+    Divergent or unreconfirmable observations are not trusted. Call
+    :func:`evaluate_carried_prior_definitiva_seed` when the caller needs the
+    operator-facing blocker/advisory findings that explain why a seed did or did
+    not resolve.
 
     Args:
         ejercicio: Ejercicio whose provisional prorrata entry is being seeded.
@@ -76,32 +168,77 @@ def seed_carried_prior_definitiva_entry(
         A :class:`ProrrataPriorDefinitivaSeed` when a stamped prior settlement
         observation re-confirms, otherwise ``None``.
     """
-    repository = observation_repository if observation_repository is not None else CalculationObservationRepository()
-    prior_year = ejercicio - 1
-    for source in _prior_settlement_observations(repository, prior_year=prior_year):
-        selected_revision = select_revision(
-            resources().modelos.get(Modelo.M303.value),
-            filing_year=source.source_filing_year,
-            period=source.source_period,
-        )
-        if source.stamped_revision_id != selected_revision.id:
-            continue
-        entry = ProrrataRegisterEntry(
-            ejercicio=ejercicio,
-            regime=ProrrataRegisterRegime.GENERAL,
-            sector_id=sector_id,
-            provisional_percentage=source.percentage,
-            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-        )
-        return ProrrataPriorDefinitivaSeed(
-            entry=entry,
-            source_modelo=Modelo.M303.value,
-            source_filing_year=source.source_filing_year,
-            source_period=source.source_period,
-            source_casilla_id=_PRORRATA_PORCENTAJE_CASILLA,
-            stamped_revision_id=source.stamped_revision_id,
-        )
-    return None
+    return evaluate_carried_prior_definitiva_seed(
+        ejercicio=ejercicio,
+        observation_repository=observation_repository,
+        sector_id=sector_id,
+    ).seed
+
+
+def _seed_from_source(
+    *,
+    ejercicio: int,
+    source: _PriorSettlementObservation,
+    sector_id: str | None,
+) -> ProrrataPriorDefinitivaSeed:
+    entry = ProrrataRegisterEntry(
+        ejercicio=ejercicio,
+        regime=ProrrataRegisterRegime.GENERAL,
+        sector_id=sector_id,
+        provisional_percentage=source.percentage,
+        provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    )
+    return ProrrataPriorDefinitivaSeed(
+        entry=entry,
+        source_modelo=Modelo.M303.value,
+        source_filing_year=source.source_filing_year,
+        source_period=source.source_period,
+        source_casilla_id=_PRORRATA_PORCENTAJE_CASILLA,
+        stamped_revision_id=source.stamped_revision_id,
+    )
+
+
+def _registry_revision_divergence_finding(
+    source: _PriorSettlementObservation,
+    *,
+    selected_revision_id: str | None,
+    detail: str,
+) -> ProrrataSeedFinding:
+    return ProrrataSeedFinding(
+        code=CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE.value,
+        blocking=True,
+        message=(
+            "Prior Modelo 303 prorrata observation cannot seed carried_prior_definitiva: "
+            f"{detail}. Re-file or re-capture {source.source_filing_year} {source.source_period} "
+            "so the observation is stamped under the law-determined registry revision."
+        ),
+        source_modelo=Modelo.M303.value,
+        source_filing_year=source.source_filing_year,
+        source_period=source.source_period,
+        stamped_revision_id=source.stamped_revision_id,
+        selected_revision_id=selected_revision_id,
+    )
+
+
+def _missing_legacy_stamp_finding(
+    source: _PriorSettlementObservation,
+    *,
+    selected_revision_id: str,
+) -> ProrrataSeedFinding:
+    return ProrrataSeedFinding(
+        code=_MISSING_LEGACY_REVISION_STAMP,
+        blocking=False,
+        message=(
+            "Prior Modelo 303 prorrata observation seeded carried_prior_definitiva but has no "
+            "stamped_revision_id because it predates revision stamping. Re-capture the source "
+            "period to clear this advisory."
+        ),
+        source_modelo=Modelo.M303.value,
+        source_filing_year=source.source_filing_year,
+        source_period=source.source_period,
+        stamped_revision_id=None,
+        selected_revision_id=selected_revision_id,
+    )
 
 
 def _prior_settlement_observations(
@@ -125,7 +262,7 @@ def _prior_settlement_observations(
                 percentage=percentage,
                 source_filing_year=observation.filing_year,
                 source_period=source_period,
-                stamped_revision_id=payload.stamped_revision_id,
+                stamped_revision_id=getattr(payload, "stamped_revision_id", None),
                 captured_at=payload.captured_at,
             )
         )
@@ -144,5 +281,8 @@ def _settlement_period_token(period: str) -> str | None:
 
 __all__ = [
     "ProrrataPriorDefinitivaSeed",
+    "ProrrataPriorDefinitivaSeedEvaluation",
+    "ProrrataSeedFinding",
+    "evaluate_carried_prior_definitiva_seed",
     "seed_carried_prior_definitiva_entry",
 ]
