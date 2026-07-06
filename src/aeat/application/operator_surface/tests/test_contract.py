@@ -1,4 +1,31 @@
-"""Tests for the backend-owned operator surface contract."""
+"""Tests for the backend-owned operator surface contract.
+
+The suite pins the command roots, mounted command families, lifecycle tokens,
+parser-only source-kind aliases, help documents, and registered refusal error
+used by entrypoint adapters. It deliberately exercises the application-owned
+contract as data so CLI and MCP surfaces cannot redefine operator vocabulary in
+their own layers.
+
+See Also:
+    :mod:`~application.operator_surface`
+        Public facade for the backend-owned command contract under test.
+    :func:`~application.operator_surface.get_operator_surface_contract`
+        Cached contract builder exercised by the root, lifecycle, command-family,
+        and source-kind assertions.
+    :func:`~application.operator_surface.build_help_document`
+        Backend help document builder checked against the current mounted
+        command families.
+    :func:`~application.operator_surface.require_accepted_root`
+        Refusal gate that raises the registered operator-surface contract error.
+    :func:`~application.operator_surface.build_operator_surface_manifest`
+        Agent-facing manifest builder that consumes the same backend contract.
+    :mod:`~entrypoints.cli._app_contract`
+        CLI adapter that emits the manifest without owning the contract.
+    Governing vault records
+        ``2026-06-10-cli-operator-surface-adr`` and
+        ``2026-06-10-cli-operator-surface-audit`` define the accepted operator
+        vocabulary and lifecycle constraints this suite protects.
+"""
 
 from __future__ import annotations
 
