@@ -101,6 +101,9 @@ casilla_id = "iva.autorepercutido.intracomunitaria"
 casilla_id = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "43"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "44"
 
 [[revisions.2023-y-siguientes.formulas]]

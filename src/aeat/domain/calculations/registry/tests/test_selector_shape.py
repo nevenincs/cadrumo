@@ -157,6 +157,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         BindingSourceKind.PROFILE,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
         BindingSourceKind.PRORRATA_REGULARIZACION,
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
     }
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
     assert all(isinstance(source, BindingSourceKind) for source in _BINDING_SELECTOR_REGISTRY)
@@ -262,6 +263,27 @@ def test_prorrata_regularizacion_selector_accepts_canonical_m390_annual_shape() 
         "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
         "source_periods": ("1T", "2T", "3T", "4T"),
         "regularizacion_output": "modelo_390_regularizacion_anual",
+    }
+
+
+def test_bienes_inversion_regularizacion_selector_accepts_canonical_m303_casilla_43_shape() -> None:
+    """The capital-goods regularisation source declares the M303 casilla 43 target."""
+
+    binding = _binding(
+        source="bienes_inversion_regularizacion",
+        selector={
+            "source_modelo": "303",
+            "regularizacion_output": "modelo_303_casilla_43",
+        },
+        binding_id="bienes-inversion-regularizacion-casilla-43",
+    )
+
+    assert validate_binding_selector_shape(binding) == []
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == ()
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "regularizacion_output": "modelo_303_casilla_43",
     }
 
 

@@ -1,0 +1,96 @@
+"""Live source-mesh enrollment for ``bienes_inversion_regularizacion``."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ....core import BindingSourceKind, Period
+from ....core.resources import resources
+from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....tests.application_adapter_exports import BienesInversionIvaRegisterRepository
+from ....tests.secure_sql import isolated_runtime_profile
+from ...modelo._calculation_actions import _resolve_bucket_source_mesh
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "bienes-inversion-source-mesh-enrollment"
+_FILING_YEAR = 2024
+_PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
+_CREATED_AT = datetime(2025, 1, 20, 9, 0, tzinfo=UTC)
+_BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
+_CASILLA_43_ID: CasillaId = validated_casilla_id("43", surface="test casilla id")
+_VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="test casilla id",
+)
+_VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
+
+
+def _work_unit(*, revision_id: str) -> WorkUnit:
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=_FILING_YEAR,
+            period=_PERIOD,
+            revision_id=revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+        revision_id=revision_id,
+        name=f"303-{_FILING_YEAR}-{_PERIOD.registry_token}",
+        created_at=_CREATED_AT,
+        updated_at=_CREATED_AT,
+    )
+
+
+def _record() -> BienInversionIvaRecord:
+    return BienInversionIvaRecord(
+        identifier="bi-2022-maquina",
+        description="Maquina afecta a la actividad",
+        acquisition_year=2022,
+        cuota_soportada=Decimal("5000.00"),
+        prorrata_inicial_pct=Decimal("80"),
+        kind=BienInversionKind.MUEBLE,
+    )
+
+
+def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: Path) -> None:
+    """The live mesh projects the register value into Modelo 303 casilla 43."""
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    work_unit = _work_unit(revision_id=snapshot.revision.id)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
+
+        resolution = _resolve_bucket_source_mesh(
+            snapshot,
+            work_unit,
+            transaction_repository=None,
+            invoice_repository=None,
+            foreign_asset_observations=(),
+            casilla_inputs={
+                _VOLUMEN_CON_DERECHO_ID: Decimal("60000.00"),
+                _VOLUMEN_TOTAL_ID: Decimal("100000.00"),
+            },
+            filing_period_date=_CREATED_AT.date(),
+        )
+
+    bienes_diagnostics = tuple(
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+    )
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION in resolution.owned_sources
+    assert resolution.binding_values[_BINDING_ID] == Decimal("200.00")
+    assert resolution.bound_inputs_by_casilla_id[_CASILLA_43_ID] == Decimal("200.00")
+    assert _BINDING_ID not in resolution.unresolved_binding_ids
+    assert bienes_diagnostics == ()

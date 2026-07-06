@@ -53,6 +53,8 @@ _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducibl
 _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-con-derecho")
 _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-total")
 _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
+_M303_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = _casilla_id("43")
+_M303_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 _M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = _casilla_id("44")
 _M303_PRORRATA_REGULARIZACION_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
 _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
@@ -430,6 +432,30 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
 
 
 @pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
+def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_casilla_43_stays_manual(
+    revision_id: str,
+) -> None:
+    """The live capital-goods resolver owns a binding slot; the official box remains operator-visible."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    bindings = {binding.id: binding for binding in revision.bindings}
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+
+    binding = bindings[_M303_BIENES_INVERSION_REGULARIZACION_BINDING]
+    assert binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "regularizacion_output": "modelo_303_casilla_43",
+    }
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == ()
+
+    casilla_43 = casillas[_M303_BIENES_INVERSION_REGULARIZACION_CASILLA]
+    assert casilla_43.input_kind is InputKind.MANUAL
+    assert casilla_43.binding is None
+
+
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
 def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44_stays_manual(
     revision_id: str,
 ) -> None:
@@ -478,13 +504,14 @@ def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_
     }
 
     assert all(formula.target_casilla_id != _M303_PRORRATA_REGULARIZACION_CASILLA for formula in revision.formulas)
+    assert all(formula.target_casilla_id != _M303_BIENES_INVERSION_REGULARIZACION_CASILLA for formula in revision.formulas)
 
     cuota_deducible_total = next(
         formula for formula in revision.formulas if formula.target_casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
     )
-    assert _M303_PRORRATA_REGULARIZACION_CASILLA in set(
-        expression_casilla_refs(cuota_deducible_total.expression)
-    )
+    refs = set(expression_casilla_refs(cuota_deducible_total.expression))
+    assert _M303_BIENES_INVERSION_REGULARIZACION_CASILLA in refs
+    assert _M303_PRORRATA_REGULARIZACION_CASILLA in refs
     assert refs_by_formula_id["modelo-303-iva-resultado-regimen-general"] == {
         _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
         _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
