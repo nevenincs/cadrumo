@@ -89,8 +89,8 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce IVA observations.
 
     The first five values are shared with
-    :class:`application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
-    through :mod:`._shared_issue_reasons` so cross-ledger telemetry can
+    :class:`~application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
+    through :mod:`~application.aggregation._shared_issue_reasons` so cross-ledger telemetry can
     group upstream filter rejections under one key. The remaining values
     are IVA-specific.
     """
@@ -489,7 +489,16 @@ def resolve_iva_ledger_binding_values(
     *,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
 ) -> dict[BindingId, Decimal]:
-    """Resolve IVA ledger bindings, applying general-prorrata to deducible cuotas only."""
+    """Resolve IVA ledger bindings, applying general-prorrata to deducible cuotas only.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose IVA ledger bindings are
+            resolved.
+        observations: Typed :class:`IvaLedgerObservation` rows to aggregate.
+        prorrata_apportionment: Optional
+            :class:`IvaLedgerProrrataApportionment` applied only to deducible
+            cuota bindings.
+    """
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     if prorrata_apportionment is None or prorrata_apportionment.percentage == _HUNDRED:
         return binding_values
@@ -867,7 +876,7 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
     flow). The final flow that lands on the observation is recomputed
     once the effective :class:`IvaCategory` is resolved via
     :func:`derive_flow_for_classification`, which routes reverse-charge
-    categories to :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
+    categories to :attr:`~domain.iva.IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
     preserving ``REPERCUTIDO``/``SOPORTADO`` for every other category.
     """
     invoice_kind = _invoice_kind_for(direction)
