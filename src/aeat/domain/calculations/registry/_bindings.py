@@ -601,14 +601,14 @@ class _IvaCompensationAnnualPartitionSelector(BaseModel):
 
 
 class _ProrrataRegularizacionSelector(BaseModel):
-    """Selector for Modelo 303 casilla 44 annual prorrata regularisation."""
+    """Selector for annual prorrata regularisation filing targets."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: Literal["303"]
     source_casilla_ids: tuple[CasillaId, ...]
     source_periods: tuple[str, ...]
-    regularizacion_output: Literal["modelo_303_casilla_44"]
+    regularizacion_output: Literal["modelo_303_casilla_44", "modelo_390_regularizacion_anual"]
 
     @field_validator("source_casilla_ids")
     @classmethod

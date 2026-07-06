@@ -195,6 +195,10 @@ _CASILLA_DEDUCIBLE: CasillaId = validated_casilla_id(
     "iva.anual.cuota-deducible-total",
     surface="_CASILLA_DEDUCIBLE",
 )
+_CASILLA_PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id(
+    "iva.anual.regularizacion-prorrata-definitiva",
+    surface="_CASILLA_PRORRATA_REGULARIZACION",
+)
 _CASILLA_RESULTADO: CasillaId = validated_casilla_id(
     "iva.anual.resultado-regimen-general",
     surface="_CASILLA_RESULTADO",
@@ -330,7 +334,11 @@ def _annual_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservation
     return tuple(IvaLedgerObservation(**row) for row in rows)
 
 
-def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
+def _calculate(
+    *,
+    include_recargo: bool,
+    regularizacion_prorrata: Decimal | None = None,
+) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
     binding_values: dict[str, Decimal] = {
         # This scenario grounds only the ledger-derived annual totals against
@@ -351,6 +359,8 @@ def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
         ),
     }
     inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    if regularizacion_prorrata is not None:
+        inputs = {**inputs, _CASILLA_PRORRATA_REGULARIZACION: regularizacion_prorrata}
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -400,6 +410,29 @@ def test_m390_annual_devengada_anti_tautology_recargo_changes_total() -> None:
     # 3.744,00 EUR.
     assert with_recargo.values[_CASILLA_DEDUCIBLE] == without_recargo.values[_CASILLA_DEDUCIBLE]
     assert with_recargo.values[_CASILLA_RESULTADO] - without_recargo.values[_CASILLA_RESULTADO] == Decimal("3744.00")
+
+
+def test_m390_prorrata_regularizacion_flows_to_deducciones_and_resultado() -> None:
+    """A nonzero box 522 raises annual deductions and lowers the net result.
+
+    The check is delta-based: it runs the existing registry calculation twice
+    with identical AEAT-manual observation inputs and changes only the
+    operator-supplied box 522 value. It therefore proves formula membership
+    without reimplementing the annual deductible-total formula in the test.
+    """
+    regularizacion = Decimal("1234.56")
+    without_regularizacion = _calculate(include_recargo=True)
+    with_regularizacion = _calculate(include_recargo=True, regularizacion_prorrata=regularizacion)
+
+    assert with_regularizacion.values[_CASILLA_DEVENGADA] == without_regularizacion.values[_CASILLA_DEVENGADA]
+    assert (
+        with_regularizacion.values[_CASILLA_DEDUCIBLE] - without_regularizacion.values[_CASILLA_DEDUCIBLE]
+        == regularizacion
+    )
+    assert (
+        without_regularizacion.values[_CASILLA_RESULTADO] - with_regularizacion.values[_CASILLA_RESULTADO]
+        == regularizacion
+    )
 
 
 def _dr_super_reducido_repercutido(
