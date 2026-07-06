@@ -1,8 +1,8 @@
 """Approval-basis staleness coverage for the invoice calculation source.
 
 Exercises the ``invoice_catalogue_fingerprint`` added to
-:class:`~aeat.domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
-:attr:`~aeat.application.filing.ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED`
+:class:`~domain.filing.ModeloApprovalBasis`: an ``APROBADO`` draft must go stale with
+:attr:`~application.filing.ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED`
 when the bucket's upstream issued/received invoices change, and must not be flagged
 when they are unchanged. The invoice catalogue is a calculation source resolved
 through the source mesh; before this fingerprint only the ledger transaction
@@ -12,6 +12,20 @@ Real behaviour: the fingerprint is self-loaded from the encrypted
 :class:`InvoiceCatalogueRepository`, mirroring the transaction-catalogue path, so
 stale detection is reproducible at refresh time without running the source mesh in
 the review layer.
+
+See Also:
+    :func:`~application.filing.compute_current_approval_basis`
+        Builds the current review fingerprints, including the invoice catalogue.
+    :func:`~application.filing.approval_stale_reasons`
+        Compares the stored approval basis with the current invoice digest.
+    :func:`~application.filing._review._invoice_catalogue_fingerprint`
+        Stable, order-independent digest over invoice catalogue records.
+    :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
+        Encrypted invoice store self-loaded by the review layer.
+    :class:`~application.invoices.InvoiceCatalogueSourceResolver`
+        Calculation source resolver for the same invoice catalogue surface.
+    :mod:`~application.filing.tests.test_source_mesh_review_unit`
+        Registry-free unit coverage for the fingerprint helper.
 """
 
 from __future__ import annotations
