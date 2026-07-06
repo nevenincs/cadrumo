@@ -1,8 +1,7 @@
-"""Madrid nacimiento/adopción D4 indeterminate-eligibility advisory tests.
+"""Madrid nacimiento/adopción indeterminate-eligibility advisory tests.
 
-Covers ``_madrid_nacimiento_adopcion_eligibility_advisory_finding`` (ADR
-``2026-07-01-autonomic-deduccion-auto-trigger-adr`` decision D4, issue #596): the
-verify-path advisory that fires when the calculate-path auto-trigger
+Covers ``_madrid_nacimiento_adopcion_eligibility_advisory_finding``: the
+verify-path advisory fires when the calculate-path auto-trigger
 (``_inject_derived_autonomic_deduccion_facts``) fail-closed on an indeterminate
 (tributación conjunta or married/pareja-de-hecho) Madrid unit with at least one
 nacimiento/adopción-eligible descendant, leaving casilla 1039 at zero with no

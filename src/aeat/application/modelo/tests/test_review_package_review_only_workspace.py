@@ -6,8 +6,8 @@ review package, seal it with ``review_only=True`` (and, separately,
 ``review_only=False``), decrypt it with the real X25519/HKDF/AES-256-GCM
 primitives (no mocks, no hand-rolled crypto), open a
 :class:`~aeat.application.modelo.ReviewOnlyWorkspace` from the recovered
-bytes, and assert the structural guard behaves per the ADR's authority
-boundary: a review-only workspace is refused for any composition requiring
+bytes, and assert the structural guard enforces the authority boundary: a
+review-only workspace is refused for any composition requiring
 filing authority, and a filing-grade (non-review-only) workspace is not.
 """
 
