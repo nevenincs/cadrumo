@@ -3,14 +3,25 @@
 This module composes existing registry-authority introspection; it does not
 re-implement registry loading, calc-closure derivation, or export-layout
 parsing. Every capability below is read directly off the loaded
-:class:`~aeat.domain.calculations.registry.ModeloDefinition` /
-:class:`~aeat.domain.calculations.registry.ModeloRevision` records, or derived
-via the existing :func:`~aeat.domain.calculations.registry.calculation_closure_casilla_ids`
+:class:`~domain.calculations.registry.ModeloDefinition` /
+:class:`~domain.calculations.registry.ModeloRevision` records, or derived
+via the existing :func:`~domain.calculations.registry.calculation_closure_casilla_ids`
 helper.
 
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
 capability reports an explicit gap (``False`` / empty tuple), never a
 fabricated positive.
+
+See Also:
+    :class:`~domain.calculations.registry.ModeloEntry`
+        Production support-matrix row carrying the expanded registry query
+        surface.
+    :func:`~domain.calculations.registry.build_support_matrix`
+        Domain builder used by the production query service.
+    :func:`~application.modelo.registry_support_matrix`
+        Application facade exposed to the operator CLI.
+    :mod:`~dev.registry.matrix.cli`
+        Developer command that renders these probe rows.
 """
 
 from __future__ import annotations
@@ -48,7 +59,7 @@ def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
     """Return the revision with the most recent ``valid_from`` for ``modelo``.
 
     A modelo always declares at least one revision
-    (:meth:`ModeloDefinition._validate_revisions` enforces this at load time),
+    (``ModeloDefinition._validate_revisions`` enforces this at load time),
     so the max is always well-defined.
     """
     return max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
@@ -65,7 +76,7 @@ class ModeloCapabilityRow:
             probed against (the revision with the most recent ``valid_from``).
         latest_revision_valid_from: That revision's applicability start date.
         calc_grade: Whether the latest revision's calculation closure
-            (:func:`~aeat.domain.calculations.registry.calculation_closure_casilla_ids`)
+            (:func:`~domain.calculations.registry.calculation_closure_casilla_ids`)
             is non-empty — i.e. the revision has at least one formula, binding,
             or verification-expectation operand wiring the calculation engine
             traverses. ``False`` marks a data-fidelity / informative-only
@@ -118,7 +129,7 @@ def build_capability_matrix(authority: ValidatedRegistryAuthority | None = None)
 
     Args:
         authority: The registry authority to probe. Defaults to
-            :func:`~aeat.domain.calculations.registry.bundled_authority`, the
+            :func:`~domain.calculations.registry.bundled_authority`, the
             package-bundled registry tree.
 
     Returns:
