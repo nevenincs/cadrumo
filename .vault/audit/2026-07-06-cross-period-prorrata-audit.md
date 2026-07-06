@@ -523,3 +523,27 @@ Findings: no open S38 reconciliation findings.
 
 Residual gate inventory: the focused domain prorrata/register test slice passes
 sequentially with 51 tests.
+
+## S39 Review
+
+Reviewed the `W06.P09.S39` ledger-rollup exclusion follow-up against the
+cross-period prorrata ADR, the W06 plan row, the declared-volume divergence
+helper, and the domain IVA prorrata input contract. The live rollup remains
+correctly advisory-only: it windows existing IVA ledger observations with
+`Period.contains`, classifies visible output volume into con-derecho and
+sin-derecho buckets, and warns when the ledger projection diverges from the
+operator-declared annual volume casillas.
+
+The automatic Art. 104.Tres exclusion classification remains deferred. The
+domain input contract requires the caller to supply annual totals with
+subvenciones not linked to operations, autoconsumos, bienes-de-inversion
+disposals, and non-recurring financial or immovable operations already excluded.
+Until ledger evidence can identify those exclusions without guessing, the rollup
+must stay a reconciliation check and must not become an authoritative filed
+volume source.
+
+Findings: no open S39 reconciliation findings.
+
+Residual gate inventory: the prorrata regularizacion plus domain prorrata test
+slice passes sequentially with 44 tests. `vault check features` and
+`vault check frontmatter` are clean for `cross-period-prorrata`.
