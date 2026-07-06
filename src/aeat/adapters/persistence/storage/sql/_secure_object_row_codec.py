@@ -1,3 +1,32 @@
+"""Row-level codec helpers for SQL secure-object records.
+
+This module keeps the encrypted row decode path and post-write revision
+metadata update close to the SQL secure-object adapter without leaving both
+algorithms embedded in the repository class. It derives and persists revision
+lineage after ciphertext is written, validates row classification and schema
+contracts before decrypting, and refuses rows whose revision hashes no longer
+match their stored metadata.
+
+See Also:
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
+        Repository that delegates revision metadata writes and row decoding here.
+    :func:`~adapters.persistence.storage.sql._secure_object_crypto.derive_revision_id`
+        Deterministic revision-id primitive used after a row write.
+    :func:`~adapters.persistence.storage.sql._secure_object_crypto.verify_revision_self_consistency`
+        Integrity check applied before decrypting an existing row.
+    :func:`~adapters.persistence.storage.sql._secure_object_schema.build_revision_ancestor_ids`
+        Revision-lineage helper used to persist ancestor chains.
+    :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectRecord`
+        Plaintext record returned after classification, schema, lineage, and
+        AEAD checks pass.
+    :func:`~adapters.persistence.storage.crypto.secure_object_payload_aad`
+        Associated-data builder that binds ciphertext to row identity.
+    Governing vault records
+        ``2026-05-22-secure-storage-production-hardening-architecture-adr`` and
+        ``2026-05-28-secure-storage-production-hardening-w04-p07-s30-review-audit``
+        require secure-object revision lineage and conflict-safe metadata.
+"""
+
 from __future__ import annotations
 
 import json

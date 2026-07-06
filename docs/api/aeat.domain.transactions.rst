@@ -20,6 +20,7 @@ Submodules
    aeat.domain.transactions._irpf_categories
    aeat.domain.transactions._llm
    aeat.domain.transactions._model_tier
+   aeat.domain.transactions._model_validation
    aeat.domain.transactions._models
    aeat.domain.transactions._protocols
    aeat.domain.transactions._raw_transaction
