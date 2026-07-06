@@ -133,7 +133,7 @@ def _broad_exception_scan_inputs(tree: ast.AST) -> _BroadExceptionScanInputs:
             for target in node.targets:
                 broad_alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
-            broad_alias_assignments.append((qualified_name(node.value), (node.target.id,)))
+            broad_alias_assignments.extend(_broad_alias_assignments_from_target(node.target, node.value))
 
     return _BroadExceptionScanInputs(
         pytest_aliases=pytest_aliases,
@@ -152,6 +152,8 @@ def _broad_alias_assignments_from_target(
 ) -> list[tuple[str, tuple[str, ...]]]:
     """Return broad-exception alias assignments from one target/value pair."""
     if isinstance(target, ast.Name):
+        if isinstance(value, ast.Tuple | ast.List | ast.Set):
+            return [(qualified_name(element), (target.id,)) for element in value.elts]
         return [(qualified_name(value), (target.id,))]
     if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
         assignments: list[tuple[str, tuple[str, ...]]] = []
@@ -425,6 +427,32 @@ with contextlib.suppress(*(RuntimeError,)):
 
     assert _broad_pytest_raises_sites(tree) == [5]
     assert _broad_contextlib_suppress_sites(tree) == [11]
+
+
+def test_broad_exception_detector_rejects_assigned_exception_containers() -> None:
+    """Assigned exception containers must not hide broad exception roots."""
+    tree = ast.parse(
+        """
+import contextlib
+import pytest
+
+ExpectedErrors = (ValueError, Exception)
+SuppressedErrors = [RuntimeError, BaseException]
+NarrowErrors = (ValueError, RuntimeError)
+
+with pytest.raises(ExpectedErrors):
+    pass
+
+with pytest.raises(NarrowErrors):
+    pass
+
+with contextlib.suppress(*SuppressedErrors):
+    pass
+"""
+    )
+
+    assert _broad_pytest_raises_sites(tree) == [9]
+    assert _broad_contextlib_suppress_sites(tree) == [15]
 
 
 def test_broad_suppress_detector_rejects_contextlib_alias_shapes() -> None:
