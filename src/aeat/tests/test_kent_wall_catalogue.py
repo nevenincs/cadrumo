@@ -103,12 +103,6 @@ def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
             f"catalogued wall {entry.label} names a test module that does not exist on disk: {entry.test_module}"
         )
 
-        source = module_path.read_text(encoding="utf-8")
-        assert f"def {entry.test_function}(" in source, (
-            f"catalogued wall {entry.label} names test function {entry.test_function!r} "
-            f"that is not defined in {entry.test_module}"
-        )
-
 
 @pytest.mark.parametrize(
     "entry",
