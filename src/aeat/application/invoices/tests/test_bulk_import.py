@@ -5,7 +5,7 @@ write to :func:`~application.invoices.create_catalogue_invoice` -- the sole
 sanctioned :class:`~domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``) -- and never persists a row
 itself. These tests exercise it against the real encrypted
-:class:`~tests.application_adapter_exports.InvoiceCatalogueRepository` (real
+:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository` (real
 master-key provider, real engine) -- no mocks.
 
 See Also:
@@ -31,9 +31,9 @@ import pytest
 from openpyxl import Workbook
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
-from ....tests.application_adapter_exports import InvoiceCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     BulkInvoiceImportRow,
