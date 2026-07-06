@@ -131,7 +131,7 @@ def _add_forbidden_binding_sites(node: ast.AST, test_double_assignments: list[tu
     if isinstance(node, ast.Assign):
         targets = list(node.targets)
         lineno = node.lineno
-    elif isinstance(node, ast.AnnAssign | ast.For | ast.AsyncFor | ast.NamedExpr):
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign | ast.For | ast.AsyncFor | ast.NamedExpr):
         targets = [node.target]
         lineno = node.lineno
     elif isinstance(node, ast.comprehension):
@@ -335,6 +335,21 @@ chosen = next((item for item in rows if (dummy_value := item.value)), None)
         (3, "fake_key"),
         (4, "stub"),
         (5, "dummy_value"),
+    }
+
+
+def test_test_double_name_detector_rejects_augmented_assignment_targets() -> None:
+    """Augmented assignments still bind forbidden test-double names."""
+    tree = ast.parse(
+        """
+mock_count += 1
+state.fake_counter += 1
+"""
+    )
+
+    assert set(_forbidden_test_double_assignments(tree)) == {
+        (2, "mock_count"),
+        (3, "fake_counter"),
     }
 
 
