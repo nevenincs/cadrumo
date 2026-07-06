@@ -6,6 +6,20 @@ out-of-scope obligation and is NOT a dependency here. Approved by Orden
 HAC/85/2003 art 1, with a verbatim-grounded January-to-14-February plazo in art 3
 (BOE-A-2003-1686). Scheduling/applicability-grade: declaration-header casillas
 only, no bundled diseño de registro, so no numbered form casilla is fabricated.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :class:`~core.TaxDomain`
+        Closed tax-family enum whose IAE member classifies the registration.
+    :data:`~core.OUT_OF_SCOPE_OBLIGATIONS`
+        Scope ledger that keeps Modelo 840 distinct from this communication.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership extended by the Modelo 848 foundation.
+    :mod:`~domain.calculations.registry.tests.test_modelo_140_143_registry`
+        Later promotion slice using the same legal-authority validation pattern.
 """
 
 from __future__ import annotations
