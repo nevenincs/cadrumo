@@ -796,13 +796,6 @@ class Transaction(BaseModel):
             return date.fromisoformat(value)
         return value
 
-    @field_validator("cash_accounting_payment_evidence", mode="before")
-    @classmethod
-    def _coerce_cash_accounting_payment_evidence(cls, value: object) -> object:
-        if value is None:
-            return ()
-        return value
-
     @field_validator(
         "business_pct",
         "taxable_base",
@@ -835,6 +828,7 @@ class Transaction(BaseModel):
         "edit_lineage",
         "lifecycle_lineage",
         "classification_history",
+        "cash_accounting_payment_evidence",
         mode="before",
     )
     @classmethod
@@ -844,8 +838,11 @@ class Transaction(BaseModel):
         Under strict mode a python-mode ``list`` fails ``tuple_type`` even
         though a JSON-decoded array is legitimately a list; this makes the
         JSON-shaped list acceptable without loosening the frozen-tuple
-        contract on the stored value.
+        contract on the stored value. ``None`` also collapses to the field's
+        empty-tuple default rather than failing ``tuple_type``.
         """
+        if value is None:
+            return ()
         if isinstance(value, list):
             return tuple(value)
         return value
