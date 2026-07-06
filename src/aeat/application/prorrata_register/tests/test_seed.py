@@ -1,4 +1,18 @@
-"""Carried-prior-definitive seed coverage over real filed observations."""
+"""Carried-prior-definitive seed coverage over real filed observations.
+
+See Also:
+    :func:`~application.prorrata_register._seed.evaluate_carried_prior_definitiva_seed`
+        Seed evaluator under test for happy-path, divergent-revision, and
+        legacy-missing-stamp outcomes.
+    :class:`~application.calculations.CalculationObservationRepository`
+        Real encrypted observation repository that stores the prior Modelo 303
+        settlement observation.
+    :class:`~application.calculations.CrossPeriodCleanStateBlocker`
+        Blocking vocabulary asserted for registry-revision divergence findings.
+    :func:`~tests.registry_observations.registry_grounded_modelo_observation`
+        Test helper that builds registry-grounded Modelo 303 observation
+        payloads instead of mirroring calculation logic.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,17 @@
-"""Application-service tests for the cross-period prorrata register."""
+"""Application-service tests for the cross-period prorrata register.
+
+See Also:
+    :class:`~application.prorrata_register.ProrrataRegisterService`
+        Facade under test for recording art. 105.Dos/Tres overrides and
+        resolving the in-force provisional percentage.
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+        Real encrypted register repository used by the service tests.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        Strict register row type persisted for carried, authorised, and inicio
+        provenance paths.
+    :func:`~domain.prorrata_register.resolve_provisional_percentage`
+        Single domain precedence ladder delegated to by the service resolver.
+"""
 
 from __future__ import annotations
 
