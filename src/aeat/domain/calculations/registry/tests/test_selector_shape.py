@@ -40,6 +40,8 @@ from .. import CasillaId, validated_casilla_id
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
+    binding_source_casilla_ids,
+    binding_source_modelo,
     selector_model_for_source,
     validate_binding_selector_shape,
 )
@@ -61,6 +63,28 @@ _M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id(
     "iva.cuota-devengada-total",
     surface="_M303_CUOTA_DEVENGADA_TOTAL_CASILLA",
+)
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.cuota-deducible-total",
+    surface="_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA",
+)
+_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA",
+)
+_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-total",
+    surface="_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA",
+)
+_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-porcentaje",
+    surface="_M303_PRORRATA_PORCENTAJE_CASILLA",
+)
+_PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
+    _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
+    _M303_PRORRATA_PORCENTAJE_CASILLA,
 )
 
 
@@ -132,6 +156,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         BindingSourceKind.MANUAL_INPUT,
         BindingSourceKind.PROFILE,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+        BindingSourceKind.PRORRATA_REGULARIZACION,
     }
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
     assert all(isinstance(source, BindingSourceKind) for source in _BINDING_SELECTOR_REGISTRY)
@@ -188,6 +213,89 @@ def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
         },
     )
     assert validate_binding_selector_shape(binding) == []
+
+
+def test_prorrata_regularizacion_selector_accepts_canonical_m303_casilla_44_shape() -> None:
+    """The prorrata regularisation source declares the regulated annual inputs."""
+
+    binding = _binding(
+        source="prorrata_regularizacion",
+        selector={
+            "source_modelo": "303",
+            "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+            "source_periods": ("1T", "2T", "3T", "4T"),
+            "regularizacion_output": "modelo_303_casilla_44",
+        },
+        binding_id="prorrata-regularizacion-casilla-44",
+    )
+
+    assert validate_binding_selector_shape(binding) == []
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == _PRORRATA_REGULARIZACION_SOURCE_IDS
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+        "source_periods": ("1T", "2T", "3T", "4T"),
+        "regularizacion_output": "modelo_303_casilla_44",
+    }
+
+
+def test_prorrata_regularizacion_selector_rejects_uncanonical_inputs() -> None:
+    """The construction gate refuses partial or non-annual regularisation selectors."""
+
+    cases = (
+        (
+            {
+                "source_modelo": "303",
+                "source_casilla_ids": (
+                    _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
+                    _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
+                    _M303_PRORRATA_PORCENTAJE_CASILLA,
+                ),
+                "source_periods": ("1T", "2T", "3T", "4T"),
+                "regularizacion_output": "modelo_303_casilla_44",
+            },
+            "bad-prorrata-missing-deductible",
+            ("prorrata_regularizacion", "canonical order"),
+        ),
+        (
+            {
+                "source_modelo": "303",
+                "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+                "source_periods": ("4T",),
+                "regularizacion_output": "modelo_303_casilla_44",
+            },
+            "bad-prorrata-quarter-only",
+            ("source_periods", "1T", "4T"),
+        ),
+        (
+            {
+                "source_modelo": "390",
+                "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+                "source_periods": ("1T", "2T", "3T", "4T"),
+                "regularizacion_output": "modelo_303_casilla_44",
+            },
+            "bad-prorrata-source-modelo",
+            ("source_modelo", "303"),
+        ),
+        (
+            {
+                "source_modelo": "303",
+                "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+                "source_periods": ("1T", "2T", "3T", "4T"),
+                "regularizacion_output": "modelo_390-annual",
+            },
+            "bad-prorrata-output",
+            ("regularizacion_output", "modelo_303_casilla_44"),
+        ),
+    )
+    for selector, binding_id, expected_substrings in cases:
+        _assert_selector_refused_at_construction(
+            source="prorrata_regularizacion",
+            selector=selector,
+            binding_id=binding_id,
+            expected_substrings=expected_substrings,
+        )
 
 
 def test_cross_filing_selectors_reject_legacy_and_invalid_source_keys() -> None:
