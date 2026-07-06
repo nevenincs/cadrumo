@@ -20,6 +20,18 @@ Current inventory for durable replacement:
   mock/fake/stub/spy/dummy helper classes or functions.
 
 The tests assert that neither mock imports nor test-double definitions appear.
+
+See Also:
+    :mod:`~tests.test_monkeypatch_inventory`
+        Companion production-test guard for monkeypatch mutation shortcuts.
+    :mod:`~tests.test_no_skip_xfail`
+        Companion guard for skip and xfail shortcuts across deterministic tests.
+    :func:`~tests._inventory.all_test_control_modules`
+        Shared inventory surface walked by this test-control ratchet.
+    :class:`_TestControlInventorySites`
+        AST-level site carrier collected for each inspected source tree.
+    :class:`_TestControlInventoryViolations`
+        Formatted violation aggregate consumed by the public assertions.
 """
 
 from __future__ import annotations
