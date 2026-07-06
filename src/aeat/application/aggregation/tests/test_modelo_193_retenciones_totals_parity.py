@@ -5,7 +5,7 @@ Modelo 193's resumen-anual summary casillas (``decl.base-total``,
 taxpayer's four Modelo 123 quarterly filings — a ``source =
 "relation_prefill"`` aggregation entirely independent of the dedicated
 per-perceptor retención store
-(:class:`~aeat.application.aggregation.RetencionesAggregation`, RET-1,
+(:class:`~application.aggregation.RetencionesAggregation`, RET-1,
 ``source = "retenciones_aggregation"``) that also materialises the
 ``decl.total-perceptores`` distinct-NIF count.
 
@@ -18,7 +18,7 @@ figure, and today's engine would silently accept both without complaint
 
 This module drives the REAL registry-loaded Modelo 193 ``2024-y-siguientes``
 snapshot and the REAL engine (``calculate_registry_snapshot``, no mocks) to
-prove :func:`~aeat.application.aggregation.compute_retenciones_totals_parity`
+prove :func:`~application.aggregation.compute_retenciones_totals_parity`
 against genuine engine output: a consistent per-perceptor store (rows sum to
 the engine-computed summary) passes, and a dropped perceptor row (the store no
 longer accounts for the full summary total) is CAUGHT with the exact delta
@@ -27,6 +27,22 @@ named, never silently accepted.
 Grounding: RD 439/2007 art. 90, art. 108, Orden HAC/56/2024 (Diseño de
 Registro Modelo 193, Tipo de Registro 1, posiciones 136-144 / 145-159 /
 160-174), Ley 35/2006 arts. 25, 99, 101.
+
+See Also:
+    :func:`~application.aggregation.compute_retenciones_totals_parity`
+        Pure comparison primitive whose deltas this regression suite asserts.
+    :class:`~application.aggregation.RetencionesTotalsParity`
+        Verdict model that keeps the perceptor-count, base, and retención axes
+        explicit instead of collapsing mismatches into a boolean.
+    :func:`~application.aggregation.aggregate_retenciones_193`
+        Dedicated per-perceptor RET-1 aggregator that supplies the store-side
+        totals for Modelo 193.
+    :class:`~application.aggregation.RetencionesAggregation`
+        Repository-backed retenciones summary source enrolled on the calculate
+        mesh for M180/M193 distinct-NIF counts.
+    ``2026-06-24-retenciones-perceptor-count-adr`` and
+    ``2026-06-30-retenciones-perceptor-count-audit``
+        Decision and current-state audit governing the RET-1 source split.
 """
 
 from __future__ import annotations
