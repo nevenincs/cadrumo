@@ -250,3 +250,29 @@ Residual gate inventory: `ruff check` is clean for the touched test file. The
 prorrata regularización test file passes sequentially with 8 tests, the seed
 test file passes sequentially with 3 tests, and the settlement write-back test
 file passes sequentially with 3 tests.
+
+## S28 Review
+
+Reviewed the `W04.P07.S28` oracle payload after re-grounding the step against
+the cross-period prorrata ADR, the W04/P07 plan row, the existing manual-oracle
+corpus shape, and the current external-oracle enrollment gate. The change is a
+single data fixture under `manual_oracles`: it records the AEAT Manual practico
+IVA 2025 prorrata-general worked example from the bundled local manual, pages
+137-138, with `filing_year` 2025, a raw evidence locator, the stated annual
+total and con-derecho volumes, the definitive percentage, the standalone
+regularización amount, and the net fourth-quarter deduction effect.
+
+The diff does not promote `PRORRATA_REGULARIZACION`, does not edit
+`_source_mesh.py`, and introduces no source kind, resolver convention,
+validator convention, or registry selector shape. The current Modelo 303
+registry still treats the volume fields and casilla 44 as manual at this point;
+the live mesh promotion remains the planned S30 step after the S29 oracle-proof
+test lands.
+
+Findings: no open S28 implementation findings.
+
+Residual gate inventory: the new JSON payload parses cleanly and its
+`expected_by_casilla_id` keys validate as canonical casilla ids. The external
+oracle enrollment test module passes when selected with the integration marker
+(`2 passed`); the initial unmarked invocation was deselected by the repository's
+default `-m unit` pytest configuration.

@@ -34,6 +34,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W04-P06-S25]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P06-S26]]'
   - '[[2026-07-06-cross-period-prorrata-W04-P06-S27]]'
+  - '[[2026-07-06-cross-period-prorrata-W04-P07-S28]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -83,6 +84,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W04-P06-S25` - project prorrata declared-volume ledger divergence advisory
 - `2026-07-06-cross-period-prorrata-W04-P06-S26` - co-emit prorrata settlement register write-back
 - `2026-07-06-cross-period-prorrata-W04-P06-S27` - prove prorrata settlement projection and year carry
+- `2026-07-06-cross-period-prorrata-W04-P07-S28` - bundle AEAT prorrata regularizacion oracle
 
 ### plan
 
