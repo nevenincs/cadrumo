@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
@@ -13,8 +12,13 @@ import pytest
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision, resolve_ledger_iva_aggregation_binding_values
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....domain.calculations.registry import (
+    DataBindingDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ....domain.iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from ....domain.transactions import (
     BusinessClassification,
@@ -46,9 +50,89 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-@cache
-def _modelo_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
-    return resources().modelos.get(modelo_id).revisions[revision_id]
+def _iva_binding(
+    binding_id: str,
+    *,
+    categories: tuple[IvaCategory, ...],
+    rate_kinds: tuple[IvaRateKind, ...],
+    flow_direction: IvaFlowDirection,
+) -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=binding_id,
+        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        selector={
+            "categories": categories,
+            "rate_kinds": rate_kinds,
+            "flow_direction": flow_direction,
+            "fact": "iva_amount_sum",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=("ley-37-1992:art-88",),
+        source_refs=("test-iva-ledger-binding",),
+    )
+
+
+def _revision_with_iva_bindings(revision_id: str, *bindings: DataBindingDefinition) -> ModeloRevision:
+    return ModeloRevision(
+        id=revision_id,
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(year_from=2026, periods=("1T", "2T", "3T", "4T", "0A")),
+        legal_refs=("ley-37-1992:art-88",),
+        source_refs=("test-iva-ledger-binding",),
+        bindings=bindings,
+    )
+
+
+def _modelo_303_iva_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2009-y-siguientes",
+        _iva_binding(
+            "modelo-303-iva-repercutido-general-cuota",
+            categories=(IvaCategory.DOMESTIC_GENERAL_21,),
+            rate_kinds=(IvaRateKind.GENERAL,),
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+        ),
+        _iva_binding(
+            "modelo-303-iva-soportado-interiores-cuota",
+            categories=(
+                IvaCategory.DOMESTIC_GENERAL_21,
+                IvaCategory.DOMESTIC_REDUCED_10,
+                IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            ),
+            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
+            flow_direction=IvaFlowDirection.SOPORTADO,
+        ),
+    )
+
+
+def _modelo_309_iva_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2004-y-siguientes",
+        _iva_binding(
+            "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
+            categories=(IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,),
+            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        ),
+        _iva_binding(
+            "modelo-309-iva-soportado-recargo-equivalencia-cuota",
+            categories=(IvaCategory.RECARGO_EQUIVALENCIA,),
+            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
+            flow_direction=IvaFlowDirection.SOPORTADO,
+        ),
+    )
+
+
+def _modelo_390_without_recargo_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2010-y-siguientes",
+        _iva_binding(
+            "modelo-390-iva-repercutido-general-cuota",
+            categories=(IvaCategory.DOMESTIC_GENERAL_21,),
+            rate_kinds=(IvaRateKind.GENERAL,),
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+        ),
+    )
 
 
 _Q2_2023 = _period(2023, "2T")
@@ -832,7 +916,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
 
 
 def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bindings() -> None:
-    revision = _modelo_revision("309", "2004-y-siguientes")
+    revision = _modelo_309_iva_revision()
     candidates = (
         IvaLedgerCandidate(
             ledger_id="eu-acquisition",
@@ -861,7 +945,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
 
 
 def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
-    revision = _modelo_revision("390", "2010-y-siguientes")
+    revision = _modelo_390_without_recargo_revision()
     candidate = IvaLedgerCandidate(
         ledger_id="retail-recargo",
         transaction_date=date(2026, 4, 12),
@@ -897,7 +981,7 @@ def test_preclassified_candidate_rejects_non_declarable_sentinel_category() -> N
 
 
 def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> None:
-    revision = _modelo_revision("309", "2004-y-siguientes")
+    revision = _modelo_309_iva_revision()
     candidate = IvaLedgerCandidate(
         ledger_id="late-row",
         transaction_date=date(2026, 7, 1),
@@ -931,7 +1015,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
         TransactionCatalogue.from_transactions((incoming, outgoing)),
         period=_Q2_2026,
     )
-    revision = _modelo_revision("303", "2009-y-siguientes")
+    revision = _modelo_303_iva_revision()
 
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)
 
