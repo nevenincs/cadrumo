@@ -5,6 +5,22 @@ tax ids, unparsable dates/amounts) and the full transport against a real loopbac
 Ollama HTTP server (no mocks) -- exactly the harness
 ``_llm_vision_evidence_support._run_against_loopback_ollama`` already uses for the
 classification vision path.
+
+See Also:
+    :class:`~application.ledger._evidence_draft_vision.LocalVisionInvoiceFieldExtractor`
+        On-host Ollama transport exercised through the loopback server.
+    :func:`~application.ledger._evidence_draft_vision.parse_vision_extraction_response`
+        JSON-object recovery and strict schema boundary covered by adversarial
+        response cases.
+    :func:`~application.ledger._evidence_draft_vision._ground_extracted_fields`
+        Grounded re-validation step that rejects hallucinated identifiers and
+        unparsable values.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        Text-layer-first orchestration path that routes scan-only evidence to
+        this local vision fallback.
+    ``2026-05-30-purchase-invoice-ocr-extraction-discipline-adr`` and
+    ``2026-06-13-llm-evidence-classification-adr``
+        Accepted local-OCR / local-vision posture these tests keep executable.
 """
 
 from __future__ import annotations
