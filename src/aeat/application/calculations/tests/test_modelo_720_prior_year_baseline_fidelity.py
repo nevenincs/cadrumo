@@ -47,13 +47,17 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import (
-    CasillaId,
+from ....core._casilla_id import CasillaId, validated_casilla_id
+from ....core._foreign_asset_obligation import ForeignAssetObligationGroup, foreign_asset_declaration_threshold
+from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+from ....domain.calculations.registry._bindings import (
+    CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
+from ....domain.modelos._verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
+from .._foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 
@@ -73,13 +77,13 @@ _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cyc
 
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
 #: ``modelo-720-asset-declaration-threshold-eur`` = €50,000).
-_INITIAL_THRESHOLD_EUR = Decimal("50000.00")
+_INITIAL_THRESHOLD_EUR = MODELO_720_REPORTING_THRESHOLD_EUR
 
 #: Re-declaration delta threshold per arts. 42-bis.5 / 42-ter.5 / 54-bis.7
 #: (€20,000 increment over last-declared baseline triggers re-declaration obligation).
-#: This is the value the A3 contract specifies as MODELO_720_REDECLARATION_DELTA_EUR;
-#: referenced here for scenario documentation only (not yet an external_constants entry).
-_REDECLARATION_DELTA_EUR = Decimal("20000.00")
+_REDECLARATION_DELTA_EUR = foreign_asset_declaration_threshold(
+    ForeignAssetObligationGroup.CUENTAS
+).redeclaration_increase_delta_eur
 
 # Year-N asset valuations (both above €50k initial threshold).
 _CUENTAS_N = Decimal("60000.00")  # cuentas (C-class: bank accounts)
@@ -116,6 +120,19 @@ _CUENTAS_VALORACION_CASILLA: CasillaId = _casilla_id("cuentas.valoracion")
 _VALORES_IDENTIFICACION_CASILLA: CasillaId = _casilla_id("valores.identificacion")
 _VALORES_VALORACION_CASILLA: CasillaId = _casilla_id("valores.valoracion")
 
+_M720_SOURCE_REFS = ("aeat-modelo-720-procedure",)
+_M720_HEADER_LEGAL_REFS = ("ley-58-2003:da-18",)
+_M720_CUENTAS_LEGAL_REFS = foreign_asset_declaration_threshold(ForeignAssetObligationGroup.CUENTAS).legal_refs
+_M720_VALORES_LEGAL_REFS = foreign_asset_declaration_threshold(
+    ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS
+).legal_refs
+_M720_CASILLA_LEGAL_REFS = {
+    _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _M720_CUENTAS_LEGAL_REFS,
+    _CUENTAS_VALORACION_CASILLA: _M720_CUENTAS_LEGAL_REFS,
+    _VALORES_IDENTIFICACION_CASILLA: _M720_VALORES_LEGAL_REFS,
+    _VALORES_VALORACION_CASILLA: _M720_VALORES_LEGAL_REFS,
+}
+
 
 def _find_observation(
     repo: CalculationObservationRepository,
@@ -129,6 +146,79 @@ def _find_observation(
         if obs.filing_year == filing_year and obs.period == period:
             return payload
     return None
+
+
+def _advisory_observation(
+    *,
+    filing_year: int,
+    casilla_values: tuple[tuple[CasillaId, Decimal], ...],
+) -> RegistryModeloObservation:
+    return RegistryModeloObservation(
+        modelo=_MODELO,
+        filing_year=filing_year,
+        period="0A",
+        observations=tuple(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                legal_refs=_M720_CASILLA_LEGAL_REFS.get(casilla_id, _M720_HEADER_LEGAL_REFS),
+                source_refs=_M720_SOURCE_REFS,
+            )
+            for casilla_id, value in casilla_values
+        ),
+    )
+
+
+def _year_n_advisory_observation() -> RegistryModeloObservation:
+    return _advisory_observation(
+        filing_year=_YEAR_N,
+        casilla_values=(
+            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N))),
+            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
+            (_CUENTAS_CODIGO_DE_CUENTA_CASILLA, _CUENTAS_IDENTIFIER),
+            (_CUENTAS_VALORACION_CASILLA, _CUENTAS_N),
+            (_VALORES_IDENTIFICACION_CASILLA, _VALORES_IDENTIFIER),
+            (_VALORES_VALORACION_CASILLA, _VALORES_N),
+        ),
+    )
+
+
+def _year_n_plus_1_advisory_observation() -> RegistryModeloObservation:
+    return _advisory_observation(
+        filing_year=_YEAR_N_PLUS_1,
+        casilla_values=(
+            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
+            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
+            (_CUENTAS_CODIGO_DE_CUENTA_CASILLA, _CUENTAS_IDENTIFIER),
+            (_CUENTAS_VALORACION_CASILLA, _CUENTAS_N1),
+            (_VALORES_IDENTIFICACION_CASILLA, _VALORES_IDENTIFIER),
+            (_VALORES_VALORACION_CASILLA, _VALORES_N1),
+        ),
+    )
+
+
+def _year_n_plus_1_advisory_without_cuentas() -> RegistryModeloObservation:
+    return _advisory_observation(
+        filing_year=_YEAR_N_PLUS_1,
+        casilla_values=(
+            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
+            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
+            (_VALORES_IDENTIFICACION_CASILLA, _VALORES_IDENTIFIER),
+            (_VALORES_VALORACION_CASILLA, _VALORES_N1),
+        ),
+    )
+
+
+def _year_n_plus_1_advisory_without_valores() -> RegistryModeloObservation:
+    return _advisory_observation(
+        filing_year=_YEAR_N_PLUS_1,
+        casilla_values=(
+            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
+            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
+            (_CUENTAS_CODIGO_DE_CUENTA_CASILLA, _CUENTAS_IDENTIFIER),
+            (_CUENTAS_VALORACION_CASILLA, _CUENTAS_N1),
+        ),
+    )
 
 
 def _year_n_observation() -> RegistryModeloObservation:
@@ -185,6 +275,34 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
             # Valores row — same identifier, grown valuation (+€10k)
             _VALORES_IDENTIFICACION_CASILLA: _VALORES_IDENTIFIER,
             _VALORES_VALORACION_CASILLA: _VALORES_N1,
+        },
+    )
+
+
+def _year_n_plus_1_observation_without_cuentas() -> RegistryModeloObservation:
+    return registry_grounded_modelo_observation(
+        modelo=_MODELO,
+        filing_year=_YEAR_N_PLUS_1,
+        period="0A",
+        casilla_values={
+            _EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _TIPO_DECLARACION_CASILLA: Decimal("1"),
+            _VALORES_IDENTIFICACION_CASILLA: _VALORES_IDENTIFIER,
+            _VALORES_VALORACION_CASILLA: _VALORES_N1,
+        },
+    )
+
+
+def _year_n_plus_1_observation_without_valores() -> RegistryModeloObservation:
+    return registry_grounded_modelo_observation(
+        modelo=_MODELO,
+        filing_year=_YEAR_N_PLUS_1,
+        period="0A",
+        casilla_values={
+            _EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _TIPO_DECLARACION_CASILLA: Decimal("1"),
+            _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _CUENTAS_IDENTIFIER,
+            _CUENTAS_VALORACION_CASILLA: _CUENTAS_N1,
         },
     )
 
@@ -341,10 +459,10 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
     than the delta threshold, confirming both stored values are correct and the
     re-declaration trigger condition is satisfied in the stored data.
 
-    NOTE: The ADVISORY predicate that fires a finding when this condition holds and
-    the cuentas category is absent from the current declaration is NOT in this module.
-    It will be added in a follow-up commit once coder-opus-is's A3
-    cross_year_delta_advisory operator lands.
+    The application advisory helper is tested separately below because it also needs
+    the current declaration row set to prove the grown category is absent. This is
+    advisory-layer coverage only; the registry `previous_filing` binding requested
+    by the multiyear plan remains a separate open implementation step.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
@@ -369,6 +487,43 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
             f"year-N+1 minus year-N delta ({delta}) must exceed €{_REDECLARATION_DELTA_EUR} "
             f"to satisfy art. 42-bis.5 re-declaration trigger condition in the test scenario"
         )
+
+
+def test_redeclaration_advisory_fires_when_grown_cuentas_is_absent_from_current_declaration() -> None:
+    findings = modelo_720_redeclaration_advisory_findings(
+        prior_observation=_year_n_advisory_observation(),
+        current_observation=_year_n_plus_1_advisory_observation(),
+        current_declaration_observation=_year_n_plus_1_advisory_without_cuentas(),
+    )
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.kind is ModeloVerificationFindingKind.ADVISORY
+    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert "cuentas" in finding.message
+    assert "25000.00 EUR" in finding.message
+    assert "rd-1065-2007:art-42-bis" in finding.legal_refs
+    assert "aeat-modelo-720-procedure" in finding.source_refs
+
+
+def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:
+    assert (
+        modelo_720_redeclaration_advisory_findings(
+            prior_observation=_year_n_advisory_observation(),
+            current_observation=_year_n_plus_1_advisory_observation(),
+            current_declaration_observation=_year_n_plus_1_advisory_observation(),
+        )
+        == ()
+    )
+
+    assert (
+        modelo_720_redeclaration_advisory_findings(
+            prior_observation=_year_n_advisory_observation(),
+            current_observation=_year_n_plus_1_advisory_observation(),
+            current_declaration_observation=_year_n_plus_1_advisory_without_valores(),
+        )
+        == ()
+    )
 
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
@@ -411,10 +566,10 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     must declare renta_years = [2023, 2024] in the same commit as this test.
 
     Evidence class: THRESHOLD_CONTINUITY. The two-year per-asset-class baseline
-    fidelity (roundtrip + valuation isolation + identifier continuity + delta check)
-    together constitute the real ≥2-renta threshold-continuity contract. The A3
-    advisory operator follow-up will add the ADVISORY predicate assertion in a
-    separate commit.
+    fidelity plus the application advisory assertions exercise the advisory layer
+    this informativa can currently support without a numeric calculation engine.
+    This test does not close the separate registry `previous_filing` baseline
+    binding work for M720.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
