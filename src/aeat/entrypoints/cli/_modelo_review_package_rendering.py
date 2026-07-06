@@ -1,4 +1,24 @@
-"""Output projection helpers for Modelo review-package CLI commands."""
+"""Output projection helpers for Modelo review-package CLI commands.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_review_package_cli`
+        Typer verb registrar that calls these projection helpers before emitting
+        CLI envelopes.
+    :mod:`~entrypoints.cli._modelo_review_package_payloads`
+        Strict result schemas populated by this module for build, verify,
+        signing, recipient encryption, and feedback flows.
+    :func:`~application.modelo.build_review_package`
+        Application build primitive whose manifest is projected into build
+        result payloads and text lines.
+    :func:`~application.modelo.sign_review_package`
+        Ed25519 authenticity primitive represented by the signing projections.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 recipient-sealing primitive represented by encrypt/decrypt
+        projections.
+    :func:`~application.modelo.import_feedback_package`
+        Originator-side feedback import primitive represented by the feedback
+        projection.
+"""
 
 from __future__ import annotations
 
