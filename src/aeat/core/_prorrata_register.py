@@ -3,11 +3,11 @@
 These enums are the register-scoped axes of the provisional-to-definitive IVA
 prorrata lifecycle. They are declared in ``core`` per the core-authority
 discipline (closed axes live in ``core/``, hydrated at boundaries, asserted as
-members in tests) and consumed by the domain :mod:`domain.prorrata_register`
+members in tests) and consumed by the domain :mod:`~domain.prorrata_register`
 aggregate and its encrypted persistence.
 
 :class:`ProrrataRegisterRegime` is deliberately a DISTINCT symbol from the
-compute-substrate :class:`domain.iva.ProrrataRegime`. The substrate enum
+compute-substrate :class:`~domain.iva.ProrrataRegime`. The substrate enum
 (``general | especial``) types a prorrata *computation*; this register enum adds
 the ``ninguna`` recorded state (the taxpayer is under no prorrata for the
 ejercicio — the LIVA art. 94 full-deduction case) and types the regime *in force
@@ -15,6 +15,20 @@ for the taxpayer this ejercicio*. Merging the two would loosen the substrate's
 ``validate_prorrata_reference`` grammar to accept ``ninguna`` in a reference id,
 a behaviour change the stable substrate must not take; the register therefore
 owns its own three-valued regime axis.
+
+See Also:
+    :mod:`~domain.prorrata_register`
+        Aggregate that stores these axes on each per-ejercicio register entry
+        and resolves the art. 105 provisional precedence ladder.
+    :class:`~domain.iva.ProrrataRegime`
+        Compute-substrate regime enum intentionally kept narrower than the
+        register's taxpayer-state axis.
+    :func:`~domain.iva.validate_prorrata_reference`
+        Parser whose canonical reference grammar must not accept the register's
+        ``ninguna`` state.
+    :func:`~application.prorrata_register.seed_carried_prior_definitiva_entry`
+        Application seed path that writes the normal art. 105.Uno carried
+        provenance into the register.
 """
 
 from __future__ import annotations
@@ -27,7 +41,7 @@ class ProrrataRegisterRegime(StrEnum):
 
     The register carries this axis from birth so prorrata especial and sectores
     diferenciados land without a schema migration. Distinct from the
-    compute-substrate :class:`domain.iva.ProrrataRegime`, which types a single
+    compute-substrate :class:`~domain.iva.ProrrataRegime`, which types a single
     computation and has no not-applicable member.
 
     Attributes:
