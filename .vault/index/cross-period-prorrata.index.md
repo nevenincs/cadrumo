@@ -26,6 +26,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S17]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S18]]'
   - '[[2026-07-06-cross-period-prorrata-W03-P05-S19]]'
+  - '[[2026-07-06-cross-period-prorrata-W03-P05-S20]]'
   - '[[2026-07-06-cross-period-prorrata-audit]]'
   - '[[2026-07-06-cross-period-prorrata-plan]]'
   - '[[2026-07-06-cross-period-prorrata-reference]]'
@@ -67,6 +68,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W02-P04-S17` - surface a BLOCKING divergence finding when a carried_prior_definitiva entry contradicts the prior observation, and an informational notice naming the provenance when an aeat_autorizada or inicio_actividad entry legitimately differs from the prior definitive (never silence)
 - `2026-07-06-cross-period-prorrata-W02-P04-S18` - add tests for override precedence and both observation cross-check surfaces (blocking contradiction vs informational regulated-difference notice)
 - `2026-07-06-cross-period-prorrata-W03-P05-S19` - thread the register's active-general provisional percentage into the shared LedgerIvaAggregationSourceResolver deducible-cuota path so it apportions the deducible cuotas (art-104.Uno + 105.Uno), leaving bases unapportioned
+- `2026-07-06-cross-period-prorrata-W03-P05-S20` - carry the applied percentage and its provenance on the binding value provenance and the casilla observation trail (binding-values-carry-provenance)
 
 ### plan
 

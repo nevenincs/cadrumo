@@ -76,3 +76,24 @@ Residual gate inventory: `ruff check` is clean for the touched aggregation files
 and the local IVA aggregation subset that does not load the full registry passed.
 The broader registry-backed IVA tests currently fail before reaching this code on
 unrelated Modelo 714 registry validation diagnostics.
+
+## S20 Review
+
+Reviewed the `W03.P05.S20` implementation around the IVA source-mesh resolver
+and the prorrata apportionment carrier. The diff keeps the already-approved
+`ledger_iva_aggregation` source kind, preserves the register's applied
+percentage, regulated provisional provenance, and carried source-observation
+identity on the apportionment DTO, and emits those facts through the existing
+`CalculationSourceProvenance` channel. The resolver row also carries the
+registry legal/source grounding for the deducible cuota casillas it qualifies,
+while the actual casilla observation trail remains the existing
+`CasillaObservation` surface produced by the registry engine. No new binding
+source kind, resolver convention, validator convention, or registry selector
+shape was introduced.
+
+Findings: no open S20 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched implementation
+and resolver-test files. The targeted prorrata provenance resolver regression,
+the full ledger source-mesh resolver test file, and the IVA ledger aggregation
+test file all pass sequentially.

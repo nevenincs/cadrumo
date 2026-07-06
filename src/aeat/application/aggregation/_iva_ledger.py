@@ -141,6 +141,8 @@ class IvaLedgerProrrataApportionment(BaseModel):
 
     percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
     provenance: ProrrataProvisionalProvenance
+    source_observation_ref: str | None = Field(default=None, min_length=1)
+    authorisation_reference: str | None = Field(default=None, min_length=1)
 
 
 class IvaLedgerInputKind(StrEnum):
@@ -518,6 +520,8 @@ def _active_general_prorrata_apportionment(
     return IvaLedgerProrrataApportionment(
         percentage=resolution.percentage,
         provenance=resolution.provenance,
+        source_observation_ref=entry.source_observation_ref,
+        authorisation_reference=entry.authorisation_reference,
     )
 
 

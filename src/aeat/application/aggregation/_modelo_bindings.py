@@ -41,6 +41,7 @@ from ...adapters.persistence.storage import (
 from ...core import BindingSourceKind, Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
     BindingId,
+    CasillaDefinition,
     CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
@@ -233,6 +234,11 @@ class LedgerIvaAggregationSourceResolver:
                         source_ref=f"prorrata:{reference.transaction_id}",
                     )
                     for reference in aggregation.prorrata_references
+                )
+                + _iva_prorrata_apportionment_provenance(
+                    context.revision,
+                    aggregation_period,
+                    aggregation.prorrata_apportionment,
                 )
             ),
         )
@@ -742,6 +748,55 @@ def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
             context={"filing_year": str(filing_year), "period": code},
         )
     return resolved
+
+
+def _iva_prorrata_apportionment_provenance(
+    revision: ModeloRevision,
+    period: Period,
+    apportionment: IvaLedgerProrrataApportionment | None,
+) -> tuple[CalculationSourceProvenance, ...]:
+    if apportionment is None:
+        return ()
+    casillas = _iva_deducible_cuota_casillas(revision)
+    return (
+        CalculationSourceProvenance(
+            source_kind="ledger_iva_aggregation",
+            source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
+            legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
+            source_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.source_refs)),
+        ),
+    )
+
+
+def _iva_prorrata_apportionment_source_ref(
+    period: Period,
+    apportionment: IvaLedgerProrrataApportionment,
+) -> str:
+    source_ref = (
+        f"prorrata-apportionment:{period.year}:general:"
+        f"percentage:{apportionment.percentage}:provenance:{apportionment.provenance.value}"
+    )
+    if apportionment.source_observation_ref is not None:
+        source_ref = f"{source_ref}:source-observation:{apportionment.source_observation_ref}"
+    return source_ref
+
+
+def _iva_deducible_cuota_casillas(revision: ModeloRevision) -> tuple[CasillaDefinition, ...]:
+    ledger_iva_amount_bindings = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+        and getattr(binding.selector, "fact", "iva_amount_sum") == "iva_amount_sum"
+    }
+    return tuple(
+        casilla
+        for casilla in revision.casillas
+        if "deducible" in casilla.section
+        and any(
+            binding_id is not None and binding_id in ledger_iva_amount_bindings
+            for binding_id in (casilla.binding, *casilla.alternate_bindings)
+        )
+    )
 
 
 def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
