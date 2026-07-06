@@ -1,4 +1,38 @@
-"""LLM ledger classification suggestion/result contracts."""
+"""LLM ledger classification suggestion/result contracts.
+
+These strict frozen DTOs carry the reviewable output of the governed ledger
+LLM workflow: stage-1 business classification suggestions, saturated IVA
+category suggestions with system-derived tax substrate, evidence-driven split
+proposals, provider availability rows, and explicit rejection receipts. They
+are application-layer contracts only; classifier engines and prompt parsing live
+in :mod:`~domain.transactions`, while persistence and audit events are handled
+by the application services that consume these records.
+
+The contracts preserve the review loop required by the LLM ADRs: a suggestion
+is not persisted until the operator applies it, a rejection records an audit
+event without mutating the transaction, and regulated euro amounts / IVA rates
+are derived by the system rather than emitted by the model.
+
+See Also:
+    :mod:`~application.ledger._llm_classification`
+        Application service that builds, applies, saturates, splits, and rejects
+        these suggestions.
+    :func:`~application.ledger.suggest_llm_classification`
+        Stage-1 suggestion path that persists nothing.
+    :func:`~application.ledger.saturate_llm_classification`
+        Path that adds model-selected IVA category plus system-derived substrate.
+    :func:`~application.ledger.suggest_evidence_split`
+        Evidence-driven split/no-split proposal builder.
+    :func:`~application.ledger.reject_llm_suggestion`
+        Audit-trailed rejection terminal for any suggestion kind.
+    :mod:`~entrypoints.cli._ledger_llm_payloads`
+        CLI JSON-envelope projections for suggest, saturate, and reject paths.
+    :class:`~domain.transactions.LLMClassificationResponse`
+        Domain classifier response projected into
+        :class:`LLMClassificationSuggestion`.
+    :class:`~domain.transactions.LLMSplitResponse`
+        Domain split response projected into :class:`LLMSplitSuggestion`.
+"""
 
 from __future__ import annotations
 
