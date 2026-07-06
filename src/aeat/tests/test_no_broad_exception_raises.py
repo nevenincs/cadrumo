@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import tokenize
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from io import StringIO
 from pathlib import Path
 from typing import NamedTuple
@@ -306,14 +306,14 @@ def _violation_marker_counts(source: str, violations: Iterable[str]) -> Counter[
 
 
 @pytest.fixture(scope="module")
-def broad_exception_inventory() -> _BroadExceptionInventory:
+def broad_exception_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _BroadExceptionInventory:
     """Return all broad exception policy violations from one test-control inventory pass."""
     module_trees: list[tuple[str, ast.AST]] = []
     broad_raise_suppressions: list[str] = []
 
     for module_path in all_test_control_modules():
         relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
         if tree is not None:
             module_trees.append((relative, tree))
         for lineno in _b017_suppression_lines(module_path):
