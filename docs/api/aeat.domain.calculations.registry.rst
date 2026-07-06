@@ -44,6 +44,7 @@ Submodules
    aeat.domain.calculations.registry._formula_initial_values
    aeat.domain.calculations.registry._formula_runtime
    aeat.domain.calculations.registry._formula_runtime_irnr
+   aeat.domain.calculations.registry._formula_runtime_m131
    aeat.domain.calculations.registry._formula_runtime_ops
    aeat.domain.calculations.registry._formula_text_inputs
    aeat.domain.calculations.registry._groi_oracle
@@ -60,6 +61,7 @@ Submodules
    aeat.domain.calculations.registry._period_offset_math
    aeat.domain.calculations.registry._period_selector_match
    aeat.domain.calculations.registry._queries
+   aeat.domain.calculations.registry._query_reports
    aeat.domain.calculations.registry._record_design
    aeat.domain.calculations.registry._record_design_coverage
    aeat.domain.calculations.registry._record_design_schema
@@ -74,6 +76,7 @@ Submodules
    aeat.domain.calculations.registry._schedules
    aeat.domain.calculations.registry._schema
    aeat.domain.calculations.registry._schema_base
+   aeat.domain.calculations.registry._schema_extraction
    aeat.domain.calculations.registry._schema_formula
    aeat.domain.calculations.registry._schema_input_kind
    aeat.domain.calculations.registry._schema_references
@@ -122,6 +125,7 @@ Submodules
    aeat.domain.calculations.registry._validate_semantic_roles
    aeat.domain.calculations.registry._validate_source_casilla_ids
    aeat.domain.calculations.registry._validate_surfaces
+   aeat.domain.calculations.registry._validate_verification_predicates
    aeat.domain.calculations.registry._withholding_bindings
    aeat.domain.calculations.registry._workbook_parity
    aeat.domain.calculations.registry._workbook_parity_models
