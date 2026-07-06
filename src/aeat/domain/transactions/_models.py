@@ -15,16 +15,15 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import Literal, Self, override
 
-from pydantic import BaseModel, Field, ValidationError, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import CoreValidationError
-from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
-from ...core.time import now, parse_iso_datetime, validate_utc_aware
+from ...core.time import now
 from .._identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
@@ -42,6 +41,18 @@ from ._irpf_categories import (
     has_activity_irpf_category,
     has_non_work_irpf_category,
     has_rent_irpf_category,
+)
+from ._model_validation import (
+    _coerce_raw_transaction,
+    _normalize_identifier_tuple,
+    _parse_datetime,
+    _parse_required_aware_datetime,
+    _require_aware_datetime,
+    _trim_lineage_text,
+    _validate_business_pct_coupling,
+    _validate_classified_by_shape,
+    _validate_confidence_range,
+    _validate_non_negative_decimal,
 )
 from ._raw_transaction import RawTransaction
 
@@ -156,159 +167,11 @@ def derive_movement_day_key(raw: RawTransaction) -> str:
     return f"{effective_value_date.isoformat()}:{canonical_decimal_string(raw.amount)}"
 
 
-def _json_default(value: object) -> str:
-    """Serialize strict-python values into JSON-mode inputs for validation."""
-    return str(value)
-
-
-def _parse_datetime(value: str) -> datetime:
-    """Parse an ISO-8601 datetime string into an aware ``datetime``."""
-    return parse_iso_datetime(value)
-
-
-def _require_aware_datetime(value: datetime) -> datetime:
-    """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
-    try:
-        return validate_utc_aware(value)
-    except CoreValidationError as exc:
-        raise TransactionValidationError(str(exc)) from exc
-
-
-def _validate_classified_by_shape(value: str) -> str:
-    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` / ``derived:<basis>``.
-
-    The ``llm:<model>`` shape lets an LLM classifier emit confidence
-    scores alongside its predictions; the pipeline distinguishes its
-    output from manual and rule-based decisions via this prefix. The
-    ``derived:<basis>`` shape marks a value the system computed from a
-    grounded authority on an operator's instruction — e.g.
-    ``derived:iva-category``, where the operator picks the IVA category
-    and the registry rate plus the gross determine the base and amount —
-    distinct from a ``manual`` value the operator typed by hand.
-    """
-    normalized = value.strip()
-    if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
-        return normalized
-    for prefix in ("rule:", "llm:", "derived:"):
-        if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
-            return normalized
-    raise TransactionValidationError(
-        "classified_by must be 'auto', 'manual', 'rule:<rule-id>', 'llm:<model>', or 'derived:<basis>'",
-    )
-
-
-_CONFIDENCE_MIN = Decimal("0")
-_CONFIDENCE_MAX = Decimal("1")
-
-
-def _validate_confidence_range(value: Decimal | None) -> Decimal | None:
-    """Restrict confidence to the inclusive 0..1 range when not None."""
-    if value is None:
-        return None
-    if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
-        raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
-    return value
-
-
-def _validate_business_pct_coupling(
-    state: BusinessClassification,
-    pct: Decimal | None,
-) -> None:
-    """Enforce the classification/business-percentage coupling rule.
-
-    Raises ``ValueError`` when the pct field is set without ``MIXED``,
-    missing for ``MIXED``, or outside the inclusive 0..1 range.
-    """
-    if state is BusinessClassification.MIXED:
-        if pct is None:
-            raise TransactionValidationError("business_pct is required when classification is MIXED")
-        if not Decimal("0") <= pct <= Decimal("1"):
-            raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
-        return
-    if pct is not None:
-        raise TransactionValidationError("business_pct must be None unless classification is MIXED")
-
-
-def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
-    """Trim identifier tuples and reject blanks or duplicates."""
-    normalized = tuple(item.strip() for item in value if item.strip())
-    if len(normalized) != len(value):
-        raise TransactionValidationError("identifier fields must not contain blank values")
-    if len(set(normalized)) != len(normalized):
-        raise TransactionValidationError("identifier fields must not contain duplicates")
-    return normalized
-
-
-def _trim_lineage_text(value: str | None) -> str | None:
-    if value is None:
-        return None
-    trimmed = value.strip()
-    if not trimmed:
-        raise TransactionValidationError("lineage text fields must not be blank")
-    return trimmed
-
-
-def _parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
-    if isinstance(value, str):
-        value = _parse_datetime(value)
-    if not isinstance(value, datetime):
-        raise TransactionValidationError(f"{field_name} must be a datetime")
-    return _require_aware_datetime(value)
-
-
-_NON_NEGATIVE_DECIMAL_HINTS = {
-    "taxable_base": (
-        "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
-        "and the income/expense direction is taken from the transaction itself, "
-        "not from the sign of this value"
-    ),
-    "iva_amount": "iva_amount must be non-negative; it is the IVA charged on the row, never a signed delta",
-    "iva_rate": "iva_rate must be non-negative; express the rate as a fraction such as 0.21",
-    "recargo_amount": (
-        "recargo_amount must be non-negative; it is the recargo de equivalencia "
-        "cuota the supplier charged on a repercutido sale to a recargo-regime "
-        "retailer, never a signed delta"
-    ),
-}
-
-
-def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
-    """Reject negative monetary or percentage values when supplied."""
-    if value is not None and value < Decimal("0"):
-        raise TransactionValidationError(
-            _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
-        )
-    return value
-
-
 def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     raw = data.get("raw")
     if not isinstance(raw, RawTransaction):
         raise TransactionValidationError("raw is required before transaction_id can be derived")
     return derive_transaction_id(raw)
-
-
-def _coerce_raw_transaction(raw: object) -> RawTransaction:
-    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record.
-
-    ``strict=False`` is passed explicitly because :class:`RawTransaction`'s own
-    ``model_config`` is ``strict=True`` (see ``STRICT_FROZEN_CONFIG``): under
-    strict mode, ``model_validate`` on a plain dict rejects a string-typed
-    ``datetime``/``date``/enum value outright (it demands the exact Python
-    type), which is exactly the shape every JSON-decoded storage row carries
-    -- so a strict attempt here would fail on *every* load-from-storage call,
-    permanently falling through to the ``json.dumps`` + ``model_validate_json``
-    round-trip below. Overriding to lax mode accepts both a JSON-decoded dict
-    (string dates/enums) and a genuine Python-native dict (manual construction
-    with real ``Decimal``/``date`` objects) in one pass, so the expensive
-    JSON re-encode fallback is reserved for payloads that are not a mapping.
-    """
-    if isinstance(raw, RawTransaction):
-        return raw
-    try:
-        return RawTransaction.model_validate(raw, strict=False)
-    except ValidationError:
-        return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))
 
 
 class DecisionProvenance(BaseModel):
