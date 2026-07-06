@@ -5,6 +5,8 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.resources import bundled_path
+
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
 # routine dev/worktree mode) "bundled" resolves to the literal in-tree
@@ -26,8 +28,6 @@ MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS = 1.0
 @lru_cache(maxsize=1)
 def _bundled_registry_root() -> Path:
     """Return the resolved package-bundled registry root, computed once per process."""
-    from ....core.resources import bundled_path
-
     return bundled_path("registry", "aeat").resolve()
 
 
