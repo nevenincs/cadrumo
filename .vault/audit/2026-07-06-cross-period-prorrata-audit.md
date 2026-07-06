@@ -588,3 +588,33 @@ S40 outcome: review complete, campaign not closed. The next open row is
 Residual gate inventory: the focused close-review prorrata slice passes
 sequentially with 48 tests. Feature and frontmatter vault checks are clean after
 S40/S41 tracking.
+
+## S41 Blocker Reconciliation
+
+Reviewed the `W06.P09.S41` live source-mesh promotion against the required RAG
+grounding, the S30/S40 records, the source mesh, the binding selector registry,
+the application source resolver enrollment, and the Modelo 303/390 registry
+surfaces.
+
+The promotion is not safely implementable as the small source-mesh cleanup that
+S40 first described. Exact source search confirms there is no
+`prorrata_regularizacion` registry binding, no selector contract entry, no
+binding selector registry enrollment, no prorrata live resolver, and no
+application source-kind enrollment. Modelo 303 casilla 44 remains a manual input
+in the current registry revisions, the current deductible-total projection does
+not consume casilla 44, and no clear Modelo 390 annual regularizacion binding
+target is provisioned.
+
+A patch that only removes `PRORRATA_REGULARIZACION` from
+`DEFERRED_SOURCE_KIND_TARGETS` and the deferred taxonomy carve-out would orphan
+the enum and bypass the real source-provisioning path. The correct closure needs
+the selector contract, registry binding or bindings, resolver, live enrollment,
+formula implications, and parity/oracle/advisory tests to land together.
+
+Tracking: `W06.P09.S41` is closed as the blocker reconciliation only. The real
+promotion chain is split into W07: selector contract (`W07.P10.S42`), Modelo 303
+binding provisioning (`W07.P10.S43`), Modelo 390 target grounding (`W07.P10.S44`),
+resolver timing (`W07.P11.S45`), resolver materialisation (`W07.P11.S46`), live
+enrollment and carve-out removal (`W07.P12.S47`), bienes-inversion dependency
+reconciliation (`W07.P12.S48`), and close review (`W07.P12.S49`). No production
+code changed in this reconciliation.
