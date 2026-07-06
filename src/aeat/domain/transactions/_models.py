@@ -1360,6 +1360,40 @@ class OutOfWindowTransactionStub(BaseModel):
     filing_date: date
 
 
+class OutOfWindowTransactionSummary(BaseModel):
+    """Compact diagnostics-only summary for out-of-window catalogue rows.
+
+    Carries only the facts authorized by the 2026-07-06 diagnostic-summary
+    amendment to the latency ADR: excluded-row count and the filing-date span
+    covered by those rows. It never carries decrypted transaction facts.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    count: int = Field(ge=1)
+    min_filing_date: date
+    max_filing_date: date
+
+    @classmethod
+    def from_stubs(cls, stubs: Iterable[OutOfWindowTransactionStub]) -> Self | None:
+        """Build a summary from row-level plaintext stubs, or ``None`` when empty."""
+        materialized = tuple(stubs)
+        if not materialized:
+            return None
+        filing_dates = tuple(stub.filing_date for stub in materialized)
+        return cls(
+            count=len(materialized),
+            min_filing_date=min(filing_dates),
+            max_filing_date=max(filing_dates),
+        )
+
+    @model_validator(mode="after")
+    def _validate_date_span(self) -> Self:
+        if self.max_filing_date < self.min_filing_date:
+            raise TransactionValidationError("out-of-window summary date span must be ordered")
+        return self
+
+
 class LedgerDatePartition(BaseModel):
     """A ledger catalogue split into an in-window and an out-of-window half.
 
@@ -1369,6 +1403,11 @@ class LedgerDatePartition(BaseModel):
     (:class:`OutOfWindowTransactionStub` rows): transactions the catalogue
     holds outside the window, reported without decryption so a caller can
     still surface a period-exclusion diagnostic for them.
+
+    ``out_of_window_summary`` is the compact diagnostics-channel replacement:
+    count plus filing-date span, with no decrypted fields and no row-level
+    allocation requirement. During the migration, callers may see either the
+    row-level stubs, the summary, or both.
 
     ``index_complete`` records whether the partition was served from a
     complete plaintext date index (``True``) or from a full-scan fallback
@@ -1382,4 +1421,5 @@ class LedgerDatePartition(BaseModel):
 
     in_window: TransactionCatalogue
     out_of_window: tuple[OutOfWindowTransactionStub, ...] = ()
+    out_of_window_summary: OutOfWindowTransactionSummary | None = None
     index_complete: bool

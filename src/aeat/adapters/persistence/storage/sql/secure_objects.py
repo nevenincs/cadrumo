@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from datetime import datetime
 from typing import Protocol, cast
 
@@ -47,6 +47,7 @@ from ._secure_object_integrity import (
     quarantine_unreadable_rows as _quarantine_unreadable_rows,
 )
 from ._secure_object_records import (
+    SecureObjectBatchLoadItem,
     SecureObjectDecryptabilityRow,
     SecureObjectDeletion,
     SecureObjectListItem,
@@ -493,6 +494,98 @@ class SecureObjectRepository:
             raise SecureObjectUnreadableError(namespace, item.row_id)
         yield from records
 
+    def load_many(
+        self,
+        namespace: str,
+        object_keys: Iterable[str],
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> Iterator[SecureObjectRecord]:
+        """Yield requested secure-object rows or fail closed on unreadable rows.
+
+        This is the targeted equivalent of :meth:`list_records`: it performs a
+        single ``WHERE namespace = ? AND object_key IN (...)`` read for the
+        requested natural keys, decrypts matching rows, and raises
+        :class:`SecureObjectUnreadableError` before yielding a partial readable
+        subset if any matching row is unreadable. Missing keys are omitted,
+        mirroring repeated :meth:`load` calls that return ``None`` for absent
+        rows.
+        """
+        records: list[SecureObjectRecord] = []
+        for item in self.iter_many_with_failures(
+            namespace,
+            object_keys,
+            expected_class=expected_class,
+            max_supported_version=max_supported_version,
+        ):
+            if isinstance(item, SecureObjectRecord):
+                records.append(item)
+                continue
+            _log.debug(
+                "secure_objects: refusing targeted batch load for namespace=%s because row id=%s is unreadable (%s)",
+                namespace,
+                item.row_id,
+                item.reason,
+            )
+            raise SecureObjectUnreadableError(namespace, item.row_id)
+        yield from records
+
+    def iter_many_with_failures(
+        self,
+        namespace: str,
+        object_keys: Iterable[str],
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> Iterator[SecureObjectBatchLoadItem]:
+        """Yield readable/unreadable outcomes for requested natural object keys.
+
+        Rows are selected by raw HMAC digests derived from ``object_keys`` and
+        returned in stored digest order. Missing keys produce no item, matching
+        :meth:`load` returning ``None``. Present rows use the same
+        classification, schema-version, AEAD, and revision-lineage checks as
+        namespace scans.
+        """
+        self._check_session_freshness()
+        namespace_definition = self._enforce_registered_read_policy(
+            namespace=namespace,
+            expected_class=expected_class,
+        )
+        object_key_digests = tuple(dict.fromkeys(secure_object_key_digest(object_key) for object_key in object_keys))
+        if not object_key_digests:
+            return
+        with session_scope(self._engine) as session:
+            stmt = (
+                text(
+                    "SELECT id, object_key, classification, schema_version, "
+                    "written_at, payload, revision_id, previous_revision_id, "
+                    "payload_hash, ciphertext_hash, previous_payload_hash "
+                    "FROM secure_objects WHERE namespace = :namespace "
+                    "AND object_key IN :object_keys "
+                    "ORDER BY object_key",
+                )
+                .bindparams(
+                    bindparam("namespace", value=namespace),
+                    bindparam("object_keys", value=object_key_digests, expanding=True),
+                )
+                .columns(
+                    id=_orm.SecureObjectRow.__table__.c.id.type,
+                    object_key=_orm.SecureObjectRow.__table__.c.object_key.type,
+                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
+                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                )
+            )
+            for raw in session.execute(stmt):
+                yield self._list_item_from_raw_row(
+                    raw,
+                    namespace=namespace,
+                    expected_class=expected_class,
+                    max_supported_version=max_supported_version,
+                    namespace_definition=namespace_definition,
+                )
+
     def iter_records_with_failures(
         self,
         namespace: str,
@@ -567,114 +660,123 @@ class SecureObjectRepository:
                 .execution_options(stream_results=True, yield_per=batch_size)
             )
             for raw in session.execute(stmt):
-                row_id = int(raw.id)
-                # ``object_key`` is a HashedLookup digest. Keep the bytes
-                # surface stable for diagnostics and raw mirror consumers.
-                _raw_ok = raw.object_key
-                object_key = _raw_ok.encode(UTF_8_ENCODING) if isinstance(_raw_ok, str) else bytes(_raw_ok)
-                classification_str = str(raw.classification)
-                schema_version = int(raw.schema_version)
-                written_at = raw.written_at
-                payload_wire = bytes(raw.payload)
-                try:
-                    classification = SensitivityClass(classification_str)
-                except ValueError:
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason=f"unknown classification {classification_str!r}",
-                    )
-                    continue
-                if classification is not expected_class:
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason=(
-                            f"classification {classification.value!r} does not match expected {expected_class.value!r}"
-                        ),
-                    )
-                    continue
-                if schema_version != max_supported_version:
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason=(f"schema version {schema_version} does not match expected {max_supported_version}"),
-                    )
-                    continue
-                try:
-                    self._enforce_registered_row_schema(
-                        namespace=namespace,
-                        schema_version=schema_version,
-                        definition=namespace_definition,
-                    )
-                except EnvelopeVersionError as exc:
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason=resolve_error_message(exc),
-                    )
-                    continue
-                try:
-                    payload_plain = decrypt_secure_object_payload(
-                        payload_wire,
-                        associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
-                    )
-                except DecryptionError as exc:
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason=str(exc),
-                    )
-                    continue
-                if not verify_revision_self_consistency(
+                yield self._list_item_from_raw_row(
+                    raw,
                     namespace=namespace,
-                    object_key=object_key,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    revision_id=raw.revision_id,
-                    previous_revision_id=raw.previous_revision_id,
-                    payload_hash=raw.payload_hash,
-                    ciphertext_hash=raw.ciphertext_hash,
-                    previous_payload_hash=raw.previous_payload_hash,
-                ):
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason="revision lineage self-consistency check failed",
-                    )
-                    continue
-                yield SecureObjectRecord(
-                    namespace=namespace,
-                    object_key=object_key,
-                    classification=classification,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    payload=payload_plain,
+                    expected_class=expected_class,
+                    max_supported_version=max_supported_version,
+                    namespace_definition=namespace_definition,
                 )
+
+    def _list_item_from_raw_row(
+        self,
+        raw: object,
+        *,
+        namespace: str,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+        namespace_definition: SecureObjectNamespaceDefinition | None,
+    ) -> SecureObjectBatchLoadItem:
+        row_id = int(raw.id)
+        # ``object_key`` is a HashedLookup digest. Keep the bytes surface
+        # stable for diagnostics and raw mirror consumers.
+        _raw_ok = raw.object_key
+        object_key = _raw_ok.encode(UTF_8_ENCODING) if isinstance(_raw_ok, str) else bytes(_raw_ok)
+        classification_str = str(raw.classification)
+        schema_version = int(raw.schema_version)
+        written_at = raw.written_at
+        payload_wire = bytes(raw.payload)
+        try:
+            classification = SensitivityClass(classification_str)
+        except ValueError:
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason=f"unknown classification {classification_str!r}",
+            )
+        if classification is not expected_class:
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason=f"classification {classification.value!r} does not match expected {expected_class.value!r}",
+            )
+        if schema_version != max_supported_version:
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason=f"schema version {schema_version} does not match expected {max_supported_version}",
+            )
+        try:
+            self._enforce_registered_row_schema(
+                namespace=namespace,
+                schema_version=schema_version,
+                definition=namespace_definition,
+            )
+        except EnvelopeVersionError as exc:
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason=resolve_error_message(exc),
+            )
+        try:
+            payload_plain = decrypt_secure_object_payload(
+                payload_wire,
+                associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
+            )
+        except DecryptionError as exc:
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason=str(exc),
+            )
+        if not verify_revision_self_consistency(
+            namespace=namespace,
+            object_key=object_key,
+            schema_version=schema_version,
+            written_at=written_at,
+            revision_id=raw.revision_id,
+            previous_revision_id=raw.previous_revision_id,
+            payload_hash=raw.payload_hash,
+            ciphertext_hash=raw.ciphertext_hash,
+            previous_payload_hash=raw.previous_payload_hash,
+        ):
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason="revision lineage self-consistency check failed",
+            )
+        return SecureObjectRecord(
+            namespace=namespace,
+            object_key=object_key,
+            classification=classification,
+            schema_version=schema_version,
+            written_at=written_at,
+            payload=payload_plain,
+        )
 
     def load(
         self,

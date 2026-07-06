@@ -17,14 +17,18 @@ from ._secure_objects_support import (
     EnvelopeVersionError,
     EphemeralMasterKeyProvider,
     Path,
+    SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectRevisionConflictError,
+    SecureObjectUnreadable,
+    SecureObjectUnreadableError,
     SecureObjectWrite,
     SensitivityClass,
     Settings,
     StorageValidationError,
     create_engine_from_settings,
     datetime,
+    event,
     hashlib,
     sqlite3,
 )
@@ -192,6 +196,137 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
             ).fetchone()
         assert after == before
         assert after[1] == hashlib.sha256(b"raw-current").hexdigest()
+
+
+def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targeted_query(
+    tmp_path: Path,
+) -> None:
+    """Targeted batch load returns the same readable rows as repeated single loads."""
+
+    with _ephemeral_secure_repo(tmp_path, "load-many-readable.db") as (_, engine, repo):
+        namespace = "aeat.batch.readable"
+        rows = {
+            "row-a": b"payload-a",
+            "row-b": b"payload-b",
+            "row-c": b"payload-c",
+        }
+        for offset, (object_key, payload) in enumerate(rows.items()):
+            repo.save(
+                namespace=namespace,
+                object_key=object_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 23, 9, offset, 0, tzinfo=UTC),
+                payload=payload,
+            )
+
+        requested = ("row-c", "row-missing", "row-a")
+        expected = {
+            record.object_key: record.payload
+            for object_key in requested
+            for record in (
+                repo.load(
+                    namespace,
+                    object_key,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                ),
+            )
+            if record is not None
+        }
+
+        statements: list[str] = []
+
+        def collect_statement(_conn: object, _cursor: object, statement: str, *_args: object) -> None:
+            statements.append(statement)
+
+        event.listen(engine, "before_cursor_execute", collect_statement)
+        try:
+            loaded = tuple(
+                repo.load_many(
+                    namespace,
+                    requested,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                ),
+            )
+        finally:
+            event.remove(engine, "before_cursor_execute", collect_statement)
+
+    assert {record.object_key: record.payload for record in loaded} == expected
+    assert {record.payload for record in loaded} == {b"payload-a", b"payload-c"}
+    assert b"payload-b" not in {record.payload for record in loaded}
+    targeted_selects = [
+        statement
+        for statement in statements
+        if "FROM secure_objects WHERE namespace = ?" in statement and "object_key IN" in statement
+    ]
+    assert len(targeted_selects) == 1
+
+
+def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_path: Path) -> None:
+    """Targeted batch load keeps readable rows and schema failures visible."""
+
+    with _ephemeral_secure_repo(tmp_path, "load-many-failures.db") as (_, _, repo):
+        namespace = "aeat.batch.failures"
+        repo.save(
+            namespace=namespace,
+            object_key="readable-row",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime(2026, 5, 23, 10, 0, 0, tzinfo=UTC),
+            payload=b"readable-payload",
+        )
+        repo.save(
+            namespace=namespace,
+            object_key="schema-row",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=2,
+            written_at=datetime(2026, 5, 23, 10, 5, 0, tzinfo=UTC),
+            payload=b"future-schema-payload",
+        )
+
+        single = repo.load(
+            namespace,
+            "readable-row",
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=1,
+        )
+        assert single is not None
+        with pytest.raises(EnvelopeVersionError):
+            repo.load(
+                namespace,
+                "schema-row",
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            )
+
+        items = tuple(
+            repo.iter_many_with_failures(
+                namespace,
+                ("schema-row", "readable-row", "missing-row"),
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            ),
+        )
+
+        with pytest.raises(SecureObjectUnreadableError):
+            tuple(
+                repo.load_many(
+                    namespace,
+                    ("schema-row", "readable-row"),
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                ),
+            )
+
+    readable = [item for item in items if isinstance(item, SecureObjectRecord)]
+    unreadable = [item for item in items if isinstance(item, SecureObjectUnreadable)]
+    assert len(readable) == 1
+    assert readable[0].payload == single.payload
+    assert len(unreadable) == 1
+    assert unreadable[0].schema_version == 2
+    assert "schema version 2" in unreadable[0].reason
 
 
 def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
