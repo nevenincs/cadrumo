@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cpdefix-followup-allgreen'
-date: '2026-07-05'
-modified: '2026-07-05'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-05-cpdefix-followup-allgreen-W01-P01-S01]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W01-P01-S02]]'
@@ -20,6 +20,16 @@ related:
   - '[[2026-07-05-cpdefix-followup-allgreen-W04-P07-S12]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W04-P07-S13]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-W04-P07-S14]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W05-P08-S15]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W05-P08-S16]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S17]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S18]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S19]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S20]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S21]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S22]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S23]]'
+  - '[[2026-07-05-cpdefix-followup-allgreen-W06-P09-S24]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-adr]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-audit]]'
   - '[[2026-07-05-cpdefix-followup-allgreen-plan]]'
@@ -56,6 +66,16 @@ Auto-generated index of all documents tagged with `#cpdefix-followup-allgreen`.
 - `2026-07-05-cpdefix-followup-allgreen-W04-P07-S12` - Revalidate current M130 gasto actividad-economica eligibility against production aggregation
 - `2026-07-05-cpdefix-followup-allgreen-W04-P07-S13` - Cover unclassified actividad-economica gasto and reviewed exclusion behavior with real aggregation tests
 - `2026-07-05-cpdefix-followup-allgreen-W04-P07-S14` - Record focused verification evidence for the post-completion M130 gasto edge
+- `2026-07-05-cpdefix-followup-allgreen-W05-P08-S15` - Verify relocated regularizacion source-mesh enrollment gates after the no-reexport cleanup
+- `2026-07-05-cpdefix-followup-allgreen-W05-P08-S16` - Resync relocated regularizacion source-mesh enrollment tests and remove test-export repository import
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S17` - Replace bienes-inversion test-export repository imports with the real persistence adapter source
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S18` - Replace invoice test-export repository imports with the real persistence adapter source
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S19` - Replace memoized transaction test-export repository import with the real persistence adapter source
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S20` - Replace renta income aggregation test-export repository imports with real persistence adapter sources
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S21` - Replace LLM telemetry test-export imports with real adapter sources
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S22` - Replace ledger evidence test-export storage imports with real adapter sources
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S23` - Execution Notes
+- `2026-07-05-cpdefix-followup-allgreen-W06-P09-S24` - Execution Notes
 
 ### plan
 
