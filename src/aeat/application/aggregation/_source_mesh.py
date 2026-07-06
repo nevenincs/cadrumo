@@ -200,18 +200,6 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
                 "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
             ),
         ),
-        # IVA capital-goods regularizacion (LIVA arts. 107-110, casilla 43)
-        # remains advisory-backed after prorrata_regularizacion promotion until
-        # its own live resolver and registry binding target are governed.
-        BindingSourceKind.BIENES_INVERSION_REGULARIZACION: DeferredSourceTarget(
-            owning_adr="2026-07-01-iva-bienes-inversion-regularizacion-adr",
-            trigger=(
-                "Promote only after a governed bienes-inversion source resolver declares and proves the "
-                "Modelo 303 casilla 43 / Modelo 390 regularizacion binding targets, maps profile-scoped "
-                "capital-goods register rows to the current-year definitive prorrata percentage, and "
-                "handles the art. 110 disposal cap facts without silently omitting LIVA arts. 107-110 cases."
-            ),
-        ),
     },
 )
 

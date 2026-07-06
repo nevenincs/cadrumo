@@ -844,3 +844,45 @@ cross-period-prorrata`, `vaultspec-core vault check features --feature
 cross-period-prorrata`, and `vaultspec-core vault plan check
 2026-07-06-cross-period-prorrata-plan` are clean. `vaultspec-core vault plan
 status 2026-07-06-cross-period-prorrata-plan` reports 49 of 49 steps complete.
+
+## S49 Follow-up Execution: Bienes inversion M303 live resolver
+
+Implemented the grounded M303 portion of
+`s49-bienes-inversion-remaining-blocker` in the working tree. The existing
+`bienes_inversion_regularizacion` source kind is now registry-declared for
+Modelo 303 in both live revisions, with a strict selector for
+`modelo_303_casilla_43`; the live calculation mesh enrolls
+`BienesInversionRegularizacionSourceResolver` and removes the source kind from
+the authoritative deferred-source set.
+
+The resolver reads the real profile-scoped encrypted bienes-inversion register,
+maps every in-window non-disposed good to the current-year definitive prorrata
+percentage materialised by the registry engine, folds the existing art. 109
+annual projection, includes the existing art. 110 disposal projection, and
+projects the result into the existing `bound_inputs_by_casilla_id` surface for
+Modelo 303 casilla `[43]`. Casilla `[43]` remains a manual official box in the
+registry, avoiding a formula-owned target cycle, while the Modelo 303 total
+deductible formula now consumes `[43]` and `[44]` in both revisions as the
+official record design requires.
+
+Resolution: the M303 live resolver, casilla `[43]` target consumption, row
+mapping to definitive prorrata, and art. 110 disposal inclusion are implemented
+and verified. The Modelo 390 bienes-inversion annual target remains formally
+deferred because the current Modelo 390 registry does not yet declare a
+separate bienes-inversion regularizacion field and the bundled authority found
+in this pass grounds M303 `[43]`/`[45]`, not a distinct M390 export target. That
+follow-up must be resolved by a Modelo 390 target-grounding slice before any
+M390 bienes-inversion binding is declared.
+
+Verification inventory: focused ruff passed for the changed resolver, mesh
+policy, registry selector, registry bindings, and tests. The focused
+bienes/prorrata/source-kind pytest slice passed with 110 tests, including the
+real encrypted-register mesh test proving `bienes_inversion_regularizacion`
+populates binding `modelo-303-bienes-inversion-regularizacion-casilla-43` and
+casilla `[43]` through `bound_inputs_by_casilla_id`. `vaultspec-core vault
+feature index --feature cross-period-prorrata`,
+`vaultspec-core vault check frontmatter --feature cross-period-prorrata`,
+`vaultspec-core vault check features --feature cross-period-prorrata`, and
+`vaultspec-core vault plan check 2026-07-06-cross-period-prorrata-plan` are
+clean. `vaultspec-core vault plan status
+2026-07-06-cross-period-prorrata-plan` reports 49 of 49 steps complete.

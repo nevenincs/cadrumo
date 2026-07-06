@@ -597,6 +597,7 @@ def _resolve_bucket_source_mesh(
         merge_source_resolutions,
     )
     from ..calculations import (
+        BienesInversionRegularizacionSourceResolver,
         IvaCompensationAnnualPartitionSourceResolver,
         PreviousFilingSourceResolver,
         ProrrataRegularizacionSourceResolver,
@@ -726,6 +727,12 @@ def _resolve_bucket_source_mesh(
             registry_snapshot=snapshot,
         ).resolve(context)
         source_resolution = merge_source_resolutions((source_resolution, prorrata_resolution))
+        bienes_resolution = BienesInversionRegularizacionSourceResolver(
+            current_year_values=materialised_prorrata_values.values,
+            missing_current_year_casilla_ids=materialised_prorrata_values.missing_casilla_ids,
+            unresolved_current_year_casilla_ids=materialised_prorrata_values.unresolved_casilla_ids,
+        ).resolve(context)
+        source_resolution = merge_source_resolutions((source_resolution, bienes_resolution))
     # Safety net: collect non-blocking advisories for every binding whose declared
     # source has no enrolled resolver and is not explicitly deferred.
     # handled_sources covers all enrolled-resolver owned_sources plus the three

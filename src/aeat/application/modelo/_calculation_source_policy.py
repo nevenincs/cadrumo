@@ -57,6 +57,7 @@ _ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.PREVIOUS_FILING,
         BindingSourceKind.RELATION_PREFILL,
         BindingSourceKind.PRORRATA_REGULARIZACION,
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
         BindingSourceKind.PROFILE,
         BindingSourceKind.BORRADOR,
         BindingSourceKind.IVA_WALLET_DECISION,

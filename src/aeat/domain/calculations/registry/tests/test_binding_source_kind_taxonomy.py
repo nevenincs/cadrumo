@@ -102,11 +102,7 @@ _MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 # surfaces an advisory rather than resolving silently to zero. A member here
 # that later gains a registry binding must be removed from this carve-out (the
 # disjointness assertion below fails otherwise).
-_DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
-    },
-)
+_DEFERRED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset()
 
 
 def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> None:

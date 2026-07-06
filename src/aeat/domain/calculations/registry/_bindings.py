@@ -570,6 +570,15 @@ _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
 _PRORRATA_REGULARIZACION_SOURCE_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 
 
+class _BienesInversionRegularizacionSelector(BaseModel):
+    """Selector for capital-goods regularisation filing targets."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: Literal["303"]
+    regularizacion_output: Literal["modelo_303_casilla_43"]
+
+
 class _IvaCompensationAnnualPartitionSelector(BaseModel):
     """Selector for Modelo 390 AEAT boxes 97 / 662 as one FIFO partition."""
 
@@ -640,6 +649,9 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
         return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
     if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
         return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
+    if binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION:
+        _BienesInversionRegularizacionSelector.model_validate(selector_as_dict(binding))
+        return ()
     return ()
 
 
@@ -653,6 +665,8 @@ def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
         return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_modelo
     if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
         return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_modelo
+    if binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION:
+        return _BienesInversionRegularizacionSelector.model_validate(selector_as_dict(binding)).source_modelo
     return None
 
 
@@ -829,6 +843,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.RELATION_PREFILL: _RelationPrefillSelector,
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
     BindingSourceKind.PRORRATA_REGULARIZACION: _ProrrataRegularizacionSelector,
+    BindingSourceKind.BIENES_INVERSION_REGULARIZACION: _BienesInversionRegularizacionSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
@@ -916,6 +931,9 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
         _IvaCompensationAnnualPartitionSelector,
     ),
     BindingSourceKind.PRORRATA_REGULARIZACION: _validate_selector_only(_ProrrataRegularizacionSelector),
+    BindingSourceKind.BIENES_INVERSION_REGULARIZACION: _validate_selector_only(
+        _BienesInversionRegularizacionSelector,
+    ),
     # The three invoice-shaped sources run the stricter invoice validator (the
     # union of the prior dual path: selector-shape + counterpart fact/op
     # invariants + the two invoice-only scalar-shape guards). ledger_transaction

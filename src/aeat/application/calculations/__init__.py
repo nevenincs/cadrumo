@@ -64,6 +64,7 @@ See Also:
 
 from ._bienes_inversion_regularizacion import (
     CASILLA_REGULARIZACION_BIENES_INVERSION,
+    BienesInversionRegularizacionSourceResolver,
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
 )
@@ -168,6 +169,7 @@ __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "M111_NO_RETENCIONES_PROFILE_PATH",
     "AssembledObservations",
+    "BienesInversionRegularizacionSourceResolver",
     "BindingPrefillReport",
     "CalculationObservationRepository",
     "CrossPeriodCleanStateBlocker",

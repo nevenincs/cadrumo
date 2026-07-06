@@ -138,6 +138,7 @@ bindings = [
     "modelo-303-iva-repercutido-reducido-base",
     "modelo-303-iva-repercutido-super-reducido-base",
     "modelo-303-iva-soportado-interiores-base",
+    "modelo-303-bienes-inversion-regularizacion-casilla-43",
     "modelo-303-prorrata-regularizacion-casilla-44",
 ]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
