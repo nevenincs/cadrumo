@@ -15,6 +15,8 @@ from the AST on every run, so it cannot go stale.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
@@ -37,11 +39,11 @@ def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
     return hits
 
 
-def test_no_absolute_self_imports_in_aeat_package() -> None:
+def test_no_absolute_self_imports_in_aeat_package(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No source file under ``src/aeat`` may import the ``aeat`` package absolutely."""
     violations: list[str] = []
     for path in package_python_files():
-        tree = ast_for_path(path)
+        tree = ast_for_path(path, source_tree_ast)
         if tree is None:
             continue
         rel = repo_relative(path).removeprefix("src/")
