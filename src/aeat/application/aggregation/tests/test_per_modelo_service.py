@@ -632,15 +632,14 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
         )
 
 
-# --- S19: retenciones double-path collapse is behaviour-preserving (P03) ---------
+# --- Retenciones dispatch collapse is behaviour-preserving --------------------
 #
-# S13 collapsed the two retenciones dispatch tables (the per-modelo service's local
-# 6-entry ``dispatch`` and the mesh resolver's 4-entry ``_RETENCIONES_AGGREGATORS``)
-# onto ONE canonical entry point,
+# The per-modelo service dispatch table and the mesh resolver dispatch table share
+# the canonical entry point,
 # :meth:`RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
 # mesh (``resolve``) and the per-modelo aggregation service (``aggregate_per_modelo``,
 # the CLI ``aggregate`` / pull surface). These gates prove the collapse routes each
-# modelo to the SAME core it did before (``one-aggregation-path-pull-equals-calculate``)
+# modelo to the same core it did before (``one-aggregation-path-pull-equals-calculate``)
 # with no value shift and the landed distinct-NIF perceptor count unchanged.
 
 # The pre-existing, independently-tested aggregation cores are the oracle: the collapsed

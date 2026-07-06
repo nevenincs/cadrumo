@@ -957,7 +957,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
 
 
 def test_non_regional_category_profile_preserves_result_across_region() -> None:
-    """S37: with the (empty) override layer, the residence CCAA is inert.
+    """With the empty override layer, the residence CCAA is inert.
 
     A category with no territorial-regime override produces byte-identical
     observations whether the residence comunidad is declared or not.
@@ -983,7 +983,7 @@ def test_non_regional_category_profile_preserves_result_across_region() -> None:
 
 
 def test_region_override_selected_when_residence_matches() -> None:
-    """S38: a declared residence with a territorial override selects the override.
+    """A declared residence with a territorial override selects the override.
 
     The synthetic 50% override for the residence comunidad halves the deductible
     versus the full-deductible state profile, proving selection by CCAA.
@@ -1009,7 +1009,7 @@ def test_region_override_selected_when_residence_matches() -> None:
 
 
 def test_region_override_undeclared_residence_fails_closed() -> None:
-    """S38/D4: a category carrying an override with no declared residence fails closed."""
+    """A category carrying an override with no declared residence fails closed."""
     row = _transaction("row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
     overrides = {
         CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)}
@@ -1030,7 +1030,7 @@ def test_region_override_undeclared_residence_fails_closed() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S36: residence CCAA derived from the active profile at the repository boundary
+# Residence CCAA derived from the active profile at the repository boundary.
 # ---------------------------------------------------------------------------
 
 
@@ -1049,7 +1049,7 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
 def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empty(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S36/S37: deriving residence_ccaa from the profile changes nothing today.
+    """Deriving residence CCAA from the profile changes nothing without overrides.
 
     With the registry override layer empty, aggregating through the repository
     wrapper with a profile declaring ``tax_residence.ccaa = madrid`` produces
@@ -1085,7 +1085,7 @@ def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empt
 def test_repository_wrapper_threads_profile_residence_into_region_override_selection(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S36/S38: the residence CCAA derived from the profile reaches override selection.
+    """The residence CCAA derived from the profile reaches override selection.
 
     A GASTOS_BANCARIOS row with a synthetic Canarias override: a profile declaring
     ``tax_residence.ccaa = canarias`` selects the override THROUGH the repository
