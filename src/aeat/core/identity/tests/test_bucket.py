@@ -20,17 +20,27 @@ class _Container(BaseModel):
     bucket_id: BucketId
 
 
-def test_bucket_id_constraint_accepts_valid_values_and_rejects_invalid_values() -> None:
-    valid_cases = (
-        ("profile-7b9c-bucket", "profile-7b9c-bucket"),
-        ("x" * 128, "x" * 128),
-        ("  profile-bucket  ", "profile-bucket"),
-    )
+@pytest.mark.parametrize(
+    ("bucket_id", "expected"),
+    (
+        pytest.param("profile-7b9c-bucket", "profile-7b9c-bucket", id="label"),
+        pytest.param("x" * 128, "x" * 128, id="max-length"),
+        pytest.param("  profile-bucket  ", "profile-bucket", id="trimmed"),
+    ),
+)
+def test_bucket_id_constraint_accepts_valid_values(bucket_id: str, expected: str) -> None:
+    container = _Container(bucket_id=bucket_id)
+    assert container.bucket_id == expected
 
-    for bucket_id, expected in valid_cases:
-        container = _Container(bucket_id=bucket_id)
-        assert container.bucket_id == expected
 
-    for bucket_id in ("", "x" * 129, "   "):
-        with pytest.raises(ValidationError):
-            _Container(bucket_id=bucket_id)
+@pytest.mark.parametrize(
+    "bucket_id",
+    (
+        pytest.param("", id="empty"),
+        pytest.param("x" * 129, id="too-long"),
+        pytest.param("   ", id="blank-after-trim"),
+    ),
+)
+def test_bucket_id_constraint_rejects_invalid_values(bucket_id: str) -> None:
+    with pytest.raises(ValidationError):
+        _Container(bucket_id=bucket_id)
