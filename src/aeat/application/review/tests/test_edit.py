@@ -26,33 +26,41 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------
 
 
-def test_parse_edit_clause_normalizes_key_value_pairs() -> None:
-    cases = {
-        "category=software": ("category", "software"),
-        "  CATEGORY  =software": ("category", "software"),
-        "category=  software ": ("category", "software"),
-    }
-    for raw, (expected_key, expected_value) in cases.items():
-        clause = parse_edit_clause(raw)
-        assert clause.key == expected_key
-        assert clause.raw_value == expected_value
+@pytest.mark.parametrize(
+    ("raw", "expected_key", "expected_value"),
+    (
+        ("category=software", "category", "software"),
+        ("  CATEGORY  =software", "category", "software"),
+        ("category=  software ", "category", "software"),
+    ),
+)
+def test_parse_edit_clause_normalizes_key_value_pairs(
+    raw: str,
+    expected_key: str,
+    expected_value: str,
+) -> None:
+    clause = parse_edit_clause(raw)
+    assert clause.key == expected_key
+    assert clause.raw_value == expected_value
 
 
-def test_parse_edit_clause_rejects_malformed_tokens() -> None:
-    cases = {
-        "category software": "missing-equals",
-        "=software": "empty-key",
-        "category=": "empty-value",
-        "category=   ": "empty-value",
-    }
-    for raw, expected_reason in cases.items():
-        with pytest.raises(EditParseError, match=expected_reason) as exc:
-            parse_edit_clause(raw)
-        assert exc.value.reason == expected_reason
-        if expected_reason == "missing-equals":
-            assert exc.value.raw_token == raw
-            assert exc.value.translated_message == "review.edit.errors.parse_failed"
-            assert exc.value.context == {"reason": "missing-equals"}
+@pytest.mark.parametrize(
+    ("raw", "expected_reason"),
+    (
+        ("category software", "missing-equals"),
+        ("=software", "empty-key"),
+        ("category=", "empty-value"),
+        ("category=   ", "empty-value"),
+    ),
+)
+def test_parse_edit_clause_rejects_malformed_tokens(raw: str, expected_reason: str) -> None:
+    with pytest.raises(EditParseError, match=expected_reason) as exc:
+        parse_edit_clause(raw)
+    assert exc.value.reason == expected_reason
+    if expected_reason == "missing-equals":
+        assert exc.value.raw_token == raw
+        assert exc.value.translated_message == "review.edit.errors.parse_failed"
+        assert exc.value.context == {"reason": "missing-equals"}
 
 
 def test_parse_edit_clauses_preserves_order() -> None:
@@ -91,34 +99,36 @@ def test_ledger_spec_parses_supported_fields_together() -> None:
     assert spec.comments == "invoice-reviewed"
 
 
-def test_ledger_spec_business_share_accepts_decimal_boundaries() -> None:
-    cases = (
-        ("0", Decimal("0")),
-        ("1", Decimal("1")),
-    )
-    for raw_value, expected in cases:
-        spec = LedgerEditSpec.from_strings([f"business.share={raw_value}"])
-        assert spec.business_share == expected
+@pytest.mark.parametrize(("raw_value", "expected"), (("0", Decimal("0")), ("1", Decimal("1"))))
+def test_ledger_spec_business_share_accepts_decimal_boundaries(raw_value: str, expected: Decimal) -> None:
+    spec = LedgerEditSpec.from_strings([f"business.share={raw_value}"])
+    assert spec.business_share == expected
 
 
-def test_ledger_spec_business_share_rejects_invalid_values() -> None:
-    for raw_value in ("1.5", "-0.1", "full"):
-        with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
-            LedgerEditSpec.from_strings([f"business.share={raw_value}"])
-        assert exc.value.reason == "invalid-value-ledger-business-share"
+@pytest.mark.parametrize("raw_value", ("1.5", "-0.1", "full"))
+def test_ledger_spec_business_share_rejects_invalid_values(raw_value: str) -> None:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
+        LedgerEditSpec.from_strings([f"business.share={raw_value}"])
+    assert exc.value.reason == "invalid-value-ledger-business-share"
 
 
-def test_ledger_spec_rejects_invalid_keys() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("clauses", "expected_reason", "expected_context"),
+    (
         (["base=120.00"], "unknown-key-ledger", None),
         (["category=a", "category=b"], "duplicate-key-ledger", {"reason": "duplicate-key-ledger", "key": "category"}),
-    )
-    for clauses, expected_reason, expected_context in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc:
-            LedgerEditSpec.from_strings(clauses)
-        assert exc.value.reason == expected_reason
-        if expected_context is not None:
-            assert exc.value.context == expected_context
+    ),
+)
+def test_ledger_spec_rejects_invalid_keys(
+    clauses: list[str],
+    expected_reason: str,
+    expected_context: dict[str, str] | None,
+) -> None:
+    with pytest.raises(EditParseError, match=expected_reason) as exc:
+        LedgerEditSpec.from_strings(clauses)
+    assert exc.value.reason == expected_reason
+    if expected_context is not None:
+        assert exc.value.context == expected_context
 
 
 def test_ledger_spec_parse_error_message_omits_sensitive_edit_value() -> None:
@@ -166,16 +176,18 @@ def test_invoice_spec_parses_supported_fields_together() -> None:
     assert spec.document_path == Path("./receipts/receipt-901.pdf")
 
 
-def test_invoice_spec_rejects_invalid_keys_and_values() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("clauses", "expected_reason"),
+    (
         (["category=software"], "unknown-key-invoice"),
         (["base=tbd"], "invalid-value-invoice-base"),
         (["base=1.0", "base=2.0"], "duplicate-key-invoice"),
-    )
-    for clauses, expected_reason in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc:
-            InvoiceEditSpec.from_strings(clauses)
-        assert exc.value.reason == expected_reason
+    ),
+)
+def test_invoice_spec_rejects_invalid_keys_and_values(clauses: list[str], expected_reason: str) -> None:
+    with pytest.raises(EditParseError, match=expected_reason) as exc:
+        InvoiceEditSpec.from_strings(clauses)
+    assert exc.value.reason == expected_reason
 
 
 def test_empty_specs_return_empty_instances() -> None:
