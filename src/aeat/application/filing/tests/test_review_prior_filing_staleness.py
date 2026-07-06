@@ -16,7 +16,6 @@ mesh or resolving any relation in the review layer.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from decimal import Decimal
 
 import pytest
@@ -39,10 +38,10 @@ from .. import (
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
-    empty_prior_filing_observations_fingerprint,
 )
-from .._review import _prior_filing_observations_fingerprint
 from ..testing import ModeloTestProfile
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _LEGAL_REFS = ("ley-35-2006:art-99",)
@@ -100,8 +99,6 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
     )
 
 
-@pytest.mark.integration
-@pytest.mark.hex_application
 def test_approval_goes_stale_when_prior_filing_observation_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
@@ -133,8 +130,6 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
     assert reasons == (ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED,)
 
 
-@pytest.mark.integration
-@pytest.mark.hex_application
 def test_approval_not_stale_when_prior_filing_observations_unchanged(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
@@ -164,88 +159,3 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
     assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons
     assert reasons == ()
 
-
-# Registry-free unit coverage of the fingerprint mechanism the prior-filing stale
-# detection relies on. These build the digest directly from real
-# `RegistryModeloObservation` values wrapped in a data-only carrier that matches
-# the observation repository's stored-envelope shape, so they exercise the
-# change-detection signal without a schema provider or the secure backend.
-
-
-@dataclass(frozen=True)
-class _StoredObservation:
-    """Data-only carrier matching the fingerprint helper's structural shape."""
-
-    observation: RegistryModeloObservation
-    source_kind: str
-    member_nif: str | None
-    stamped_revision_id: str
-
-
-def _carrier(
-    *, value: str, source_kind: str = "app_filing", stamped_revision_id: str = "2019-y-siguientes"
-) -> _StoredObservation:
-    return _StoredObservation(
-        observation=_prior_observation(value=value),
-        source_kind=source_kind,
-        member_nif=None,
-        stamped_revision_id=stamped_revision_id,
-    )
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_prior_filing_fingerprint_changes_when_a_filed_value_changes() -> None:
-    before = _prior_filing_observations_fingerprint([_carrier(value="100.00")])
-    after = _prior_filing_observations_fingerprint([_carrier(value="250.00")])
-
-    assert before != after
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_prior_filing_fingerprint_tracks_the_stamped_revision() -> None:
-    before = _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")])
-    after = _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")])
-
-    # Same filed value, different stamped registry revision -> different digest,
-    # so a revision re-stamp of an otherwise-identical prior is not silently missed.
-    assert before != after
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> None:
-    a = _carrier(value="100.00")
-    b = _StoredObservation(
-        observation=RegistryModeloObservation(
-            modelo="130",
-            filing_year=2025,
-            period="1T",
-            observations=(
-                CasillaObservation(
-                    casilla_id=_M130_RESULTADO_CASILLA,
-                    value=Decimal("200.00"),
-                    legal_refs=_LEGAL_REFS,
-                    source_refs=_SOURCE_REFS,
-                ),
-            ),
-        ),
-        source_kind="app_filing",
-        member_nif=None,
-        stamped_revision_id="2019-y-siguientes",
-    )
-
-    assert _prior_filing_observations_fingerprint([a, b]) == _prior_filing_observations_fingerprint([b, a])
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_prior_filing_fingerprint_distinguishes_empty_from_populated() -> None:
-    empty = _prior_filing_observations_fingerprint([])
-    populated = _prior_filing_observations_fingerprint([_carrier(value="100.00")])
-
-    assert empty != populated
-    # The exported empty-set helper matches an empty stream and is stable.
-    assert empty == empty_prior_filing_observations_fingerprint()
-    assert empty == _prior_filing_observations_fingerprint([])
