@@ -51,6 +51,7 @@ from ...core import (
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
+from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
     IvaLedgerObservation,
@@ -727,8 +728,6 @@ class ProrrataRegularizacionSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         snapshot = self._registry_snapshot
         if snapshot is None:
-            from ...core.resources import resources
-
             snapshot = resources().modelos.authority.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
