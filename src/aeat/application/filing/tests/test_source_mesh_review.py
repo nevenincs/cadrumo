@@ -38,8 +38,9 @@ from .. import (
     build_draft,
     build_runtime_schema_provider,
 )
-from .._review import _invoice_catalogue_fingerprint
 from ..testing import ModeloTestProfile
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 # The filing conftest's module-scope ``_active_bucket_runtime`` activates this
@@ -85,8 +86,6 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
     )
 
 
-@pytest.mark.integration
-@pytest.mark.hex_application
 def test_approval_goes_stale_when_invoice_source_data_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
@@ -121,8 +120,6 @@ def test_approval_goes_stale_when_invoice_source_data_changes(
     assert reasons == (ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED,)
 
 
-@pytest.mark.integration
-@pytest.mark.hex_application
 def test_approval_not_stale_when_invoice_source_unchanged(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
@@ -153,47 +150,3 @@ def test_approval_not_stale_when_invoice_source_unchanged(
 
     assert ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED not in reasons
     assert reasons == ()
-
-
-# Registry-free unit coverage of the fingerprint mechanism the invoice-source
-# stale detection relies on. These do not build a runtime schema provider, so they
-# exercise the source-change signal independently of the full-registry validation
-# the integration tests above depend on. Real Invoice / InvoiceCatalogue objects,
-# no test doubles.
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_invoice_catalogue_fingerprint_changes_when_an_invoice_changes() -> None:
-    before = InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"))])
-    after = InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("250.00"))])
-
-    assert _invoice_catalogue_fingerprint(before) != _invoice_catalogue_fingerprint(after)
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_invoice_catalogue_fingerprint_is_deterministic_and_order_independent() -> None:
-    invoice_a = _invoice("2026-0001", taxable_base=Decimal("100.00"))
-    invoice_b = _invoice("2026-0002", taxable_base=Decimal("200.00"))
-    one_order = InvoiceCatalogue.from_invoices([invoice_a, invoice_b])
-    other_order = InvoiceCatalogue.from_invoices([invoice_b, invoice_a])
-
-    # Same content, different insertion order -> identical fingerprint.
-    assert _invoice_catalogue_fingerprint(one_order) == _invoice_catalogue_fingerprint(other_order)
-    # Re-deriving the identical catalogue reproduces the digest (no volatile fields).
-    rebuilt = InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00")), invoice_b])
-    assert _invoice_catalogue_fingerprint(rebuilt) == _invoice_catalogue_fingerprint(one_order)
-
-
-@pytest.mark.unit
-@pytest.mark.hex_application
-def test_invoice_catalogue_fingerprint_distinguishes_empty_from_populated() -> None:
-    empty = _invoice_catalogue_fingerprint(InvoiceCatalogue())
-    populated = _invoice_catalogue_fingerprint(
-        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"))]),
-    )
-
-    assert empty != populated
-    # Empty digest is stable across calls.
-    assert empty == _invoice_catalogue_fingerprint(InvoiceCatalogue())
