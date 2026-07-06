@@ -20,6 +20,7 @@ No mocks, no skips, no tautological assertions.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -131,14 +132,11 @@ def test_llm_cache_json_loads_rationale_present() -> None:
 
 
 def test_schedules_final_path_constants() -> None:
-    """_schedules.py must declare _IVA_REGIME_PATH and _TAXPAYER_ENTITY_TYPE_PATH as Final constants."""
-    src = _read("domain/calculations/registry/_schedules.py")
-    assert '_IVA_REGIME_PATH: Final[str] = "iva.regime"' in src, (
-        "domain/calculations/registry/_schedules.py: missing _IVA_REGIME_PATH Final constant"
-    )
-    assert '_TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"' in src, (
-        "domain/calculations/registry/_schedules.py: missing _TAXPAYER_ENTITY_TYPE_PATH Final constant"
-    )
+    """_schedules.py exposes the registry dotted-path constants used by profile predicates."""
+    from ..domain.calculations.registry import _schedules
+
+    assert _schedules._IVA_REGIME_PATH == "iva.regime"
+    assert _schedules._TAXPAYER_ENTITY_TYPE_PATH == "taxpayer.entity_type"
 
 
 # ---------------------------------------------------------------------------
@@ -146,22 +144,25 @@ def test_schedules_final_path_constants() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_schedules_uses_constants_in_resolver() -> None:
-    """_resolve_profile_fact must reference the Final constants, not bare string literals."""
-    src = _read("domain/calculations/registry/_schedules.py")
-    # Find the _resolve_profile_fact function body.
-    assert "def _resolve_profile_fact" in src, (
-        "domain/calculations/registry/_schedules.py: _resolve_profile_fact not found"
-    )
-    func_start = src.index("def _resolve_profile_fact")
-    func_body = src[func_start:]
-    # The constants must appear in the function body.
-    assert "_IVA_REGIME_PATH" in func_body, (
-        "domain/calculations/registry/_schedules.py: _IVA_REGIME_PATH constant not used in _resolve_profile_fact"
-    )
-    assert "_TAXPAYER_ENTITY_TYPE_PATH" in func_body, (
-        "domain/calculations/registry/_schedules.py: "
-        "_TAXPAYER_ENTITY_TYPE_PATH constant not used in _resolve_profile_fact"
+def test_schedules_resolver_accepts_registry_dotted_profile_paths() -> None:
+    """_resolve_profile_fact maps registry dotted fields onto the flat profile object."""
+    from ..domain.calculations.registry import _schedules
+
+    @dataclass(frozen=True)
+    class _Regime:
+        value: str
+
+    @dataclass(frozen=True)
+    class _Profile:
+        iva_regime: _Regime
+        entity_type: str
+
+    profile = _Profile(iva_regime=_Regime("monthly"), entity_type="legal_entity")
+
+    assert _schedules._resolve_profile_fact(profile, _schedules._IVA_REGIME_PATH) == "monthly"
+    assert (
+        _schedules._resolve_profile_fact(profile, _schedules._TAXPAYER_ENTITY_TYPE_PATH)
+        == "legal_entity"
     )
 
 
