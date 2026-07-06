@@ -40,6 +40,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MINIMAL_LEGAL_REF_ID = "rd-439-2007:art-110"
 _MINIMAL_SOURCE_REF_ID = "aeat-modelo-130-instructions"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.cuota-deducible-total",
+    surface="_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA",
+)
+_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA",
+)
+_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-total",
+    surface="_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA",
+)
+_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-porcentaje",
+    surface="_M303_PRORRATA_PORCENTAJE_CASILLA",
+)
+_PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
+    _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
+    _M303_PRORRATA_PORCENTAJE_CASILLA,
+)
 
 
 # Per-source well-shaped selector mappings. As of F8 the binding selector is
@@ -83,6 +105,12 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
     "foreign_asset": {"fact": "row_field", "row_field": "valuation_amount"},
     "atribucion_member": {"fact": "row_field", "row_field": "base_imponible_assigned"},
     "refund_operation": {"fact": "row_field", "row_field": "refund_amount"},
+    "prorrata_regularizacion": {
+        "source_modelo": "303",
+        "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
+        "source_periods": ("1T", "2T", "3T", "4T"),
+        "regularizacion_output": "modelo_303_casilla_44",
+    },
 }
 
 
@@ -176,6 +204,7 @@ _SUM_DEFAULT_SOURCES: tuple[str, ...] = (
     "ledger_renta_expense_aggregation",
     "ledger_renta_income_aggregation",
     "profile",
+    "prorrata_regularizacion",
 )
 
 
