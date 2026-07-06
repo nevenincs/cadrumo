@@ -5,3 +5,4 @@ aeat.domain.prorrata_register package
    :members:
    :show-inheritance:
    :ignore-module-all:
+
