@@ -235,6 +235,7 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
         "303",
         "353",
         "390",
+        "720",
     )
     assert all(item.dependencies for item in inventory.items)
     assert any(
@@ -278,7 +279,7 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
     }
 
 
-def test_cross_period_dependency_inventory_documents_patrimonio_foreign_asset_scope(
+def test_cross_period_dependency_inventory_documents_patrimonio_and_foreign_asset_scope(
     tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -290,11 +291,30 @@ def test_cross_period_dependency_inventory_documents_patrimonio_foreign_asset_sc
             for filing_year in (2025, 2026)
         )
 
-    assert all("714" not in inventory.target_modelos for inventory in inventories)
-    assert all("720" not in inventory.target_modelos for inventory in inventories)
+    inventories_by_year = {inventory.filing_year: inventory for inventory in inventories}
+    inventory_2025 = inventories_by_year[2025]
+    inventory_2026 = inventories_by_year[2026]
+
+    m714_items = tuple(item for item in inventory_2025.items if item.target_modelo == "714")
+    assert len(m714_items) == 1
+    assert m714_items[0].target_period == Period.from_year_and_code(2025, "0A")
+    assert m714_items[0].source_modelos == ("100",)
+    assert all(requirement.filing_year == 2025 for requirement in m714_items[0].dependencies)
+    assert "714" not in inventory_2026.target_modelos
+
+    for inventory in inventories:
+        m720_items = tuple(item for item in inventory.items if item.target_modelo == "720")
+        assert len(m720_items) == 1
+        assert m720_items[0].target_period == Period.from_year_and_code(inventory.filing_year, "0A")
+        assert m720_items[0].source_modelos == ("720",)
+        assert all(
+            requirement.filing_year == inventory.filing_year - 1
+            and requirement.period == Period.from_year_and_code(inventory.filing_year - 1, "0A")
+            and requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+            for requirement in m720_items[0].dependencies
+        )
+
     assert all("721" not in inventory.target_modelos for inventory in inventories)
-    assert all("714" not in inventory.source_modelos for inventory in inventories)
-    assert all("720" not in inventory.source_modelos for inventory in inventories)
     assert all("721" not in inventory.source_modelos for inventory in inventories)
 
 
