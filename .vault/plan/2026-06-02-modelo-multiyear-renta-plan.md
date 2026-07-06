@@ -252,14 +252,14 @@ Build the Patrimonio wealth-base engine (60% limite conjunto x-ref to M100) per 
 - [x] `W06.P24.S67` - write the M714 >=2-renta E2E test asserting year-over-year wealth-base calculation via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_714_wealth_continuity.py`.
 - [x] `W06.P24.S68` - enroll M714 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
-### Phase `W06.P25` - Modelo 721 (crypto declaracion, ENGINE-BUILD-THEN-CALC)
+### Phase `W06.P25` - Modelo 721 (crypto declaracion, THRESHOLD/CONTINUITY-CROSS-RENTA)
 
-Build the crypto obligation-trigger engine per A5 (Ley 58/2003 DA13 + Orden HFP/886/2023), then enroll the obligation-trigger across two renta years.
+Enroll Modelo 721 as the accepted 720-twin informativa threshold-continuity path: legal-registry correction, threshold parameters, two-year repository/advisory evidence, and no calculation engine or calculation application-link surface.
 
-- [ ] `W06.P25.S69` - build the crypto obligation-trigger engine per A5-721 (Ley 58/2003 DA13, Orden HFP/886/2023) (vaultspec-high-executor); `src/aeat/domain/calculations/engines/_modelo_721.py`.
-- [ ] `W06.P25.S70` - declare the modelo-721 calculation application-link surface in the registry (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/721/`.
-- [ ] `W06.P25.S71` - write the M721 >=2-renta E2E test asserting the obligation-trigger across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_721_obligation_continuity.py`.
-- [ ] `W06.P25.S72` - enroll M721 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W06.P25.S69` - reconcile Modelo 721 against the accepted no-calculation threshold-continuity ADR and retire the stale crypto engine requirement; `.vault/adr/2026-06-02-modelo-721-cripto-data-fidelity-adr.md`.
+- [x] `W06.P25.S70` - assert the Modelo 721 registry keeps threshold parameters and filing/extractor/verification/deadline links without a calculation application-link surface; `src/aeat/_data/registry/aeat/modelos/721/`.
+- [x] `W06.P25.S71` - write the M721 >=2-renta threshold-continuity E2E test across 2023 and 2024 via real repository/advisory evidence; `src/aeat/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py`.
+- [x] `W06.P25.S72` - enroll M721 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W06.P26` - Modelo 151 (IRPF regimen impatriados, ENGINE-BUILD-THEN-CALC)
 
@@ -292,9 +292,9 @@ Enroll the entidades-en-atribucion-de-rentas informativa across two renta years;
 
 Enroll the declaracion de bienes en el extranjero via the A3 prior-year asset-baseline binding (+20k/50k re-declaration, RD 1065/2007 art.42-bis) across two renta years; export golden-SHA deferred.
 
-- [ ] `W07.P29.S81` - author the M720 prior-year asset-baseline previous_filing binding (+20k/50k re-declaration) in the registry per A3 (RD 1065/2007 art.42-bis) (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/720/`.
-- [ ] `W07.P29.S82` - write the M720 threshold-continuity E2E test asserting the prior-year asset baseline drives the re-declaration obligation across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_720_baseline_continuity.py`.
-- [ ] `W07.P29.S83` - enroll M720 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
+- [x] `W07.P29.S81` - author the M720 prior-year asset-baseline previous_filing binding (+20k/50k re-declaration) in the registry per A3 (RD 1065/2007 art.42-bis) (vaultspec-high-executor); `src/aeat/_data/registry/aeat/modelos/720/`.
+- [x] `W07.P29.S82` - write the M720 threshold-continuity E2E test asserting the prior-year asset baseline drives the re-declaration obligation across two renta years via real adapters (vaultspec-high-executor); `src/aeat/application/calculations/test_modelo_720_baseline_continuity.py`.
+- [x] `W07.P29.S83` - enroll M720 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
 ### Phase `W07.P30` - Modelo 036 (censo, THRESHOLD/CONTINUITY-CROSS-RENTA)
 
@@ -310,11 +310,17 @@ Enroll the Impuesto sobre Actividades Economicas via the 1M-per-year cifra-de-ne
 - [x] `W07.P31.S86` - write the M840 threshold-continuity E2E test asserting the 1M-per-year cifra-de-negocios exemption across two annual contexts via real adapters (vaultspec-standard-executor); `src/aeat/application/calculations/test_modelo_840_exemption_continuity.py`.
 - [x] `W07.P31.S87` - enroll M840 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer); `src/aeat/_data/registry/aeat/authorization.toml`.
 
+### Phase `W07.P32` - Residual ADR hardening
+
+Track explicit follow-up work discovered during enrollment closeout where the live green path does not yet discharge a narrower ADR mechanism.
+
+- [ ] `W07.P32.S89` - investigate and implement or explicitly supersede the Modelo 721 per-custodian prior-year baseline binding promised by the accepted ADR; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
+
 ## Parallelization
 
 Waves are sequenced by default. W01 must land and be reviewed before any enrollment Wave begins: enrollment writes to the `authorization.toml` manifest and depends on the dual-mode recorder and the meta-test cross-check. Within W01, P01 (manifest plus derived capability) gates P02 (recorder) and P03 (meta-test plus CLI banner); P04 (mechanism ADRs) runs concurrently with P01-P03 because authoring ADRs touches no production code.
 
-After W01 lands, W02 through W07 parallelise across the coding swarm because no enrollment Wave depends on another. Within each enrollment Wave the per-modelo Phases are independent and parallelise freely, with these hard intra-Wave orderings: each modelo's E2E-test Step precedes its manifest-enrollment Step (you cannot enroll before the recorder has observed the years); each registry-binding Step (M100, M200, M202, M353, M720) precedes that modelo's E2E Step; and each engine-build Step (M210 wiring, M714, M721, M151) precedes its registry-link-declaration Step, which precedes the E2E Step.
+After W01 lands, W02 through W07 parallelise across the coding swarm because no enrollment Wave depends on another. Within each enrollment Wave the per-modelo Phases are independent and parallelise freely, with these hard intra-Wave orderings: each modelo's E2E-test Step precedes its manifest-enrollment Step (you cannot enroll before the recorder has observed the years); each registry-binding Step (M100, M200, M202, M353, M720) precedes that modelo's E2E Step; and each engine-build Step (M210 wiring, M714, M151) precedes its registry-link-declaration Step, which precedes the E2E Step. Modelo 721 follows the accepted no-calculation threshold-continuity path; its unresolved per-custodian prior-year binding mechanism is tracked separately as residual ADR hardening in W07.P32.S89.
 
 Cross-Wave ADR dependencies: M353 (W04.P14) is blocked by the A2 ADR (W01.P04.S13); M720 (W07.P29) by the A3 ADR (S14); M100 (W02.P06) by the A4-M100 ADR (S15), M200 (W05.P20) by A4-M200 (S16), M202 (W05.P21) by A4-M202 (S17); M714 (W06.P24) by the A5-714 ADR (S18), M151 (W06.P26) by A5-151 (S19), M210 (W06.P23) by A5-210 (S20), M721 (W06.P25) by A5-721 (S21). The quick-win order for the first enrollment pass that validates the gate end-to-end is M130, M303, M390 (existing scaffolding plus the established binding-prefill pattern), then the remaining quick-wins M202, M200, M131, M190, M193, M100, M180.
 
@@ -326,7 +332,7 @@ The campaign is complete when every Step in every Wave is closed and the followi
 - For every one of the 30 modelos, the meta-test confirms the recorded year-set equals the manifest `renta_years` claim and contains at least two distinct renta years; a stub or single-period test reds the gate.
 - The `>=2 distinct renta years` invariant is enforced at the pydantic type boundary, proven by the anti-tautology test (S08) that a single-year evidence record raises `ValidationError`.
 - Every docstring-claimed `MultiYearResolver.resolve()` use-case has a real-adapter integration test (S88), or the unsubstantiated claim has been deleted from `_multi_year.py`; the M303 (S35) and M200 (S55) enrollment tests exercise the resolver path for their respective claimed use-case so no claim survives unverified.
-- Every enrollment E2E test drives real adapters (real encrypted SQLite repos, the real registry authority, the real `previous_filing` resolver) across two distinct `filing_year` values, with no mocks, stubs, skips, or xfail, per the roundtrip and quality-gate disciplines.
+- Every enrollment E2E test drives real adapters (real encrypted SQLite repos and the real registry authority) across two distinct `filing_year` values, with no mocks, stubs, skips, or xfail, per the roundtrip and quality-gate disciplines. Mechanisms that declare `previous_filing` bindings also exercise the real `previous_filing` resolver.
 - Calculation-class assertions are grounded against external authority (AEAT workbooks, BOE or AEAT worked examples, registry-authoritative fixtures, or live oracle replay), never hand-computed from the registry formula under test; data-fidelity and threshold/continuity classes assert provenance, year-over-year fidelity, and obligation logic where no numeric oracle exists.
 - The advisory `work calculate` banner names the unauthorized state for unauthorized-but-has-engine modelos without refusing computation, and the existing `_guard_stub_modelo` hard refusal at `work create` still fires for no-engine stubs (S11, S12).
 - The `authorization.toml` manifest is fingerprinted into the registry tree fingerprint so a manifest edit invalidates the cache (S02); no path-only cache serves stale authorization.

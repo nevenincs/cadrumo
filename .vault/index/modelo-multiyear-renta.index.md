@@ -75,6 +75,10 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W06-P24-S66]]'
   - '[[2026-06-02-modelo-multiyear-renta-W06-P24-S67]]'
   - '[[2026-06-02-modelo-multiyear-renta-W06-P24-S68]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W06-P25-S69]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W06-P25-S70]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W06-P25-S71]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W06-P25-S72]]'
   - '[[2026-06-02-modelo-multiyear-renta-W06-P26-S73]]'
   - '[[2026-06-02-modelo-multiyear-renta-W06-P26-S74]]'
   - '[[2026-06-02-modelo-multiyear-renta-W06-P26-S75]]'
@@ -83,6 +87,9 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-W07-P27-S78]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P28-S79]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P28-S80]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W07-P29-S81]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W07-P29-S82]]'
+  - '[[2026-06-02-modelo-multiyear-renta-W07-P29-S83]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P30-S84]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P30-S85]]'
   - '[[2026-06-02-modelo-multiyear-renta-W07-P31-S86]]'
@@ -180,6 +187,10 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W06-P24-S66` - declare the modelo-714 calculation application-link surface in the registry (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W06-P24-S67` - write the M714 >=2-renta E2E test asserting year-over-year wealth-base calculation via real adapters (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W06-P24-S68` - enroll M714 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
+- `2026-06-02-modelo-multiyear-renta-W06-P25-S69` - reconcile Modelo 721 against the accepted no-calculation threshold-continuity ADR and retire the stale crypto engine requirement
+- `2026-06-02-modelo-multiyear-renta-W06-P25-S70` - assert the Modelo 721 registry keeps threshold parameters and filing/extractor/verification/deadline links without a calculation application-link surface
+- `2026-06-02-modelo-multiyear-renta-W06-P25-S71` - write the M721 >=2-renta threshold-continuity E2E test across 2023 and 2024 via real repository/advisory evidence
+- `2026-06-02-modelo-multiyear-renta-W06-P25-S72` - enroll M721 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
 - `2026-06-02-modelo-multiyear-renta-W06-P26-S73` - build the Beckham flat-rate impatriate engine per A5-151 (Ley 35/2006 art.93) (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W06-P26-S74` - declare the modelo-151 calculation application-link surface in the registry (vaultspec-high-executor)
 - `2026-06-02-modelo-multiyear-renta-W06-P26-S75` - write the M151 >=2-renta E2E test asserting the flat-rate calculation across two renta years via real adapters (vaultspec-high-executor)
@@ -188,6 +199,9 @@ Auto-generated index of all documents tagged with `#modelo-multiyear-renta`.
 - `2026-06-02-modelo-multiyear-renta-W07-P27-S78` - enroll M347 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
 - `2026-06-02-modelo-multiyear-renta-W07-P28-S79` - write the M184 data-fidelity E2E test building atribucion-de-rentas member RegistryModeloObservation rows directly and asserting year-over-year fidelity across two renta years (vaultspec-standard-executor)
 - `2026-06-02-modelo-multiyear-renta-W07-P28-S80` - enroll M184 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
+- `2026-06-02-modelo-multiyear-renta-W07-P29-S81` - author the M720 prior-year asset-baseline previous_filing binding (+20k/50k re-declaration) in the registry per A3 (RD 1065/2007 art.42-bis) (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W07-P29-S82` - write the M720 threshold-continuity E2E test asserting the prior-year asset baseline drives the re-declaration obligation across two renta years via real adapters (vaultspec-high-executor)
+- `2026-06-02-modelo-multiyear-renta-W07-P29-S83` - enroll M720 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
 - `2026-06-02-modelo-multiyear-renta-W07-P30-S84` - write the M036 obligation-continuity E2E test asserting the censo obligation-set carries across alta year N and modificacion year N+1 via real adapters (vaultspec-standard-executor)
 - `2026-06-02-modelo-multiyear-renta-W07-P30-S85` - enroll M036 in the authorization manifest with renta_years claim matching the recorded year-set (vaultspec-code-reviewer)
 - `2026-06-02-modelo-multiyear-renta-W07-P31-S86` - write the M840 threshold-continuity E2E test asserting the 1M-per-year cifra-de-negocios exemption across two annual contexts via real adapters (vaultspec-standard-executor)
