@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core import BindingSourceKind, Period
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
-from ....core.resources import resources
-from ....domain.calculations.registry import resolve_foreign_asset_binding_row_values
+from ....domain.calculations.registry import (
+    DataBindingDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    resolve_foreign_asset_binding_row_values,
+)
 from .._foreign_assets import (
     ForeignAssetClass,
     ForeignAssetClassRollup,
@@ -26,6 +32,58 @@ from .._source_mesh import CalculationSourceContext
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_M720_LEGAL_REFS = (
+    "orden-hap-72-2013:art-1",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "ley-58-2003:art-93",
+)
+_M720_SOURCE_REFS = ("aeat-dr-720", "aeat-modelo-720-procedure")
+_M720_ROW_BINDINGS = (
+    ("modelo-720-asset-row-class", "asset_class_code"),
+    ("modelo-720-asset-row-country", "country_code"),
+    ("modelo-720-asset-row-currency", "currency_code"),
+    ("modelo-720-asset-row-identifier", "asset_identifier"),
+    ("modelo-720-asset-row-valuation", "valuation_amount"),
+    ("modelo-720-asset-row-acquisition-date", "acquisition_date"),
+)
+
+
+def _m720_row_binding(binding_id: str, row_field: str) -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=binding_id,
+        source=BindingSourceKind.FOREIGN_ASSET,
+        selector={
+            "fact": "row_field",
+            "row_field": row_field,
+            "grouping": "per_foreign_asset",
+            "record": "bien",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=_M720_LEGAL_REFS,
+        source_refs=_M720_SOURCE_REFS,
+    )
+
+
+def _m720_revision() -> ModeloRevision:
+    return ModeloRevision(
+        id="2013-y-siguientes",
+        valid_from=date(2013, 1, 1),
+        period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
+        legal_refs=_M720_LEGAL_REFS,
+        source_refs=_M720_SOURCE_REFS,
+        bindings=tuple(_m720_row_binding(binding_id, row_field) for binding_id, row_field in _M720_ROW_BINDINGS),
+    )
+
+
+def _revision_without_foreign_asset_source() -> ModeloRevision:
+    return ModeloRevision(
+        id="foreign-asset-empty-test",
+        valid_from=date(2025, 1, 1),
+        period_selector=PeriodSelector(years=(2025,), periods=("1T",)),
+        legal_refs=("ley-37-1992:art-1",),
+        source_refs=("test-foreign-asset-no-source",),
+    )
 
 
 def _obs(
@@ -244,7 +302,7 @@ class TestThreshold720:
 
 
 class TestForeignAssetSourceResolver:
-    def test_resolver_validates_declarable_m720_rows_against_live_registry(self) -> None:
+    def test_resolver_validates_declarable_m720_rows_against_registry_row_bindings(self) -> None:
         period = Period.from_year_and_code(2025, "0A")
         observations = (
             _obs(
@@ -274,7 +332,7 @@ class TestForeignAssetSourceResolver:
                 source_id="small-security",
             ),
         )
-        snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+        revision = _m720_revision()
 
         resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(
             CalculationSourceContext(
@@ -282,7 +340,7 @@ class TestForeignAssetSourceResolver:
                 modelo="720",
                 filing_year=2025,
                 period=period,
-                revision=snapshot.revision,
+                revision=revision,
             ),
         )
 
@@ -296,7 +354,7 @@ class TestForeignAssetSourceResolver:
 
         aggregation = aggregate_foreign_assets_720(observations, period=period)
         row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
-        row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+        row_values = resolve_foreign_asset_binding_row_values(revision, row_observations)
 
         assert len(row_observations) == 2
         assert row_values[("modelo-720-asset-row-class", 1)] == "C"
@@ -329,11 +387,10 @@ class TestForeignAssetSourceResolver:
                 source_id="tx-real-ad",
             ),
         )
-        snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
         aggregation = aggregate_foreign_assets_720(observations, period=period)
         row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
 
-        row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+        row_values = resolve_foreign_asset_binding_row_values(_m720_revision(), row_observations)
 
         assert {observation.asset_class_code for observation in row_observations} == {"I", "B"}
         assert row_values[("modelo-720-asset-row-class", 1)] == "B"
@@ -358,8 +415,6 @@ class TestForeignAssetSourceResolver:
             _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
 
     def test_resolver_silent_when_revision_declares_no_foreign_asset_source(self) -> None:
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
-
         resolution = ForeignAssetsAggregationSourceResolver(
             observations=(
                 _obs(
@@ -374,7 +429,7 @@ class TestForeignAssetSourceResolver:
                 modelo="303",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
-                revision=snapshot.revision,
+                revision=_revision_without_foreign_asset_source(),
             ),
         )
 
