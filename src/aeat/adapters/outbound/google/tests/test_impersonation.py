@@ -10,8 +10,19 @@ on a host with no usable credential, giving a genuine (not simulated)
 The live token-mint path (a real network round-trip to Google's IAM
 credentials endpoint, requiring a real GCP project + a provisioned target
 service account) is gated behind
-:func:`aeat.tests.live_gate.requires_live_google_enabled` and is not part of
+:func:`~tests.live_gate.requires_live_google_enabled` and is not part of
 the default test run, per the project's live-external-call safety posture.
+
+See Also:
+    :class:`GoogleCredentialSourceKind`:
+        Closed taxonomy that distinguishes OAuth Desktop from service-account
+        impersonation.
+    :class:`~adapters.outbound.google.GoogleImpersonationConfig`:
+        Frozen target-principal and scope record under test.
+    :func:`~adapters.outbound.google.resolve_impersonated_credentials`:
+        ADC discovery and impersonation wrapper validated by these tests.
+    :mod:`~entrypoints.cli._config._google_credential_source_cli`:
+        CLI surface that persists the chosen credential source.
 """
 
 from __future__ import annotations
