@@ -454,3 +454,29 @@ Residual gate inventory: `ruff check` is clean for the touched calculation test.
 The expanded prorrata regularizacion calculation test file passes sequentially
 with 11 tests, and the adjacent missing-carry plus M303 verify-advisory slice
 passes sequentially with 19 tests.
+
+## S36 Review
+
+Reviewed the `W05.P08.S36` silent-zero-base closure reconciliation against the
+live silent-zero-base plan status, the silent-zero ADR, the S03/S04 exec records,
+and the July 5 silent-zero campaign-close audit. At current HEAD the
+silent-zero-base plan is already complete: 18 of 18 steps, no open step, and no
+missing exec records. `W01.P02.S03` and `W01.P02.S04` are checked and have
+dedicated exec records explaining that per-period prorrata volume bindings would
+ship wrong regulated values for mixed traders and are therefore formally
+deferred to the cross-period prorrata mechanism.
+
+No duplicate old-plan exec record was added and the existing silent-zero records
+were left untouched. The S36 cross-period exec record captures the verification
+that the prior plan's deferred rows are closed with the cross-period model as the
+named follow-up: provisional carry, annual current-year volumes, settlement
+regularizacion, and advisory-first visibility rather than fabricated per-period
+bindings.
+
+Findings: no open S36 reconciliation findings.
+
+Residual gate inventory: `vault plan status` for
+`2026-06-19-silent-zero-base-aggregation-plan` reports 18/18 complete with no
+missing exec records. `vault check features` and `vault check frontmatter` are
+clean for `silent-zero-base-aggregation`, and the focused prorrata regression
+slice passes sequentially with 19 tests.
