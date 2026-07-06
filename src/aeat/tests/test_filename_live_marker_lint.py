@@ -130,7 +130,7 @@ def test_lint_flags_live_module_without_marker_or_banner(tmp_path: Path) -> None
     offender.write_text(
         "import pytest\n\n"
         "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n\n"
-        "def test_x() -> None:\n    assert True\n",
+        "def test_x() -> None:\n    pass\n",
         encoding="utf-8",
     )
     assert _live_filename_violation(offender) is not None
@@ -142,7 +142,7 @@ def test_lint_accepts_live_marked_module(tmp_path: Path) -> None:
     compliant.write_text(
         "import pytest\n\n"
         "pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]\n\n\n"
-        "def test_x() -> None:\n    assert True\n",
+        "def test_x() -> None:\n    pass\n",
         encoding="utf-8",
     )
     assert _live_filename_violation(compliant) is None
@@ -155,7 +155,7 @@ def test_lint_rejects_aeat_live_lookalike_attribute(tmp_path: Path) -> None:
         "class Marker:\n"
         "    aeat_live = object()\n\n"
         "pytestmark = [Marker.aeat_live]\n\n\n"
-        "def test_x() -> None:\n    assert True\n",
+        "def test_x() -> None:\n    pass\n",
         encoding="utf-8",
     )
     assert _live_filename_violation(offender) is not None
@@ -168,7 +168,7 @@ def test_lint_accepts_intent_banner(tmp_path: Path) -> None:
         "import pytest\n\n"
         "# INTENTIONAL: unit because it exercises local wiring without contacting AEAT.\n"
         "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n\n"
-        "def test_x() -> None:\n    assert True\n",
+        "def test_x() -> None:\n    pass\n",
         encoding="utf-8",
     )
     assert _live_filename_violation(compliant) is None
@@ -180,7 +180,7 @@ def test_intent_banner_in_docstring_string_does_not_satisfy_rule(tmp_path: Path)
     offender.write_text(
         '"""INTENTIONAL: unit because this is only a docstring, not a comment."""\n'
         "import pytest\n\npytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n\n"
-        "def test_x() -> None:\n    assert True\n",
+        "def test_x() -> None:\n    pass\n",
         encoding="utf-8",
     )
     assert _live_filename_violation(offender) is not None
