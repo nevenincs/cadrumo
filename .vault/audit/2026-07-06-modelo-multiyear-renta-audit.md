@@ -10,7 +10,7 @@ related:
   - "[[2026-06-02-modelo-multiyear-renta-W01-P03-S10]]"
 ---
 
-# `modelo-multiyear-renta` audit: `Modelo 145 fleet drift review`
+# `modelo-multiyear-renta` audit: `Modelo 145 fleet drift and post-S89 closeout review`
 
 ## Scope
 
@@ -19,15 +19,48 @@ registry-backed local payer communication. The review checked the central `Model
 the authorization fleet denominator ratchet, overview obligation out-of-scope
 classification, and the S09/S10 plan/exec evidence.
 
+After S89 closed, the same audit file also records the 2026-07-06 post-S89
+campaign-close review: the pass rechecked the stale HIGH/MEDIUM findings from the
+campaign-close honesty audit, the W06/W07 edge-review notes below, and the final
+M721 source-output supersession.
+
 ## Findings
 
-### w06-w07-edge-review | medium | M720 advisory work does not close previous-filing binding rows
+### w06-w07-edge-review | closed | M720 previous-filing binding path now exists
 
-The W06/W07 edge review found that the new M720/M721 foreign-asset helper is advisory-layer code over caller-supplied prior and current observations. It does not exercise a registry `previous_filing` binding path for M720, so W07.P29.S81 through W07.P29.S83 must remain open until that binding/resolver path exists. The M720 test wording was tightened to state this limitation explicitly.
+The W06/W07 edge review originally found that the M720/M721 foreign-asset helper was
+advisory-layer code over caller-supplied prior and current observations and did not
+exercise a registry `previous_filing` binding path for M720. That finding is now closed:
+commit `8f5442bc0d` added the three strict M720 `previous_filing` copy bindings for
+cuentas, valores, and inmuebles, closed W07.P29.S81 through W07.P29.S83 with exec
+records, and verified the resolver path with the M720 prior-year baseline tests.
 
-### w06-w07-edge-review | medium | M714 art.31 evidence is relation-backed calculation wiring, not independent oracle replay
+### w06-w07-edge-review | classified | M714 art.31 evidence is relation-backed calculation wiring
 
-The W06/W07 edge review found that the M714 art.31 tests prove real registry relation resolution and formula wiring across two renta years, but do not replay an independent AEAT worked example. The M714 closure evidence should therefore be described as relation-backed calculation evidence for the bounded 2021-2025 window, with art.31 exclusion slices still manual where M100 lacks filing-grade breakdowns.
+The W06/W07 edge review found that the M714 art.31 tests prove real registry relation
+resolution and formula wiring across two renta years, but do not replay an independent
+AEAT worked example. This remains the correct evidence classification, not a blocker:
+the baseline-fidelity test now avoids claiming a Phase-A art.30 calculation oracle, and
+the dedicated registry tests own the art.30 escala formula coverage.
+
+### post-s89-closeout | no new high/medium findings
+
+The post-S89 review rechecked the remaining campaign-close honesty findings against
+the live tree:
+
+- M353 no longer carries expected-to-fail / held-pending framing.
+- The M721 exterior orphan test file is absent; only the `_extranjero_` fidelity
+  module remains.
+- M309 and M369 both enroll through calculation mode with `record_calculation_year`.
+- The A4 income ADR now reflects the delivered M100 `1391 -> 1388` art.48 carry.
+- M202's 18% leg reads the live registry parameter and separately checks the
+  statutory value.
+- M714 wording now separates manual baseline-fidelity inputs from art.30 escala
+  registry tests.
+- S89 explicitly supersedes, rather than implements, the obsolete M721 scalar
+  `source_output` previous-filing binding promise.
+
+No new HIGH or MEDIUM blockers were found.
 
 ### modelo-145-fleet-drift | low | no blocking findings
 
@@ -48,3 +81,7 @@ non-silent.
 Keep future fleet changes routed through the central `Modelo` enum and the registry parity
 tests. Do not patch `CANONICAL_MODELO_FLEET` locally in `core/access_gate`; that would
 reintroduce the drift this fix removed.
+
+Do not reopen M720 S81-S83 unless a new regression removes the committed
+`previous_filing` binding path. Do not reopen the M721 `source_output` promise without a
+new row-set previous-filing ADR and schema/resolver plan.
