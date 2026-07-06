@@ -10,6 +10,20 @@ NO calendar deadline windows — a fixed date is not fabricated. Both are
 declaration-header grade: no Modelo 341/380 diseño de registro is bundled, so no
 money-closure form casilla is fabricated. Each orden's approval (art 1) and plazo
 article are cross-checked against the bundled BOE corpus at build.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for committed modelo registry definitions and catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that cross-checks legal/source catalogue references.
+    :func:`~domain.calculations.registry._authority.bundled_authority`
+        Authority facade used to inspect generated deadline windows.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership asserted once the foundations are registered.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Legacy unmodeled set these IVA foundations must leave.
+    :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
+        Sibling registry-foundation coverage for windowless/unmodeled-tail modelos.
 """
 
 from __future__ import annotations
