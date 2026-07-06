@@ -221,3 +221,32 @@ filing, and test files. The new prorrata settlement write-back test file passes
 sequentially with 3 tests, the prorrata register roundtrip file passes
 sequentially with 4 tests, and the existing participation co-emission regression
 passes sequentially with 1 test.
+
+## S27 Review
+
+Reviewed the `W04.P06.S27` regression slice after re-grounding it against the
+W04 plan row and the current S24-S26 implementation. The change is test-only and
+does not alter binding source kinds, resolver conventions, validator
+conventions, registry selectors, or production write paths. The projection test
+now names the supplied definitive percentage as the declared annual-volume value
+and asserts that value is the one projected to Modelo 303 casilla 44 and the
+Modelo 390 annual field. The existing ledger contradiction test remains a
+declared-authority proof: the rollup can fire a non-blocking diagnostic, but it
+does not replace the declared annual volume casillas.
+
+The new integration test uses real encrypted repositories and registry-grounded
+M303 settlement observations. It files a verified 2026 4T M303 revision through
+the production filing persistence helper with both the prorrata register
+repository and the calculation-observation repository supplied. The assertions
+prove the settlement register entry receives definitive percentage and volume
+inputs, and the stamped local filed observation lets
+`evaluate_carried_prior_definitiva_seed` produce the 2027
+`carried_prior_definitiva` entry with percentage `75` and source observation
+identity `303:2026:4T`.
+
+Findings: no open S27 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the touched test file. The
+prorrata regularización test file passes sequentially with 8 tests, the seed
+test file passes sequentially with 3 tests, and the settlement write-back test
+file passes sequentially with 3 tests.

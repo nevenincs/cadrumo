@@ -14,13 +14,21 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, Period
-from ....domain.calculations.registry import IvaLedgerObservation
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....core import BindingSourceKind, Modelo, Period, ProrrataProvisionalProvenance
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, IvaLedgerObservation, validated_casilla_id
 from ....domain.iva import (
     IvaCategory,
     IvaExemptionArticle,
@@ -28,6 +36,21 @@ from ....domain.iva import (
     IvaRateKind,
     RegularizacionProrrataDireccion,
 )
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
+    ModeloCode,
+    WorkUnit,
+    derive_calculation_revision_id,
+    derive_work_unit_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
+)
+from ....tests.registry_observations import registry_grounded_observations
+from ....tests.secure_sql import isolated_runtime_profile
+from ...modelo._revision_persistence import persist_filed_revision
+from ...prorrata_register._seed import evaluate_carried_prior_definitiva_seed
+from .. import CalculationObservationRepository
 from .._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_declared_volume_divergence_advisory,
@@ -36,6 +59,19 @@ from .._prorrata_regularizacion import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "prorrata-regularizacion-s27"
+_T0 = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
+_SETTLEMENT_YEAR = 2026
+_CARRY_YEAR = 2027
+_SETTLEMENT_PERIOD = "4T"
+
+_VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
+_VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="test casilla id",
+)
+_PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 
 
 def _periods_2026() -> tuple[Period, ...]:
@@ -63,6 +99,72 @@ def _ledger_observation(
     )
 
 
+def _m303_revision_id(*, filing_year: int, period: str) -> str:
+    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
+    return str(snapshot.revision.id)
+
+
+def _seed_verified_m303_settlement(
+    *,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    work_unit_repository: WorkUnitCatalogueRepository,
+) -> tuple[CalculationRevision, WorkUnit]:
+    period = Period.from_year_and_code(_SETTLEMENT_YEAR, _SETTLEMENT_PERIOD)
+    revision_id = _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
+    casilla_values = {
+        _VOLUMEN_TOTAL_ID: Decimal("200000.00"),
+        _VOLUMEN_CON_DERECHO_ID: Decimal("150000.00"),
+        _PORCENTAJE_ID: Decimal("75"),
+    }
+    work_unit_id = derive_work_unit_id(
+        bucket_id=_BUCKET_ID,
+        modelo=Modelo.M303.value,
+        filing_year=_SETTLEMENT_YEAR,
+        period=period,
+        revision_id=revision_id,
+    )
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    verified_at = _T0 + timedelta(hours=1)
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo=Modelo.M303.value,
+            filing_year=_SETTLEMENT_YEAR,
+            period=_SETTLEMENT_PERIOD,
+            casilla_values=casilla_values,
+        ),
+        created_at=_T0,
+        updated_at=verified_at,
+        verified_at=verified_at,
+        verified_by="aeat.test.modelo.verify",
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode(Modelo.M303.value),
+        filing_year=_SETTLEMENT_YEAR,
+        period=period,
+        revision_id=revision_id,
+        name="303-2026-4T",
+        created_at=_T0,
+        updated_at=verified_at,
+        current_calculation_revision_id=calculation_revision_id,
+    )
+    calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
+    work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
+    return revision, work_unit
+
+
 def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_differ() -> None:
     """A trader with sin-derecho volumes and a percentage delta is alerted, not silent."""
     result, diagnostic = build_prorrata_regularizacion_advisory(
@@ -82,15 +184,20 @@ def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_dif
     assert "2000.00" in diagnostic.message
 
 
-def test_projection_feeds_m303_casilla_44_and_m390_from_single_result() -> None:
-    """The proposed M303 and M390 values are one projection of the same result."""
+def test_projection_feeds_m303_casilla_44_from_declared_volume_definitive_percentage() -> None:
+    """The declared-volume definitive percentage is the percentage projected to casilla 44."""
+    declared_volume_total = Decimal("200000.00")
+    declared_volume_con_derecho = Decimal("150000.00")
+    declared_definitive_percentage = Decimal("75")
     projection = project_prorrata_regularizacion_feed(
         cuotas_soportadas_deducibles=Decimal("20000.00"),
         prorrata_provisional_pct=Decimal("80"),
-        prorrata_definitiva_pct=Decimal("90"),
-        operaciones_sin_derecho_deduccion=Decimal("10000"),
+        prorrata_definitiva_pct=declared_definitive_percentage,
+        operaciones_sin_derecho_deduccion=declared_volume_total - declared_volume_con_derecho,
     )
 
+    assert projection.result.prorrata_definitiva_pct == declared_definitive_percentage
+    assert projection.operaciones_sin_derecho_deduccion == Decimal("50000.00")
     assert projection.modelo_303_casilla_44_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
     assert projection.modelo_303_casilla_44_value == projection.result.importe
     assert projection.modelo_390_regularizacion_anual_value == projection.result.importe
@@ -220,3 +327,56 @@ def test_advisory_reports_ingreso_direction_when_definitiva_below_provisional() 
     assert result.direccion is RegularizacionProrrataDireccion.INGRESO
     assert diagnostic is not None
     assert "ingreso" in diagnostic.message
+
+
+def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_entry(tmp_path: Path) -> None:
+    """Filing the settlement writes the register and lets year+1 carry from the stamped observation."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        filing_repository = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+        work_unit_repository = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+        prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+        observation_repository = CalculationObservationRepository(objects=profile.repository)
+        revision, work_unit = _seed_verified_m303_settlement(
+            calculation_repository=calculation_repository,
+            work_unit_repository=work_unit_repository,
+        )
+
+        persist_filed_revision(
+            target=revision,
+            work_unit=work_unit,
+            work_units=work_unit_repository.load(),
+            notes=None,
+            actor="aeat.test.modelo.file",
+            now=_T0 + timedelta(hours=2),
+            calculation_repository=calculation_repository,
+            filing_repository=filing_repository,
+            work_unit_repository=work_unit_repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+            calculation_observation_repository=observation_repository,
+            participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
+            prorrata_register_repository=prorrata_repository,
+        )
+
+        settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)
+        seed_evaluation = evaluate_carried_prior_definitiva_seed(
+            ejercicio=_CARRY_YEAR,
+            observation_repository=observation_repository,
+        )
+
+    assert settled_entry is not None
+    assert settled_entry.definitive_percentage == Decimal("75")
+    assert settled_entry.definitive_volume_con_derecho == Decimal("150000.00")
+    assert settled_entry.definitive_volume_sin_derecho == Decimal("50000.00")
+    assert seed_evaluation.findings == ()
+    seed = seed_evaluation.seed
+    assert seed is not None
+    assert seed.source_modelo == Modelo.M303.value
+    assert seed.source_filing_year == _SETTLEMENT_YEAR
+    assert seed.source_period == _SETTLEMENT_PERIOD
+    assert seed.source_casilla_id == _PORCENTAJE_ID
+    assert seed.stamped_revision_id == _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
+    assert seed.entry.ejercicio == _CARRY_YEAR
+    assert seed.entry.provisional_percentage == Decimal("75")
+    assert seed.entry.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    assert seed.entry.source_observation_ref == "303:2026:4T"
