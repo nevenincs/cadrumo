@@ -21,10 +21,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...core._casilla_id import CasillaId
-from ...core._foreign_asset_obligation import ForeignAssetObligationGroup, foreign_asset_declaration_threshold
-from ...domain.calculations.registry._bindings import RegistryModeloObservation
-from ...domain.modelos._verification_report import (
+from ...core import CasillaId, ForeignAssetObligationGroup, foreign_asset_declaration_threshold
+from ...domain.calculations.registry import RegistryModeloObservation
+from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

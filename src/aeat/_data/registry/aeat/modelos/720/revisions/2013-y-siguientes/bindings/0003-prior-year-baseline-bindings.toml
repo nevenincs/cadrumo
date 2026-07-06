@@ -1,0 +1,35 @@
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-prior-year-cuentas-valoracion-baseline"
+source = "previous_filing"
+selector = { source_modelo = "720", filing_year_delta = -1, period = "0A", source_casilla_id = "cuentas.valoracion" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-2"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-prior-year-valores-valoracion-baseline"
+source = "previous_filing"
+selector = { source_modelo = "720", filing_year_delta = -1, period = "0A", source_casilla_id = "valores.valoracion" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-2"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-prior-year-inmuebles-valoracion-baseline"
+source = "previous_filing"
+selector = { source_modelo = "720", filing_year_delta = -1, period = "0A", source_casilla_id = "inmuebles.valoracion" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-2"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
