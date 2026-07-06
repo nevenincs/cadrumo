@@ -38,9 +38,9 @@ from typing import Any, ClassVar, cast, override
 
 import pytest
 
+from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ...core.config import Settings
 from ...core.telemetry import TelemetryTier
-from ...tests.application_adapter_exports import LLMRunRecord, LLMRunTelemetryRecorder
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_telemetry import (
     build_telemetry_flush_preview,
