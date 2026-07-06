@@ -1,36 +1,43 @@
-"""Production call-site guard for construct closure evidence validation."""
+"""Construct closure evidence validation."""
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
-
 import pytest
 
-from .. import __file__ as registry_package_file
+from .._schema import ConstructDefinition
+from .._validate import RegistryValidator
+from ._referential_integrity_support import (
+    REFERENCE_LEGAL_ID,
+    REFERENCE_SOURCE_ID,
+    RegistryValidationError,
+    minimal_casilla,
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_production_construct_closure_calls_pass_evidence_keyword() -> None:
-    """Every production call to ``validate_construct_closure`` supplies evidence.
+def test_modelo_validation_rejects_construct_without_official_source_evidence() -> None:
+    """The revision validator must route constructs through evidence-tier checks."""
 
-    The construct validator enforces schema-independent evidence requirements.
-    A signature change must therefore fail at the call-site contract, not fall
-    through to a public CLI TypeError when the registry validates during a blank
-    ledger calculation.
-    """
+    catalogues = minimal_catalogues()
+    layout_only_source = catalogues.sources[REFERENCE_SOURCE_ID].model_copy(update={"evidence_tier": "layout_authority"})
+    casilla = minimal_casilla()
+    construct = ConstructDefinition(
+        id="construct.without-guidance",
+        title="Construct without official guidance",
+        casilla_ids=(casilla.id,),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = minimal_revision(casillas=(casilla,), constructs=(construct,))
 
-    registry_root = Path(registry_package_file).parent
-    missing_evidence: list[str] = []
-    for path in sorted(registry_root.glob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            if not isinstance(node.func, ast.Name) or node.func.id != "validate_construct_closure":
-                continue
-            if not any(keyword.arg == "evidence" for keyword in node.keywords):
-                missing_evidence.append(f"{path.name}:{node.lineno}")
-
-    assert not missing_evidence, "validate_construct_closure calls missing evidence=: " + ", ".join(missing_evidence)
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"construct construct\.without-guidance requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(
+            catalogues.model_copy(update={"sources": {REFERENCE_SOURCE_ID: layout_only_source}}),
+        ).validate_modelo(minimal_modelo(revision))
