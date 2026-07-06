@@ -1,7 +1,7 @@
 """Connectivity gate: the committed registry declares no dormant source kind.
 
 The ``RegistryQueryService.source_inventory`` report walks every committed modelo
-revision and records which :class:`~aeat.core.BindingSourceKind` members the
+revision and records which :class:`BindingSourceKind` members the
 registry actually declares in its bindings, and where. This gate joins that
 registry-side inventory against the live-mesh disposition taxonomy
 (``build_binding_source_dispositions`` and the ``DEFERRED`` / ``RESERVED``
@@ -19,6 +19,24 @@ and that a novel source raises) lives in the application-layer companion
 enrolled set is an application (live-mesh) fact and cannot cross into a domain
 test without inverting the layer boundary. This domain gate owns the
 registry-inventory integrity half.
+
+See Also:
+    :class:`BindingSourceKind`
+        Closed source-kind enum whose committed declarations are inventoried.
+    :class:`~domain.calculations.registry.RegistryQueryService`
+        Domain query service whose ``source_inventory`` report feeds this gate.
+    :class:`~domain.calculations.registry.RegistrySourceInventoryReport`
+        Typed report contract that records declared source kinds and sites.
+    :func:`~application.aggregation.build_binding_source_dispositions`
+        Builds the enrolled/deferred/reserved disposition taxonomy.
+    :class:`~application.aggregation.BindingSourceDisposition`
+        Disposition enum used to reject reserved committed declarations.
+    :data:`~application.aggregation.DEFERRED_SOURCE_KINDS`
+        Known source kinds with visible advisory deferral.
+    :data:`~application.aggregation.RESERVED_SOURCE_KINDS`
+        Reserved source kinds this registry gate proves are not declared.
+    :mod:`~application.modelo.tests.test_source_mesh_missing_sources`
+        Application companion that joins the inventory to the live enrolled set.
 """
 
 from __future__ import annotations
