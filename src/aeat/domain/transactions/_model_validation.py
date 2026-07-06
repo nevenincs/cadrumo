@@ -1,3 +1,29 @@
+"""Validation helpers for strict transaction boundary models.
+
+The transaction models keep their Pydantic validators on the boundary records,
+while this helper module owns the reusable parsing and invariant checks those
+validators call. It normalizes raw transactions, UTC timestamps, classifier
+provenance, confidence ranges, identifier tuples, lineage text, and non-negative
+tax amount fields without turning those rules into a separate public API.
+
+See Also:
+    :class:`~domain.transactions.Transaction`
+        Strict transaction record whose validators delegate to these helpers.
+    :class:`~domain.transactions.RawTransaction`
+        Upstream row model accepted directly or coerced from JSON-compatible
+        payloads.
+    :class:`~domain.transactions.BusinessClassification`
+        Classification enum coupled to ``business_pct`` by this module.
+    :class:`~domain.transactions.TransactionValidationError`
+        Typed domain error raised for validation failures.
+    :func:`~core.time.validate_utc_aware`
+        UTC-awareness gate wrapped into the transaction error hierarchy.
+    Governing vault records
+        ``2026-05-27-source-jurisdiction-axis-adr`` and
+        ``2026-05-28-source-jurisdiction-axis-audit`` capture the transaction
+        model axis and validator behavior this helper preserves.
+"""
+
 from __future__ import annotations
 
 import json
