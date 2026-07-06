@@ -9,6 +9,24 @@ These tests verify:
 - The project_answers registration slot raises before registration and
   dispatches correctly after.
 - SetupAnswers field validation exercises real enum coercion (not mocks).
+
+See Also:
+    :mod:`~core.setup_answers`
+        Canonical typed-answer model and projection slot under test.
+    :func:`~core.setup_answers.register_project_answers`
+        Core registration hook populated by wizard persistence.
+    :func:`~core.setup_answers.get_project_answers`
+        Slot reader whose pre-registration failure and post-registration
+        dispatch are covered here.
+    :mod:`~domain.deadlines._profiles`
+        Domain consumer that must import setup-answer projection objects from
+        core, not from application wizard modules.
+    :func:`~core.wizard_catalogue.get_setup_flow`
+        Flow descriptor that binds setup answers to the canonical core class.
+    Governing vault records
+        ``2026-06-01-domain-boundary-audit-adr`` D5 and
+        ``2026-05-28-codebase-solidification-plan`` W03.P14.S321-S324 record
+        the setup-answer relocation and import-purity regression surface.
 """
 
 from __future__ import annotations
