@@ -1,4 +1,17 @@
-"""Unit coverage for invoice-source approval-basis fingerprints."""
+"""Unit coverage for invoice-source approval-basis fingerprints.
+
+See Also:
+    :func:`~application.filing._review._invoice_catalogue_fingerprint`
+        Order-independent digest helper under test for invoice source changes.
+    :class:`~domain.invoices.InvoiceCatalogue`
+        Typed invoice collection whose normalized records feed the approval
+        basis.
+    :func:`~application.invoices.build_catalogue_invoice`
+        Application helper used to build real invoice records for the digest
+        tests.
+    :class:`~domain.iva.InvoiceKind`
+        IVA invoice axis carried by the catalogue invoices under test.
+"""
 
 from __future__ import annotations
 

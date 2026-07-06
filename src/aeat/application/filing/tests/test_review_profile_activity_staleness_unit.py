@@ -1,4 +1,16 @@
-"""Unit coverage for profile-activity approval-basis fingerprints."""
+"""Unit coverage for profile-activity approval-basis fingerprints.
+
+See Also:
+    :func:`~application.filing._review._profile_activity_fingerprint`
+        Order-independent digest helper under test for relation-scoping profile
+        facts.
+    :func:`~application.filing.empty_profile_activity_fingerprint`
+        Public empty-surface sentinel compared against the private digest
+        helper.
+    :class:`~application.filing.ModeloApprovalStaleReason`
+        Staleness reason enum whose ``PROFILE_ACTIVITY_CHANGED`` member is fed
+        by this fingerprint.
+"""
 
 from __future__ import annotations
 
