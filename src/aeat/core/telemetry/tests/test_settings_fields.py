@@ -9,6 +9,7 @@ for the sibling off-host consent gate.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ....tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ...config import Settings
@@ -41,7 +42,7 @@ def test_telemetry_tier_reads_its_env_var() -> None:
 
 
 def test_telemetry_tier_rejects_an_unrecognised_value() -> None:
-    with pytest.raises(Exception):  # noqa: B017 - pydantic-settings raises a bare ValidationError here
+    with pytest.raises(ValidationError):
         _settings_from_env(AEAT_TELEMETRY_TIER="not-a-real-tier")
 
 
