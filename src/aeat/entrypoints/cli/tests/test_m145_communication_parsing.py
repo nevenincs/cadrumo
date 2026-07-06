@@ -1,4 +1,17 @@
-"""Parser-boundary tests for Modelo 145 communication CLI arguments."""
+"""Parser-boundary tests for Modelo 145 communication CLI arguments.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_m145_parsing`
+        CLI-only parser boundary under test.
+    :mod:`~entrypoints.cli._modelo_m145_cli`
+        Typer command group that delegates raw option values to these helpers.
+    :class:`~application.modelo.M145CommunicationCreateCommand`
+        Backend DTO constructed from parsed CLI arguments.
+    :class:`~application.modelo.M145CommunicationPeriod`
+        Closed period-token type accepted by the CLI option.
+    :func:`~entrypoints.cli._modelo_cli_support.parse_casilla_override`
+        Shared registry-field assignment parser reused by the M145 helpers.
+"""
 
 from __future__ import annotations
 
