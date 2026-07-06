@@ -1,4 +1,31 @@
-"""Tests for the central per-modelo aggregation service."""
+"""Tests for the central per-modelo aggregation service.
+
+The suite pins :func:`~application.aggregation.aggregate_per_modelo` as the
+application-owned dispatch boundary for retenciones, counterpart, and foreign
+asset provider families. It verifies the immutable command/result contracts,
+the canonical :class:`~core.BindingSourceKind` taxonomy, source-mesh parity for
+the counterpart and foreign-assets follow-up surfaces, and the retenciones
+collapse onto :meth:`~application.aggregation.RetencionesAggregationSourceResolver.aggregate`.
+
+See Also:
+    :mod:`~application.aggregation._service`
+        Service contracts and dispatch implementation under test.
+    :func:`~application.aggregation.get_per_modelo_aggregation_contract`
+        Backend-owned provider/source-kind contract asserted by this module.
+    :class:`~application.aggregation.PerModeloAggregationCommand`
+        Strict command envelope that selects the provider family.
+    :class:`~application.aggregation.PerModeloAggregationResult`
+        Typed result envelope checked for provider/payload coherence.
+    :class:`~application.aggregation._counterpart.CounterpartAggregationSourceResolver`
+        Counterpart source-mesh resolver compared with the service surface for
+        Modelo 347/349 evidence.
+    :class:`~application.aggregation.ForeignAssetsAggregationSourceResolver`
+        Foreign-assets resolver compared with Modelo 720 row projections.
+    Governing vault records
+        ``2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr``
+        introduced the service boundary; ``2026-07-02-binding-resolver-contract-unification-audit``
+        records the counterpart/foreign-assets parity evidence this suite pins.
+"""
 
 from __future__ import annotations
 
@@ -634,7 +661,7 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
 #
 # The per-modelo service dispatch table and the mesh resolver dispatch table share
 # the canonical entry point,
-# :meth:`RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
+# :meth:`~application.aggregation.RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
 # mesh (``resolve``) and the per-modelo aggregation service (``aggregate_per_modelo``,
 # the CLI ``aggregate`` / pull surface). These gates prove the collapse routes each
 # modelo to the same core it did before (``one-aggregation-path-pull-equals-calculate``)
