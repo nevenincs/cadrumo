@@ -238,15 +238,6 @@ def _validate_business_pct_coupling(
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
-def _coerce_identifier_tuple(raw: object) -> tuple[object, ...]:
-    """Freeze inbound identifier sequences while rejecting scalar strings."""
-    if isinstance(raw, tuple):
-        return raw
-    if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
-        return tuple(raw)
-    raise TransactionValidationError("identifier fields must be a sequence")
-
-
 def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     """Trim identifier tuples and reject blanks or duplicates."""
     normalized = tuple(item.strip() for item in value if item.strip())
@@ -299,6 +290,13 @@ def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) ->
     return value
 
 
+def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
+    raw = data.get("raw")
+    if not isinstance(raw, RawTransaction):
+        raise TransactionValidationError("raw is required before transaction_id can be derived")
+    return derive_transaction_id(raw)
+
+
 def _coerce_raw_transaction(raw: object) -> RawTransaction:
     """Accept a RawTransaction or a mapping/JSON-like and produce the typed record.
 
@@ -320,79 +318,6 @@ def _coerce_raw_transaction(raw: object) -> RawTransaction:
         return RawTransaction.model_validate(raw, strict=False)
     except ValidationError:
         return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))
-
-
-_TRANSACTION_DECIMAL_KEYS: tuple[str, ...] = (
-    "business_pct",
-    "taxable_base",
-    "iva_rate",
-    "iva_amount",
-    "recargo_amount",
-    "classification_confidence",
-    "fx_rate",
-    "value_in_eur",
-)
-_TRANSACTION_COLLECTION_KEYS: tuple[str, ...] = (
-    "evidence_provenance",
-    "edit_lineage",
-    "lifecycle_lineage",
-)
-
-
-def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
-    """Promote str enum payload values to their declared enum class."""
-    enum_coercers: tuple[tuple[str, type], ...] = (
-        ("direction", TransactionDirection),
-        ("business_classification", BusinessClassification),
-        ("lifecycle_state", TransactionLifecycleState),
-        ("iva_category", IvaCategory),
-        ("exemption_article", IvaExemptionArticle),
-        ("counterparty_eu_member_state", EUMemberState),
-    )
-    for key, enum_cls in enum_coercers:
-        value = payload.get(key)
-        if isinstance(value, str):
-            payload[key] = enum_cls(value)
-
-
-def _coerce_transaction_decimal_fields(payload: dict[str, object]) -> None:
-    """Promote str payload values to Decimal for every decimal-typed key."""
-    for key in _TRANSACTION_DECIMAL_KEYS:
-        value = payload.get(key)
-        if isinstance(value, str):
-            payload[key] = Decimal(value)
-
-
-def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
-    """Parse the str-typed datetime fields via the shared helper."""
-    for key in ("classified_at", "created_at", "modified_at"):
-        value = payload.get(key)
-        if isinstance(value, str):
-            payload[key] = _parse_datetime(value)
-
-
-def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
-    """Trim optional id strings and collapse empty strings to None."""
-    for key in ("import_fingerprint", "purchase_invoice_evidence_id", "group_label"):
-        value = payload.get(key)
-        if not isinstance(value, str):
-            continue
-        if key not in payload:
-            continue
-        normalized = value.strip()
-        payload[key] = normalized or None
-
-
-def _coerce_transaction_collection_fields(payload: dict[str, object]) -> None:
-    """Coerce identifier tuples and history sequences into their canonical shape."""
-    if "attachment_ids" in payload:
-        payload["attachment_ids"] = _coerce_identifier_tuple(payload["attachment_ids"])
-    history = payload.get("classification_history")
-    if history is not None:
-        payload["classification_history"] = _coerce_history(history)
-    for key in _TRANSACTION_COLLECTION_KEYS:
-        if key in payload:
-            payload[key] = _coerce_history(payload[key])
 
 
 class DecisionProvenance(BaseModel):
@@ -884,8 +809,8 @@ class Transaction(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: TransactionId
     raw: RawTransaction
+    transaction_id: TransactionId = Field(default_factory=_derive_transaction_id_from_validated_data)
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
     business_pct: Decimal | None = None
@@ -945,30 +870,104 @@ class Transaction(BaseModel):
     created_at: datetime = Field(default_factory=now)
     modified_at: datetime = Field(default_factory=now)
 
-    @model_validator(mode="before")
+    @field_validator("raw", mode="before")
     @classmethod
-    def _enforce_derived_transaction_id(cls, data: object) -> object:
-        """Compute or validate ``transaction_id`` from the wrapped raw record."""
-        if isinstance(data, cls):
-            return data
-        if not isinstance(data, Mapping):
-            return data
-        payload = dict(data)
-        if "raw" not in payload:
-            return data
-        raw_transaction = _coerce_raw_transaction(payload["raw"])
-        derived = derive_transaction_id(raw_transaction)
-        existing = payload.get("transaction_id")
-        if existing is not None and str(existing).strip() != derived:
+    def _coerce_raw_field(cls, value: object) -> object:
+        """Accept a ``RawTransaction`` or a JSON-shaped/python-native mapping.
+
+        Delegates to :func:`_coerce_raw_transaction`, which validates through
+        ``RawTransaction``'s own validators -- never ``Transaction``'s -- so
+        this carries no re-entrant recursion risk (unlike a model-level
+        ``Transaction`` before-validator that called back into
+        ``Transaction.model_validate*``, which recurses forever because that
+        re-invokes this exact model-level hook on the still string-shaped
+        JSON-decoded dict).
+        """
+        return _coerce_raw_transaction(value)
+
+    @field_validator(
+        "direction",
+        "business_classification",
+        "lifecycle_state",
+        "iva_category",
+        "exemption_article",
+        "counterparty_eu_member_state",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_enum_field(cls, value: object, info: core_schema.ValidationInfo) -> object:
+        """Accept a JSON-decoded enum string alongside a real enum instance.
+
+        A field-level ``mode="before"`` coercion inspects only this one
+        field's value and never re-triggers model-level validation, so it
+        carries no re-entrancy risk. No-op for an already-typed enum member
+        or ``None``.
+        """
+        if not isinstance(value, str):
+            return value
+        enum_by_field: dict[str, type] = {
+            "direction": TransactionDirection,
+            "business_classification": BusinessClassification,
+            "lifecycle_state": TransactionLifecycleState,
+            "iva_category": IvaCategory,
+            "exemption_article": IvaExemptionArticle,
+            "counterparty_eu_member_state": EUMemberState,
+        }
+        return enum_by_field[info.field_name or ""](value)
+
+    @field_validator(
+        "business_pct",
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "recargo_amount",
+        "classification_confidence",
+        "fx_rate",
+        "value_in_eur",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_decimal_field(cls, value: object) -> object:
+        """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``."""
+        if isinstance(value, str):
+            return Decimal(value)
+        return value
+
+    @field_validator("classified_at", "created_at", "modified_at", mode="before")
+    @classmethod
+    def _coerce_datetime_field(cls, value: object) -> object:
+        """Accept a JSON-decoded ISO-8601 datetime string alongside a real ``datetime``."""
+        if isinstance(value, str):
+            return _parse_datetime(value)
+        return value
+
+    @field_validator(
+        "attachment_ids",
+        "evidence_provenance",
+        "edit_lineage",
+        "lifecycle_lineage",
+        "classification_history",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_collection_field(cls, value: object) -> object:
+        """Freeze a JSON-decoded list into the declared tuple shape.
+
+        Under strict mode a python-mode ``list`` fails ``tuple_type`` even
+        though a JSON-decoded array is legitimately a list; this makes the
+        JSON-shaped list acceptable without loosening the frozen-tuple
+        contract on the stored value.
+        """
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
+    @model_validator(mode="after")
+    def _enforce_derived_transaction_id(self) -> Self:
+        """Validate ``transaction_id`` against the already-validated raw record."""
+        if self.transaction_id != derive_transaction_id(self.raw):
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
-        payload["raw"] = raw_transaction
-        _coerce_transaction_enum_fields(payload)
-        _coerce_transaction_decimal_fields(payload)
-        _coerce_transaction_temporal_fields(payload)
-        _normalize_transaction_optional_strings(payload)
-        _coerce_transaction_collection_fields(payload)
-        payload["transaction_id"] = derived
-        return payload
+        return self
 
     @field_validator(
         "invoice_id",

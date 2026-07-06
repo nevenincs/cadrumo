@@ -205,6 +205,65 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
     assert restored.attachment_ids == ("attachment-1",)
 
 
+def test_transaction_json_roundtrip_preserves_non_default_fields_and_derived_id() -> None:
+    raw = _sample_raw(amount=Decimal("121.00"), description="Consulting invoice")
+    original = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": "Client A",
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.50"),
+            "category_id": "professional-services",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+            "irpf_category": "actividad_economica",
+            "usage_ratio_id": "ratio-office",
+            "prorrata_reference": "prorrata-2026",
+            "purchase_invoice_evidence_id": "purchase-evidence-1",
+            "attachment_ids": ("attachment-1",),
+            "classified_by": "manual",
+            "classification_reason": "operator classified from invoice evidence",
+            "classification_confidence": Decimal("1.00"),
+            "created_by": "operator-A",
+            "source_command": "aeat ledger add",
+            "created_event_id": "c" * 64,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert original.transaction_id == derive_transaction_id(raw)
+    assert restored == original
+    assert restored.transaction_id == derive_transaction_id(restored.raw)
+    assert restored.business_classification is BusinessClassification.MIXED
+    assert restored.business_pct == Decimal("0.50")
+    assert restored.group_label == "Client A"
+    assert restored.classification_confidence == Decimal("1.00")
+    assert restored.attachment_ids == ("attachment-1",)
+
+
+def test_transaction_json_rejects_tampered_derived_id_in_storage_payload() -> None:
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00"), description="Consulting invoice"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": "Client A",
+            "source_jurisdiction": "ES",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["transaction_id"] = "0" * 64
+
+    with pytest.raises(ValidationError, match="transaction_id must match"):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
 def test_transaction_exemption_article_round_trips_for_domestic_exempt_category() -> None:
     original = Transaction.model_validate(
         {
@@ -608,3 +667,88 @@ def test_group_label_is_required_but_nullable() -> None:
                 "source_jurisdiction": "ES",
             },
         )
+
+
+def test_dict_mode_model_validate_accepts_json_shaped_dict_values() -> None:
+    """A strict-mode ``model_validate`` call accepts JSON-shaped strings too.
+
+    ``Transaction`` is strict-mode, but a python-mode ``dict`` (real
+    enum/``Decimal``/``date`` instances, as ``model_dump(mode="python")``
+    produces) and a JSON-decoded ``dict`` (string stand-ins for those types,
+    as ``model_dump(mode="json")`` or a deserialised storage payload
+    produces) are BOTH valid ``model_validate`` inputs -- neither is a
+    second-class caller. Field-level ``mode="before"`` coercions on the
+    affected fields (enum/Decimal/datetime/the nested ``raw`` record) bridge
+    the JSON-shaped case without a model-level re-route: a model-level
+    ``mode="before"`` that re-dispatched to ``model_validate_json`` would
+    recurse forever, because ``model_validate_json`` re-decodes to a plain
+    dict and re-runs every model-level ``mode="before"`` validator on that
+    still string-shaped dict before applying the rest of the schema.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00")),
+            "direction": TransactionDirection.INCOMING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+        },
+    )
+
+    json_shaped_dict = original.model_dump(mode="json")
+    assert isinstance(json_shaped_dict["direction"], str)
+    assert isinstance(json_shaped_dict["taxable_base"], str)
+    assert isinstance(json_shaped_dict["raw"]["booked_date"], str)
+
+    restored = Transaction.model_validate(json_shaped_dict)
+    assert restored == original
+    assert restored.direction is TransactionDirection.INCOMING
+    assert restored.business_classification is BusinessClassification.BUSINESS
+    assert restored.taxable_base == Decimal("100.00")
+
+    restored_via_json = Transaction.model_validate_json(json.dumps(json_shaped_dict))
+    assert restored_via_json == original
+
+
+def test_dict_mode_model_validate_still_rejects_genuinely_malformed_payload() -> None:
+    """The JSON-shaped-dict coercion must not launder a truly invalid payload."""
+    with pytest.raises(ValidationError):
+        Transaction.model_validate(
+            {
+                "raw": _sample_raw(),
+                "direction": "NOT_A_REAL_DIRECTION",
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "created_at": "not-a-real-timestamp",
+            },
+        )
+
+
+def test_python_mode_dict_with_real_instances_round_trips() -> None:
+    """A genuine python-mode dict (as ``model_dump(mode="python")`` produces) validates directly.
+
+    ``model_dump(mode="python")`` always flattens a nested ``BaseModel`` field
+    (``raw``) to a plain ``dict``, even in python mode; the leaf scalar values
+    inside it (``Decimal``, ``date``, enums) stay their real Python types
+    rather than JSON-string stand-ins, which is what strict-mode
+    ``model_validate`` accepts for a nested model field.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+    python_mode_dict = original.model_dump(mode="python")
+    assert isinstance(python_mode_dict["direction"], TransactionDirection)
+    assert isinstance(python_mode_dict["raw"]["booked_date"], date)
+    assert isinstance(python_mode_dict["raw"]["amount"], Decimal)
+
+    restored = Transaction.model_validate(python_mode_dict)
+
+    assert restored == original
