@@ -10,6 +10,34 @@ X25519 keypair and recovers the original bytes byte-for-byte. Also proves the
 envelope on disk never carries the plaintext package bytes, a wrong bucket's
 keypair fails to decrypt, an expired package refuses, and a replayed envelope
 refuses on its second presentation.
+
+See Also:
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_encrypt_for_recipient`
+        CLI verb that seals a package to a registered recipient key.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_decrypt`
+        CLI verb that opens an envelope with the active bucket keypair.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 ECIES primitive behind the encrypt verb.
+    :func:`~application.modelo.decrypt_review_package_for_recipient`
+        Decryption primitive behind the decrypt verb.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Trusted-recipient registry used by ``encrypt-for-recipient``.
+    :func:`~application.modelo.ensure_recipient_encryption_keypair`
+        Mint-or-load path for the bucket's recipient decryption key.
+    :class:`~application.modelo.RecipientEncryptedPackage`
+        JSON envelope written to disk by the encrypt verb.
+    :class:`~application.modelo.RecipientReplayGuardRepository`
+        Consumed-nonce ledger that refuses the second decrypt.
+    :class:`~entrypoints.cli._modelo_review_package_payloads.ModeloReviewPackageEncryptForRecipientResult`
+        JSON result schema asserted for the encrypt verb.
+    :class:`~entrypoints.cli._modelo_review_package_payloads.ModeloReviewPackageDecryptResult`
+        JSON result schema asserted for the decrypt verb.
+    :class:`CasillaId`
+        Typed casilla ids used to seed the exportable Modelo 111 revision.
+    :class:`Period`
+        Typed filing period used to resolve the review-package work target.
+    :func:`~tests.cli_runner.invoke_cached_cli`
+        CLI runner used for the operator-visible command chain.
 """
 
 from __future__ import annotations
