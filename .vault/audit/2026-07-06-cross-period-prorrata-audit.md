@@ -131,3 +131,23 @@ Findings: no open S22 implementation findings.
 
 Residual gate inventory: `ruff check` is clean for the prorrata apportionment
 regression file, and the full file passes sequentially.
+
+## S23 Review
+
+Reviewed the `W03.P05.S23` parity regression. The new test records real M303
+ledger rows, an active prorrata-general register entry, and an IVA-wallet zero
+decision in the encrypted runtime profile, then compares two paths over the same
+registry revision: the live bucket-aggregation calculate mesh and the direct
+`LedgerIvaAggregationSourceResolver` plus `calculate_registry_snapshot` pull
+shape used by the existing parity module. It asserts the apportioned deducible
+cuota binding is positive and below the source purchase cuota, the persisted
+live binding override equals the resolver value, the semantic deducible casilla
+equals that apportioned binding, and official box `29` matches on both paths.
+No new source kind, resolver convention, or hand-computed prorrata oracle was
+introduced.
+
+Findings: no open S23 implementation findings.
+
+Residual gate inventory: `ruff check` is clean for the parity regression file,
+the targeted S23 regression passes sequentially, and the full parity file passes
+sequentially.
