@@ -4,7 +4,7 @@ Local telemetry is always on and unaffected by this gate; it governs only the
 remote-transmission exception. It must be off by default, re-affirmed per
 invocation, refused while the tier is ``off``, and barred absolutely in
 gestor deployments (``sensitive-financial-data-secure-storage-only``,
-``2026-07-04-remote-telemetry-adr``).
+secure-storage telemetry policy).
 """
 
 from __future__ import annotations
