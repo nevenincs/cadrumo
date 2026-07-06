@@ -62,7 +62,15 @@ def _marker_names_from_value(value: ast.expr) -> Iterator[str]:
 def _marker_name(element: ast.expr) -> str | None:
     """Return the ``<name>`` in a ``pytest.mark.<name>`` attribute or call."""
     attr_chain = element.func if isinstance(element, ast.Call) else element
-    if isinstance(attr_chain, ast.Attribute):
+    if not isinstance(attr_chain, ast.Attribute):
+        return None
+    mark_attr = attr_chain.value
+    if (
+        isinstance(mark_attr, ast.Attribute)
+        and mark_attr.attr == "mark"
+        and isinstance(mark_attr.value, ast.Name)
+        and mark_attr.value.id == "pytest"
+    ):
         return attr_chain.attr
     return None
 
@@ -138,6 +146,19 @@ def test_lint_accepts_live_marked_module(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert _live_filename_violation(compliant) is None
+
+
+def test_lint_rejects_aeat_live_lookalike_attribute(tmp_path: Path) -> None:
+    """Only ``pytest.mark.aeat_live`` satisfies the filename intent rule."""
+    offender = tmp_path / "test_live_lookalike.py"
+    offender.write_text(
+        "class Marker:\n"
+        "    aeat_live = object()\n\n"
+        "pytestmark = [Marker.aeat_live]\n\n\n"
+        "def test_x() -> None:\n    assert True\n",
+        encoding="utf-8",
+    )
+    assert _live_filename_violation(offender) is not None
 
 
 def test_lint_accepts_intent_banner(tmp_path: Path) -> None:
