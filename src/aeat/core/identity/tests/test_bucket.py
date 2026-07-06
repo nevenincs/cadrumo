@@ -1,9 +1,23 @@
-"""Tests for :data:`aeat.core.identity.BucketId`.
+"""Tests for :data:`~core.identity.BucketId`.
 
 Covers the four boundary properties the alias contract pins: a valid
 value constructs cleanly, an empty value is rejected, a value longer
 than 128 characters is rejected, and surrounding whitespace is stripped
 on construction.
+
+See Also:
+    :mod:`~core.identity._bucket`
+        Pydantic-ready bucket identity alias under test.
+    :class:`~application.workflow.ProfileBucketPointer`
+        Workflow-facing pointer that carries the bucket identity and mutable
+        operator label separately.
+    :mod:`~application.bucket_maintenance`
+        Application service layer that composes bucket lifecycle operations
+        without owning the identity constraint.
+    Governing vault records
+        ``2026-05-14-profile-bucket-lifecycle-adr`` defines the per-profile
+        bucket model; ``2026-05-30-identity-primitives-adr`` promotes
+        ``BucketId`` to ``core.identity``.
 """
 
 from __future__ import annotations
