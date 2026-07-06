@@ -470,7 +470,7 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
 
 
 @pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
-def test_modelo_303_casilla_44_binding_is_not_yet_consumed_by_formulas(revision_id: str) -> None:
+def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions[revision_id]
     refs_by_formula_id = {
@@ -478,14 +478,17 @@ def test_modelo_303_casilla_44_binding_is_not_yet_consumed_by_formulas(revision_
     }
 
     assert all(formula.target_casilla_id != _M303_PRORRATA_REGULARIZACION_CASILLA for formula in revision.formulas)
-    assert all(_M303_PRORRATA_REGULARIZACION_CASILLA not in refs for refs in refs_by_formula_id.values())
 
     cuota_deducible_total = next(
         formula for formula in revision.formulas if formula.target_casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
     )
-    assert _M303_PRORRATA_REGULARIZACION_CASILLA not in set(
+    assert _M303_PRORRATA_REGULARIZACION_CASILLA in set(
         expression_casilla_refs(cuota_deducible_total.expression)
     )
+    assert refs_by_formula_id["modelo-303-iva-resultado-regimen-general"] == {
+        _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+        _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    }
 
     if revision_id == "2023-y-siguientes":
         projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")

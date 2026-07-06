@@ -100,6 +100,9 @@ casilla_id = "iva.autorepercutido.intracomunitaria"
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "iva.autorepercutido.interior.deducible"
 
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "44"
+
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-resultado-regimen-general"
 target_casilla_id = "iva.resultado-regimen-general"
