@@ -244,7 +244,6 @@ def test_google_drive_any_return_sites_carry_rationale() -> None:
 # documented justification.
 
 _STDIO_MODULE = _SRC / "entrypoints/cli/_stdio.py"
-_STDIO_LOGGER_TOKEN = "aeat.core.logging"
 _STDIO_RATIONALE_TOKEN = "before settings are loaded"
 
 
