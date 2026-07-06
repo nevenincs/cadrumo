@@ -10,6 +10,19 @@ current-year operations 25.000/20.000 produce the manual's definitive 56%; first
 three quarters carry 1.280 EUR supported IVA and the fourth quarter carries
 160 EUR. The expected values asserted below are the manual's own stated figures:
 934,40; 716,80; 217,60; 89,60; -128,00; and the bundled casilla figures.
+
+See Also:
+    :func:`~application.calculations._prorrata_regularizacion.project_prorrata_regularizacion_feed`
+        Projection whose casilla-44 output is pinned to the manual oracle.
+    :func:`~domain.iva.compute_prorrata_general`
+        Domain percentage compute used to reproduce the manual's prior-year
+        provisional percentage from raw operation volumes.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry execution path used to derive the current-year definitive
+        percentage from Modelo 303 annual volume casillas.
+    :class:`~domain.iva.RegularizacionProrrataDireccion`
+        Direction type asserted so the oracle distinguishes ingreso from
+        deduccion complementaria.
 """
 
 from __future__ import annotations
@@ -123,7 +136,16 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: dict[str, Any]
 
 
 def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
-    """The real registry/domain chain reproduces the bundled AEAT manual figures."""
+    """The real registry/domain chain reproduces the bundled AEAT manual figures.
+
+    See Also:
+        :func:`~application.calculations._prorrata_regularizacion.project_prorrata_regularizacion_feed`
+            Application projection under test for the signed Modelo 303 casilla
+            44 regularizacion value.
+        :class:`~domain.iva.RegularizacionProrrataResult`
+            Result carrier whose provisional, definitive, importe, and direction
+            fields are compared against the manual figures.
+    """
     payload = _oracle_payload()
 
     definitive_percentage = _m303_prorrata_percentage_from_manual_annual_volumes(payload)
