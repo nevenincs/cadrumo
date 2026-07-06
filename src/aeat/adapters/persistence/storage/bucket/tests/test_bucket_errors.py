@@ -1,4 +1,23 @@
-"""Payload-contract and registry-binding tests for the bucket error hierarchy."""
+"""Payload-contract and registry-binding tests for bucket storage errors.
+
+The suite pins every bucket error as an :class:`~core.errors.AeatError` with a
+registered code, distinct registry identity, safe operator suggestion, and
+structured context for bucket-id / lock-holder payloads. These contracts keep
+manifest, lockfile, recovery, and active-bucket failures observable without
+leaking raw storage details.
+
+See Also:
+    :mod:`~adapters.persistence.storage.bucket._errors`
+        Error hierarchy and payload constructors under test.
+    :mod:`~adapters.persistence.storage.bucket._manifest_io`
+        Manifest read/write boundary that raises bucket validation failures.
+    :mod:`~adapters.persistence.storage.bucket._lockfile`
+        PID-stamped lock primitive that raises busy / locked bucket failures.
+    Governing vault records
+        ``2026-05-14-profile-bucket-lifecycle-adr`` defines the bucket storage
+        model; the secure-storage production-hardening architecture ADR requires
+        adverse storage failures to fail closed with redacted diagnostics.
+"""
 
 from __future__ import annotations
 
