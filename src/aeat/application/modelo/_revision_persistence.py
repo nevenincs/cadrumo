@@ -38,6 +38,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ...core import Modelo, ProrrataRegisterRegime
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -53,6 +55,7 @@ from ...domain.calculations.registry import (
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RelationId,
+    validated_casilla_id,
 )
 from ...domain.modelos import (
     CalculationRevision,
@@ -74,6 +77,7 @@ from ...domain.modelos import (
     upsert_transaction_participation,
     upsert_work_unit,
 )
+from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ..calculations import CalculationObservationRepository
 from ._filed_revision_observation import persist_filed_revision_observation
 
@@ -82,6 +86,20 @@ if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""
+
+_PRORRATA_SETTLEMENT_PERIOD_TOKENS = frozenset({"4T", "0A"})
+_PRORRATA_VOLUMEN_TOTAL_CASILLA = validated_casilla_id(
+    "iva.prorrata-volumen-total",
+    surface="prorrata settlement volumen total casilla id",
+)
+_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="prorrata settlement volumen con derecho casilla id",
+)
+_PRORRATA_PORCENTAJE_CASILLA = validated_casilla_id(
+    "iva.prorrata-porcentaje",
+    surface="prorrata settlement definitive percentage casilla id",
+)
 
 
 def emit_bucket_event(
@@ -327,6 +345,86 @@ def _participation_index_repository(
     return repository or TransactionParticipationIndexRepository(bucket_id=bucket_id)
 
 
+def _prorrata_register_repository(
+    repository: ProrrataRegisterRepository | None,
+    *,
+    bucket_id: str,
+) -> ProrrataRegisterRepository:
+    return repository or ProrrataRegisterRepository(bucket_id=bucket_id)
+
+
+def _build_prorrata_settlement_write(
+    *,
+    filed_target: CalculationRevision,
+    work_unit: WorkUnit,
+    prorrata_register_repository: ProrrataRegisterRepository,
+) -> SecureObjectWrite | None:
+    """Build the settlement prorrata-register write for an M303 year close."""
+    values = _prorrata_settlement_values(filed_target=filed_target, work_unit=work_unit)
+    if values is None:
+        return None
+
+    register = prorrata_register_repository.load()
+    entry = _settled_prorrata_register_entry(
+        work_unit=work_unit,
+        register=register,
+        volumen_total=values[0],
+        volumen_con_derecho=values[1],
+        definitive_percentage=values[2],
+    )
+    retained = tuple(
+        existing
+        for existing in register.entries
+        if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
+    )
+    return prorrata_register_repository.to_secure_object_write(ProrrataRegister(entries=(*retained, entry)))
+
+
+def _prorrata_settlement_values(
+    *,
+    filed_target: CalculationRevision,
+    work_unit: WorkUnit,
+) -> tuple[Decimal, Decimal, Decimal] | None:
+    if str(work_unit.modelo) != Modelo.M303.value:
+        return None
+    if work_unit.period.registry_token not in _PRORRATA_SETTLEMENT_PERIOD_TOKENS:
+        return None
+
+    casilla_values = filed_target.casilla_values
+    volumen_total = casilla_values.get(_PRORRATA_VOLUMEN_TOTAL_CASILLA)
+    volumen_con_derecho = casilla_values.get(_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA)
+    definitive_percentage = casilla_values.get(_PRORRATA_PORCENTAJE_CASILLA)
+    if volumen_total is None or volumen_con_derecho is None or definitive_percentage is None:
+        return None
+    return volumen_total, volumen_con_derecho, definitive_percentage
+
+
+def _settled_prorrata_register_entry(
+    *,
+    work_unit: WorkUnit,
+    register: ProrrataRegister,
+    volumen_total: Decimal,
+    volumen_con_derecho: Decimal,
+    definitive_percentage: Decimal,
+) -> ProrrataRegisterEntry:
+    volumen_sin_derecho = volumen_total - volumen_con_derecho
+    settlement_fields = {
+        "definitive_percentage": definitive_percentage,
+        "definitive_volume_con_derecho": volumen_con_derecho,
+        "definitive_volume_sin_derecho": volumen_sin_derecho,
+    }
+    existing = register.entry_for(work_unit.filing_year)
+    if existing is not None:
+        return ProrrataRegisterEntry.model_validate({**existing.model_dump(), **settlement_fields})
+
+    regime = ProrrataRegisterRegime.GENERAL if volumen_sin_derecho > Decimal("0") else ProrrataRegisterRegime.NINGUNA
+    return ProrrataRegisterEntry(
+        ejercicio=work_unit.filing_year,
+        regime=regime,
+        **settlement_fields,
+    )
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -341,6 +439,7 @@ def persist_filed_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository | None = None,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    prorrata_register_repository: ProrrataRegisterRepository | None = None,
     refunded: bool = False,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
@@ -367,6 +466,11 @@ def persist_filed_revision(
     (devolución, Tipo de declaración ``D``), it tells
     :func:`persist_filed_revision_observation` to persist ZERO compensación carry;
     the default ``False`` preserves standard carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+
+    For Modelo 303 settlement periods, the filed definitive prorrata percentage
+    and annual volume inputs are also co-emitted to the profile prorrata
+    register in the same secure-object save as the filing catalogue and filed
+    calculation revision.
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
@@ -440,6 +544,16 @@ def persist_filed_revision(
         filing_record_id=new_filing_id,
         participation_index_repository=participation_repo,
     )
+    prorrata_repo = _prorrata_register_repository(prorrata_register_repository, bucket_id=work_unit.bucket_id)
+    prorrata_write = _build_prorrata_settlement_write(
+        filed_target=filed_target,
+        work_unit=work_unit,
+        prorrata_register_repository=prorrata_repo,
+    )
+    extra_writes = (calculation_repository.to_secure_object_write(revisions), *participation_writes)
+    if prorrata_write is not None:
+        extra_writes = (*extra_writes, prorrata_write)
+
     # Co-emit the filed revision, filing catalogue, and per-transaction
     # participation index in the filing repository's save_many call. The
     # participation rows gain filing_record_id in the same SQL unit of work as
@@ -447,7 +561,7 @@ def persist_filed_revision(
     # from the receipt it names.
     filing_repository.save_with_secure_object_writes(
         updated_filing_catalogue,
-        (calculation_repository.to_secure_object_write(revisions), *participation_writes),
+        extra_writes,
     )
     work_unit_repository.save(
         upsert_work_unit(
