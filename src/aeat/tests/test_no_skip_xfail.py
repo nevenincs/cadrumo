@@ -307,6 +307,7 @@ def _skip_alias_inventory(tree: ast.AST) -> _SkipAliasInventory:
                 elif node.module == "unittest" and alias.name == "case":
                     unittest_case_aliases.add(alias.asname or alias.name)
         _add_pytest_assignment_aliases(node, pytest_aliases, pytest_mark_aliases, pytest_shortcut_aliases)
+        _add_skiptest_assignment_aliases(node, unittest_aliases, unittest_case_aliases, skiptest_aliases)
 
     return _SkipAliasInventory(
         pytest_aliases=pytest_aliases,
@@ -353,6 +354,34 @@ def _is_pytest_mark_alias_value(
     if value_name in pytest_mark_aliases:
         return True
     return any(value_name == f"{alias}.mark" for alias in pytest_aliases)
+
+
+def _add_skiptest_assignment_aliases(
+    node: ast.AST,
+    unittest_aliases: set[str],
+    unittest_case_aliases: set[str],
+    skiptest_aliases: dict[str, str],
+) -> None:
+    """Record aliases assigned from unittest SkipTest spellings."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+        value = node.value
+    elif isinstance(node, ast.AnnAssign) and node.value is not None:
+        targets = [node.target]
+        value = node.value
+    else:
+        return
+    target_names = tuple(target.id for target in targets if isinstance(target, ast.Name))
+    if not target_names:
+        return
+    exception_name = _canonical_skiptest_exception_name(
+        qualified_name(value),
+        unittest_aliases,
+        unittest_case_aliases,
+        skiptest_aliases,
+    )
+    if exception_name in _FORBIDDEN_EXCEPTIONS:
+        skiptest_aliases.update({target_name: exception_name for target_name in target_names})
 
 
 def _canonical_skiptest_exception_name(
@@ -679,6 +708,35 @@ def test_direct_case_skip_alias_raise():
         (14, "unittest.case.SkipTest"),
         (17, "SkipTest"),
     ]
+
+
+def test_skip_detector_rejects_assigned_unittest_skiptest_aliases() -> None:
+    """Assigned SkipTest aliases are still deterministic skips."""
+    tree = ast.parse(
+        """
+import unittest
+import unittest.case as unittest_case
+
+UnitSkip = unittest.SkipTest
+CaseSkip = unittest_case.SkipTest
+DirectSkip = UnitSkip
+
+def test_unit_alias_raise():
+    raise UnitSkip("missing dependency")
+
+def test_case_alias_raise():
+    raise CaseSkip("missing dependency")
+
+def test_transitive_alias_raise():
+    raise DirectSkip("missing dependency")
+"""
+    )
+
+    assert set(_forbidden_marker_sites(tree)) == {
+        (10, "unittest.SkipTest"),
+        (13, "unittest.case.SkipTest"),
+        (16, "unittest.SkipTest"),
+    }
 
 
 def test_skip_detector_scans_support_files_but_allows_central_live_gate_only() -> None:
