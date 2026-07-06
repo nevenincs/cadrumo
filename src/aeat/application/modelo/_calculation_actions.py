@@ -40,11 +40,10 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -65,7 +64,6 @@ from ...domain.calculations.registry import (
     bound_casilla_binding_ids,
     calculate_registry_snapshot,
     casillas_by_id,
-    initial_value_casilla_ids,
     validated_text_input_casilla_ids,
 )
 from ...domain.modelos import (
@@ -129,6 +127,15 @@ from ._calculation_source_policy import (
     BUCKET_AGGREGATION_LOCK_SOURCES,
     CALLER_OVERRIDABLE_CARRY_SOURCES,
 )
+from ._calculation_source_staging import (
+    add_expected_missing_binding_diagnostics as _add_expected_missing_binding_diagnostics,
+)
+from ._calculation_source_staging import (
+    add_unhandled_source_diagnostics as _add_unhandled_source_diagnostics,
+)
+from ._calculation_source_staging import (
+    resolve_prorrata_regularizacion_sources as _resolve_prorrata_regularizacion_sources,
+)
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -162,44 +169,6 @@ class BucketAggregationCalculationResult:
 
     revision: CalculationRevision
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class _SourceResolutionRegistryValues:
-    """Registry-engine values materialised for a staged source resolver.
-
-    ``values`` is produced by :func:`calculate_registry_snapshot`, not by
-    re-evaluating formulas in the resolver layer. ``initial_casilla_ids`` marks
-    which selected values came from the pre-formula input/binding seed; anything
-    present in ``values`` but absent there was computed by the registry engine.
-    """
-
-    values: Mapping[CasillaId, Decimal]
-    initial_casilla_ids: frozenset[CasillaId]
-    unresolved_casilla_ids: tuple[CasillaId, ...] = ()
-    missing_casilla_ids: tuple[CasillaId, ...] = ()
-
-    def select(self, casilla_ids: Iterable[CasillaId]) -> _SourceResolutionRegistryValues:
-        """Return a narrowed view for one source resolver's declared dependencies."""
-        ordered = tuple(casilla_ids)
-        selected = {casilla_id: self.values[casilla_id] for casilla_id in ordered if casilla_id in self.values}
-        unresolved = frozenset(self.unresolved_casilla_ids)
-        return _SourceResolutionRegistryValues(
-            values=MappingProxyType(selected),
-            initial_casilla_ids=frozenset(
-                casilla_id for casilla_id in ordered if casilla_id in self.initial_casilla_ids
-            ),
-            unresolved_casilla_ids=tuple(casilla_id for casilla_id in ordered if casilla_id in unresolved),
-            missing_casilla_ids=tuple(casilla_id for casilla_id in ordered if casilla_id not in selected),
-        )
-
-
-_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
-    "iva.cuota-deducible-total",
-    "iva.prorrata-volumen-con-derecho",
-    "iva.prorrata-volumen-total",
-    "iva.prorrata-porcentaje",
-)
 
 
 def calculate_modelo_revision(
@@ -583,7 +552,6 @@ def _resolve_bucket_source_mesh(
     memoized_transaction_repository = _MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     from ..aggregation import (
         CalculationSourceContext,
-        CalculationSourceDiagnostic,
         ForeignAssetsAggregationSourceResolver,
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
@@ -593,14 +561,11 @@ def _resolve_bucket_source_mesh(
         OssIossLedgerSourceResolver,
         RetencionesAggregationSourceResolver,
         WithholdingSourceResolver,
-        collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
     from ..calculations import (
-        BienesInversionRegularizacionSourceResolver,
         IvaCompensationAnnualPartitionSourceResolver,
         PreviousFilingSourceResolver,
-        ProrrataRegularizacionSourceResolver,
         RelationPrefillSourceResolver,
     )
     from ..invoices import InvoiceCatalogueSourceResolver
@@ -695,112 +660,21 @@ def _resolve_bucket_source_mesh(
         ),
     )
     source_resolution = _source_resolution_excluding_iva_compensation(snapshot.revision, source_resolution)
-    if _revision_declares_prorrata_regularizacion(snapshot.revision):
-        caller_binding_values = dict(binding_values or {})
-        caller_relation_values = dict(relation_values or {})
-        materialised_prorrata_values = _materialise_prorrata_regularizacion_current_year_values(
-            snapshot=snapshot,
-            work_unit=work_unit,
-            casilla_inputs=casilla_inputs or {},
-            backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
-            binding_values={**dict(source_resolution.binding_values), **caller_binding_values},
-            enum_binding_values={**dict(source_resolution.enum_binding_values), **dict(enum_binding_values or {})},
-            date_binding_values={**dict(source_resolution.date_binding_values), **dict(date_binding_values or {})},
-            text_casilla_inputs=text_casilla_inputs,
-            relation_values={**dict(source_resolution.relation_values), **caller_relation_values},
-            unresolved_relation_ids=tuple(
-                relation_id
-                for relation_id in source_resolution.unresolved_relation_ids
-                if relation_id not in caller_relation_values
-            ),
-            unresolved_binding_ids=tuple(
-                binding_id
-                for binding_id in source_resolution.unresolved_binding_ids
-                if binding_id not in caller_binding_values
-            ),
-            filing_period_date=filing_period_date,
-        )
-        prorrata_resolution = ProrrataRegularizacionSourceResolver(
-            current_year_values=materialised_prorrata_values.values,
-            missing_current_year_casilla_ids=materialised_prorrata_values.missing_casilla_ids,
-            unresolved_current_year_casilla_ids=materialised_prorrata_values.unresolved_casilla_ids,
-            registry_snapshot=snapshot,
-        ).resolve(context)
-        source_resolution = merge_source_resolutions((source_resolution, prorrata_resolution))
-        bienes_resolution = BienesInversionRegularizacionSourceResolver(
-            current_year_values=materialised_prorrata_values.values,
-            missing_current_year_casilla_ids=materialised_prorrata_values.missing_casilla_ids,
-            unresolved_current_year_casilla_ids=materialised_prorrata_values.unresolved_casilla_ids,
-        ).resolve(context)
-        source_resolution = merge_source_resolutions((source_resolution, bienes_resolution))
-    # Safety net: collect non-blocking advisories for every binding whose declared
-    # source has no enrolled resolver and is not explicitly deferred.
-    # handled_sources covers all enrolled-resolver owned_sources plus the three
-    # pre-mesh-handled source kinds (profile, borrador, iva_wallet_decision).
-    # DEFERRED_SOURCE_KINDS are NOT on the manual_sources allowlist so they still
-    # emit an advisory.
-    _pre_mesh_handled: frozenset[BindingSourceKind] = frozenset(
-        {
-            BindingSourceKind.PROFILE,
-            BindingSourceKind.BORRADOR,
-            BindingSourceKind.IVA_WALLET_DECISION,
-        },
+    source_resolution = _resolve_prorrata_regularizacion_sources(
+        registry_snapshot=snapshot,
+        work_unit=work_unit,
+        context=context,
+        source_resolution=source_resolution,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
+        relation_values=relation_values,
+        filing_period_date=filing_period_date,
     )
-    _handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
-    _unhandled_diagnostics = collect_unhandled_source_diagnostics(
-        snapshot.revision,
-        handled_sources=_handled,
-        manual_sources=frozenset({"manual_input"}),
-    )
-    if _unhandled_diagnostics:
-        source_resolution = source_resolution.model_copy(
-            update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics},
-        )
-    # Expected-but-missing binding gap (no-silent-under-declaration): a directly
-    # casilla-bound binding whose enrolled resolver RAN (its source kind is in the
-    # merged owned_sources, i.e. the source was present and resolved) but produced
-    # NO value for that binding would otherwise fall through to a silent zero on
-    # the initial-value path (binding not in binding_values, source not the
-    # observation-backed previous_filing/relation_prefill carve-out). Mark those
-    # ids unresolved so the formula leaf escapes non-blocking (mirroring the
-    # relation channel) AND surface an INFORMATIONAL advisory. A binding whose
-    # source is ABSENT (not in owned_sources) is a legitimate zero — the taxpayer
-    # has no such data — and stays silent.
-    _expected_missing = _expected_but_missing_binding_ids(
-        snapshot.revision,
-        owned_sources=frozenset(source_resolution.owned_sources),
-        resolved_binding_values=source_resolution.binding_values,
-    )
-    if _expected_missing:
-        unresolved_binding_ids = tuple(
-            sorted(
-                {
-                    *source_resolution.unresolved_binding_ids,
-                    *(binding_id for binding_id, _casilla_id, _source in _expected_missing),
-                }
-            )
-        )
-        _missing_diagnostics = tuple(
-            CalculationSourceDiagnostic(
-                reason="unresolved_binding",
-                source_kind=str(source),
-                binding_id=binding_id,
-                casilla_id=casilla_id,
-                message=(
-                    f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
-                    f"{source!r} whose resolver produced no value; the bound casilla would "
-                    "otherwise default to a silent zero. Supply the source records before filing."
-                ),
-            )
-            for binding_id, casilla_id, source in _expected_missing
-        )
-        source_resolution = source_resolution.model_copy(
-            update={
-                "unresolved_binding_ids": unresolved_binding_ids,
-                "diagnostics": source_resolution.diagnostics + _missing_diagnostics,
-            },
-        )
-    return source_resolution
+    source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
+    return _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
 
 
 def _source_provenance_refs(
@@ -827,166 +701,6 @@ def _source_provenance_refs(
         )
         for provenance in source_resolution.provenance
     )
-
-
-# Binding sources whose unresolved slot is ALREADY handled non-silently elsewhere
-# and must NOT be re-flagged as an expected-but-missing silent zero:
-#   - previous_filing / relation_prefill: the initial-value path treats an
-#     unresolved slot of these as absent-by-design (operator-manual fallback) or
-#     the relation channel already surfaces its own diagnostic;
-#   - manual_input: the operator supplies the value directly.
-_NON_SILENT_BOUND_BINDING_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill", "manual_input"})
-
-
-def _expected_but_missing_binding_ids(
-    revision: ModeloRevision,
-    *,
-    owned_sources: frozenset[BindingSourceKind],
-    resolved_binding_values: Mapping[BindingId, Decimal],
-) -> tuple[tuple[BindingId, CasillaId, BindingSourceKind], ...]:
-    """Return (binding_id, casilla_id, source) for casilla-bound bindings whose present source resolved no value.
-
-    A binding qualifies when (1) it is the binding of a ``BOUND`` casilla, (2) its
-    source kind is in ``owned_sources`` (the resolver RAN for a present source),
-    (3) it produced no value (absent from ``resolved_binding_values``), and (4) its
-    source is not one of the non-silent carve-outs already handled by the
-    initial-value path or the relation channel. The absent-source case (source not
-    in ``owned_sources``) is a legitimate zero and is deliberately excluded.
-    """
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
-    missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
-    for casilla in revision.casillas:
-        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
-            continue
-        binding = bindings_by_id.get(casilla.binding)
-        if binding is None:
-            continue
-        source = binding.source
-        if str(source) in _NON_SILENT_BOUND_BINDING_SOURCES:
-            continue
-        if source not in owned_sources:
-            continue
-        if binding.id in resolved_binding_values:
-            continue
-        missing.append((binding.id, casilla.id, source))
-    return tuple(missing)
-
-
-def _revision_declares_prorrata_regularizacion(revision: ModeloRevision) -> bool:
-    return any(binding.source is BindingSourceKind.PRORRATA_REGULARIZACION for binding in revision.bindings)
-
-
-def _materialise_registry_values_for_source_resolution(
-    *,
-    snapshot: RegistrySnapshot,
-    work_unit: WorkUnit,
-    casilla_inputs: Mapping[CasillaId, Decimal],
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    binding_values: Mapping[BindingId, Decimal],
-    enum_binding_values: Mapping[BindingId, str] | None = None,
-    date_binding_values: Mapping[BindingId, date] | None = None,
-    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
-    relation_values: Mapping[RelationId, Decimal] | None = None,
-    unresolved_relation_ids: tuple[RelationId, ...] = (),
-    unresolved_binding_ids: tuple[BindingId, ...] = (),
-    staging_binding_defaults: Mapping[BindingId, Decimal] | None = None,
-    filing_period_date: date | None = None,
-) -> _SourceResolutionRegistryValues:
-    """Run the registry engine without persistence so staged resolvers can read current values.
-
-    This is the calculation-order seam for sources that need values computed by
-    the same registry revision they feed. The caller supplies already-resolved
-    source channels; the helper delegates input assembly and formula evaluation
-    to the normal registry runtime, then returns a read-only materialisation.
-    """
-    effective_binding_values = {**dict(staging_binding_defaults or {}), **dict(binding_values)}
-    effective_unresolved_binding_ids = tuple(
-        binding_id for binding_id in unresolved_binding_ids if binding_id not in effective_binding_values
-    )
-    resolved_backend_inputs = {
-        **_m131_objective_estimation_data_base_inputs(
-            work_unit=work_unit,
-            revision=snapshot.revision,
-            binding_values=effective_binding_values,
-        ),
-        **dict(backend_casilla_inputs or {}),
-    }
-    resolved_inputs = _resolve_calculation_inputs(
-        revision=snapshot.revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        backend_casilla_inputs=resolved_backend_inputs,
-        resolved_bindings=effective_binding_values,
-        casilla_inputs=casilla_inputs,
-    )
-    resolved_text_inputs = validated_text_input_casilla_ids(text_casilla_inputs or {})
-    engine_result = calculate_registry_snapshot(
-        snapshot,
-        inputs=resolved_inputs,
-        text_inputs=resolved_text_inputs or None,
-        date_context={"filing_period": filing_period_date} if filing_period_date is not None else {},
-        binding_values=effective_binding_values,
-        enum_binding_values=enum_binding_values or {},
-        relation_values=relation_values or {},
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=effective_unresolved_binding_ids,
-        date_binding_values=date_binding_values or None,
-    )
-    return _SourceResolutionRegistryValues(
-        values=MappingProxyType(dict(engine_result.values)),
-        initial_casilla_ids=initial_value_casilla_ids(snapshot.revision),
-        unresolved_casilla_ids=tuple(sorted(outcome.casilla_id for outcome in engine_result.unresolved_outcomes)),
-    )
-
-
-def _materialise_prorrata_regularizacion_current_year_values(
-    *,
-    snapshot: RegistrySnapshot,
-    work_unit: WorkUnit,
-    casilla_inputs: Mapping[CasillaId, Decimal],
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    binding_values: Mapping[BindingId, Decimal],
-    enum_binding_values: Mapping[BindingId, str] | None = None,
-    date_binding_values: Mapping[BindingId, date] | None = None,
-    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
-    relation_values: Mapping[RelationId, Decimal] | None = None,
-    unresolved_relation_ids: tuple[RelationId, ...] = (),
-    unresolved_binding_ids: tuple[BindingId, ...] = (),
-    filing_period_date: date | None = None,
-) -> _SourceResolutionRegistryValues:
-    """Materialise the current-year values needed by ``prorrata_regularizacion``.
-
-    The selected values are, in selector order: current-year deductible input
-    IVA, declared annual volume with deduction right, declared annual total
-    volume, and the definitive prorrata percentage computed by the registry.
-    """
-    revision_casillas = casillas_by_id(snapshot.revision)
-    if any(casilla_id not in revision_casillas for casilla_id in _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS):
-        return _SourceResolutionRegistryValues(
-            values=MappingProxyType({}),
-            initial_casilla_ids=initial_value_casilla_ids(snapshot.revision),
-            missing_casilla_ids=_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
-        )
-    materialised = _materialise_registry_values_for_source_resolution(
-        snapshot=snapshot,
-        work_unit=work_unit,
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        date_binding_values=date_binding_values,
-        text_casilla_inputs=text_casilla_inputs,
-        relation_values=relation_values,
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=unresolved_binding_ids,
-        staging_binding_defaults={
-            binding_id: Decimal("0.00")
-            for binding_id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
-            if binding_id not in binding_values
-        },
-        filing_period_date=filing_period_date,
-    )
-    return materialised.select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
 
 
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

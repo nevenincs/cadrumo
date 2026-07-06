@@ -30,18 +30,18 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import WorkUnit, derive_work_unit_id
-from ....tests.application_adapter_exports import BienesInversionIvaRegisterRepository
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._calculation_actions import _resolve_bucket_source_mesh
+from .._calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "bienes-inversion-source-mesh-enrollment"
+_BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 _FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
 _CREATED_AT = datetime(2025, 1, 20, 9, 0, tzinfo=UTC)
