@@ -78,6 +78,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S292]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S297]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S298]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S302]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
@@ -224,6 +225,7 @@ related:
   - '[[2026-07-02-cross-domain-continuity-audit]]'
   - '[[2026-07-06-cross-domain-continuity-adr]]'
   - '[[2026-07-06-cross-domain-continuity-research]]'
+  - '[[2026-07-07-cross-domain-continuity-W09-P41-S300]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -453,8 +455,10 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W05-P24-S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer
 - `2026-05-26-cross-domain-continuity-W09-P41-S251` - Resolve Cataluna 2024 autonomic tariff discrepancy
 - `2026-05-26-cross-domain-continuity-W09-P41-S288` - Close duplicate criterio de caja cash-accounting split
+- `2026-05-26-cross-domain-continuity-W09-P41-S298` - R8-ROSA-CRITICAL M100 missing binding for estimacion objetiva regimen
 - `2026-05-26-cross-domain-continuity-W09-P41-S302` - R8-ROSA-F add regime incompatibility warnings
 - `2026-05-26-cross-domain-continuity-W09-P41-S347` - Annotate stale overview explain deadlines
+- `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
 
 ### plan
 
