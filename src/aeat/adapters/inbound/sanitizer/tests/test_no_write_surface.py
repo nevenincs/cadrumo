@@ -1,4 +1,4 @@
-"""Write-guard tests for :mod:`aeat.adapters.inbound.sanitizer`.
+"""Write-guard tests for :mod:`~adapters.inbound.sanitizer`.
 
 The sanitiser subpackage MUST NOT contain any public symbol whose
 name implies an AEAT mutation. This module is a CI-time grep guard
@@ -15,6 +15,17 @@ CLI verb attached to the Typer ``app``.
 The false-positive whitelist is narrow: ``commit_id`` is allowed
 because git commit identifiers are read-only state, not mutation
 verbs.
+
+See Also:
+    :mod:`~entrypoints.cli.sanitize`
+        Read-only CLI bridge whose public verbs are covered by this guard.
+    ``.vault/adr/2026-04-25-pdf-sanitizer-adr.md``
+        Establishes the sanitizer's no-AEAT-mutation and no-persistence
+        boundary.
+    ``.vault/plan/2026-04-25-pdf-sanitizer-plan.md``
+        Defines the Phase 8 no-write-surface gate implemented here.
+    ``.vault/audit/2026-04-26-aeat-verify-audit.md``
+        Records the parent AEAT verify write-guard re-verification.
 """
 
 from __future__ import annotations
