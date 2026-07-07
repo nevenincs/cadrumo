@@ -14,6 +14,22 @@ Exclusions
 - ``test_*.py`` files: test suites verify the helpers and may use direct calls.
 - ``src/aeat/core/parsing/_dates.py``: the canonical implementation itself.
 - ``src/aeat/core/parsing/_utils.py``: the canonical bool-parsing implementation.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the shared production AST inventory used by this parsing
+        enrollment gate.
+    :func:`~core.parsing.parse_iso8601_date`
+        Public ISO date parser that production callers should use instead of
+        direct ``date.fromisoformat`` calls.
+    :func:`~core.parsing.parse_ddmmyyyy_date`
+        Public Spanish day-first parser for Sede and form-input dates.
+    :func:`~core.parsing.parse_bool`
+        Public boolean-token parser that replaces inline lower-case string
+        comparisons.
+    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
+        Tracks the W03.P17 canonical parsing enrollment sweep and S357
+        inventory gate.
 """
 
 from __future__ import annotations
