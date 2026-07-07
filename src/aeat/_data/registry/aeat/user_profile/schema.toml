@@ -1,6 +1,6 @@
 [schema]
 id = "aeat.user_profile"
-version = 3
+version = 4
 title = "AEAT user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -512,6 +512,16 @@ description = "Participation percentage for the attribution entity member, expre
 minimum = "0"
 maximum = "100"
 model_selectors = ["attribution_entity_socios.share_pct"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "base_imponible_assigned"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit income or base imponible amount attributed to this socio for Modelo 184. It is required because the filing row reports the assigned amount and the resolver must not fabricate it from share_pct without an independently declared entity total."
+model_selectors = ["attribution_entity_socios.base_imponible_assigned"]
 legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
 
 [[sections.fields]]
