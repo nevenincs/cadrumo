@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import ast_for_path, package_python_files, repo_relative
+from ._inventory import package_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -42,10 +42,7 @@ def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
 def test_no_absolute_self_imports_in_aeat_package(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No source file under ``src/aeat`` may import the ``aeat`` package absolutely."""
     violations: list[str] = []
-    for path in package_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for path, tree in package_ast_items(source_tree_ast):
         rel = repo_relative(path).removeprefix("src/")
         for lineno, statement in _absolute_self_imports(tree):
             violations.append(f"  {rel}:{lineno}  {statement}")
