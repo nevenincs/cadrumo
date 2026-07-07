@@ -26,6 +26,18 @@ is permitted, and the module is an actively-churned dispatch surface; ratcheting
 it is deferred to a follow-up once its dispatch shape stabilises. Modelo-KEYED
 DATA modules (applicability rules, censo modelo sets, query projections) are out
 of scope by design — only modelo-BRANCHED LOGIC in generic modules is the debt.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory and repository-relative path
+        helpers used by this ratchet.
+    :class:`~core.Modelo`
+        Closed modelo identifier enum whose ``M###`` members are detected when
+        they appear in generic application logic.
+    ``.vault/adr/2026-07-02-arch-remediation-modelo-surface-adr.md``
+        Establishes the per-modelo extension surface this ratchet protects.
+    ``.vault/audit/2026-07-04-arch-remediation-modelo-surface-audit.md``
+        Records the campaign-close verification that includes this gate.
 """
 
 from __future__ import annotations
