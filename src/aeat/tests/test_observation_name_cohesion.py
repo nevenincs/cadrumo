@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import ast_for_path, module_name, production_python_files
+from ._inventory import module_name, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -29,10 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _observation_class_definitions(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> dict[str, set[str]]:
     """Map each ``*Observation`` class name to the set of modules defining it."""
     definitions: dict[str, set[str]] = defaultdict(set)
-    for path in production_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for path, tree in production_ast_items(source_tree_ast):
         module = module_name(path)
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and node.name.endswith("Observation"):
