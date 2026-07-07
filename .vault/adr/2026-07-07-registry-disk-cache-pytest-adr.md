@@ -198,3 +198,48 @@ sharing.
   root specifically, hardening the key to a full content hash is a
   self-contained follow-up that does not require revisiting this decision's
   root-classification approach.
+
+## Amendment: the session-isolation fixture defeated the gate it was measured against
+
+A subsequent re-grounding of this decision (before the reviewer gate) found the
+gate change above, while correct, was NOT delivering its measured win in a real
+multi-worker run: `src/aeat/conftest.py`'s `_isolate_registry_caches` fixture is
+`scope="session", autouse=True` and unconditionally purged EVERY
+`aeat_registry_*.pkl` at session start. Under pytest-xdist, `scope="session"`
+means "per worker process" -- there is no single controlling session spanning
+all workers -- so every worker's own session start deleted the very pickle a
+sibling worker (or an earlier invocation) had just written, forcing every
+worker to independently recompile the bundled tree from scratch with zero
+sharing. This fixture predates the gate change above and was written when the
+disk cache was UNCONDITIONALLY disabled under pytest (so any pre-existing
+pickle could only have come from a prior non-pytest run); it was never updated
+when the gate above started writing to disk under pytest for the bundled root.
+
+Measured directly: two separate real `pytest` invocations against the same
+throwaway test module (each its own "session," exactly the same fixture-scope
+boundary a real xdist worker's own session is) touching the bundled registry,
+BEFORE removing the purge: 1st invocation 8.7s (cold, writes the pickle), 2nd
+invocation ALSO recompiled (mtime changed, confirming the purge deleted the
+1st invocation's pickle before the 2nd invocation's own test ran). AFTER
+removing the purge (the fix below): 1st invocation 8.9s, 2nd invocation 1.3s,
+3rd invocation 1.3s, pickle mtime and size unchanged across all three.
+
+**Fix:** `_isolate_registry_caches`'s `_reset()` helper no longer purges the
+disk cache at session start (or end -- session end never purged it either).
+It now only clears the in-process `lru_cache` and the 1-second-TTL fingerprint
+cache, which is process-local and cheap and was never the problem. The
+disk-cache read path is already self-validating (the SHA-256 covers the schema
+version plus every file's path/size/mtime), so a stale or incompatible pickle
+simply misses its own key and gets recompiled+rewritten -- the defensive purge
+provided no correctness guarantee the key itself does not already provide, only
+a false sense of "tidiness" that actively worked against this ADR's decision.
+
+A new regression test
+(`test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions`)
+materialises a pid-suffixed throwaway sibling test module in the real registry
+`tests/` directory and runs it through TWO REAL, SEPARATE `pytest` subprocess
+invocations (not simulated via env vars), asserting the bundled disk pickle's
+mtime and size are unchanged across both -- proven to fail against the
+pre-amendment fixture (anti-tautology check: reverted the fixture to its old
+unconditional-purge form, confirmed this exact test fails with the same
+purge-then-recompile signature measured above, then restored the fix).

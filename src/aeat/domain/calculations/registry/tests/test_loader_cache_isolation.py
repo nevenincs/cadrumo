@@ -59,6 +59,9 @@ from ._loader_directory_mode_support import _standard_manifest_text, _standard_r
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REPO_ROOT = Path(__file__).resolve().parents[6]
+_SUBPROCESS_TIMEOUT_SECONDS = 60
+
 
 def test_registry_disk_cache_disabled_under_pytest_for_a_mutable_root() -> None:
     """The shared ``/tmp`` disk pickle is gated OFF under pytest for a non-bundled root.
@@ -249,6 +252,107 @@ def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
         f"the child process took {child_elapsed}s -- too slow for a disk-cache hit, "
         "suggesting it recompiled instead of sharing the pickle"
     )
+
+
+def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions() -> None:
+    """The per-session cache-isolation fixture must not purge the bundled disk pickle.
+
+    Regression proof for a real defect: an earlier version of
+    ``_isolate_registry_caches`` (``src/aeat/conftest.py``) purged EVERY
+    ``aeat_registry_*.pkl`` unconditionally at session start. Under
+    pytest-xdist, ``scope="session"`` means "per worker process" -- there is
+    no single controlling session spanning all workers -- so every worker's
+    own session start deleted the very pickle a sibling worker (or an earlier
+    invocation) had just written, forcing each one to independently recompile
+    the bundled tree from scratch with zero cross-worker sharing. Measured
+    directly during this fix's investigation: two separate real ``pytest``
+    invocations against the same bundled-tree content took 8.6-8.9s EACH
+    before the purge was removed, and 8.9s then 1.3s after.
+
+    This test proves it through TWO REAL, SEPARATE ``pytest`` subprocess
+    invocations (not simulated via env vars, and not the same process
+    twice) against a throwaway sibling test module materialised in this
+    real ``tests/`` directory -- exactly the same package position a real
+    xdist worker's own test file would occupy, so the real
+    ``src/aeat/conftest.py`` autouse fixture governs both. The bundled disk
+    pickle must be the SAME file (unchanged mtime and size) after the second
+    invocation, proving the second real pytest session read it rather than
+    purging and recompiling it.
+    """
+    scratch_module_name = f"test_zzz_purge_isolation_proof_{os.getpid()}.py"
+    scratch_module_path = Path(__file__).resolve().parent / scratch_module_name
+    assert not scratch_module_path.exists(), "stale purge-isolation-proof fixture left behind by a prior run"
+
+    scratch_source = (
+        "from __future__ import annotations\n"
+        "\n"
+        "import pytest\n"
+        "\n"
+        "from .....core.resources import bundled_path\n"
+        "from .._loader import load_registry_tree\n"
+        "\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]\n"
+        "\n"
+        "\n"
+        "def test_touch_bundled_registry() -> None:\n"
+        "    root = bundled_path('registry', 'aeat').resolve()\n"
+        "    modelos, _catalogues = load_registry_tree(root)\n"
+        "    assert modelos\n"
+    )
+
+    def _run_real_pytest_session() -> subprocess.CompletedProcess[str]:
+        node_id = f"{scratch_module_path.relative_to(_REPO_ROOT).as_posix()}::test_touch_bundled_registry"
+        return subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-q",
+                "--no-header",
+                "-p",
+                "no:cacheprovider",
+                "-n0",
+                "-m",
+                "unit",
+                node_id,
+            ],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        )
+
+    for stale in _bundled_registry_disk_cache_files():
+        stale.unlink(missing_ok=True)
+
+    try:
+        scratch_module_path.write_text(scratch_source, encoding="utf-8")
+
+        first = _run_real_pytest_session()
+        assert first.returncode == 0, f"first real pytest session failed:\n{first.stdout}\n{first.stderr}"
+        written = _bundled_registry_disk_cache_files()
+        assert len(written) == 1, f"expected exactly one bundled-root disk pickle after session 1, got {written}"
+        cache_path = next(iter(written))
+        stat_after_first = cache_path.stat()
+
+        second = _run_real_pytest_session()
+        assert second.returncode == 0, f"second real pytest session failed:\n{second.stdout}\n{second.stderr}"
+        stat_after_second = cache_path.stat()
+
+        assert _bundled_registry_disk_cache_files() == written, (
+            "a second real pytest session must not write a second disk pickle"
+        )
+        assert stat_after_second.st_mtime_ns == stat_after_first.st_mtime_ns, (
+            "the second real pytest session's own autouse session-start fixture purged and "
+            "recompiled the shared bundled-root pickle instead of reading it -- the #148 "
+            "cross-worker sharing regression this test guards against"
+        )
+        assert stat_after_second.st_size == stat_after_first.st_size, (
+            "the second real pytest session rewrote the shared pickle instead of reading it"
+        )
+    finally:
+        scratch_module_path.unlink(missing_ok=True)
 
 
 def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path: Path) -> None:

@@ -614,6 +614,12 @@ convention = "google"
 # because it is built from a parametrized/loop-derived node id, not a static
 # literal list.
 "src/aeat/tests/test_acceptance_wall_catalogue.py" = ["S603"]
+# The bundled-root disk-cache cross-session regression proof runs the trusted
+# `sys.executable -m pytest` driver against a node id built from this test's
+# own pid-suffixed scratch-module path (never untrusted input); ruff's S603
+# heuristic cannot prove the argv is fixed because it is derived from a
+# runtime path, not a static literal list.
+"src/aeat/domain/calculations/registry/tests/test_loader_cache_isolation.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/aeat/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
 # `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
