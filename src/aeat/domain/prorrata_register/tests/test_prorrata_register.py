@@ -188,6 +188,46 @@ def test_entry_source_observation_only_for_carried() -> None:
         )
 
 
+def test_interrupted_entry_roundtrips_and_defaults_carry_no_percentages() -> None:
+    """An art-105.Cinco interrupted (sin operaciones) entry survives JSON roundtrip with no percentages."""
+    entry = ProrrataRegisterEntry(
+        ejercicio=2023,
+        regime=ProrrataRegisterRegime.NINGUNA,
+        interrupted=True,
+    )
+    restored = ProrrataRegisterEntry.model_validate_json(entry.model_dump_json())
+    assert restored == entry
+    assert restored.interrupted is True
+    assert restored.provisional_percentage is None
+    assert restored.definitive_percentage is None
+
+
+def test_interrupted_entry_forbids_percentages_and_volumes() -> None:
+    """An interrupted ejercicio had no operations, so it carries no definitive percentage/volumes."""
+    with pytest.raises(pydantic.ValidationError, match="interrupted"):
+        ProrrataRegisterEntry(
+            ejercicio=2023,
+            regime=ProrrataRegisterRegime.GENERAL,
+            interrupted=True,
+            definitive_percentage=Decimal("50"),
+            definitive_volume_con_derecho=Decimal("10000.00"),
+            definitive_volume_sin_derecho=Decimal("10000.00"),
+        )
+
+
+def test_interrumpida_tres_ultimos_provenance_resolves_in_ladder() -> None:
+    """A resumed ejercicio seeded by the art-105.Cinco three-year rule resolves its provisional percentage."""
+    resumed = ProrrataRegisterEntry(
+        ejercicio=2024,
+        regime=ProrrataRegisterRegime.GENERAL,
+        provisional_percentage=Decimal("70"),
+        provisional_provenance=ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
+    )
+    resolution = resolve_provisional_percentage((resumed,))
+    assert resolution.percentage == Decimal("70")
+    assert resolution.provenance is ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS
+
+
 def test_entry_unsupported_schema_version_rejected() -> None:
     """An unsupported schema_version is rejected."""
     with pytest.raises(pydantic.ValidationError, match="unsupported ProrrataRegisterEntry"):

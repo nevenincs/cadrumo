@@ -77,11 +77,19 @@ class ProrrataProvisionalProvenance(StrEnum):
         INICIO_ACTIVIDAD: The inicio-de-actividades proposed percentage
             (art. 105.Tres via art. 111.Dos) for a taxpayer with no prior
             definitive to carry, recorded with its proposal reference.
+        INTERRUMPIDA_TRES_ULTIMOS: The art. 105.Cinco interrupted-activity
+            percentage — the global percentage over the aggregate volumes of the
+            last three activo años naturales (skipping the interruption gap),
+            used to seed an ejercicio whose immediately prior year had no
+            operations. Computed from the register's own stored volumes, never a
+            fabricated default and never silently the single pre-interruption
+            year.
     """
 
     CARRIED_PRIOR_DEFINITIVA = "carried_prior_definitiva"
     AEAT_AUTORIZADA = "aeat_autorizada"
     INICIO_ACTIVIDAD = "inicio_actividad"
+    INTERRUMPIDA_TRES_ULTIMOS = "interrumpida_tres_ultimos"
 
 
 __all__ = [

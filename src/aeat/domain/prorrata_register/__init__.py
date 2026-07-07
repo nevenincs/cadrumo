@@ -87,6 +87,7 @@ _PROVENANCE_PRECEDENCE: tuple[ProrrataProvisionalProvenance, ...] = (
     ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
     ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
     ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
 )
 
 
@@ -107,6 +108,13 @@ class ProrrataRegisterEntry(BaseModel):
         sector_id: Sector identifier for a sectores-diferenciados register, or
             ``None`` for the whole-entity register. Present from birth so
             sectores land without migration; the per-sector compute is deferred.
+        interrupted: The art. 105.Cinco "sin operaciones" marker — ``True`` when
+            the taxpayer (or the differentiated sector) performed no operations
+            during the ejercicio. Distinct from the ``ninguna`` regime (an
+            *active* year under no prorrata): an interrupted year is *inactive*.
+            An interrupted entry carries no provisional or definitive percentage
+            and no volume inputs; the three-active-years seed walk skips it. The
+            register thereby retains a truthful active/inactive history.
         provisional_percentage: The provisional deduction percentage (0-100) in
             force during the year's liquidations (art. 104.Uno + 105.Uno), or
             ``None`` when no percentage has resolved yet (never a fabricated
@@ -139,6 +147,7 @@ class ProrrataRegisterEntry(BaseModel):
     ejercicio: int = Field(ge=_MIN_EJERCICIO, le=_MAX_EJERCICIO)
     regime: ProrrataRegisterRegime
     sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+    interrupted: bool = False
     provisional_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=_HUNDRED)
     provisional_provenance: ProrrataProvisionalProvenance | None = None
     authorisation_reference: str | None = Field(default=None, min_length=1)
@@ -159,6 +168,22 @@ class ProrrataRegisterEntry(BaseModel):
     @model_validator(mode="after")
     def _validate_field_coupling(self) -> ProrrataRegisterEntry:
         """Enforce that the provisional, referenced, and settlement field groups are coherent."""
+        if self.interrupted and any(
+            field is not None
+            for field in (
+                self.provisional_percentage,
+                self.provisional_provenance,
+                self.authorisation_reference,
+                self.definitive_percentage,
+                self.definitive_volume_con_derecho,
+                self.definitive_volume_sin_derecho,
+                self.source_observation_ref,
+            )
+        ):
+            raise ProrrataRegisterValidationError(
+                "an interrupted (sin operaciones) ejercicio carries no provisional/definitive percentage, "
+                "volume inputs, authorisation, or source-observation reference"
+            )
         if (self.provisional_percentage is None) != (self.provisional_provenance is None):
             raise ProrrataRegisterValidationError(
                 "provisional_percentage and provisional_provenance must be present or absent together"
