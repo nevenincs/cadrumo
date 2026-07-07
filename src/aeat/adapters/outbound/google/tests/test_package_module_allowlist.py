@@ -1,11 +1,28 @@
-"""Module allow-list for the Google OAuth Desktop adapter package.
+"""Module allow-list for the Google OAuth Desktop adapter tests package.
 
-Pins the exact set of `.py` files under
-`src/aeat/adapters/outbound/google/`. A new untracked file fails the
-gate so module additions are deliberate.
+Pins the accepted ``.py`` files in the directory containing this test. A
+new untracked test module fails the gate so additions are deliberate and
+carry local rationale in ``_ALLOWED_MODULES``; stale allow-list entries
+are enforced for test modules by the ``test_`` prefix. The test
+introspects the source tree directly rather than importing the package,
+so it stays runnable even when the broader import chain is broken during
+adapter restructuring.
 
-The test introspects the source tree directly (not via Python import)
-so it stays runnable even when the broader import chain is broken.
+See Also:
+    :mod:`~adapters.outbound.google`
+        Public Google outbound adapter facade whose colocated tests are
+        guarded by this inventory check.
+    :mod:`~adapters.outbound.google._oauth_flow`
+        Desktop OAuth flow surface whose legacy predecessors remain outside
+        the allowed module list.
+    :mod:`~adapters.outbound.google._session_store`
+        Secure per-profile OAuth session persistence enrolled as a deliberate
+        package module.
+    ``2026-05-14-google-oauth-w01-p01-closeout-exec``
+        Closeout record that established the package file allow-list and
+        filesystem-introspection gate.
+    ``2026-05-08-google-oauth-adr``
+        Decision record for the v1 Google OAuth adapter surface.
 """
 
 from __future__ import annotations
