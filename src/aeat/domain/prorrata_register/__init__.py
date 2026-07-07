@@ -278,6 +278,39 @@ def resolve_provisional_percentage(
     )
 
 
+class ThreeActiveYearsAggregate(BaseModel):
+    """Aggregated volume inputs of the last three ACTIVE años naturales (LIVA art. 105.Cinco).
+
+    The art. 105.Cinco interrupted-activity rule seeds a resumed ejercicio from
+    the percentage that "globalmente corresponda al conjunto de los tres últimos
+    años naturales en que se hubiesen realizado operaciones": a GLOBAL percentage
+    over the AGGREGATE volumes of the last three active years, not the average of
+    their three definitive percentages. This carrier holds those summed volumes
+    and the contributing ejercicios (newest-first). :attr:`sufficient` is ``True``
+    only when a full three active years were found; with fewer, the application
+    seed surfaces an advisory rather than assuming a percentage.
+
+    Attributes:
+        contributing_ejercicios: The active ejercicios whose volumes were summed,
+            newest first (at most three).
+        summed_volume_con_derecho: Sum of the contributing years' annual
+            con-derecho operation volumes.
+        summed_volume_sin_derecho: Sum of the contributing years' annual
+            sin-derecho operation volumes.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    contributing_ejercicios: tuple[int, ...] = ()
+    summed_volume_con_derecho: Decimal = Decimal("0")
+    summed_volume_sin_derecho: Decimal = Decimal("0")
+
+    @property
+    def sufficient(self) -> bool:
+        """Whether a full three active años naturales contributed."""
+        return len(self.contributing_ejercicios) == 3
+
+
 class ProrrataRegister(BaseModel):
     """Encrypted JSON document holding the per-ejercicio prorrata register.
 
@@ -333,6 +366,54 @@ class ProrrataRegister(BaseModel):
         entry = self.entry_for(ejercicio, sector_id=sector_id)
         return resolve_provisional_percentage(() if entry is None else (entry,))
 
+    def collect_last_three_active_years(
+        self,
+        *,
+        before_ejercicio: int,
+        sector_id: str | None = None,
+    ) -> ThreeActiveYearsAggregate:
+        """Aggregate the volume inputs of the last three ACTIVE años naturales (LIVA art. 105.Cinco).
+
+        Walks the register backward from ``before_ejercicio`` for the given
+        ``sector_id``, SKIPPING interrupted (sin operaciones) years and any year
+        that has not settled (no definitive volumes), and sums the con-derecho and
+        sin-derecho volume inputs of the last three active años naturales. An
+        "active" year is a settled, non-interrupted entry; the walk is over
+        *active* years, not calendar years, so the interruption gap is skipped.
+
+        Returns a :class:`ThreeActiveYearsAggregate` whose ``sufficient`` is
+        ``True`` only when three active years contributed; the application seed
+        turns an insufficient aggregate into a visible advisory rather than
+        assuming a percentage.
+        """
+        active = sorted(
+            (
+                entry
+                for entry in self.entries
+                if entry.sector_id == sector_id
+                and entry.ejercicio < before_ejercicio
+                and not entry.interrupted
+                and entry.definitive_percentage is not None
+                and entry.definitive_volume_con_derecho is not None
+                and entry.definitive_volume_sin_derecho is not None
+            ),
+            key=lambda entry: entry.ejercicio,
+            reverse=True,
+        )[:3]
+        summed_con = sum(
+            (entry.definitive_volume_con_derecho for entry in active),
+            Decimal("0"),
+        )
+        summed_sin = sum(
+            (entry.definitive_volume_sin_derecho for entry in active),
+            Decimal("0"),
+        )
+        return ThreeActiveYearsAggregate(
+            contributing_ejercicios=tuple(entry.ejercicio for entry in active),
+            summed_volume_con_derecho=summed_con,
+            summed_volume_sin_derecho=summed_sin,
+        )
+
 
 __all__ = [
     "PRORRATA_REGISTER_SCHEMA_VERSION",
@@ -341,5 +422,6 @@ __all__ = [
     "ProrrataRegisterEntry",
     "ProrrataRegisterError",
     "ProrrataRegisterValidationError",
+    "ThreeActiveYearsAggregate",
     "resolve_provisional_percentage",
 ]

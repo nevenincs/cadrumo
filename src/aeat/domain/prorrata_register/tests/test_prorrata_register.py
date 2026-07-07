@@ -228,6 +228,60 @@ def test_interrumpida_tres_ultimos_provenance_resolves_in_ladder() -> None:
     assert resolution.provenance is ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS
 
 
+def _settled(ejercicio: int, con: str, sin: str) -> ProrrataRegisterEntry:
+    return ProrrataRegisterEntry(
+        ejercicio=ejercicio,
+        regime=ProrrataRegisterRegime.GENERAL,
+        definitive_percentage=Decimal("50"),
+        definitive_volume_con_derecho=Decimal(con),
+        definitive_volume_sin_derecho=Decimal(sin),
+    )
+
+
+def _interrupted(ejercicio: int) -> ProrrataRegisterEntry:
+    return ProrrataRegisterEntry(ejercicio=ejercicio, regime=ProrrataRegisterRegime.NINGUNA, interrupted=True)
+
+
+def test_walk_collects_last_three_active_years_skipping_the_interruption_gap() -> None:
+    """The art-105.Cinco walk takes the last three ACTIVE años, skipping interrupted years."""
+    register = ProrrataRegister(
+        entries=(
+            _settled(2019, "1000", "0"),
+            _settled(2020, "10000", "0"),
+            _settled(2021, "6000", "4000"),
+            _settled(2022, "8000", "2000"),
+            _interrupted(2023),
+        ),
+    )
+    aggregate = register.collect_last_three_active_years(before_ejercicio=2024)
+    assert aggregate.contributing_ejercicios == (2022, 2021, 2020)
+    assert aggregate.sufficient is True
+    assert aggregate.summed_volume_con_derecho == Decimal("24000")
+    assert aggregate.summed_volume_sin_derecho == Decimal("6000")
+
+
+def test_walk_reports_insufficient_history_with_fewer_than_three_active_years() -> None:
+    """Fewer than three active años yields an insufficient aggregate, never a fabricated fill."""
+    register = ProrrataRegister(entries=(_settled(2022, "8000", "2000"), _interrupted(2023)))
+    aggregate = register.collect_last_three_active_years(before_ejercicio=2024)
+    assert aggregate.contributing_ejercicios == (2022,)
+    assert aggregate.sufficient is False
+
+
+def test_walk_skips_unsettled_years() -> None:
+    """A year with no definitive volumes (not yet settled) is not an active year for the walk."""
+    register = ProrrataRegister(
+        entries=(
+            _settled(2020, "10000", "0"),
+            _settled(2021, "6000", "4000"),
+            ProrrataRegisterEntry(ejercicio=2022, regime=ProrrataRegisterRegime.GENERAL),
+        ),
+    )
+    aggregate = register.collect_last_three_active_years(before_ejercicio=2023)
+    assert aggregate.contributing_ejercicios == (2021, 2020)
+    assert aggregate.sufficient is False
+
+
 def test_entry_unsupported_schema_version_rejected() -> None:
     """An unsupported schema_version is rejected."""
     with pytest.raises(pydantic.ValidationError, match="unsupported ProrrataRegisterEntry"):
