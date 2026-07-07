@@ -31,25 +31,21 @@ storage-foundation cleanup.
 from __future__ import annotations
 
 import ast
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
 
+from ...tests._inventory import SRC_AEAT, production_ast_items, production_python_files, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_CORE_ROOT = Path("src/aeat/core")
-_SOURCE_ROOT = Path("src/aeat")
 _FORBIDDEN_CORE_PREFIXES = (
     "aeat.adapters",
     "aeat.application",
     "aeat.domain",
     "aeat.entrypoints",
 )
-
-
-def _is_production_module(path: Path) -> bool:
-    return not (path.name.startswith("test_") or path.name.startswith("_test_"))
 
 
 def _absolute_import_name(module: str | None, names: list[ast.alias]) -> str:
@@ -61,7 +57,7 @@ def _absolute_import_name(module: str | None, names: list[ast.alias]) -> str:
 
 
 def _resolve_relative_import(path: Path, level: int, module: str | None) -> str:
-    package_parts = list(path.with_suffix("").relative_to(Path("src")).parts)
+    package_parts = list(path.with_suffix("").relative_to(SRC_AEAT.parent).parts)
     package_parts = package_parts[:-1]
     if level:
         package_parts = package_parts[: len(package_parts) - level + 1]
@@ -83,7 +79,7 @@ def _is_type_checking_guard(node: ast.stmt) -> bool:
     return False
 
 
-def _iter_import_time_imports(path: Path) -> list[str]:
+def _iter_import_time_imports(path: Path, tree: ast.AST) -> list[str]:
     """Collect every import that executes when ``path`` is loaded.
 
     Imports nested inside a function or method body are deferred and do
@@ -92,7 +88,6 @@ def _iter_import_time_imports(path: Path) -> list[str]:
     real import-time dependency graph the layered contract protects.
     """
 
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     imports: list[str] = []
 
     def _record(node: ast.Import | ast.ImportFrom) -> None:
@@ -134,15 +129,16 @@ def _iter_import_time_imports(path: Path) -> list[str]:
     return imports
 
 
-def test_core_production_modules_do_not_import_outer_layers() -> None:
+def test_core_production_modules_do_not_import_outer_layers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Core production modules must not import the outer layers at load time."""
     violations: list[str] = []
-    for path in sorted(_CORE_ROOT.rglob("*.py")):
-        if not _is_production_module(path):
+    for path, tree in production_ast_items(source_tree_ast):
+        relative_path = repo_relative(path)
+        if not relative_path.startswith("src/aeat/core/"):
             continue
-        for imported in _iter_import_time_imports(path):
+        for imported in _iter_import_time_imports(path, tree):
             if imported.startswith(_FORBIDDEN_CORE_PREFIXES):
-                violations.append(f"{path}:{imported}")
+                violations.append(f"{relative_path}:{imported}")
 
     assert violations == []
 
@@ -151,10 +147,8 @@ def test_workspace_locked_error_is_not_present_in_production_sources() -> None:
     """The removed ``WorkspaceLockedError`` symbol must not reappear."""
     removed_error_name = "Workspace" + "LockedError"
     offenders: list[str] = []
-    for path in sorted(_SOURCE_ROOT.rglob("*.py")):
-        if not _is_production_module(path):
-            continue
+    for path in production_python_files():
         if removed_error_name in path.read_text(encoding="utf-8"):
-            offenders.append(str(path))
+            offenders.append(repo_relative(path))
 
     assert offenders == []
