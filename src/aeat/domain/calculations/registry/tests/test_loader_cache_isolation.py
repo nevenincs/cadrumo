@@ -4,14 +4,28 @@ The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is keyed
 file mtime and SHARED across pytest-xdist worker processes, so a parallel ``-n`` run
 could serve a stale/transient compiled registry from one worker to another (the #44
 isolation gap that flaked the M303-2009 ledger tests under the P05 sweep). The loader
-now skips that disk pickle under pytest -- including collection before
-``PYTEST_CURRENT_TEST`` is set -- relying on the per-process ``lru_cache`` for
-in-run perf so each worker compiles from the current TOML.
+originally skipped that disk pickle under pytest ENTIRELY -- including collection
+before ``PYTEST_CURRENT_TEST`` is set -- which closed the #44 race but forced every
+xdist worker and every subprocess-spawning test to independently pay the full
+multi-second registry compile, since a cold compile+validate of the bundled tree
+costs single-to-double-digit seconds on this codebase's registry size.
 
-These tests pin that invariant: the gate is OFF in the test environment (so no
-cross-worker stale-pickle race is possible), and removing the pytest env markers
-restores the production path (so the gate is genuine pytest-detection, not an
-unconditional disable). They read the real gate -- no mocks, no tautology.
+The gate is now scoped to the ROOT: a mutable/synthetic root (a ``tmp_path`` test
+fixture, or any path that is not the resolved package-bundled root) keeps the disk
+pickle disabled under pytest, preserving the #44 invariant exactly -- such a root can
+be edited mid-run by the very test that built it. The package-bundled, read-only
+registry tree is never mutated during a run, so it is exempt: under pytest it now
+shares ONE compiled disk pickle across every worker/subprocess that requests it,
+collapsing N independent cold compiles into one compile the rest read.
+
+These tests pin both invariants: the gate stays OFF for a mutable/default root (no
+cross-worker stale-pickle race is possible there), turns ON for the bundled root, and
+removing the pytest env markers restores the unconditional production path (so the
+gate is genuine pytest-detection, not an unconditional disable). They read the real
+gate -- no mocks, no tautology. :func:`test_bundled_root_disk_cache_is_shared_across_processes`
+and :func:`test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest` prove
+the end-to-end behavior through the real ``load_registry_tree`` entry point and the
+real ``/tmp`` pickle file, not just the boolean gate.
 
 The bundled-tree fingerprint TTL tests below pin a related but distinct
 invariant: the fingerprint cache's directory-mtime walk is only skippable for
@@ -26,6 +40,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -34,23 +49,42 @@ import pytest
 from .....core.resources import bundled_path
 from .._loader import (
     _collect_registry_tree_fingerprints,
+    _load_registry_tree_cached,
     clear_fingerprint_cache,
     is_bundled_registry_root,
+    load_registry_tree,
     registry_disk_cache_enabled,
 )
+from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_registry_disk_cache_disabled_under_pytest() -> None:
-    """The shared ``/tmp`` disk pickle is gated OFF whenever pytest is running.
+def test_registry_disk_cache_disabled_under_pytest_for_a_mutable_root() -> None:
+    """The shared ``/tmp`` disk pickle is gated OFF under pytest for a non-bundled root.
 
-    The pytest process itself is enough to disable the gate, including collection
-    before ``PYTEST_CURRENT_TEST`` is present -- the invariant that removes the
-    cross-worker stale-pickle race the #44 root-cause identified.
+    The pytest process itself is enough to disable the gate for the
+    ``is_bundled=False`` default, including collection before
+    ``PYTEST_CURRENT_TEST`` is present -- the invariant that removes the
+    cross-worker stale-pickle race the #44 root-cause identified, preserved
+    for every mutable/synthetic root after the bundled-root carve-out below.
     """
     assert "PYTEST_CURRENT_TEST" in os.environ, "sanity: this test runs under pytest"
     assert registry_disk_cache_enabled() is False
+    assert registry_disk_cache_enabled(is_bundled=False) is False
+
+
+def test_registry_disk_cache_enabled_under_pytest_for_the_bundled_root() -> None:
+    """The gate is ON under pytest when the caller identifies the root as bundled.
+
+    The package-bundled read-only registry tree is never mutated during a test
+    run, so it is exempt from the #44 isolation concern: every pytest-xdist
+    worker and every subprocess-spawning test may safely share its compiled
+    disk pickle. See :func:`test_bundled_root_disk_cache_is_shared_across_processes`
+    for the real cross-process proof this boolean gate enables.
+    """
+    assert "PYTEST_CURRENT_TEST" in os.environ, "sanity: this test runs under pytest"
+    assert registry_disk_cache_enabled(is_bundled=True) is True
 
 
 def test_registry_disk_cache_enabled_without_pytest_markers() -> None:
@@ -134,3 +168,113 @@ def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> 
     time.sleep(1.2)
     second = _collect_registry_tree_fingerprints(bundled_root)
     assert second is first, "the bundled tree's TTL must outlive the strict 1-second mutable-tree window"
+
+
+def _bundled_registry_disk_cache_files() -> set[Path]:
+    return set(Path(tempfile.gettempdir()).glob("aeat_registry_*.pkl"))
+
+
+def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
+    """Under pytest, the bundled root's disk pickle is written once and shared.
+
+    Real end-to-end proof through the actual ``load_registry_tree`` entry point
+    and the actual ``/tmp`` pickle file, not just the boolean gate above: after
+    this (pytest) process compiles the bundled tree and writes its disk pickle,
+    a SEPARATE child process -- launched with ``PYTEST_CURRENT_TEST`` set, so it
+    is itself pytest-like exactly as an xdist worker would be -- reads the SAME
+    pickle rather than recompiling and rewriting it. Reusing the identical file
+    (unchanged mtime and size) is the only way this can happen, since a rewrite
+    would touch both.
+
+    Under the new gate ONLY the bundled root is ever disk-cached under pytest
+    (mutable/synthetic roots always stay disabled -- see
+    :func:`test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest`),
+    so every ``aeat_registry_*.pkl`` file in the temp directory belongs to this
+    root; stale files from an earlier bundled-tree state (this session, before
+    the fix, or from unrelated churn) are cleared first so the test observes a
+    genuine write-then-read cycle.
+    """
+    for stale in _bundled_registry_disk_cache_files():
+        stale.unlink(missing_ok=True)
+    _load_registry_tree_cached.cache_clear()
+    clear_fingerprint_cache()
+
+    bundled_root = bundled_path("registry", "aeat").resolve()
+    modelos, _catalogues = load_registry_tree(bundled_root)
+    assert modelos, "sanity: the bundled tree must compile at least one modelo"
+
+    written = _bundled_registry_disk_cache_files()
+    assert len(written) == 1, f"expected exactly one bundled-root disk pickle after the first compile, got {written}"
+    cache_path = next(iter(written))
+    stat_before = cache_path.stat()
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import time\n"
+                "from aeat.domain.calculations.registry._loader import load_registry_tree\n"
+                "from aeat.core.resources import bundled_path\n"
+                "root = bundled_path('registry', 'aeat').resolve()\n"
+                "t0 = time.time()\n"
+                "modelos, _ = load_registry_tree(root)\n"
+                "t1 = time.time()\n"
+                "print(len(modelos))\n"
+                "print(t1 - t0)\n"
+            ),
+        ],
+        check=True,
+        capture_output=True,
+        env={**os.environ, "PYTEST_CURRENT_TEST": "simulated_worker::test_shares_bundled_disk_cache"},
+        text=True,
+        timeout=60,
+    )
+    child_modelo_count_line, child_elapsed_line = completed.stdout.strip().splitlines()
+    assert int(child_modelo_count_line) == len(modelos), (
+        "the child process must compile the identical modelo set from the shared pickle"
+    )
+    child_elapsed = float(child_elapsed_line)
+
+    after_child = _bundled_registry_disk_cache_files()
+    assert after_child == written, "the child process must not have written a second disk pickle"
+    stat_after = cache_path.stat()
+    assert stat_after.st_mtime_ns == stat_before.st_mtime_ns, (
+        "the child process rewrote the shared pickle instead of reading it"
+    )
+    assert stat_after.st_size == stat_before.st_size, (
+        "the child process rewrote the shared pickle instead of reading it"
+    )
+    assert child_elapsed < 5.0, (
+        f"the child process took {child_elapsed}s -- too slow for a disk-cache hit, "
+        "suggesting it recompiled instead of sharing the pickle"
+    )
+
+
+def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path: Path) -> None:
+    """A mutable ``tmp_path`` registry never gets a disk pickle under pytest, even now.
+
+    Builds a minimal, real, successfully-loadable synthetic registry tree (the
+    same fixture shape :mod:`test_loader_directory_mode` uses) and loads it
+    through the real ``load_registry_tree`` entry point under the current
+    pytest process. Because ``is_bundled_registry_root`` rejects any path other
+    than the resolved package-bundled root, this call must never write a disk
+    pickle -- the #44 isolation invariant for exactly the kind of root a test
+    can mutate mid-run.
+    """
+    registry_root = tmp_path / "registry" / "aeat"
+    (registry_root / "legal").mkdir(parents=True)
+    modelos_dir = registry_root / "modelos"
+    modelos_dir.mkdir()
+    (modelos_dir / "999.toml").write_text(
+        _standard_manifest_text("Synthetic disk-cache isolation test") + "\n" + _standard_revision_preamble_text(),
+        encoding="utf-8",
+    )
+    assert is_bundled_registry_root(registry_root.resolve()) is False
+
+    before = _bundled_registry_disk_cache_files()
+    modelos, _catalogues = load_registry_tree(registry_root)
+    assert {modelo.id for modelo in modelos} == {"999"}
+
+    after = _bundled_registry_disk_cache_files()
+    assert after == before, "a mutable/synthetic root must never write a disk pickle under pytest"
