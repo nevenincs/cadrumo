@@ -29,7 +29,7 @@ import pytest
 # guard. Documented in #158 entry 2 and ADR pending under
 # session-honest-followups P03.S19.
 from .core.external_constants import UTF_8_ENCODING
-from .tests import package_python_files
+from .tests import package_python_files, prime_ast_cache
 
 _SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/aeat/`` source tree (the directory hosting this conftest)."""
@@ -51,6 +51,13 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     Consumers retain their own filter predicates (e.g. ``test_*.py``
     only, or exclude certain subdirs). The fixture is the AST cache;
     the policy is per-test.
+
+    Also primes the shared process-level AST cache
+    (``tests._inventory.prime_ast_cache``) so a ratchet that calls
+    ``ast_for_path(path)`` WITHOUT threading this fixture through its own
+    helpers (the historical bypass pattern -- a ratchet imports only
+    ``ast_for_path`` and re-parses independently) still reuses this parse
+    instead of re-reading and re-parsing the file from disk.
     """
     cache: dict[Path, ast.AST] = {}
     for path in package_python_files():
@@ -62,6 +69,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
             cache[path] = ast.parse(source, filename=str(path))
         except SyntaxError:
             continue
+    prime_ast_cache(cache)
     return cache
 
 
