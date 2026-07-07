@@ -2920,10 +2920,13 @@ cli:
         export_full_backup_info: 'Ez az archívum egy TELJES biztonsági mentés: nyugalmi
           állapotban AEAD-titkosított, és a profilon, a főkönyvön, a számításokon
           és a bevallási előzményeken kívül tartalmazza a bizonylatok byte-jait, az
-          auditnaplót és az időszakok közötti számítási bemeneteket is. Tárold biztonságos
-          helyen; az ''aeat config profile archive import'' paranccsal állítsd vissza.'
-        export_help: Lezárt, titkosított teljes biztonsági mentés írása az ÚTVONAL
-          helyre.
+          auditnaplót és az időszakok közötti számítási bemeneteket is. Ha --recovery-wrap-passphrase
+          opcióval exportálod, ez a profilcsomagok titkosított, gépek közötti átviteli
+          útja. Tárold biztonságos helyen; az ''aeat config profile archive import''
+          paranccsal állítsd vissza.'
+        export_help: Lezárt, AEAD-titkosított teljes biztonsági mentés írása az ÚTVONAL
+          helyre; e-mailes vagy gépek közötti átvitel előtt add meg a --recovery-wrap-passphrase
+          opciót.
         export_name_help: A mentendő profil; alapértelmezés szerint az aktív.
         export_out_help: Az archívum célútvonala.
         export_recovery_wrap_help: Opcionális jelmondat az archívum lezárásához az
@@ -2999,14 +3002,33 @@ cli:
       duplicate_target_help: A másolat célazonosítója.
       edit_help: A varázsló újrafuttatása meglévő profil ellen, értékek frissítése
         helyben.
-      export_help: Hordozható profilcsomag írása JSON-fájlba.
+      export_cleartext_local_help: Titkosítatlan JSON írása csak helyi/SAR kezelésre;
+        nem biztonságos e-mailhez, szinkronizáláshoz vagy átvitelhez.
+      export_encrypted_info: 'A profilcsomag AEAD passphrase titkosítással ide íródott:
+        {out}. Importálás: ''aeat config profile import PATH --passphrase ...''. Csak
+        a strukturált profilcsomagot tartalmazza; a csatolt bizonyítékokat és az
+        auditnaplót is tartalmazó teljes mentéshez használd a titkosított helyreállítási
+        archívumot.'
+      export_help: Passphrase alatt titkosított hordozható profilcsomag írása ÚTVONALRA;
+        a titkosítatlan JSON-hoz --cleartext-local kell, és csak helyi/SAR célra
+        való.
       export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
-      export_out_help: A JSON-csomag célútvonala.
+      export_out_help: A profilcsomag célútvonala.
+      export_passphrase_help: Passphrase a serializált profilcsomag AEAD-titkosításához
+        átvitelre.
+      export_passphrase_too_short: A profilexport passphrase legalább 8 karakter
+        hosszú legyen.
+      export_requires_transport: Használd a --passphrase kapcsolót titkosított átviteli
+        csomaghoz, vagy a --cleartext-local kapcsolót csak helyi/SAR JSON-hoz.
       export_sensitivity_warning: 'Ez a csomag NEM titkosított, és érzékeny pénzügyi
-        adatokat tartalmaz: a nyers adóazonosítót (nem kitakarva), a teljes főkönyvet,
-        a számítási revíziókat és a benyújtási rekordokat. A következő helyre íródott:
-        {out}. Az átvitel után törölje; ne küldje e-mailben, ne szinkronizálja, és
-        ne hagyja a lemezen.'
+        adatokat tartalmaz: a nyers adóazonosítót (nem kitakarva), a nevet/vezetékneveket,
+        a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. A következő
+        helyre íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben,
+        ne szinkronizáld és ne vidd át. Töröld, amikor a helyi/SAR kezelés befejeződött.
+        AEAD-titkosított strukturált átviteli csomaghoz használd az ''aeat config
+        profile export --passphrase ...'' parancsot.'
+      export_transport_conflict: A --passphrase és a --cleartext-local közül csak
+        az egyiket add meg.
       help: Aktív profilkonfigurációs értékek kezelése.
       history:
         invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
@@ -3030,7 +3052,9 @@ cli:
       import_active_switch_info: 'Az importált {name} profil mostantól az AKTÍV profil;
         a további parancsok ezen működnek. Az aktív profil módosításához futtassa:
         ''aeat config switch <name>''.'
-      import_help: Hordozható profilcsomag regisztrálása JSON-fájlból.
+      import_encrypted_bundle_invalid: A titkosított profilcsomag nem fejthető vissza
+        vagy nem validálható. Ellenőrizd a passphrase értéket és a fájlt.
+      import_help: Hordozható profilcsomag regisztrálása fájlból.
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
       import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
         Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
@@ -3044,7 +3068,9 @@ cli:
       import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási azonosító
         adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt ezekkel a
         mezőkkel: %{missing_flags}.'
-      import_path_help: A profilcsomag JSON-fájljának elérési útja.
+      import_passphrase_help: Passphrase egy 'config profile export --passphrase'
+        paranccsal exportált csomaghoz.
+      import_path_help: A profilcsomag fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Kijelentkezés az aktív profilból a helyi mutató törlésével.
       logout_session_warning: A kijelentkezes torolte az aktiv profil mutatot. Ebben

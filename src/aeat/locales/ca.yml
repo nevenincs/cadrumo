@@ -2975,10 +2975,12 @@ cli:
           està xifrat AEAD en repòs i inclou els bytes d''evidència de justificants,
           el registre d''auditoria i les entrades de càlcul entre períodes, a més
           del perfil, el llibre comptable, els càlculs i l''historial de presentacions.
-          Desa''l en un lloc segur; restaura''l amb ''aeat config profile archive
-          import''.'
-        export_help: Escriu un arxiu de còpia de seguretat completa, segellat i xifrat,
-          a CAMÍ.
+          Si s''exporta amb --recovery-wrap-passphrase, és la via xifrada de transferència
+          entre equips per a paquets de perfil. Desa''l en un lloc segur; restaura''l
+          amb ''aeat config profile archive import''.'
+        export_help: Escriu un arxiu de còpia de seguretat completa, segellat i xifrat
+          AEAD, a CAMÍ; afegeix --recovery-wrap-passphrase abans d'enviar-lo per
+          correu o transferir-lo entre equips.
         export_name_help: Perfil a copiar; per defecte l'actiu.
         export_out_help: Camí de destinació de l'arxiu.
         export_recovery_wrap_help: Frase de pas opcional per segellar l'arxiu, en
@@ -3048,14 +3050,32 @@ cli:
       duplicate_source_help: Id del perfil d''origen a duplicar
       duplicate_target_help: Id del perfil de destinació per al duplicat
       edit_help: Torna a executar l'assistent sobre un perfil existent
-      export_help: Escriu un paquet portable del perfil en un JSON
+      export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
+        no és segur per a correu, sincronització ni transferència.
+      export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
+        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import
+        PATH --passphrase ...'. Només conté el paquet estructurat del perfil; usa
+        l'arxiu de recuperació xifrat per a una còpia completa amb evidències adjuntes
+        i auditoria.
+      export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
+        a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús
+        local/SAR.
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
-      export_out_help: Ruta de destinació per al paquet JSON
+      export_out_help: Ruta de destinació per al paquet de perfil
+      export_passphrase_help: Frase de contrasenya per xifrar amb AEAD el paquet
+        de perfil serialitzat per a transferència.
+      export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
+        ha de tenir almenys 8 caràcters.
+      export_requires_transport: Usa --passphrase per a un paquet xifrat de transferència,
+        o --cleartext-local només per a JSON local/SAR.
       export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres
-        sensibles: el NIF en clar (sense ocultar), el llibre de moviments complet,
-        les revisions de càlcul i els registres de presentació. S''ha escrit a {out}.
-        Esborra''l després de la transferència; no l''enviïs per correu, no el sincronitzis
-        ni el deixis al disc.'
+        sensibles: el NIF en clar (sense ocultar), nom i cognoms, el llibre de moviments
+        complet, les revisions de càlcul i els registres de presentació. S''ha escrit
+        a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
+        el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
+        local/SAR. Usa ''aeat config profile export --passphrase ...'' per a un paquet
+        estructurat de transferència xifrat AEAD.'
+      export_transport_conflict: Tria --passphrase o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
         invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
@@ -3079,7 +3099,9 @@ cli:
       import_active_switch_info: El perfil importat {name} ara és el perfil ACTIU;
         les ordres següents operen sobre ell. Executa 'aeat config switch <name>'
         per canviar el perfil actiu.
-      import_help: Registra un paquet portable de perfil des d'un JSON
+      import_encrypted_bundle_invalid: No s'ha pogut desxifrar o validar el paquet
+        de perfil xifrat. Comprova la frase de contrasenya i el fitxer.
+      import_help: Registra un paquet portable de perfil des d'un fitxer
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
       import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
@@ -3095,7 +3117,9 @@ cli:
       import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
         per presentar models. Corregeix el paquet o torna a exportar un perfil complet
         amb aquests camps: %{missing_flags}.'
-      import_path_help: Ruta al paquet JSON del perfil
+      import_passphrase_help: Frase de contrasenya per a un paquet exportat amb
+        'config profile export --passphrase'.
+      import_path_help: Ruta al fitxer del paquet de perfil
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
       logout_session_warning: El tancament de sessio ha esborrat el punter del perfil

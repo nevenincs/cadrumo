@@ -229,6 +229,7 @@ related:
   - '[[2026-07-06-cross-domain-continuity-research]]'
   - '[[2026-07-07-cross-domain-continuity-W07-P31-S301]]'
   - '[[2026-07-07-cross-domain-continuity-W09-P41-S300]]'
+  - '[[2026-07-07-cross-domain-continuity-W09-P41-S308]]'
   - '[[2026-07-07-cross-domain-continuity-adr]]'
 ---
 
@@ -467,6 +468,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P41-S347` - Annotate stale overview explain deadlines
 - `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
 - `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
+- `2026-07-07-cross-domain-continuity-W09-P41-S308` - R8-NURIA-MODERATE encrypted profile-bundle transfer path
 
 ### plan
 

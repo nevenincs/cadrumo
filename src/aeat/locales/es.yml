@@ -3007,10 +3007,12 @@ cli:
           está cifrado AEAD en reposo e incluye los bytes de evidencia de justificantes,
           el registro de auditoría y las entradas de cálculo entre periodos, además
           del perfil, el libro contable, los cálculos y el historial de presentaciones.
-          Guárdalo en un lugar seguro; restáuralo con ''aeat config profile archive
-          import''.'
+          Si se exporta con --recovery-wrap-passphrase, es la vía cifrada de transferencia
+          entre equipos para paquetes de perfil. Guárdalo en un lugar seguro; restáuralo
+          con ''aeat config profile archive import''.'
         export_help: Escribe un archivo de copia de seguridad completa, sellado y
-          cifrado, en RUTA.
+          cifrado AEAD, en RUTA; añade --recovery-wrap-passphrase antes de enviarlo
+          por correo o transferirlo entre equipos.
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo.
         export_recovery_wrap_help: Frase de paso opcional para sellar el archivo,
@@ -3083,14 +3085,32 @@ cli:
       duplicate_source_help: Id del perfil de origen a duplicar
       duplicate_target_help: Id del perfil de destino para el duplicado
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
-      export_help: Escribe un paquete portátil del perfil en un JSON
+      export_cleartext_local_help: Escribe JSON en claro solo para gestión local/SAR;
+        no es seguro para correo, sincronización ni transferencia.
+      export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
+        AEAD por frase de contraseña. Impórtalo con 'aeat config profile import PATH
+        --passphrase ...'. Solo contiene el paquete estructurado del perfil; usa
+        el archivo de recuperación cifrado para una copia completa con evidencias
+        adjuntas y auditoría.
+      export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
+        en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso
+        local/SAR.
       export_name_help: Perfil que quieres exportar; por defecto, el activo
-      export_out_help: Ruta de destino para el paquete JSON
+      export_out_help: Ruta de destino para el paquete de perfil
+      export_passphrase_help: Frase de contraseña para cifrar con AEAD el paquete
+        de perfil serializado para transferencia.
+      export_passphrase_too_short: La frase de contraseña de exportación del perfil
+        debe tener al menos 8 caracteres.
+      export_requires_transport: Usa --passphrase para un paquete cifrado de transferencia,
+        o --cleartext-local solo para JSON local/SAR.
       export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
-        sensibles: el NIF en claro (sin ocultar), el libro de movimientos completo,
-        las revisiones de cálculo y los registros de presentación. Se escribió en
-        {out}. Bórralo tras la transferencia; no lo envíes por correo, no lo sincronices
-        ni lo dejes en disco.'
+        sensibles: el NIF en claro (sin ocultar), nombre y apellidos, el libro de
+        movimientos completo, las revisiones de cálculo y los registros de presentación.
+        Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
+        correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa
+        gestión local/SAR. Usa ''aeat config profile export --passphrase ...'' para
+        un paquete estructurado de transferencia cifrado AEAD.'
+      export_transport_conflict: Elige --passphrase o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -3113,7 +3133,9 @@ cli:
       import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
         las órdenes siguientes operan sobre él. Ejecuta 'aeat config switch <name>'
         para cambiar el perfil activo.
-      import_help: Registra un paquete portátil de perfil desde un JSON
+      import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete
+        de perfil cifrado. Comprueba la frase de contraseña y el archivo.
+      import_help: Registra un paquete portátil de perfil desde un archivo
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
       import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
@@ -3129,7 +3151,9 @@ cli:
       import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
         para presentar modelos. Corrige el paquete o vuelve a exportar un perfil completo
         con estos campos: %{missing_flags}.'
-      import_path_help: Ruta al paquete JSON del perfil
+      import_passphrase_help: Frase de contraseña para un paquete exportado con
+        'config profile export --passphrase'.
+      import_path_help: Ruta al archivo del paquete de perfil
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
