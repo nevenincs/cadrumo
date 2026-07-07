@@ -28,10 +28,10 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.resources import resources
 
-M145_COMMUNICATION_MODELO = "145"
+M145_COMMUNICATION_MODELO = Modelo.M145.value
 M145_COMMUNICATION_PERIOD = "comunicacion"
 M145_COMMUNICATION_SERVICE_OWNER = "aeat.application.modelo"
 
