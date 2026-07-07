@@ -48,7 +48,7 @@ The foundational ledger-trio change. Especial makes the one shared ledger IVA ag
 
 Wire a typed per-input use-classification from the ledger into a regime-aware apportionment (100/0/general), and fire the settlement art-103.Dos.2 +10% mandatory-especial advisory. Consumes the existing classify_input_deduction substrate; general path stays byte-identical.
 
-- [ ] `W02.P03.S10` - Author the ley-37-1992 art-103 and art-106 legal entries with corpus_ref + required_text, grounded in the bundled consolidated LIVA; `src/aeat/_data/registry/aeat/legal/iva.toml`.
+- [x] `W02.P03.S10` - Author the ley-37-1992 art-103 and art-106 legal entries with corpus_ref + required_text, grounded in the bundled consolidated LIVA; `src/aeat/_data/registry/aeat/legal/iva.toml`.
 - [ ] `W02.P03.S11` - Add the typed input_classification axis (core InputClassification) to the ledger transaction, operator-declared for especial buckets, with roundtrip + anti-tautology proof; `src/aeat/domain/transactions/_models.py`.
 - [ ] `W02.P03.S12` - Make the shared ledger IVA apportionment regime-aware so especial routes each deducible cuota via _deductible_percentage_for (100/0/general), the general path stays byte-identical, and provenance carries the applied classification and percentage; `src/aeat/application/aggregation/_iva_ledger.py`.
 - [ ] `W02.P03.S13` - Emit the settlement art-103.Dos.2 +10% mandatory-especial advisory Notice via is_especial_mandatory, non-blocking, both totals on Notice.context; `src/aeat/application/calculations/_prorrata_regularizacion.py`.
