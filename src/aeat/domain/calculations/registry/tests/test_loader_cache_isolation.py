@@ -55,6 +55,7 @@ from .._loader import (
     load_registry_tree,
     registry_disk_cache_enabled,
 )
+from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -173,15 +174,20 @@ def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> 
     assert second is first, "the bundled tree's TTL must outlive the strict 1-second mutable-tree window"
 
 
-def _bundled_registry_disk_cache_files() -> set[Path]:
-    return set(Path(tempfile.gettempdir()).glob("aeat_registry_*.pkl"))
+def _bundled_registry_disk_cache_files(cache_dir: Path | None = None) -> set[Path]:
+    """List every ``aeat_registry_*.pkl`` in ``cache_dir`` (default: the real OS temp dir)."""
+    directory = cache_dir if cache_dir is not None else Path(tempfile.gettempdir())
+    return set(directory.glob("aeat_registry_*.pkl"))
 
 
-def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
+def test_bundled_root_disk_cache_is_shared_across_processes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Under pytest, the bundled root's disk pickle is written once and shared.
 
     Real end-to-end proof through the actual ``load_registry_tree`` entry point
-    and the actual ``/tmp`` pickle file, not just the boolean gate above: after
+    and the actual pickle file on disk, not just the boolean gate above: after
     this (pytest) process compiles the bundled tree and writes its disk pickle,
     a SEPARATE child process -- launched with ``PYTEST_CURRENT_TEST`` set, so it
     is itself pytest-like exactly as an xdist worker would be -- reads the SAME
@@ -189,16 +195,29 @@ def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
     (unchanged mtime and size) is the only way this can happen, since a rewrite
     would touch both.
 
-    Under the new gate ONLY the bundled root is ever disk-cached under pytest
-    (mutable/synthetic roots always stay disabled -- see
-    :func:`test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest`),
-    so every ``aeat_registry_*.pkl`` file in the temp directory belongs to this
-    root; stale files from an earlier bundled-tree state (this session, before
-    the fix, or from unrelated churn) are cleared first so the test observes a
-    genuine write-then-read cycle.
+    Isolated onto a test-owned cache directory via
+    ``AEAT_REGISTRY_DISK_CACHE_DIR`` (propagated to the child process's own
+    ``env=``, not just this process's ``os.environ``): this test's
+    exclusive-state assertions ("exactly one file", "mtime unchanged") would
+    otherwise be confused by a SIBLING pytest-xdist worker concurrently
+    touching the real shared bundled-root pickle in the real OS temp
+    directory under a parallel ``-n`` run. The test still exercises the real
+    filesystem and the real pickle read/write path end-to-end (no mock of the
+    loader's own behavior) -- only the directory is test-owned, not the
+    mechanism.
+
+    Proof is STRUCTURAL (mtime and size unchanged), not timing-based: a
+    machine under heavy concurrent load (this is a shared, multi-agent
+    worktree) can make even a genuine cache-hit read take several seconds
+    once subprocess startup and unpickling ~20MB of compiled registry data
+    are counted, overlapping the range a cold compile itself takes on this
+    codebase's registry size -- a wall-clock threshold cannot reliably tell
+    the two apart here. The mtime/size identity check has no such ambiguity:
+    a rewrite touches both, unconditionally, on every real filesystem.
     """
-    for stale in _bundled_registry_disk_cache_files():
-        stale.unlink(missing_ok=True)
+    isolated_cache_dir = tmp_path / "registry-disk-cache"
+    isolated_cache_dir.mkdir()
+    monkeypatch.setenv(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir))
     _load_registry_tree_cached.cache_clear()
     clear_fingerprint_cache()
 
@@ -206,7 +225,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
     modelos, _catalogues = load_registry_tree(bundled_root)
     assert modelos, "sanity: the bundled tree must compile at least one modelo"
 
-    written = _bundled_registry_disk_cache_files()
+    written = _bundled_registry_disk_cache_files(isolated_cache_dir)
     assert len(written) == 1, f"expected exactly one bundled-root disk pickle after the first compile, got {written}"
     cache_path = next(iter(written))
     stat_before = cache_path.stat()
@@ -216,30 +235,29 @@ def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
             sys.executable,
             "-c",
             (
-                "import time\n"
                 "from aeat.domain.calculations.registry._loader import load_registry_tree\n"
                 "from aeat.core.resources import bundled_path\n"
                 "root = bundled_path('registry', 'aeat').resolve()\n"
-                "t0 = time.time()\n"
                 "modelos, _ = load_registry_tree(root)\n"
-                "t1 = time.time()\n"
                 "print(len(modelos))\n"
-                "print(t1 - t0)\n"
             ),
         ],
         check=True,
         capture_output=True,
-        env={**os.environ, "PYTEST_CURRENT_TEST": "simulated_worker::test_shares_bundled_disk_cache"},
+        env={
+            **os.environ,
+            "PYTEST_CURRENT_TEST": "simulated_worker::test_shares_bundled_disk_cache",
+            REGISTRY_DISK_CACHE_DIR_ENV_VAR: str(isolated_cache_dir),
+        },
         text=True,
         timeout=60,
     )
-    child_modelo_count_line, child_elapsed_line = completed.stdout.strip().splitlines()
-    assert int(child_modelo_count_line) == len(modelos), (
+    child_modelo_count = int(completed.stdout.strip())
+    assert child_modelo_count == len(modelos), (
         "the child process must compile the identical modelo set from the shared pickle"
     )
-    child_elapsed = float(child_elapsed_line)
 
-    after_child = _bundled_registry_disk_cache_files()
+    after_child = _bundled_registry_disk_cache_files(isolated_cache_dir)
     assert after_child == written, "the child process must not have written a second disk pickle"
     stat_after = cache_path.stat()
     assert stat_after.st_mtime_ns == stat_before.st_mtime_ns, (
@@ -248,13 +266,12 @@ def test_bundled_root_disk_cache_is_shared_across_processes() -> None:
     assert stat_after.st_size == stat_before.st_size, (
         "the child process rewrote the shared pickle instead of reading it"
     )
-    assert child_elapsed < 5.0, (
-        f"the child process took {child_elapsed}s -- too slow for a disk-cache hit, "
-        "suggesting it recompiled instead of sharing the pickle"
-    )
 
 
-def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions() -> None:
+def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The per-session cache-isolation fixture must not purge the bundled disk pickle.
 
     Regression proof for a real defect: an earlier version of
@@ -278,7 +295,20 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions()
     pickle must be the SAME file (unchanged mtime and size) after the second
     invocation, proving the second real pytest session read it rather than
     purging and recompiling it.
+
+    Isolated onto a test-owned cache directory via
+    ``AEAT_REGISTRY_DISK_CACHE_DIR`` (set in this process's own environment,
+    which both spawned ``pytest`` subprocesses inherit): otherwise a SIBLING
+    pytest-xdist worker concurrently touching the real shared bundled-root
+    pickle in the real OS temp directory under a parallel ``-n`` run could
+    make this test's exclusive-state assertions ("exactly one file", "mtime
+    unchanged") fail for a reason unrelated to what this test actually
+    guards against.
     """
+    isolated_cache_dir = tmp_path / "registry-disk-cache"
+    isolated_cache_dir.mkdir()
+    monkeypatch.setenv(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir))
+
     scratch_module_name = f"test_zzz_purge_isolation_proof_{os.getpid()}.py"
     scratch_module_path = Path(__file__).resolve().parent / scratch_module_name
     assert not scratch_module_path.exists(), "stale purge-isolation-proof fixture left behind by a prior run"
@@ -323,7 +353,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions()
             timeout=_SUBPROCESS_TIMEOUT_SECONDS,
         )
 
-    for stale in _bundled_registry_disk_cache_files():
+    for stale in _bundled_registry_disk_cache_files(isolated_cache_dir):
         stale.unlink(missing_ok=True)
 
     try:
@@ -331,7 +361,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions()
 
         first = _run_real_pytest_session()
         assert first.returncode == 0, f"first real pytest session failed:\n{first.stdout}\n{first.stderr}"
-        written = _bundled_registry_disk_cache_files()
+        written = _bundled_registry_disk_cache_files(isolated_cache_dir)
         assert len(written) == 1, f"expected exactly one bundled-root disk pickle after session 1, got {written}"
         cache_path = next(iter(written))
         stat_after_first = cache_path.stat()
@@ -340,7 +370,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions()
         assert second.returncode == 0, f"second real pytest session failed:\n{second.stdout}\n{second.stderr}"
         stat_after_second = cache_path.stat()
 
-        assert _bundled_registry_disk_cache_files() == written, (
+        assert _bundled_registry_disk_cache_files(isolated_cache_dir) == written, (
             "a second real pytest session must not write a second disk pickle"
         )
         assert stat_after_second.st_mtime_ns == stat_after_first.st_mtime_ns, (

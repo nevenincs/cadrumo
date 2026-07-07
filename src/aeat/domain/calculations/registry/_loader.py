@@ -8,6 +8,7 @@ file or a set of append fragments merged in deterministic order.
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -24,6 +25,7 @@ from ._loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
     is_bundled_registry_root,
+    registry_disk_cache_dir,
     registry_disk_cache_enabled,
 )
 from ._schema import (
@@ -99,6 +101,19 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
+_DISK_CACHE_READ_ATTEMPTS = 3
+"""Total read attempts against the shared disk-cache pickle before falling back.
+
+Closes a narrow, real Windows race: ``os.replace`` is atomic at the
+filesystem level (sub-millisecond), but a reader's ``open(..., "rb")`` can
+transiently observe a sharing-violation ``OSError`` while a concurrent
+writer's replace is in flight -- an xdist worker racing a sibling worker (or
+an earlier invocation) that is mid-write to the SAME bundled-root pickle.
+2 retries with a short backoff comfortably outlasts an atomic replace; the
+broad ``except`` after the final attempt still falls through to a safe
+recompute for a genuinely corrupt or foreign file, unchanged from before.
+"""
+_DISK_CACHE_READ_RETRY_BASE_DELAY_SECONDS = 0.01
 type _RegistryPathFingerprint = tuple[str, int, int]
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 
@@ -1106,6 +1121,45 @@ def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
     return tuple(fingerprints)
 
 
+def _read_registry_disk_cache_pickle(
+    cache_path: Path,
+    *,
+    logger: logging.Logger,
+) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues] | None:
+    """Read the shared registry disk-cache pickle, retrying past a transient replace race.
+
+    Returns the unpickled payload, or ``None`` if every attempt failed (the
+    caller falls through to a safe recompute). See
+    :data:`_DISK_CACHE_READ_ATTEMPTS` for why the retry exists: a concurrent
+    writer's ``os.replace`` is atomic but can transiently make ``open()``
+    raise on some platforms while the replace is in flight.
+    """
+    import pickle
+    import time
+
+    for attempt in range(_DISK_CACHE_READ_ATTEMPTS):
+        try:
+            with open(cache_path, "rb") as f:
+                # Internal same-user performance cache of first-party registry data only.
+                # The payload is produced exclusively by the dump in the caller and keyed
+                # by a sha256 of the registry tree fingerprints; no untrusted input is ever
+                # deserialized here. A corrupt/foreign file is swallowed and recomputed.
+                return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
+        except Exception:
+            final_attempt = attempt == _DISK_CACHE_READ_ATTEMPTS - 1
+            logger.debug(
+                "Registry disk-cache read attempt %d/%d failed at %s%s",
+                attempt + 1,
+                _DISK_CACHE_READ_ATTEMPTS,
+                cache_path,
+                " -- giving up, will recompute" if final_attempt else " -- retrying",
+                exc_info=True,
+            )
+            if not final_attempt:
+                time.sleep(_DISK_CACHE_READ_RETRY_BASE_DELAY_SECONDS * (2**attempt))
+    return None
+
+
 @lru_cache(maxsize=32)
 def _load_registry_tree_cached(
     root: str,
@@ -1130,17 +1184,11 @@ def _load_registry_tree_cached(
             hasher.update(str(item[2]).encode("utf-8"))
         key_hash = hasher.hexdigest()
 
-        cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
+        cache_path = registry_disk_cache_dir() / f"aeat_registry_{key_hash}.pkl"
         if cache_path.is_file():
-            # Internal same-user performance cache of first-party registry data only.
-            # The payload is produced exclusively by the dump below in this process and
-            # keyed by a sha256 of the registry tree fingerprints; no untrusted input is
-            # ever deserialized here. A corrupt/foreign file is swallowed and recomputed.
-            try:
-                with open(cache_path, "rb") as f:
-                    return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
-            except Exception:
-                logger.debug("Ignoring unreadable registry disk cache at %s", cache_path, exc_info=True)
+            cached = _read_registry_disk_cache_pickle(cache_path, logger=logger)
+            if cached is not None:
+                return cached
 
     catalogues = _load_shared_catalogue_files(resolved / "legal")
     modelos = _load_all_modelo_definitions(resolved / "modelos")

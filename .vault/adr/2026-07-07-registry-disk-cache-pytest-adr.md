@@ -243,3 +243,73 @@ mtime and size are unchanged across both -- proven to fail against the
 pre-amendment fixture (anti-tautology check: reverted the fixture to its old
 unconditional-purge form, confirmed this exact test fails with the same
 purge-then-recompile signature measured above, then restored the fix).
+
+## Second amendment: hardening for zero flake under real concurrent `-n4` load
+
+A real full-suite `-n4` run (not the paired-session measurement above) surfaced
+a genuine residual race the paired-session proof did not exercise: with the
+purge removed, N real xdist workers now share ONE disk pickle via real
+concurrent filesystem I/O -- something that never happened before this ADR
+(the disk cache was previously off under pytest entirely, so there was no
+disk-I/O race surface at all). Measured directly: the shared pickle's mtime
+changed mid-suite even though no registry TOML content changed (confirmed via
+`git log`; the pickle's content-derived filename/hash stayed identical too),
+and 5 tests newly failed under `-n4` that pass cleanly in isolation. Root
+cause: `os.replace` is atomic at the filesystem level, but a concurrent
+reader's `open(cache_path, "rb")` can transiently observe an `OSError` while a
+sibling worker's replace is in flight (a Windows-specific sharing-violation
+window in particular); the existing broad `except Exception` swallowed this
+and fell through to a full recompute+rewrite, which is safe (never serves
+corrupt data) but defeats the sharing this ADR exists to deliver, and
+additionally revealed that 2 of the new regression tests asserted EXCLUSIVE
+state (file count, mtime) on the real shared `/tmp` pickle -- a false
+assumption once sibling xdist workers are also touching it.
+
+**Two fixes, both real-behavior, no mocks:**
+
+1. **Read-retry on the disk-cache open.** `_read_registry_disk_cache_pickle`
+   (new, `_loader.py`) retries the `open()` + `pickle.load()` up to 3 times
+   with a short exponential backoff (10ms, 20ms) before giving up and falling
+   through to recompute -- closing the transient replace-race window, which
+   is sub-millisecond, with large margin. The broad `except Exception` is
+   preserved as defence-in-depth for a genuinely corrupt/foreign file; it now
+   logs at `.debug` on every attempt (satisfying this package's own
+   broad-exception-must-log-or-raise hygiene gate,
+   `test_registry_production_broad_exception_handlers_raise_or_log`).
+2. **Test-owned cache-directory isolation.** `registry_disk_cache_dir()` (new,
+   `_loader_cache.py`) reads an `AEAT_REGISTRY_DISK_CACHE_DIR` env-var override
+   before falling back to `tempfile.gettempdir()`. The two tests that assert
+   exclusive pickle state
+   (`test_bundled_root_disk_cache_is_shared_across_processes`,
+   `test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions`)
+   now set this var to a `tmp_path`-owned directory (via `monkeypatch.setenv`
+   for the parent process and an explicit `env=` entry for every spawned
+   subprocess, since the var must reach both ends of a cross-process proof).
+   Production and every other caller never set this var and keep using the
+   real OS temp directory unchanged; only these two tests' own exclusive-state
+   assertions are isolated from sibling xdist traffic -- the real filesystem,
+   the real pickle read/write path, and the real bundled-root sharing
+   mechanism are still exercised end-to-end, nothing is mocked.
+
+The timing assertion in `test_bundled_root_disk_cache_is_shared_across_processes`
+(a threshold on the child process's elapsed read time) was removed rather than
+loosened: measured child-read times under this environment's variable
+concurrent load (7.0s) overlapped the range a genuine cold compile itself
+takes (6.7s-9s) on this codebase's registry size, so no fixed wall-clock
+threshold can reliably distinguish "slow but correct cache-hit read" from "a
+real recompile" here. The mtime/size identity check is the deterministic,
+unambiguous proof (a rewrite touches both, unconditionally, on every real
+filesystem) and remains the test's sole pass/fail signal.
+
+**Verification:** three consecutive real `-n4` full-registry-suite runs (cold,
+immediate warm repeat, and a third repeat under measurably heavier concurrent
+load): the shared bundled pickle's mtime and size stayed byte-identical across
+all three (zero rewrites), and the failure count returned to exactly the 6
+pre-existing, unrelated prorrata-campaign failures on runs 1 and 2 (0 new).
+Run 3, under heavier load, surfaced ONE additional failure
+(`test_public_api_boundaries.py::test_source_tree_does_not_use_absolute_registry_private_imports`,
+a source-tree AST scan wholly unrelated to the registry disk cache) that
+passed cleanly in isolation -- the general "registry-suite failures under
+parallel pytest are more often a loader-cache race than a real regression"
+pattern this codebase's own local-execution discipline already documents,
+not a regression from this hardening.
