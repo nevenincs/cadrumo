@@ -225,6 +225,7 @@ related:
   - '[[2026-07-02-cross-domain-continuity-audit]]'
   - '[[2026-07-06-cross-domain-continuity-adr]]'
   - '[[2026-07-06-cross-domain-continuity-research]]'
+  - '[[2026-07-07-cross-domain-continuity-W07-P31-S301]]'
   - '[[2026-07-07-cross-domain-continuity-W09-P41-S300]]'
 ---
 
@@ -458,6 +459,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P41-S298` - R8-ROSA-CRITICAL M100 missing binding for estimacion objetiva regimen
 - `2026-05-26-cross-domain-continuity-W09-P41-S302` - R8-ROSA-F add regime incompatibility warnings
 - `2026-05-26-cross-domain-continuity-W09-P41-S347` - Annotate stale overview explain deadlines
+- `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
 - `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
 
 ### plan
