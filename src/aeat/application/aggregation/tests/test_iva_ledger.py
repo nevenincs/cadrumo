@@ -11,7 +11,7 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Art104TresExclusion, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry import (
     DataBindingDefinition,
@@ -194,6 +194,7 @@ def _transaction(
     value_in_eur: Decimal | None = None,
     iva_category: IvaCategory | None = None,
     exemption_article: IvaExemptionArticle | None = None,
+    art_104_tres_exclusion: Art104TresExclusion | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -220,6 +221,7 @@ def _transaction(
             "iva_amount": iva_amount,
             "iva_category": iva_category,
             "exemption_article": exemption_article,
+            "art_104_tres_exclusion": art_104_tres_exclusion,
             "prorrata_reference": prorrata_reference,
             "lifecycle_state": lifecycle_state,
             "fx_rate": fx_rate,
@@ -228,6 +230,29 @@ def _transaction(
             "classified_by": "manual",
         },
     )
+
+
+def test_art_104_tres_tagged_transaction_is_recorded_as_excluded_ledger_id() -> None:
+    """An operator-tagged art. 104.Tres judgment operation is recorded for prorrata exclusion.
+
+    The tagged sale still projects its IVA cuota observation (it is a real
+    taxable supply); only its ledger id is collected so the prorrata annual
+    volume rollup can skip it from both terms of the ratio.
+    """
+    untagged = _transaction("row-taxable-sale", direction=TransactionDirection.INCOMING)
+    tagged = _transaction(
+        "row-non-habitual-inmueble",
+        direction=TransactionDirection.INCOMING,
+        art_104_tres_exclusion=Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((untagged, tagged)),
+        period=_Q2_2026,
+    )
+
+    assert len(result.observations) == 2
+    assert result.art_104_tres_excluded_ledger_ids == (tagged.transaction_id,)
 
 
 def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -> None:

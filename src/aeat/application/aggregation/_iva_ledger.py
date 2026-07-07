@@ -241,10 +241,21 @@ class IvaLedgerAggregation(BaseModel):
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None
     issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
+    # Ledger ids of operator-tagged LIVA art. 104.Tres judgment exclusions
+    # (foreign PE, non-habitual inmobiliario/financiero). The prorrata annual
+    # volume rollup skips these on the ledger side so the reconciliation does
+    # not count operations the law removes from both terms of the ratio. The
+    # operations' own IVA cuota observations are unaffected and still aggregate.
+    art_104_tres_excluded_ledger_ids: tuple[str, ...] = ()
 
     @field_validator("observations")
     @classmethod
     def _freeze_observations(cls, value: Sequence[IvaLedgerObservation]) -> tuple[IvaLedgerObservation, ...]:
+        return tuple(value)
+
+    @field_validator("art_104_tres_excluded_ledger_ids")
+    @classmethod
+    def _freeze_excluded_ledger_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
         return tuple(value)
 
     @field_validator("prorrata_references")
@@ -476,6 +487,7 @@ def aggregate_iva_ledger_observations(
     observations: list[IvaLedgerObservation] = []
     prorrata_references: list[ProrrataLedgerReference] = []
     issues: list[IvaLedgerAggregationIssue] = []
+    art_104_tres_excluded_ledger_ids: list[str] = []
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -494,12 +506,20 @@ def aggregate_iva_ledger_observations(
         if outcome.prorrata_reference is not None:
             prorrata_references.append(outcome.prorrata_reference)
         observations.extend(outcome.observations)
+        # LIVA art. 104.Tres: an operator-declared judgment exclusion removes the
+        # operation from BOTH terms of the prorrata ratio. The IVA cuota
+        # observations above still aggregate (the operation is a real taxable
+        # supply); only the prorrata annual volume rollup skips it, keyed by the
+        # ledger id recorded here.
+        if transaction.art_104_tres_exclusion is not None:
+            art_104_tres_excluded_ledger_ids.append(transaction.transaction_id)
     return IvaLedgerAggregation(
         period=resolved_period,
         observations=tuple(observations),
         prorrata_references=tuple(prorrata_references),
         prorrata_apportionment=prorrata_apportionment,
         issues=tuple(issues),
+        art_104_tres_excluded_ledger_ids=tuple(art_104_tres_excluded_ledger_ids),
     )
 
 

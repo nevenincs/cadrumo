@@ -289,6 +289,85 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
     assert "conservan la autoridad" in diagnostic.message
 
 
+def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms() -> None:
+    """An art. 104.Tres judgment-tagged operation is removed from both ledger terms and recorded.
+
+    A non-habitual inmobiliaria sale would otherwise inflate the con-derecho
+    volume; tagging it (art. 104.Tres 4.º) removes it from the ledger ratio so
+    the rollup reconciles against the declared (exclusion-free) volumes, while
+    recording the exclusion so it is auditable rather than silent.
+    """
+    observations = (
+        _ledger_observation(
+            "taxable-sale",
+            transaction_date=date(2026, 1, 20),
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            base="1000.00",
+        ),
+        _ledger_observation(
+            "non-habitual-inmueble",
+            transaction_date=date(2026, 6, 10),
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            base="4000.00",
+        ),
+    )
+
+    rollup, diagnostic = build_prorrata_declared_volume_divergence_advisory(
+        declared_volume_total=Decimal("1000.00"),
+        declared_volume_con_derecho=Decimal("1000.00"),
+        ledger_observations=observations,
+        ejercicio_periods=_periods_2026(),
+        regularizacion_year=2026,
+        art_104_tres_excluded_ledger_ids=("non-habitual-inmueble",),
+    )
+
+    assert rollup.ledger_volume_con_derecho == Decimal("1000.00")
+    assert rollup.ledger_volume_sin_derecho == Decimal("0.00")
+    assert rollup.included_ledger_ids == ("taxable-sale",)
+    assert rollup.art_104_tres_excluded_ledger_ids == ("non-habitual-inmueble",)
+    # The exclusion made the ledger match the declared volumes: no divergence.
+    assert rollup.diverges is False
+    assert diagnostic is None
+
+
+def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion() -> None:
+    """When a divergence still fires, the advisory names the applied art. 104.Tres exclusion.
+
+    The exclusion must be visible on the operator surface, never a silent
+    denominator change (no-silent-under-declaration).
+    """
+    observations = (
+        _ledger_observation(
+            "taxable-sale",
+            transaction_date=date(2026, 1, 20),
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            base="1000.00",
+        ),
+        _ledger_observation(
+            "foreign-pe-sale",
+            transaction_date=date(2026, 6, 10),
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            base="4000.00",
+        ),
+    )
+
+    rollup, diagnostic = build_prorrata_declared_volume_divergence_advisory(
+        declared_volume_total=Decimal("2000.00"),
+        declared_volume_con_derecho=Decimal("2000.00"),
+        ledger_observations=observations,
+        ejercicio_periods=_periods_2026(),
+        regularizacion_year=2026,
+        art_104_tres_excluded_ledger_ids=("foreign-pe-sale",),
+    )
+
+    assert rollup.art_104_tres_excluded_ledger_ids == ("foreign-pe-sale",)
+    assert rollup.ledger_volume_con_derecho == Decimal("1000.00")
+    assert rollup.diverges is True
+    assert diagnostic is not None
+    assert "art. 104.Tres" in diagnostic.message
+    assert "conservan la autoridad" in diagnostic.message
+
+
 def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() -> None:
     """No advisory fires when the ledger projection matches the declared volumes."""
     observations = (
