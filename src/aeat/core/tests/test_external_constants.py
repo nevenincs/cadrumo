@@ -1,4 +1,25 @@
-"""Tests for the external-constants registry and tunable-Settings split."""
+"""Tests for the external-constants registry and tunable-Settings split.
+
+See Also:
+    :func:`~core.external_constants.load_external_constants`
+        Runtime loader for the packaged TOML registry validated by this test
+        module.
+    :class:`~core.external_constants.ExternalConstants`
+        Typed, frozen registry root that keeps remote-mirror constants
+        schema-owned.
+    :class:`~core.config.Settings`
+        Tunable configuration surface that must consume registry defaults
+        without becoming a second authority for external constants.
+    :mod:`~domain.portals`
+        Portal catalogue whose host and route keys resolve through the AEAT
+        registry surfaces checked here.
+    ``.vault/adr/2026-05-26-aeat-sede-constants-centralization-adr.md``
+        Governs centralising AEAT/Sede host, route, selector, and portal
+        constants in schema-owned authority data.
+    ``.vault/audit/2026-06-05-secure-storage-production-hardening-w12-p26-s296-review-audit.md``
+        Classifies the external constants module as a read-only remote-mirror
+        registry with non-tautological guards.
+"""
 
 from __future__ import annotations
 
