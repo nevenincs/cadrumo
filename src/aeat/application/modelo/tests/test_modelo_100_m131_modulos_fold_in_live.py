@@ -1,4 +1,31 @@
-"""M100 objective-estimation income folds in annual Modelo 131 módulos data."""
+"""M100 objective-estimation income folds in annual Modelo 131 módulos data.
+
+This live application regression proves that stored Modelo 131 quarterly
+observations feed the annual Modelo 100 estimación-objetiva módulos chain
+through the registry ``relation_prefill`` mechanism. The objective-estimation
+case sums Modelo 131 casilla ``01`` into the M100 relation-backed binding for
+casilla ``1481`` and carries it through ``1482``/``1484``; the direct-estimation
+case keeps that módulos-only binding at the explicit not-applicable zero.
+
+See Also:
+    :mod:`~application.modelo`
+        Public application facade for work-unit creation and calculation
+        revision orchestration.
+    :mod:`~application.calculations`
+        Observation repository and relation-prefill source facade used by the
+        annual fold-in path.
+    :mod:`~domain.calculations.registry`
+        Registry authority for relation declarations, binding ids, casillas,
+        and formula execution.
+    ``renta-2024-modelo-131-rendimiento-neto-modulos``
+        M100/2024 relation-backed binding populated from Modelo 131 casilla
+        ``01``.
+    ``renta-2024-rel-131-rendimiento-neto-modulos``
+        M100/2024 relation that sums the quarterly Modelo 131 source
+        observations.
+    ``2026-05-26-cross-domain-continuity-W09-P41-S298``
+        Execution record for the missing M100 módulos net-income binding.
+"""
 
 from __future__ import annotations
 
