@@ -36,7 +36,6 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_session_store.py",
         "test_api.py",  # contract: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",
-        "test_calc_sheets_apply.py",
         "test_calc_sheets_apply_evidence.py",  # online Evidencia render + offline/online evidence parity
         "test_calc_sheets_export_integration.py",  # offline request-pipeline integration for live export
         "test_calc_sheets_offline_online_conformance.py",  # offline/online renderer conformance
@@ -50,6 +49,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_drive_folder_bulk_fetch_roundtrip.py",  # contract (#262): folder sweep fetch-and-encrypt-or-refuse
         "test_grid_resize.py",
         "test_impersonation.py",  # service-account ADC discovery, IAM refusal, and config validation
+        "test_impersonation_live.py",  # live opt-in IAM token minting for provisioned service accounts
         "test_oauth_flow.py",  # contract: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
         "test_package_module_allowlist.py",
@@ -80,6 +80,11 @@ def test_only_allowed_modules_present_in_package() -> None:
 
     found_files = {entry.name for entry in _PACKAGE_ROOT.iterdir() if entry.is_file() and entry.suffix == ".py"}
     unexpected = sorted(found_files - _ALLOWED_MODULES)
+    missing_tests = sorted(name for name in _ALLOWED_MODULES - found_files if name.startswith("test_"))
     assert unexpected == [], (
         f"unexpected .py files in {_PACKAGE_ROOT.name}: {unexpected}; add to _ALLOWED_MODULES with rationale or remove"
+    )
+    assert missing_tests == [], (
+        f"allowed test .py files missing from {_PACKAGE_ROOT.name}: {missing_tests}; "
+        "remove stale _ALLOWED_MODULES entries or restore the files"
     )
