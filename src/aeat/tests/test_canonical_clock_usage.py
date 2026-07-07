@@ -1,28 +1,28 @@
-"""Production modules must obtain UTC time via :func:`aeat.core.time.now`.
+"""Production modules must obtain UTC time via :func:`~core.time.now`.
 
-Rule
-----
 No production module under ``src/aeat/`` may call ``datetime.now(UTC)``
-or ``datetime.now(tz=UTC)`` inline. All call-sites delegate to
-:func:`aeat.core.time._clock.now` so the production clock is uniform
-and traceable.
+or ``datetime.now(tz=UTC)`` inline. All call-sites delegate to the public
+:mod:`~core.time` clock facade so the production clock is uniform, traceable,
+and compatible with :func:`~core.time.frozen_clock` replay.
 
-Exclusions (permanent)
-----------------------
-- ``test_*.py`` files: test suites exercise clock behaviour directly.
-- ``src/aeat/core/time/_clock.py``: the canonical implementation itself.
-- ``src/aeat/adapters/persistence/storage/envelope/_repository_test_suite.py``:
-  shared test-suite helper (treated as test infrastructure).
-- ``src/aeat/tests/secure_sql.py``: test-support module.
+The permanent exclusions are test infrastructure and the canonical
+implementation module itself. Conditional defaults of the shape
+``if now is not None else datetime.now(...)`` remain permitted only on
+constructor/helper signatures that already accept an injectable clock argument
+named ``now``.
 
-Documented escape-hatch pattern
--------------------------------
-Conditional defaults of the shape
-``if now is not None else datetime.now(...)`` are permitted on
-constructor / helper signatures that already accept an injectable clock
-argument named ``now``. The enclosing function's signature carries the
-propagation contract; the inline call is the documented fallback when
-the caller passes nothing.
+See Also:
+    :mod:`~core.time`
+        Canonical wall-clock facade and deterministic replay seam.
+    :mod:`~tests._inventory`
+        Shared production AST inventory surface used by this ratchet.
+    ``2026-07-01-determinism-replay-residual-adr``
+        Decision that adds a seam-coverage gate for bare clock reads.
+    ``2026-07-01-determinism-replay-residual-P01-S01``
+        Execution record for the AST clock-seam conformance gate.
+    ``2026-05-28-codebase-solidification-plan``
+        W03.P15 clock enrollment sweep that removed inline
+        ``datetime.now(UTC)`` call sites.
 """
 
 from __future__ import annotations
@@ -123,7 +123,7 @@ def _collect_violations(source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
 
 
 def test_no_inline_datetime_now_utc(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    """Production modules MUST route UTC time through :func:`now`."""
+    """Production modules MUST route UTC time through :func:`~core.time.now`."""
     violations = _collect_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
