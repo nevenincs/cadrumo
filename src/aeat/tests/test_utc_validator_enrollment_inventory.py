@@ -12,7 +12,6 @@ itself and outside test files.
 from __future__ import annotations
 
 import ast
-import re
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -25,33 +24,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SRC_ROOT = SRC_AEAT
 _CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "_utc.py"
 
-# Pattern matched against the raw source text before AST walk, for speed.
-_QUICK_FILTER = re.compile(r"tzinfo\s+is\s+None")
 
-
-def _file_has_inline_tzinfo_guard(
-    path: Path,
-    tree: ast.AST | None = None,
-) -> bool:
-    """Return True iff ``path`` contains an inline ``tzinfo is None`` check.
-
-    When *tree* is supplied (test-loop path), reuse the cached AST and skip
-    the quick text-filter; the AST walk is authoritative. When omitted,
-    fall back to per-call parse so the helper signature stays single-path
-    compatible.
-    """
-    if tree is None:
-        source = path.read_text(encoding="utf-8")
-        if not _QUICK_FILTER.search(source):
-            return False
-        # AST-walk to confirm it is a real ``tzinfo is None`` comparison node,
-        # not a comment or string literal.
-        try:
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
-            # Unparseable file — flag it for investigation rather than silently
-            # skipping, since a broken parse is itself a quality signal.
-            return True
+def _tree_has_inline_tzinfo_guard(tree: ast.AST) -> bool:
+    """Return True iff *tree* contains an inline ``tzinfo is None`` check."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.Compare):
             continue
@@ -89,7 +64,7 @@ def test_no_inline_tzinfo_guards_in_production_code(source_tree_ast: Mapping[Pat
         # Skip the canonical UTC module — it is the allowed home.
         if py_file.resolve() == canonical_utc:
             continue
-        if _file_has_inline_tzinfo_guard(py_file, tree):
+        if _tree_has_inline_tzinfo_guard(tree):
             violations.append(str(py_file.relative_to(_SRC_ROOT.parent)))
 
     assert not violations, (
