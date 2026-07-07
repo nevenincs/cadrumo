@@ -512,7 +512,8 @@ class SecureObjectRepository:
         :class:`SecureObjectUnreadableError` before yielding a partial readable
         subset if any matching row is unreadable. Missing keys are omitted,
         mirroring repeated :meth:`load` calls that return ``None`` for absent
-        rows.
+        rows. ``expected_class`` is the :class:`SensitivityClass` every
+        returned row must be classified under; a mismatch fails closed.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_many_with_failures(
@@ -547,7 +548,8 @@ class SecureObjectRepository:
         returned in stored digest order. Missing keys produce no item, matching
         :meth:`load` returning ``None``. Present rows use the same
         classification, schema-version, AEAD, and revision-lineage checks as
-        namespace scans.
+        namespace scans. ``expected_class`` is the :class:`SensitivityClass`
+        every yielded row must be classified under; a mismatch fails closed.
         """
         self._check_session_freshness()
         namespace_definition = self._enforce_registered_read_policy(

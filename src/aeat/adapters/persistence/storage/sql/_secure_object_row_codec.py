@@ -21,6 +21,8 @@ See Also:
         AEAD checks pass.
     :func:`~adapters.persistence.storage.crypto.secure_object_payload_aad`
         Associated-data builder that binds ciphertext to row identity.
+    :class:`SensitivityClass`
+        Expected row classification validated before a row is decoded.
     Governing vault records
         ``2026-05-22-secure-storage-production-hardening-architecture-adr`` and
         ``2026-05-28-secure-storage-production-hardening-w04-p07-s30-review-audit``

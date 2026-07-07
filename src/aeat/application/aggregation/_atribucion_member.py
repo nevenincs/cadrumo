@@ -1,4 +1,10 @@
-"""Modelo 184 attribution-member source resolver."""
+"""Modelo 184 attribution-member source resolver.
+
+See Also:
+    :class:`UserProfileRecord`
+        Active taxpayer profile the resolver reads attribution-entity socio
+        facts from.
+"""
 
 from __future__ import annotations
 

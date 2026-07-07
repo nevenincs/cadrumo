@@ -16,6 +16,11 @@ The deadline-engine ``explain`` text is still surfaced as the
 registered for the year), but it no longer drives the applicability
 flag. The service also enumerates the profile keys the answer depends
 on so the operator can audit them. Local-only: never contacts AEAT.
+
+See Also:
+    :class:`ModeloRevision`
+        Compiled revision whose deadline windows are matched against the
+        taxpayer profile to build the scheduling rationale.
 """
 
 from __future__ import annotations
