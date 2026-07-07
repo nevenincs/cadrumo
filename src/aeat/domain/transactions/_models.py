@@ -23,6 +23,7 @@ from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
+from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from .._identifiers import canonical_decimal_string
 from ..iva import (
@@ -793,7 +794,7 @@ class Transaction(BaseModel):
     @classmethod
     def _parse_cash_accounting_operation_date(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return parse_iso8601_date(value)
         return value
 
     @field_validator(
