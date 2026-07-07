@@ -3,10 +3,10 @@
 Walks every production module under ``src/aeat`` (tests excluded) and fails if a
 bare ``datetime.now(...)`` / ``datetime.utcnow(...)`` call appears — the wall-clock
 read that bypasses the deterministic-output seam
-(:func:`aeat.core.time.now` / :func:`aeat.core.time.frozen_clock`). A call site that
-reads the clock directly is invisible to :func:`~aeat.core.time.frozen_clock`, so a
+(:func:`~core.time.now` / :func:`~core.time.frozen_clock`). A call site that
+reads the clock directly is invisible to :func:`~core.time.frozen_clock`, so a
 golden capture or replay cannot pin it; routing every read through
-:func:`aeat.core.time.now` keeps the seam the single consulted clock.
+:func:`~core.time.now` keeps the seam the single consulted clock.
 
 Detection is by AST, grounded in each module's own imports so an aliased binding is
 caught and an unrelated ``.now()`` on a non-datetime object is not:
@@ -25,6 +25,17 @@ in :data:`_ALLOWLIST` with a stated per-entry reason.
 
 This is the clock-seam companion to the AST gates in ``test_modelo_string_usage.py``
 and ``test_external_constants.py``.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory and repository-relative path
+        helpers used by this gate.
+    :mod:`~core.time`
+        Canonical clock and frozen-clock seam protected from direct wall-clock
+        reads.
+    ``.vault/exec/2026-05-28-codebase-solidification/2026-05-28-codebase-solidification-W01-P05-S141.md``
+        Records the canonical clock extraction and initial local-clock
+        migration.
 """
 
 from __future__ import annotations
