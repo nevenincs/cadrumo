@@ -72,6 +72,12 @@ dependencies = [
   # Typer imports Rich at runtime for help/error rendering. Keep the direct
   # pin version-bounded here; application code should not import Rich directly.
   "rich>=14.2.0,<16",
+  # Rust-backed TOML parser for the registry/profile-schema read boundary
+  # (`core/_toml.py`). ~2.4x faster than stdlib tomllib on the ~16k-fragment
+  # registry tree with proven byte-identical output (see
+  # `registry-toml-parser` ADR); zero transitive dependencies, MIT license,
+  # prebuilt wheels including win_amd64.
+  "rtoml>=0.13.0,<1",
   # Persistence
   "sqlalchemy>=2.0.36,<3",
   # CLI
