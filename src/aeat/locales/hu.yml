@@ -4242,6 +4242,10 @@ cli:
       investigate: '%{count} bevallasi kotelezettseget nem sikerult egyertelmuen megallapitani
         ehhez a profilhoz, es bevallatlan maradhat: %{modelos}. Vizsgalja meg mindegyiket
         az ''aeat app overview explain <modelo>'' paranccsal.'
+    warning:
+      m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazando, de a simplificado
+        forfait szamitasi motor meg nem elerheto; beadas elott ellenorizze az egyszerusitett
+        rezsim casillait.
     drafts: Tervezetek
     explain:
       help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.
