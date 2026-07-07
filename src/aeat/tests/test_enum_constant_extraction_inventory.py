@@ -6,6 +6,20 @@ documented escape hatches.
 
 Canonical definition sites are excluded from every scan; the test
 asserts the *non-canonical* production code is clean.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the package-file and regex inventory helpers used by this
+        literal-survivor gate.
+    :class:`~core.aggregation.BindingSourceKind`
+        Canonical source-kind enum whose value strings must not drift back into
+        runtime literals.
+    :mod:`~core.external_constants`
+        Central constant registry for external encodings, extensions, MIME
+        strings, hostnames, and route fragments.
+    ``.vault/adr/2026-06-26-binding-source-kind-taxonomy-unification-adr.md``
+        Governs the source-kind enum consolidation that this inventory keeps
+        from regressing.
 """
 
 from __future__ import annotations
