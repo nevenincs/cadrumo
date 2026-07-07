@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests._inventory import ast_for_path, non_test_python_files_under
+from .....tests._inventory import ast_for_path, non_test_python_files_under
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests._inventory import SRC_AEAT, package_python_files, production_python_files, repo_path, repo_relative
+from ....tests._inventory import SRC_AEAT, package_python_files, production_python_files, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

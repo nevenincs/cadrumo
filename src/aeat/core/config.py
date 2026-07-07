@@ -1138,6 +1138,7 @@ class Settings(AeatIntegrationSettings):
         "aeat_blob_store_dir",
         "aeat_audit_dir",
         "aeat_registry_parity_store_dir",
+        "aeat_registry_disk_cache_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
         "aeat_iva_catalogue_root",

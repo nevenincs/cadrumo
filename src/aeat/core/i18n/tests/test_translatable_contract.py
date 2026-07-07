@@ -26,7 +26,7 @@ from typing import override
 
 import pytest
 
-from aeat.tests._inventory import SRC_AEAT, package_ast_items, repo_relative
+from ....tests._inventory import SRC_AEAT, package_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
