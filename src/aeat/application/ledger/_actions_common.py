@@ -624,6 +624,7 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.irpf_category,
         transaction.usage_ratio_id,
         transaction.prorrata_reference,
+        transaction.art_104_tres_exclusion,
         transaction.purchase_invoice_evidence_id,
         transaction.attachment_ids,
         transaction.notes,
@@ -660,6 +661,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         and command.irpf_category == current.irpf_category
         and command.usage_ratio_id == current.usage_ratio_id
         and command.prorrata_reference == current.prorrata_reference
+        and command.art_104_tres_exclusion == current.art_104_tres_exclusion
         and command.purchase_invoice_evidence_id == current.purchase_invoice_evidence_id
         # tuple[str, ...] on both sides â€” Python tuple equality is value-equal, not identity-equal.
         and command.attachment_ids == current.attachment_ids
