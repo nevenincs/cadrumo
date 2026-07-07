@@ -679,6 +679,16 @@ CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="clave_permanente_diagnostics",
+    namespace="aeat.outbound.aeat.auth.clave_permanente.diagnostics",
+    owner="aeat.adapters.outbound.aeat.auth",
+    sensitivity=SensitivityClass.SESSION,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{diagnostic_id_or_timestamp_iso}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
 GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_client",
     namespace="aeat.google.oauth.client",
@@ -1104,6 +1114,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         ATTACHMENT_MANIFEST_NAMESPACE,
         AEAT_BROWSER_SESSION_NAMESPACE,
         CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+        CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE,
         GOOGLE_OAUTH_CLIENT_NAMESPACE,
         GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -1144,6 +1155,7 @@ __all__ = [
     "BUCKET_MANIFEST_FILENAME",
     "CALCULATION_OBSERVATIONS_NAMESPACE",
     "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
+    "CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE",
     "DOMAIN_NAMESPACE_DEFINITIONS",
     "GOOGLE_CREDENTIAL_SOURCE_NAMESPACE",
     "GOOGLE_DRIVE_CONFIG_NAMESPACE",

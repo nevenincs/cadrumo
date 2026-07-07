@@ -202,7 +202,7 @@ def test_profile_import_label_refuses_duplicate_bundle_identity(
 
     bundle_path = _per_bucket_backend / "operator-bundle.json"
     export_result = _invoke(
-        ("config", "profile", "export", "operator", "--to", str(bundle_path)),
+        ("config", "profile", "export", "operator", "--to", str(bundle_path), "--cleartext-local"),
     )
     assert export_result.exit_code == 0, export_result.output
     assert bundle_path.is_file()

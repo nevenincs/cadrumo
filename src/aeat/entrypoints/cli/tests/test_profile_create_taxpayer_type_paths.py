@@ -149,7 +149,7 @@ def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> 
     """A successful IRNR profile must not point at unsupported local M210 work."""
 
     result = _create_profile(
-        "marta-irnr",
+        "irnr-profile",
         "--entity-type",
         "natural_person",
         "--irpf-income-categories",

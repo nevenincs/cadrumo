@@ -1,6 +1,6 @@
 """Typer registration for the guided ``aeat app modelo work wizard`` command.
 
-Kent knows "gross income" and "deductible expenses" in plain language, not
+An operator knows "gross income" and "deductible expenses" in plain language, not
 that Modelo 130 casilla ``06`` is "Retenciones e ingresos a cuenta". The
 wizard walks a work unit's *outstanding* manual-input surface —
 ``input_kind = "manual"`` casillas plus any binding or relation the registry

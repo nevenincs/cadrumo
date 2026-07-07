@@ -95,25 +95,40 @@ def _create_profile(
         activity,
         "--entity-type",
         "natural_person",
+        "--iva-regime",
+        "GENERAL",
         "--name",
-        "Export",
+        "Ariadna",
         "--surnames",
-        "Ready",
+        "Villar",
     ]
     if output_language is not None:
         args.extend(("--output-language", output_language))
     return _invoke(args)
 
 
-def _export_profile(name: str, bundle_path: Path, *, json_format: bool = False) -> Result:
+def _export_profile(
+    name: str,
+    bundle_path: Path,
+    *,
+    json_format: bool = False,
+    passphrase: str | None = None,
+    cleartext_local: bool = True,
+) -> Result:
     args = ["config", "profile", "export", name, "--to", str(bundle_path)]
+    if passphrase is not None:
+        args.extend(("--passphrase", passphrase))
+    if cleartext_local:
+        args.append("--cleartext-local")
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)
 
 
-def _import_bundle(bundle_path: Path, *, json_format: bool = False) -> Result:
+def _import_bundle(bundle_path: Path, *, json_format: bool = False, passphrase: str | None = None) -> Result:
     args = ["config", "profile", "import", str(bundle_path)]
+    if passphrase is not None:
+        args.extend(("--passphrase", passphrase))
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)
@@ -371,6 +386,64 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     assert computed.source_refs == (_SOURCE_REF_303,)
 
 
+def test_v3_bundle_passphrase_encrypted_export_import_roundtrip(tmp_path: Path) -> None:
+    """The first-class profile export/import surface round-trips an encrypted bundle."""
+
+    from ....core import resolve_active_bucket_id
+
+    cleartext_fixture_path = tmp_path / "source-cleartext-local.json"
+    source_bucket_id = _seed_and_export(tmp_path, cleartext_fixture_path)
+
+    encrypted_path = tmp_path / "source-encrypted.aeat-profile"
+    passphrase = "profile-transfer-passphrase-308"  # noqa: S105 - synthetic test fixture, not a secret
+    r_export = _export_profile(
+        "source",
+        encrypted_path,
+        json_format=True,
+        passphrase=passphrase,
+        cleartext_local=False,
+    )
+    assert r_export.exit_code == 0, r_export.output
+    assert encrypted_path.is_file()
+
+    encrypted_bytes = encrypted_path.read_bytes()
+    for forbidden in (b"12345678Z", b"Ariadna", b"Villar", b"source"):
+        assert forbidden not in encrypted_bytes
+
+    import_root = tmp_path / "encrypted-import-root"
+    with isolated_profile_storage_root(tmp_path=import_root):
+        r_import = _import_bundle(encrypted_path, json_format=True, passphrase=passphrase)
+        assert r_import.exit_code == 0, r_import.output
+        import_payload = assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
+        assert import_payload["display_name"] == "source"
+        assert resolve_active_bucket_id() == source_bucket_id
+
+
+def test_v3_bundle_encrypted_import_refuses_wrong_passphrase_without_traceback(tmp_path: Path) -> None:
+    """Wrong passphrases refuse encrypted profile-bundle import cleanly."""
+
+    cleartext_fixture_path = tmp_path / "source-cleartext-local.json"
+    _seed_and_export(tmp_path, cleartext_fixture_path)
+
+    encrypted_path = tmp_path / "source-encrypted-wrong-pass.aeat-profile"
+    r_export = _export_profile(
+        "source",
+        encrypted_path,
+        passphrase="right-profile-transfer-passphrase-308",  # noqa: S106 - synthetic test fixture
+        cleartext_local=False,
+    )
+    assert r_export.exit_code == 0, r_export.output
+
+    import_root = tmp_path / "encrypted-wrong-pass-import-root"
+    with isolated_profile_storage_root(tmp_path=import_root):
+        r_import = _import_bundle(
+            encrypted_path,
+            passphrase="wrong-profile-transfer-passphrase-308",  # noqa: S106 - synthetic test fixture
+        )
+        assert r_import.exit_code != 0, r_import.output
+        assert "Traceback" not in r_import.output
+
+
 # ---------------------------------------------------------------------------
 # Anti-tautology proof for provenance preservation
 # ---------------------------------------------------------------------------
@@ -532,6 +605,21 @@ def test_export_emits_cleartext_sensitivity_warning_notice(tmp_path: Path) -> No
     assert "tax id" in message.lower()
     # Instructs deletion after transfer.
     assert "delete" in message.lower()
+    assert "profile export" in message.lower()
+    assert "--passphrase" in message.lower()
+
+
+def test_export_requires_explicit_cleartext_or_passphrase(tmp_path: Path) -> None:
+    """``export`` no longer writes cleartext JSON unless local/SAR mode is explicit."""
+
+    r_create = _create_profile("explicit-transport", tax_id="87654321X", activity="consulting")
+    assert r_create.exit_code == 0, r_create.output
+
+    bundle_path = tmp_path / "implicit-cleartext.json"
+    r_export = _invoke(["config", "profile", "export", "explicit-transport", "--to", str(bundle_path)])
+    assert r_export.exit_code != 0, r_export.output
+    assert not bundle_path.exists()
+    assert "Traceback" not in r_export.output
 
 
 def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> None:

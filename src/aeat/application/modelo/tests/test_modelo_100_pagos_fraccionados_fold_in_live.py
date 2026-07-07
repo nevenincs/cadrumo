@@ -73,7 +73,7 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2024
 
-# Marta's locally filed M130 quarters reported casilla 19 ("Resultado a ingresar")
+# The operator's locally filed M130 quarters reported casilla 19 ("Resultado a ingresar")
 # as EUR 380.00 in every quarter, so annual M100 must credit EUR 1520.00.
 _M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("380.00"),
@@ -285,8 +285,8 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects:
     """
     obs_repo = CalculationObservationRepository()
     seeded_total = _seed_m130_quarters(obs_repo=obs_repo, periods=("1T", "2T", "3T", "4T"))
-    # Sanity: the four seeded observations reproduce Marta's local M130 c19
-    # values and total to a strictly-positive known annual credit.
+    # Sanity: the four seeded observations reproduce the operator's local
+    # M130 c19 values and total to a strictly-positive known annual credit.
     assert seeded_total == _EXPECTED_M130_TOTAL
     assert seeded_total > Decimal("0")
 

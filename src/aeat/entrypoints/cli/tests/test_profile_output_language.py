@@ -321,7 +321,7 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     from ....application.workflow import workflow_state_repository
 
     result = _create_profile(
-        "marta",
+        "autonoma",
         "--accept-defaults",
         "--entity-type",
         "natural_person",
@@ -333,7 +333,7 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     )
     assert result.exit_code == 0, result.output
 
-    facts = _profile_facts("marta")
+    facts = _profile_facts("autonoma")
     assert facts.get("preferences.output_language") == "en", (
         f"Expected output_language 'en' but got {facts.get('preferences.output_language')!r}. "
         "AEAT_OUTPUT_LANGUAGE=en env var was not honoured by profile create."

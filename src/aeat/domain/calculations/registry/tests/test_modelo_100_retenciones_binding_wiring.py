@@ -151,7 +151,7 @@ def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
 ) -> None:
     """M190 annual retenciones are a reviewed equivalent source for M100/2025 0596.
 
-    Regression guard for Marta: the binding was accepted but left 0596 at zero.
+    Regression guard: a previously reported defect had the binding accepted but left 0596 at zero.
     This exercises binding projection and formula propagation, not a duplicated
     rental or salary arithmetic oracle.
     """

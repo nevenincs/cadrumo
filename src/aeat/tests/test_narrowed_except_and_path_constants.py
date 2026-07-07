@@ -7,6 +7,15 @@ Asserts:
 - _sink.py defines JsonlRunSink as a real stdlib logging.Handler subclass.
 
 No mocks, no skips, no tautological assertions.
+
+See Also:
+    :mod:`~domain.calculations.registry._schedules`
+        Registry schedule predicates whose dotted profile paths are pinned here.
+    :class:`~core.observability.JsonlRunSink`
+        Logging sink whose stdlib ``logging.Handler`` inheritance justifies the
+        logging import survivor.
+    ``.vault/exec/2026-05-31-codebase-solidification-w13p45-exec.md``
+        Records the S602/S605 closure steps enforced by this aggregate test.
 """
 
 from __future__ import annotations

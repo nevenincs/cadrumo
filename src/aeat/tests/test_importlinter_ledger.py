@@ -1,4 +1,18 @@
-"""Structural checks for the Import Linter ignore ledger."""
+"""Structural checks for the Import Linter ignore ledger.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the repository root anchor used to parse ``.importlinter``
+        without depending on the current working directory.
+    ``.importlinter``
+        Layered architecture contract and ignore ledger ratcheted by these
+        tests.
+    ``.vault/adr/2026-04-30-aeat-restructure-adr.md``
+        Establishes the import-boundary model and sanctioned exception
+        registry.
+    ``.vault/audit/2026-07-02-aeat-architecture-review-audit.md``
+        Records the ledger-drift risk that makes this ratchet load-bearing.
+"""
 
 from __future__ import annotations
 
@@ -53,8 +67,16 @@ def _ignore_edges() -> tuple[IgnoreEdge, ...]:
     return tuple(edges)
 
 
-def _layered_edges() -> tuple[IgnoreEdge, ...]:
-    return tuple(edge for edge in _ignore_edges() if edge.contract == "layered")
+@pytest.fixture(scope="module")
+def ignore_edges() -> tuple[IgnoreEdge, ...]:
+    """Return parsed Import Linter ignore edges once for this test module."""
+    return _ignore_edges()
+
+
+@pytest.fixture(scope="module")
+def layered_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> tuple[IgnoreEdge, ...]:
+    """Return the parsed layered-contract ignore edges."""
+    return tuple(edge for edge in ignore_edges if edge.contract == "layered")
 
 
 def _resolve_module_path(module: str) -> Path:
@@ -69,9 +91,9 @@ def _module_exists(module: str) -> bool:
     return path.with_suffix(".py").is_file() or (path / "__init__.py").is_file()
 
 
-def test_ignore_import_modules_resolve_on_disk() -> None:
+def test_ignore_import_modules_resolve_on_disk(ignore_edges: tuple[IgnoreEdge, ...]) -> None:
     missing: list[str] = []
-    for edge in _ignore_edges():
+    for edge in ignore_edges:
         for module in (edge.source, edge.target):
             if not _module_exists(module):
                 missing.append(f"line {edge.line_no}: {module}")
@@ -79,10 +101,10 @@ def test_ignore_import_modules_resolve_on_disk() -> None:
     assert missing == []
 
 
-def test_application_to_adapters_pin_count_does_not_grow() -> None:
+def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
     application_adapter_edges = tuple(
         edge
-        for edge in _layered_edges()
+        for edge in layered_edges
         if edge.source.startswith("aeat.application.") and edge.target.startswith("aeat.adapters")
     )
     blanket_edges = tuple(
@@ -97,17 +119,17 @@ def test_application_to_adapters_pin_count_does_not_grow() -> None:
     assert len(source_module_edges) <= _APPLICATION_SOURCE_MODULE_BASELINE
 
 
-def test_domain_to_adapters_pin_count_does_not_grow() -> None:
+def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
     domain_adapter_edges = tuple(
         edge
-        for edge in _layered_edges()
+        for edge in layered_edges
         if edge.source.startswith("aeat.domain.") and edge.target.startswith("aeat.adapters")
     )
 
     assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
 
 
-def test_zero_production_domain_to_adapters_edges() -> None:
+def test_zero_production_domain_to_adapters_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> None:
     """No production domain module may pin a domain -> adapters ignore edge.
 
     Every production domain repository now sits behind a Protocol port with its
@@ -118,7 +140,7 @@ def test_zero_production_domain_to_adapters_edges() -> None:
     """
     production_domain_adapter_edges = tuple(
         edge
-        for edge in _ignore_edges()
+        for edge in ignore_edges
         if edge.source.startswith("aeat.domain.")
         and edge.target.startswith("aeat.adapters")
         and ".tests." not in edge.source

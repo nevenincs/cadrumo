@@ -85,7 +85,10 @@ def _register_archive_export_command(
         "export",
         help=tr(
             "cli.config.profile.archive.export_help",
-            default="Write a sealed, encrypted full-backup archive to PATH.",
+            default=(
+                "Write a sealed, AEAD-encrypted full-backup archive to PATH; add "
+                "--recovery-wrap-passphrase before email or cross-host transfer."
+            ),
         ),
     )
     def config_profile_archive_export(
@@ -187,8 +190,10 @@ def _build_export_completeness_notice() -> Notice:
                 "This archive is a FULL backup: it is AEAD-encrypted at rest and "
                 "carries attachment evidence bytes, the audit trail, and the "
                 "cross-period calculation inputs, in addition to the profile, "
-                "ledger, calculation, and filing history. Store it somewhere safe; "
-                "restore with 'aeat config profile archive import'."
+                "ledger, calculation, and filing history. When exported with "
+                "--recovery-wrap-passphrase it is the encrypted cross-host transfer "
+                "path for profile bundles. Store it somewhere safe; restore with "
+                "'aeat config profile archive import'."
             ),
         ),
     )

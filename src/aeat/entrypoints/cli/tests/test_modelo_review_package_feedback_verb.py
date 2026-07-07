@@ -261,7 +261,7 @@ def _counter_sign(tmp_path: Path, package_path: Path, signature_path: Path) -> t
 
 def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(tmp_path: Path) -> None:
     package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
-    originator_public_key_hex = _register_originator("kents-client")
+    originator_public_key_hex = _register_originator("my-client")
     signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
     receipt_path, counter_signer_public_key_hex = _counter_sign(tmp_path, package_path, signature_path)
 
@@ -275,13 +275,13 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
             "review-package",
             "encrypt-feedback",
             "--originator",
-            "kents-client",
+            "my-client",
             "--work-unit-id",
             work_unit_id,
             "--calculation-revision-id",
             calculation_revision_id,
             "--by",
-            "kents-accountant",
+            "my-accountant",
             "--note",
             "all clear",
             "--receipt",
@@ -322,7 +322,7 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
     assert import_payload["counter_signature_verified"] is True
     assert import_payload["attached_to_journal"] is True
     assert import_payload["note"] == "all clear"
-    assert import_payload["submitted_by"] == "kents-accountant"
+    assert import_payload["submitted_by"] == "my-accountant"
     assert "private_key" not in import_result.output
 
     # Countersign-attach-to-journal: the originator's own bucket-event history
@@ -339,7 +339,7 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
 
 def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_path: Path) -> None:
     package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
-    _register_originator("kents-client")
+    _register_originator("my-client")
     _signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
 
     feedback_envelope_path = tmp_path / "feedback-envelope.json"
@@ -352,13 +352,13 @@ def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_p
             "review-package",
             "encrypt-feedback",
             "--originator",
-            "kents-client",
+            "my-client",
             "--work-unit-id",
             work_unit_id,
             "--calculation-revision-id",
             calculation_revision_id,
             "--by",
-            "kents-accountant",
+            "my-accountant",
             "--note",
             "see attached corrections, no formal sign-off yet",
             "--output",
@@ -392,7 +392,7 @@ def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_p
 
 def test_import_feedback_refuses_tampered_feedback_envelope(tmp_path: Path) -> None:
     package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
-    _register_originator("kents-client")
+    _register_originator("my-client")
     _signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
 
     feedback_envelope_path = tmp_path / "feedback-envelope.json"
@@ -405,13 +405,13 @@ def test_import_feedback_refuses_tampered_feedback_envelope(tmp_path: Path) -> N
             "review-package",
             "encrypt-feedback",
             "--originator",
-            "kents-client",
+            "my-client",
             "--work-unit-id",
             work_unit_id,
             "--calculation-revision-id",
             calculation_revision_id,
             "--by",
-            "kents-accountant",
+            "my-accountant",
             "--note",
             "all clear",
             "--output",

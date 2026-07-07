@@ -1,11 +1,12 @@
-"""Persona testimonial: Marta the autónoma closes her 1T-2025 quarter.
+"""Persona testimonial: an autónoma closes their 1T-2025 quarter.
 
-Marta Rios Velasco is a freelance software consultant on estimación directa
-simplificada filing IVA on the general regime. This suite drives the real
-``aeat app ledger`` CLI end-to-end through her *first* quarterly close: import
-her four bank exports, narrow the review to 1T (Q1) 2025, classify the quarter's
-business income and expenses against the ground-truth oracle, then run the
-readiness gates (``preflight``/``check``/``status``) and ``export`` the result.
+This testimonial follows a freelance software consultant (an autónoma) on
+estimación directa simplificada filing IVA on the general regime. This suite
+drives the real ``aeat app ledger`` CLI end-to-end through their *first*
+quarterly close: import their four bank exports, narrow the review to 1T (Q1)
+2025, classify the quarter's business income and expenses against the
+ground-truth oracle, then run the readiness gates
+(``preflight``/``check``/``status``) and ``export`` the result.
 
 Unlike :mod:`test_ledger_corpus_journeys`, which exercises each verb in
 isolation, this is a single linear journey: the assertions track what an operator
@@ -93,41 +94,41 @@ def _list_rows() -> list[dict[str, object]]:
 
 
 def _is_q1_2025(row: dict[str, object]) -> bool:
-    """Marta only wants the January-March 2025 rows for her 1T close."""
+    """Only the January-March 2025 rows are wanted for the 1T close."""
     date_val = row.get("date")
     date = str(date_val) if date_val is not None else ""
     return date.startswith("2025-01") or date.startswith("2025-02") or date.startswith("2025-03")
 
 
-def test_marta_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
-    """Marta's full first quarterly close as she would run it."""
+def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
+    """The full first quarterly close as an operator would run it."""
     rules = _oracle_rules()
 
     # --- Import every bank export -----------------------------------------
-    # Marta downloaded one CSV from each of her four banks. She imports each in
-    # turn. TESTIMONIAL: there is no "import all CSVs in a folder" affordance;
-    # she must invoke the verb once per file and remember the --provider flag.
+    # One CSV is downloaded from each of four banks, imported in turn.
+    # TESTIMONIAL: there is no "import all CSVs in a folder" affordance;
+    # the operator must invoke the verb once per file and remember the --provider flag.
     _import_corpus()
     all_rows = _list_rows()
     assert len(all_rows) >= 500, f"expected full corpus imported, got {len(all_rows)}"
 
     # --- Narrow to the quarter --------------------------------------------
-    # Marta tries the documented filter first: review --filter period=1T --filter year=2025.
+    # The documented filter is tried first: review --filter period=1T --filter year=2025.
     by_period = _invoke(["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
     assert by_period.exit_code == 0, by_period.output
     # TESTIMONIAL: `review` renders a human table but does not emit a JSON row
-    # list she can drive programmatically; to actually *act* on the quarter she
-    # falls back to `list` + a client-side date filter on the `date` field.
+    # list the operator can drive programmatically; to actually *act* on the
+    # quarter the fallback is `list` + a client-side date filter on the `date` field.
     q1_rows = [r for r in all_rows if _is_q1_2025(r)]
-    assert q1_rows, "corpus must carry 1T-2025 activity for Marta to close"
+    assert q1_rows, "corpus must carry 1T-2025 activity for the close"
 
-    # Every freshly-imported row is unprocessed; Marta has real work to do.
+    # Every freshly-imported row is unprocessed; there is real work to do.
     assert all(r.get("business_classification") == "NOT_YET_PROCESSED" for r in q1_rows)
 
     # --- Classify the quarter's business income + expenses ----------------
-    # Marta builds a classify CSV resolving each Q1 row against the oracle. She
-    # restricts to non-MIXED, non-gated rows (MIXED needs --business-pct, which
-    # --from-csv does not carry; gated/personal rows she leaves out of scope).
+    # A classify CSV is built resolving each Q1 row against the oracle,
+    # restricted to non-MIXED, non-gated rows (MIXED needs --business-pct, which
+    # --from-csv does not carry; gated/personal rows are left out of scope).
     classify_lines = ["transaction_id,classification,category_id"]
     expected: dict[str, str] = {}
     for row in q1_rows:
@@ -148,9 +149,9 @@ def test_marta_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
         classify_lines.append(f"{tx_id},{classification_val},{category}")
         expected[tx_id] = classification_val
 
-    assert len(expected) >= 10, f"Marta's quarter should carry a meaningful classify workload, got {len(expected)}"
+    assert len(expected) >= 10, f"the quarter should carry a meaningful classify workload, got {len(expected)}"
 
-    classify_csv = tmp_path / "marta-1t-classifications.csv"
+    classify_csv = tmp_path / "autonoma-1t-classifications.csv"
     classify_csv.write_text("\n".join(classify_lines) + "\n", encoding="utf-8")
 
     bulk = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
@@ -158,17 +159,17 @@ def test_marta_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     bulk_result = json.loads(bulk.output)["result"]
     # TESTIMONIAL: bulk classify reports total/applied/skipped/failures — a
     # clear summary. It is also the known-slow path (per-row re-persist), which
-    # Marta would feel on a real quarter of dozens of rows.
+    # an operator would feel on a real quarter of dozens of rows.
     assert bulk_result["applied"] == len(expected), bulk_result
 
-    # Verify the classifications actually stuck (Marta re-lists to confirm).
+    # Verify the classifications actually stuck (re-list to confirm).
     by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
     for tx_id, classification in expected.items():
         assert by_id.get(tx_id, {}).get("business_classification") == classification, tx_id
 
     # --- Classify one MIXED home-office expense the long way ---------------
-    # `--from-csv` can't carry the business proportion, so Marta classifies her
-    # mixed-use rows one at a time with --business-pct. She picks her Q1 fibra
+    # `--from-csv` can't carry the business proportion, so mixed-use rows are
+    # classified one at a time with --business-pct, picking the Q1 fibra
     # internet line (oracle business_pct 0.30).
     internet = None
     for r in q1_rows:
@@ -196,7 +197,7 @@ def test_marta_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
             assert mixed.exit_code == 0, mixed.output
 
     # --- Readiness gates --------------------------------------------------
-    # Marta runs preflight for the quarter to see what's still missing.
+    # Preflight runs for the quarter to see what's still missing.
     preflight = _invoke(
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
@@ -214,15 +215,15 @@ def test_marta_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     chk = json.loads(check.output)["result"]
     assert "issues" in chk, chk
 
-    # `status` is Marta's at-a-glance summary for the quarter.
+    # `status` is the at-a-glance summary for the quarter.
     status = _invoke(["app", "ledger", "status", "--period", "1T", "--year", "2025"])
     assert status.exit_code == 0, status.output
 
     # --- Export the quarter -----------------------------------------------
-    # Marta exports the whole ledger for her gestor. TESTIMONIAL: `export` has
-    # no --period flag, so she cannot hand her gestor *just* the quarter; the
-    # export is the entire bucket and her gestor must filter downstream.
-    out_csv = tmp_path / "marta-1t-2025.csv"
+    # The whole ledger exports for the gestor. TESTIMONIAL: `export` has
+    # no --period flag, so the operator cannot hand their gestor *just* the
+    # quarter; the export is the entire bucket and the gestor must filter downstream.
+    out_csv = tmp_path / "autonoma-1t-2025.csv"
     exported = _invoke(
         ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
     )

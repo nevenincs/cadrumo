@@ -69,9 +69,9 @@ def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
 
         added = repository.add(
-            recipient_id="kents-accountant",
+            recipient_id="my-accountant",
             public_key_hex=public_key_hex,
-            label="Kent's Accountant",
+            label="My Accountant",
             added_at=_NOW,
         )
         reloaded = repository.load()
@@ -79,8 +79,8 @@ def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
     assert reloaded == added
     assert len(reloaded.records) == 1
     record = reloaded.records[0]
-    assert record.recipient_id == "kents-accountant"
-    assert record.label == "Kent's Accountant"
+    assert record.recipient_id == "my-accountant"
+    assert record.label == "My Accountant"
     assert record.public_key_hex == public_key_hex
     assert record.added_at == _NOW
     # fingerprint_sha256 is computed, never a stored independent field --
@@ -97,7 +97,7 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
     public_key_hex = _fresh_public_key_hex()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-ciphertext") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, added_at=_NOW)
+        repository.add(recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
         raw_record = profile.repository.load(
             _NAMESPACE.namespace,
@@ -117,16 +117,16 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
             ciphertext_bytes = bytes(row.payload)
 
     assert public_key_hex.encode("utf-8") not in ciphertext_bytes
-    assert b"kents-accountant" not in ciphertext_bytes
+    assert b"my-accountant" not in ciphertext_bytes
 
 
 def test_add_refuses_duplicate_recipient_id(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-dup") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+        repository.add(recipient_id="my-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
 
         with pytest.raises(RecipientAlreadyRegisteredError):
-            repository.add(recipient_id="kents-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+            repository.add(recipient_id="my-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
 
 
 def test_remove_refuses_missing_recipient_id(tmp_path: Path) -> None:
@@ -188,7 +188,7 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
     public_key_hex = _fresh_public_key_hex()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-corrupt") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, added_at=_NOW)
+        repository.add(recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
         from sqlalchemy import select, update
 

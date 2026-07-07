@@ -100,6 +100,11 @@ from ._post_filing_event import (
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
 )
+from ._prorrata_exclusions import (
+    ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
+    ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
+    Art104TresExclusion,
+)
 from ._prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ._refund_election import RefundElection
 from ._rescate_type import RescateType
@@ -143,6 +148,8 @@ if TYPE_CHECKING:
 __all__: list[str] = [
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "ANTHROPIC_EXTRA",
+    "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
+    "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",
     "DEFAULT_WRITE_PROVENANCE",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
@@ -158,6 +165,7 @@ __all__: list[str] = [
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
+    "Art104TresExclusion",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",

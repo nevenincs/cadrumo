@@ -10,6 +10,17 @@ the hexagonal structure depends on.
 The gate fails hard with a precise ``path:line`` enumeration of every absolute
 self-import so the offending lines are trivial to find and fix. It is computed
 from the AST on every run, so it cannot go stale.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the package AST inventory and repository-relative path
+        rendering used by this architecture gate.
+    ``.vault/plan/2026-06-04-repo-health-triage-plan.md``
+        Tracks the structural import-gate repair wave that made this ratchet
+        dependable.
+    ``.vault/adr/2026-07-01-import-centralization-adr.md``
+        Governs the broader import-hygiene campaign this relative-import gate
+        complements.
 """
 
 from __future__ import annotations
@@ -20,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import ast_for_path, package_python_files, repo_relative
+from ._inventory import package_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -42,10 +53,7 @@ def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
 def test_no_absolute_self_imports_in_aeat_package(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No source file under ``src/aeat`` may import the ``aeat`` package absolutely."""
     violations: list[str] = []
-    for path in package_python_files():
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None:
-            continue
+    for path, tree in package_ast_items(source_tree_ast):
         rel = repo_relative(path).removeprefix("src/")
         for lineno, statement in _absolute_self_imports(tree):
             violations.append(f"  {rel}:{lineno}  {statement}")

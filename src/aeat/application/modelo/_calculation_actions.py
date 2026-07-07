@@ -563,6 +563,7 @@ def _resolve_bucket_source_mesh(
         WithholdingSourceResolver,
         merge_source_resolutions,
     )
+    from ..aggregation._atribucion_member import AtribucionMemberSourceResolver
     from ..calculations import (
         IvaCompensationAnnualPartitionSourceResolver,
         PreviousFilingSourceResolver,
@@ -631,6 +632,9 @@ def _resolve_bucket_source_mesh(
             ForeignAssetsAggregationSourceResolver(
                 observations=foreign_asset_observations,
             ).resolve(context),
+            # Modelo 184 attribution members are declared on the attribution-entity
+            # profile as repeatable socios with explicit assigned base amounts.
+            AtribucionMemberSourceResolver().resolve(context),
             # Cross-period carry: prior-filing observations flow through the
             # backend-binding channel so an automatically-carried previous_filing
             # value fills the binding gap, while a caller --binding still

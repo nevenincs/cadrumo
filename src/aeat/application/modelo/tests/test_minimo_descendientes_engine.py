@@ -38,7 +38,13 @@ from typing import Any
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistrySnapshot,
+    calculate_registry_snapshot,
+    resolve_parameter,
+    validated_casilla_id,
+)
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -56,6 +62,10 @@ _ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _MADRID_PARTIAL_DIVERGENCE_YEARS = (2020, 2021)
 # Years where Madrid's own table diverges on all five tranches.
 _MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
+
+
+def _casilla_id(value: str) -> CasillaId:
+    return validated_casilla_id(value, surface="test_minimo_descendientes_engine.casilla")
 
 
 @lru_cache
@@ -243,6 +253,76 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_pa
 
     tranches, _ = _registry_tranches(snapshot)
     assert resolution.binding_values[binding_id] == tranches[0]
+
+
+def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_path: Path) -> None:
+    """Real profile descendientes feed 0513/0514 and the downstream cuota path.
+
+    The expected cuota is the LIRPF 2024 Art. 62-63 table oracle for a 35,400 EUR
+    general base and two descendants, one under 3:
+    tarifa(35400) - tarifa(13450) = 4,399.75 - 1,302.75 = 3,097.00 EUR.
+    """
+    snapshot = _snapshot(2024)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
+        descendientes = (
+            DescendantInfo(birth_date=date(2015, 1, 1)),
+            DescendantInfo(birth_date=date(2023, 1, 15)),
+        )
+        facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
+        UserProfileLifecycleRepository(bucket_id=_BUCKET, objects=profile.repository).save(
+            UserProfileRecord(
+                profile_id=_BUCKET,
+                display_name=_PROFILE_LABEL,
+                facts=(
+                    *facts,
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
+                    UserProfileFact(path="filing_export.declaration_type", value="1"),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1975, 6, 15)),
+                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                    UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+                ),
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
+        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
+
+    # 37,400 EUR in trabajo ingresos íntegros nets to a 35,400 EUR base after
+    # the 2,000 EUR Art. 19.2.f "otros gastos" deduction, matching the table
+    # oracle in test_modelo_100_tarifa_real.
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={_casilla_id("0003"): Decimal("37400")},
+        date_context={"filing_period": date(2024, 12, 31)},
+        binding_values={
+            **resolution.binding_values,
+            "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+            "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        },
+        enum_binding_values=resolution.enum_binding_values,
+        date_binding_values=resolution.date_binding_values,
+        relation_values={
+            "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+            "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+            "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+            "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+            "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+            "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+        },
+    )
+
+    assert resolution.binding_values["renta-2024-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
+    assert resolution.binding_values["renta-2024-profile-minimo-descendientes-autonomico"] == Decimal("7900.00")
+    assert result.values[_casilla_id("0513")] == Decimal("7900.00")
+    assert result.values[_casilla_id("0514")] == Decimal("7900.00")
+    assert result.values[_casilla_id("0545")] == Decimal("3097.00")
 
 
 # ---------------------------------------------------------------------------

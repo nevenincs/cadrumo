@@ -25,6 +25,23 @@ Exclusions
   preceded by a quote character or occurs inside a triple-quoted block, skip.
   Rather than attempting full parse, we use a conservative AST walk per file
   to locate real ``cast()`` call nodes and their line numbers.
+
+See Also:
+    :func:`~tests._inventory.cast_rationale_violations`
+        Shared AST inventory helper that locates production ``cast()`` calls
+        missing adjacent rationale markers.
+    :mod:`~tests.test_type_ignore_rationale_inventory`
+        Companion escape-hatch ratchet that also accepts historical
+        ``CAST-RATIONALE-*`` markers for type-ignore suppressions.
+    :mod:`~tests.test_any_param_rationale_inventory`
+        Parameter-level ``Any`` rationale ratchet that protects the same typed
+        boundary documentation standard.
+    ``.vault/audit/2026-05-31-codebase-solidification-audit.md``
+        Records the standing inventory ratchets, including this cast marker
+        guard, that defend the converged hardening state.
+    ``.vault/audit/2026-06-03-suite-redgreen-longtail-discovery-audit.md``
+        Classifies missing cast, Any, and type-ignore markers as mechanical
+        source-documentation violations.
 """
 
 from __future__ import annotations

@@ -75,27 +75,27 @@ def _tx(
 
 
 def test_each_bucket_ledger_is_independent(secure_objects: SecureObjectRepository) -> None:
-    marta = TransactionCatalogueRepository(bucket_id="marta", objects=secure_objects)
+    autonoma = TransactionCatalogueRepository(bucket_id="autonoma", objects=secure_objects)
     retailer = TransactionCatalogueRepository(bucket_id="retailer", objects=secure_objects)
 
-    marta_tx = _tx("marta-1", amount=Decimal("100.00"))
+    autonoma_tx = _tx("autonoma-1", amount=Decimal("100.00"))
     retailer_tx = _tx("retailer-1", amount=Decimal("250.00"))
-    marta.save(TransactionCatalogue.from_transactions((marta_tx,)))
+    autonoma.save(TransactionCatalogue.from_transactions((autonoma_tx,)))
     retailer.save(TransactionCatalogue.from_transactions((retailer_tx,)))
 
-    marta_rows = tuple(marta.load().values())
+    autonoma_rows = tuple(autonoma.load().values())
     retailer_rows = tuple(retailer.load().values())
 
-    assert [t.transaction_id for t in marta_rows] == [marta_tx.transaction_id]
+    assert [t.transaction_id for t in autonoma_rows] == [autonoma_tx.transaction_id]
     assert [t.transaction_id for t in retailer_rows] == [retailer_tx.transaction_id]
     # No cross-bucket leakage in either direction.
-    assert retailer_tx.transaction_id not in {t.transaction_id for t in marta_rows}
-    assert marta_tx.transaction_id not in {t.transaction_id for t in retailer_rows}
+    assert retailer_tx.transaction_id not in {t.transaction_id for t in autonoma_rows}
+    assert autonoma_tx.transaction_id not in {t.transaction_id for t in retailer_rows}
 
 
 def test_unknown_bucket_loads_empty(secure_objects: SecureObjectRepository) -> None:
-    TransactionCatalogueRepository(bucket_id="marta", objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((_tx("marta-1", amount=Decimal("100.00")),)),
+    TransactionCatalogueRepository(bucket_id="autonoma", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((_tx("autonoma-1", amount=Decimal("100.00")),)),
     )
     fresh = TransactionCatalogueRepository(bucket_id="never-used", objects=secure_objects).load()
     assert tuple(fresh.values()) == ()

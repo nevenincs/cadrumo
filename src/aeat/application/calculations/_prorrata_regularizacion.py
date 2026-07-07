@@ -201,6 +201,11 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
     ledger_volume_con_derecho: Decimal
     ledger_volume_sin_derecho: Decimal
     included_ledger_ids: tuple[str, ...] = ()
+    #: Ledger ids skipped from the rollup because they carry an operator-declared
+    #: LIVA art. 104.Tres judgment exclusion (foreign PE, non-habitual
+    #: inmobiliario/financiero). Recorded so the exclusion is auditable and the
+    #: proposal is never a silent substitution of the declared volumes.
+    art_104_tres_excluded_ledger_ids: tuple[str, ...] = ()
 
     @property
     def diverges(self) -> bool:
@@ -316,14 +321,25 @@ def build_prorrata_declared_volume_divergence_advisory(
     ledger_observations: Iterable[IvaLedgerObservation],
     ejercicio_periods: Iterable[Period],
     regularizacion_year: int,
+    art_104_tres_excluded_ledger_ids: Iterable[str] = (),
 ) -> tuple[ProrrataDeclaredVolumeLedgerRollup, CalculationSourceDiagnostic | None]:
-    """Compare declared annual prorrata volumes with the ledger rollup.
+    """Compare declared annual prorrata volumes with the exclusion-filtered ledger rollup.
 
-    The rollup is deliberately advisory-only: it uses the existing IVA ledger
-    observation stream and the supplied ejercicio periods'
-    :meth:`~core.Period.contains` boundary, but it does not replace the operator's
-    declared annual volume casillas because some art-104 exclusions still need
-    explicit classification.
+    The rollup is deliberately advisory-only and remains a reconciliation
+    pre-fill PROPOSAL, never a filed-volume authority: the operator-declared
+    annual volume casillas keep the filing authority; this only surfaces a
+    divergence. It applies the LIVA art. 104.Tres denominator exclusions on the
+    ledger side before summing: the structural (cuotas), category-derived
+    (art. 7 no-sujeta, art. 9.1.d autoconsumo) exclusions never enter because
+    :func:`_prorrata_volume_side` already resolves them to neither term, and the
+    operator-declared judgment exclusions (foreign PE, non-habitual
+    inmobiliario/financiero) are skipped here by ledger id via the
+    ``art_104_tres_excluded_ledger_ids`` argument (typically
+    :attr:`~application.aggregation.IvaLedgerAggregation.art_104_tres_excluded_ledger_ids`):
+    observations with those ids are removed from both terms of the ledger-side
+    ratio and recorded on the rollup so the exclusion is auditable, never
+    silent. The bienes-de-inversión exclusion (art. 104.Tres 3.º) is owned by
+    the bienes-inversión register and is not applied here.
 
     See Also:
         :class:`~domain.calculations.registry.IvaLedgerObservation`
@@ -334,11 +350,16 @@ def build_prorrata_declared_volume_divergence_advisory(
     if not periods:
         raise ValueError("ejercicio_periods must contain at least one Period")
 
+    excluded_ids = frozenset(art_104_tres_excluded_ledger_ids)
     ledger_volume_con_derecho = Decimal("0")
     ledger_volume_sin_derecho = Decimal("0")
     included_ledger_ids: list[str] = []
+    applied_exclusions: set[str] = set()
     for observation in ledger_observations:
         if not any(period.contains(observation.transaction_date) for period in periods):
+            continue
+        if observation.ledger_id in excluded_ids:
+            applied_exclusions.add(observation.ledger_id)
             continue
         volume_side = _prorrata_volume_side(observation)
         if volume_side is None:
@@ -358,10 +379,17 @@ def build_prorrata_declared_volume_divergence_advisory(
         ledger_volume_con_derecho=ledger_volume_con_derecho,
         ledger_volume_sin_derecho=ledger_volume_sin_derecho,
         included_ledger_ids=tuple(sorted(included_ledger_ids)),
+        art_104_tres_excluded_ledger_ids=tuple(sorted(applied_exclusions)),
     )
     if not rollup.diverges:
         return rollup, None
 
+    exclusion_note = ""
+    if rollup.art_104_tres_excluded_ledger_ids:
+        exclusion_note = (
+            f" Se excluyeron {len(rollup.art_104_tres_excluded_ledger_ids)} operación(es) por el art. 104.Tres "
+            "(establecimiento permanente en el extranjero / operación inmobiliaria o financiera no habitual)."
+        )
     diagnostic = CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND,
@@ -370,6 +398,7 @@ def build_prorrata_declared_volume_divergence_advisory(
             f"IVA de libro: declarado con derecho {declared_volume_con_derecho}, sin derecho "
             f"{declared_volume_sin_derecho}; libro con derecho {ledger_volume_con_derecho}, "
             f"sin derecho {ledger_volume_sin_derecho}. Las casillas declaradas conservan la autoridad."
+            f"{exclusion_note}"
         ),
     )
     return rollup, diagnostic
@@ -638,8 +667,7 @@ def _source_period_feed_from_observations(
     cuota_values = [
         period_values[_CUOTA_DEDUCIBLE_TOTAL_ID]
         for period in regularised_periods
-        if (period_values := observed_by_period.get(period)) is not None
-        and _CUOTA_DEDUCIBLE_TOTAL_ID in period_values
+        if (period_values := observed_by_period.get(period)) is not None and _CUOTA_DEDUCIBLE_TOTAL_ID in period_values
     ]
     if len(cuota_values) == len(regularised_periods):
         values[_CUOTA_DEDUCIBLE_TOTAL_ID] = sum(cuota_values, Decimal("0"))

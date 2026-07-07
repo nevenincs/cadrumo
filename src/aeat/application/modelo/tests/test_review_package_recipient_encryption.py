@@ -271,8 +271,8 @@ def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-g-registry") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=recipient_public_key_hex, added_at=_NOW)
-        registered = repository.get("kents-accountant")
+        repository.add(recipient_id="my-accountant", public_key_hex=recipient_public_key_hex, added_at=_NOW)
+        registered = repository.get("my-accountant")
 
     envelope = encrypt_review_package_for_recipient(
         package_bytes,

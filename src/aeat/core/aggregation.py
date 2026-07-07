@@ -331,7 +331,7 @@ class BindingSourceKind(StrEnum):
     # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
     # No live resolver yet - Sheets-pull-only, the same deferred shape as the
     # sibling detail-record families (ATRIBUCION_MEMBER, RELATED_PARTY_OPERATION,
-    # REFUND_OPERATION); registered in DEFERRED_SOURCE_KINDS
+    # REFUND_OPERATION); the latter two remain registered in DEFERRED_SOURCE_KINDS
     # (application/aggregation/_source_mesh.py).
     DONATIVO_DONOR = "donativo_donor"
 

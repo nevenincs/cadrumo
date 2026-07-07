@@ -15,7 +15,7 @@ from types import ModuleType
 
 import pytest
 
-import aeat
+from .... import __path__ as _aeat_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -80,7 +80,7 @@ _ALLOWLIST = {
 
 def _iter_imported_aeat_modules() -> list[ModuleType]:
     modules: list[ModuleType] = []
-    for info in pkgutil.walk_packages(aeat.__path__, prefix="aeat."):
+    for info in pkgutil.walk_packages(_aeat_package_path, prefix="aeat."):
         name = info.name
         if ".tests." in name or ".test_" in name or "._test_" in name:
             continue

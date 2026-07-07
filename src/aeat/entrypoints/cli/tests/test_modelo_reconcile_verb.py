@@ -342,7 +342,7 @@ def test_reconcile_file_kind_declaration_matches_when_computed_agrees(
     """`reconcile file --file --kind declaration` reports a clean `matches` when
     the persisted revision's computed casilla values agree with the filed
     declaración the fixture prints -- the calc-verify-roundtrip claim behind
-    Kent wall #326 (Modelo 303), proven end-to-end through the real CLI
+    acceptance wall #326 (Modelo 303), proven end-to-end through the real CLI
     against a real (synthetic-declared) declaración PDF, not a hand-computed
     in-memory observation."""
     work_unit_id = _seed_m303_work_unit_with_revision(casilla_values=_M303_2024_1T_MATCHING_CASILLA_VALUES)
@@ -441,7 +441,7 @@ def _seed_m130_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) ->
 def test_reconcile_file_kind_declaration_m130_matches_when_computed_agrees(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #321 (Modelo 130): the persisted revision's computed `03`/`19`
+    """Acceptance wall #321 (Modelo 130): the persisted revision's computed `03`/`19`
     agree with the filed declaración the fixture prints -- a clean `matches`
     through the real CLI against a real declaración PDF."""
     work_unit_id = _seed_m130_work_unit_with_revision(casilla_values=_M130_2024_1T_MATCHING_CASILLA_VALUES)
@@ -468,7 +468,7 @@ def test_reconcile_file_kind_declaration_m130_matches_when_computed_agrees(
 def test_reconcile_file_kind_declaration_m130_catches_casilla_divergence(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #321 (Modelo 130): a computed `19` that disagrees with the
+    """Acceptance wall #321 (Modelo 130): a computed `19` that disagrees with the
     filed declaración is CAUGHT as a typed `casilla` diff, not a silent
     identity `matches`."""
     mismatched = dict(_M130_2024_1T_MATCHING_CASILLA_VALUES)
@@ -535,7 +535,7 @@ def _seed_m111_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) ->
 def test_reconcile_file_kind_declaration_m111_matches_when_computed_agrees(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #318 (Modelo 111): the persisted revision's computed `28`/`30`
+    """Acceptance wall #318 (Modelo 111): the persisted revision's computed `28`/`30`
     agree with the filed declaración the fixture prints -- a clean `matches`
     through the real CLI against a real declaración PDF whose header lacks a
     detectable ejercicio stamp, proving the work-unit-context override
@@ -564,7 +564,7 @@ def test_reconcile_file_kind_declaration_m111_matches_when_computed_agrees(
 def test_reconcile_file_kind_declaration_m111_catches_casilla_divergence(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #318 (Modelo 111): a computed `30` that disagrees with the
+    """Acceptance wall #318 (Modelo 111): a computed `30` that disagrees with the
     filed declaración is CAUGHT as a typed `casilla` diff, not a silent
     identity `matches`."""
     mismatched = dict(_M111_2024_1T_MATCHING_CASILLA_VALUES)
@@ -629,7 +629,7 @@ def _seed_m390_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) ->
 def test_reconcile_file_kind_declaration_m390_matches_when_computed_agrees(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #327 (Modelo 390): the persisted revision's 3 computed IVA
+    """Acceptance wall #327 (Modelo 390): the persisted revision's 3 computed IVA
     anual casillas agree with the filed declaración -- a clean `matches`
     through the real CLI against a real declaración PDF."""
     work_unit_id = _seed_m390_work_unit_with_revision(casilla_values=_M390_2022_0A_MATCHING_CASILLA_VALUES)
@@ -656,7 +656,7 @@ def test_reconcile_file_kind_declaration_m390_matches_when_computed_agrees(
 def test_reconcile_file_kind_declaration_m390_catches_casilla_divergence(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #327 (Modelo 390): a computed `iva.anual.resultado-regimen-general`
+    """Acceptance wall #327 (Modelo 390): a computed `iva.anual.resultado-regimen-general`
     that disagrees with the filed declaración is CAUGHT as a typed `casilla`
     diff, not a silent identity `matches`."""
     mismatched = dict(_M390_2022_0A_MATCHING_CASILLA_VALUES)
@@ -713,7 +713,7 @@ def _seed_m190_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) ->
 def test_reconcile_file_kind_declaration_m190_matches_when_computed_agrees(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #328 (Modelo 190, Tier-S summary return): the persisted
+    """Acceptance wall #328 (Modelo 190, Tier-S summary return): the persisted
     revision's 3 computed casillas agree with the filed declaración -- a
     clean `matches` through the real CLI against a real declaración PDF."""
     work_unit_id = _seed_m190_work_unit_with_revision(casilla_values=_M190_2024_0A_MATCHING_CASILLA_VALUES)
@@ -740,7 +740,7 @@ def test_reconcile_file_kind_declaration_m190_matches_when_computed_agrees(
 def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """Kent wall #328 (Modelo 190): a computed `decl.retenciones-total` that
+    """Acceptance wall #328 (Modelo 190): a computed `decl.retenciones-total` that
     disagrees with the filed declaración is CAUGHT as a typed `casilla` diff,
     not a silent identity `matches`."""
     mismatched = dict(_M190_2024_0A_MATCHING_CASILLA_VALUES)

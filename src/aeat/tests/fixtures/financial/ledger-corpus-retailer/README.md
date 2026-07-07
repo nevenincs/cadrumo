@@ -3,7 +3,7 @@
 A second, smaller hand-authored corpus for a **different taxpayer in a different
 profile bucket**, exercising the **cross-profile runtime-pegged ledger** goal and
 the **recargo de equivalencia regime** end-to-end. It is the regime
-counterpart to the Marta autónoma corpus, where the same RE purchase category is
+counterpart to the autónoma corpus, where the same RE purchase category is
 an unexpected non-declarable recargo-equivalence preflight issue rather than an
 expected retailer-regime acquisition cost.
 
@@ -11,7 +11,7 @@ expected retailer-regime acquisition cost.
 
 **Comercio Minorista García** — NIF `23456789J` — a small retail shop under
 **régimen de recargo de equivalencia** (IVA), estimación directa simplificada
-(IRPF). Distinct NIF + bucket from Marta so cross-profile isolation is real.
+(IRPF). Distinct NIF + bucket from the autónoma corpus so cross-profile isolation is real.
 
 ## The RE regime (what the oracle encodes)
 
@@ -27,7 +27,7 @@ expected retailer-regime acquisition cost.
 - **Other expenses** (rent, utilities, gestoría): a RE retailer cannot deduct
   input IVA on these either; the gross is the renta cost.
 
-This contrasts with `ledger-corpus/` (Marta), where a `recargo_equivalencia`
+This contrasts with `ledger-corpus/` (the autónoma corpus), where a `recargo_equivalencia`
 purchase row is surfaced as a **non-declarable recargo-equivalence preflight
 issue** for a non-retailer persona. Same IVA category, different persona
 rationale; both remain outside IVA ledger aggregation.

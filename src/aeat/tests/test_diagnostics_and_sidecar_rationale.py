@@ -4,6 +4,18 @@ Covers:
   (a) wizard next tab-label locale keys exist
   (b) _parser.py _PdfWord remains the expected adapter-internal alias
   (c) _local.py sidecar manifest read returns Mapping[str, object]
+
+See Also:
+    :func:`~core.i18n.tr`
+        Locale lookup surface used to verify the wizard output-label key.
+    :mod:`~adapters.inbound.declaracion._parser`
+        Adapter parser module that intentionally owns the ``_PdfWord`` alias.
+    :class:`~adapters.outbound.storage._local.LocalFileSystemProvider`
+        Local storage provider whose sidecar loader keeps the Mapping return
+        contract.
+    ``.vault/audit/2026-05-31-codebase-solidification-audit.md``
+        Records the recurring rationale and structural-hygiene ratchets this
+        test belongs to.
 """
 
 from __future__ import annotations

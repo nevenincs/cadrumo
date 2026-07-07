@@ -2,7 +2,7 @@
 
 :func:`build_pipeline_health_report` is the application service backing
 ``aeat app overview pipeline --year YEAR --period PERIOD``. It answers the
-Kent-observable question "is my pipeline healthy for this period?" by
+operator-observable question "is my pipeline healthy for this period?" by
 composing three already-existing read models for the requested
 ``(filing_year, period)`` scope into one typed report:
 

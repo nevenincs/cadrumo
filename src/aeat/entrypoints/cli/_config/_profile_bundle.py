@@ -210,7 +210,10 @@ def _register_profile_export_command(
         "export",
         help=tr(
             "cli.config.profile.export_help",
-            default="Write a portable profile bundle to PATH.",
+            default=(
+                "Write a passphrase-encrypted portable profile bundle to PATH; "
+                "cleartext JSON requires --cleartext-local for local/SAR use only."
+            ),
         ),
     )
     def config_profile_export(
@@ -222,7 +225,23 @@ def _register_profile_export_command(
         out: Path = typer.Option(
             ...,
             "--to",
-            help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+            help=tr("cli.config.profile.export_out_help", default="Destination path for the profile bundle."),
+        ),
+        passphrase: str | None = typer.Option(
+            None,
+            "--passphrase",
+            help=tr(
+                "cli.config.profile.export_passphrase_help",
+                default="Passphrase to AEAD-encrypt the serialized profile bundle for transfer.",
+            ),
+        ),
+        cleartext_local: bool = typer.Option(
+            False,
+            "--cleartext-local",
+            help=tr(
+                "cli.config.profile.export_cleartext_local_help",
+                default="Write cleartext JSON for local/SAR handling only; not safe for email, sync, or transfer.",
+            ),
         ),
         output_language: OutputLanguage | None = typer.Option(
             None,
@@ -233,11 +252,13 @@ def _register_profile_export_command(
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
         from ....application.user_profile import profile_storage_session, serialize_profile_bundle
+        from ....application.user_profile._bundle_encryption import encrypt_profile_bundle_for_passphrase
         from ....domain.buckets import BucketEventType
         from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
         from .._config_payloads import ConfigProfileExportResult
 
         _activate_subcommand_output_language(ctx, output_language)
+        _validate_export_transport_options(passphrase=passphrase, cleartext_local=cleartext_local)
         profile_state().load()
         if name is not None:
             pointer = resolve_profile_by_label(name)
@@ -277,7 +298,15 @@ def _register_profile_export_command(
                 context={"name": pointer.label},
             ) from exc
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
+        if passphrase is None:
+            out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
+            notices = (_build_export_sensitivity_notice(out),)
+            transport = "cleartext-local"
+        else:
+            encrypted = encrypt_profile_bundle_for_passphrase(bundle, passphrase=passphrase)
+            out.write_text(encrypted.model_dump_json(indent=2), encoding="utf-8")
+            notices = (_build_encrypted_export_notice(out),)
+            transport = "passphrase-encrypted"
 
         export_result = ConfigProfileExportResult(
             profile_id=pointer.bucket_id,
@@ -285,7 +314,6 @@ def _register_profile_export_command(
             out=str(out),
             schema_version=bundle.bundle_schema_version,
         )
-        sensitivity_notice = _build_export_sensitivity_notice(out)
         _emit_envelope(
             ctx,
             command="config.profile.export",
@@ -294,10 +322,11 @@ def _register_profile_export_command(
                 f"profile_id\t{pointer.bucket_id}",
                 f"display_name\t{pointer.label}",
                 f"out\t{out}",
+                f"transport\t{transport}",
                 f"schema_version\t{bundle.bundle_schema_version}",
-                f"WARNING\t{sensitivity_notice.message}",
+                *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
             ),
-            notices=(sensitivity_notice,),
+            notices=notices,
         )
 
 
@@ -323,9 +352,12 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
             "cli.config.profile.export_sensitivity_warning",
             default=(
                 "This bundle is UNENCRYPTED and contains sensitive financial data: "
-                "the raw tax id (not redacted), the full ledger, calculation revisions, "
-                "and filing records. It was written to {out}. Delete it after transfer; "
-                "do not email, sync, or leave it on disk. It is NOT a full backup: "
+                "the raw tax id (not redacted), names/surnames, the full ledger, "
+                "calculation revisions, and filing records. It was written to {out}. "
+                "Use it only for local/SAR handling; do not email, sync, or transfer it. "
+                "Delete it after that local/SAR handling is complete. "
+                "Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted "
+                "structured transfer bundle. It is NOT a full backup: "
                 "attachment evidence bytes, AEAT captures, and the audit trail are "
                 "excluded. Use the encrypted recovery archive for a complete backup."
             ),
@@ -333,6 +365,43 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
         ),
         context={"out": str(out)},
     )
+
+
+def _build_encrypted_export_notice(out: Path) -> Notice:
+    """Build the info notice for the passphrase-encrypted bundle transport."""
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.profile.export.encrypted_bundle",
+        message=tr(
+            "cli.config.profile.export_encrypted_info",
+            default=(
+                "This profile bundle was written to {out} with AEAD passphrase encryption. "
+                "Import it with 'aeat config profile import PATH --passphrase ...'. "
+                "It carries the structured profile bundle only; use the encrypted recovery "
+                "archive for a complete backup with attachment evidence bytes and audit trail."
+            ),
+            out=str(out),
+        ),
+        suggestion="aeat config profile import PATH --passphrase ...",
+        context={"out": str(out), "transport": "passphrase-encrypted"},
+    )
+
+
+def _validate_export_transport_options(*, passphrase: str | None, cleartext_local: bool) -> None:
+    """Require an explicit encrypted or local-cleartext export mode."""
+    if passphrase is not None and cleartext_local:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.export_transport_conflict",
+        )
+    if passphrase is None and not cleartext_local:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.export_requires_transport",
+            suggestion="aeat config profile export NAME --to bundle.json --passphrase <passphrase>",
+        )
+    if passphrase is not None and len(passphrase) < 8:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.export_passphrase_too_short",
+        )
 
 
 def _register_profile_import_command(
@@ -351,7 +420,15 @@ def _register_profile_import_command(
         ctx: typer.Context,
         path: Path = typer.Argument(
             ...,
-            help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle."),
+            help=tr("cli.config.profile.import_path_help", default="Path to the profile bundle."),
+        ),
+        passphrase: str | None = typer.Option(
+            None,
+            "--passphrase",
+            help=tr(
+                "cli.config.profile.import_passphrase_help",
+                default="Passphrase for a bundle exported with 'config profile export --passphrase'.",
+            ),
         ),
         label: str | None = typer.Option(
             None,
@@ -375,6 +452,11 @@ def _register_profile_import_command(
             profile_storage_session,
             record_to_path_values,
         )
+        from ....application.user_profile._bundle_encryption import (
+            EncryptedProfileBundleError,
+            EncryptedProfileBundleExport,
+            decrypt_profile_bundle_with_passphrase,
+        )
         from ....application.workflow import read_profile_bucket as _read_profile_bucket
         from ....application.workflow import read_profile_bucket_by_id
         from ....domain.buckets import BucketEventType
@@ -387,7 +469,17 @@ def _register_profile_import_command(
                 context={"path": str(path)},
             )
         try:
-            bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
+            raw_bundle_text = path.read_text(encoding="utf-8")
+            if passphrase is None:
+                bundle = UserProfilePortableExport.model_validate_json(raw_bundle_text)
+            else:
+                encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
+                bundle = decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
+        except EncryptedProfileBundleError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.import_encrypted_bundle_invalid",
+                context={"path": str(path)},
+            ) from exc
         except _AeatError:
             raise
         except Exception as exc:

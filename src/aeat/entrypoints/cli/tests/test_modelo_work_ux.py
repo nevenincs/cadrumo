@@ -22,6 +22,7 @@ pin the modelo-work findings reported by the persona fleet:
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -591,6 +592,80 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
     assert payload["filing_year"] == 2026
     assert payload["period"] == {"filing_year": 2026, "code": "2T"}
     assert payload["revision_id"] == expected_revision
+
+
+def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
+    _isolated_cli_backend: Path,
+) -> None:
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation taxi activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+
+    created_work = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "131", "--year", "2026", "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert created_work.exit_code == 0, created_work.output
+    work_unit_id = _payload(created_work.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "01=12000",
+            "--casilla", "02=0",
+            "--casilla", "03=0",
+            "--casilla", "05=0",
+            "--casilla", "08=0",
+            "--casilla", "09=0",
+            "--casilla", "12=0",
+            "--casilla", "14=0",
+            "--casilla", "modulos-epigrafe=721.2",
+            "--casilla", "modulos-1-unidades=0",
+            "--casilla", "modulos-1-unidades-anterior=0",
+            "--casilla", "modulos-2-unidades=1",
+            "--casilla", "modulos-3-unidades=40",
+            "--casilla", "modulos-4-unidades=0",
+            "--casilla", "modulos-5-unidades=0",
+            "--casilla", "modulos-6-unidades=0",
+            "--casilla", "modulos-7-unidades=0",
+            "--casilla", "modulos-minoracion-inversion=0",
+            "--binding", "modelo-131-2026-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    calculated_payload = _payload(calculated.output)
+    revision_id = calculated_payload["calculation_revision_id"]
+
+    shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    assert shown.exit_code == 0, shown.output
+    revision_payload = _payload(shown.output)
+
+    inputs = revision_payload["input_values_by_casilla_id"]
+    assert inputs["01"] == "12000"
+    assert inputs["modulos-epigrafe"] == "721.2"
+    assert inputs["modulos-2-unidades"] == "1"
+    assert inputs["modulos-3-unidades"] == "40"
+    assert inputs["modulos-minoracion-inversion"] == "0"
+
+    casillas = revision_payload["casilla_values"]
+    assert Decimal(casillas["01"]) == Decimal("12000")
+    assert Decimal(casillas["modulos-rendimiento-neto-actividad"]) > Decimal("0")
+    assert Decimal(casillas["modulos-rendimiento-neto-actividad"]) != Decimal(casillas["01"])
 
 
 def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:

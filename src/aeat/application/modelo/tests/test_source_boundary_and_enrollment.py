@@ -7,13 +7,12 @@ non-blocking advisory on source_diagnostics instead of silently blanking.
 Resolver enrollment: LedgerRentaIncomeAggregationSourceResolver (M130 income),
 OssIossLedgerSourceResolver (M369 OSS/IOSS), InvoiceCatalogueSourceResolver
 (M349 collectible_invoice), and ForeignAssetsAggregationSourceResolver (M720
-foreign_asset) are enrolled in the live merge_source_resolutions tuple so they
-fire on their modelos.
+foreign_asset), and M184 attribution members (atribucion_member) are enrolled
+in the live merge_source_resolutions tuple so they fire on their modelos.
 
-Deferred source kinds: the remaining deferred source kinds (atribucion_member,
-related_party_operation, refund_operation) produce an
-'unhandled_binding_source' advisory on source_diagnostics rather than a silent blank,
-and are NOT on the manual_sources allowlist.
+Deferred source kinds: the remaining deferred source kinds (related_party_operation,
+refund_operation) produce an 'unhandled_binding_source' advisory on source_diagnostics
+rather than a silent blank, and are NOT on the manual_sources allowlist.
 
 Boundary gate: assert_no_novel_source_kinds raises on a synthetic novel-source binding
 so a TOML source that would resolve to blank fails fast instead of compiling silently.
@@ -76,6 +75,17 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
     UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
+    UserProfileFact(path="attribution_entity.legal_form", value="comunidad_bienes"),
+    UserProfileFact(path="attribution_entity_socios.0.nif", value="22222222B"),
+    UserProfileFact(path="attribution_entity_socios.0.name", value="Member Two"),
+    UserProfileFact(path="attribution_entity_socios.0.share_pct", value=Decimal("40")),
+    UserProfileFact(path="attribution_entity_socios.0.base_imponible_assigned", value=Decimal("4000")),
+    UserProfileFact(path="attribution_entity_socios.0.role", value="comunero"),
+    UserProfileFact(path="attribution_entity_socios.1.nif", value="11111111A"),
+    UserProfileFact(path="attribution_entity_socios.1.name", value="Member One"),
+    UserProfileFact(path="attribution_entity_socios.1.share_pct", value=Decimal("60")),
+    UserProfileFact(path="attribution_entity_socios.1.base_imponible_assigned", value=Decimal("6000")),
+    UserProfileFact(path="attribution_entity_socios.1.role", value="comunero"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
 )
 
@@ -200,20 +210,10 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
 # ---------------------------------------------------------------------------
 
 
-def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
+def test_s08_atribucion_member_profile_source_resolves_m184_rows(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics.
-
-    M184 2015-y-siguientes bindings declare source='atribucion_member'.  The atribucion
-    resolver is not yet built; the unhandled-source safety net must emit an
-    'unhandled_binding_source' advisory so the operator's CLI surfaces the gap instead
-    of a silent blank.
-
-    M184 is chosen over M190/M193 for this test because it has no formula relations,
-    so the engine does not crash on a missing relation value and we can isolate the
-    unhandled-source advisory path cleanly.
-    """
+    """M184 ``atribucion_member`` rows resolve from real attribution-entity profile facts."""
     _seed_attribution_entity_profile(secure_objects)
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
@@ -228,48 +228,64 @@ def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
     )
 
     assert isinstance(result, BucketAggregationCalculationResult)
-    # source_diagnostics must carry at least one advisory for the atribucion_member source kind.
-    advisories = [
+    unrouted = [
         d
         for d in result.source_diagnostics
         if d.source_kind == "atribucion_member" and d.reason == "unhandled_binding_source"
     ]
-    assert advisories, (
-        "Expected at least one 'unhandled_binding_source' advisory for 'atribucion_member' "
-        "but source_diagnostics contained none. "
-        f"All diagnostics: {result.source_diagnostics}"
-    )
-    # The advisory must identify the binding so the operator can act on it.
-    assert all(d.binding_id for d in advisories)
-    assert all("atribucion_member" in d.message for d in advisories)
+    assert not unrouted, f"atribucion_member is enrolled and must not be unhandled: {unrouted}"
+    assert result.revision.row_binding_values["modelo-184-member-row-nif"] == {"1": "11111111A", "2": "22222222B"}
+    assert result.revision.row_binding_values["modelo-184-member-row-share"] == {"1": "60", "2": "40"}
+    assert result.revision.row_binding_values["modelo-184-member-row-base-assigned"] == {
+        "1": "6000",
+        "2": "4000",
+    }
+    assert [row.nif for row in result.revision.detail_rows] == ["11111111A", "22222222B"]
+    assert [row.importe for row in result.revision.detail_rows] == [Decimal("6000"), Decimal("4000")]
 
 
-def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
-    secure_objects: SecureObjectRepository,
+def test_s08_atribucion_member_missing_base_emits_source_issue_not_zero(
+    tmp_path: Path,
 ) -> None:
-    """Deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics."""
-    _seed_attribution_entity_profile(secure_objects)
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
-    work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        clock=_T1,
+    """Missing assigned base is diagnosed; the resolver does not derive it from share percentage."""
+    incomplete_facts = tuple(
+        fact
+        for fact in _ATTRIBUTION_PROFILE_FACTS
+        if fact.path != "attribution_entity_socios.1.base_imponible_assigned"
     )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+            UserProfileRecord(
+                profile_id=_BUCKET_ID,
+                display_name="Incomplete M184 attribution profile",
+                facts=incomplete_facts,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
+        wu_repo, cr_repo, tx_repo, invoice_repo = _repos(objects)
+        work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
-    advisories = [
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+            clock=_T1,
+        )
+
+    source_issues = [
         d
         for d in result.source_diagnostics
-        if d.source_kind == "atribucion_member" and d.reason == "unhandled_binding_source"
+        if d.source_kind == "atribucion_member" and d.reason == "source_issue"
     ]
-    assert advisories, (
-        "Expected 'unhandled_binding_source' advisory for 'atribucion_member'. "
-        f"source_diagnostics: {result.source_diagnostics}"
-    )
+    assert len(source_issues) == 1
+    assert "base_imponible_assigned" in source_issues[0].message
+    assert result.revision.row_binding_values["modelo-184-member-row-nif"] == {"1": "22222222B"}
+    assert result.revision.row_binding_values["modelo-184-member-row-base-assigned"] == {"1": "4000"}
+    assert "0" not in set(result.revision.row_binding_values["modelo-184-member-row-base-assigned"].values())
 
 
 # ---------------------------------------------------------------------------
@@ -434,77 +450,13 @@ def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
     """DEFERRED_SOURCE_KINDS is non-empty and contains the expected deferred kinds."""
     expected = frozenset(
         {
-            BindingSourceKind.ATRIBUCION_MEMBER,
             BindingSourceKind.RELATED_PARTY_OPERATION,
             BindingSourceKind.REFUND_OPERATION,
         },
     )
     assert expected.issubset(DEFERRED_SOURCE_KINDS), f"Missing deferred kinds: {expected - DEFERRED_SOURCE_KINDS}"
     assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
-
-
-@pytest.mark.parametrize(
-    ("modelo", "period", "revision_id", "deferred_kind"),
-    [
-        ("184", "0A", "2015-y-siguientes", "atribucion_member"),
-    ],
-)
-def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
-    tmp_path: Path,
-    modelo: str,
-    period: str,
-    revision_id: str,
-    deferred_kind: str,
-) -> None:
-    """Each deferred source kind emits an advisory rather than silently blanking.
-
-    Checks that for every deferred kind that appears in some revision's bindings,
-    a live calculate on a work unit for that revision surfaces the advisory.
-    M184 has no formula relations, so a fresh-bucket calculate does not crash on a
-    missing relation operand and the unhandled-source advisory path is isolated cleanly.
-    The withholding kind moved out of the deferred set when
-    WithholdingSourceResolver was enrolled; M190/M193 empty-store behavior is
-    asserted in the annual reconciliation and withholding-resolver tests.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        objects = profile.repository
-        _seed_ready_profile(objects)
-        if modelo == "184":
-            _seed_attribution_entity_profile(objects)
-        wu_repo, cr_repo, tx_repo, invoice_repo = (
-            WorkUnitCatalogueRepository(objects=objects),
-            CalculationRevisionCatalogueRepository(objects=objects),
-            TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-            InvoiceCatalogueRepository(objects=objects),
-        )
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo=modelo,
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, period),
-            revision_id=revision_id,
-            repository=wu_repo,
-            clock=_T0,
-        )
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            clock=_T1,
-        )
-
-    advisories = [
-        d
-        for d in result.source_diagnostics
-        if d.source_kind == deferred_kind and d.reason == "unhandled_binding_source"
-    ]
-    assert advisories, (
-        f"S10: expected 'unhandled_binding_source' advisory for deferred kind "
-        f"'{deferred_kind}' on M{modelo} but got none. "
-        f"source_diagnostics: {result.source_diagnostics}"
-    )
+    assert BindingSourceKind.ATRIBUCION_MEMBER not in DEFERRED_SOURCE_KINDS
 
 
 def _foreign_asset_observation(

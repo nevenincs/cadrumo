@@ -122,7 +122,7 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
             display_name=_PROFILE_LABEL,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
-                UserProfileFact(path="identity.name", value="Marta"),
+                UserProfileFact(path="identity.name", value="Ana"),
                 UserProfileFact(path="identity.surnames", value="Verifier"),
                 UserProfileFact(path="activities.description", value="design services"),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),

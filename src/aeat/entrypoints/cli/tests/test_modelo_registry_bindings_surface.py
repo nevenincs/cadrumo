@@ -517,7 +517,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
 
 
 def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> None:
-    """Marta's suffered salary withholding is discoverable as a public binding."""
+    """An operator's suffered salary withholding is discoverable as a public binding."""
     result = invoke_cached_cli(
         [
             "--format",

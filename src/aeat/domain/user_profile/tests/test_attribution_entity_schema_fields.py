@@ -43,11 +43,18 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
     section = schema.section("attribution_entity_socios")
 
     assert section.repeatable is True
-    assert {field.key for field in section.fields} == {"nif", "name", "share_pct", "role"}
+    assert {field.key for field in section.fields} == {
+        "nif",
+        "name",
+        "share_pct",
+        "base_imponible_assigned",
+        "role",
+    }
     assert {
         "attribution_entity_socios.nif",
         "attribution_entity_socios.name",
         "attribution_entity_socios.share_pct",
+        "attribution_entity_socios.base_imponible_assigned",
         "attribution_entity_socios.role",
     } <= set(schema.field_paths)
 
@@ -79,6 +86,20 @@ def test_attribution_entity_socios_share_pct_is_decimal_percentage(
     assert field.type is ProfileFieldType.DECIMAL
     assert field.minimum == Decimal("0")
     assert field.maximum == Decimal("100")
+    expected_refs = {"ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"}
+    assert set(field.legal_refs) == expected_refs
+    assert expected_refs <= legal_ids
+
+
+def test_attribution_entity_socios_base_assigned_is_explicit_money_amount(
+    schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
+) -> None:
+    field = schema.field("attribution_entity_socios.base_imponible_assigned")
+
+    assert field.type is ProfileFieldType.MONEY
+    assert field.required is True
+    assert "must not fabricate" in field.description
     expected_refs = {"ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"}
     assert set(field.legal_refs) == expected_refs
     assert expected_refs <= legal_ids

@@ -111,7 +111,7 @@ def collab_recipient_add(
         ...,
         help=tr(
             "cli.config.collab.recipient.recipient_id_help",
-            default="Stable operator-chosen label (e.g. 'kents-accountant').",
+            default="Stable operator-chosen label (e.g. 'my-accountant').",
         ),
     ),
     public_key: str = typer.Option(
@@ -198,7 +198,7 @@ def collab_recipient_remove(
         ...,
         help=tr(
             "cli.config.collab.recipient.recipient_id_help",
-            default="Stable operator-chosen label (e.g. 'kents-accountant').",
+            default="Stable operator-chosen label (e.g. 'my-accountant').",
         ),
     ),
 ) -> None:

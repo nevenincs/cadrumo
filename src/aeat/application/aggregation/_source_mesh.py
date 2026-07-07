@@ -172,13 +172,6 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
         # re-ratified with no promotion date; the review trigger is the modelo's
         # next hardening campaign or an operator filing need, whichever comes
         # first, and promotion requires its own grounded design ADR.
-        BindingSourceKind.ATRIBUCION_MEMBER: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M184's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
         BindingSourceKind.RELATED_PARTY_OPERATION: DeferredSourceTarget(
             owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
             trigger=(

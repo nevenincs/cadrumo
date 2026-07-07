@@ -1,6 +1,6 @@
 """CLI ``--file`` spreadsheet import for local filed observations (issue #273).
 
-Kent's cert-free path: a hand-authored CSV or XLSX spreadsheet of
+A cert-free path: a hand-authored CSV or XLSX spreadsheet of
 ``casilla_code, value`` rows reconstructs a past filing's casilla values into a
 non-official local observation, without any AEAT certificate or live pull.
 """
@@ -71,7 +71,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
             "--period",
             "0A",
             "--by",
-            "kent-spreadsheet",
+            "operator-spreadsheet",
             "--file",
             str(sheet),
         ],
@@ -139,7 +139,7 @@ def test_observe_local_from_xlsx_spreadsheet_persists_values(
             "--period",
             "0A",
             "--by",
-            "kent-spreadsheet-xlsx",
+            "operator-spreadsheet-xlsx",
             "--file",
             str(sheet),
         ],
@@ -173,7 +173,7 @@ def test_observe_local_set_overrides_file_value_for_same_casilla(
             "--period",
             "0A",
             "--by",
-            "kent-override",
+            "operator-override",
             "--file",
             str(sheet),
             "--set",

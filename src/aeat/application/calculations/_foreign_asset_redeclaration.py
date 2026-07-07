@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...core import CasillaId, ForeignAssetObligationGroup, foreign_asset_declaration_threshold
+from ...core import CasillaId, ForeignAssetObligationGroup, Modelo, foreign_asset_declaration_threshold
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.modelos import (
     ModeloVerificationFinding,
@@ -75,7 +75,7 @@ def modelo_720_redeclaration_advisory_findings(
             Supplies the strict per-obligation-block re-declaration delta.
     """
     return _redeclaration_advisory_findings(
-        modelo="720",
+        modelo=Modelo.M720.value,
         prior_positions=_modelo_720_positions(prior_observation),
         current_positions=_modelo_720_positions(current_observation),
         declared_positions=_modelo_720_positions(current_declaration_observation or current_observation),
@@ -97,7 +97,7 @@ def modelo_721_redeclaration_advisory_findings(
             re-declaration threshold.
     """
     return _redeclaration_advisory_findings(
-        modelo="721",
+        modelo=Modelo.M721.value,
         prior_positions=_modelo_721_positions(prior_observation),
         current_positions=_modelo_721_positions(current_observation),
         declared_positions=_modelo_721_positions(current_declaration_observation or current_observation),
