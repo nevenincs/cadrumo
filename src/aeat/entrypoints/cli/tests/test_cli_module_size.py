@@ -1,4 +1,20 @@
-"""Static size guards for CLI modules and command functions."""
+"""Static size guards for CLI modules and command functions.
+
+See Also:
+    :func:`~tests._inventory.package_python_files`
+        Shared source inventory used to enumerate production CLI modules
+        without bespoke filesystem walking.
+    :mod:`~tests.test_codebase_size_budgets`
+        Codebase-wide sibling ratchet that mirrors the CLI module and callable
+        size ceilings.
+    ``.vault/adr/2026-06-05-codebase-monolith-decomposition-adr.md``
+        Governs bounded monolith decomposition while preserving public
+        hexagonal facades.
+    ``.vault/plan/2026-06-05-modelo-work-revision-cli-decomposition-plan.md``
+        Tracks the residual CLI extraction waves that established this guard.
+    ``.vault/audit/2026-07-02-arch-remediation-gates-ratchet-audit.md``
+        Records follow-up size-budget closures and remaining ratchet debt.
+"""
 
 from __future__ import annotations
 
