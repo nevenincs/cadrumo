@@ -1,20 +1,25 @@
-"""Inventory test: inline quantize and bare Decimal(str()) enrollment gate.
+"""Inventory gate for canonical Decimal rounding and coercion.
 
-Rule
-----
 Production modules under ``src/aeat/`` must not use:
 
 1. ``value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)`` inline.
-   All callers must delegate to :func:`aeat.core.money.round_to_cents`.
+   All callers must delegate to :func:`~core.money.round_to_cents`.
 
 2. ``Decimal(str(`` bare coercion patterns inline.
-   All callers must delegate to :func:`aeat.core.decimal.coerce_decimal`.
+   All callers must delegate to :func:`~core.decimal.coerce_decimal`.
 
-Exclusions (permanent)
-----------------------
-- ``test_*.py`` files: test suites may exercise decimal behaviour directly.
-- ``src/aeat/core/money/__init__.py``: the canonical round_to_cents definition.
-- ``src/aeat/core/decimal/_coerce.py``: the canonical coerce_decimal definition.
+The only production exclusions are the canonical implementation modules
+themselves. Test modules may exercise decimal behaviour directly.
+
+See Also:
+    :mod:`~core.money`
+        Canonical euro-cent quantum and half-up rounding helper.
+    :mod:`~core.decimal`
+        Canonical Decimal coercion and formatting helpers.
+    :mod:`~tests._inventory`
+        Shared production AST inventory surface used by this ratchet.
+    ``2026-05-28-codebase-solidification-plan``
+        W03.P18.S358-S368 decimal canonical-enrollment closure.
 """
 
 from __future__ import annotations
@@ -118,7 +123,7 @@ def test_no_inline_quantize_round_half_up(source_tree_ast: Mapping[Path, ast.AST
 def test_no_bare_decimal_str_coercion(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Bare ``Decimal(str(`` coercion must be zero in production code.
 
-    All call-sites must delegate to :func:`aeat.core.decimal.coerce_decimal`.
+    All call-sites must delegate to :func:`~core.decimal.coerce_decimal`.
     The only permitted occurrence lives in the canonical helper module itself,
     which is excluded above.
     """
