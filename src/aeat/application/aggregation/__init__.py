@@ -73,7 +73,6 @@ from ...core.aggregation import (
 )
 from ...domain.calculations.registry import WithholdingObservation
 from ...domain.modelos import LedgerFilingSnapshot
-from ._atribucion_member import AtribucionMemberSourceResolver
 from ._business_proportion import business_proportion
 from ._counterpart import (
     CounterpartAggregation,
@@ -233,7 +232,6 @@ __all__ = [
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
-    "AtribucionMemberSourceResolver",
     "BindingSourceDisposition",
     "BorradorSourceProvenance",
     "CalculationSourceContext",
