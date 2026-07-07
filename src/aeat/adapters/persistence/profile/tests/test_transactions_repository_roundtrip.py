@@ -9,6 +9,19 @@ Anti-tautology: builds a two-transaction catalogue with non-default
 distinct categories, and provenance metadata, then loads it back.
 Per-field witnesses pin business_pct, category_id, taxable_base and
 the keying invariant (mapping keys equal transaction_id).
+
+See Also:
+    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
+        Encrypted per-transaction repository exercised by these roundtrips.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Domain catalogue persisted under the bucket-scoped transaction namespace.
+    :class:`~domain.iva.IvaCashAccountingPaymentEvidence`
+        Cash-accounting payment evidence whose Decimal/date fields must survive
+        JSON-shaped persistence roundtrips.
+    ``2026-05-13-cli-workflow-redesign-w61-p301-s1801-ledger-storage-ownership-audit``
+        Audit that required bucket-scoped transaction catalogue storage.
+    ``2026-06-30-bucket-custody-completeness-adr``
+        Secure-object custody decision that keeps financial records encrypted.
 """
 
 from __future__ import annotations
@@ -622,7 +635,7 @@ def test_transaction_catalogue_preserves_nonnegative_amount_and_direction(
 
     The ledger-amount-direction convention stores ``raw.amount`` as a
     non-negative magnitude and carries the flow solely in
-    :attr:`Transaction.direction`. This pins both halves through the encrypted
+    :attr:`~domain.transactions.Transaction.direction`. This pins both halves through the encrypted
     boundary: an OUTGOING magnitude row and an INTERNAL_TRANSFER magnitude row
     must load back strictly equal, with the magnitude and the direction
     preserved verbatim. A save-drops / load-re-derives regression on either
