@@ -516,6 +516,14 @@ class TaxpayerProfile(BaseModel):
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
     objective_estimation_prior_year_purchases_eur: Decimal | None = None
+    objective_estimation_modulos_iae_epigraph: str = ""
+    objective_estimation_modulos_module_1_units: Decimal | None = None
+    objective_estimation_modulos_module_2_units: Decimal | None = None
+    objective_estimation_modulos_module_3_units: Decimal | None = None
+    objective_estimation_modulos_module_4_units: Decimal | None = None
+    objective_estimation_modulos_module_5_units: Decimal | None = None
+    objective_estimation_modulos_module_6_units: Decimal | None = None
+    objective_estimation_modulos_module_7_units: Decimal | None = None
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
@@ -648,6 +656,13 @@ class TaxpayerProfile(BaseModel):
         "objective_estimation_prior_year_invoice_gross_income_eur",
         "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
         "objective_estimation_prior_year_purchases_eur",
+        "objective_estimation_modulos_module_1_units",
+        "objective_estimation_modulos_module_2_units",
+        "objective_estimation_modulos_module_3_units",
+        "objective_estimation_modulos_module_4_units",
+        "objective_estimation_modulos_module_5_units",
+        "objective_estimation_modulos_module_6_units",
+        "objective_estimation_modulos_module_7_units",
         mode="before",
     )
     @classmethod

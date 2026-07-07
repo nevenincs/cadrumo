@@ -9,6 +9,8 @@ boundary refusals; the per-persona derivation matrix lives in
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
@@ -150,6 +152,33 @@ def test_explain_degrades_gracefully_for_modelo_without_deadline_windows() -> No
     # The scheduling rationale degrades to None when no window data exists.
     assert result.scheduling_rationale is None
     assert "tax_id" in result.profile_facts
+
+
+def test_explain_historical_modelo_100_carries_out_of_plazo_warning() -> None:
+    """A historical applicable return must say its voluntary filing window is closed.
+
+    S347 repro: M100 for tax year 2022 in 2026 is still applicable for a
+    natural person, but it is no longer an ordinary in-window filing. The warning
+    is derived from the real registered Modelo 100 2022 deadline window.
+    """
+
+    result = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=date(2026, 7, 7))
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.applicable is True
+    assert result.out_of_plazo_warning is not None
+    assert "out_of_plazo" in result.out_of_plazo_warning
+    assert "voluntary filing window closed on 2023-" in result.out_of_plazo_warning
+    assert "four-year LGT arts. 66-67 prescription horizon" in result.out_of_plazo_warning
+
+
+def test_explain_recent_modelo_100_does_not_emit_out_of_plazo_warning() -> None:
+    """A just-closed M100 window is not the S347 stale-year case."""
+
+    result = build_overview_explain(_autonomo_profile(), modelo="100", year=2025, today=date(2026, 7, 7))
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+    assert result.out_of_plazo_warning is None
 
 
 def test_explain_unknown_modelo_still_raises_not_degrades() -> None:

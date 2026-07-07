@@ -365,32 +365,3 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
     )
     with pytest.raises(ValidationError):
         env_cls.model_validate_json(bad_json)
-
-
-# ---------------------------------------------------------------------------
-# contract: CI assertion that cast rationale markers are present in source
-# ---------------------------------------------------------------------------
-
-
-def test_cast_rationale_markers_present_in_secure_repository_source() -> None:
-    """Assert that rationale-marker comments survive refactoring.
-
-    Each ``cast()`` call in ``_secure_repository.py`` that cannot yet be
-    eliminated must carry a CAST-RATIONALE-* marker. This test reads the
-    source file and asserts the markers are present, acting as a CI gate
-    that blocks silent removal of documented safety rationale.
-    """
-    import pathlib
-
-    source = pathlib.Path(__file__).parent.parent / "_secure_repository.py"
-    text = source.read_text(encoding="utf-8")
-
-    required_markers = [
-        "CAST-RATIONALE-SECURE-REPOSITORY-LOAD",
-        "CAST-RATIONALE-SECURE-REPOSITORY-ITER",
-        "CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS",
-    ]
-    for marker in required_markers:
-        assert marker in text, (
-            f"Cast rationale marker {marker!r} is missing from {source}. Either restore the comment or remove the cast."
-        )

@@ -137,6 +137,31 @@ def taxpayer_profile_from_mapping(
         objective_estimation_prior_year_purchases_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
         ),
+        objective_estimation_modulos_iae_epigraph=canonical.get(
+            "irpf.objective_estimation_modulos_iae_epigraph",
+            "",
+        ),
+        objective_estimation_modulos_module_1_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_1_units"),
+        ),
+        objective_estimation_modulos_module_2_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_2_units"),
+        ),
+        objective_estimation_modulos_module_3_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_3_units"),
+        ),
+        objective_estimation_modulos_module_4_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_4_units"),
+        ),
+        objective_estimation_modulos_module_5_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_5_units"),
+        ),
+        objective_estimation_modulos_module_6_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_6_units"),
+        ),
+        objective_estimation_modulos_module_7_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_7_units"),
+        ),
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,

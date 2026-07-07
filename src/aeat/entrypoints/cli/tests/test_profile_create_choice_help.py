@@ -78,3 +78,86 @@ def test_profile_create_help_advertises_situacion_familiar_runtime_choices(
     assert "FUNCTION" not in help_result.output
     missing = sorted(token for token in runtime_choices if token not in compact_help)
     assert not missing, f"--situacion-familiar runtime choices are not all visible in profile-create help: {missing}"
+
+
+def test_profile_create_cli_accepts_objetiva_modulos_facts_and_directa_without_them(
+    tmp_path: Path,
+) -> None:
+    """Real profile-create CLI stores módulos facts only when the operator supplies them."""
+
+    env = _isolated_env(tmp_path)
+    direct = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "config",
+            "profile",
+            "create",
+            "direct-profile",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Direct",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "direct activity",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_normal",
+        ],
+        env=env,
+    )
+    assert direct.exit_code == 0, direct.output
+
+    objetiva = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "config",
+            "profile",
+            "create",
+            "modulos-profile",
+            "--quiet",
+            "--accept-defaults",
+            "--tax-id",
+            "87654321X",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Modulos",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "barber shop",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--irpf-estimation-regime",
+            "objetiva",
+            "--objective-estimation-modulos-iae-epigraph",
+            "972.1",
+            "--objective-estimation-modulos-module-1-units",
+            "2.50",
+            "--objective-estimation-modulos-module-2-units",
+            "85",
+            "--objective-estimation-modulos-module-3-units",
+            "12000.75",
+        ],
+        env=env,
+    )
+    assert objetiva.exit_code == 0, objetiva.output
+
+    shown = invoke_cached_cli(
+        ["--language", "en", "config", "profile", "show", "modulos-profile"],
+        env=env,
+    )
+    assert shown.exit_code == 0, shown.output
+    assert "irpf.objective_estimation_modulos_iae_epigraph" in shown.output
+    assert "972.1" in shown.output
+    assert "irpf.objective_estimation_modulos_module_1_units" in shown.output
+    assert "2.50" in shown.output

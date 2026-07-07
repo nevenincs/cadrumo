@@ -148,6 +148,10 @@ _IRPF_SPECIAL_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
 )
 
 _IMPATRIADO_REGIME = WizardCondition(question_id="irpf-special-regime", equals=IrpfSpecialRegime.IMPATRIADO.value)
+_IRPF_OBJECTIVE_ESTIMATION = WizardCondition(
+    question_id="irpf-estimation-regime",
+    equals=IrpfEstimationRegime.OBJETIVA.value,
+)
 
 _FISCAL_RESIDENCY_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
@@ -800,6 +804,86 @@ _OBLIGATIONS_SECTION = WizardSection(
             help=tr("wizard.setup.obligations.irpf-estimation-regime.help"),
             choices=_IRPF_ESTIMATION_REGIME_CHOICES,
             required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-iae-epigraph",
+            profile_key="irpf.objective_estimation_modulos_iae_epigraph",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-iae-epigraph.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-iae-epigraph.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-1-units",
+            profile_key="irpf.objective_estimation_modulos_module_1_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-1-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-2-units",
+            profile_key="irpf.objective_estimation_modulos_module_2_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-2-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-3-units",
+            profile_key="irpf.objective_estimation_modulos_module_3_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-3-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-4-units",
+            profile_key="irpf.objective_estimation_modulos_module_4_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-4-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-5-units",
+            profile_key="irpf.objective_estimation_modulos_module_5_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-5-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-6-units",
+            profile_key="irpf.objective_estimation_modulos_module_6_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-6-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="objective-estimation-modulos-module-7-units",
+            profile_key="irpf.objective_estimation_modulos_module_7_units",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-7-units.prompt"),
+            help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
+            required=False,
+            visible_when=_IRPF_OBJECTIVE_ESTIMATION,
             answer_type=str,
         ),
         WizardQuestion(

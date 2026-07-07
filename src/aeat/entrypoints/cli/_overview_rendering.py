@@ -327,6 +327,8 @@ def overview_explain_output(result) -> tuple[OverviewExplainResult, list[str]]:
     ]
     if result.scheduling_rationale is not None:
         lines.append(f"scheduling_rationale\t{result.scheduling_rationale}")
+    if result.out_of_plazo_warning is not None:
+        lines.append(f"warning\tout_of_plazo\t{result.out_of_plazo_warning}")
     for fact_name, fact_value in sorted(result.profile_facts.items()):
         lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
     return typed_explain, lines
