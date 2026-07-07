@@ -38,7 +38,7 @@ Represent an interrupted ejercicio in the register and seed the resumed year wit
 - [x] `W01.P02.S06` - Extend the ley-37-1992 art-105 required_text with the art-105.Cinco clause, corpus-grounded; `src/aeat/_data/registry/aeat/legal/iva.toml`.
 - [x] `W01.P02.S07` - Add the interrupted-ejercicio marker/provenance to the register enums and the active/inactive history on ProrrataRegisterEntry; `src/aeat/core/_prorrata_register.py, src/aeat/domain/prorrata_register/__init__.py`.
 - [x] `W01.P02.S08` - Implement the last-three-active-years global seed walk (summed volumes via compute_prorrata_definitiva_anual, skipping the gap) and the insufficient-history advisory; `src/aeat/domain/prorrata_register/__init__.py, src/aeat/application/calculations/_prorrata_regularizacion.py`.
-- [ ] `W01.P02.S09` - Verify the interruption seed against a worked example with a genuine gap and no averaged percentages; `src/aeat/domain/prorrata_register/tests/`.
+- [x] `W01.P02.S09` - Verify the interruption seed against a worked example with a genuine gap and no averaged percentages; `src/aeat/domain/prorrata_register/tests/`.
 
 ## Wave `W02` - Prorrata especial: regime-aware apportionment foundation
 
