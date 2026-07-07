@@ -27,25 +27,23 @@ from __future__ import annotations
 import ast
 import importlib
 import inspect
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...tests import leaf_name
+from ...tests import ast_for_path, leaf_name, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_REPO_ROOT = Path(__file__).parents[4]
-
-
-def _repo_source(relative_path: str) -> str:
-    return (_REPO_ROOT / relative_path).read_text(encoding="utf-8")
-
-
-def _repo_tree(relative_path: str) -> ast.AST:
-    return ast.parse(_repo_source(relative_path))
+def _repo_tree(relative_path: str, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
+    path = repo_path(relative_path)
+    tree = ast_for_path(path, source_tree_ast)
+    if tree is None:
+        raise AssertionError(f"unable to parse {repo_relative(path)}")
+    return tree
 
 
 def _assert_module_constant_identity(
@@ -67,9 +65,10 @@ def _decimal_call_literal_offenders(
     display_path: str,
     literal: str,
     replacement: str,
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> list[str]:
     offenders: list[str] = []
-    for node in ast.walk(_repo_tree(relative_path)):
+    for node in ast.walk(_repo_tree(relative_path, source_tree_ast)):
         if not isinstance(node, ast.Call):
             continue
         if leaf_name(node.func) != "Decimal":
@@ -85,9 +84,10 @@ def _min_arg_literal_offenders(
     display_path: str,
     literal: int,
     replacement: str,
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> list[str]:
     offenders: list[str] = []
-    for node in ast.walk(_repo_tree(relative_path)):
+    for node in ast.walk(_repo_tree(relative_path, source_tree_ast)):
         if not isinstance(node, ast.Call):
             continue
         if leaf_name(node.func) != "min":
@@ -422,9 +422,8 @@ def test_modelo_group_consumers_alias_central_constants() -> None:
         )
 
 
-def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]) -> bool:
+def _ast_contains_modelo_group_tuple(tree: ast.AST, expected_elts: tuple[str, ...]) -> bool:
     """Return True if the AST contains a bare tuple literal whose string elements equal ``expected_elts``."""
-    tree = ast.parse(source)
     target_set = set(expected_elts)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Tuple):
@@ -438,7 +437,7 @@ def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]
     return False
 
 
-def test_no_bare_modelo_group_tuple_literals_in_consumers() -> None:
+def test_no_bare_modelo_group_tuple_literals_in_consumers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare modelo group tuple literals in consumers."""
 
     for _case_id, (relative_path, expected_elts, message) in zip(
@@ -446,7 +445,7 @@ def test_no_bare_modelo_group_tuple_literals_in_consumers() -> None:
         _MODELO_GROUP_LITERAL_CASES,
         strict=True,
     ):
-        assert not _ast_contains_modelo_group_tuple(_repo_source(relative_path), expected_elts), message
+        assert not _ast_contains_modelo_group_tuple(_repo_tree(relative_path, source_tree_ast), expected_elts), message
 
 
 # ---------------------------------------------------------------------------
@@ -494,7 +493,7 @@ def test_irpf_int_constant_consumers_alias_core_constants() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_no_bare_irpf_cap_literals_in_min_calls() -> None:
+def test_no_bare_irpf_cap_literals_in_min_calls(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare IRPF cap literals appear as ``min()`` arguments in consumers."""
 
     for _case_id, (relative_path, display_path, literal, replacement, message) in zip(
@@ -507,6 +506,7 @@ def test_no_bare_irpf_cap_literals_in_min_calls() -> None:
             display_path=display_path,
             literal=literal,
             replacement=replacement,
+            source_tree_ast=source_tree_ast,
         )
 
         assert offenders == [], message + ":\n" + "\n".join(offenders)
@@ -543,7 +543,7 @@ def test_decimal_constant_consumers_alias_core_constants() -> None:
         )
 
 
-def test_no_bare_decimal_literals_in_consumers() -> None:
+def test_no_bare_decimal_literals_in_consumers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare Decimal literals in Decimal-constant consumers."""
 
     for case_id, (relative_path, display_path, replacement) in zip(
@@ -556,6 +556,7 @@ def test_no_bare_decimal_literals_in_consumers() -> None:
             display_path=display_path,
             literal="21.00",
             replacement=replacement,
+            source_tree_ast=source_tree_ast,
         )
 
         assert offenders == [], (
@@ -573,6 +574,7 @@ def test_no_bare_decimal_literals_in_consumers() -> None:
             display_path=display_path,
             literal=literal,
             replacement=replacement,
+            source_tree_ast=source_tree_ast,
         )
 
         assert offenders == [], message + ":\n" + "\n".join(offenders)
