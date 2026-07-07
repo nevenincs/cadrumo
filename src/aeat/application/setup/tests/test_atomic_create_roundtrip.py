@@ -218,7 +218,9 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
 
     _create("alice")
     bundle = _cli_storage / "alice-bundle.json"
-    export = _invoke(["--format", "json", "config", "profile", "export", "alice", "--to", str(bundle)])
+    export = _invoke(
+        ["--format", "json", "config", "profile", "export", "alice", "--to", str(bundle), "--cleartext-local"],
+    )
     assert export.exit_code == 0, export.output
     assert bundle.is_file()
     exported_id = json.loads(bundle.read_text(encoding="utf-8"))["profile"]["profile_id"]

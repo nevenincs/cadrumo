@@ -2779,9 +2779,11 @@ cli:
         export_full_backup_info: 'This archive is a FULL backup: it is AEAD-encrypted
           at rest and carries attachment evidence bytes, the audit trail, and the
           cross-period calculation inputs, in addition to the profile, ledger, calculation,
-          and filing history. Store it somewhere safe; restore with ''aeat config
-          profile archive import''.'
-        export_help: Write a sealed, encrypted full-backup archive to PATH.
+          and filing history. When exported with --recovery-wrap-passphrase it is
+          the encrypted cross-host transfer path for profile bundles. Store it somewhere
+          safe; restore with ''aeat config profile archive import''.'
+        export_help: Write a sealed, AEAD-encrypted full-backup archive to PATH; add
+          --recovery-wrap-passphrase before email or cross-host transfer.
         export_name_help: Profile to back up; defaults to active.
         export_out_help: Destination path for the archive.
         export_recovery_wrap_help: Optional passphrase to seal the archive under,
@@ -2852,13 +2854,30 @@ cli:
       duplicate_target_help: Target profile id for the duplicate
       edit_help: Re-run the wizard against an existing profile and update values in
         place
-      export_help: Write a portable profile bundle to a JSON file
+      export_cleartext_local_help: Write cleartext JSON for local/SAR handling only;
+        not safe for email, sync, or transfer.
+      export_encrypted_info: This profile bundle was written to {out} with AEAD passphrase
+        encryption. Import it with 'aeat config profile import PATH --passphrase ...'.
+        It carries the structured profile bundle only; use the encrypted recovery
+        archive for a complete backup with attachment evidence bytes and audit trail.
+      export_help: Write a passphrase-encrypted portable profile bundle to PATH; cleartext
+        JSON requires --cleartext-local for local/SAR use only.
       export_name_help: Profile to export; defaults to the active profile
-      export_out_help: Destination path for the JSON bundle
+      export_out_help: Destination path for the profile bundle
+      export_passphrase_help: Passphrase to AEAD-encrypt the serialized profile bundle
+        for transfer.
+      export_passphrase_too_short: The profile export passphrase must be at least
+        8 characters.
+      export_requires_transport: Use --passphrase for an encrypted transfer bundle,
+        or --cleartext-local for local/SAR JSON only.
       export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
-        financial data: the raw tax id (not redacted), the full ledger, calculation
-        revisions, and filing records. It was written to {out}. Delete it after transfer;
-        do not email, sync, or leave it on disk.'
+        financial data: the raw tax id (not redacted), names/surnames, the full ledger,
+        calculation revisions, and filing records. It was written to {out}. Use it
+        only for local/SAR handling; do not email, sync, or transfer it. Delete
+        it after that local/SAR handling is complete. Use ''aeat config profile
+        export --passphrase ...'' for an AEAD-encrypted structured transfer bundle.'
+      export_transport_conflict: Choose either --passphrase or --cleartext-local,
+        not both.
       help: Manage active profile configuration values
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
@@ -2879,7 +2898,9 @@ cli:
       import_active_switch_info: The imported profile {name} is now the ACTIVE profile;
         subsequent commands operate on it. Run 'aeat config switch <name>' to change
         the active profile.
-      import_help: Register a portable profile bundle from a JSON file
+      import_encrypted_bundle_invalid: The encrypted profile bundle could not be
+        decrypted or validated. Check the passphrase and file.
+      import_help: Register a portable profile bundle from a file
       import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
         the profile bundle schema.'
       import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
@@ -2894,7 +2915,9 @@ cli:
       import_missing_filing_baseline: 'The profile bundle is missing filing identity
         details. Fix the bundle or re-export a complete profile with these fields:
         %{missing_flags}.'
-      import_path_help: Path to the profile bundle JSON file
+      import_passphrase_help: Passphrase for a bundle exported with 'config profile
+        export --passphrase'.
+      import_path_help: Path to the profile bundle file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
       logout_session_warning: Logout cleared the active-profile pointer. Subsequent

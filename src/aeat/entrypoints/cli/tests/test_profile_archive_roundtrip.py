@@ -181,6 +181,48 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     assert restored_transactions == original_transactions
 
 
+def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path) -> None:
+    """A passphrase-wrapped transfer archive does not expose raw profile identity bytes.
+
+    This is the S308 persona path: a gestor needs a bundle suitable for
+    cross-host/email transfer. The sealed archive may expose only its header
+    metadata in clear; the profile payload containing NIF/name/surnames must
+    stay inside the AEAD envelope.
+    """
+    import tarfile
+
+    r_create = _create_profile("kent-identity", tax_id="12345678Z")
+    assert r_create.exit_code == 0, r_create.output
+
+    archive_path = tmp_path / "kent-identity-transfer.tar.gz"
+    r_export = _archive_export(
+        "kent-identity",
+        archive_path,
+        recovery_wrap_passphrase="identity-transfer-passphrase-42",  # noqa: S106 - synthetic test fixture
+    )
+    assert r_export.exit_code == 0, r_export.output
+    assert archive_path.is_file()
+
+    member_payloads: dict[str, bytes] = {}
+    with tarfile.open(archive_path, mode="r:gz") as archive:
+        for member in archive.getmembers():
+            if not member.isfile():
+                continue
+            extracted = archive.extractfile(member)
+            assert extracted is not None
+            member_payloads[member.name] = extracted.read()
+
+    assert set(member_payloads) == {"header.json", "payload.envelope", "recovery.wrap"}
+    joined_members = b"\n".join(member_payloads.values())
+    for forbidden in (b"12345678Z", b"Archive", b"Roundtrip", b"kent-identity"):
+        assert forbidden not in joined_members
+
+    # The header is intentionally inspectable without decryption, but it must
+    # remain metadata-only and never carry the portable bundle payload.
+    assert b"manifest_digest" in member_payloads["header.json"]
+    assert b"identity.tax_id" not in member_payloads["header.json"]
+
+
 def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> None:
     """Archive import provisions the restored bucket as the active profile."""
     from ....core import resolve_active_bucket_id
@@ -210,6 +252,29 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
         assert "active" in switch["message"].lower()
 
         assert resolve_active_bucket_id() == source_bucket_id
+
+
+def test_archive_import_refuses_wrong_recovery_wrap_passphrase(tmp_path: Path) -> None:
+    """A passphrase-wrapped transfer archive refuses restore with the wrong passphrase."""
+    r_create = _create_profile("kent-wrong-passphrase", tax_id="87654321X")
+    assert r_create.exit_code == 0, r_create.output
+
+    archive_path = tmp_path / "kent-wrong-passphrase.tar.gz"
+    r_export = _archive_export(
+        "kent-wrong-passphrase",
+        archive_path,
+        recovery_wrap_passphrase="right-recovery-passphrase-42",  # noqa: S106 - synthetic test fixture
+    )
+    assert r_export.exit_code == 0, r_export.output
+
+    restore_root = tmp_path / "wrong-passphrase-root"
+    with isolated_profile_storage_root(tmp_path=restore_root):
+        r_import = _archive_import(
+            archive_path,
+            recovery_wrap_passphrase="wrong-recovery-passphrase-42",  # noqa: S106 - synthetic test fixture
+        )
+        assert r_import.exit_code != 0, r_import.output
+        assert "Traceback" not in r_import.output
 
 
 # ---------------------------------------------------------------------------

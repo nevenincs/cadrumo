@@ -75,7 +75,7 @@ def _create_profile(
 
 
 def _export_profile(name: str, bundle_path: Path) -> Result:
-    return _invoke(("config", "profile", "export", name, "--to", str(bundle_path)))
+    return _invoke(("config", "profile", "export", name, "--to", str(bundle_path), "--cleartext-local"))
 
 
 def _import_bundle(
