@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.file_permissions import _restrict_posix_file_permissions, _run_permission_command
+from ..file_permissions import _restrict_posix_file_permissions, _run_permission_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -39,14 +39,13 @@ from datetime import date
 
 import pytest
 
-import aeat.application.workflow._engine as engine_module
-
 from ....core.errors import (
     ErrorCategory,
     ErrorEnvelope,
     build_error_envelope,
 )
 from .. import WorkflowAbortReason, WorkflowEngine, WorkflowStage
+from .. import _engine as engine_module
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 from ._engine_support import (
     _ConcreteDraft,

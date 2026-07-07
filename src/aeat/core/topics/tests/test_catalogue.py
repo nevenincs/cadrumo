@@ -23,16 +23,17 @@ See Also:
 from __future__ import annotations
 
 import inspect
+import sys
 
 import pytest
 from pydantic import ValidationError
-
-import aeat.core.topics as topics_module
 
 from ...resources import resources
 from .. import Topic, TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+topics_module = sys.modules[__package__.removesuffix(".tests")]
 
 _EXPECTED_TOPICS = frozenset(
     {
