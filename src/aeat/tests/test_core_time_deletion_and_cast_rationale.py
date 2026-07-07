@@ -1,7 +1,22 @@
-"""aeat.core._time deletion inventory.
+"""Deleted ``core._time`` import-survivor inventory.
 
-Confirms:
-- aeat.core._time has been fully deleted with no import survivors.
+Confirms the dormant ``aeat.core._time`` shim remains deleted and that
+production source imports the canonical :mod:`~core.time` package instead of
+the retired module. The direct import assertion catches importable survivors;
+the AST inventory catches source-level references before they can reintroduce
+the deleted clock surface.
+
+See Also:
+    :mod:`~core.time`
+        Canonical UTC clock, frozen-clock seam, and UTC datetime helpers.
+    :mod:`~tests._inventory`
+        Shared production AST inventory surface used by structural ratchets.
+    ``2026-05-28-codebase-solidification-plan``
+        W07.P33.S528/S530 deletion and aggregate-test closure for
+        ``core._time``.
+    ``2026-05-31-core-authority-plan``
+        W13.P30.S103 follow-up proving the deleted module no longer has live
+        import survivors after CTIMEX cleanup.
 """
 
 from __future__ import annotations
