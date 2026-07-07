@@ -6220,6 +6220,22 @@ wizard:
           LIS; per sota, totes dues modalitats són possibles. Opcional.
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
+      objective-estimation-modulos-iae-epigraph:
+        help: Epígraf IAE per a mòduls d'estimació objectiva, per exemple 972.
+      objective-estimation-modulos-module-1-units:
+        help: Unitats anuals del mòdul 1 per a estimació objectiva.
+      objective-estimation-modulos-module-2-units:
+        help: Unitats anuals del mòdul 2 per a estimació objectiva.
+      objective-estimation-modulos-module-3-units:
+        help: Unitats anuals del mòdul 3 per a estimació objectiva.
+      objective-estimation-modulos-module-4-units:
+        help: Unitats anuals del mòdul 4 per a estimació objectiva.
+      objective-estimation-modulos-module-5-units:
+        help: Unitats anuals del mòdul 5 per a estimació objectiva.
+      objective-estimation-modulos-module-6-units:
+        help: Unitats anuals del mòdul 6 per a estimació objectiva.
+      objective-estimation-modulos-module-7-units:
+        help: Unitats anuals del mòdul 7 per a estimació objectiva.
       irpf-income-categories:
         help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
           per categoria
@@ -6413,6 +6429,25 @@ wizard:
         help: Com es determina el rendiment net de l'activitat econòmica; selecciona
           Model 130 o 131
         prompt: Règim d'estimació IRPF
+      objective-estimation-modulos-iae-epigraph:
+        help: Es desa una vegada al perfil anual. Els coeficients continuen al registre del model.
+        prompt: Epígraf IAE per a mòduls d'estimació objectiva
+      objective-estimation-modulos-module-1-units:
+        prompt: Unitats anuals del mòdul 1
+      objective-estimation-modulos-module-2-units:
+        prompt: Unitats anuals del mòdul 2
+      objective-estimation-modulos-module-3-units:
+        prompt: Unitats anuals del mòdul 3
+      objective-estimation-modulos-module-4-units:
+        prompt: Unitats anuals del mòdul 4
+      objective-estimation-modulos-module-5-units:
+        prompt: Unitats anuals del mòdul 5
+      objective-estimation-modulos-module-6-units:
+        prompt: Unitats anuals del mòdul 6
+      objective-estimation-modulos-module-7-units:
+        prompt: Unitats anuals del mòdul 7
+      objective-estimation-modulos-module-units:
+        help: Recompte anual estable per a aquesta casella de mòdul. L'epígraf IAE seleccionat defineix si significa personal, superfície del local, consum elèctric o un altre mòdul oficial.
       irpf-special-regime:
         choices:
           general:

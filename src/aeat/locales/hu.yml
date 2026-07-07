@@ -6126,6 +6126,22 @@ wizard:
       irpf-estimation-regime:
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
           hogy Modelo 130 vagy 131 alkalmazandó-e
+      objective-estimation-modulos-iae-epigraph:
+        help: IAE epigrafus objektív becslési modulokhoz, például 972.
+      objective-estimation-modulos-module-1-units:
+        help: Az 1. modul éves egységei objektív becsléshez.
+      objective-estimation-modulos-module-2-units:
+        help: A 2. modul éves egységei objektív becsléshez.
+      objective-estimation-modulos-module-3-units:
+        help: A 3. modul éves egységei objektív becsléshez.
+      objective-estimation-modulos-module-4-units:
+        help: A 4. modul éves egységei objektív becsléshez.
+      objective-estimation-modulos-module-5-units:
+        help: Az 5. modul éves egységei objektív becsléshez.
+      objective-estimation-modulos-module-6-units:
+        help: A 6. modul éves egységei objektív becsléshez.
+      objective-estimation-modulos-module-7-units:
+        help: A 7. modul éves egységei objektív becsléshez.
       irpf-income-categories:
         help: IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót
           kategóriánként egyszer
@@ -6321,6 +6337,25 @@ wizard:
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
           hogy Modelo 130 vagy 131 alkalmazandó-e
         prompt: IRPF becslési rend
+      objective-estimation-modulos-iae-epigraph:
+        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a modelo-nyilvántartásban maradnak.
+        prompt: IAE epigrafus objektív becslési modulokhoz
+      objective-estimation-modulos-module-1-units:
+        prompt: Az 1. modul éves egységei
+      objective-estimation-modulos-module-2-units:
+        prompt: A 2. modul éves egységei
+      objective-estimation-modulos-module-3-units:
+        prompt: A 3. modul éves egységei
+      objective-estimation-modulos-module-4-units:
+        prompt: A 4. modul éves egységei
+      objective-estimation-modulos-module-5-units:
+        prompt: Az 5. modul éves egységei
+      objective-estimation-modulos-module-6-units:
+        prompt: A 6. modul éves egységei
+      objective-estimation-modulos-module-7-units:
+        prompt: A 7. modul éves egységei
+      objective-estimation-modulos-module-units:
+        help: Stabil éves egységszám ehhez a modulhelyhez. A kiválasztott IAE epigrafus határozza meg, hogy alkalmazottat, üzlethelyiség-területet, villamosenergia-fogyasztást vagy más hivatalos modult jelent.
       irpf-special-regime:
         choices:
           general:

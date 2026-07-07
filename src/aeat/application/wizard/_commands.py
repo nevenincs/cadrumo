@@ -461,6 +461,38 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
+    "objective-estimation-modulos-iae-epigraph": typer.Option(
+        "--objective-estimation-modulos-iae-epigraph",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-iae-epigraph.help"),
+    ),
+    "objective-estimation-modulos-module-1-units": typer.Option(
+        "--objective-estimation-modulos-module-1-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-1-units.help"),
+    ),
+    "objective-estimation-modulos-module-2-units": typer.Option(
+        "--objective-estimation-modulos-module-2-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-2-units.help"),
+    ),
+    "objective-estimation-modulos-module-3-units": typer.Option(
+        "--objective-estimation-modulos-module-3-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-3-units.help"),
+    ),
+    "objective-estimation-modulos-module-4-units": typer.Option(
+        "--objective-estimation-modulos-module-4-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-4-units.help"),
+    ),
+    "objective-estimation-modulos-module-5-units": typer.Option(
+        "--objective-estimation-modulos-module-5-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-5-units.help"),
+    ),
+    "objective-estimation-modulos-module-6-units": typer.Option(
+        "--objective-estimation-modulos-module-6-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-6-units.help"),
+    ),
+    "objective-estimation-modulos-module-7-units": typer.Option(
+        "--objective-estimation-modulos-module-7-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-7-units.help"),
+    ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
         click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
