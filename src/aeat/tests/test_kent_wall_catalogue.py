@@ -67,6 +67,14 @@ def _run_pytest_subprocess(*node_ids: str) -> subprocess.CompletedProcess[str]:
     Forces ``-m integration`` explicitly so the invocation is not silently
     narrowed back to ``unit`` by the inherited ``addopts`` -- the exact
     scoping gap this gate exists to close.
+
+    Passes ``-n0`` to override the inherited ``addopts`` ``-n auto``: without
+    it, every one of these per-wall subprocesses spins up a full fleet of
+    ``xdist`` workers (one per core) just to run a single node, and in the
+    shared multi-agent worktree the outer suite is itself an ``-n auto`` run,
+    so the nested worker fleets oversubscribe every core many times over. ``-n0``
+    keeps ``xdist`` loaded (so the ``-n`` argument stays valid) but runs the
+    node in-process, collapsing each subprocess to just its one node's cost.
     """
     return subprocess.run(
         [
@@ -77,6 +85,7 @@ def _run_pytest_subprocess(*node_ids: str) -> subprocess.CompletedProcess[str]:
             "--no-header",
             "-p",
             "no:cacheprovider",
+            "-n0",
             "-m",
             "integration",
             *node_ids,
