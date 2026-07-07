@@ -1,4 +1,28 @@
-"""Centralisation contract tests (part 1): MIME types, currency, classified-by-manual, and threshold constants."""
+"""Centralisation contract tests for shared external constants.
+
+This first constants sweep pins MIME payload types, the default currency,
+manual-classification sentinels, and statutory threshold amounts to
+``core.external_constants``. Identity checks prove known consumers import the
+shared objects, while AST scans catch bare MIME strings and Decimal threshold
+literals reintroduced outside the canonical registry.
+
+See Also:
+    :mod:`~core.external_constants`
+        Canonical registry that owns the shared MIME, currency, sentinel, and
+        threshold constants under test.
+    :mod:`~tests._inventory`
+        AST inventory helpers used to scan production consumers for local
+        literal shadow definitions.
+    :class:`~core.config.Settings`
+        Configuration surface that must inherit default currency from the core
+        constant rather than a second local literal.
+    ``.vault/adr/2026-05-26-aeat-sede-constants-centralization-adr.md``
+        Governs centralising executable AEAT/Sede and externally defined
+        constants in schema-owned authority surfaces.
+    ``.vault/audit/2026-06-14-legal-grounding-centralization-audit.md``
+        Records the regulatory-literal centralisation lane that these
+        threshold guards keep closed.
+"""
 
 from __future__ import annotations
 
