@@ -214,7 +214,11 @@ def materialise_registry_values_for_source_resolution(
     staging_binding_defaults: Mapping[BindingId, Decimal] | None = None,
     filing_period_date: date | None = None,
 ) -> SourceResolutionRegistryValues:
-    """Run the registry engine without persistence so staged resolvers can read current values."""
+    """Run the registry engine without persistence so staged resolvers can read current values.
+
+    ``registry_snapshot`` is the compiled :class:`RegistrySnapshot` the engine
+    evaluates the staged current-year values against.
+    """
     revision = registry_snapshot.revision
     effective_binding_values = {**dict(staging_binding_defaults or {}), **dict(binding_values)}
     effective_unresolved_binding_ids = tuple(
@@ -260,7 +264,11 @@ def add_unhandled_source_diagnostics(
     revision: ModeloRevision,
     source_resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
-    """Add advisories for declared binding sources not handled by the mesh."""
+    """Add advisories for declared binding sources not handled by the mesh.
+
+    ``revision`` is the compiled :class:`ModeloRevision` whose declared binding
+    sources are checked against the mesh's owned-source set.
+    """
     pre_mesh_handled = frozenset(
         {
             BindingSourceKind.PROFILE,
@@ -282,7 +290,11 @@ def add_expected_missing_binding_diagnostics(
     revision: ModeloRevision,
     source_resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
-    """Mark present-source, no-value binding gaps unresolved instead of silent."""
+    """Mark present-source, no-value binding gaps unresolved instead of silent.
+
+    ``revision`` is the compiled :class:`ModeloRevision` whose bound casillas
+    are checked for present-source, no-value binding gaps.
+    """
     missing = expected_but_missing_binding_ids(
         revision,
         owned_sources=frozenset(source_resolution.owned_sources),
@@ -326,7 +338,11 @@ def expected_but_missing_binding_ids(
     owned_sources: frozenset[BindingSourceKind],
     resolved_binding_values: Mapping[BindingId, Decimal],
 ) -> tuple[tuple[BindingId, CasillaId, BindingSourceKind], ...]:
-    """Return direct bound bindings whose present source resolved no value."""
+    """Return direct bound bindings whose present source resolved no value.
+
+    ``revision`` is the compiled :class:`ModeloRevision` whose bindings and
+    casillas are scanned for present-source, no-value gaps.
+    """
     non_silent_sources = frozenset({"previous_filing", "relation_prefill", "manual_input"})
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
