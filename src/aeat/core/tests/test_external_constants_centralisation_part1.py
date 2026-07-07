@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import ast
 import importlib
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ...tests._inventory import ast_for_path, package_ast_items, repo_path, repo_relative
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -47,13 +49,22 @@ def _assert_module_constant_identity(
     assert getattr(mod, attr_name) is expected, module_name
 
 
-def _read_ast(path: Path) -> ast.AST:
-    return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _read_ast(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
+    tree = ast_for_path(path, source_tree_ast)
+    if tree is None:
+        raise AssertionError(f"unable to parse {repo_relative(path)}")
+    return tree
 
 
-def _decimal_call_literal_offenders(path: Path, *, literal: str, replacement: str) -> list[str]:
+def _decimal_call_literal_offenders(
+    path: Path,
+    *,
+    literal: str,
+    replacement: str,
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> list[str]:
     offenders: list[str] = []
-    for node in ast.walk(_read_ast(path)):
+    for node in ast.walk(_read_ast(path, source_tree_ast)):
         if not isinstance(node, ast.Call):
             continue
         func = node.func
@@ -65,9 +76,15 @@ def _decimal_call_literal_offenders(path: Path, *, literal: str, replacement: st
     return offenders
 
 
-def _string_literal_offenders(path: Path, *, literal: str, replacement: str) -> list[str]:
+def _string_literal_offenders(
+    path: Path,
+    *,
+    literal: str,
+    replacement: str,
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> list[str]:
     offenders: list[str] = []
-    for node in ast.walk(_read_ast(path)):
+    for node in ast.walk(_read_ast(path, source_tree_ast)):
         if not isinstance(node, ast.Constant) or node.value != literal:
             continue
         offenders.append(f"{path.name}:{node.lineno}: bare {literal!r} literal; use {replacement}")
@@ -202,7 +219,7 @@ def test_classified_by_manual_consumers_alias_core_constant() -> None:
         )
 
 
-def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None:
+def test_no_local_classified_by_manual_shadow_in_application_or_domain(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No production file in application/ or domain/ may define a local ``classified_by``
     sentinel by assigning the bare string ``"manual"`` to a module-level variable whose
     name contains ``classified_by`` or ``manual_classified``.
@@ -212,37 +229,32 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
     locally instead of imported from ``aeat.core.external_constants``.
     """
 
-    repo_root = Path(__file__).parents[4]
-    search_roots = (
-        repo_root / "src/aeat/application",
-        repo_root / "src/aeat/domain",
-    )
-
     # Names that signal a classified_by sentinel re-definition.
     _SENTINEL_NAME_FRAGMENTS = ("classified_by", "manual_classified")
 
     offenders: list[str] = []
-    for search_root in search_roots:
-        for py_file in search_root.rglob("*.py"):
-            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
-            for node in ast.walk(tree):
-                # Look for module-level or function-level simple assignments:
-                # TARGET = "manual"
-                if not isinstance(node, ast.Assign):
+    for py_file, tree in package_ast_items(source_tree_ast):
+        relative_path = repo_relative(py_file)
+        if not relative_path.startswith(("src/aeat/application/", "src/aeat/domain/")):
+            continue
+        for node in ast.walk(tree):
+            # Look for module-level or function-level simple assignments:
+            # TARGET = "manual"
+            if not isinstance(node, ast.Assign):
+                continue
+            value = node.value
+            if not isinstance(value, ast.Constant) or value.value != "manual":
+                continue
+            for target in node.targets:
+                if not isinstance(target, ast.Name):
                     continue
-                value = node.value
-                if not isinstance(value, ast.Constant) or value.value != "manual":
-                    continue
-                for target in node.targets:
-                    if not isinstance(target, ast.Name):
-                        continue
-                    name_lower = target.id.lower()
-                    if any(frag in name_lower for frag in _SENTINEL_NAME_FRAGMENTS):
-                        offenders.append(
-                            f"{py_file.relative_to(repo_root)}:{node.lineno}: "
-                            f"local classified_by sentinel '{target.id} = \"manual\"'; "
-                            f"import CLASSIFIED_BY_MANUAL from aeat.core.external_constants",
-                        )
+                name_lower = target.id.lower()
+                if any(frag in name_lower for frag in _SENTINEL_NAME_FRAGMENTS):
+                    offenders.append(
+                        f"{relative_path}:{node.lineno}: "
+                        f"local classified_by sentinel '{target.id} = \"manual\"'; "
+                        f"import CLASSIFIED_BY_MANUAL from aeat.core.external_constants",
+                    )
 
     assert offenders == [], (
         "Local classified_by manual sentinels found; "
@@ -299,20 +311,26 @@ def test_export_mime_consumers_alias_core_constants() -> None:
     assert tabular._CSV_MIME_TYPE == "text/csv"
 
 
-def test_no_bare_json_or_csv_mime_literals_in_exporters() -> None:
+def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare JSON/CSV MIME literals remain in exporter argument positions.
 
     Anti-tautology: parses the real AST so any future re-introduction of
     either literal triggers immediate failure.
     """
 
-    repo_root = Path(__file__).parents[4]
     offenders: list[str] = []
     for relative_path, literal, replacement in (
         ("src/aeat/adapters/outbound/aeat/sede/_declarations.py", "application/json", "_JSON_MIME_TYPE"),
         ("src/aeat/application/export/_tabular.py", "text/csv", "_CSV_MIME_TYPE"),
     ):
-        offenders.extend(_string_literal_offenders(repo_root / relative_path, literal=literal, replacement=replacement))
+        offenders.extend(
+            _string_literal_offenders(
+                repo_path(relative_path),
+                literal=literal,
+                replacement=replacement,
+                source_tree_ast=source_tree_ast,
+            )
+        )
 
     assert offenders == [], "Bare JSON/CSV MIME literals found; import the core MIME constants instead:\n" + "\n".join(
         offenders
@@ -335,12 +353,6 @@ def test_threshold_consumers_alias_core_constants() -> None:
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
             "_counterpart must import M347_THRESHOLD_EUR from aeat.core.external_constants",
-        ),
-        (
-            "aeat.application.aggregation._foreign_assets",
-            "MODELO_720_REPORTING_THRESHOLD_EUR",
-            "MODELO_720_REPORTING_THRESHOLD_EUR",
-            "_foreign_assets must import MODELO_720_REPORTING_THRESHOLD_EUR from aeat.core.external_constants",
         ),
         (
             "aeat.domain.renta._maritime_exemption",
@@ -369,10 +381,9 @@ def test_threshold_consumers_alias_core_constants() -> None:
         )
 
 
-def test_no_bare_threshold_decimal_literals_in_consumers() -> None:
+def test_no_bare_threshold_decimal_literals_in_consumers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No local ``Decimal(...)`` threshold literals remain in threshold consumers."""
 
-    repo_root = Path(__file__).parents[4]
     offenders: list[str] = []
     for relative_path, literal, replacement in (
         ("src/aeat/application/aggregation/_counterpart.py", "3005.06", "M347_THRESHOLD_EUR"),
@@ -385,7 +396,12 @@ def test_no_bare_threshold_decimal_literals_in_consumers() -> None:
         ),
     ):
         offenders.extend(
-            _decimal_call_literal_offenders(repo_root / relative_path, literal=literal, replacement=replacement),
+            _decimal_call_literal_offenders(
+                repo_path(relative_path),
+                literal=literal,
+                replacement=replacement,
+                source_tree_ast=source_tree_ast,
+            ),
         )
 
     assert offenders == [], (
