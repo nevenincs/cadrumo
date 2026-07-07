@@ -1,17 +1,30 @@
-"""Static enforcement of the :data:`aeat.core.errors.ERROR_REGISTRY` invariants.
+"""Static enforcement of the :data:`~core.errors.ERROR_REGISTRY` invariants.
 
-Walks every importable module under :mod:`aeat`, discovers each
-:class:`aeat.core.errors.AeatError` subclass, and asserts:
+Walks every importable module under ``aeat``, discovers each
+:class:`~core.errors.AeatError` subclass, and asserts:
 
-* every subclass binds to a registered :class:`aeat.core.errors.ErrorCode`,
+* every subclass binds to a registered :class:`~core.errors.ErrorCode`,
 * each registered code maps to exactly one subclass (no aliasing),
-* every :class:`aeat.core.errors.ErrorCategory` has at least one
+* every :class:`~core.errors.ErrorCategory` has at least one
   registered code, and
-* no production raise site instantiates :class:`aeat.core.errors.AeatError`
+* no production raise site instantiates :class:`~core.errors.AeatError`
   directly or references an unregistered subclass.
 
 Runs at unit-test scope — failures here are CI-blocking so missing
 registrations cannot ship.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory and module-name resolver used by
+        the raise-site scan.
+    :mod:`~core.errors`
+        Public error-registry surface whose declared codes are enforced here.
+    ``.vault/audit/2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit.md``
+        Records the deterministic import and test-only subclass filtering fix
+        for this gate.
+    ``.vault/audit/2026-04-25-error-code-registry-review-audit.md``
+        Reviews the declared-registry contract and strengthened raise-site
+        enforcement.
 """
 
 from __future__ import annotations
