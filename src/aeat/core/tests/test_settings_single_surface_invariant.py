@@ -1,8 +1,8 @@
 """Enforce: AEAT-prefixed config READS must flow through ``Settings``.
 
 The architectural mandate is that every AEAT-prefixed environment
-variable be read through :class:`aeat.core.config.Settings` (and its
-:func:`aeat.core.config.load_settings` accessor), not through direct
+variable be read through :class:`~core.config.Settings` (and its
+:func:`~core.config.load_settings` accessor), not through direct
 ``os.environ.get`` / ``os.getenv`` / ``os.environ[...]`` access.
 
 Direct reads bypass:
@@ -19,6 +19,22 @@ docstring is *not* a function call, so the AST walk ignores it.
 A short allowlist captures the documented irreducible exceptions —
 subprocess-IPC WRITE sites where ``Settings`` has no write API. Each
 allowlisted line is annotated in-source with a rationale comment.
+
+See Also:
+    :func:`~core.config.load_settings`
+        Canonical process settings accessor that owns AEAT-prefixed
+        environment reads.
+    :func:`~core.config.override_settings`
+        Test override seam whose behavior direct environment reads would
+        bypass.
+    :func:`~tests._inventory.production_ast_items`
+        Shared production AST inventory scanned by this structural guard.
+    ``.vault/audit/2026-05-26-secure-storage-settings-env-audit.md``
+        Records the settings and environment handling audit that motivates
+        centralizing AEAT env access.
+    ``.vault/adr/2026-06-03-settings-di-deferral-adr.md``
+        Preserves the Settings dependency-injection migration decision and
+        direct ``os.environ`` remediation path.
 """
 
 from __future__ import annotations
