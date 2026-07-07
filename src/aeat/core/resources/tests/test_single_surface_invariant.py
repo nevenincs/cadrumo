@@ -24,11 +24,11 @@ from pathlib import Path
 
 import pytest
 
+from aeat.tests._inventory import SRC_AEAT, package_python_files, production_python_files, repo_path, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
-_SRC = _REPO_ROOT / "src" / "aeat"
-_RESOURCES_PKG = _SRC / "core" / "resources"
+_RESOURCES_PKG = SRC_AEAT / "core" / "resources"
 
 
 def _is_production_module(path: Path) -> bool:
@@ -44,7 +44,7 @@ def _is_production_module(path: Path) -> bool:
 
 
 def _production_files() -> list[Path]:
-    return sorted(p for p in _SRC.rglob("*.py") if _is_production_module(p))
+    return sorted(p for p in production_python_files() if _is_production_module(p))
 
 
 _PENDING_RETIREMENT_ALLOWLIST: frozenset[Path] = frozenset()
@@ -73,15 +73,15 @@ def test_no_default_root_constants_in_production() -> None:
     pattern = re.compile(r"^_DEFAULT_[A-Z_]+_ROOT\s*=\s*bundled_path", re.MULTILINE)
     offenders: list[str] = []
     for path in _production_files():
-        rel = path.relative_to(_REPO_ROOT)
+        rel = repo_relative(path)
         # Normalise on POSIX-style separators so allow-list checks
         # work on Windows too.
-        normalised = Path(rel.as_posix())
+        normalised = Path(rel)
         if normalised in _PENDING_RETIREMENT_ALLOWLIST:
             continue
         text = path.read_text(encoding="utf-8")
         if pattern.search(text):
-            offenders.append(str(rel))
+            offenders.append(rel)
     assert not offenders, (
         "production files outside the allow-list defining "
         "_DEFAULT_*_ROOT = bundled_path(...) found; these must "
@@ -98,7 +98,7 @@ def test_allowlist_only_contains_files_that_actually_offend() -> None:
     pattern = re.compile(r"^_DEFAULT_[A-Z_]+_ROOT\s*=\s*bundled_path", re.MULTILINE)
     stale: list[str] = []
     for rel in _PENDING_RETIREMENT_ALLOWLIST:
-        absolute = _REPO_ROOT / rel
+        absolute = repo_path(rel.as_posix())
         if not absolute.is_file():
             stale.append(f"{rel} (file missing)")
             continue
@@ -131,7 +131,7 @@ def test_no_dead_project_root_imports() -> None:
     elsewhere in the body.
     """
     dead_imports: list[str] = []
-    for path in _SRC.rglob("*.py"):
+    for path in package_python_files(include_data=True):
         text = path.read_text(encoding="utf-8")
         for match in _PROJECT_ROOT_IMPORT_RE.finditer(text):
             imported = {name.strip() for name in match.group(1).split(",")}
@@ -141,7 +141,7 @@ def test_no_dead_project_root_imports() -> None:
             # that a single-line import does not satisfy its own gate.
             body = text[: match.start()] + text[match.end() :]
             if "PROJECT_ROOT" not in body:
-                dead_imports.append(str(path.relative_to(_REPO_ROOT)))
+                dead_imports.append(repo_relative(path))
     assert not dead_imports, (
         "modules that import PROJECT_ROOT but never reference it "
         "(drop the dead import; bundled-data reads go through "
