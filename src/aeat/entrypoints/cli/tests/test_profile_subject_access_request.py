@@ -57,7 +57,7 @@ def _create_profile(name: str) -> Result:
 def test_subject_access_request_writes_parsable_archive(tmp_path: Path) -> None:
     """The SAR archive is written and parses back as the portable bundle."""
     assert _create_profile("subject").exit_code == 0
-    out = tmp_path / "kent-data.json"
+    out = tmp_path / "sar-data.json"
 
     result = _invoke(["config", "profile", "subject-access-request", "subject", "--to", str(out)])
 
@@ -70,7 +70,7 @@ def test_subject_access_request_writes_parsable_archive(tmp_path: Path) -> None:
 def test_subject_access_request_envelope_lists_data_categories(tmp_path: Path) -> None:
     """The JSON envelope enumerates the personal-data categories held."""
     assert _create_profile("subject").exit_code == 0
-    out = tmp_path / "kent-data.json"
+    out = tmp_path / "sar-data.json"
 
     result = _invoke(
         ["--format", "json", "config", "profile", "subject-access-request", "subject", "--to", str(out)],

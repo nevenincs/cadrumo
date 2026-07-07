@@ -90,7 +90,7 @@ def test_profile_preflight_names_profile_only_scope_for_m100() -> None:
     ("profile_name", "modelo", "filing_year", "period", "revision_id"),
     (
         ("lucia_defaults_broken", "303", "2024", "1T", "2023-y-siguientes"),
-        ("marta_defaults_broken", "100", "2025", "0A", "2025"),
+        ("ana_defaults_broken", "100", "2025", "0A", "2025"),
     ),
     ids=("m303-defaulted-profile", "m100-defaulted-profile"),
 )

@@ -164,8 +164,8 @@ def test_recipient_registered_and_removed_events_roundtrip(tmp_path: Path) -> No
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
         public_key_hex = public_key_hex_from_raw_bytes(X25519PrivateKey.generate().public_key().public_bytes_raw())
-        registry.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, label="Kent's Accountant")
-        record = registry.get("kents-accountant")
+        registry.add(recipient_id="my-accountant", public_key_hex=public_key_hex, label="My Accountant")
+        record = registry.get("my-accountant")
 
         registered_event = emit_collab_recipient_registered_event(
             record,
@@ -175,12 +175,12 @@ def test_recipient_registered_and_removed_events_roundtrip(tmp_path: Path) -> No
         )
         assert registered_event.event_type is BucketEventType.COLLAB_RECIPIENT_REGISTERED
         assert registered_event.object_type is BucketEventObjectType.RECIPIENT
-        assert registered_event.object_id == "kents-accountant"
+        assert registered_event.object_id == "my-accountant"
         assert registered_event.payload["fingerprint_sha256"] == record.fingerprint_sha256
 
-        registry.remove("kents-accountant")
+        registry.remove("my-accountant")
         removed_event = emit_collab_recipient_removed_event(
-            recipient_id="kents-accountant",
+            recipient_id="my-accountant",
             bucket_id="collab-audit-registry",
             repository=event_repository,
             occurred_at=_NOW,

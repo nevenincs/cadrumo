@@ -44,7 +44,7 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Marta"),
+            UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="identity.surnames", value="Retenciones"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),

@@ -224,7 +224,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
-            submitted_by="kents-accountant",
+            submitted_by="my-accountant",
             submitted_at=_NOW,
         )
         envelope = encrypt_feedback_package_for_originator(
@@ -246,7 +246,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
 
         assert imported.counter_signature_verified is True
         assert imported.feedback.note == "all clear"
-        assert imported.feedback.submitted_by == "kents-accountant"
+        assert imported.feedback.submitted_by == "my-accountant"
         assert imported.feedback.counter_signed_receipt == receipt
 
         # Countersign-attach-to-journal: the verified receipt is appended to
@@ -291,7 +291,7 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
             calculation_revision_id=_PLACEHOLDER_REVISION_ID,
             note="see attached corrections, no formal sign-off yet",
             counter_signed_receipt=None,
-            submitted_by="kents-accountant",
+            submitted_by="my-accountant",
             submitted_at=_NOW,
         )
         envelope = encrypt_feedback_package_for_originator(
@@ -461,7 +461,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
-            submitted_by="kents-accountant",
+            submitted_by="my-accountant",
             submitted_at=_NOW,
         )
         envelope = encrypt_feedback_package_for_originator(
@@ -523,7 +523,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
-            submitted_by="kents-accountant",
+            submitted_by="my-accountant",
             submitted_at=_NOW,
         )
         envelope = encrypt_feedback_package_for_originator(
@@ -581,7 +581,7 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
-            submitted_by="kents-accountant",
+            submitted_by="my-accountant",
             submitted_at=_NOW,
         )
         envelope = encrypt_feedback_package_for_originator(

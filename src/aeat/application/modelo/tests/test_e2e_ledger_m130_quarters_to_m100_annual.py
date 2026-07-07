@@ -175,14 +175,14 @@ _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
 _EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
-_MARTA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
+_AUTONOMA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("300.00"),
     "2T": Decimal("360.00"),
     "3T": Decimal("400.00"),
     "4T": Decimal("460.00"),
 }
-_MARTA_SALARY_GROSS = Decimal("30000.00")
-_MARTA_SALARY_WITHHOLDING = Decimal("4500.00")
+_AUTONOMA_SALARY_GROSS = Decimal("30000.00")
+_AUTONOMA_SALARY_WITHHOLDING = Decimal("4500.00")
 _EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
     ("expense-office", date(_YEAR, 2, 20), SpendingCategory.MATERIAL_OFICINA, Decimal("500.00")),
     ("expense-software", date(_YEAR, 5, 22), SpendingCategory.SOFTWARE_SUSCRIPCION, Decimal("700.00")),
@@ -244,7 +244,7 @@ def _income_transaction(period: str) -> Transaction:
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            # Marta's activity receipts are IRPF-ready taxable-base rows. They
+            # The autonoma's activity receipts are IRPF-ready taxable-base rows. They
             # deliberately carry no IVA amount/rate facts: M130 already consumes
             # this base-only substrate and M100 must not demand IVA-only facts
             # unless its revision owns IVA ledger bindings.
@@ -299,8 +299,8 @@ def _expense_transaction(
     )
 
 
-def _persist_marta_style_ledger(secure_objects: SecureObjectRepository) -> None:
-    """Persist Marta-shaped annual activity income plus deductible expenses."""
+def _persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> None:
+    """Persist Autonoma-shaped annual activity income plus deductible expenses."""
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     transactions = tuple(_income_transaction(period) for period in _QUARTER_ORDER) + tuple(
         _expense_transaction(transaction_id, value_date=value_date, category=category, taxable_base=taxable_base)
@@ -368,7 +368,7 @@ def _import_official_m130_result_observation(
     period: str,
     c19_value: Decimal,
 ) -> None:
-    """Persist Marta's filed M130 result as AEAT-attested local evidence."""
+    """Persist the autonoma's filed M130 result as AEAT-attested local evidence."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
@@ -385,7 +385,7 @@ def _import_official_m130_result_observation(
         clock=_FILE_AT,
     )
     casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
-    evidence_reference_id = f"JUST-130-{_YEAR}-{period}-MARTA-C19"
+    evidence_reference_id = f"JUST-130-{_YEAR}-{period}-AUTONOMA-C19"
     persist_justificante_metadata(
         evidence_reference_id,
         modelo="130",
@@ -505,7 +505,7 @@ def _seed_taxpayer_profile() -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
 
 
-def _marta_workflow_profile() -> TaxpayerProfile:
+def _autonoma_workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         entity_type=EntityType.NATURAL_PERSON,
@@ -585,7 +585,7 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
 ) -> None:
     """The full yearly cadence: persisted ledger → 4×M130 → M100 0604 fold-in."""
     _seed_taxpayer_profile()
-    _persist_marta_style_ledger(secure_objects)
+    _persist_autonoma_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
 
     computed_c19: dict[str, Decimal] = {}
@@ -624,10 +624,10 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     )
 
 
-def test_verify_accepts_marta_m100_with_official_m130_observations(
+def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Marta's internally consistent M100/2024 draft passes verify replay.
+    """An internally consistent M100/2024 draft passes verify replay.
 
     The annual activity values are produced from real persisted ledger rows,
     and 0604 is folded from four imported AEAT-attested M130 observations.
@@ -636,10 +636,10 @@ def test_verify_accepts_marta_m100_with_official_m130_observations(
     treating them as manual casillas.
     """
     _seed_taxpayer_profile()
-    _persist_marta_style_ledger(secure_objects)
+    _persist_autonoma_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
 
-    for period, c19_value in _MARTA_M130_C19_BY_PERIOD.items():
+    for period, c19_value in _AUTONOMA_M130_C19_BY_PERIOD.items():
         _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
 
     annual = _calculate_m100_annual(secure_objects)
@@ -651,14 +651,14 @@ def test_verify_accepts_marta_m100_with_official_m130_observations(
     assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == sum(
-        _MARTA_M130_C19_BY_PERIOD.values(),
+        _AUTONOMA_M130_C19_BY_PERIOD.values(),
         Decimal("0"),
     )
 
     report = verify_modelo_revision(
         annual.calculation_revision_id,
-        actor="marta-cli-rerun",
-        workflow_profile=_marta_workflow_profile(),
+        actor="autonoma-cli-rerun",
+        workflow_profile=_autonoma_workflow_profile(),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
@@ -674,36 +674,36 @@ def test_verify_accepts_marta_m100_with_official_m130_observations(
     ]
 
 
-def test_marta_m100_salary_certificate_retenciones_export_replays_verified_total_pagos(
+def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_total_pagos(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
-    """Marta's verified salary withholding replays through verify and XML export."""
+    """Verified salary withholding replays through verify and XML export."""
     _seed_taxpayer_profile()
-    _persist_marta_style_ledger(secure_objects)
+    _persist_autonoma_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
 
-    for period, c19_value in _MARTA_M130_C19_BY_PERIOD.items():
+    for period, c19_value in _AUTONOMA_M130_C19_BY_PERIOD.items():
         _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
 
     annual = _calculate_m100_annual(
         secure_objects,
-        casilla_inputs={_casilla_id("0003"): _MARTA_SALARY_GROSS},
-        binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _MARTA_SALARY_WITHHOLDING},
+        casilla_inputs={_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
+        binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _AUTONOMA_SALARY_WITHHOLDING},
     )
 
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
-    assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _MARTA_SALARY_WITHHOLDING
+    assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _AUTONOMA_SALARY_WITHHOLDING
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
 
     report = verify_modelo_revision(
         annual.calculation_revision_id,
-        actor="marta-cli-rerun",
-        workflow_profile=_marta_workflow_profile(),
+        actor="autonoma-cli-rerun",
+        workflow_profile=_autonoma_workflow_profile(),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
@@ -723,9 +723,9 @@ def test_marta_m100_salary_certificate_retenciones_export_replays_verified_total
         ModeloExportCommand(
             calculation_revision_id=annual.calculation_revision_id,
             output_path=output,
-            actor="marta-cli-rerun",
+            actor="autonoma-cli-rerun",
         ),
-        workflow_profile=_marta_workflow_profile(),
+        workflow_profile=_autonoma_workflow_profile(),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),
@@ -788,7 +788,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     real ledger-derived multi-period chain.
     """
     _seed_taxpayer_profile()
-    _persist_marta_style_ledger(secure_objects)
+    _persist_autonoma_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
     for period in _QUARTER_ORDER:
         _calculate_and_file_m130_quarter(secure_objects, period=period)

@@ -768,7 +768,7 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
 
     Regression test (issue #599): the repository-backed entry point must NOT pre-filter the
     loaded catalogue by date range for a multi-year catalogue. ``OUTSIDE_PERIOD`` is a genuine
-    no-silent-under-declaration-class diagnostic -- an operator running Kent's 10-year history
+    no-silent-under-declaration-class diagnostic -- an operator running a 10-year ledger history
     against the 2025 annual window needs to see that a 2023-dated catalogue transaction exists
     and was excluded, not have it silently vanish before the classifier ever runs (mirroring
     ``test_iva_ledger.py::test_repository_backed_projection_reports_out_of_period_catalogue_transactions``).

@@ -1,6 +1,6 @@
 """Typer registration for the guided ``aeat app modelo work amend-wizard`` command.
 
-Kent discovers a mistake in an already-filed return and knows "casilla 01 was
+An operator discovers a mistake in an already-filed return and knows "casilla 01 was
 wrong, it should have been 1100" in plain language, not the raw
 ``--from-filing-record ... --kind ... --reason ... --set 01=1100`` flag
 grammar ``work amend`` demands. The wizard resolves the work unit's current

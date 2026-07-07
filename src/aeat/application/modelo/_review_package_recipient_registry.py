@@ -243,7 +243,7 @@ class RecipientFingerprintRegistryRepository:
 
         Args:
             recipient_id: Stable operator-chosen label (e.g.
-                ``"kents-accountant"``). Must be unique within the
+                ``"my-accountant"``). Must be unique within the
                 register.
             public_key_hex: The recipient's raw 32-byte X25519 public
                 key, hex-encoded (see :func:`public_key_hex_from_raw_bytes`).

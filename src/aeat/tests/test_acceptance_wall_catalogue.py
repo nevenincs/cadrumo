@@ -1,13 +1,13 @@
-"""CI regression gate: a closed Kent wall must not reopen silently.
+"""CI regression gate: a closed acceptance wall must not reopen silently.
 
-Issue ``#406``: "Kent-wall regression tests fail CI when a previously-closed
-wall reopens." The root mechanism (confirmed by direct investigation of
-``pyproject.toml`` ``addopts`` and ``.github/workflows/ci.yml``) is that
-``addopts = "... -m 'unit' ..."`` scopes every bare ``pytest`` invocation --
-including the CI "Test (unit)" step, which runs plain
+Issue ``#406``: "acceptance-wall regression tests fail CI when a
+previously-closed wall reopens." The root mechanism (confirmed by direct
+investigation of ``pyproject.toml`` ``addopts`` and ``.github/workflows/ci.yml``)
+is that ``addopts = "... -m 'unit' ..."`` scopes every bare ``pytest``
+invocation -- including the CI "Test (unit)" step, which runs plain
 ``pytest --junitxml=junit.xml`` with no marker override -- to the ``unit``
-marker only. Every Kent-journey / persona CLI acceptance test in this codebase
-is marked ``integration`` (``pytestmark = [pytest.mark.integration, ...]``),
+marker only. Every acceptance-journey / persona CLI acceptance test in this
+codebase is marked ``integration`` (``pytestmark = [pytest.mark.integration, ...]``),
 so none of those ~2500 tests ever execute in CI. A wall can regress -- its
 guarding assertion can be silently weakened, or the guarding test itself can be
 deleted -- with zero CI signal, because CI never runs it in the first place.
@@ -16,9 +16,9 @@ This module is itself marked ``unit`` (so it always runs in the CI lane that
 does execute today) and is the structural half of the fix:
 
 1. :func:`test_catalogue_is_non_empty_and_entries_are_well_formed` proves the
-   catalogue in :mod:`aeat.tests.kent_wall_catalogue` is real, non-empty, and
-   every entry resolves to a real file on disk (an AST-level existence check,
-   not a name lookup against a hand-maintained list).
+   catalogue in :mod:`aeat.tests.acceptance_wall_catalogue` is real, non-empty,
+   and every entry resolves to a real file on disk (an AST-level existence
+   check, not a name lookup against a hand-maintained list).
 2. :func:`test_every_catalogued_wall_test_is_collectible_and_passes` proves,
    via a REAL ``pytest`` subprocess against the actual repository test files
    (no mocks, no stubs), that every catalogued wall's guarding test both
@@ -53,7 +53,7 @@ from pathlib import Path
 
 import pytest
 
-from .kent_wall_catalogue import KENT_WALL_CATALOGUE, KentWallEntry
+from .acceptance_wall_catalogue import ACCEPTANCE_WALL_CATALOGUE, AcceptanceWallEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -100,10 +100,10 @@ def _run_pytest_subprocess(*node_ids: str) -> subprocess.CompletedProcess[str]:
 
 def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
     """The catalogue enrolls at least one wall, and every entry names a real file."""
-    assert len(KENT_WALL_CATALOGUE) > 0, "Kent-wall catalogue must not be empty"
+    assert len(ACCEPTANCE_WALL_CATALOGUE) > 0, "acceptance-wall catalogue must not be empty"
 
     seen_node_ids: set[str] = set()
-    for entry in KENT_WALL_CATALOGUE:
+    for entry in ACCEPTANCE_WALL_CATALOGUE:
         assert entry.node_id not in seen_node_ids, f"duplicate catalogue entry: {entry.node_id}"
         seen_node_ids.add(entry.node_id)
 
@@ -115,10 +115,10 @@ def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
 
 @pytest.mark.parametrize(
     "entry",
-    KENT_WALL_CATALOGUE,
-    ids=[entry.label for entry in KENT_WALL_CATALOGUE],
+    ACCEPTANCE_WALL_CATALOGUE,
+    ids=[entry.label for entry in ACCEPTANCE_WALL_CATALOGUE],
 )
-def test_every_catalogued_wall_test_is_collectible_and_passes(entry: KentWallEntry) -> None:
+def test_every_catalogued_wall_test_is_collectible_and_passes(entry: AcceptanceWallEntry) -> None:
     """Each catalogued closed-wall test still collects and passes today.
 
     Runs the REAL repository test file end-to-end through a fresh pytest
@@ -130,9 +130,9 @@ def test_every_catalogued_wall_test_is_collectible_and_passes(entry: KentWallEnt
     """
     completed = _run_pytest_subprocess(entry.node_id)
     assert completed.returncode == 0, (
-        f"Kent wall {entry.label} has REGRESSED (its guarding test no longer passes):\n"
+        f"acceptance wall {entry.label} has REGRESSED (its guarding test no longer passes):\n"
         f"  node id: {entry.node_id}\n"
-        f"  kent perspective: {entry.kent_perspective}\n"
+        f"  capability: {entry.capability}\n"
         f"  stdout: {completed.stdout}\n"
         f"  stderr: {completed.stderr}"
     )
@@ -158,7 +158,7 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate() -> None:
     multi-agent worktree) never collide on the same path, and cleanup runs in
     a ``try``/``finally`` so a failed assertion still removes the fixture.
     """
-    guarded_entry = next(entry for entry in KENT_WALL_CATALOGUE if entry.issue == 224)
+    guarded_entry = next(entry for entry in ACCEPTANCE_WALL_CATALOGUE if entry.issue == 224)
     original_module = _REPO_ROOT / guarded_entry.test_module
     original_source = original_module.read_text(encoding="utf-8")
 
@@ -171,7 +171,7 @@ def test_a_regressed_wall_assertion_is_caught_by_the_gate() -> None:
     mutated_source = original_source.replace(target_assertion, regressed_assertion, 1)
     assert mutated_source != original_source
 
-    mutated_module_name = f"test_kent_wall_regression_proof_ledger_exclude_mutated_{os.getpid()}.py"
+    mutated_module_name = f"test_acceptance_wall_regression_proof_ledger_exclude_mutated_{os.getpid()}.py"
     mutated_module_path = original_module.parent / mutated_module_name
     assert not mutated_module_path.exists(), "stale mutated-proof fixture left behind by a prior run"
 
