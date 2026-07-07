@@ -27,12 +27,13 @@ the caller passes nothing.
 
 from __future__ import annotations
 
-import re
+import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, production_python_files, repo_relative
+from ._inventory import SRC_AEAT, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -44,14 +45,6 @@ _TEST_INFRA_MODULES: frozenset[Path] = frozenset(
         _SRC_ROOT / "tests" / "secure_sql.py",
     },
 )
-_ESCAPE_HATCH_PATTERN = re.compile(
-    r"if\s+now\s+is\s+not\s+None\s+else\s+datetime\.now\s*\(",
-)
-_VIOLATION_PATTERNS: tuple[str, ...] = (
-    "datetime.now(UTC)",
-    "datetime.now(tz=UTC)",
-)
-
 
 def _is_excluded(path: Path) -> bool:
     if path in _TEST_INFRA_MODULES:
@@ -63,39 +56,75 @@ def _is_excluded(path: Path) -> bool:
         return False
 
 
-def _collect_violations() -> list[str]:
+def _parent_map(tree: ast.AST) -> dict[ast.AST, ast.AST]:
+    return {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+
+
+def _is_utc_name(node: ast.AST) -> bool:
+    return leaf_name(node) == "UTC"
+
+
+def _is_datetime_now_utc_call(node: ast.AST) -> bool:
+    if not isinstance(node, ast.Call):
+        return False
+    if not isinstance(node.func, ast.Attribute) or node.func.attr != "now":
+        return False
+    if leaf_name(node.func.value) != "datetime":
+        return False
+    if node.args and _is_utc_name(node.args[0]):
+        return True
+    return any(keyword.arg == "tz" and _is_utc_name(keyword.value) for keyword in node.keywords)
+
+
+def _is_now_is_not_none_test(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Compare)
+        and isinstance(node.left, ast.Name)
+        and node.left.id == "now"
+        and len(node.ops) == 1
+        and isinstance(node.ops[0], ast.IsNot)
+        and len(node.comparators) == 1
+        and isinstance(node.comparators[0], ast.Constant)
+        and node.comparators[0].value is None
+    )
+
+
+def _enclosing_function_accepts_now(node: ast.AST, parents: Mapping[ast.AST, ast.AST]) -> bool:
+    current: ast.AST | None = node
+    while current is not None:
+        parent = parents.get(current)
+        if isinstance(parent, ast.FunctionDef | ast.AsyncFunctionDef):
+            return any(arg.arg == "now" for arg in [*parent.args.args, *parent.args.kwonlyargs])
+        current = parent
+    return False
+
+
+def _is_documented_now_fallback(node: ast.AST, parents: Mapping[ast.AST, ast.AST]) -> bool:
+    parent = parents.get(node)
+    return (
+        isinstance(parent, ast.IfExp)
+        and parent.orelse is node
+        and _is_now_is_not_none_test(parent.test)
+        and _enclosing_function_accepts_now(parent, parents)
+    )
+
+
+def _collect_violations(source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
     """Return repo-relative ``path:lineno`` strings for every inline clock call."""
     violations: list[str] = []
-    for path in production_python_files():
+    for path, tree in production_ast_items(source_tree_ast):
         if _is_excluded(path):
             continue
-        try:
-            source = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        for lineno, line in enumerate(source.splitlines(), start=1):
-            stripped = line.strip()
-            if stripped.startswith("#"):
-                continue
-            for pattern in _VIOLATION_PATTERNS:
-                if pattern not in line:
-                    continue
-                code_part = line.split("#")[0]
-                if _ESCAPE_HATCH_PATTERN.search(code_part):
-                    continue
-                pattern_idx = code_part.find(pattern)
-                if pattern_idx > 0:
-                    pre = code_part[:pattern_idx].rstrip()
-                    if pre and pre[-1] in ('"', "'", "`"):
-                        continue
-                violations.append(f"{repo_relative(path)}:{lineno}")
-                break
+        parents = _parent_map(tree)
+        for node in ast.walk(tree):
+            if _is_datetime_now_utc_call(node) and not _is_documented_now_fallback(node, parents):
+                violations.append(f"{repo_relative(path)}:{node.lineno}")
     return violations
 
 
-def test_no_inline_datetime_now_utc() -> None:
+def test_no_inline_datetime_now_utc(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Production modules MUST route UTC time through :func:`now`."""
-    violations = _collect_violations()
+    violations = _collect_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
