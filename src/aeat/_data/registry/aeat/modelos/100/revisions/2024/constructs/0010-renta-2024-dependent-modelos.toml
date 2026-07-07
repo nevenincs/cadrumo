@@ -32,10 +32,12 @@ bindings = [
     "renta-2024-modelo-123-retenciones-periodicas",
     "renta-2024-modelo-130-pagos-fraccionados",
     "renta-2024-modelo-131-pagos-fraccionados",
+    "renta-2024-modelo-131-rendimiento-neto-modulos",
     "renta-2024-modelo-193-retenciones-anuales",
 ]
 casilla_ids = [
     "0604",
+    "1481",
 ]
 formulas = [
     "renta-2024-pagos-fraccionados-ingresados",
@@ -46,6 +48,7 @@ relations = [
     "renta-2024-rel-123-retenciones-trimestrales",
     "renta-2024-rel-130-pagos-fraccionados",
     "renta-2024-rel-131-pagos-fraccionados",
+    "renta-2024-rel-131-rendimiento-neto-modulos",
     "renta-2024-rel-193-retenciones-anuales",
 ]
 dependency_classifications = [
