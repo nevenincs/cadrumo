@@ -5,6 +5,24 @@ Walks every deterministic test, test-support, and ``conftest.py`` module under
 mutation calls, and explicit ``pytest.MonkeyPatch`` / ``_pytest.monkeypatch``
 imports, references, and contexts. Process-global isolation should use local
 context managers or injectable runtime boundaries instead.
+
+See Also:
+    :mod:`~tests.test_mock_inventory`
+        Companion production-test guard for mock imports and test-double
+        helper definitions.
+    :mod:`~tests.test_no_skip_xfail`
+        Companion guard for skip and xfail shortcuts across deterministic
+        tests.
+    :func:`~tests._inventory.all_test_control_modules`
+        Shared inventory surface walked by this monkeypatch ratchet.
+    :class:`_PatchAliasInventory`
+        Alias inventory used to detect pytest and internal monkeypatch names.
+    :class:`_PatchInventorySites`
+        AST-level monkeypatch mutation, context, and reference sites collected
+        for each inspected source tree.
+    ``.vault/audit/2026-05-13-eliminate-shims-audit.md``
+        Records the test-hygiene baseline that identified monkeypatch
+        replacement as part of the no-shim campaign.
 """
 
 from __future__ import annotations
