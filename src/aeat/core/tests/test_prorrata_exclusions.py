@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core import (
+from .. import (
     ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
     Art104TresExclusion,
