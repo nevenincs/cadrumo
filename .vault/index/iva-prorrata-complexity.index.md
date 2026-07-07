@@ -16,6 +16,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W01-P02-S08]]'
   - '[[2026-07-07-iva-prorrata-complexity-W01-P02-S09]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S10]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S11]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
 ---
@@ -42,6 +43,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 - `2026-07-07-iva-prorrata-complexity-W01-P02-S08` - Implement the last-three-active-years global seed walk (summed volumes via compute_prorrata_definitiva_anual, skipping the gap) and the insufficient-history advisory
 - `2026-07-07-iva-prorrata-complexity-W01-P02-S09` - Verify the interruption seed against a worked example with a genuine gap and no averaged percentages
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S10` - Author the ley-37-1992 art-103 and art-106 legal entries with corpus_ref + required_text, grounded in the bundled consolidated LIVA
+- `2026-07-07-iva-prorrata-complexity-W02-P03-S11` - Add the typed input_classification axis (core InputClassification) to the ledger transaction, operator-declared for especial buckets, with roundtrip + anti-tautology proof
 
 ### plan
 
