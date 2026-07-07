@@ -28,6 +28,21 @@ Exclusions
 - Files whose name starts with ``test_`` or ends with ``_test.py``.
 - Lambda nodes (no function-level marker convention applies; the body is
   usually on one line and the annotation is almost never ``Any``).
+
+See Also:
+    :func:`~tests._inventory.production_ast_items`
+        Shared AST inventory used to scan production functions for parameter
+        ``Any`` annotations.
+    :mod:`~tests.test_type_ignore_rationale_inventory`
+        Companion suppression ratchet that mirrors this marker-enrollment
+        pattern for ``# type: ignore`` sites.
+    :mod:`~tests.test_cast_rationale_inventory`
+        Typed-boundary escape-hatch guard for runtime ``cast()`` calls.
+    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
+        Records the W21 parameter-Any prevention lane and marker convention.
+    ``.vault/exec/2026-05-28-codebase-solidification/2026-05-31-codebase-solidification-w21-p53-s646-s650-exec.md``
+        Captures the original ratchet creation and parameter-Any marker
+        batches that this module keeps from drifting.
 """
 
 from __future__ import annotations
