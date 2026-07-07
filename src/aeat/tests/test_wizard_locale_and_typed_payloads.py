@@ -11,6 +11,20 @@
   ``_decode_invoice_payload`` and survives the ``parse_invoice_payload``
   pipeline.
 - Orphan namespace ``__init__`` modules carry intent documentation.
+
+See Also:
+    :mod:`~application.wizard`
+        Wizard descriptor package whose bounded dynamic locale keys are
+        materialized at runtime.
+    :mod:`~adapters.outbound.google`
+        Public Google outbound adapter surface that re-exports response
+        TypedDict contracts.
+    :class:`~entrypoints.cli.OAuthClientPayload`
+        CLI Google OAuth payload boundary validated from Cloud Console JSON.
+    :class:`~application.invoices.InvoiceRowPayload`
+        Invoice import row boundary carried through JSON decoding and parsing.
+    ``2026-05-28-codebase-solidification-plan``
+        W09.P39 plan rows that grouped these locale and typed-boundary closures.
 """
 
 from __future__ import annotations
