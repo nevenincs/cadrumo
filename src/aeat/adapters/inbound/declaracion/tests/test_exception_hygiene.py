@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 
 import pytest
+
+from aeat.tests._inventory import ast_for_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -27,16 +30,18 @@ def _production_modules() -> tuple[Path, ...]:
     )
 
 
-@cache
-def _production_trees() -> tuple[tuple[Path, ast.AST], ...]:
-    return tuple(
-        (path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))) for path in _production_modules()
-    )
+def _production_trees(source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[Path, ast.AST], ...]:
+    items: list[tuple[Path, ast.AST]] = []
+    for path in _production_modules():
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is not None:
+            items.append((path, tree))
+    return tuple(items)
 
 
-def test_inbound_pdf_code_does_not_swallow_exceptions_with_pass() -> None:
+def test_inbound_pdf_code_does_not_swallow_exceptions_with_pass(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offenders: list[str] = []
-    for path, tree in _production_trees():
+    for path, tree in _production_trees(source_tree_ast):
         for node in ast.walk(tree):
             if isinstance(node, ast.ExceptHandler) and len(node.body) == 1 and isinstance(node.body[0], ast.Pass):
                 offenders.append(_location(path, node))
@@ -44,9 +49,9 @@ def test_inbound_pdf_code_does_not_swallow_exceptions_with_pass() -> None:
     assert offenders == []
 
 
-def test_inbound_pdf_code_does_not_use_contextlib_suppress() -> None:
+def test_inbound_pdf_code_does_not_use_contextlib_suppress(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offenders: list[str] = []
-    for path, tree in _production_trees():
+    for path, tree in _production_trees(source_tree_ast):
         for node in ast.walk(tree):
             if not isinstance(node, ast.With):
                 continue
@@ -60,9 +65,9 @@ def test_inbound_pdf_code_does_not_use_contextlib_suppress() -> None:
     assert offenders == []
 
 
-def test_inbound_pdf_code_does_not_use_bare_except() -> None:
+def test_inbound_pdf_code_does_not_use_bare_except(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offenders: list[str] = []
-    for path, tree in _production_trees():
+    for path, tree in _production_trees(source_tree_ast):
         for node in ast.walk(tree):
             if isinstance(node, ast.ExceptHandler) and node.type is None:
                 offenders.append(_location(path, node))
@@ -70,9 +75,9 @@ def test_inbound_pdf_code_does_not_use_bare_except() -> None:
     assert offenders == []
 
 
-def test_inbound_pdf_broad_exception_handlers_raise_or_log() -> None:
+def test_inbound_pdf_broad_exception_handlers_raise_or_log(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offenders: list[str] = []
-    for path, tree in _production_trees():
+    for path, tree in _production_trees(source_tree_ast):
         for node in ast.walk(tree):
             if not isinstance(node, ast.ExceptHandler) or node.type is None:
                 continue
@@ -86,9 +91,9 @@ def test_inbound_pdf_broad_exception_handlers_raise_or_log() -> None:
     assert offenders == []
 
 
-def test_inbound_pdf_code_does_not_read_environment_directly() -> None:
+def test_inbound_pdf_code_does_not_read_environment_directly(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offenders: list[str] = []
-    for path, tree in _production_trees():
+    for path, tree in _production_trees(source_tree_ast):
         for node in ast.walk(tree):
             if _is_os_environ_reference(node) or _is_getenv_call(node):
                 offenders.append(_location(path, node))
