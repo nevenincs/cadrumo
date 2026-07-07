@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core import Art104TresExclusion
 from ...iva import (
     IvaCategory,
     IvaExemptionArticle,
@@ -263,6 +264,67 @@ def test_transaction_json_rejects_tampered_derived_id_in_storage_payload() -> No
     storage_payload["transaction_id"] = "0" * 64
 
     with pytest.raises(ValidationError, match="transaction_id must match"):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
+def test_art_104_tres_exclusion_roundtrips_for_judgment_exclusion() -> None:
+    """A judgment art. 104.Tres exclusion tag survives a strict JSON save/load cycle.
+
+    The field is populated with a NON-default judgment member so a
+    save-drops-field / load-re-defaults-field regression cannot hide behind the
+    ``None`` default.
+    """
+    raw = _sample_raw(amount=Decimal("5000.00"), description="Venta inmueble no habitual")
+    original = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "art_104_tres_exclusion": Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+
+
+def test_art_104_tres_exclusion_rejects_auto_derived_operator_tag() -> None:
+    """An auto-derived art. 104.Tres member is refused as an operator transaction tag."""
+    with pytest.raises(ValidationError, match="art_104_tres_exclusion is operator-declared only"):
+        Transaction.model_validate(
+            {
+                "raw": _sample_raw(),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "art_104_tres_exclusion": Art104TresExclusion.NON_SUBJECT_ART_7,
+            },
+        )
+
+
+def test_art_104_tres_exclusion_rejects_tampered_auto_derived_value_on_load() -> None:
+    """A persisted payload mutated to an auto-derived member is refused at load.
+
+    Anti-tautology proof: the operator-declared-only invariant fires on the
+    load path, not only at construction, so a corrupted on-disk value cannot
+    silently mis-scope the prorrata denominator.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("5000.00"), description="Venta inmueble no habitual"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "art_104_tres_exclusion": Art104TresExclusion.FOREIGN_PERMANENT_ESTABLISHMENT,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["art_104_tres_exclusion"] = Art104TresExclusion.DIRECT_IVA_CUOTAS.value
+
+    with pytest.raises(ValidationError, match="art_104_tres_exclusion is operator-declared only"):
         Transaction.model_validate_json(json.dumps(storage_payload))
 
 

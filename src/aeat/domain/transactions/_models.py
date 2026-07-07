@@ -18,6 +18,7 @@ from typing import Literal, Self, override
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
 
+from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex, sha256_hex
@@ -592,6 +593,18 @@ class Transaction(BaseModel):
         irpf_category: Optional IRPF-specific category key.
         usage_ratio_id: Optional proportionality reference.
         prorrata_reference: Optional IVA prorrata substrate reference.
+        art_104_tres_exclusion: Operator-declared LIVA art. 104.Tres
+            denominator-exclusion tag. Set ONLY for the two judgment
+            exclusions the ledger cannot infer -- foreign permanent
+            establishment (1.º) and non-habitual inmobiliario/financiero
+            operations (4.º); the transaction boundary rejects any
+            auto-derived member (art. 7 no-sujeta, art. 9.1.d autoconsumo,
+            bienes-inversión disposal, direct cuotas) since those are
+            recognised from the category / register / structure. When set,
+            the annual prorrata volume rollup excludes this operation from
+            both terms of the art. 104.Dos ratio; the operation's own IVA
+            cuota treatment is unaffected. ``None`` for every operation that
+            is not an art. 104.Tres judgment exclusion.
         purchase_invoice_evidence_id: Canonical purchase-invoice evidence
             reference attached to the row.
         attachment_ids: Supplementary attachment references.
@@ -693,6 +706,7 @@ class Transaction(BaseModel):
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
+    art_104_tres_exclusion: Art104TresExclusion | None = None
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     created_by: str | None = None
@@ -766,6 +780,7 @@ class Transaction(BaseModel):
         "exemption_article",
         "counterparty_eu_member_state",
         "cash_accounting_treatment",
+        "art_104_tres_exclusion",
         mode="before",
     )
     @classmethod
@@ -787,6 +802,7 @@ class Transaction(BaseModel):
             "exemption_article": IvaExemptionArticle,
             "counterparty_eu_member_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,
+            "art_104_tres_exclusion": Art104TresExclusion,
         }
         return enum_by_field[info.field_name or ""](value)
 
@@ -952,6 +968,30 @@ class Transaction(BaseModel):
             actual = self.iva_category.value if self.iva_category is not None else None
             raise TransactionValidationError(
                 f"exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; got iva_category {actual!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_art_104_tres_exclusion_is_operator_declared(self) -> Self:
+        """Reject an auto-derived art. 104.Tres exclusion as an operator transaction tag.
+
+        Only the two judgment exclusions (foreign PE, non-habitual
+        inmobiliario/financiero) are operator-declared. The other four are
+        recognised structurally, from the IVA category, or from the
+        bienes-inversión register; declaring one on a transaction would
+        double-count or misroute a value the ledger already excludes, so the
+        boundary refuses it loudly rather than silently mis-scoping the
+        prorrata denominator.
+        """
+        if (
+            self.art_104_tres_exclusion is not None
+            and self.art_104_tres_exclusion not in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS
+        ):
+            accepted = ", ".join(sorted(member.value for member in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS))
+            raise TransactionValidationError(
+                "art_104_tres_exclusion is operator-declared only for the two judgment exclusions "
+                f"({accepted}); {self.art_104_tres_exclusion.value!r} is auto-derived and must not be tagged on a "
+                "transaction",
             )
         return self
 
