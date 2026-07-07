@@ -2,9 +2,11 @@
 
 This module centralizes the small policy decisions that keep registry loading
 fast without hiding live TOML edits. Bundled registry roots receive a short
-fingerprint TTL, mutable authoring roots keep the stricter window, and pytest
-disables the cross-process disk pickle so xdist workers cannot share stale
-compiled registry state.
+fingerprint TTL, mutable authoring roots keep the stricter window, and under
+pytest the cross-process disk pickle is shared only for the immutable
+bundled root -- a mutable/synthetic root always keeps it disabled so xdist
+workers cannot share a stale compiled registry from a tree the run itself
+can edit.
 
 See Also:
     :mod:`~domain.calculations.registry._loader`
@@ -78,22 +80,39 @@ def is_bundled_registry_root(resolved: Path) -> bool:
         return False
 
 
-def registry_disk_cache_enabled() -> bool:
+def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
     """Whether the cross-process ``/tmp`` registry pickle is read/written.
 
-    Disabled under pytest, including collection before ``PYTEST_CURRENT_TEST``
-    is set: the pickle is keyed by file mtime and shared across pytest-xdist
-    workers, so a parallel run could serve a stale compiled registry from one
-    worker to another. Production loads the registry once at startup with no
-    concurrent edits, so it keeps the disk cache.
+    Production (no pytest markers present at all) always keeps the disk
+    cache: it loads the registry once at startup with no concurrent edits.
+
+    Under pytest, including collection before ``PYTEST_CURRENT_TEST`` is
+    set, the cache is enabled ONLY for ``is_bundled=True`` -- the
+    package-bundled, read-only registry tree (:func:`is_bundled_registry_root`).
+    That tree is never mutated during a test run, so every pytest-xdist
+    worker and every subprocess-spawning test may safely share ONE compiled
+    pickle keyed by a content fingerprint of that tree, collapsing what would
+    otherwise be an independent multi-second cold compile per worker/subprocess
+    into a single shared compile the rest read.
+
+    A mutable or synthetic root (e.g. a test's ``tmp_path`` registry, or any
+    path that is not the resolved bundled root) always keeps the cache
+    disabled under pytest -- this is the #44 isolation fix: such a root CAN be
+    edited mid-run by the very test that built it, and the pickle is keyed by
+    file mtime, so sharing it across workers could serve a stale or
+    transiently-inconsistent compiled registry (the M303-2009 flake #44
+    diagnosed). Only the always-immutable bundled tree is exempt from that
+    race.
     """
     import os
     import sys
 
-    if "pytest" in sys.modules:
-        return False
-    return (
-        "PYTEST_CURRENT_TEST" not in os.environ
-        and "PYTEST_XDIST_WORKER" not in os.environ
-        and "PYTEST_VERSION" not in os.environ
+    under_pytest = (
+        "pytest" in sys.modules
+        or "PYTEST_CURRENT_TEST" in os.environ
+        or "PYTEST_XDIST_WORKER" in os.environ
+        or "PYTEST_VERSION" in os.environ
     )
+    if under_pytest:
+        return is_bundled
+    return True

@@ -1118,8 +1118,9 @@ def _load_registry_tree_cached(
     import tempfile
 
     logger = logging.getLogger(__name__)
+    resolved = Path(root)
     cache_path: Path | None = None
-    if registry_disk_cache_enabled():
+    if registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved)):
         hasher = hashlib.sha256()
         hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
         hasher.update(root.encode("utf-8"))
@@ -1141,7 +1142,6 @@ def _load_registry_tree_cached(
             except Exception:
                 logger.debug("Ignoring unreadable registry disk cache at %s", cache_path, exc_info=True)
 
-    resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
     modelos = _load_all_modelo_definitions(resolved / "modelos")
     result = (modelos, catalogues)
@@ -1185,6 +1185,7 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
         parameters.update(catalogue.parameters)
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+
 
 def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, ...]:
     """Load every modelo (single-file + directory-mode) and reject layout collisions.
