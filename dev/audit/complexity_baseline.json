@@ -460,7 +460,6 @@
       "src/aeat/tests/test_cross_module_imports_resolve.py::_collect_init_missing_from_all": 13,
       "src/aeat/tests/test_cross_module_imports_resolve.py::_extract_all_assignment": 15,
       "src/aeat/tests/test_docstring_core_struct_links.py::test_public_functions_link_anchor_parameters": 18,
-      "src/aeat/tests/test_docstring_return_type_links.py::test_public_functions_link_their_aeat_return_type": 18,
       "src/aeat/tests/test_every_module_has_test_coverage.py::_aeat_imports_in": 12,
       "src/aeat/tests/test_locale_tr_positional_inventory.py::_raise_positional_tr_violations": 11,
       "src/aeat/tests/test_locale_translation_honesty.py::test_ca_hu_values_differ_from_en_unless_allowlisted": 11,
