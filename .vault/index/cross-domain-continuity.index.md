@@ -81,6 +81,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S298]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S302]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S307]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S347]]'
@@ -227,6 +228,7 @@ related:
   - '[[2026-07-06-cross-domain-continuity-research]]'
   - '[[2026-07-07-cross-domain-continuity-W07-P31-S301]]'
   - '[[2026-07-07-cross-domain-continuity-W09-P41-S300]]'
+  - '[[2026-07-07-cross-domain-continuity-adr]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -241,6 +243,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-27-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `ledger-classification-rule-engine` | (**status:** `accepted`)
 - `2026-05-27-profile-portability-adr` - `cross-domain-continuity` adr: `profile-portability` | (**status:** `accepted`)
 - `2026-07-06-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `iva cash accounting treatment for modelo 303` | (**status:** `accepted`)
+- `2026-07-07-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `Modelo 184 attribution-member source promotion` | (**status:** `accepted`)
 
 ### audit
 
@@ -458,6 +461,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P41-S288` - Close duplicate criterio de caja cash-accounting split
 - `2026-05-26-cross-domain-continuity-W09-P41-S298` - R8-ROSA-CRITICAL M100 missing binding for estimacion objetiva regimen
 - `2026-05-26-cross-domain-continuity-W09-P41-S302` - R8-ROSA-F add regime incompatibility warnings
+- `2026-05-26-cross-domain-continuity-W09-P41-S307` - R8-NURIA-HIGH M184 atribucion de rentas calculation path missing
 - `2026-05-26-cross-domain-continuity-W09-P41-S347` - Annotate stale overview explain deadlines
 - `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
 - `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts

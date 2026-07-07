@@ -81,14 +81,14 @@ def test_source_inventory_is_non_empty_and_well_formed() -> None:
 def test_declared_source_kinds_carry_both_enrolled_and_deferred_anchors() -> None:
     """The inventory spans both partitions, so the enrolled/deferred discrimination below is live.
 
-    ``ledger_iva_aggregation`` is an enrolled ledger resolver; ``atribucion_member``
+    ``ledger_iva_aggregation`` is an enrolled ledger resolver; ``related_party_operation``
     is an explicitly deferred detail-row kind. Both being declared by the committed
     registry proves the connectivity gate exercises both partitions rather than one.
     """
     declared = _inventory().declared_source_kinds
     assert BindingSourceKind.LEDGER_IVA_AGGREGATION in declared
-    assert BindingSourceKind.ATRIBUCION_MEMBER in declared
-    assert BindingSourceKind.ATRIBUCION_MEMBER in DEFERRED_SOURCE_KINDS
+    assert BindingSourceKind.RELATED_PARTY_OPERATION in declared
+    assert BindingSourceKind.RELATED_PARTY_OPERATION in DEFERRED_SOURCE_KINDS
 
 
 def test_no_committed_revision_declares_a_reserved_source_kind() -> None:
