@@ -10,14 +10,15 @@ Censo lifecycle event enrollment is owned by the application service.
 This module uses :class:`BucketEventHistoryRepository` for event recording
 and reads the active :class:`UserProfileRecord` to project its censo keys.
 
-``refresh`` is mounted but refuses with a typed CLI boundary error
-until the sede G313 driver lands - the verb is visible in ``--help``
-so operators see the canonical name now and get an explicit message
-about what is missing rather than a silent absence.
+``pull`` drives the live G313 sede fetch through
+:meth:`CensoSyncService.refresh_censo_from_sede`, gated by the
+live-read access gate and the authenticated-session boundary; it
+persists the captured snapshot and refuses with a typed CLI boundary
+error only when AEAT publishes no censo for the operator's NIF.
 
 The repository connection is injected into
 :class:`CensoSyncService` so censo apply and
-refresh events stay application-owned.
+pull events stay application-owned.
 """
 
 from __future__ import annotations
