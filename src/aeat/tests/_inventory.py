@@ -180,23 +180,50 @@ def ast_for_path(path: Path, cache: Mapping[Path, ast.AST] | None = None) -> ast
     Structural ratchets scan many of the same modules. Accepting the shared
     ``source_tree_ast`` fixture avoids repeated parse work while preserving a
     single-file fallback for callers that inspect documented inventory entries.
+    Callers that do not thread the fixture through still benefit: the fallback
+    reads from the shared process-level cache primed by :func:`prime_ast_cache`.
     """
     if cache is not None and path in cache:
         return cache[path]
     return _parsed_ast_for_path(path)
 
 
-@cache
+_AST_CACHE: dict[Path, ast.AST | None] = {}
+"""Process-level AST parse cache shared by every :func:`ast_for_path` caller
+that does not supply its own cache mapping. Primed once per pytest session by
+:func:`prime_ast_cache` (called from the ``source_tree_ast`` fixture in
+``conftest.py``) so a ratchet that calls ``ast_for_path(path)`` without
+threading the session fixture through still reuses the one full-tree parse
+instead of independently re-parsing the same file from disk."""
+
+
+def prime_ast_cache(entries: Mapping[Path, ast.AST]) -> None:
+    """Seed the shared process-level AST cache from an externally-parsed mapping.
+
+    Called once per pytest session by the ``source_tree_ast`` fixture so every
+    :func:`ast_for_path` call made without an explicit cache argument (the
+    common bypass pattern across structural ratchets that only import
+    ``ast_for_path`` and never thread the session fixture through their own
+    helpers) reuses the shared parse instead of re-parsing the file.
+    """
+    _AST_CACHE.update(entries)
+
+
 def _parsed_ast_for_path(path: Path) -> ast.AST | None:
     """Return a parsed AST for *path*, cached for structural ratchets."""
+    if path in _AST_CACHE:
+        return _AST_CACHE[path]
     try:
         source = path.read_text(encoding="utf-8", errors="replace")
     except (OSError, UnicodeDecodeError):
+        _AST_CACHE[path] = None
         return None
     try:
-        return ast.parse(source, filename=str(path))
+        tree = ast.parse(source, filename=str(path))
     except SyntaxError:
-        return None
+        tree = None
+    _AST_CACHE[path] = tree
+    return tree
 
 
 def production_ast_items(cache: Mapping[Path, ast.AST] | None = None) -> tuple[tuple[Path, ast.AST], ...]:
