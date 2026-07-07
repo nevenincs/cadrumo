@@ -1,12 +1,13 @@
-"""Reflective gate: every exported source-mesh resolver is enrolled or classified.
+"""Reflective gate: every discoverable source-mesh resolver is enrolled or classified.
 
 The rule (no-dormant-source-resolvers, aeat-architecture-boundaries): every class
 that satisfies the :class:`ModeloSourceResolver` structural protocol
 (``resolver_id`` + ``owned_sources`` + ``resolve``) and is reachable from a
-package public surface (``__all__``) MUST be enrolled on the live calculate path —
-either inside the ``merge_source_resolutions`` mesh tuple in
-``_resolve_bucket_source_mesh`` (``_calculation_actions.py``) or as a documented
-pre-mesh resolver called directly on the production calculate path.
+package public surface (``__all__``), or is an explicitly enrolled real-source
+module, MUST be enrolled on the live calculate path — either inside the
+``merge_source_resolutions`` mesh tuple in ``_resolve_bucket_source_mesh``
+(``_calculation_actions.py``) or as a documented pre-mesh resolver called
+directly on the production calculate path.
 
 A second shape of resolver — a ``resolve``-bearing class that does NOT satisfy the
 source-mesh protocol (it lacks ``resolver_id`` / ``owned_sources``), such as the
@@ -30,9 +31,10 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Packages that publish resolver symbols through their ``__all__`` surface.
-_RESOLVER_PACKAGES = (
+# Modules that publish resolver symbols through their ``__all__`` surface.
+_RESOLVER_MODULES = (
     "aeat.application.aggregation",
+    "aeat.application.aggregation._atribucion_member",
     "aeat.application.calculations",
     "aeat.application.invoices",
     "aeat.application.modelo",
@@ -52,7 +54,7 @@ _PROTOCOL_QUALNAME = "aeat.application.aggregation.ModeloSourceResolver"
 # gate). All nineteen are enrolled — none may resolve to a silent blank.
 _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
     {
-        "aeat.application.aggregation.AtribucionMemberSourceResolver",
+        "aeat.application.aggregation._atribucion_member.AtribucionMemberSourceResolver",
         "aeat.application.aggregation.ForeignAssetsAggregationSourceResolver",
         "aeat.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
         "aeat.application.aggregation.LedgerIvaAggregationSourceResolver",
@@ -81,17 +83,18 @@ _KNOWN_NON_MESH_RESOLVERS: dict[str, str] = {}
 
 
 def _discover_resolve_bearing_classes() -> dict[str, bool]:
-    """Return {qualified_name: is_source_mesh} for every exported resolver class.
+    """Return {qualified_name: is_source_mesh} for every discovered resolver class.
 
-    A class qualifies if it is exported via a package ``__all__`` and carries a
-    ``resolve`` method. ``is_source_mesh`` is True when the class also carries the
-    remaining protocol members (``resolver_id`` and ``owned_sources``). No instance
-    is constructed: the check reads the class object directly so a resolver with
-    required constructor dependencies is still discovered.
+    A class qualifies if it is exported via a discovered module's ``__all__`` and
+    carries a ``resolve`` method. ``is_source_mesh`` is True when the class also
+    carries the remaining protocol members (``resolver_id`` and
+    ``owned_sources``). No instance is constructed: the check reads the class
+    object directly so a resolver with required constructor dependencies is still
+    discovered.
     """
     discovered: dict[str, bool] = {}
-    for package_name in _RESOLVER_PACKAGES:
-        module = importlib.import_module(package_name)
+    for module_name in _RESOLVER_MODULES:
+        module = importlib.import_module(module_name)
         for name in getattr(module, "__all__", []):
             obj = getattr(module, name, None)
             if not inspect.isclass(obj):
@@ -99,7 +102,7 @@ def _discover_resolve_bearing_classes() -> dict[str, bool]:
             if not hasattr(obj, "resolve"):
                 continue
             is_source_mesh = all(hasattr(obj, member) for member in _SOURCE_MESH_MEMBERS)
-            discovered[f"{package_name}.{name}"] = is_source_mesh
+            discovered[f"{module_name}.{name}"] = is_source_mesh
     return discovered
 
 
@@ -113,7 +116,7 @@ def test_every_discovered_resolver_is_enrolled_or_classified() -> None:
     discovered = _discover_resolve_bearing_classes()
     assert discovered, (
         "Discovery returned no resolver classes — the package surface or the "
-        "discovery logic is broken. Check that _RESOLVER_PACKAGES lists the right "
+        "discovery logic is broken. Check that _RESOLVER_MODULES lists the right "
         "module paths and that the resolver symbols are still exported."
     )
 
