@@ -2,11 +2,20 @@
 
 Every site that previously reimplemented UTC timezone validation inline
 (``if value.tzinfo is None or value.utcoffset() is None: raise ...``) must
-now delegate to :func:`aeat.core.time._utc.validate_utc_aware`.
+now delegate to :func:`~core.time.validate_utc_aware`.
 
 This test walks the production source tree with :mod:`ast` and asserts that
 no ``tzinfo is None`` comparisons appear outside the canonical UTC module
 itself and outside test files.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the shared production AST inventory consumed by the ratchet.
+    :mod:`~core.time`
+        Public home for the canonical UTC coercion and validation helpers.
+    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
+        Tracks the W03.P16 UTC validator enrollment sweep and S348 inventory
+        gate.
 """
 
 from __future__ import annotations
