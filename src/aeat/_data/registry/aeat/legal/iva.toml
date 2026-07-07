@@ -1032,6 +1032,47 @@ required_text = [
     "el que globalmente corresponda al conjunto de los tres últimos años naturales en que se hubiesen realizado operaciones",
 ]
 
+[legal."ley-37-1992:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a103"
+document_id = "BOE-A-1992-28740"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a103"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a103 clases de prorrata; operator to re-stamp)"
+notes = "Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata tiene dos modalidades, general y especial; la general se aplica cuando no concurren las circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las cuotas deducibles del ano natural por la regla general excede en un 10 por ciento o mas del que resultaria por la regla especial (obligacion de especial). Base legal del aviso +10% de prorrata especial obligatoria (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE)."
+required_text = [
+    "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
+    "La regla de prorrata especial será aplicable en los siguientes supuestos:",
+    "Cuando el montante total de las cuotas deducibles en un año natural por aplicación de la regla de prorrata general exceda en un 10 por ciento o más del que resultaría por aplicación de la regla de prorrata especial.",
+]
+
+[legal."ley-37-1992:art-106"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a106"
+document_id = "BOE-A-1992-28740"
+article = "106"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a106"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp)"
+notes = "Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deduccion por uso del input: 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a deduccion se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento del art 105. Base legal del enrutado por InputClassification (exclusively_deductible/exclusively_non_deductible/common)."
+required_text = [
+    "El ejercicio del derecho a deducir en la prorrata especial se ajustará a las siguientes reglas:",
+    "utilizados exclusivamente en la realización de operaciones que originen el derecho a la deducción podrán deducirse íntegramente.",
+    "utilizados exclusivamente en la realización de operaciones que no originen el derecho a deducir no podrán ser objeto de deducción.",
+    "utilizados sólo en parte en la realización de operaciones que originen el derecho a la deducción podrán ser deducidas en la proporción resultante de aplicar al importe global de las mismas el porcentaje a que se refiere el artículo 104, apartados Dos y siguientes.",
+]
+
 [legal."ley-37-1992:art-107"]
 evidence_tier = "legal_authority"
 authority = "boe"
