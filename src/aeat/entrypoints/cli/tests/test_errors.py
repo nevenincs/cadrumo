@@ -1,12 +1,25 @@
-"""Real-behaviour tests for cast-replacement helpers in :mod:`_errors` (contract, contract).
+"""Real-behaviour tests for CLI error-boundary cast narrowing.
 
-Verifies:
+These tests pin the memoised wrapper branch in
+:func:`~entrypoints.cli._errors.command_error_boundary` and the
+:func:`~entrypoints.cli._errors._is_memoised_wrapper` TypeGuard used to recover
+the callback's original callable type. The coverage is intentionally
+identity- and behaviour-based: wrapping the same callback twice must return the
+same object, and the wrapper must still behave like the original callback.
 
-- ``_is_memoised_wrapper`` narrows callable objects correctly.
-- ``command_error_boundary`` memo cache returns the identical wrapped object
-  for a repeated call (the memoised-wrapper path).
+No mocks, skips, expected-fail markers, or tautological assertions are used.
 
-No mocks, no skips, no expected-fail markers, no tautological assertions.
+See Also:
+    :mod:`~entrypoints.cli._errors`
+        Shared CLI error-emission boundary that owns callback wrapping,
+        memoisation, and typed stderr emission.
+    :class:`~core.errors.AeatError`
+        Central typed error base forwarded through the command boundary.
+    ``2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr``
+        Decision requiring every CLI callback to pass through the central
+        error boundary and registry-backed renderer.
+    ``2026-05-08-cli-backend-boundary-adr``
+        Root boundary contract that keeps CLI error handling centralized.
 """
 
 from __future__ import annotations
