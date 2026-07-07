@@ -34,6 +34,7 @@ from pydantic import (
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
+from ...core.parsing import parse_iso8601_date
 from ._errors import IvaValidationError
 
 
@@ -99,7 +100,7 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
     @classmethod
     def _parse_payment_date(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return parse_iso8601_date(value)
         return value
 
     @field_validator("taxable_base", "iva_amount", "recargo_amount", mode="before")
