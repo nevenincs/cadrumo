@@ -2797,7 +2797,7 @@ cli:
           activo.
         public_key_help: La clave publica X25519 en bruto del destinatario, en 64
           caracteres hexadecimales en minuscula.
-        recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'gestor-de-kent').
+        recipient_id_help: 'Etiqueta estable elegida por el operador (p. ej. ''mi-gestor'').'
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.

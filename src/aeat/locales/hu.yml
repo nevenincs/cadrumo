@@ -2709,7 +2709,7 @@ cli:
         list_help: Az aktiv profilon regisztralt osszes bizalmi cimzett listazasa.
         public_key_help: A cimzett nyers X25519 nyilvanos kulcsa, 64 kisbetus hexadecimalis
           karakterkent.
-        recipient_id_help: Stabil, kezelo altal valasztott cimke (pl. 'kent-konyveloje').
+        recipient_id_help: 'Stabil, kezelo altal valasztott cimke (pl. ''a-konyvelom'').'
         remove_help: Egy bizalmi cimzett eltavolitasa azonosito alapjan az aktiv profilbol.
     custody:
       confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.

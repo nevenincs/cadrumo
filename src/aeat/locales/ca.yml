@@ -2767,7 +2767,7 @@ cli:
           actiu.
         public_key_help: La clau publica X25519 en brut del destinatari, en 64 caracters
           hexadecimals en minuscula.
-        recipient_id_help: Etiqueta estable triada per l'operador (p. ex. 'gestor-de-kent').
+        recipient_id_help: 'Etiqueta estable triada per l''operador (p. ex. ''el-meu-gestor'').'
         remove_help: Elimina un destinatari de confianca pel seu id del perfil actiu.
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.

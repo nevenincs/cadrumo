@@ -2592,7 +2592,7 @@ cli:
         list_help: List every trusted recipient registered on the active profile.
         public_key_help: The recipient's raw X25519 public key, as 64 lowercase hex
           characters.
-        recipient_id_help: Stable operator-chosen label (e.g. 'kents-accountant').
+        recipient_id_help: 'Stable operator-chosen label (e.g. ''my-accountant'').'
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
