@@ -1,7 +1,7 @@
 """MCP server shell: the thin protocol wiring over the SDK-independent core.
 
 The Model Context Protocol runtime is an optional dependency behind the
-``aeat[agent]`` extra. :func:`serve` imports it lazily and, when it is absent,
+``aeat-cli[agent]`` extra. :func:`serve` imports it lazily and, when it is absent,
 refuses with the install hint and a non-zero exit instead of raising a raw
 ``ModuleNotFoundError`` - the same graceful-degradation contract the Google,
 browser, and Anthropic integrations follow. The tool list, annotations, and the
@@ -97,7 +97,7 @@ from ._terminology_tools import (
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 if TYPE_CHECKING:
-    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat[agent]``),
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``),
     # so every real import of it is deferred to inside a function body (see the
     # module docstring). These names are never evaluated at runtime (deferred
     # annotations, `from __future__ import annotations`); they exist solely so
@@ -106,7 +106,7 @@ if TYPE_CHECKING:
     from mcp.server import Server
     from mcp.types import ContentBlock, Tool
 
-_INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
+_INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat-cli[agent]'"
 _SERVER_NAME = "aeat"
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
@@ -188,7 +188,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
     """Adapt the SDK-independent descriptors into MCP SDK ``Tool`` objects.
 
     Lazily imports the SDK types so the module still imports (and ``serve`` still
-    refuses gracefully) when the ``aeat[agent]`` extra is absent. Exposed at module
+    refuses gracefully) when the ``aeat-cli[agent]`` extra is absent. Exposed at module
     level so the adaptation - including the mutability-to-annotation projection -
     is unit-tested against the real SDK types when they are installed.
     """
@@ -275,7 +275,7 @@ def build_meta_sdk_tools() -> list[Tool]:
     """Build the SDK ``Tool`` objects for the ``search`` and ``execute`` meta-tools.
 
     Lazily imports the SDK ``Tool`` type so the module still imports when the
-    ``aeat[agent]`` extra is absent. Exposed at module level so the meta-tool
+    ``aeat-cli[agent]`` extra is absent. Exposed at module level so the meta-tool
     surface is unit-tested against the real SDK types when they are installed.
 
     Returns:
@@ -732,7 +732,7 @@ def _run_server(
 ) -> None:  # pragma: no cover - requires the SDK runtime
     """Build and run the MCP stdio server from the tool descriptors.
 
-    Exercised only when the ``aeat[agent]`` extra is installed; the descriptor,
+    Exercised only when the ``aeat-cli[agent]`` extra is installed; the descriptor,
     annotation, dispatch, block, and capability-registration logic it composes are
     unit-tested without the stdio transport via :func:`build_server`.
     """
