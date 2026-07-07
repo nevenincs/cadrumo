@@ -82,6 +82,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S302]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S307]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S309]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S347]]'
@@ -462,6 +463,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P41-S298` - R8-ROSA-CRITICAL M100 missing binding for estimacion objetiva regimen
 - `2026-05-26-cross-domain-continuity-W09-P41-S302` - R8-ROSA-F add regime incompatibility warnings
 - `2026-05-26-cross-domain-continuity-W09-P41-S307` - R8-NURIA-HIGH M184 atribucion de rentas calculation path missing
+- `2026-05-26-cross-domain-continuity-W09-P41-S309` - R8-NURIA-MODERATE M131 módulos manual entry path
 - `2026-05-26-cross-domain-continuity-W09-P41-S347` - Annotate stale overview explain deadlines
 - `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
 - `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
