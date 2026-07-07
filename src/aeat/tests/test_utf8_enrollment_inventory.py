@@ -3,7 +3,7 @@
 
 Rule
 ----
-Every production module must use :data:`aeat.core.external_constants.UTF_8_ENCODING`
+Every production module must use :data:`~core.external_constants.UTF_8_ENCODING`
 instead of the bare string literal ``"utf-8"``.  Idiomatic hash sites
 (where the encode feeds a ``hashlib`` or ``hmac`` digest call on the
 same logical line) are allowlisted because the encoding is
@@ -34,6 +34,16 @@ Exclusions
 - ``external_constants.py``: defines ``UTF_8_ENCODING`` itself.
 - Lines containing ``hashlib``, ``hmac``, ``sha256``, ``sha1``, or
   ``md5`` on the same line as the literal (hash-protocol allowlist).
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production-file scanner and bare UTF-8 literal detector
+        used by the ratchet.
+    :mod:`~core.external_constants`
+        Defines ``UTF_8_ENCODING`` as the shared encoding authority.
+    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
+        Tracks the UTF-8 enrollment wave and the S506 inventory gate this file
+        now maintains.
 """
 
 from __future__ import annotations
