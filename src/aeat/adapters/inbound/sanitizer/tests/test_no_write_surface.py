@@ -19,6 +19,7 @@ verbs.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -79,11 +80,6 @@ def _public_python_files() -> list[Path]:
     return candidates
 
 
-_PUBLIC_DEF_RE = re.compile(
-    r"^(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)",
-    re.MULTILINE,
-)
-
 
 class TestPublicSurfaceCarriesNoForbiddenVerb:
     """No public function / class name in the sanitiser carries a banned verb."""
@@ -101,9 +97,11 @@ class TestPublicSurfaceCarriesNoForbiddenVerb:
     def test_no_public_symbol_uses_forbidden_verb(self) -> None:
         offenders: list[tuple[Path, str]] = []
         for path in _public_python_files():
-            text = path.read_text(encoding="utf-8")
-            for match in _PUBLIC_DEF_RE.finditer(text):
-                name = match.group(1)
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+                    continue
+                name = node.name
                 if name.startswith("_"):
                     continue
                 lowered = name.lower()
