@@ -1,4 +1,18 @@
-"""Structural checks for the Import Linter ignore ledger."""
+"""Structural checks for the Import Linter ignore ledger.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the repository root anchor used to parse ``.importlinter``
+        without depending on the current working directory.
+    ``.importlinter``
+        Layered architecture contract and ignore ledger ratcheted by these
+        tests.
+    ``.vault/adr/2026-04-30-aeat-restructure-adr.md``
+        Establishes the import-boundary model and sanctioned exception
+        registry.
+    ``.vault/audit/2026-07-02-aeat-architecture-review-audit.md``
+        Records the ledger-drift risk that makes this ratchet load-bearing.
+"""
 
 from __future__ import annotations
 
