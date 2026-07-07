@@ -48,6 +48,7 @@ from ...core import (
     CasillaId,
     Modelo,
     Period,
+    ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
@@ -64,8 +65,10 @@ from ...domain.iva import (
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
+    ProrrataInputs,
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
+    compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
 )
 from ...domain.prorrata_register import (
@@ -73,6 +76,7 @@ from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
+    ThreeActiveYearsAggregate,
 )
 from ..aggregation import (
     CalculationSourceContext,
@@ -312,6 +316,88 @@ def build_prorrata_missing_provisional_advisory(
         message=message,
         casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     )
+
+
+class ProrrataInterruptedSeed(BaseModel):
+    """The LIVA art. 105.Cinco resumption seed for an ejercicio after an interruption.
+
+    Carries the global definitive percentage over the aggregate of the last three
+    active años naturales and the :class:`~core.ProrrataProvisionalProvenance`
+    stamping it as the art. 105.Cinco three-year rule. When the register holds
+    fewer than three active years the seed is unresolved (``percentage is None``)
+    and the caller surfaces the insufficient-history advisory rather than assuming
+    a percentage.
+
+    See Also:
+        :func:`build_interrumpida_tres_ultimos_seed`
+            Builds this seed and the optional insufficient-history diagnostic.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    percentage: Decimal | None = None
+    provenance: ProrrataProvisionalProvenance | None = None
+    contributing_ejercicios: tuple[int, ...] = ()
+    aggregate: ThreeActiveYearsAggregate | None = None
+
+    @property
+    def resolved(self) -> bool:
+        """Whether the three-active-years rule resolved a percentage."""
+        return self.percentage is not None
+
+
+def build_interrumpida_tres_ultimos_seed(
+    register: ProrrataRegister,
+    *,
+    ejercicio: int,
+    sector_id: str | None = None,
+) -> tuple[ProrrataInterruptedSeed, CalculationSourceDiagnostic | None]:
+    """Seed a resumed ejercicio from the LIVA art. 105.Cinco three-active-years rule.
+
+    When the immediately prior year is interrupted, seed the resuming ejercicio
+    from the GLOBAL definitive percentage over the AGGREGATE volumes of the last
+    three active años naturales (skipping the interruption gap), computed via
+    :func:`~domain.iva.compute_prorrata_definitiva_anual` over the summed volumes -
+    never the average of the three definitive percentages, never silently the
+    single pre-interruption year. With fewer than three active years no percentage
+    is assumed: a visible insufficient-history advisory is returned instead
+    (``no-silent-under-declaration``).
+
+    See Also:
+        :meth:`~domain.prorrata_register.ProrrataRegister.collect_last_three_active_years`
+            The register walk that aggregates the three active years' volumes.
+    """
+    aggregate = register.collect_last_three_active_years(before_ejercicio=ejercicio, sector_id=sector_id)
+    if not aggregate.sufficient:
+        found = len(aggregate.contributing_ejercicios)
+        years = ", ".join(str(year) for year in aggregate.contributing_ejercicios) or "ninguno"
+        message = (
+            f"Prorrata art. 105.Cinco para {ejercicio}: historial insuficiente para la siembra por interrupción "
+            f"(se requieren tres años naturales con operaciones; se encontraron {found}: {years}). "
+            "Registre o siembre el porcentaje manualmente; no se aplica un porcentaje por defecto."
+        )
+        diagnostic = CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+            message=message,
+            casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
+        )
+        return ProrrataInterruptedSeed(contributing_ejercicios=aggregate.contributing_ejercicios), diagnostic
+
+    result = compute_prorrata_definitiva_anual(
+        ProrrataInputs(
+            operaciones_con_derecho_deduccion=aggregate.summed_volume_con_derecho,
+            operaciones_sin_derecho_deduccion=aggregate.summed_volume_sin_derecho,
+        ),
+        year=ejercicio,
+    )
+    seed = ProrrataInterruptedSeed(
+        percentage=result.percentage,
+        provenance=ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
+        contributing_ejercicios=aggregate.contributing_ejercicios,
+        aggregate=aggregate,
+    )
+    return seed, None
 
 
 def build_prorrata_declared_volume_divergence_advisory(
@@ -993,8 +1079,10 @@ __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
+    "ProrrataInterruptedSeed",
     "ProrrataRegularizacionFeedProjection",
     "ProrrataRegularizacionSourceResolver",
+    "build_interrumpida_tres_ultimos_seed",
     "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
