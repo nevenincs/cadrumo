@@ -46,7 +46,7 @@ def test_wizard_success_text_uses_central_output_redaction(capsys: pytest.Captur
 
 
 def test_wizard_success_text_accepts_non_resident_next_step(capsys: pytest.CaptureFixture[str]) -> None:
-    _emit_wizard_success("create", "marta-irnr", next_command="aeat app modelo describe 210")
+    _emit_wizard_success("create", "irnr-profile", next_command="aeat app modelo describe 210")
 
     output = capsys.readouterr().out
     assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in output

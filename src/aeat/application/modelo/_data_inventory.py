@@ -63,12 +63,12 @@ class DataInventoryChecklist:
     ``required_manual`` and ``optional_manual`` are the casillas an operator
     must (or may) hand-enter. ``ledger_derivable`` are casillas the ledger
     aggregation mesh populates automatically once the relevant transactions
-    are imported and classified — Kent imports these rather than typing them.
-    ``profile_derivable`` are casillas populated from the active taxpayer
-    profile (coefficients such as the home-office usage ratio);
+    are imported and classified — the operator imports these rather than
+    typing them. ``profile_derivable`` are casillas populated from the active
+    taxpayer profile (coefficients such as the home-office usage ratio);
     ``unresolved_profile_bindings`` names the subset of those bindings the
     active profile has not yet supplied a fact for, so the checklist can warn
-    Kent before he calculates and hits a missing-binding refusal.
+    the operator before they calculate and hit a missing-binding refusal.
     """
 
     modelo: str

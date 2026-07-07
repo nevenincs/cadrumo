@@ -130,16 +130,16 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     from ....core import resolve_active_bucket_id
 
     csv_path = tmp_path / "bank.csv"
-    r_create = _create_profile("kent", tax_id="12345678Z")
+    r_create = _create_profile("profile", tax_id="12345678Z")
     assert r_create.exit_code == 0, r_create.output
     _seed_transaction(csv_path)
 
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
-    archive_path = tmp_path / "kent-backup.tar.gz"
+    archive_path = tmp_path / "profile-backup.tar.gz"
     passphrase = "correct-horse-battery-staple-9"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("kent", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
     export_payload = assert_public_profile_payload_redacted(r_export.output, source_bucket_id)
     assert export_payload["recovery_wrap_present"] is True
@@ -191,12 +191,12 @@ def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path
     """
     import tarfile
 
-    r_create = _create_profile("kent-identity", tax_id="12345678Z")
+    r_create = _create_profile("profile-identity", tax_id="12345678Z")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "kent-identity-transfer.tar.gz"
+    archive_path = tmp_path / "profile-identity-transfer.tar.gz"
     r_export = _archive_export(
-        "kent-identity",
+        "profile-identity",
         archive_path,
         recovery_wrap_passphrase="identity-transfer-passphrase-42",  # noqa: S106 - synthetic test fixture
     )
@@ -214,7 +214,7 @@ def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path
 
     assert set(member_payloads) == {"header.json", "payload.envelope", "recovery.wrap"}
     joined_members = b"\n".join(member_payloads.values())
-    for forbidden in (b"12345678Z", b"Archive", b"Roundtrip", b"kent-identity"):
+    for forbidden in (b"12345678Z", b"Archive", b"Roundtrip", b"profile-identity"):
         assert forbidden not in joined_members
 
     # The header is intentionally inspectable without decryption, but it must
@@ -227,14 +227,14 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
     """Archive import provisions the restored bucket as the active profile."""
     from ....core import resolve_active_bucket_id
 
-    r_create = _create_profile("kent2", tax_id="87654321X")
+    r_create = _create_profile("profile2", tax_id="87654321X")
     assert r_create.exit_code == 0, r_create.output
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
-    archive_path = tmp_path / "kent2-backup.tar.gz"
+    archive_path = tmp_path / "profile2-backup.tar.gz"
     passphrase = "another-recovery-passphrase-42"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("kent2", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile2", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
 
     restore_root = tmp_path / "restore-root-2"
@@ -256,12 +256,12 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
 
 def test_archive_import_refuses_wrong_recovery_wrap_passphrase(tmp_path: Path) -> None:
     """A passphrase-wrapped transfer archive refuses restore with the wrong passphrase."""
-    r_create = _create_profile("kent-wrong-passphrase", tax_id="87654321X")
+    r_create = _create_profile("profile-wrong-passphrase", tax_id="87654321X")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "kent-wrong-passphrase.tar.gz"
+    archive_path = tmp_path / "profile-wrong-passphrase.tar.gz"
     r_export = _archive_export(
-        "kent-wrong-passphrase",
+        "profile-wrong-passphrase",
         archive_path,
         recovery_wrap_passphrase="right-recovery-passphrase-42",  # noqa: S106 - synthetic test fixture
     )
@@ -291,12 +291,12 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
     an operator wants to check a backup file before deciding whether (and
     with what passphrase) to restore it.
     """
-    r_create = _create_profile("kent3", tax_id="11111111H")
+    r_create = _create_profile("profile3", tax_id="11111111H")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "kent3-backup.tar.gz"
+    archive_path = tmp_path / "profile3-backup.tar.gz"
     r_export = _archive_export(
-        "kent3",
+        "profile3",
         archive_path,
         recovery_wrap_passphrase="inspect-me-passphrase-7",  # noqa: S106 - synthetic test fixture, not a secret
     )
@@ -335,12 +335,12 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
     """
     import tarfile
 
-    r_create = _create_profile("kent4", tax_id="22222222J")
+    r_create = _create_profile("profile4", tax_id="22222222J")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "kent4-backup.tar.gz"
+    archive_path = tmp_path / "profile4-backup.tar.gz"
     passphrase = "tamper-test-passphrase-321"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("kent4", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile4", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
 
     # Extract, corrupt the payload member, and re-pack the tar.gz.
@@ -356,7 +356,7 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
     raw[-8] ^= 0xFF  # Flip a byte deep inside the AEAD ciphertext/tag region.
     payload_path.write_bytes(bytes(raw))
 
-    tampered_path = tmp_path / "kent4-backup-tampered.tar.gz"
+    tampered_path = tmp_path / "profile4-backup-tampered.tar.gz"
     with tarfile.open(tampered_path, mode="w:gz") as archive:
         for member_name in ("header.json", "payload.envelope", "recovery.wrap"):
             member_path = extract_dir / member_name
@@ -374,14 +374,14 @@ def test_archive_import_refuses_uuid_collision(tmp_path: Path) -> None:
     """Importing an archive whose bucket id is already registered is refused without --force."""
     from ....core import resolve_active_bucket_id
 
-    r_create = _create_profile("kent5", tax_id="33333333P")
+    r_create = _create_profile("profile5", tax_id="33333333P")
     assert r_create.exit_code == 0, r_create.output
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
-    archive_path = tmp_path / "kent5-backup.tar.gz"
+    archive_path = tmp_path / "profile5-backup.tar.gz"
     passphrase = "collision-test-passphrase-654"  # noqa: S105 - synthetic test fixture, not a secret
-    r_export = _archive_export("kent5", archive_path, recovery_wrap_passphrase=passphrase)
+    r_export = _archive_export("profile5", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
 
     # Re-import into the SAME storage root, where the bucket id already exists.

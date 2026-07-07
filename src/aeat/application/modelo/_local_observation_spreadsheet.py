@@ -1,6 +1,6 @@
 """Parse a two-column casilla-value spreadsheet into a decimal mapping.
 
-Kent keeps a hand-authored CSV or XLSX spreadsheet of ``casilla_code, value``
+An operator keeps a hand-authored CSV or XLSX spreadsheet of ``casilla_code, value``
 rows — a cert-free reconstruction path for a past filing when neither the
 justificante PDF (:mod:`application.filing._import`) nor a live AEAT pull
 is available. This module owns exactly the tabular-to-mapping projection: read

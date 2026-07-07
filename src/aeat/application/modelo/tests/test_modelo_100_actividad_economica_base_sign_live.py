@@ -41,7 +41,7 @@ from .test_e2e_ledger_m130_quarters_to_m100_annual import (
     _BUCKET_ID,
     _EXPECTED_M100_ACTIVITY_NET,
     _calculate_m100_annual,
-    _persist_marta_style_ledger,
+    _persist_autonoma_style_ledger,
     _seed_prior_year_m100,
 )
 
@@ -64,7 +64,7 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
     negative base imponible general (regression guard for #514)."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         secure_objects: SecureObjectRepository = profile.repository
-        _persist_marta_style_ledger(secure_objects)
+        _persist_autonoma_style_ledger(secure_objects)
         _seed_prior_year_m100(secure_objects)
 
         annual = _calculate_m100_annual(secure_objects)

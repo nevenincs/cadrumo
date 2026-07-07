@@ -103,9 +103,9 @@ def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, se
 def test_requires_classifies_m130_casillas_against_live_registry_no_active_profile() -> None:
     """``requires`` for Modelo 130 matches the registry's own input_kind/source split.
 
-    No active profile is set: Kent has not created a taxpayer profile yet, but
-    the checklist must still tell him what data he needs from the registry
-    alone (required/optional manual casillas, ledger-derivable casillas).
+    No active profile is set: the operator has not created a taxpayer profile
+    yet, but the checklist must still tell them what data is needed from the
+    registry alone (required/optional manual casillas, ledger-derivable casillas).
     """
     expected = _registry_derived_expectation(
         modelo=_M130_MODELO,
@@ -218,8 +218,8 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     status, spouse identity, descendant/ascendant rows, ...). The seeded
     profile resolves only a proper subset (tax residence, declaration type,
     birth date, minor children count); every other profile-derivable binding
-    must be reported as unresolved so Kent knows exactly which coefficient he
-    still owes -- never a silent gap.
+    must be reported as unresolved so the operator knows exactly which
+    coefficient is still owed -- never a silent gap.
     """
     resolved = {
         "renta-2025-profile-tax-residence-ccaa",

@@ -234,7 +234,7 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
     public_key = recipient_encryption_public_key(keypair)
-    _register_recipient("kents-accountant", public_key_hex=public_key.public_key_hex)
+    _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
     encrypt_result = _invoke(
@@ -247,14 +247,14 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
             "encrypt-for-recipient",
             str(package_path),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(envelope_path),
         ],
     )
     assert encrypt_result.exit_code == 0, encrypt_result.output
     encrypt_payload = _payload(encrypt_result.output)
-    assert encrypt_payload["recipient_id"] == "kents-accountant"
+    assert encrypt_payload["recipient_id"] == "my-accountant"
     assert encrypt_payload["recipient_public_key_hex"] == public_key.public_key_hex
     assert encrypt_payload["review_only"] is False
     assert encrypt_payload["valid_until"] is None
@@ -304,7 +304,7 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
     public_key = recipient_encryption_public_key(keypair)
-    _register_recipient("kents-accountant", public_key_hex=public_key.public_key_hex)
+    _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
     encrypt_result = _invoke(
@@ -317,7 +317,7 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
             "encrypt-for-recipient",
             str(package_path),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(envelope_path),
             "--review-only",
@@ -356,7 +356,7 @@ def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
     public_key = recipient_encryption_public_key(keypair)
-    _register_recipient("kents-accountant", public_key_hex=public_key.public_key_hex)
+    _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
     encrypt_result = _invoke(
@@ -367,7 +367,7 @@ def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
             "encrypt-for-recipient",
             str(package_path),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(envelope_path),
         ],
@@ -462,7 +462,7 @@ def test_encrypt_for_recipient_refuses_missing_package(tmp_path: Path) -> None:
             "encrypt-for-recipient",
             str(tmp_path / "does-not-exist.zip"),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(tmp_path / "envelope.json"),
         ],
