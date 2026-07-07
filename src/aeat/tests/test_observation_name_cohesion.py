@@ -10,6 +10,16 @@ This gate walks the production source tree (tests excluded) and refuses any
 ``*Observation`` class name that is defined in more than one module. A future
 homonym fails here loudly instead of silently overloading the vocabulary a
 semantic search relies on.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory used by this cohesion gate.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Canonical registry observation carrier protected from generic
+        ``Observation`` homonyms by the binding vocabulary pass.
+    ``.vault/adr/2026-06-26-binding-vocabulary-cli-cohesion-adr.md``
+        Governs the naming-discipline pass that retired cross-domain binding
+        and observation homonyms for reader and RAG coherence.
 """
 
 from __future__ import annotations
