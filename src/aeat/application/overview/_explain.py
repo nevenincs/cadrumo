@@ -21,7 +21,7 @@ on so the operator can audit them. Local-only: never contacts AEAT.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -40,6 +40,9 @@ from ...domain.deadlines import (
     TaxpayerProfile,
 )
 from ._errors import OverviewExplainError
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry import DeadlineWindowDefinition, ModeloRevision
 
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.
@@ -98,6 +101,11 @@ class OverviewExplain(BaseModel):
             registered for the year. ``None`` when no deadline-window
             data exists (registry-track gap R1) — the applicability
             ``verdict`` is independent of it.
+        out_of_plazo_warning: Warning text when the matching registry
+            filing window closed more than twelve months before the
+            reference date. The warning annotates the voluntary-deadline
+            state and the ordinary four-year LGT prescription horizon
+            without changing the applicability verdict.
         profile_facts: Subset of the operator's
             :class:`~domain.deadlines.TaxpayerProfile` fields the answer
             depends on. Keys are stable field names; values are
@@ -114,6 +122,7 @@ class OverviewExplain(BaseModel):
     rationale: str = Field(min_length=1)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     scheduling_rationale: str | None = None
+    out_of_plazo_warning: str | None = None
     profile_facts: dict[str, _ProfileFactValue] = Field(default_factory=dict)
     generated_at: datetime
 
@@ -194,6 +203,7 @@ def build_overview_explain(
     modelo: str,
     year: int | None = None,
     engine: DeadlineExplanationEngine | None = None,
+    today: date | None = None,
 ) -> OverviewExplain:
     """Decompose a modelo's applicability against the operator's profile.
 
@@ -219,6 +229,9 @@ def build_overview_explain(
         modelo: Modelo identifier to explain (e.g. ``"130"``).
         year: Optional calendar year. Defaults to the current year.
         engine: Optional :class:`DeadlineExplanationEngine` override.
+        today: Optional reference date for out-of-plazo annotation.
+            Defaults to today. Tests pass this explicitly; the CLI uses
+            the real current date.
 
     Returns:
         An :class:`OverviewExplain` carrying the applicability verdict,
@@ -234,7 +247,8 @@ def build_overview_explain(
         raise OverviewExplainError(
             translated_message="application.overview.explain.errors.modelo_blank",
         )
-    resolved_year = year or date.today().year
+    reference_today = today or date.today()
+    resolved_year = year or reference_today.year
 
     if not _modelo_is_registered(modelo_id):
         unmodeled_description = _UNMODELED_MODELO_DESCRIPTIONS.get(modelo_id)
@@ -267,6 +281,12 @@ def build_overview_explain(
         year=resolved_year,
         engine=engine,
     )
+    out_of_plazo_warning = _out_of_plazo_warning(
+        profile,
+        modelo=modelo_id,
+        year=resolved_year,
+        today=reference_today,
+    )
 
     return OverviewExplain(
         modelo=modelo_id,
@@ -276,6 +296,7 @@ def build_overview_explain(
         rationale=applicability.reason,
         legal_refs=applicability.legal_refs,
         scheduling_rationale=scheduling_rationale,
+        out_of_plazo_warning=out_of_plazo_warning,
         profile_facts=_extract_profile_facts(profile),
         generated_at=now(),
     )
@@ -312,6 +333,74 @@ def _scheduling_rationale(
         raise OverviewExplainError(
             f"could not evaluate modelo {modelo!r} for year {year}: {exc}",
         ) from exc
+
+
+def _out_of_plazo_warning(
+    profile: TaxpayerProfile,
+    *,
+    modelo: str,
+    year: int,
+    today: date,
+) -> str | None:
+    """Return an old-deadline warning for ``overview explain``.
+
+    Applicability answers the taxpayer-model question ("does this
+    modelo apply?"). This helper adds the separate timing warning S347
+    asks for: a historical return can still be applicable while its
+    voluntary filing window closed long ago.
+    """
+    deadline_engine = DeadlineEngine()
+    try:
+        windows = deadline_engine._deadline_windows(year)
+    except NoDeadlineWindowsError:
+        return None
+    matching_windows = tuple(
+        window
+        for code, revision, window in windows
+        if code == modelo and _deadline_window_matches(deadline_engine, profile, revision, window)
+    )
+    if not matching_windows:
+        return None
+    closes_on = max(window.closes_on for window in matching_windows)
+    twelve_month_boundary = _add_years(closes_on, 1)
+    if today < twelve_month_boundary:
+        return None
+    days_late = (today - closes_on).days
+    prescription_boundary = _add_years(closes_on, 4)
+    prescription_state = (
+        "inside the ordinary four-year LGT arts. 66-67 prescription horizon"
+        if today <= prescription_boundary
+        else "after the ordinary four-year LGT arts. 66-67 prescription horizon"
+    )
+    return (
+        f"out_of_plazo: voluntary filing window closed on {closes_on.isoformat()}; "
+        f"as of {today.isoformat()} the return is {days_late} days past the "
+        f"deadline and is {prescription_state} "
+        f"(ordinary boundary {prescription_boundary.isoformat()})."
+    )
+
+
+def _deadline_window_matches(
+    deadline_engine: DeadlineEngine,
+    profile: TaxpayerProfile,
+    revision: ModeloRevision,
+    window: DeadlineWindowDefinition,
+) -> bool:
+    if not deadline_engine._schedule_applies(profile, revision, window):
+        return False
+    condition_text = deadline_engine._evaluate_conditions(
+        profile,
+        window.applicability_conditions,
+        mode=window.applicability_condition_mode,
+    )
+    return condition_text is not None
+
+
+def _add_years(value: date, years: int) -> date:
+    try:
+        return value.replace(year=value.year + years)
+    except ValueError:
+        return value.replace(year=value.year + years, month=2, day=28)
 
 
 __all__ = [
