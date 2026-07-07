@@ -90,6 +90,7 @@ from ._calendar_warnings import (
     _calendar_aeat_evidence_conflict_warnings,
     _calendar_censo_enrolment_state,
     _calendar_censo_reconciliation_warnings,
+    _calendar_regime_incompatibility_warnings,
     _calendar_unverified_justificante_warnings,
 )
 from ._calendar_warnings import (
@@ -1649,6 +1650,10 @@ def build_overview_calendar(
         events=enriched_events,
     )
     evidence_conflict_warnings = _calendar_aeat_evidence_conflict_warnings(entries=entries_tuple)
+    regime_incompatibility_warnings = _calendar_regime_incompatibility_warnings(
+        iva_regime=profile.iva_regime,
+        entries=entries_tuple,
+    )
     coverage = build_obligation_coverage(
         profile,
         coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
@@ -1658,7 +1663,13 @@ def build_overview_calendar(
         range=calendar_range,
         entries=entries_tuple,
         generated_at=now(),
-        warnings=warnings + censo_warnings + justificante_warnings + evidence_conflict_warnings,
+        warnings=(
+            warnings
+            + censo_warnings
+            + justificante_warnings
+            + evidence_conflict_warnings
+            + regime_incompatibility_warnings
+        ),
         completeness=completeness,
         suppressed_entries=tuple(suppressed),
         events=enriched_events,
