@@ -183,6 +183,13 @@ def _read_init_version() -> str:
     return match.group(1)
 
 
+@pytest.fixture(scope="module")
+def release_checklist() -> ReleaseChecklist:
+    """Return the strict release checklist model once for this module."""
+    payload = yaml.safe_load(RELEASE_CHECKLIST_PATH.read_text(encoding="utf-8"))
+    return ReleaseChecklist.model_validate(payload)
+
+
 def test_release_please_config_is_well_formed() -> None:
     """``release-please-config.json`` parses as the strict pydantic model."""
     payload = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -254,7 +261,7 @@ def test_no_release_please_github_actions_workflow() -> None:
     )
 
 
-def test_release_checklist_is_well_formed() -> None:
+def test_release_checklist_is_well_formed(release_checklist: ReleaseChecklist) -> None:
     """``docs/_release_checklist.yaml`` parses as the strict pydantic model.
 
     Machine-validates the RC-soak window, versioning discipline, hotfix
@@ -262,28 +269,23 @@ def test_release_checklist_is_well_formed() -> None:
     both cite — a typo or dropped section here silently breaks the gate's
     contract with the printed rollback/soak procedure.
     """
-    payload = yaml.safe_load(RELEASE_CHECKLIST_PATH.read_text(encoding="utf-8"))
-    checklist = ReleaseChecklist.model_validate(payload)
-
-    assert checklist.schema_version == 1
-    assert 0 < checklist.soak.minimum_hours <= checklist.soak.maximum_hours
-    assert checklist.rollback.triggers, "rollback.triggers must not be empty"
-    assert checklist.audit_state_gate.checks, "audit_state_gate.checks must not be empty"
+    assert release_checklist.schema_version == 1
+    assert 0 < release_checklist.soak.minimum_hours <= release_checklist.soak.maximum_hours
+    assert release_checklist.rollback.triggers, "rollback.triggers must not be empty"
+    assert release_checklist.audit_state_gate.checks, "audit_state_gate.checks must not be empty"
     # The hotfix cycle times must be a strictly increasing severity ladder:
     # security/data-loss is the fastest, other-critical the slowest.
-    times = checklist.hotfix.cycle_times_hours
+    times = release_checklist.hotfix.cycle_times_hours
     assert times.security_or_data_loss <= times.portal_drift <= times.other_critical
 
 
-def test_release_notes_template_exists_and_is_referenced() -> None:
+def test_release_notes_template_exists_and_is_referenced(release_checklist: ReleaseChecklist) -> None:
     """The release-notes template exists and the checklist points at it."""
     assert RELEASE_NOTES_TEMPLATE_PATH.is_file(), f"{RELEASE_NOTES_TEMPLATE_PATH} is missing"
     text = RELEASE_NOTES_TEMPLATE_PATH.read_text(encoding="utf-8")
     assert text.strip()
 
-    payload = yaml.safe_load(RELEASE_CHECKLIST_PATH.read_text(encoding="utf-8"))
-    checklist = ReleaseChecklist.model_validate(payload)
-    assert checklist.changelog.template == "docs/_release_notes_template.md"
+    assert release_checklist.changelog.template == "docs/_release_notes_template.md"
 
 
 def test_releasing_doc_documents_rc_soak_and_rollback() -> None:
