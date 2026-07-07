@@ -4281,6 +4281,10 @@ cli:
       investigate: 'No s''han pogut determinar amb certesa %{count} obligacio(ns)
         de presentacio per a aquest perfil i podrien quedar sense declarar: %{modelos}.
         Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
+    warning:
+      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor
+        de calcul forfait del regim simplificat encara no esta disponible; reviseu
+        les caselles del regim simplificat abans de presentar.
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra

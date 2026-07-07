@@ -4012,6 +4012,10 @@ cli:
       investigate: '%{count} filing obligation(s) could not be positively scoped for
         this profile and may be under-reported: %{modelos}. Investigate each with
         ''aeat app overview explain <modelo>''.'
+    warning:
+      m303_simplificado_forfait_unavailable: Modelo 303 is applicable, but the
+        regimen simplificado forfait calculation engine is not yet available; review
+        the simplified-regime casillas before filing.
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
