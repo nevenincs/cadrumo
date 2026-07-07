@@ -3525,6 +3525,7 @@ cli:
         létrehozás: ''aeat app ledger ratios set <category-id> <ratio>''. Nem szabad
         szöveg.'
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
+      art_104_tres_exclusion_help: 'Az uzemelteto altal megadott LIVA art. 104.Tres nevezoi kizaras (kulfoldi allando telephely vagy nem szokasos ingatlan-/penzugyi ugylet); kizarja az ugyletet a prorrata arany mindket tagjabol.'
     allocate:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz; teljesen

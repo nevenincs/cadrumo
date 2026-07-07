@@ -3618,6 +3618,7 @@ cli:
         list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
         set <category-id> <ratio>'. No es texto libre.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
+      art_104_tres_exclusion_help: 'Exclusion del denominador de prorrata declarada por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero u operacion inmobiliaria o financiera no habitual); excluye la operacion de ambos terminos de la prorrata.'
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;

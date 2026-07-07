@@ -15,18 +15,11 @@ related:
 ---
 
 
-
-
-
-
-
-
 # `iva-prorrata-complexity` plan
 
 ## Wave `W01` - Independent axes (art-104.Tres exclusions parallel-with art-105.Cinco interrupted)
 
 The two least-entangled ADRs. art-104.Tres (denominator exclusions) and art-105.Cinco (interrupted-activity seeding) share no ledger-transaction field, no _iva_ledger apportionment routing, and no CLI verb; they overlap only on distinct functions in _prorrata_regularizacion.py and distinct additive iva.toml blocks. P01 and P02 therefore run in parallel, coordinated by per-file explicit-pathspec commits.
-
 
 ### Phase `W01.P01` - art-104.Tres denominator exclusions
 
@@ -35,7 +28,7 @@ Ground the 6 real art-104.Tres exclusions and make the ledger volume-rollup a re
 - [x] `W01.P01.S01` - Author the ley-37-1992 art-104 (art-104.Tres) legal entries with corpus_ref and required_text for the 6 real exclusions, correcting the stale subvenciones-no-vinculadas prose removed by Ley 3/2006; `src/aeat/_data/registry/aeat/legal/iva.toml`.
 - [x] `W01.P01.S02` - Add the Art104TresExclusion core enum and the operator-declared exclusion tag on the ledger transaction, with save/load roundtrip + anti-tautology proof; `src/aeat/core/, src/aeat/domain/transactions/_models.py`.
 - [x] `W01.P01.S03` - Filter the art-104.Tres exclusions from the annual volume rollup and keep it a reconciliation pre-fill proposal, never a silent filed-volume authority; `src/aeat/application/aggregation/_iva_ledger.py, src/aeat/application/calculations/_prorrata_regularizacion.py`.
-- [ ] `W01.P01.S04` - Surface the operator exclusion declaration at the CLI and the M303 exclusion metadata in the registry; `src/aeat/entrypoints/cli/, src/aeat/_data/registry/aeat/modelos/303/`.
+- [x] `W01.P01.S04` - Surface the operator exclusion declaration at the CLI and the M303 exclusion metadata in the registry; `src/aeat/entrypoints/cli/, src/aeat/_data/registry/aeat/modelos/303/`.
 - [x] `W01.P01.S05` - Verify the exclusion classification against an AEAT worked example with no hand-computed expected values; `src/aeat/application/calculations/tests/`.
 
 ### Phase `W01.P02` - art-105.Cinco interrupted-activity seeding

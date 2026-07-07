@@ -34,7 +34,7 @@ from ...application.ledger import (
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
 )
-from ...core import resolve_active_bucket_id
+from ...core import Art104TresExclusion, resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -236,6 +236,11 @@ def ledger_add(
         "--prorrata-reference",
         help=tr("cli.ledger.add.prorrata_reference_help"),
     ),
+    art_104_tres_exclusion: Art104TresExclusion | None = typer.Option(
+        None,
+        "--art-104-tres-exclusion",
+        help=tr("cli.ledger.add.art_104_tres_exclusion_help"),
+    ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
         "--purchase-invoice-evidence-id",
@@ -316,6 +321,7 @@ def ledger_add(
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
+            art_104_tres_exclusion=art_104_tres_exclusion,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             attachment_ids=tuple(attachment_ids),
             notes=notes,

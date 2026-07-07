@@ -3577,6 +3577,7 @@ cli:
         ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
         <ratio>'. No és text lliure.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
+      art_104_tres_exclusion_help: 'Exclusio del denominador de prorrata declarada per l''operador (LIVA art. 104.Tres: establiment permanent a l''estranger o operacio immobiliaria o financera no habitual); exclou l''operacio dels dos termes de la prorrata.'
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;
