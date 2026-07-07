@@ -2,6 +2,19 @@
 
 Asserts that none of the literals canonicalised in ratchet history survive in production
 Python source outside their single canonical definition site and documented escapes.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production-file and regex scanners used by this literal
+        centralisation gate.
+    :mod:`~core.external_constants`
+        Canonical registry for shared MIME, encoding, host, and route constants.
+    :mod:`~adapters.outbound.aeat.sede._browser_constants`
+        Adapter-local Playwright and Sede body-encoding constants excluded as
+        authoritative definition sites.
+    ``.vault/adr/2026-05-26-aeat-sede-constants-centralization-adr.md``
+        Governs centralising executable AEAT/Sede constants in schema-owned
+        surfaces instead of scattered literals.
 """
 
 from __future__ import annotations
