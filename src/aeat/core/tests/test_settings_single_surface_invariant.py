@@ -25,11 +25,12 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ..paths import PROJECT_ROOT
+from aeat.tests._inventory import SRC_AEAT, aeat_relative, ast_for_path, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -52,22 +53,8 @@ _ALLOWLIST: frozenset[str] = frozenset(
 _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT_[A-Z0-9_]+$")
 
 
-def _candidate_files() -> list[Path]:
-    src_root = PROJECT_ROOT / "src" / "aeat"
-    candidates: list[Path] = []
-    for path in src_root.rglob("*.py"):
-        rel = path.relative_to(src_root).as_posix()
-        # Exclude this test itself + pytest test files (test reads are
-        # expected to use monkeypatch / fresh-Settings fixtures rather
-        # than Settings directly, and validation happens elsewhere).
-        if rel == "core/test_settings_single_surface_invariant.py":
-            continue
-        if path.name.startswith("test_") or path.name.startswith("_test_"):
-            continue
-        if "/tests/" in rel or rel.startswith("tests/"):
-            continue
-        candidates.append(path)
-    return candidates
+def _candidate_modules(source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[Path, ast.AST], ...]:
+    return production_ast_items(source_tree_ast)
 
 
 def _aeat_key_from_arg(node: ast.expr, constants: dict[str, str]) -> str | None:
@@ -170,9 +157,8 @@ def _is_string_with_aeat_format_template(node: ast.expr) -> bool:
     return False
 
 
-def _violations_in(path: Path) -> list[tuple[int, str, str]]:
+def _violations_in(path: Path, tree: ast.AST) -> list[tuple[int, str, str]]:
     """Return (lineno, key, snippet) tuples for AEAT-prefixed env reads."""
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     constants = _collect_aeat_string_bindings(tree)
     aliases = _collect_environ_aliases(tree)
     violations: list[tuple[int, str, str]] = []
@@ -258,13 +244,12 @@ def _target_label(node: ast.expr) -> str:
     return "<environ-alias>"
 
 
-def test_no_direct_aeat_env_reads_outside_allowlist() -> None:
+def test_no_direct_aeat_env_reads_outside_allowlist(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Every AEAT_* env read must flow through Settings, except allowlisted IPC writes."""
-    src_root = PROJECT_ROOT / "src" / "aeat"
     offences: list[str] = []
-    for path in _candidate_files():
-        rel = path.relative_to(src_root).as_posix()
-        violations = _violations_in(path)
+    for path, tree in _candidate_modules(source_tree_ast):
+        rel = aeat_relative(path)
+        violations = _violations_in(path, tree)
         if not violations:
             continue
         if rel in _ALLOWLIST:
@@ -280,12 +265,11 @@ def test_no_direct_aeat_env_reads_outside_allowlist() -> None:
 
 def test_allowlisted_paths_actually_exist() -> None:
     """Allowlist must not carry stale entries that bypass the check vacuously."""
-    src_root = PROJECT_ROOT / "src" / "aeat"
-    missing = [entry for entry in _ALLOWLIST if not (src_root / entry).exists()]
+    missing = [entry for entry in _ALLOWLIST if not (SRC_AEAT / entry).exists()]
     assert not missing, f"Allowlist entries no longer exist on disk: {missing}"
 
 
-def test_allowlisted_paths_still_contain_aeat_env_reads() -> None:
+def test_allowlisted_paths_still_contain_aeat_env_reads(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """A file on the allowlist must still carry an AEAT_* os.environ read.
 
     Without this check the allowlist would degrade into bitrot — if the
@@ -293,13 +277,13 @@ def test_allowlisted_paths_still_contain_aeat_env_reads() -> None:
     Settings, the allowlist entry becomes a free pass for any future
     AEAT_* read added to that file.
     """
-    src_root = PROJECT_ROOT / "src" / "aeat"
     stale: list[str] = []
     for entry in _ALLOWLIST:
-        path = src_root / entry
+        path = SRC_AEAT / entry
         if not path.exists():
             continue  # caught by the other test
-        if not _violations_in(path):
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is None or not _violations_in(path, tree):
             stale.append(entry)
     assert not stale, (
         f"Allowlisted files no longer contain any AEAT_* os.environ read — remove them from the allowlist: {stale}"
