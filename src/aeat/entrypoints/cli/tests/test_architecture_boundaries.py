@@ -18,6 +18,20 @@ below (legacy-root growth budgets, raw-id-regex placement, legacy-selector
 reintroduction, centralized-addressing bypass) are modelo-CLI-decomposition-
 specific structural rules, not import-hygiene duplicates, and remain this
 module's own authority.
+
+See Also:
+    :func:`~tests._inventory.package_python_files`
+        Shared source inventory used to enumerate focused modelo CLI modules.
+    :func:`~tests._inventory.ast_for_path`
+        Cached AST lookup used by the structural boundary scans.
+    :mod:`~entrypoints.cli.tests.test_cli_module_size`
+        Companion size-budget guard for CLI decomposition.
+    ``.vault/adr/2026-06-05-modelo-work-revision-cli-decomposition-adr.md``
+        Governs modelo revision commands as thin transports over public
+        application facades.
+    ``.vault/adr/2026-05-12-cli-workflow-redesign-app-modelo-shape-adr.md``
+        Establishes the broader CLI backend-boundary rule this test enforces
+        for modelo command modules.
 """
 
 from __future__ import annotations
