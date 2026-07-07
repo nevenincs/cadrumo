@@ -6,6 +6,10 @@ tags:
 date: '2026-07-07'
 modified: '2026-07-07'
 related:
+  - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S01]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S02]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S03]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S05]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
 ---
@@ -19,6 +23,13 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 ### adr
 
 - `2026-07-07-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
+
+### exec
+
+- `2026-07-07-iva-prorrata-complexity-W01-P01-S01` - Author the ley-37-1992 art-104 (art-104.Tres) legal entries with corpus_ref and required_text for the 6 real exclusions, correcting the stale subvenciones-no-vinculadas prose removed by Ley 3/2006
+- `2026-07-07-iva-prorrata-complexity-W01-P01-S02` - Add the Art104TresExclusion core enum and the operator-declared exclusion tag on the ledger transaction, with save/load roundtrip + anti-tautology proof
+- `2026-07-07-iva-prorrata-complexity-W01-P01-S03` - Filter the art-104.Tres exclusions from the annual volume rollup and keep it a reconciliation pre-fill proposal, never a silent filed-volume authority
+- `2026-07-07-iva-prorrata-complexity-W01-P01-S05` - Verify the exclusion classification against an AEAT worked example with no hand-computed expected values
 
 ### plan
 
