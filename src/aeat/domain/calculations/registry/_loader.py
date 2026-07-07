@@ -1111,12 +1111,13 @@ def _load_registry_tree_cached(
     root: str,
     fingerprints: tuple[tuple[str, int, int], ...],
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    import contextlib
     import hashlib
+    import logging
     import os
     import pickle
     import tempfile
 
+    logger = logging.getLogger(__name__)
     cache_path: Path | None = None
     if registry_disk_cache_enabled():
         hasher = hashlib.sha256()
@@ -1134,8 +1135,11 @@ def _load_registry_tree_cached(
             # The payload is produced exclusively by the dump below in this process and
             # keyed by a sha256 of the registry tree fingerprints; no untrusted input is
             # ever deserialized here. A corrupt/foreign file is swallowed and recomputed.
-            with contextlib.suppress(Exception), open(cache_path, "rb") as f:
-                return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
+            try:
+                with open(cache_path, "rb") as f:
+                    return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
+            except Exception:
+                logger.debug("Ignoring unreadable registry disk cache at %s", cache_path, exc_info=True)
 
     resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
@@ -1152,9 +1156,12 @@ def _load_registry_tree_cached(
                 temp_name = tf.name
             os.replace(temp_name, cache_path)
         except Exception:
+            logger.debug("Could not write registry disk cache at %s", cache_path, exc_info=True)
             if temp_name is not None:
-                with contextlib.suppress(Exception):
+                try:
                     os.unlink(temp_name)
+                except Exception:
+                    logger.debug("Could not remove temporary registry disk cache file %s", temp_name, exc_info=True)
     return result
 
 
