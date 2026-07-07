@@ -15,6 +15,23 @@ Allow-listed exceptions:
 * The corpus-registry-packaging wheel guard
   (``src/aeat/tests/test_wheel_bundles_corpus_and_registry.py``)
   legitimately greps the data tree.
+
+See Also:
+    :func:`~core.resources.resources`
+        Canonical repository factory that production code must use for bundled
+        resource access.
+    :func:`~core.resources.bundled_path`
+        Lower-level bundled-data path helper allowed only at the resource
+        boundary and in shape-verification tests.
+    :func:`~tests._inventory.production_python_files`
+        Shared production source inventory scanned for parallel resource
+        locator constants.
+    ``.vault/adr/2026-05-16-resource-management-api-adr.md``
+        Establishes the repository-per-resource registry as the single
+        read-only bundled-data access surface.
+    ``.vault/adr/2026-05-15-corpus-registry-packaging-adr.md``
+        Governs packaging corpus and registry trees through
+        ``importlib.resources`` instead of checkout-relative paths.
 """
 
 from __future__ import annotations
