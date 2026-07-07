@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, package_python_files, regex_line_hits
+from ._inventory import SRC_AEAT, non_test_package_python_files, regex_line_hits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,12 +44,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
 
 def _production_py_files() -> tuple[Path, ...]:
     """Return all non-test Python source files under src/aeat/."""
-    return tuple(
-        p
-        for p in package_python_files(include_data=True)
-        if not any(part.startswith("test_") or part == "__pycache__" for part in p.parts)
-        and p not in _CANONICAL_DEFINITIONS
-    )
+    return tuple(p for p in non_test_package_python_files(include_data=True) if p not in _CANONICAL_DEFINITIONS)
 
 
 def _scan(files: Iterable[Path], pattern: re.Pattern[str], skip_comment_lines: bool = True) -> list[str]:
