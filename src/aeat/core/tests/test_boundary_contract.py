@@ -1,15 +1,15 @@
-"""Boundary checks that protect :mod:`aeat.core` from upward dependencies.
+"""Boundary checks that protect :mod:`~core` from upward dependencies.
 
-The :mod:`aeat.core` package sits at the bottom of the dependency
-graph: the outer layers (:mod:`aeat.adapters`, :mod:`aeat.application`,
-:mod:`aeat.domain`, :mod:`aeat.entrypoints`) depend on it, never the
+The :mod:`~core` package sits at the bottom of the dependency
+graph: the outer layers (:mod:`~adapters`, :mod:`~application`,
+:mod:`~domain`, :mod:`~entrypoints`) depend on it, never the
 other way round. The tests here parse every production module under
-:mod:`aeat.core` and assert that none of them imports anything from
+:mod:`~core` and assert that none of them imports anything from
 those outer packages at *import time*.
 
 Import-time coupling is what the layered architecture forbids: a
 module-level ``import`` of an outer package would make loading
-:mod:`aeat.core` drag the outer layer in, opening the door to import
+:mod:`~core` drag the outer layer in, opening the door to import
 cycles and layer inversion. Two import forms are deliberately *not*
 import-time edges and are excluded from the scan, matching the
 authoritative ``core-not-outer`` import-linter contract
@@ -19,13 +19,30 @@ authoritative ``core-not-outer`` import-linter contract
   checkers, never at runtime.
 * Function- and method-scoped (deferred) imports — evaluated only when
   the enclosing callable runs. ``aeat.core`` uses this pattern
-  deliberately (for example :mod:`aeat.core.config` and the resource
+  deliberately (for example :mod:`~core.config` and the resource
   repositories) so a core primitive can call into a higher layer
   lazily without a load-time dependency.
 
 A second test guards against the re-introduction of the historical
 ``WorkspaceLockedError`` symbol that was removed during the
 storage-foundation cleanup.
+
+See Also:
+    :func:`~tests._inventory.production_ast_items`
+        Shared AST inventory used to scan production modules for import-time
+        layer inversions.
+    :func:`~tests._inventory.production_python_files`
+        Production source inventory used by the removed-symbol regression
+        guard.
+    :mod:`~core.resources`
+        Core resource boundary whose deferred outer-layer access pattern is
+        intentionally excluded from import-time coupling.
+    ``.vault/adr/2026-06-01-domain-boundary-audit-adr.md``
+        Codifies the hexagonal ownership and layering contract that this core
+        guard enforces.
+    ``.vault/adr/2026-05-15-corpus-registry-packaging-adr.md``
+        Establishes the importlib.resources boundary for packaged corpus and
+        registry data.
 """
 
 from __future__ import annotations
