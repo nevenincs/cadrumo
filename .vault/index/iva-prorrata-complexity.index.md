@@ -12,6 +12,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S04]]'
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S05]]'
   - '[[2026-07-07-iva-prorrata-complexity-W01-P02-S06]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W01-P02-S07]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
 ---
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 - `2026-07-07-iva-prorrata-complexity-W01-P01-S04` - Surface the operator exclusion declaration at the CLI and the M303 exclusion metadata in the registry
 - `2026-07-07-iva-prorrata-complexity-W01-P01-S05` - Verify the exclusion classification against an AEAT worked example with no hand-computed expected values
 - `2026-07-07-iva-prorrata-complexity-W01-P02-S06` - Extend the ley-37-1992 art-105 required_text with the art-105.Cinco clause, corpus-grounded
+- `2026-07-07-iva-prorrata-complexity-W01-P02-S07` - Add the interrupted-ejercicio marker/provenance to the register enums and the active/inactive history on ProrrataRegisterEntry
 
 ### plan
 
