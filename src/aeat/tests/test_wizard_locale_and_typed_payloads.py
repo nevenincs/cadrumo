@@ -1,7 +1,7 @@
 """Wizard locale routing and typed-payload boundary contracts.
 
-- Catalogue f-string sites are documented as bounded dynamic-dispatch
-  survivors in ``_ast_scanner._DYNAMIC_TRANSLATION_ROOTS``.
+- The wizard catalogue materializes bounded dynamic choice translation
+  keys in its runtime descriptors.
 - Google API response TypedDicts (``GoogleDriveFile``,
   ``GoogleSheetsRange``, ``GoogleSpreadsheet``) are importable from
   ``_api``.
@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import ast
 import importlib
 import json
 import pathlib
@@ -28,6 +27,26 @@ import yaml
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SRC_ROOT = pathlib.Path(__file__).parent.parent
+
+
+def _wizard_descriptor_translation_keys() -> set[str]:
+    from ..application.wizard import WIZARD_FLOWS
+
+    keys: set[str] = set()
+    for flow in WIZARD_FLOWS:
+        keys.add(str(flow.title))
+        keys.add(str(flow.description))
+        for section in flow.sections:
+            keys.add(str(section.title))
+            for question in section.questions:
+                keys.add(str(question.prompt))
+                if question.help is not None:
+                    keys.add(str(question.help))
+                for choice in question.choices:
+                    keys.add(str(choice.label))
+                    if choice.description is not None:
+                        keys.add(str(choice.description))
+    return keys
 
 
 def test_wizard_status_locale_key_exists_in_all_locales() -> None:
@@ -43,34 +62,38 @@ def test_wizard_status_locale_key_exists_in_all_locales() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Wizard f-string dynamic dispatch documented in _ast_scanner
+# Wizard bounded dynamic keys materialize in descriptors
 # ---------------------------------------------------------------------------
 
 
-def test_wizard_root_in_dynamic_translation_roots() -> None:
-    """'wizard' must appear in _ast_scanner._DYNAMIC_TRANSLATION_ROOTS."""
-    from ..locales._ast_scanner import _DYNAMIC_TRANSLATION_ROOTS
+def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
+    """Enum- and language-derived choice labels must be concrete descriptor keys."""
+    from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+    from ..domain.deadlines import EntityType, FiscalResidency, IrpfIncomeCategory
 
-    assert "wizard" in _DYNAMIC_TRANSLATION_ROOTS, (
-        "'wizard' is not in _DYNAMIC_TRANSLATION_ROOTS — catalogue f-string dynamic-dispatch survivors are undocumented"
-    )
+    keys = _wizard_descriptor_translation_keys()
 
+    expected = {
+        *{
+            f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.label"
+            for member in EntityType
+        },
+        *{
+            "wizard.setup.taxpayer-type.irpf-income-categories.choices."
+            f"{member.value.replace('_', '-')}.label"
+            for member in IrpfIncomeCategory
+        },
+        *{
+            f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"
+            for member in FiscalResidency
+        },
+        *{
+            f"wizard.setup.profile.output-language.choices.{language}.label"
+            for language in SUPPORTED_OUTPUT_LANGUAGES
+        },
+    }
 
-def test_catalogue_fstring_prefixes_detected_by_scanner() -> None:
-    """The AST scanner must emit namespace markers for wizard.setup.* f-strings in _catalogue.py."""
-    catalogue_path = _SRC_ROOT / "application" / "wizard" / "_catalogue.py"
-    source = catalogue_path.read_text(encoding="utf-8")
-    tree = ast.parse(source, filename=str(catalogue_path))
-
-    # Import the internal function directly to scan just the catalogue module
-    from ..locales._ast_scanner import _extract_fstring_prefixes
-
-    markers = _extract_fstring_prefixes(tree)
-    wizard_markers = {m for m in markers if m.startswith("wizard.")}
-    assert wizard_markers, (
-        "No wizard.* namespace markers detected in _catalogue.py — "
-        "f-string dynamic-dispatch sites are not being picked up by the scanner"
-    )
+    assert expected <= keys
 
 
 # ---------------------------------------------------------------------------
