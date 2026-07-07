@@ -16,6 +16,19 @@ files that do not belong to a runtime module.
 Per the project pydantic mandate, the JSON payloads are parsed into
 strict pydantic v2 models so typos in either config file are caught
 as test failures rather than silent drift.
+
+See Also:
+    :func:`~tests._inventory.repo_path`
+        Resolves repository-root release metadata without depending on the
+        current working directory.
+    ``RELEASING.md``
+        Human release procedure that cites the same checklist, soak, and
+        rollback surfaces validated here.
+    ``docs/_release_checklist.yaml``
+        Machine-readable release-readiness contract parsed into strict models
+        by this module.
+    ``docs/_release_notes_template.md``
+        Human release-body template required by the checklist.
 """
 
 from __future__ import annotations
