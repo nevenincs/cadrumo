@@ -5850,6 +5850,22 @@ wizard:
           LIS modality; below it both modalities are available. Optional.
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
+      objective-estimation-modulos-iae-epigraph:
+        help: IAE epigraph for objective-estimation modules, such as 972.
+      objective-estimation-modulos-module-1-units:
+        help: Annual module 1 units for objective-estimation modules.
+      objective-estimation-modulos-module-2-units:
+        help: Annual module 2 units for objective-estimation modules.
+      objective-estimation-modulos-module-3-units:
+        help: Annual module 3 units for objective-estimation modules.
+      objective-estimation-modulos-module-4-units:
+        help: Annual module 4 units for objective-estimation modules.
+      objective-estimation-modulos-module-5-units:
+        help: Annual module 5 units for objective-estimation modules.
+      objective-estimation-modulos-module-6-units:
+        help: Annual module 6 units for objective-estimation modules.
+      objective-estimation-modulos-module-7-units:
+        help: Annual module 7 units for objective-estimation modules.
       irpf-income-categories:
         help: IRPF income category; pass --irpf-income-categories once per category
       irpf-special-regime:
@@ -6037,6 +6053,25 @@ wizard:
         help: How economic-activity net income is determined; selects Modelo 130 vs
           131
         prompt: IRPF estimation regime
+      objective-estimation-modulos-iae-epigraph:
+        help: Stored once per annual profile. Coefficients remain in the modelo registry.
+        prompt: IAE epigraph for objective-estimation modules
+      objective-estimation-modulos-module-1-units:
+        prompt: Annual module 1 units
+      objective-estimation-modulos-module-2-units:
+        prompt: Annual module 2 units
+      objective-estimation-modulos-module-3-units:
+        prompt: Annual module 3 units
+      objective-estimation-modulos-module-4-units:
+        prompt: Annual module 4 units
+      objective-estimation-modulos-module-5-units:
+        prompt: Annual module 5 units
+      objective-estimation-modulos-module-6-units:
+        prompt: Annual module 6 units
+      objective-estimation-modulos-module-7-units:
+        prompt: Annual module 7 units
+      objective-estimation-modulos-module-units:
+        help: Stable annual unit count for this module slot. The selected IAE epigraph defines whether the slot means employees, local surface, electricity consumption, or another official module.
       irpf-special-regime:
         choices:
           general:

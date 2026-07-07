@@ -184,6 +184,27 @@ class TestTaxpayerProfileProjection:
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
+    def test_objetiva_regime_projects_modulos_annual_profile_facts(self) -> None:
+        """Annual módulos facts project from the real profile mapping."""
+
+        profile = taxpayer_profile_from_mapping(
+            {
+                "identity.tax_id": "12345678Z",
+                "activities.description": "Modulos activity",
+                "irpf.estimation_regime": "objetiva",
+                "irpf.objective_estimation_modulos_iae_epigraph": "972.1",
+                "irpf.objective_estimation_modulos_module_1_units": "2.50",
+                "irpf.objective_estimation_modulos_module_2_units": "85",
+                "irpf.objective_estimation_modulos_module_3_units": "12000.75",
+            },
+            tax_id_default="00000000T",
+        )
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+        assert profile.objective_estimation_modulos_iae_epigraph == "972.1"
+        assert str(profile.objective_estimation_modulos_module_1_units) == "2.50"
+        assert str(profile.objective_estimation_modulos_module_2_units) == "85"
+        assert str(profile.objective_estimation_modulos_module_3_units) == "12000.75"
+
     def test_undeclared_axes_project_to_safe_empty_defaults(self) -> None:
         """A profile with no taxpayer-axis facts projects to undeclared.
 

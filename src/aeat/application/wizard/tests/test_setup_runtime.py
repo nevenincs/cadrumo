@@ -378,3 +378,60 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     assert isinstance(answers, SetupAnswers)
     assert "activity" not in prompter.asked
     assert answers.activity == ""
+
+
+def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> None:
+    """The módulos annual facts are gated to estimación objetiva only."""
+
+    from .._commands import _scripted_from_canonical
+
+    flags = {
+        "entity-type": "natural_person",
+        "irpf-income-categories": "actividad_economica",
+        "tax-id": "12345678Z",
+        "activity": "direct activity",
+        "irpf-estimation-regime": "directa_normal",
+    }
+    canonical = _non_interactive_canonical(flags)
+    explicit = frozenset(flags)
+    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    assert isinstance(answers, SetupAnswers)
+    assert "objective-estimation-modulos-iae-epigraph" not in prompter.asked
+    assert "objective-estimation-modulos-module-1-units" not in prompter.asked
+    assert answers.objective_estimation_modulos_iae_epigraph == ""
+    assert answers.objective_estimation_modulos_module_1_units == ""
+
+
+def test_objetiva_profile_collects_modulos_annual_facts() -> None:
+    """Objective-estimation profiles collect stable annual módulo facts once."""
+
+    from .._commands import _scripted_from_canonical
+
+    flags = {
+        "entity-type": "natural_person",
+        "irpf-income-categories": "actividad_economica",
+        "tax-id": "12345678Z",
+        "activity": "barber shop",
+        "irpf-estimation-regime": "objetiva",
+        "objective-estimation-modulos-iae-epigraph": "972.1",
+        "objective-estimation-modulos-module-1-units": "2.50",
+        "objective-estimation-modulos-module-2-units": "85",
+        "objective-estimation-modulos-module-3-units": "12000.75",
+    }
+    canonical = _non_interactive_canonical(flags)
+    explicit = frozenset(flags)
+    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    assert isinstance(answers, SetupAnswers)
+
+    assert "objective-estimation-modulos-iae-epigraph" in prompter.asked
+    assert "objective-estimation-modulos-module-1-units" in prompter.asked
+    assert answers.objective_estimation_modulos_iae_epigraph == "972.1"
+    assert answers.objective_estimation_modulos_module_1_units == "2.50"
+    assert answers.objective_estimation_modulos_module_2_units == "85"
+    assert answers.objective_estimation_modulos_module_3_units == "12000.75"
+
+    canonical_profile = serialise_answers(SETUP_FLOW, answers)
+    assert canonical_profile["irpf.objective_estimation_modulos_iae_epigraph"] == "972.1"
+    assert canonical_profile["irpf.objective_estimation_modulos_module_1_units"] == "2.50"

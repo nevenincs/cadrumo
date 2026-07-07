@@ -670,6 +670,86 @@ model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
 legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
 
 [[sections.fields]]
+key = "objective_estimation_modulos_iae_epigraph"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IAE epigraph declared for IRPF estimacion objetiva modulos. This is an annual operator fact used to prefill the M131 modulos epigraph input; coefficient tables remain in the modelo registry."
+model_selectors = ["irpf.objective_estimation_modulos_iae_epigraph"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_1_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema."
+model_selectors = ["irpf.objective_estimation_modulos_module_1_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_2_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 2. The slot stores the operator's stable annual unit count only; coefficients and activity labels remain registry-owned."
+model_selectors = ["irpf.objective_estimation_modulos_module_2_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_3_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot."
+model_selectors = ["irpf.objective_estimation_modulos_module_3_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_4_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient."
+model_selectors = ["irpf.objective_estimation_modulos_module_4_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_5_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero."
+model_selectors = ["irpf.objective_estimation_modulos_module_5_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_6_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero."
+model_selectors = ["irpf.objective_estimation_modulos_module_6_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_7_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero."
+model_selectors = ["irpf.objective_estimation_modulos_module_7_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
 key = "special_regime"
 type = "enum"
 required = false

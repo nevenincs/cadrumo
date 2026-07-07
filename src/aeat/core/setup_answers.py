@@ -339,6 +339,14 @@ class SetupAnswers(BaseModel):
     pays_capital_income_with_retencion: bool = False
     modelo_111_no_retenciones_periods: str = ""
     irpf_estimation_regime: Any = ""
+    objective_estimation_modulos_iae_epigraph: str = ""
+    objective_estimation_modulos_module_1_units: str = ""
+    objective_estimation_modulos_module_2_units: str = ""
+    objective_estimation_modulos_module_3_units: str = ""
+    objective_estimation_modulos_module_4_units: str = ""
+    objective_estimation_modulos_module_5_units: str = ""
+    objective_estimation_modulos_module_6_units: str = ""
+    objective_estimation_modulos_module_7_units: str = ""
     irpf_special_regime: Any = ""
     """IRPF special-regime axis. Blank for the general regime."""
     irpf_special_regime_start_date: str = ""
@@ -620,6 +628,27 @@ class SetupAnswers(BaseModel):
             Decimal(value)
         except InvalidOperation as exc:
             raise ValueError(f"incn_prior_12_months must be a decimal number, got {value!r}") from exc
+        return value
+
+    @field_validator(
+        "objective_estimation_modulos_module_1_units",
+        "objective_estimation_modulos_module_2_units",
+        "objective_estimation_modulos_module_3_units",
+        "objective_estimation_modulos_module_4_units",
+        "objective_estimation_modulos_module_5_units",
+        "objective_estimation_modulos_module_6_units",
+        "objective_estimation_modulos_module_7_units",
+    )
+    @classmethod
+    def _validate_objective_estimation_modulos_units(cls, value: str) -> str:
+        from decimal import Decimal, InvalidOperation
+
+        if value == "":
+            return value
+        try:
+            Decimal(value)
+        except InvalidOperation as exc:
+            raise ValueError(f"objective-estimation modulos units must be decimal numbers, got {value!r}") from exc
         return value
 
     @field_validator("new_entity_first_two_profit_periods", mode="before")
