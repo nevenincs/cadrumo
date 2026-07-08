@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
-modified: '2026-07-08'
+modified: '2026-07-09'
 tier: L2
 related:
   - '[[2026-07-08-mcp-identity-linked-operation-adr]]'
@@ -28,7 +28,7 @@ related:
 Add the optional active_profile human-label field to the shared SchemaEnvelope spine and its stderr ErrorEnvelope sibling, populated at emit for profile-bound commands, so every response carries the identity anchor without a per-command blast radius (ADR I3).
 
 - [x] `P01.S01` - Add the optional active_profile label field to the shared SchemaEnvelope spine and the stderr ErrorEnvelope sibling, defaulting null before a profile exists; `src/aeat/core/json_contract.py`.
-- [x] `P01.S02` - Populate active_profile at emit for profile-bound commands from the active-profile resolution, leaving the redacted bucket/profile UUIDs untouched; `src/aeat/entrypoints/cli/_config/_active_profile.py`.
+- [x] `P01.S02` - Populate active_profile at emit for profile-bound commands from the active-profile resolution, leaving the redacted bucket/profile UUIDs untouched; `src/aeat/entrypoints/cli/_common.py`.
 - [x] `P01.S03` - Extend the shared-spine conformance test so the success and error envelopes both carry active_profile and a profile-bound command populates it; `src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
 ### Phase `P02` - whoami core tool
