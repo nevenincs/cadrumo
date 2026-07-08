@@ -51,6 +51,7 @@ def _create_profile() -> None:
             "--name", "Operator",
             "--surnames", "Operator",
             "--activity", "design",
+            "--irpf-income-categories", "actividad_economica",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
