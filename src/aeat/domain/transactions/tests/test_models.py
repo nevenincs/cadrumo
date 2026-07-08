@@ -369,6 +369,51 @@ def test_input_classification_rejects_unknown_member_on_load() -> None:
         Transaction.model_validate_json(json.dumps(storage_payload))
 
 
+def test_prorrata_sector_id_roundtrips_for_declared_sector() -> None:
+    """The operator-declared LIVA arts. 9.1.c/101 sector reference survives a strict JSON cycle.
+
+    The field is populated with a NON-default sector id so a save-drops / load-re-defaults
+    regression cannot hide behind the ``None`` (common-use / whole-entity) default.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("242.00"), description="Compra sector arrendamiento"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "prorrata_sector_id": "arrendamiento",
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.prorrata_sector_id == "arrendamiento"
+
+
+def test_prorrata_sector_id_rejects_blank_value_on_load() -> None:
+    """A persisted payload mutated to an empty prorrata_sector_id is refused at load.
+
+    Anti-tautology: the ``min_length=1`` constraint fires on the load path, not
+    only at construction, so a corrupted on-disk empty string cannot silently
+    masquerade as a declared sector (which would mis-route the deducible cuota).
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("242.00"), description="Compra sector arrendamiento"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "prorrata_sector_id": "arrendamiento",
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["prorrata_sector_id"] = ""
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
 def test_transaction_exemption_article_round_trips_for_domestic_exempt_category() -> None:
     original = Transaction.model_validate(
         {

@@ -26,10 +26,15 @@ from decimal import Decimal
 import pydantic
 import pytest
 
-from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import (
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from .. import (
     ProrrataRegister,
     ProrrataRegisterEntry,
+    SectorDefinition,
     resolve_provisional_percentage,
 )
 
@@ -336,3 +341,65 @@ def test_register_resolve_provisional_delegates_to_ladder() -> None:
     resolved = register.resolve_provisional(2024)
     assert resolved.percentage == Decimal("80")
     assert register.resolve_provisional(2023).resolved is False
+
+
+def _sector(sector_id: str, letra: SectorDiferenciadoLetra, *codes: str) -> SectorDefinition:
+    return SectorDefinition(sector_id=sector_id, letra=letra, member_activity_codes=codes)
+
+
+def test_register_without_sector_definitions_is_whole_entity() -> None:
+    """Fail-closed: an empty sector partition is a whole-entity register."""
+    register = ProrrataRegister(entries=(_carried_entry(2024),))
+    assert register.is_sectorized is False
+    assert register.sector_ids() == ()
+    assert register.sector_definition_for("comercio") is None
+
+
+def test_register_sector_definitions_declare_partition() -> None:
+    """A declared sector partition is queryable by sector_id and carries its art. 9.1.c letra."""
+    comercio = _sector("comercio", SectorDiferenciadoLetra.A, "4711", "4719")
+    arrendamiento = _sector("arrendamiento", SectorDiferenciadoLetra.A, "6820")
+    register = ProrrataRegister(
+        entries=(_carried_entry(2024),),
+        sector_definitions=(comercio, arrendamiento),
+    )
+    assert register.is_sectorized is True
+    assert register.sector_ids() == ("comercio", "arrendamiento")
+    assert register.sector_definition_for("arrendamiento") is arrendamiento
+    assert register.sector_definition_for("arrendamiento").letra is SectorDiferenciadoLetra.A
+    assert register.sector_definition_for("unknown") is None
+
+
+def test_register_rejects_duplicate_sector_definition() -> None:
+    """Two sector definitions for the same sector_id are rejected."""
+    with pytest.raises(pydantic.ValidationError, match="duplicate sector_id"):
+        ProrrataRegister(
+            sector_definitions=(
+                _sector("comercio", SectorDiferenciadoLetra.A, "4711"),
+                _sector("comercio", SectorDiferenciadoLetra.B, "0111"),
+            ),
+        )
+
+
+def test_sector_definition_requires_member_codes() -> None:
+    """A sector definition must group at least one activity code (min_length=1)."""
+    with pytest.raises(pydantic.ValidationError):
+        SectorDefinition(sector_id="comercio", letra=SectorDiferenciadoLetra.A, member_activity_codes=())
+
+
+def test_sector_definition_rejects_blank_member_code() -> None:
+    """A blank member activity code is refused — every grouped code is a real token."""
+    with pytest.raises(pydantic.ValidationError, match="blank code"):
+        SectorDefinition(
+            sector_id="comercio",
+            letra=SectorDiferenciadoLetra.A,
+            member_activity_codes=("4711", "   "),
+        )
+
+
+def test_sector_definition_letra_hydrates_from_stored_token() -> None:
+    """The art. 9.1.c letra hydrates from its stored StrEnum token across a JSON cycle."""
+    original = _sector("arrendamiento-financiero", SectorDiferenciadoLetra.C, "6491")
+    restored = SectorDefinition.model_validate_json(original.model_dump_json())
+    assert restored == original
+    assert restored.letra is SectorDiferenciadoLetra.C

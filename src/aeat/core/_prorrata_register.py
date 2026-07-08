@@ -92,7 +92,36 @@ class ProrrataProvisionalProvenance(StrEnum):
     INTERRUMPIDA_TRES_ULTIMOS = "interrumpida_tres_ultimos"
 
 
+class SectorDiferenciadoLetra(StrEnum):
+    """The LIVA art. 9.1.c letra that makes an operator-declared sector differentiated.
+
+    Art. 9, número 1.º, letra c) enumerates the four grounds on which two economic
+    activities belong to distinct "sectores diferenciados". The register's
+    operator-declared sector definition tags each sector with the letra that makes
+    it differentiated so the art. 9.1.c judgment is recorded, not inferred. Distinct
+    from :class:`ProrrataRegisterRegime` (the deduction regime in force per sector);
+    this axis is *why the sector is a separate sector*, not *how it deducts*.
+
+    Attributes:
+        A: Letra a' — distinct CNAE groups whose art. 104 general prorrata
+            percentages differ by more than 50 percentage points
+            (``PRORRATA_SECTORAL_SEPARATION_SPREAD_PP``). The only ground on which
+            the art. 101.Dos AEAT-authorised common regime may later apply.
+        B: Letra b' — activities under the regímenes especiales (simplificado,
+            agricultura/ganadería/pesca, oro de inversión, recargo de
+            equivalencia); their deduction is governed by their special regime.
+        C: Letra c' — arrendamiento financiero operations (DA 3.ª Ley 10/2014).
+        D: Letra d' — cesión de créditos o préstamos (except factoring).
+    """
+
+    A = "a"
+    B = "b"
+    C = "c"
+    D = "d"
+
+
 __all__ = [
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
+    "SectorDiferenciadoLetra",
 ]
