@@ -105,9 +105,10 @@ addresses the cold-compile cost itself.
 - `rtoml` is a smaller side project (by pydantic's creator, Samuel Colvin)
   than his flagship libraries; it is less actively maintained than
   `pydantic-core`. Mitigated by keeping the swap narrowly scoped (two
-  functions), pinning the exact version in `pyproject.toml`/`uv.lock`, and
-  documenting `tomli` as a same-effort fallback if `rtoml` is ever abandoned
-  upstream.
+  functions), constraining the dependency to a bounded range in
+  `pyproject.toml` (`rtoml>=0.13.0,<1`) with the exact resolved version
+  locked in `uv.lock` (`0.13.0`), and documenting `tomli` as a same-effort
+  fallback if `rtoml` is ever abandoned upstream.
 - `rtoml`'s PyPI classifiers list only Unix/Linux/macOS operating systems
   (the maintainer appears not to have updated them), but the actual wheel
   matrix DOES publish a prebuilt `win_amd64` wheel for the project's pinned
