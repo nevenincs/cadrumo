@@ -907,8 +907,7 @@ def test_python_mode_dict_with_real_instances_round_trips() -> None:
 def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
     """The diagnostics-only summary is structurally incapable of leaking decrypted facts.
 
-    ``OutOfWindowTransactionSummary`` (the 2026-07-06 diagnostic-summary
-    amendment to the latency ADR) collapses N out-of-window
+    ``OutOfWindowTransactionSummary`` collapses N out-of-window
     ``OutOfWindowTransactionStub`` rows into one summary carrying ONLY the
     excluded-row count and the filing-date span. This pins that guarantee
     structurally -- the declared field set is exactly
