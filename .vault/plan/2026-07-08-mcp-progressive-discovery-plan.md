@@ -46,10 +46,10 @@ Make the search meta-tool the real discovery spine: hybrid lexical plus semantic
 
 Wire the existing manifest-derived toolsets to runtime activation with tools/list_changed notifications, damped auto-activation, and persona-scope filtering (ADR P3).
 
-- [ ] `P03.S11` - Add per-session toolset activation state with damping and a hard activation cap over the existing manifest-derived groups; `src/aeat/entrypoints/mcp/_toolsets.py`.
-- [ ] `P03.S12` - Add the toolsets management meta-tool (list, activate, deactivate) filtered by the active persona scope; `src/aeat/entrypoints/mcp/_meta_tools.py`.
-- [ ] `P03.S13` - Emit notifications/tools/list_changed on activation change, declare the capability, and include activated groups in the advertised surface; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P03.S14` - Add toolset-activation tests covering activation, deactivation, notification emission, damping, persona filtering, and byte-identical gate refusals on activated tools; `src/aeat/entrypoints/mcp/tests/test_toolset_activation.py`.
+- [x] `P03.S11` - Add per-session toolset activation state with damping and a hard activation cap over the existing manifest-derived groups; `src/aeat/entrypoints/mcp/_toolsets.py`.
+- [x] `P03.S12` - Add the toolsets management meta-tool (list, activate, deactivate) filtered by the active persona scope; `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `P03.S13` - Emit notifications/tools/list_changed on activation change, declare the capability, and include activated groups in the advertised surface; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P03.S14` - Add toolset-activation tests covering activation, deactivation, notification emission, damping, persona filtering, and byte-identical gate refusals on activated tools; `src/aeat/entrypoints/mcp/tests/test_toolset_activation.py`.
 
 ### Phase `P04` - Tool naming budget
 

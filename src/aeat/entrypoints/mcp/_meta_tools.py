@@ -18,6 +18,7 @@ this module stays SDK-independent and unit-tested.
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,6 +27,7 @@ from ...application.command_search import CommandDoc, CommandIndex, build_comman
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
+from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -160,6 +162,100 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
     ):
         return "refused: AEAT live-write is permanently forbidden"
     return None
+
+
+class ToolsetAction(StrEnum):
+    """The three verbs the ``toolsets`` management meta-tool accepts."""
+
+    LIST = "list"
+    ACTIVATE = "activate"
+    DEACTIVATE = "deactivate"
+
+
+class ToolsetManageResult(BaseModel):
+    """The outcome of a :func:`manage_toolsets` call.
+
+    ``changed`` is true only when the active set actually moved (so the caller
+    knows whether to emit ``tools/list_changed``). ``groups`` lists every toolset
+    with its member count and current active state; ``refused`` carries an
+    instructive message when an action could not be applied (unknown name, cap
+    reached).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    action: str
+    changed: bool
+    active: tuple[str, ...]
+    groups: tuple[dict[str, object], ...]
+    refused: str | None = None
+
+
+def manage_toolsets(
+    action: str,
+    name: str | None,
+    *,
+    active: set[Toolset],
+) -> ToolsetManageResult:
+    """Apply a ``toolsets`` action, mutating ``active`` in place.
+
+    ``list`` reports the groups and current state without change. ``activate``
+    adds a toolset (refused past :data:`~entrypoints.mcp._toolsets.MAX_ACTIVE_TOOLSETS`
+    or on an unknown name); ``deactivate`` removes one. Activation widens the
+    advertised surface within the active persona's scope (the server applies the
+    scope filter when it rebuilds the tool list), so this function owns only the
+    set membership and the cap.
+
+    Returns:
+        A :class:`ToolsetManageResult`; ``changed`` drives the list-changed
+        notification.
+    """
+    groups = build_toolsets()
+    member_counts = {group.toolset: len(group.command_keys) for group in groups}
+    changed = False
+    refused: str | None = None
+
+    try:
+        parsed_action = ToolsetAction(action)
+    except ValueError:
+        accepted = ", ".join(a.value for a in ToolsetAction)
+        parsed_action = ToolsetAction.LIST
+        refused = f"unknown toolsets action {action!r}; accepted: {accepted}"
+
+    if refused is None and parsed_action in (ToolsetAction.ACTIVATE, ToolsetAction.DEACTIVATE):
+        try:
+            toolset = Toolset(str(name or ""))
+        except ValueError:
+            accepted = ", ".join(t.value for t in Toolset)
+            refused = f"unknown toolset {name!r}; accepted: {accepted}"
+        else:
+            if parsed_action is ToolsetAction.ACTIVATE:
+                if toolset in active:
+                    pass
+                elif len(active) >= MAX_ACTIVE_TOOLSETS:
+                    refused = f"at most {MAX_ACTIVE_TOOLSETS} toolsets may be active; deactivate one first"
+                else:
+                    active.add(toolset)
+                    changed = True
+            elif toolset in active:
+                active.discard(toolset)
+                changed = True
+
+    group_payload = tuple(
+        {
+            "toolset": group.toolset.value,
+            "member_count": member_counts[group.toolset],
+            "active": group.toolset in active,
+        }
+        for group in groups
+    )
+    return ToolsetManageResult(
+        action=parsed_action.value,
+        changed=changed,
+        active=tuple(sorted(t.value for t in active)),
+        groups=group_payload,
+        refused=refused,
+    )
 
 
 def meta_execute(

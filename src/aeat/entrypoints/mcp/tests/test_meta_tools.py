@@ -157,10 +157,10 @@ def test_meta_execute_dispatches_a_read_only_command_end_to_end() -> None:
     assert outcome.is_error is False
 
 
-def test_build_meta_sdk_tools_exposes_search_and_execute() -> None:
+def test_build_meta_sdk_tools_exposes_search_execute_and_toolsets() -> None:
     tools = build_meta_sdk_tools()
     names = {tool.name for tool in tools}
-    assert names == {"search", "execute"}
+    assert names == {"search", "execute", "toolsets"}
     for tool in tools:
         assert tool.inputSchema["type"] == "object"
 

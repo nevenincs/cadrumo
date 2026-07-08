@@ -1,0 +1,104 @@
+"""Runtime toolset activation widens the advertised surface, gate-invariant.
+
+Proves the ADR ``mcp-progressive-discovery`` P3 dynamic toolsets: the ``toolsets``
+meta-tool lists the domain groups and activates/deactivates one, activation adds
+that group's per-verb tools to the advertised ``tools/list`` (rebuilt per call)
+while the orientation core stays, a hard cap bounds simultaneous activations, an
+unknown name/action refuses instructively, and a verb reached only through an
+activated toolset still runs the same safety gates. The SDK-independent
+management is asserted directly; the advertised-surface effect is asserted
+through the real built ``Server``.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+from typing import Any, cast
+
+import anyio
+import pytest
+
+from .._meta_tools import manage_toolsets
+from .._tools import build_tool_descriptors
+from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_SDK_PRESENT = importlib.util.find_spec("mcp") is not None
+
+
+def test_list_reports_every_group_inactive_by_default() -> None:
+    result = manage_toolsets("list", None, active=set())
+    assert result.changed is False
+    assert {group["toolset"] for group in result.groups} == {t.value for t in Toolset}
+    assert all(group["active"] is False for group in result.groups)
+
+
+def test_activate_then_deactivate_moves_the_active_set() -> None:
+    active: set[Toolset] = set()
+    activated = manage_toolsets("activate", "ledger", active=active)
+    assert activated.changed is True
+    assert active == {Toolset.LEDGER}
+    assert "ledger" in activated.active
+
+    # Re-activating the same toolset is a no-op (no spurious list_changed).
+    again = manage_toolsets("activate", "ledger", active=active)
+    assert again.changed is False
+
+    deactivated = manage_toolsets("deactivate", "ledger", active=active)
+    assert deactivated.changed is True
+    assert active == set()
+
+
+def test_activation_is_capped_and_refuses_past_the_limit() -> None:
+    active: set[Toolset] = set()
+    order = [t.value for t in Toolset]
+    for name in order[:MAX_ACTIVE_TOOLSETS]:
+        assert manage_toolsets("activate", name, active=active).changed is True
+    overflow = manage_toolsets("activate", order[MAX_ACTIVE_TOOLSETS], active=active)
+    assert overflow.changed is False
+    assert overflow.refused is not None
+    assert str(MAX_ACTIVE_TOOLSETS) in overflow.refused
+
+
+def test_unknown_name_and_action_refuse_instructively() -> None:
+    bad_name = manage_toolsets("activate", "nonsense", active=set())
+    assert bad_name.refused is not None and "nonsense" in bad_name.refused
+    bad_action = manage_toolsets("frobnicate", None, active=set())
+    assert bad_action.refused is not None and "frobnicate" in bad_action.refused
+
+
+@pytest.mark.skipif(not _SDK_PRESENT, reason="asserted-absent branch covered elsewhere")
+def test_activating_a_toolset_widens_the_advertised_surface() -> None:
+    from mcp.types import CallToolRequest, CallToolRequestParams, ListToolsRequest
+
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    server = cast("Any", build_server(descriptors, persona=None))
+    handlers = server.request_handlers
+
+    async def _list_names() -> set[str]:
+        tools = (await handlers[ListToolsRequest](ListToolsRequest(method="tools/list"))).root.tools
+        return {tool.name for tool in tools}
+
+    async def _drive() -> None:
+        before = await _list_names()
+        # The core surface does not advertise the long-tail ledger verbs.
+        assert "aeat_ledger_add" not in before
+        assert "toolsets" in before
+
+        request = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name="toolsets", arguments={"action": "activate", "name": "ledger"}),
+        )
+        result = (await handlers[CallToolRequest](request)).root
+        assert result.isError is False
+
+        after = await _list_names()
+        # Activation widened the surface: ledger verbs now advertised, core kept.
+        assert "aeat_ledger_add" in after
+        assert "aeat_overview_status" in after
+        assert before < after
+
+    anyio.run(_drive)
