@@ -99,6 +99,28 @@ def toolset_for_command(command_key: str, *, family_map: dict[str, MountedComman
     return None
 
 
+#: The hard cap on simultaneously-active toolsets. Activation is an enhancement
+#: that widens the advertised surface within the persona scope (ADR
+#: ``mcp-progressive-discovery`` P3); a cap keeps the surface from creeping back
+#: toward the flat listing the core surface exists to avoid.
+MAX_ACTIVE_TOOLSETS = 3
+
+
+def command_keys_for_toolsets(active: frozenset[Toolset]) -> frozenset[str]:
+    """Return every command key belonging to an active toolset.
+
+    The union of the member keys of the active groups, derived from the live
+    toolset membership so it cannot drift from the manifest.
+    """
+    if not active:
+        return frozenset()
+    members = {group.toolset: group.command_keys for group in build_toolsets()}
+    keys: set[str] = set()
+    for toolset in active:
+        keys.update(members.get(toolset, ()))
+    return frozenset(keys)
+
+
 def build_toolsets() -> tuple[ToolsetGroup, ...]:
     """Derive the toolset membership from the live manifest and command keys.
 

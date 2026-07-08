@@ -46,6 +46,15 @@ See Also:
 
 from __future__ import annotations
 
+from ._classification import (
+    DESTRUCTIVE_LEAVES,
+    HANDOFF_LEAVES,
+    IDEMPOTENT_LEAVES,
+    LIVE_WRITE_LEAVES,
+    CommandClassification,
+    classification_is_coherent,
+    classify_command,
+)
 from ._contract import (
     ACCEPTED_ROOTS,
     MOUNTED_COMMAND_FAMILIES,
@@ -104,9 +113,14 @@ __all__ = [
     "ACCEPTED_ROOTS",
     "BUILTIN_CRUD_CATALOGUE",
     "CANONICAL_CRUD_VERBS",
+    "DESTRUCTIVE_LEAVES",
+    "HANDOFF_LEAVES",
+    "IDEMPOTENT_LEAVES",
+    "LIVE_WRITE_LEAVES",
     "MOUNTED_COMMAND_FAMILIES",
     "SOURCE_KIND_ALIASES",
     "BucketEventSuffix",
+    "CommandClassification",
     "CommandSchemaRef",
     "CrudContractCatalogue",
     "CrudVerb",
@@ -138,6 +152,8 @@ __all__ = [
     "build_operator_surface_contract",
     "build_operator_surface_manifest",
     "build_root_landing_report",
+    "classification_is_coherent",
+    "classify_command",
     "event_suffix_for",
     "get_builtin_catalogue",
     "get_operator_surface_contract",

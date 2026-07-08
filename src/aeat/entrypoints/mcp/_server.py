@@ -34,6 +34,7 @@ manifest family and are not distinguished by this gate).
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import subprocess
@@ -73,7 +74,7 @@ from ._hitl import (
     requires_user_interaction,
 )
 from ._input_schema import cli_argv_for
-from ._meta_tools import build_command_search_index, meta_execute, search_commands
+from ._meta_tools import build_command_search_index, manage_toolsets, meta_execute, search_commands
 from ._persona_scope import (
     AgentPersona,
     active_persona,
@@ -102,6 +103,7 @@ from ._terminology_tools import (
     render_terminology_search_text,
 )
 from ._tools import McpToolDescriptor, build_tool_descriptors
+from ._toolsets import Toolset, command_keys_for_toolsets
 
 if TYPE_CHECKING:
     # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``),
@@ -121,6 +123,10 @@ _SERVER_NAME = "aeat"
 # persona-scoped away (``execute`` applies the persona gate internally).
 _META_SEARCH_TOOL = "search"
 _META_EXECUTE_TOOL = "execute"
+# The toolset-activation meta-tool (ADR mcp-progressive-discovery P3): activating
+# a domain toolset adds its per-verb tools to the advertised surface (within the
+# active persona's scope) and emits tools/list_changed for clients that honour it.
+_META_TOOLSETS_TOOL = "toolsets"
 
 
 def emit_missing_sdk_refusal() -> None:
@@ -223,6 +229,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
                     readOnlyHint=annotations.read_only_hint,
                     destructiveHint=annotations.destructive_hint,
                     idempotentHint=annotations.idempotent_hint,
+                    openWorldHint=annotations.open_world_hint,
                 ),
                 _meta=meta,
             ),
@@ -320,6 +327,29 @@ def build_meta_sdk_tools() -> list[Tool]:
                     "arguments": {"type": "object", "description": "The named arguments for the command."},
                 },
                 "required": ["command_key"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name=_META_TOOLSETS_TOOL,
+            description=(
+                "Manage domain toolsets: list them, or activate/deactivate one to add or remove its "
+                "per-verb tools from the advertised tool list (renta, iva, ledger, censo, modelo-lifecycle)."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["list", "activate", "deactivate"],
+                        "description": "list the toolsets, or activate/deactivate one by name.",
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The toolset to activate/deactivate (omit for list).",
+                    },
+                },
+                "required": ["action"],
                 "additionalProperties": False,
             },
         ),
@@ -442,13 +472,26 @@ def build_server(
     # ``by_name`` above still spans EVERY descriptor, so a verb outside the
     # advertised surface stays reachable through the ``execute`` meta-tool and a
     # direct call by name - it is discovered, not listed.
-    advertised = advertised_descriptors(scoped_descriptors, mode=surface_mode)
-    sdk_tools = build_sdk_tools(advertised)
     meta_tools = build_meta_sdk_tools()
     # The hybrid command-search index backing the ``search`` meta-tool, built once
     # over the FULL descriptor set (ADR mcp-progressive-discovery P2) so discovery
     # reaches every verb, not only the advertised surface.
     command_index = build_command_search_index(descriptors)
+    # Per-session toolset activation state (ADR mcp-progressive-discovery P3). The
+    # advertised surface is the orientation core PLUS the persona-scoped verbs of
+    # any active toolset; activating a toolset emits ``tools/list_changed``.
+    active_toolsets: set[Toolset] = set()
+
+    def _advertised_tools() -> list[Tool]:
+        advertised = advertised_descriptors(scoped_descriptors, mode=surface_mode)
+        advertised_keys = {descriptor.command_key for descriptor in advertised}
+        active_keys = command_keys_for_toolsets(frozenset(active_toolsets))
+        activated = tuple(
+            descriptor
+            for descriptor in scoped_descriptors
+            if descriptor.command_key in active_keys and descriptor.command_key not in advertised_keys
+        )
+        return build_sdk_tools((*advertised, *activated))
     floor_tool = build_harness_floor_tool()
     # Grounding tools (ADR R3): read-only search over the bundled legal corpus
     # and the taxpayer-facing terminology handbook. Always advertised (never
@@ -515,8 +558,10 @@ def build_server(
         # The harness.load floor tool is advertised first and is never persona-scoped
         # away: per ADR R4 it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The grounding tools follow
-        # for the same always-available reason (ADR R3).
-        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]
+        # for the same always-available reason (ADR R3). The per-verb surface is the
+        # orientation core plus any active toolset (rebuilt per call so a toolset
+        # activation is reflected — ADR mcp-progressive-discovery P1/P3).
+        return [floor_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
@@ -570,6 +615,24 @@ def build_server(
                 content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
                 structuredContent=payload,
                 isError=False,
+            )
+        if name == _META_TOOLSETS_TOOL:
+            outcome = manage_toolsets(
+                str(arguments.get("action", "list") or "list"),
+                (str(arguments["name"]) if arguments.get("name") is not None else None),
+                active=active_toolsets,
+            )
+            if outcome.changed:
+                # Best-effort per the floor/enhancement rule: a client that does not
+                # honour list-changed still sees the widened surface on its next
+                # tools/list, so a send failure must not break the call.
+                with contextlib.suppress(Exception):
+                    await server.request_context.session.send_tool_list_changed()
+            payload = outcome.model_dump(mode="json")
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
+                structuredContent=payload,
+                isError=outcome.refused is not None,
             )
         if name == _META_EXECUTE_TOOL:
             raw_args = arguments.get("arguments", {})
@@ -749,6 +812,20 @@ def build_server(
     return server
 
 
+def server_initialization_options(server: Server) -> object:
+    """Build the negotiated initialization options for ``server``.
+
+    Declares ``tools.listChanged`` because the console emits
+    ``tools/list_changed`` when a toolset is activated (ADR
+    ``mcp-progressive-discovery`` P3). Centralised so production
+    (:func:`_run_server`) and the capability-posture conformance test negotiate
+    the SAME capability set and cannot drift.
+    """
+    from mcp.server.lowlevel import NotificationOptions
+
+    return server.create_initialization_options(NotificationOptions(tools_changed=True))
+
+
 def _run_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
@@ -769,6 +846,6 @@ def _run_server(
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):
-            await server.run(read_stream, write_stream, server.create_initialization_options())
+            await server.run(read_stream, write_stream, server_initialization_options(server))
 
     anyio.run(_amain)

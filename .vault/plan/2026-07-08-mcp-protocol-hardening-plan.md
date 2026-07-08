@@ -10,20 +10,21 @@ related:
   - '[[2026-07-08-mcp-protocol-hardening-research]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `mcp-protocol-hardening` plan
 
 ### Phase `P01` - Supervised call runtime
 
 Replace the bare unbounded subprocess call with a supervised runner: tiered timeouts keyed off the command classification, progress-notification heartbeats when the client supplies a progress token, cooperative cancellation with Windows process-tree termination, and localized instructive timeout refusals (ADR H1).
-
-
 
 - [ ] `P01.S01` - Add the supervised subprocess runner: per-tier timeout table keyed off the command classification, cooperative cancellation, and Windows process-tree termination; `src/aeat/entrypoints/mcp/_call_runtime.py`.
 - [ ] `P01.S02` - Route the direct and meta call paths through the supervised runner and emit notifications/progress heartbeats (elapsed plus coarse stage) when the client supplied a progress token; `src/aeat/entrypoints/mcp/_server.py`.
@@ -34,20 +35,20 @@ Replace the bare unbounded subprocess call with a supervised runner: tiered time
 
 Make the per-verb schemas faithful: real JSON-safe defaults, expressible boolean off-tokens, and loud build-time failure instead of silently empty schemas on lazy-resolution errors (ADR H2).
 
-- [ ] `P02.S05` - Render JSON-safe real defaults (paths as strings, tuples as arrays) instead of dropping non-scalar defaults to null; `src/aeat/entrypoints/mcp/_input_schema.py`.
-- [ ] `P02.S06` - Support boolean off-tokens: the schema accepts explicit false and the argv renderer emits the secondary no-flag token for default-on pairs; `src/aeat/entrypoints/mcp/_input_schema.py`.
-- [ ] `P02.S07` - Convert the silent lazy-subcommand resolution fallback into a build-time schema-coverage gate failure naming the broken verb; `src/aeat/entrypoints/mcp/_input_schema.py`.
-- [ ] `P02.S08` - Extend the descriptor tests for real defaults, off-token round-trips, and the loud-degradation gate; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
+- [x] `P02.S05` - Render JSON-safe real defaults (paths as strings, tuples as arrays) instead of dropping non-scalar defaults to null; `src/aeat/entrypoints/mcp/_input_schema.py`.
+- [x] `P02.S06` - Support boolean off-tokens: the schema accepts explicit false and the argv renderer emits the secondary no-flag token for default-on pairs; `src/aeat/entrypoints/mcp/_input_schema.py`.
+- [x] `P02.S07` - Convert the silent lazy-subcommand resolution fallback into a build-time schema-coverage gate failure naming the broken verb; `src/aeat/entrypoints/mcp/_input_schema.py`.
+- [x] `P02.S08` - Extend the descriptor tests for real defaults, off-token round-trips, and the loud-degradation gate; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
 
 ### Phase `P03` - Command classification table
 
 Move the destructive, idempotent, handoff, live-write, and open-world axes from leaf-name frozensets to one typed declared classification beside the operator-surface manifest, consumed by annotations and HITL alike, with a manifest parity gate (ADR H3).
 
-- [ ] `P03.S09` - Add the typed per-command classification record (destructive, idempotent, handoff, live-write, open-world) co-located with the operator-surface manifest; `src/aeat/application/operator_surface/_classification.py`.
-- [ ] `P03.S10` - Re-home annotation derivation onto the classification table and populate openWorldHint for the sede-interacting live family; `src/aeat/entrypoints/mcp/_annotations.py`.
-- [ ] `P03.S11` - Re-home the HITL confirmation-tier derivation onto the same classification table so client hints and server gates read one authority; `src/aeat/entrypoints/mcp/_hitl.py`.
-- [ ] `P03.S12` - Add the manifest parity gate: every mutating verb in the manifest carries an explicit classification and an unclassified new verb fails loudly; `src/aeat/application/operator_surface/tests/test_classification_parity.py`.
-- [ ] `P03.S13` - Extend the annotation tests for openWorldHint coverage and classification-table consumption; `src/aeat/entrypoints/mcp/tests/test_annotations.py`.
+- [x] `P03.S09` - Add the typed per-command classification record (destructive, idempotent, handoff, live-write, open-world) co-located with the operator-surface manifest; `src/aeat/application/operator_surface/_classification.py`.
+- [x] `P03.S10` - Re-home annotation derivation onto the classification table and populate openWorldHint for the sede-interacting live family; `src/aeat/entrypoints/mcp/_annotations.py`.
+- [x] `P03.S11` - Re-home the HITL confirmation-tier derivation onto the same classification table so client hints and server gates read one authority; `src/aeat/entrypoints/mcp/_hitl.py`.
+- [x] `P03.S12` - Add the manifest parity gate: every mutating verb in the manifest carries an explicit classification and an unclassified new verb fails loudly; `src/aeat/application/operator_surface/tests/test_classification_parity.py`.
+- [x] `P03.S13` - Extend the annotation tests for openWorldHint coverage and classification-table consumption; `src/aeat/entrypoints/mcp/tests/test_annotations.py`.
 
 ### Phase `P04` - Result thinning via resource links
 
@@ -62,18 +63,18 @@ Keep structuredContent the typed summary and move bulk provenance and evidence a
 
 Turn the implicit postures into gated contracts: the English model-facing localization boundary, the no-raw-markup untrusted-content boundary on the live family, and the no-secret-over-MCP elicitation stance (ADR H5, H7, H8).
 
-- [ ] `P05.S18` - Add the localization-boundary gate asserting the model-facing surface is English and the operator-facing strings ride the locale catalogues; `src/aeat/entrypoints/mcp/tests/test_localization_boundary.py`.
-- [ ] `P05.S19` - Add the untrusted-content gate over the live family result schemas: no raw portal markup reaches a tool result and portal-sourced free text carries its source kind; `src/aeat/entrypoints/mcp/tests/test_untrusted_content_boundary.py`.
-- [ ] `P05.S20` - Add the no-secret-elicitation gate asserting no elicitation schema collects secret-like fields, recording the local-CLI-only secret stance; `src/aeat/entrypoints/mcp/tests/test_elicitation.py`.
+- [x] `P05.S18` - Add the localization-boundary gate asserting the model-facing surface is English and the operator-facing strings ride the locale catalogues; `src/aeat/entrypoints/mcp/tests/test_localization_boundary.py`.
+- [x] `P05.S19` - Add the untrusted-content gate over the live family result schemas: no raw portal markup reaches a tool result and portal-sourced free text carries its source kind; `src/aeat/entrypoints/mcp/tests/test_untrusted_content_boundary.py`.
+- [x] `P05.S20` - Add the no-secret-elicitation gate asserting no elicitation schema collects secret-like fields, recording the local-CLI-only secret stance; `src/aeat/entrypoints/mcp/tests/test_elicitation.py`.
 
 ### Phase `P06` - Retention and posture
 
 Bound telemetry growth, pin the negotiated capability set with a conformance test, and land the residual grounding-stack hardenings (ADR H6, H9).
 
-- [ ] `P06.S21` - Add telemetry retention pruning (age and count based, newest-N protected) at server start with a documented read path; `src/aeat/entrypoints/mcp/_telemetry.py`.
-- [ ] `P06.S22` - Add telemetry retention tests proving pruning bounds growth and never touches the newest sessions; `src/aeat/entrypoints/mcp/tests/test_serving_gates.py`.
-- [ ] `P06.S23` - Add the capability-set conformance test pinning the exact negotiated server capabilities; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
-- [ ] `P06.S24` - Pin the potion model revision to a commit hash and route the model download through the app-controlled cache directory; `src/aeat/application/corpus_search/_query_embed.py`.
+- [x] `P06.S21` - Add telemetry retention pruning (age and count based, newest-N protected) at server start with a documented read path; `src/aeat/entrypoints/mcp/_telemetry.py`.
+- [x] `P06.S22` - Add telemetry retention tests proving pruning bounds growth and never touches the newest sessions; `src/aeat/entrypoints/mcp/tests/test_serving_gates.py`.
+- [x] `P06.S23` - Add the capability-set conformance test pinning the exact negotiated server capabilities; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
+- [x] `P06.S24` - Pin the potion model revision to a commit hash and route the model download through the app-controlled cache directory; `src/aeat/application/corpus_search/_query_embed.py`.
 - [ ] `P06.S25` - Regenerate the API reference stubs for the new modules via the apidocs CLI; `docs/api`.
 
 ## Description

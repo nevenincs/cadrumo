@@ -12,21 +12,16 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ...application.operator_surface import HANDOFF_LEAVES as _CLASSIFICATION_HANDOFF_LEAVES
+from ...application.operator_surface import LIVE_WRITE_LEAVES as _CLASSIFICATION_LIVE_WRITE_LEAVES
 from ._annotations import McpAnnotations
 
-# Leaf verbs that hand a filing-grade artefact off (an export, a local file
-# marker). They are not destructive, but they are deliberate outputs a human
-# should confirm. Public: the single declaration the elicitation matrix and
-# the persona handoff-deny rules also consume.
-HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
-# Leaf verbs that would write to AEAT. None are exposed today (the live tree is
-# read-only and live submission is permanently forbidden); this guard blocks one
-# defensively if it ever appears in the command set. "declare" is deliberately
-# excluded: it collides with the local ledger bien-de-inversion verb
-# (``ledger.bienes_inversion.declare``), a non-AEAT local write, so a bare leaf
-# match would false-positive a legitimate exposed tool as a forbidden live-write.
-# The remaining verbs are AEAT-submission-specific (submit/present/send).
-_LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
+# The handoff and live-write leaf sets are declared once in the operator-surface
+# classification module (ADR mcp-protocol-hardening H3, the single risk-posture
+# authority) and re-exported here under the names the elicitation matrix and the
+# persona handoff-deny rules already consume, so there is one source of truth.
+HANDOFF_LEAVES: frozenset[str] = _CLASSIFICATION_HANDOFF_LEAVES
+_LIVE_WRITE_LEAVES: frozenset[str] = _CLASSIFICATION_LIVE_WRITE_LEAVES
 
 
 class ConfirmationPolicy(StrEnum):

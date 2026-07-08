@@ -34,6 +34,30 @@ def test_every_descriptor_has_full_annotation_coverage() -> None:
     assert gaps == ()
 
 
+def test_open_world_hint_covers_exactly_the_sede_family_over_the_real_surface() -> None:
+    # ADR mcp-protocol-hardening H3: the openWorldHint is derived from the single
+    # classification authority and is set for exactly the AEAT-sede-interacting
+    # verbs (the ``app.live.*`` subtree and any ``pull*`` leaf) and no local verb.
+    descriptors = build_tool_descriptors()
+    for descriptor in descriptors:
+        key = descriptor.command_key
+        expected = key.startswith("app.live.") or key.rsplit(".", 1)[-1].startswith("pull")
+        assert descriptor.annotations.open_world_hint is expected, key
+    # The set is non-empty: the live family exists on the real surface.
+    assert any(descriptor.annotations.open_world_hint for descriptor in descriptors)
+
+
+def test_classification_backs_both_the_annotation_and_the_confirmation_tier() -> None:
+    # The client hint and the server gate read one authority (H3): a destructive
+    # verb is destructive-hinted AND its confirmation tier is CONFIRM.
+    descriptors = build_tool_descriptors()
+    by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    remove = by_key.get("ledger.remove")
+    assert remove is not None
+    assert remove.annotations.destructive_hint is True
+    assert confirmation_for_tool(command_key="ledger.remove", annotations=remove.annotations) is ConfirmationPolicy.CONFIRM
+
+
 def test_a_read_only_and_destructive_annotation_is_a_gap() -> None:
     contradictory = McpAnnotations(
         title="x",
