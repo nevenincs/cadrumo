@@ -212,7 +212,7 @@ class TransactionCatalogueRepository:
     bare ``id()`` integer key alone would risk the GC-recycle hazard the ADR
     warns against -- a collected instance's address could be reused by an
     unrelated object -- so each cache entry is paired with a
-    :func:`weakref.finalize` callback that evicts the ``id()`` entry the
+    :class:`~weakref.finalize` callback that evicts the ``id()`` entry the
     INSTANT its ``Transaction`` is garbage-collected, before the address could
     be recycled for a different object. ``Transaction`` is strict-frozen, so a
     content edit always produces a NEW instance rather than mutating the
@@ -779,7 +779,7 @@ class TransactionCatalogueRepository:
 
         Keyed by ``id(transaction)`` rather than the object itself (see the
         class docstring for why a plain hash-keyed cache is unsafe here). A
-        :func:`weakref.finalize` callback evicts the entry the instant this
+        :class:`~weakref.finalize` callback evicts the entry the instant this
         exact ``transaction`` instance is garbage-collected, so a later,
         unrelated object cannot inherit a stale cache hit at a recycled
         address.
