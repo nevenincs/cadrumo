@@ -162,7 +162,7 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
     if persona is not None and is_handoff_denied(persona=persona, command_key=descriptor.command_key):
         return handoff_denial_message(persona=persona, command_key=descriptor.command_key)
     if (
-        confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+        confirmation_for_tool(command_key=descriptor.command_key)
         is ConfirmationPolicy.BLOCK
     ):
         return "refused: AEAT live-write is permanently forbidden"

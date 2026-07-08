@@ -10,45 +10,37 @@ non-destructive, and the annotation hint and the server gate could drift because
 they derived independently.
 
 This module makes the classification ONE declared, typed record keyed by command
-key, derived from the manifest mutability plus the closed leaf/prefix sets
-declared here (ADR ``mcp-protocol-hardening`` H3). The MCP annotation projection
-and the HITL confirmation tier both consume :func:`classify_command`, so the
-client hint and the server gate cannot drift, and a parity gate over the manifest
-asserts every command classifies coherently.
+key. The destructive / handoff / live-write axes - the genuinely-judgment ones -
+are DECLARED per command in :mod:`~application.operator_surface._risk_table`
+(ADR ``mcp-protocol-hardening`` H3, as its wording actually decided: "declared
+data keyed by command key ... with a parity gate"); read_only and idempotent are
+derived from the manifest family mutability, and open_world is derived from the
+``app.live.``/``pull`` facts. The MCP annotation projection and the HITL
+confirmation tier both consume :func:`command_classification`, so the client hint
+and the server gate read one authority and cannot drift, and the no-silent-default
+parity gate asserts every mutating-family command carries an explicit declaration.
+
+This replaces the earlier leaf-NAME frozensets, which matched on the command key's
+trailing word and so let a new mutating verb named ``purge``/``wipe``/``finalize``
+fall through, classify non-destructive, and auto-approve (the safety finding of the
+2026-07-08 MCP console review).
 """
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from pydantic import BaseModel, ConfigDict
 
 from ._models import OperatorMutability
+from ._risk_table import CommandRiskDeclaration, declared_risk
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-# Leaf verbs that destroy or irreversibly overwrite local state. A command key
-# whose final segment is one of these is destructive regardless of its family.
-DESTRUCTIVE_LEAVES: frozenset[str] = frozenset(
-    {"remove", "reset", "delete", "discard", "rekey", "recover", "logout", "clear", "merge", "stash"},
-)
-
-# Leaf verbs that are safe to repeat with the same effect (pure reads).
-IDEMPOTENT_LEAVES: frozenset[str] = frozenset(
-    {"list", "show", "view", "status", "describe", "casillas", "history", "calendar", "agenda", "backlog"},
-)
-
-# Leaf verbs that hand a filing-grade artefact off (an export, a local file
-# marker). Not destructive, but a deliberate output a human should confirm.
-HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
-
-# Leaf verbs that would write to AEAT. None are exposed today (the live tree is
-# read-only and live submission is permanently forbidden); this guard blocks one
-# defensively if it ever appears. ``declare`` is excluded: it collides with the
-# local ledger bien-de-inversion verb, a non-AEAT local write.
-LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
-
 # The outside-world surface: the ``app.live.*`` subtree talks to the AEAT sede,
 # and any ``pull*`` leaf fetches from AEAT (a portal read, often Playwright-
-# driven). These carry ``openWorldHint = true`` - the textbook open-world case.
+# driven). These carry ``openWorldHint = true`` - the textbook open-world case,
+# and a factual property of the command path, so it stays derived (not declared).
 _OPEN_WORLD_PREFIXES: tuple[str, ...] = ("app.live.",)
 
 
@@ -84,32 +76,62 @@ class CommandClassification(BaseModel):
 
 
 def classify_command(command_key: str, *, mutability: OperatorMutability) -> CommandClassification:
-    """Classify one command from its key and its manifest family mutability.
+    """Classify one command from its key, its manifest mutability, and its risk row.
 
-    The single derivation both the MCP annotation projection and the HITL
-    confirmation tier consume, so the client hint and the server gate read one
-    authority and cannot drift.
+    The destructive / handoff / live-write axes come from the declared risk row
+    (:func:`~application.operator_surface._risk_table.declared_risk`); a read-only
+    command has no row and all three are False. read_only and idempotent derive
+    from the family mutability (a live-write is never read-only - the stronger
+    per-command declaration wins); open_world derives from the command path. This
+    is the single derivation the annotation projection and the HITL tier consume.
 
     Returns:
         The command's :class:`CommandClassification`.
     """
-    leaf = _leaf(command_key)
-    live_write = leaf in LIVE_WRITE_LEAVES
-    # A live-write leaf mutates the outside world by definition, so it is never
-    # read-only regardless of the family's declared mutability - the stronger
-    # per-verb signal wins over the family default.
-    read_only = mutability is OperatorMutability.READ_ONLY and not live_write
-    destructive = (not read_only) and leaf in DESTRUCTIVE_LEAVES
-    idempotent = read_only or leaf in IDEMPOTENT_LEAVES
+    risk: CommandRiskDeclaration = declared_risk(command_key) or CommandRiskDeclaration()
+    read_only = mutability is OperatorMutability.READ_ONLY and not risk.live_write
     return CommandClassification(
         command_key=command_key,
         read_only=read_only,
-        destructive=destructive,
-        idempotent=idempotent,
-        handoff=leaf in HANDOFF_LEAVES,
-        live_write=live_write,
+        destructive=(not read_only) and risk.destructive,
+        idempotent=read_only,
+        handoff=risk.handoff,
+        live_write=risk.live_write,
         open_world=_is_open_world(command_key),
     )
+
+
+@lru_cache(maxsize=1)
+def _family_mutability_map() -> dict[str, OperatorMutability]:
+    """Map each normalized command-family child token to its manifest mutability (cached)."""
+    from ...core.json_contract import ENVELOPE_SCHEMA_VERSION
+    from ._manifest import build_operator_surface_manifest
+
+    contract = build_operator_surface_manifest(
+        envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
+        command_schemas=(),
+    ).contract
+    return {family.child.replace("-", "_"): family.mutability for family in contract.command_families}
+
+
+def _mutability_for(command_key: str) -> OperatorMutability:
+    tokens = command_key.split(".")
+    family_token = tokens[1] if tokens[0] in {"config", "app"} and len(tokens) > 1 else tokens[0]
+    return _family_mutability_map().get(family_token, OperatorMutability.LOCAL_STATE_MUTATING)
+
+
+def command_classification(command_key: str) -> CommandClassification:
+    """Classify a command by key alone, resolving its family mutability from the manifest.
+
+    The by-key accessor the HITL confirmation tier and the persona handoff-deny
+    rules consume when they hold only a command key (not the mutability the
+    annotation builder already has). Reads the same declared risk table, so all
+    three consumers share one authority.
+
+    Returns:
+        The command's :class:`CommandClassification`.
+    """
+    return classify_command(command_key, mutability=_mutability_for(command_key))
 
 
 def classification_is_coherent(classification: CommandClassification) -> bool:
