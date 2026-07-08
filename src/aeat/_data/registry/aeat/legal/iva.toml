@@ -1073,6 +1073,50 @@ required_text = [
     "utilizados sólo en parte en la realización de operaciones que originen el derecho a la deducción podrán ser deducidas en la proporción resultante de aplicar al importe global de las mismas el porcentaje a que se refiere el artículo 104, apartados Dos y siguientes.",
 ]
 
+[legal."ley-37-1992:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a101"
+document_id = "BOE-A-1992-28740"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a101"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-08
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp)"
+notes = "Articulo 101 LIVA: regimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: el sujeto pasivo que realiza actividades economicas en sectores diferenciados (art 9.1.c) debe aplicar SEPARADAMENTE el regimen de deducciones respecto de cada uno; la prorrata especial puede aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: cada input a la deduccion de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deduccion COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de cuotas deducibles por el regimen comun exceda en un 20 por 100 al que resultaria aplicando con independencia el regimen de cada sector - se registra como caso de autorizacion (register authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado para admitirlo."
+required_text = [
+    "Los sujetos pasivos que realicen actividades económicas en sectores diferenciados de la actividad empresarial o profesional deberán aplicar separadamente el régimen de deducciones respecto de cada uno de ellos.",
+    "La aplicación de la regla de prorrata especial podrá efectuarse independientemente respecto de cada uno de los sectores diferenciados",
+    "para su utilización en común en varios sectores diferenciados de actividad, será de aplicación lo establecido en el artículo 104, apartados dos y siguientes de esta Ley",
+    "La Administración podrá autorizar la aplicación de un régimen de deducción común a los sectores diferenciados",
+    "exceda en un 20 por 100 al que resultaría de aplicar con independencia el régimen de deducciones respecto de cada sector diferenciado",
+]
+
+[legal."ley-37-1992:art-9-1-c"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9"
+document_id = "BOE-A-1992-28740"
+article = "9.1.c"
+section = "sectores-diferenciados"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-08
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp)"
+notes = "Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad (base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS PORCENTUALES respecto de la actividad principal (base del test PRORRATA_SECTORAL_SEPARATION_SPREAD_PP = 50). Letra b': actividades acogidas a los regimenes especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si divergen >50pp, si hay regimen especial) - operator-declared, nunca inferido del ledger."
+required_text = [
+    "se considerarán sectores diferenciados de la actividad empresarial o profesional los siguientes",
+    "Se considerarán actividades económicas distintas aquellas que tengan asignados grupos diferentes en la Clasificación Nacional de Actividades Económicas.",
+    "difirieran en más de 50 puntos porcentuales del correspondiente a la citada actividad principal",
+    "Las actividades acogidas a los regímenes especiales simplificado, de la agricultura, ganadería y pesca, de las operaciones con oro de inversión o del recargo de equivalencia.",
+]
+
 [legal."ley-37-1992:art-107"]
 evidence_tier = "legal_authority"
 authority = "boe"

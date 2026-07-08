@@ -73,7 +73,7 @@ Extends especial's regime-aware aggregation to per-sector routing over the (ejer
 
 Operator-declared sector identification (CNAE/IAE) driving per-(ejercicio,sector) register orchestration and per-sector routing in the regime-aware aggregation, with a per-sector provisional/definitive lifecycle.
 
-- [ ] `W03.P04.S16` - Author the ley-37-1992 art-101 legal entry corpus-grounded, noting the art-101.Dos common-deduction regime is deferred; `src/aeat/_data/registry/aeat/legal/iva.toml`.
+- [x] `W03.P04.S16` - Author the ley-37-1992 art-101 legal entry corpus-grounded, noting the art-101.Dos common-deduction regime is deferred; `src/aeat/_data/registry/aeat/legal/iva.toml`.
 - [ ] `W03.P04.S17` - Add operator-declared sector identification (CNAE/IAE) on the contribuyente profile and the sector reference on the ledger transaction; `src/aeat/domain/contribuyente/, src/aeat/domain/transactions/_models.py`.
 - [ ] `W03.P04.S18` - Orchestrate per-(ejercicio,sector) register entries and per-sector routing in the regime-aware aggregation; `src/aeat/domain/prorrata_register/__init__.py, src/aeat/application/aggregation/_iva_ledger.py`.
 - [ ] `W03.P04.S19` - Run the per-sector provisional/definitive lifecycle (seed and settlement per sector); `src/aeat/application/prorrata_register/, src/aeat/application/calculations/_prorrata_regularizacion.py`.
