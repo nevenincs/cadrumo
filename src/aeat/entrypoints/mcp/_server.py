@@ -77,6 +77,12 @@ from ._hitl import (
     is_handoff_command,
     requires_user_interaction,
 )
+from ._identity_gate import (
+    IDENTITY_READ_CONSOLE_TOOLS,
+    SessionIdentityState,
+    identity_elicitation_echo,
+    identity_gate_refusal,
+)
 from ._input_schema import cli_argv_for
 from ._meta_tools import (
     build_command_search_index,
@@ -565,6 +571,10 @@ def build_server(
     # only; the telemetry writer (injected by the stdio runner; None in unit
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
+    # Per-session identity-read state (ADR I2): armed until an identity read has
+    # occurred, re-armed on a profile switch. Shared by the direct and execute
+    # paths below so the block-first-mutation gate is byte-identical on both.
+    identity_state = SessionIdentityState()
 
     def _gated_subprocess_run(
         descriptor: McpToolDescriptor,
@@ -579,6 +589,12 @@ def build_server(
         direct path.
         """
         key = descriptor.command_key
+        identity_refusal = identity_gate_refusal(key, state=identity_state)
+        if identity_refusal is not None:
+            _record_telemetry(
+                telemetry, tool_name=descriptor.name, command_key=key, route="identity_block", is_error=True
+            )
+            return ({"status": "error", "refusal": identity_refusal}, True)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
@@ -674,6 +690,12 @@ def build_server(
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
+        # A console identity read (whoami / harness.load) clears the gate (ADR I2):
+        # both surface the active-identity block, so either proves the agent has
+        # seen who is active. These carry no registry command key, so record here
+        # rather than in identity_gate_refusal (which keys off command keys).
+        if name in IDENTITY_READ_CONSOLE_TOOLS:
+            identity_state.record_identity_read()
         if name == HARNESS_LOAD_TOOL:
             # Resolve the active-taxpayer identity at the server boundary (it reads
             # storage) and inject it into the otherwise-pure floor payload, so the
@@ -799,6 +821,10 @@ def build_server(
                 content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
                 isError=True,
             )
+        identity_refusal = identity_gate_refusal(key, state=identity_state)
+        if identity_refusal is not None:
+            _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
+            return CallToolResult(content=[TextContent(type="text", text=identity_refusal)], isError=True)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(
             policy=policy,
@@ -814,8 +840,12 @@ def build_server(
         route_label = route.value
         if route is ConfirmRoute.ELICIT:
             request = confirmation_request(command_key=key)
+            # Name the active-taxpayer LABEL in the human-facing prompt (ADR I4)
+            # so the person approving a destructive/handoff verb sees whose data
+            # it touches and can catch an Erik/Erika mismatch at the gate.
+            echo = identity_elicitation_echo(active_profile_label=build_whoami_identity().active_profile)
             result = await server.request_context.session.elicit(
-                message=request.message,
+                message=f"{echo}\n\n{request.message}",
                 requestedSchema=request.requested_schema,
             )
             decision = decision_from_elicitation(

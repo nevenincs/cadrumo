@@ -588,7 +588,8 @@ application:
         a otro perfil.
       archive_not_confirmed: Archivar es una transición de estado reversible, pero
         requiere confirmación explícita.
-      archive_schema_version_from_future: 'La versión de esquema del archivo {archive_schema_version} es más reciente de lo que admite esta aplicación (hasta {max_supported}).'
+      archive_schema_version_from_future: La versión de esquema del archivo {archive_schema_version}
+        es más reciente de lo que admite esta aplicación (hasta {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -5937,9 +5938,14 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
-      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version} hacia {expected}.'
-      schema_upgrader_already_registered: 'Ya hay un actualizador de esquema registrado para el espacio de nombres {namespace} desde la versión {from_version}.'
-      schema_version_from_future: 'La versión de esquema almacenada {schema_version} del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación (hasta {expected}); no se puede leer.'
+      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
+        espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
+        hacia {expected}.'
+      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
+        para el espacio de nombres {namespace} desde la versión {from_version}.
+      schema_version_from_future: La versión de esquema almacenada {schema_version}
+        del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
+        (hasta {expected}); no se puede leer.
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
@@ -6054,6 +6060,9 @@ mcp:
       byte de evidencia — NUNCA salen de su equipo: permanecen en almacenamiento local
       cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor
       o profesional), confirme que esto es aceptable antes de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuando como el perfil del contribuyente: %{label}.'
+    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del primer cambio de esta sesion. Una presentacion o edicion nunca debe ejecutarse bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' / ''overview status'') para ver que contribuyente esta activo y vuelve a intentarlo; una sola lectura de identidad lo desbloquea durante la sesion hasta que cambies de perfil.'
   persona:
     handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
       propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada

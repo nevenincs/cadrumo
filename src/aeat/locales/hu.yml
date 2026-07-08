@@ -541,7 +541,8 @@ application:
       archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
       archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
         megerősítést igényel.
-      archive_schema_version_from_future: 'Az archívum sémaverziója ({archive_schema_version}) újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).'
+      archive_schema_version_from_future: Az archívum sémaverziója ({archive_schema_version})
+        újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -5769,9 +5770,13 @@ errors:
         használt.
       schema_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z) %{expected}
         sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
-      schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace} névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z) {expected} felé.'
-      schema_upgrader_already_registered: 'A(z) {namespace} névtérhez már regisztrálva van sémafrissítő a(z) {from_version} verziótól.'
-      schema_version_from_future: 'A(z) {namespace} névtér tárolt sémaverziója ({schema_version}) újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.'
+      schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace}
+        névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z)
+        {expected} felé.'
+      schema_upgrader_already_registered: A(z) {namespace} névtérhez már regisztrálva
+        van sémafrissítő a(z) {from_version} verziótól.
+      schema_version_from_future: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
+        újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.
       unknown_classification: 'A(z) %{namespace} biztonságos objektum névtér ismeretlen
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva
@@ -5884,6 +5889,9 @@ mcp:
       bizonyítékbájt — SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak,
       és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember)
       nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
+  identity_gate:
+    elicitation_echo: 'Az adoalany-profil neveben eljarva: %{label}.'
+    first_mutation_refused: 'Elutasitva: erositsd meg az aktiv adoalanyt a munkamenet elso modositasa elott. Bevallas vagy szerkesztes soha nem futhat rossz identitas alatt. Futtasd a whoami parancsot (vagy a ''config profile status'' / ''overview status'' parancsot), hogy lasd, melyik adoalany aktiv, majd probald ujra; egyetlen identitasolvasas feloldja ezt a munkamenetre, amig profilt nem valtasz.'
   persona:
     handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
       amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg

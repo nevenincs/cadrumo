@@ -527,7 +527,8 @@ application:
         profile first.
       archive_not_confirmed: Archiving is a reversible state transition, but it still
         requires explicit confirmation.
-      archive_schema_version_from_future: 'The archive schema version {archive_schema_version} is newer than this application supports (up to {max_supported}).'
+      archive_schema_version_from_future: The archive schema version {archive_schema_version}
+        is newer than this application supports (up to {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -5511,9 +5512,13 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
-      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}: an upgrader from version {missing_from_version} toward {expected} is missing.'
-      schema_upgrader_already_registered: 'A schema upgrader is already registered for namespace {namespace} from version {from_version}.'
-      schema_version_from_future: 'Stored schema version {schema_version} for namespace {namespace} is newer than this application supports (up to {expected}); it cannot be read.'
+      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
+        an upgrader from version {missing_from_version} toward {expected} is missing.'
+      schema_upgrader_already_registered: A schema upgrader is already registered
+        for namespace {namespace} from version {from_version}.
+      schema_version_from_future: Stored schema version {schema_version} for namespace
+        {namespace} is newer than this application supports (up to {expected}); it
+        cannot be read.
       unknown_classification: Secure-object namespace %{namespace} contains unknown
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
@@ -5622,6 +5627,9 @@ mcp:
       in encrypted local storage and are never transmitted. If you are acting for
       a third party (a gestor or professional), confirm this is acceptable before
       you proceed.'
+  identity_gate:
+    elicitation_echo: 'Acting as the taxpayer profile: %{label}.'
+    first_mutation_refused: 'Refused: confirm the active taxpayer before the first change of this session. A filing or edit must never run under the wrong identity. Call whoami (or ''config profile status'' / ''overview status'') to see which taxpayer is active, then retry - one identity read clears this for the session until you switch profiles.'
   persona:
     handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
