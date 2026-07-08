@@ -12,16 +12,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...application.operator_surface import HANDOFF_LEAVES as _CLASSIFICATION_HANDOFF_LEAVES
-from ...application.operator_surface import LIVE_WRITE_LEAVES as _CLASSIFICATION_LIVE_WRITE_LEAVES
-from ._annotations import McpAnnotations
-
-# The handoff and live-write leaf sets are declared once in the operator-surface
-# classification module (ADR mcp-protocol-hardening H3, the single risk-posture
-# authority) and re-exported here under the names the elicitation matrix and the
-# persona handoff-deny rules already consume, so there is one source of truth.
-HANDOFF_LEAVES: frozenset[str] = _CLASSIFICATION_HANDOFF_LEAVES
-_LIVE_WRITE_LEAVES: frozenset[str] = _CLASSIFICATION_LIVE_WRITE_LEAVES
+from ...application.operator_surface import command_classification
 
 
 class ConfirmationPolicy(StrEnum):
@@ -56,24 +47,26 @@ def requires_user_interaction(policy: ConfirmationPolicy) -> bool:
     return policy is ConfirmationPolicy.CONFIRM
 
 
-def confirmation_for_tool(*, command_key: str, annotations: McpAnnotations) -> ConfirmationPolicy:
+def confirmation_for_tool(*, command_key: str) -> ConfirmationPolicy:
     """Return the confirmation tier for one tool.
 
-    Order matters: a forbidden live-write blocks before any approval; a
-    destructive or filing-handoff verb requires confirmation; everything else
-    (reads and non-destructive local mutations) auto-approves.
+    Reads the declared classification (:func:`command_classification`) - the same
+    authority the annotation projection reads - so the client hint and the server
+    gate cannot drift. Order matters: a forbidden live-write blocks before any
+    approval; a destructive or filing-handoff verb requires confirmation;
+    everything else (reads and non-destructive local mutations) auto-approves.
 
     Returns:
         :class:`ConfirmationPolicy` selected for the command.
     """
-    leaf = command_key.rsplit(".", 1)[-1]
-    if leaf in _LIVE_WRITE_LEAVES:
+    classification = command_classification(command_key)
+    if classification.live_write:
         return ConfirmationPolicy.BLOCK
-    if annotations.destructive_hint or leaf in HANDOFF_LEAVES:
+    if classification.destructive or classification.handoff:
         return ConfirmationPolicy.CONFIRM
     return ConfirmationPolicy.AUTO_APPROVE
 
 
 def is_handoff_command(command_key: str) -> bool:
-    """True when the command's leaf verb is the irreversible filing-handoff boundary."""
-    return command_key.rsplit(".", 1)[-1] in HANDOFF_LEAVES
+    """True when the command produces the irreversible filing-handoff artefact."""
+    return command_classification(command_key).handoff

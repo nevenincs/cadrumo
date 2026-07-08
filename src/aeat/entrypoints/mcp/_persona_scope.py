@@ -56,9 +56,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...application.operator_surface import OperatorMutability, build_operator_surface_manifest
+from ...application.operator_surface import (
+    OperatorMutability,
+    build_operator_surface_manifest,
+    command_classification,
+)
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION
-from ._hitl import HANDOFF_LEAVES
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -253,10 +256,9 @@ def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool
 # and the record marker. The preparer builds, the reconciler acts after the
 # human files; neither owns the handoff. Personas outside the modelo family
 # never reach these verbs through the family scope, so they need no row.
-PERSONA_HANDOFF_DENIALS: dict[AgentPersona, frozenset[str]] = {
-    AgentPersona.MODELO_PREPARER: HANDOFF_LEAVES,
-    AgentPersona.RECONCILER: HANDOFF_LEAVES,
-}
+PERSONA_HANDOFF_DENIALS: frozenset[AgentPersona] = frozenset(
+    {AgentPersona.MODELO_PREPARER, AgentPersona.RECONCILER},
+)
 
 
 #: The mounted-command family that owns the irreversible filing handoff. The
@@ -282,12 +284,11 @@ def is_handoff_denied(*, persona: AgentPersona, command_key: str) -> bool:
     and is checked by both ``_list_tools`` (the denied tool is not even
     advertised to the persona) and ``_call_tool`` (a direct call refuses).
     """
-    denied_leaves = PERSONA_HANDOFF_DENIALS.get(persona)
-    if not denied_leaves:
+    if persona not in PERSONA_HANDOFF_DENIALS:
         return False
     if _family_token_for_command_key(command_key) != _HANDOFF_FAMILY:
         return False
-    return command_key.rsplit(".", 1)[-1] in denied_leaves
+    return command_classification(command_key).handoff
 
 
 def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:

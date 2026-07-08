@@ -33,7 +33,8 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
-from ....entrypoints.mcp import build_tool_descriptors
+from ....application.operator_surface import command_classification
+from ....entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileConfirmationScenario, check_profile_confirmation_scenario
@@ -150,32 +151,38 @@ def _scenario() -> ProfileConfirmationScenario:
 
 
 def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_on_the_live_manifest() -> None:
-    """Anti-rubber-stamp: the confirmation command is real and idempotent; mutating commands are not.
+    """Anti-rubber-stamp: the confirmation command is freely callable; the mutating commands mutate.
 
     Cross-checks ``_CONFIRMATION_COMMAND`` and ``_MUTATING_COMMANDS`` against the REAL MCP
-    tool-descriptor classification (the same classification the ``PreToolUse`` confirmation
-    gate reads via ``entrypoints.mcp._hitl.confirmation_for_tool``), so neither declared set
-    is an invented label. ``idempotent_hint`` - not ``read_only_hint`` - is the correct
-    discriminator here: the ``config profile`` family is annotated ``LOCAL_STATE_MUTATING``
-    at the whole-family granularity (it also owns ``create``/``edit``/``delete``), so
-    ``config.profile.status``'s ``read_only_hint`` is ``False`` even though the command itself
-    reads only. Its leaf (``status``) is nonetheless a genuine, repeatable, non-state-changing
-    read (``idempotent_hint`` is ``True``), while none of the declared mutating leaves
-    (``create``/``calculate``/``verify``/``file``/``export``) are idempotent.
+    tool-descriptor classification and confirmation gate (the same authority the ``PreToolUse``
+    gate reads via ``entrypoints.mcp._hitl.confirmation_for_tool``), so neither declared set is
+    an invented label. Under the H3 declared-risk model (ADR ``mcp-protocol-hardening``) the
+    ``config profile`` family is ``LOCAL_STATE_MUTATING`` at whole-family granularity (it also
+    owns ``create``/``edit``/``delete``), so ``config.profile.status`` is non-read-only like the
+    mutating leaves; the risk table carries only the destructive/handoff/live-write axes, so the
+    two are not distinguished by ``idempotent_hint``. The meaningful, gate-relevant properties
+    are asserted instead: the confirmation step is safe to call before any mutation - it carries
+    no destructive/handoff/live-write risk, so the gate AUTO_APPROVEs it - while every declared
+    mutating command is genuinely non-read-only on the manifest.
     """
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
 
     assert _CONFIRMATION_COMMAND in by_key, f"'{_CONFIRMATION_COMMAND}' is not an exposed MCP tool"
-    assert by_key[_CONFIRMATION_COMMAND].annotations.idempotent_hint, (
-        f"'{_CONFIRMATION_COMMAND}' is declared as this scenario's active-profile confirmation "
-        "step but the live manifest does not report it as a repeatable, non-mutating read"
+    confirm_annotations = by_key[_CONFIRMATION_COMMAND].annotations
+    assert not confirm_annotations.destructive_hint, (
+        f"'{_CONFIRMATION_COMMAND}' is this scenario's active-profile confirmation step but the "
+        "live manifest reports it as destructive - a pre-mutation confirmation read must not be"
+    )
+    assert confirmation_for_tool(command_key=_CONFIRMATION_COMMAND) is ConfirmationPolicy.AUTO_APPROVE, (
+        f"'{_CONFIRMATION_COMMAND}' must be freely callable as the pre-mutation confirmation step; "
+        "the gate must not require a human approval loop to read which profile is active"
     )
 
     for command in _MUTATING_COMMANDS:
         assert command in by_key, f"'{command}' is not an exposed MCP tool"
-        assert not by_key[command].annotations.idempotent_hint, (
-            f"'{command}' is declared mutating in this scenario but the live manifest reports "
-            "it as an idempotent (non-mutating) read"
+        assert not command_classification(command).read_only, (
+            f"'{command}' is declared mutating in this scenario but the live manifest classifies "
+            "it read-only"
         )
 
 

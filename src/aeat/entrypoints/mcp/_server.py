@@ -216,7 +216,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
         # server's PreToolUse path enforces, so a tool that would be confirmed
         # server-side also forces the client's permission prompt. Non-CONFIRM tools
         # carry no ``_meta`` (``None`` omits it from the wire descriptor).
-        policy = confirmation_for_tool(command_key=descriptor.command_key, annotations=annotations)
+        policy = confirmation_for_tool(command_key=descriptor.command_key)
         meta = {REQUIRES_USER_INTERACTION_META_KEY: True} if requires_user_interaction(policy) else None
         tools.append(
             Tool(
@@ -531,7 +531,7 @@ def build_server(
         direct path.
         """
         key = descriptor.command_key
-        policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
+        policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
             _record_telemetry(telemetry, tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
@@ -725,7 +725,7 @@ def build_server(
                 content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
                 isError=True,
             )
-        policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
+        policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(
             policy=policy,
             command_key=key,

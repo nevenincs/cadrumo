@@ -55,7 +55,7 @@ def test_classification_backs_both_the_annotation_and_the_confirmation_tier() ->
     remove = by_key.get("ledger.remove")
     assert remove is not None
     assert remove.annotations.destructive_hint is True
-    assert confirmation_for_tool(command_key="ledger.remove", annotations=remove.annotations) is ConfirmationPolicy.CONFIRM
+    assert confirmation_for_tool(command_key="ledger.remove") is ConfirmationPolicy.CONFIRM
 
 
 def test_a_read_only_and_destructive_annotation_is_a_gap() -> None:
@@ -106,7 +106,7 @@ def _confirm_tier_command_keys() -> frozenset[str]:
     return frozenset(
         descriptor.command_key
         for descriptor in build_tool_descriptors()
-        if confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+        if confirmation_for_tool(command_key=descriptor.command_key)
         is ConfirmationPolicy.CONFIRM
     )
 

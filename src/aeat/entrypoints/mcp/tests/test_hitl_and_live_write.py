@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
+from collections.abc import Iterator
+
 import pytest
 
-from ....application.operator_surface import OperatorMutability
-from .._annotations import McpAnnotations, annotations_for_command
+from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from .._hitl import ConfirmationPolicy, confirmation_for_tool
 from .._tools import build_tool_descriptors
 
@@ -13,9 +15,28 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _decision(command_key: str) -> ConfirmationPolicy:
-    by_key = {d.command_key: d for d in build_tool_descriptors()}
-    descriptor = by_key[command_key]
-    return confirmation_for_tool(command_key=command_key, annotations=descriptor.annotations)
+    return confirmation_for_tool(command_key=command_key)
+
+
+@contextlib.contextmanager
+def _declared_live_write(command_key: str) -> Iterator[None]:
+    """Declare ``command_key`` a live-write in the risk table for the test body.
+
+    A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
+    heuristic (ADR ``mcp-protocol-hardening`` H3): no real command declares
+    ``live_write`` (never-submit is enforced as "no such tool exists"), so a test
+    that exercises the defensive BLOCK branch must supply a declared live-write
+    row and restore the table after - test data, not a mocked behaviour.
+    """
+    previous = COMMAND_RISK.get(command_key)
+    COMMAND_RISK[command_key] = CommandRiskDeclaration(live_write=True)
+    try:
+        yield
+    finally:
+        if previous is None:
+            COMMAND_RISK.pop(command_key, None)
+        else:
+            COMMAND_RISK[command_key] = previous
 
 
 def test_read_only_tools_auto_approve() -> None:
@@ -40,16 +61,13 @@ def test_no_exposed_tool_is_a_forbidden_live_write() -> None:
     # The live AEAT tree is read-only and live submission is permanently
     # forbidden, so no exposed tool may resolve to a BLOCK decision.
     for descriptor in build_tool_descriptors():
-        decision = confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+        decision = confirmation_for_tool(command_key=descriptor.command_key)
         assert decision is not ConfirmationPolicy.BLOCK, descriptor.command_key
 
 
 def test_a_hypothetical_live_write_would_be_blocked() -> None:
-    # Defensive: if a live-write verb ever entered the command set, the gate
-    # blocks it outright. This proves the BLOCK rail is real, not vacuous.
-    annotations: McpAnnotations = annotations_for_command(
-        command_key="modelo.work.submit",
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-        title="aeat app modelo work submit",
-    )
-    assert confirmation_for_tool(command_key="modelo.work.submit", annotations=annotations) is ConfirmationPolicy.BLOCK
+    # Defensive: if a live-write verb ever entered the command set - declared
+    # live_write in the risk table - the gate blocks it outright. This proves the
+    # BLOCK rail is real, not vacuous.
+    with _declared_live_write("modelo.work.submit"):
+        assert confirmation_for_tool(command_key="modelo.work.submit") is ConfirmationPolicy.BLOCK

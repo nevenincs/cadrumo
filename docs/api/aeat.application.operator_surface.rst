@@ -21,3 +21,4 @@ Submodules
    aeat.application.operator_surface._help
    aeat.application.operator_surface._manifest
    aeat.application.operator_surface._models
+   aeat.application.operator_surface._risk_table
