@@ -191,7 +191,7 @@ def _partial_m100_profile() -> Iterator[None]:
 
     Mirrors ``test_bindings_list_missing_filter.py``'s partial-profile
     pattern: real facts persisted through the workflow state repository, not
-    a mock or a stub.
+    a mock or a placeholder.
     """
     with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
         workflow_state_repository().update(

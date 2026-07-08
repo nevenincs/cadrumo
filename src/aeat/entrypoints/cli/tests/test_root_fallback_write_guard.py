@@ -238,8 +238,8 @@ def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path:
     assert "No active profile" not in output
 
 
-def test_stub_only_modelo_work_create_reaches_leaf_refusal_on_root_fallback_database(tmp_path: Path) -> None:
-    """Stub-only modelos refuse with their legal route before the root profile guard."""
+def test_minimal_registry_modelo_work_create_reaches_leaf_refusal_on_root_fallback_database(tmp_path: Path) -> None:
+    """Minimal-registry modelos refuse with their legal route before the root profile guard."""
 
     result = _run_aeat(
         tmp_path,
