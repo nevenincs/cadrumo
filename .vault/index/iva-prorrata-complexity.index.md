@@ -20,6 +20,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S12]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S13]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S14]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S15]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
 ---
@@ -50,6 +51,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S12` - Make the shared ledger IVA apportionment regime-aware so especial routes each deducible cuota via _deductible_percentage_for (100/0/general), the general path stays byte-identical, and provenance carries the applied classification and percentage
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S13` - Emit the settlement art-103.Dos.2 +10% mandatory-especial advisory Notice via is_especial_mandatory, non-blocking, both totals on Notice.context
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S14` - Surface the per-input classification declaration at the CLI and the M303 especial classification metadata
+- `2026-07-07-iva-prorrata-complexity-W02-P03-S15` - Verify all three art-106 reglas (100/0/common) and the +10% comparison against an AEAT Manual practico worked example with no substrate-derived expected values
 
 ### plan
 
