@@ -24,7 +24,7 @@ from collections.abc import Callable
 from itertools import pairwise
 from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._models import (
     GoldenScenario,
@@ -227,9 +227,253 @@ def score_live_trajectory(
 
 ScoreLiveTrajectory = Callable[..., LiveScenarioScore]
 
+
+# The console's long-tail discovery meta-tools (ADR ``mcp-progressive-discovery``
+# P1/P2): on the CORE surface a verb that is not in the advertised orientation
+# slice is reached by ``search``-ing for it and then ``execute``-ing the winning
+# command key. Kept as data (a default the caller may override) so this module
+# stays SDK- and server-independent, mirroring the caller-injected leaf sets on
+# :func:`score_live_trajectory`.
+_DISCOVERY_META_TOOL_NAMES: frozenset[str] = frozenset({"search", "execute"})
+
+
+class DiscoveryScore(BaseModel):
+    """Selection-quality verdict for one long-tail-verb discovery trajectory.
+
+    The measurement half of ADR ``mcp-progressive-discovery`` P6 (plan step S23):
+    given an observed trajectory that set out to reach one long-tail
+    ``target_command_key``, this scores how efficiently the model got there.
+    ``rounds_to_correct_verb`` is the 1-based ordinal of the tool call that first
+    executed the target (every round-trip up to and including it), so a direct
+    FULL-surface call scores ``1`` and a CORE-surface ``search`` + ``execute``
+    pair scores ``2``; ``discovery_calls`` isolates the ``search`` / ``execute``
+    meta round-trips within that prefix, and ``misselections`` counts wrong,
+    non-target verbs actually executed before the target was reached.
+
+    ``reached`` is the load-bearing dimension: a trajectory that never executes
+    the target scores ``rounds_to_correct_verb = 0`` (unreachable ordinal, since a
+    genuine reach is always ``>= 1``) and records a failure - the anti-tautology
+    guard that stops an unreached target from reading as a cheap discovery.
+
+    Attributes:
+        scenario: The discovery scenario name (empty for a free session).
+        persona: The harness persona the driver played.
+        session_id: The captured session's stable identity.
+        target_command_key: The long-tail registry command key the session set
+            out to locate and invoke.
+        reached: Whether the target command key was executed without error.
+        rounds_to_correct_verb: The 1-based ordinal of the target-executing call
+            among all tool calls; ``0`` when the target was never reached.
+        discovery_calls: The number of ``search`` / ``execute`` meta round-trips
+            issued up to and including the target-executing call.
+        misselections: The number of wrong, non-empty command keys executed
+            before the target was reached.
+        failures: A human-readable reason per failed dimension.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    scenario: str = ""
+    persona: str = Field(min_length=1)
+    session_id: str = Field(min_length=1)
+    target_command_key: str = Field(min_length=1)
+    reached: bool
+    rounds_to_correct_verb: int = Field(ge=0)
+    discovery_calls: int = Field(ge=0)
+    misselections: int = Field(ge=0)
+    failures: tuple[str, ...] = ()
+
+    @property
+    def passed(self) -> bool:
+        """True when the target was reached and no dimension failed."""
+        return self.reached and not self.failures
+
+
+class SurfaceDiscoveryComparison(BaseModel):
+    """A CORE-surface discovery trajectory measured against a FULL-surface one.
+
+    The core-vs-full A/B artifact of ADR ``mcp-progressive-discovery`` P6 (plan
+    step S24): both surfaces must reach the SAME long-tail verb, and the
+    comparison quantifies the trade the ADR makes - the lean CORE surface
+    advertises far fewer tools (``core_advertised_tool_count`` vs
+    ``full_advertised_tool_count``) at the cost of a small number of extra
+    discovery round-trips (``rounds_delta``), while the target stays reachable.
+
+    ``core_advertised_tool_count`` / ``full_advertised_tool_count`` are
+    caller-supplied (measured from the live surface policy, so the numbers are not
+    baked into this pure module); ``0`` leaves the tool-count dimension unasserted.
+
+    Attributes:
+        target_command_key: The long-tail verb both surfaces set out to reach.
+        core: The CORE-surface discovery score (search + execute path).
+        full: The FULL-surface discovery score (direct call path).
+        core_advertised_tool_count: Tools advertised up front on the CORE surface.
+        full_advertised_tool_count: Tools advertised up front on the FULL surface.
+        failures: A human-readable reason per failed comparison dimension.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    target_command_key: str = Field(min_length=1)
+    core: DiscoveryScore
+    full: DiscoveryScore
+    core_advertised_tool_count: int = Field(ge=0, default=0)
+    full_advertised_tool_count: int = Field(ge=0, default=0)
+    failures: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _targets_agree(self) -> SurfaceDiscoveryComparison:
+        for label, score in (("core", self.core), ("full", self.full)):
+            if score.target_command_key != self.target_command_key:
+                raise ValueError(
+                    f"{label} discovery score targets {score.target_command_key!r} but the comparison "
+                    f"targets {self.target_command_key!r}; a core-vs-full comparison must measure one verb",
+                )
+        return self
+
+    @property
+    def both_reached_same_target(self) -> bool:
+        """True when both surfaces executed the one target verb."""
+        return self.core.reached and self.full.reached
+
+    @property
+    def rounds_delta(self) -> int:
+        """CORE minus FULL rounds-to-correct-verb: the discovery cost of the lean surface."""
+        return self.core.rounds_to_correct_verb - self.full.rounds_to_correct_verb
+
+    @property
+    def full_surface_advertises_more(self) -> bool:
+        """True when the FULL surface advertises strictly more tools up front than CORE."""
+        return self.full_advertised_tool_count > self.core_advertised_tool_count
+
+    @property
+    def passed(self) -> bool:
+        """True when both surfaces reached the same target and nothing failed."""
+        return self.both_reached_same_target and not self.failures
+
+
+def score_discovery_trajectory(
+    trajectory: LiveTrajectory,
+    *,
+    target_command_key: str,
+    meta_tool_names: frozenset[str] = _DISCOVERY_META_TOOL_NAMES,
+) -> DiscoveryScore:
+    """Score how efficiently one observed trajectory reached a long-tail verb.
+
+    Walks ``trajectory.tool_calls`` in order and finds the first call that
+    executed ``target_command_key`` without error. Everything is derived from that
+    reach point: ``rounds_to_correct_verb`` is its 1-based ordinal among all
+    calls, ``discovery_calls`` counts the ``search`` / ``execute`` meta calls in
+    the prefix up to and including it, and ``misselections`` counts wrong
+    non-target command keys executed strictly before it. A trajectory that never
+    reaches the target scores ``reached = False`` with a ``0`` ordinal and a
+    recorded failure.
+
+    Args:
+        trajectory: The captured live session.
+        target_command_key: The long-tail registry command key the session set
+            out to locate and invoke.
+        meta_tool_names: The tool names counted as discovery round-trips (the
+            ``search`` / ``execute`` meta pair by default; overridable so the
+            function never hard-codes the server's tool naming).
+
+    Returns:
+        The :class:`DiscoveryScore` for the session.
+    """
+    calls = trajectory.tool_calls
+    correct_index: int | None = None
+    for index, call in enumerate(calls):
+        if call.command_key == target_command_key and not call.is_error:
+            correct_index = index
+            break
+
+    failures: list[str] = []
+    if correct_index is None:
+        failures.append(
+            f"target verb {target_command_key!r} was never executed (without error) in the "
+            f"{len(calls)}-call trajectory - discovery did not reach it",
+        )
+        return DiscoveryScore(
+            scenario=trajectory.scenario,
+            persona=trajectory.persona,
+            session_id=trajectory.session_id,
+            target_command_key=target_command_key,
+            reached=False,
+            rounds_to_correct_verb=0,
+            discovery_calls=0,
+            misselections=0,
+            failures=tuple(failures),
+        )
+
+    prefix = calls[: correct_index + 1]
+    discovery_calls = sum(1 for call in prefix if call.tool_name in meta_tool_names)
+    misselections = sum(
+        1 for call in calls[:correct_index] if call.command_key and call.command_key != target_command_key
+    )
+
+    return DiscoveryScore(
+        scenario=trajectory.scenario,
+        persona=trajectory.persona,
+        session_id=trajectory.session_id,
+        target_command_key=target_command_key,
+        reached=True,
+        rounds_to_correct_verb=correct_index + 1,
+        discovery_calls=discovery_calls,
+        misselections=misselections,
+        failures=(),
+    )
+
+
+def compare_surface_discovery(
+    *,
+    core: DiscoveryScore,
+    full: DiscoveryScore,
+    core_advertised_tool_count: int = 0,
+    full_advertised_tool_count: int = 0,
+) -> SurfaceDiscoveryComparison:
+    """Compare a CORE-surface discovery score against a FULL-surface one.
+
+    Both scores must target the same verb; the comparison records a failure when
+    either surface failed to reach it, so a surface that silently lost the verb
+    cannot pass. The advertised tool counts are optional caller measurements from
+    the live surface policy (``0`` leaves that dimension unasserted).
+
+    Args:
+        core: The CORE-surface discovery score (the search + execute path).
+        full: The FULL-surface discovery score (the direct call path).
+        core_advertised_tool_count: Tools advertised up front under CORE.
+        full_advertised_tool_count: Tools advertised up front under FULL.
+
+    Returns:
+        The :class:`SurfaceDiscoveryComparison`.
+
+    Raises:
+        ValueError: When the two scores target different verbs.
+    """
+    target = core.target_command_key
+    failures: list[str] = []
+    if not core.reached:
+        failures.append(f"CORE surface did not reach {target!r}: {', '.join(core.failures) or 'no reach'}")
+    if not full.reached:
+        failures.append(f"FULL surface did not reach {target!r}: {', '.join(full.failures) or 'no reach'}")
+
+    return SurfaceDiscoveryComparison(
+        target_command_key=target,
+        core=core,
+        full=full,
+        core_advertised_tool_count=core_advertised_tool_count,
+        full_advertised_tool_count=full_advertised_tool_count,
+        failures=tuple(failures),
+    )
+
+
 __all__ = [
+    "DiscoveryScore",
     "FaithfulnessCheckFn",
     "LiveScenarioScore",
     "ScoreLiveTrajectory",
+    "SurfaceDiscoveryComparison",
+    "compare_surface_discovery",
+    "score_discovery_trajectory",
     "score_live_trajectory",
 ]
