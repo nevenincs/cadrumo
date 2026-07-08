@@ -323,7 +323,11 @@ def build_meta_sdk_tools() -> list[Tool]:
     return [
         Tool(
             name=_META_SEARCH_TOOL,
-            description="Search aeat commands by keyword; returns matching command keys with mutability hints.",
+            description=(
+                "Search aeat commands by keyword; returns matching command keys with mutability hints. "
+                "Pass a hit to describe for its full schema before you run it, or activate a toolset to "
+                "advertise a whole domain's verbs directly."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -338,7 +342,10 @@ def build_meta_sdk_tools() -> list[Tool]:
         ),
         Tool(
             name=_META_EXECUTE_TOOL,
-            description="Execute one aeat command by key with named arguments, through the same safety gates.",
+            description=(
+                "Execute one aeat command by key with named arguments, through the same safety gates. "
+                "Call describe first to read the command's full input schema before you build the arguments."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -356,7 +363,9 @@ def build_meta_sdk_tools() -> list[Tool]:
             name=_META_TOOLSETS_TOOL,
             description=(
                 "Manage domain toolsets: list them, or activate/deactivate one to add or remove its "
-                "per-verb tools from the advertised tool list (renta, iva, ledger, censo, modelo-lifecycle)."
+                "per-verb tools from the advertised tool list (renta, iva, ledger, censo, modelo-lifecycle). "
+                "Activate a toolset when you will do repeated work in that domain, so its verbs are advertised "
+                "directly instead of reached one at a time through search and execute."
             ),
             inputSchema={
                 "type": "object",

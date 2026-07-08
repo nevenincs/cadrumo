@@ -246,3 +246,55 @@ def test_schema_coverage_gate_passes_on_the_real_command_set() -> None:
     keys = tuple(descriptor.command_key for descriptor in build_tool_descriptors())
     schemas = build_verb_input_schemas(keys)  # must not trip the coverage gate
     assert len(schemas) == len(keys)
+
+
+# --- P03.S16/S17: provider enum + one-of identifier fidelity -------------------
+
+
+def test_ledger_import_provider_renders_as_a_json_enum() -> None:
+    """The ``ledger.import`` provider is a closed set, so its schema is an enum.
+
+    ``--provider`` is typed as the ``LedgerProviderID`` enum, so Typer renders a
+    ``Choice`` and the built MCP input schema surfaces the closed provider set as a
+    JSON ``enum`` rather than a bare string. This proves the enum declared at the
+    CLI boundary flows through the input-schema builder without any per-command
+    special case (the ``FuncParamType`` wrapping a ``click_type=click.Choice`` does
+    NOT carry choices; an enum-typed option is the idiom that does).
+    """
+    from ....application.ledger import LedgerProviderID
+
+    expected = [provider.value for provider in LedgerProviderID]
+    by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    provider_property = by_key["ledger.import"].input_schema["properties"]["provider"]
+    assert provider_property["type"] == "string"
+    assert provider_property["enum"] == expected
+    assert provider_property["enum"], "the recognised provider set must be non-empty"
+
+
+def test_modelo_work_addressing_exposes_both_identifier_forms_as_optional() -> None:
+    """One-of identifier alternation is enforced in the body, not the schema.
+
+    The work-addressing verbs accept EITHER a ``work_unit_id`` OR a
+    ``modelo``/``year``/``period`` triple to address the target. That alternation
+    is resolved inside the command body (work addressing), not declared on the CLI
+    parameters, so click models each identifier as an independent optional option
+    and the generic input-schema builder cannot infer a JSON-Schema ``anyOf`` from
+    the declaration. Expressing one would require hand-encoding the identifier
+    groups in the schema builder - a per-command special case that would drift from
+    the CLI authority - so the honest current shape is both forms present, both
+    optional, no ``anyOf``. This test pins that shape so a regression that silently
+    drops one identifier form fails here.
+    """
+    by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    for key in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export"):
+        schema = by_key[key].input_schema
+        properties = schema["properties"]
+        assert "work_unit_id" in properties
+        assert {"modelo", "year", "period"} <= set(properties)
+        # The alternation is a runtime concern; the schema declares no anyOf/oneOf
+        # and leaves every identifier optional.
+        assert "anyOf" not in schema
+        assert "oneOf" not in schema
+        required = schema.get("required", [])
+        assert "work_unit_id" not in required
+        assert "modelo" not in required
