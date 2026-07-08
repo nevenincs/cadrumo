@@ -581,6 +581,7 @@ application:
         altre perfil.
       archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
         confirmació explícita.
+      archive_schema_version_from_future: 'La versió d''esquema de l''arxiu {archive_schema_version} és més recent del que admet aquesta aplicació (fins a {max_supported}).'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -3599,7 +3600,13 @@ cli:
         exclusively_non_deductible sense deduccio; common al percentatge general de
         prorrata); nomes rellevant per a operacions suportades en un bucket amb prorrata
         especial.'
-      input_classification_inert: '--input-classification es inert per a l''exercici {ejercicio}: no s''aplica cap eleccio de prorrata especial, de manera que l''input es dedueix al percentatge general. Classificar tots els inputs de l''exercici tambe habilita la comprovacio de prorrata especial obligatoria (LIVA art. 103.Dos.2) en la liquidacio per a un regim general. Executa ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons LIVA art. 106.'
+      input_classification_inert: '--input-classification es inert per a l''exercici
+        {ejercicio}: no s''aplica cap eleccio de prorrata especial, de manera que
+        l''input es dedueix al percentatge general. Classificar tots els inputs de
+        l''exercici tambe habilita la comprovacio de prorrata especial obligatoria
+        (LIVA art. 103.Dos.2) en la liquidacio per a un regim general. Executa ''app
+        ledger prorrata elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons
+        LIVA art. 106.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
@@ -5874,6 +5881,9 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version} cap a {expected}.'
+      schema_upgrader_already_registered: 'Ja hi ha un actualitzador d''esquema registrat per a l''espai de noms {namespace} des de la versió {from_version}.'
+      schema_version_from_future: 'La versió d''esquema emmagatzemada {schema_version} de l''espai de noms {namespace} és més recent del que admet aquesta aplicació (fins a {expected}); no es pot llegir.'
       unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
@@ -5955,7 +5965,9 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s) i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en un terminal.'
+    timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s)
+      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en
+      un terminal.'
   elicitation:
     confirm:
       consequence_handoff: Això genera el document de presentació que el contribuent

@@ -588,6 +588,7 @@ application:
         a otro perfil.
       archive_not_confirmed: Archivar es una transición de estado reversible, pero
         requiere confirmación explícita.
+      archive_schema_version_from_future: 'La versión de esquema del archivo {archive_schema_version} es más reciente de lo que admite esta aplicación (hasta {max_supported}).'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -3642,7 +3643,13 @@ cli:
         integra; exclusively_non_deductible sin deduccion; common al porcentaje general
         de prorrata); solo relevante para operaciones soportadas en un bucket con
         prorrata especial.'
-      input_classification_inert: '--input-classification es inerte para el ejercicio {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que el input se deduce al porcentaje general. Clasificar todos los inputs del ejercicio tambien habilita la comprobacion de prorrata especial obligatoria (LIVA art. 103.Dos.2) en la liquidacion para un regimen general. Ejecuta ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo segun LIVA art. 106.'
+      input_classification_inert: '--input-classification es inerte para el ejercicio
+        {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que
+        el input se deduce al porcentaje general. Clasificar todos los inputs del
+        ejercicio tambien habilita la comprobacion de prorrata especial obligatoria
+        (LIVA art. 103.Dos.2) en la liquidacion para un regimen general. Ejecuta ''app
+        ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo segun
+        LIVA art. 106.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
@@ -5930,6 +5937,9 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version} hacia {expected}.'
+      schema_upgrader_already_registered: 'Ya hay un actualizador de esquema registrado para el espacio de nombres {namespace} desde la versión {from_version}.'
+      schema_version_from_future: 'La versión de esquema almacenada {schema_version} del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación (hasta {expected}); no se puede leer.'
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
@@ -6010,7 +6020,9 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s) y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente en un terminal.'
+    timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
+      y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente
+      en un terminal.'
   elicitation:
     confirm:
       consequence_handoff: Esto genera el documento de presentación que el contribuyente

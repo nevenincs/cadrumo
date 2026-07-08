@@ -18,6 +18,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
+from .._schema_lineage import ensure_schema_version_readable, upgrade_secure_object_payload
 from ..crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
@@ -200,13 +201,10 @@ class SecureObjectRepository:
     ) -> None:
         if definition is None or schema_version == definition.schema_version:
             return
-        raise EnvelopeVersionError(
-            translated_message="errors.storage.namespace.schema_mismatch",
-            context={
-                "namespace": namespace,
-                "schema_version": schema_version,
-                "expected": definition.schema_version,
-            },
+        ensure_schema_version_readable(
+            namespace=namespace,
+            schema_version=schema_version,
+            current_version=definition.schema_version,
         )
 
     def _check_session_freshness(self) -> None:
@@ -475,8 +473,9 @@ class SecureObjectRepository:
             expected_class: The
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 all rows in this namespace must carry.
-            max_supported_version: Expected row ``schema_version``; any different
-                version is treated as unreadable.
+            max_supported_version: The consumer's current ``schema_version``
+                ceiling; a row above it, or below it without a complete
+                registered upgrade chain, is treated as unreadable.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(
@@ -619,8 +618,9 @@ class SecureObjectRepository:
                 all rows in this namespace must carry; rows with a differing
                 classification are yielded as
                 :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
-            max_supported_version: Current row ``schema_version`` expected
-                by the consumer. Rows with a different version are yielded
+            max_supported_version: The consumer's current ``schema_version``
+                ceiling. Rows above it, or below it without a complete
+                registered upgrade chain, are yielded
                 as :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
@@ -712,7 +712,13 @@ class SecureObjectRepository:
                 written_at=written_at,
                 reason=f"classification {classification.value!r} does not match expected {expected_class.value!r}",
             )
-        if schema_version != max_supported_version:
+        try:
+            ensure_schema_version_readable(
+                namespace=namespace,
+                schema_version=schema_version,
+                current_version=max_supported_version,
+            )
+        except EnvelopeVersionError as exc:
             return SecureObjectUnreadable(
                 namespace=namespace,
                 row_id=row_id,
@@ -720,7 +726,7 @@ class SecureObjectRepository:
                 classification=classification_str,
                 schema_version=schema_version,
                 written_at=written_at,
-                reason=f"schema version {schema_version} does not match expected {max_supported_version}",
+                reason=resolve_error_message(exc),
             )
         try:
             self._enforce_registered_row_schema(
@@ -773,11 +779,29 @@ class SecureObjectRepository:
                 written_at=written_at,
                 reason="revision lineage self-consistency check failed",
             )
+        if schema_version < max_supported_version:
+            try:
+                payload_plain = upgrade_secure_object_payload(
+                    payload_plain,
+                    namespace=namespace,
+                    from_version=schema_version,
+                    to_version=max_supported_version,
+                )
+            except Exception as exc:
+                return SecureObjectUnreadable(
+                    namespace=namespace,
+                    row_id=row_id,
+                    object_key=object_key,
+                    classification=classification_str,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    reason=resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc),
+                )
         return SecureObjectRecord(
             namespace=namespace,
             object_key=object_key,
             classification=classification,
-            schema_version=schema_version,
+            schema_version=max_supported_version,
             written_at=written_at,
             payload=payload_plain,
         )

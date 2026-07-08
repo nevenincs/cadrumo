@@ -527,6 +527,7 @@ application:
         profile first.
       archive_not_confirmed: Archiving is a reversible state transition, but it still
         requires explicit confirmation.
+      archive_schema_version_from_future: 'The archive schema version {archive_schema_version} is newer than this application supports (up to {max_supported}).'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -3354,7 +3355,12 @@ cli:
         per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible:
         no deduction; common: deducted at the general prorrata percentage); meaningful
         only for input rows in a bucket under prorrata especial.'
-      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}: no prorrata especial election applies, so the input deducts under the general percentage. Classifying every input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' to route it by LIVA art. 106.'
+      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}:
+        no prorrata especial election applies, so the input deducts under the general
+        percentage. Classifying every input of the ejercicio also enables the settlement
+        LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run ''app
+        ledger prorrata elect-especial --ejercicio {ejercicio}'' to route it by LIVA
+        art. 106.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
@@ -5505,6 +5511,9 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
+      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}: an upgrader from version {missing_from_version} toward {expected} is missing.'
+      schema_upgrader_already_registered: 'A schema upgrader is already registered for namespace {namespace} from version {from_version}.'
+      schema_version_from_future: 'Stored schema version {schema_version} for namespace {namespace} is newer than this application supports (up to {expected}); it cannot be read.'
       unknown_classification: Secure-object namespace %{namespace} contains unknown
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime

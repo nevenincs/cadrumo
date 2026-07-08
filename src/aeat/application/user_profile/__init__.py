@@ -103,6 +103,7 @@ if TYPE_CHECKING:
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
         serialize_profile_bundle,
+        validate_bundle_payload,
     )
     from ._bundle_encryption import (
         EncryptedProfileBundleError,
@@ -318,6 +319,7 @@ def __getattr__(name: str):
         "UnsupportedBundleSchemaVersionError",
         "deserialize_profile_bundle",
         "serialize_profile_bundle",
+        "validate_bundle_payload",
     ):
         from . import _bundle
 
@@ -531,6 +533,7 @@ __all__ = [
     "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
+    "validate_bundle_payload",
     "validate_profile_values",
     "verify_recovery_code",
 ]
