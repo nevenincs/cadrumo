@@ -2,9 +2,12 @@
 
 Proves the ADR ``mcp-progressive-discovery`` P2 discovery spine: the FTS5 index
 recalls a command through Spanish stemming and diacritics folding where an exact
-token-overlap match misses it, and the degraded (no-FTS5) mode still ranks by
-term overlap so a minimal install keeps a working ``search``. Uses a small
-synthetic corpus so the cross-vocabulary property is deterministic.
+token-overlap match misses it; per-column BM25 weighting ranks a key-tier hit
+above the same token buried in the help tier; and the degraded (no-FTS5) mode
+still ranks by term overlap so a minimal install keeps a working ``search``. Uses
+a small synthetic corpus so the properties are deterministic, and disables the
+semantic side so the lexical contract is asserted in isolation regardless of
+whether the ``search`` extra is installed.
 """
 
 from __future__ import annotations
@@ -23,30 +26,41 @@ _DOCS = (
     CommandDoc(
         command_key="modelo.work.calculate",
         tool_name="aeat_modelo_work_calculate",
-        text="modelo work calculate calcula la autoliquidación de IVA y las declaraciones trimestrales",
+        key_and_name="modelo.work.calculate modelo work calculate aeat_modelo_work_calculate",
+        description="Run `aeat app modelo work calculate`.",
+        help="calcula la autoliquidación de IVA y las declaraciones trimestrales",
     ),
     CommandDoc(
         command_key="ledger.add",
         tool_name="aeat_ledger_add",
-        text="ledger add registra una transacción bancaria en el libro",
+        key_and_name="ledger.add ledger add aeat_ledger_add",
+        description="Run `aeat app ledger add`.",
+        help="registra una transacción bancaria en el libro",
     ),
     CommandDoc(
         command_key="modelo.export",
         tool_name="aeat_modelo_export",
-        text="modelo export genera el fichero para presentar la declaración",
+        key_and_name="modelo.export modelo export aeat_modelo_export",
+        description="Run `aeat app modelo export`.",
+        help="genera el fichero para presentar la declaración",
     ),
 )
+
+
+def _index(docs: tuple[CommandDoc, ...] = _DOCS) -> CommandIndex:
+    """Build a lexical-only index so the assertions do not depend on the extra."""
+    return build_command_index(docs, enable_semantic=False)
 
 
 def _token_overlap_only(docs: tuple[CommandDoc, ...], query: str) -> set[str]:
     """The keys a naive exact-token-overlap scorer would match (no stemming)."""
     wanted = set(_WORD_RE.findall(query.lower()))
-    return {doc.command_key for doc in docs if wanted & set(_WORD_RE.findall(doc.text.lower()))}
+    return {doc.command_key for doc in docs if wanted & set(_WORD_RE.findall(doc.combined_text.lower()))}
 
 
 def test_stemmed_recall_reaches_a_command_exact_overlap_misses() -> None:
-    index = build_command_index(_DOCS)
-    if index._connection is None:  # noqa: SLF001 - degraded env has no stemming to prove
+    index = _index()
+    if index._connection is None:
         pytest.skip("FTS5 unavailable; stemming recall is exercised only in the FTS5 path")
 
     # "declaración" (singular, accented) vs the corpus token "declaraciones"
@@ -58,22 +72,50 @@ def test_stemmed_recall_reaches_a_command_exact_overlap_misses() -> None:
 
 
 def test_diacritics_fold_so_an_unaccented_query_matches_accented_text() -> None:
-    index = build_command_index(_DOCS)
-    if index._connection is None:  # noqa: SLF001
+    index = _index()
+    if index._connection is None:
         pytest.skip("FTS5 unavailable; folding is exercised only in the FTS5 path")
     hits = index.search("transaccion bancaria", limit=5)
     assert "ledger.add" in {hit.command_key for hit in hits}
 
 
 def test_ranks_the_named_command_first_for_a_direct_query() -> None:
-    index = build_command_index(_DOCS)
+    index = _index()
     hits = index.search("calculate autoliquidacion IVA", limit=5)
     assert hits
     assert hits[0].command_key == "modelo.work.calculate"
 
 
+def test_key_tier_outranks_the_same_token_in_the_help_tier() -> None:
+    # Per-column BM25 weighting (ADR P2/S07): a shared token that lands in a
+    # command's KEY tier must outrank the same token buried in another command's
+    # HELP tier, so a homonym in a low-value column no longer wins.
+    docs = (
+        CommandDoc(
+            command_key="widget.run",
+            tool_name="aeat_widget_run",
+            key_and_name="widget.run widget run aeat_widget_run",
+            description="Run `aeat app widget run`.",
+            help="ejecuta la operación principal",
+        ),
+        CommandDoc(
+            command_key="other.thing",
+            tool_name="aeat_other_thing",
+            key_and_name="other.thing other thing aeat_other_thing",
+            description="Run `aeat app other thing`.",
+            help="menciona un widget de pasada en la ayuda",
+        ),
+    )
+    index = _index(docs)
+    if index._connection is None:
+        pytest.skip("per-column weighting is an FTS5-path property")
+    hits = index.search("widget", limit=5)
+    assert hits
+    assert hits[0].command_key == "widget.run"
+
+
 def test_blank_or_termless_query_returns_no_hits() -> None:
-    index = build_command_index(_DOCS)
+    index = _index()
     assert index.search("", limit=5) == ()
     assert index.search("   ", limit=5) == ()
     assert index.search("calculate", limit=0) == ()
@@ -82,8 +124,8 @@ def test_blank_or_termless_query_returns_no_hits() -> None:
 def test_degraded_mode_ranks_by_term_overlap_without_fts5() -> None:
     # Force the degraded path by constructing an index whose FTS5 connection is
     # cleared, proving the pure-Python fallback still ranks and never raises.
-    index = CommandIndex(_DOCS)
-    index._connection = None  # noqa: SLF001 - simulate the no-FTS5 minimal install
+    index = _index()
+    index._connection = None
     hits = index.search("ledger transaccion", limit=5)
     assert hits
     assert hits[0].command_key == "ledger.add"

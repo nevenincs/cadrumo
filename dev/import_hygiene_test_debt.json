@@ -380,6 +380,13 @@
         "target_mod": "aeat.application.invoices._importing",
         "imported_names": ["_decode_invoice_payload"],
         "reason": "White-box test confirming the private invoice-payload decoder returns InvoiceRowPayload TypedDict instances from JSON. Internal decoding helper backing parse_invoice_payload, not a standalone public entry point."
+      },
+      {
+        "importer_path": "src/aeat/application/command_search/tests/test_command_ranking_golden.py",
+        "lineno": 28,
+        "target_mod": "aeat.entrypoints.mcp._meta_tools",
+        "imported_names": ["build_command_search_index", "search_commands"],
+        "reason": "Pinned retrieval golden set (ADR mcp-progressive-discovery P2/S09) asserting the live command-ranking over build_tool_descriptors(). The ranking helpers wrap the private `search` meta-tool surface and have no public facade promotion candidate; the golden set is authored under the command_search package it validates, so it is a white-box test-only reach into the meta-tool ranking API."
       }
     ]
   }
