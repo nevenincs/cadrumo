@@ -46,7 +46,11 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core import (
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ...core.errors import AeatError as _AeatError
 
 
@@ -89,6 +93,48 @@ _PROVENANCE_PRECEDENCE: tuple[ProrrataProvisionalProvenance, ...] = (
     ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
 )
+
+
+class SectorDefinition(BaseModel):
+    """One operator-declared differentiated sector (LIVA arts. 9.1.c / 101).
+
+    Strict, frozen, no extra fields. The art. 9.1.c partition of a taxpayer's
+    activities into differentiated sectors is a legal judgment the ledger cannot
+    infer (which CNAE groups are run, whether their prorrata percentages diverge
+    by more than 50 percentage points, whether a special-regime activity is
+    present), so it is operator-declared: each sector carries a stable
+    ``sector_id`` (the key the register entries and the ledger rows reference),
+    the member activity codes it groups, and the :class:`~core.SectorDiferenciadoLetra`
+    that makes it differentiated. Fail-closed: a register with no sector
+    definitions is a whole-entity register (``sector_id = None`` throughout), the
+    landed cross-period behaviour, never a silently inferred partition.
+
+    Attributes:
+        sector_id: Stable identifier the register entries and ledger rows
+            reference. Must match the ``sector_id`` on the per-sector
+            :class:`ProrrataRegisterEntry` rows.
+        letra: The :class:`~core.SectorDiferenciadoLetra` (art. 9.1.c letra
+            a'/b'/c'/d') on which this sector is differentiated.
+        member_activity_codes: The CNAE / IAE-epígrafe activity codes grouped
+            into this sector. Non-empty: a declared sector groups at least one
+            activity. Recorded for provenance and operator audit; the per-sector
+            routing keys on ``sector_id``, never on these codes.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    letra: SectorDiferenciadoLetra
+    member_activity_codes: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("member_activity_codes")
+    @classmethod
+    def _member_codes_non_empty_tokens(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Reject a blank member activity code — every grouped code is a real token."""
+        for code in value:
+            if not code.strip():
+                raise ProrrataRegisterValidationError("member_activity_codes must not contain a blank code")
+        return value
 
 
 class ProrrataRegisterEntry(BaseModel):
@@ -322,12 +368,18 @@ class ProrrataRegister(BaseModel):
     Attributes:
         schema_version: Forward-compatible schema version. ``"1"``.
         entries: Tuple of :class:`ProrrataRegisterEntry` rows.
+        sector_definitions: The operator-declared differentiated-sector partition
+            (LIVA arts. 9.1.c / 101). Empty for a whole-entity register — the
+            fail-closed default; when non-empty every per-sector
+            :class:`ProrrataRegisterEntry` ``sector_id`` and every sectored
+            ledger row references one of these declared sectors.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
 
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
     entries: tuple[ProrrataRegisterEntry, ...] = ()
+    sector_definitions: tuple[SectorDefinition, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
@@ -344,6 +396,35 @@ class ProrrataRegister(BaseModel):
         if len(seen) != len(set(seen)):
             raise ProrrataRegisterValidationError("register carries duplicate (ejercicio, sector) entries")
         return self
+
+    @model_validator(mode="after")
+    def _sector_definitions_unique(self) -> ProrrataRegister:
+        """Reject a register that declares two sector definitions for the same sector_id."""
+        sector_ids = [definition.sector_id for definition in self.sector_definitions]
+        if len(sector_ids) != len(set(sector_ids)):
+            raise ProrrataRegisterValidationError("register carries duplicate sector_id definitions")
+        return self
+
+    @property
+    def is_sectorized(self) -> bool:
+        """Whether the register declares a differentiated-sector partition.
+
+        Fail-closed: ``False`` (whole-entity) when no sector definition exists,
+        so a taxpayer with no declared partition keeps the landed cross-period
+        behaviour byte-identical.
+        """
+        return bool(self.sector_definitions)
+
+    def sector_ids(self) -> tuple[str, ...]:
+        """Return the declared sector ids, in declaration order."""
+        return tuple(definition.sector_id for definition in self.sector_definitions)
+
+    def sector_definition_for(self, sector_id: str) -> SectorDefinition | None:
+        """Return the declared :class:`SectorDefinition` for ``sector_id``, or ``None``."""
+        for definition in self.sector_definitions:
+            if definition.sector_id == sector_id:
+                return definition
+        return None
 
     def entries_for_ejercicio(self, ejercicio: int) -> tuple[ProrrataRegisterEntry, ...]:
         """Return every entry recorded for ``ejercicio`` across all sectors."""
@@ -422,6 +503,7 @@ __all__ = [
     "ProrrataRegisterEntry",
     "ProrrataRegisterError",
     "ProrrataRegisterValidationError",
+    "SectorDefinition",
     "ThreeActiveYearsAggregate",
     "resolve_provisional_percentage",
 ]

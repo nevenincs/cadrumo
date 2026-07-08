@@ -615,6 +615,14 @@ class Transaction(BaseModel):
             especial; the regime-aware aggregation routes the deducible cuota by
             this classification. ``None`` for rows that are not under especial or
             carry no per-input use declaration.
+        prorrata_sector_id: Operator-declared LIVA arts. 9.1.c / 101 differentiated
+            sector this input belongs to. References a ``sector_id`` declared in
+            the bucket's prorrata register sector definitions; the sector-aware
+            aggregation applies THAT sector's provisional percentage to the row's
+            deducible cuota. ``None`` means common-use (usable across sectors),
+            apportioned by the art. 104.Dos common percentage in a sectorized
+            bucket; in a non-sectorized bucket ``None`` is the whole-entity
+            default (today's behaviour), so an unsectored taxpayer is unaffected.
         purchase_invoice_evidence_id: Canonical purchase-invoice evidence
             reference attached to the row.
         attachment_ids: Supplementary attachment references.
@@ -718,6 +726,7 @@ class Transaction(BaseModel):
     prorrata_reference: str | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     created_by: str | None = None
