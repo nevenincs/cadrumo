@@ -333,7 +333,6 @@ def _parse_tier(value: str) -> TelemetryTier:
         raise _bad(
             tr(
                 "cli.diagnostics.telemetry.bad_tier",
-                option="--tier",
                 value=value,
                 accepted=accepted,
                 default=f"--tier must be one of: {accepted}; got {value!r}.",
