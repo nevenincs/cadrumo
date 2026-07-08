@@ -18,8 +18,6 @@ See Also:
         Canonical Decimal coercion and formatting helpers.
     :mod:`~tests._inventory`
         Shared production AST inventory surface used by this ratchet.
-    ``2026-05-28-codebase-solidification-plan``
-        W03.P18.S358-S368 decimal canonical-enrollment closure.
 """
 
 from __future__ import annotations

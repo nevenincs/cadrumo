@@ -17,9 +17,9 @@ See Also:
     :class:`~domain.calculations.registry.RegistryModeloObservation`
         Canonical registry observation carrier protected from generic
         ``Observation`` homonyms by the binding vocabulary pass.
-    ``.vault/adr/2026-06-26-binding-vocabulary-cli-cohesion-adr.md``
-        Governs the naming-discipline pass that retired cross-domain binding
-        and observation homonyms for reader and RAG coherence.
+
+Every binding and observation name must stay domain-qualified so a reader (or
+a semantic search) can trust the name without cross-checking the module.
 """
 
 from __future__ import annotations

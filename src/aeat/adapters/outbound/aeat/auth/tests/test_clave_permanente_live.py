@@ -22,10 +22,6 @@ See Also:
         Browser runtime whose context construction owns storage-state injection.
     :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente`
         Protocol-level companion suite covering deterministic provider branches.
-    ``2026-06-04-live-auth-decomposition-adr`` and
-    ``2026-06-04-repo-health-triage-live-auth-split-invariants-audit``
-        Custody-boundary records for live gates, read-only posture, and
-        encrypted provider metadata.
 """
 
 from __future__ import annotations

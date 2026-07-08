@@ -27,9 +27,9 @@ See Also:
     :func:`~core.parsing.parse_bool`
         Public boolean-token parser that replaces inline lower-case string
         comparisons.
-    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
-        Tracks the W03.P17 canonical parsing enrollment sweep and S357
-        inventory gate.
+
+Date, day-first, and boolean parsing must funnel through one canonical helper
+each, so a locale or format quirk is fixed in exactly one place.
 """
 
 from __future__ import annotations

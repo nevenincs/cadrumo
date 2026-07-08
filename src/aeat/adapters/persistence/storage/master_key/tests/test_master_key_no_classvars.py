@@ -14,8 +14,6 @@ See Also:
         OS-keychain-backed provider guarded against revived class caches.
     :class:`~adapters.persistence.storage.master_key.FileFallbackMasterKeyProvider`
         File-backed provider guarded against revived class caches.
-    ``2026-05-14-profile-bucket-lifecycle-adr``
-        Decision that moved provider caches to bucket-scoped session state.
 """
 
 from __future__ import annotations

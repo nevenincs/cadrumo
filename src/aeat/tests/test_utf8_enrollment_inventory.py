@@ -41,9 +41,9 @@ See Also:
         used by the ratchet.
     :mod:`~core.external_constants`
         Defines ``UTF_8_ENCODING`` as the shared encoding authority.
-    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
-        Tracks the UTF-8 enrollment wave and the S506 inventory gate this file
-        now maintains.
+
+A bare ``"utf-8"`` literal must route through the shared constant so an
+encoding-name change is fixed in one place, never re-typed at each call site.
 """
 
 from __future__ import annotations

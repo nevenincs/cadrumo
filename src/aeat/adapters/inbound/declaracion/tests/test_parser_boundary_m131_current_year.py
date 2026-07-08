@@ -25,9 +25,6 @@ See Also:
     ``test_parser_synthetic_fixtures_quarterly.py``
         Sibling 2026 fixture round-trip reused as the current-year layout
         precedent.
-    ``2026-05-21-declaracion-extraction-architecture-adr`` and
-    ``2026-05-27-declaracion-extraction-architecture-W07-P33-S174``
-        Accepted registry-driven parser architecture and M131 layout grounding.
 """
 
 from __future__ import annotations

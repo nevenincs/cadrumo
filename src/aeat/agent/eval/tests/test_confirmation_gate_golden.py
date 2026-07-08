@@ -35,10 +35,9 @@ See Also:
     :func:`~agent.eval.run_golden_scenario`
         Golden runner that fails a scenario when an injected confirmation tier
         mismatches.
-    Governing vault records
-        ``2026-07-02-agent-harness-refoundation-adr`` wires confirmation gates
-        into serving behavior; ``2026-06-30-agent-harness-adr`` defines the MCP
-        harness layers and live-write prohibition.
+
+The MCP harness wires confirmation gates into its serving behavior and
+enforces the live-write prohibition at that same layer.
 """
 
 from __future__ import annotations

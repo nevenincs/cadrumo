@@ -17,9 +17,10 @@ See Also:
     :mod:`~core.external_constants`
         Central constant registry for external encodings, extensions, MIME
         strings, hostnames, and route fragments.
-    ``.vault/adr/2026-06-26-binding-source-kind-taxonomy-unification-adr.md``
-        Governs the source-kind enum consolidation that this inventory keeps
-        from regressing.
+
+The source-kind enum is the single closed taxonomy for binding sources; this
+inventory keeps that consolidation from regressing back into scattered
+runtime literals.
 """
 
 from __future__ import annotations

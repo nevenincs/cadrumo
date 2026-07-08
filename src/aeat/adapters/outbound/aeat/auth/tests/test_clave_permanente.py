@@ -23,10 +23,6 @@ See Also:
         Recording browser/page harness shared by these protocol tests.
     :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente_live`
         Live Playwright probe covering the real AEAT Cl@ve Permanente surface.
-    ``2026-06-04-repo-health-triage-live-auth-split-invariants-audit`` and
-    ``2026-06-04-live-auth-decomposition-adr``
-        Governance records for central live-auth gating and encrypted session
-        metadata custody.
 """
 
 from __future__ import annotations

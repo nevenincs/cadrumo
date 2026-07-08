@@ -24,10 +24,10 @@ See Also:
         Revision record that carries the optional ledger filing snapshot.
     :class:`~domain.transactions.TransactionCatalogue`
         Live ledger catalogue used to recompute contributor fingerprints.
-    Governing vault records
-        ``2026-06-02-modelo-filing-ledger-snapshot-adr`` defines immutable
-        snapshot-backed revisions; ``2026-06-10-ledger-modelo-crossref-adr``
-        keeps inverse transaction-to-modelo references derived and auditable.
+
+Filing snapshots must stay immutable once captured, and the inverse
+transaction-to-modelo reference index must remain derived and rebuildable,
+never a second source of truth.
 """
 
 from __future__ import annotations
