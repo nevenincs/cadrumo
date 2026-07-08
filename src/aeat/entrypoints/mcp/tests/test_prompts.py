@@ -21,6 +21,7 @@ import anyio
 import pytest
 
 from ....agent import iter_skill_documents, operator_rules_text
+from .._completions import complete_prompt_argument
 from .._prompts import (
     ORIENTATION_PROMPT_NAME,
     PromptNotFoundError,
@@ -163,3 +164,37 @@ def test_server_get_prompt_unknown_name_is_a_protocol_error() -> None:
             await handlers[GetPromptRequest](request)
 
     anyio.run(_drive)
+
+
+def test_workflow_prompts_declare_typed_arguments_orientation_does_not() -> None:
+    # ADR P5: guided workflows accept filing_year + period; orientation takes none.
+    catalogue = {entry.name: entry for entry in build_prompt_catalogue()}
+    orientation = catalogue[ORIENTATION_PROMPT_NAME]
+    assert orientation.arguments == ()
+    workflow = next(entry for name, entry in catalogue.items() if name != ORIENTATION_PROMPT_NAME)
+    arg_names = {argument.name for argument in workflow.arguments}
+    assert arg_names == {"filing_year", "period"}
+    assert all(argument.required is False for argument in workflow.arguments)
+
+
+def test_prompt_get_substitutes_the_supplied_scope_into_the_brief() -> None:
+    workflow_name = next(
+        entry.name for entry in build_prompt_catalogue() if entry.name != ORIENTATION_PROMPT_NAME
+    )
+    document = prompt_document(workflow_name, {"filing_year": "2026", "period": "3T"})
+    assert "filing year 2026" in document.brief_text
+    assert "period 3T" in document.brief_text
+    # No arguments -> no scope line appended.
+    bare = prompt_document(workflow_name, None)
+    assert "Scope for this run" not in bare.brief_text
+
+
+def test_completions_serve_period_and_year_values_by_prefix() -> None:
+    assert complete_prompt_argument("period", "") == ("1T", "2T", "3T", "4T", "ANUAL")
+    assert complete_prompt_argument("period", "3") == ("3T",)
+    assert complete_prompt_argument("period", "an") == ("ANUAL",)  # case-insensitive
+    years = complete_prompt_argument("filing_year", "202")
+    assert "2026" in years
+    assert all(value.startswith("202") for value in years)
+    # An unknown argument yields no candidates.
+    assert complete_prompt_argument("nonsense", "x") == ()

@@ -44,6 +44,7 @@ from typing import TYPE_CHECKING
 
 from ...core.external_constants import UTF_8_ENCODING
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
+from ._completions import complete_prompt_argument
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
     build_corpus_search_payload,
@@ -458,9 +459,12 @@ def build_server(
     from mcp.server.lowlevel.helper_types import ReadResourceContents
     from mcp.types import (
         CallToolResult,
+        Completion,
+        CompletionArgument,
         EmbeddedResource,
         GetPromptResult,
         Prompt,
+        PromptArgument,
         PromptMessage,
         Resource,
         ResourceTemplate,
@@ -799,14 +803,22 @@ def build_server(
     @server.list_prompts()
     async def _list_prompts() -> list[Prompt]:
         return [
-            Prompt(name=entry.name, title=entry.title, description=entry.description, arguments=[])
+            Prompt(
+                name=entry.name,
+                title=entry.title,
+                description=entry.description,
+                arguments=[
+                    PromptArgument(name=argument.name, description=argument.description, required=argument.required)
+                    for argument in entry.arguments
+                ],
+            )
             for entry in build_prompt_catalogue()
         ]
 
     @server.get_prompt()
     async def _get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
         try:
-            document = prompt_document(name)
+            document = prompt_document(name, arguments)
         except PromptNotFoundError as exc:
             raise ValueError(str(exc)) from exc
         messages: list[PromptMessage] = [
@@ -863,6 +875,18 @@ def build_server(
         except HarnessResourceNotFoundError as exc:
             raise ValueError(str(exc)) from exc
         return [ReadResourceContents(content=content.text, mime_type=content.ref.mime_type)]
+
+    # Argument autocompletion for the guided-workflow prompts (ADR
+    # mcp-progressive-discovery P5): a client completing a prompt argument
+    # (filing year, period) gets the accepted values from the typed axes.
+    @server.completion()
+    async def _complete(ref: object, argument: CompletionArgument, context: object) -> Completion | None:
+        from mcp.types import PromptReference
+
+        if not isinstance(ref, PromptReference):
+            return None
+        values = complete_prompt_argument(argument.name, argument.value)
+        return Completion(values=list(values), total=len(values), hasMore=False)
 
     return server
 

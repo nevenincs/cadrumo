@@ -43,9 +43,10 @@ def test_negotiated_capability_set_is_pinned() -> None:
     assert capabilities.prompts is not None
     assert capabilities.resources is not None
 
-    # Asserted-absent: no completions handler yet (the discovery ADR adds it) and
-    # no logging handler. Pinning None makes their arrival a caught change.
-    assert capabilities.completions is None
+    # completions IS declared: the discovery ADR (P5) registers a completion
+    # handler for the guided-workflow prompt arguments. logging stays absent;
+    # pinning None makes its arrival a caught change.
+    assert capabilities.completions is not None
     assert capabilities.logging is None
 
     # tools.listChanged IS declared: the console emits tools/list_changed on a
