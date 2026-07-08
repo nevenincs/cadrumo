@@ -15,6 +15,7 @@ from ....application.operator_surface import build_help_document
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
 from ....core.config import SecretStoreBackend, Settings
+from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
 
@@ -303,7 +304,11 @@ class TestBareInvocationWithActiveProfile:
         missing = _invoke([])
         with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
-                lambda current: register_minimal_profile(current, profile_id="11111111-1111-4111-8111-111111111111")
+                lambda current: register_minimal_profile(
+                    current,
+                    profile_id="11111111-1111-4111-8111-111111111111",
+                    display_name="operator",
+                )
             )
         active = _invoke([])
         overview = _invoke(["app", "overview", "status"])
@@ -335,14 +340,21 @@ class TestBareInvocationWithActiveProfile:
 
         with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
             workflow_state_repository().update(
-                lambda current: register_minimal_profile(current, profile_id="11111111-1111-4111-8111-111111111111")
+                lambda current: register_minimal_profile(
+                    current,
+                    profile_id="11111111-1111-4111-8111-111111111111",
+                    display_name="operator",
+                )
             )
         active = _invoke(["--format", "json"])
 
         assert active.exit_code == 0, active.output
         active_envelope = json.loads(active.output)
         active_payload = active_envelope.get("result", active_envelope)
-        assert active_payload["active_profile"] == "operator"
+        # The root landing report carries the raw active bucket id, which the
+        # output redaction funnel replaces with the profile-id placeholder
+        # before it reaches the operator (see ``core.redaction``).
+        assert active_payload["active_profile"] == CLI_PROFILE_ID_PLACEHOLDER
         # The RootLandingReport model carries (active_profile, command, message);
         # `transactions` is not part of the bare-invocation payload contract.
         assert "command" in active_payload
