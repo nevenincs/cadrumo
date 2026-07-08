@@ -251,8 +251,11 @@ def _register_profile_export_command(
         ),
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
-        from ....application.user_profile import profile_storage_session, serialize_profile_bundle
-        from ....application.user_profile._bundle_encryption import encrypt_profile_bundle_for_passphrase
+        from ....application.user_profile import (
+            encrypt_profile_bundle_for_passphrase,
+            profile_storage_session,
+            serialize_profile_bundle,
+        )
         from ....domain.buckets import BucketEventType
         from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
         from .._config_payloads import ConfigProfileExportResult
@@ -445,17 +448,15 @@ def _register_profile_import_command(
         """Read a portable profile bundle from a JSON file and register it."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.user_profile import (
+            EncryptedProfileBundleError,
+            EncryptedProfileBundleExport,
             ProfileAlreadyRegisteredError,
             UnsupportedBundleSchemaVersionError,
+            decrypt_profile_bundle_with_passphrase,
             deserialize_profile_bundle,
             missing_filing_baseline_flags,
             profile_storage_session,
             record_to_path_values,
-        )
-        from ....application.user_profile._bundle_encryption import (
-            EncryptedProfileBundleError,
-            EncryptedProfileBundleExport,
-            decrypt_profile_bundle_with_passphrase,
         )
         from ....application.workflow import read_profile_bucket as _read_profile_bucket
         from ....application.workflow import read_profile_bucket_by_id

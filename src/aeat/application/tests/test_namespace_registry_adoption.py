@@ -24,8 +24,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
-from ...tests import SRC_AEAT, leaf_name, repo_relative
-from ...tests._inventory import production_ast_items
+from ...tests import SRC_AEAT, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

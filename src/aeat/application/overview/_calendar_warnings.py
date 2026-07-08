@@ -210,7 +210,7 @@ _AEAT_EVIDENCE_CONFLICT_WARNING_CODE = "filing.aeat_evidence_conflict"
 _AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_conflict"
 _AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
-_M303_SIMPLIFICADO_FORFAIT_WARNING_MESSAGE = "cli.overview.warning.m303_simplificado_forfait_unavailable"
+_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND = "aeat app modelo describe 303"
 
 
@@ -394,7 +394,7 @@ def _calendar_regime_incompatibility_warnings(
     return (
         CalendarWarning(
             code=_M303_SIMPLIFICADO_FORFAIT_WARNING_CODE,
-            message=_M303_SIMPLIFICADO_FORFAIT_WARNING_MESSAGE,
+            message=_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY,
             fix_command=_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND,
             affected_modelos=(_Modelo.M303.value,),
         ),

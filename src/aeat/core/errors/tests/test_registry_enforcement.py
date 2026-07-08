@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests._inventory import module_name, production_ast_items, repo_relative
+from ....tests import module_name, production_ast_items, repo_relative
 from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

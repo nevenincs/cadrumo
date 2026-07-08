@@ -551,6 +551,7 @@ def _resolve_bucket_source_mesh(
     )
     memoized_transaction_repository = _MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     from ..aggregation import (
+        AtribucionMemberSourceResolver,
         CalculationSourceContext,
         ForeignAssetsAggregationSourceResolver,
         LedgerImpatriadoIncomeAggregationSourceResolver,
@@ -563,7 +564,6 @@ def _resolve_bucket_source_mesh(
         WithholdingSourceResolver,
         merge_source_resolutions,
     )
-    from ..aggregation._atribucion_member import AtribucionMemberSourceResolver
     from ..calculations import (
         IvaCompensationAnnualPartitionSourceResolver,
         PreviousFilingSourceResolver,

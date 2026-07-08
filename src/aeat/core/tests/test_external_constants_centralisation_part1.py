@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._inventory import ast_for_path, package_ast_items, repo_path, repo_relative
+from ...tests import ast_for_path, package_ast_items, repo_path, repo_relative
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

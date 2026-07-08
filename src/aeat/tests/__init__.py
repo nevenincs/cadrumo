@@ -17,23 +17,31 @@ cross-package import surface for other test modules' structural ratchets.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ._env import temporary_env
 from ._inventory import (
     REPO_ROOT,
     SRC_AEAT,
+    aeat_relative,
     ast_for_path,
+    discover_test_control_modules,
     leaf_name,
+    module_name,
     non_test_package_python_files,
     non_test_python_files_under,
     package_ast_items,
     package_python_files,
     prime_ast_cache,
+    production_ast_items,
+    production_python_files,
     qualified_name,
     repo_path,
     repo_relative,
 )
-from ._justificante_parse_cache import parse_committed_justificante_fixture
+
+if TYPE_CHECKING:
+    from ._justificante_parse_cache import parse_committed_justificante_fixture
 
 FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
 """Root of the on-disk fixture tree bundled with the package."""
@@ -42,16 +50,39 @@ __all__ = [
     "FIXTURES_DIR",
     "REPO_ROOT",
     "SRC_AEAT",
+    "aeat_relative",
     "ast_for_path",
+    "discover_test_control_modules",
     "leaf_name",
+    "module_name",
     "non_test_package_python_files",
     "non_test_python_files_under",
     "package_ast_items",
     "package_python_files",
     "parse_committed_justificante_fixture",
     "prime_ast_cache",
+    "production_ast_items",
+    "production_python_files",
     "qualified_name",
     "repo_path",
     "repo_relative",
     "temporary_env",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Lazily resolve ``parse_committed_justificante_fixture``.
+
+    Deferred (not a module-level import) so that reaching any OTHER name on
+    this facade -- the pure, domain-free AST/path inventory helpers most
+    consumers want -- never drags ``aeat.adapters.inbound.justificante`` /
+    ``aeat.domain.justificante`` into a ``aeat.core`` test's import graph.
+    Mirrors the PEP 562 pattern :mod:`application.user_profile` already uses
+    for the same reason.
+    """
+    if name == "parse_committed_justificante_fixture":
+        import importlib
+
+        module = importlib.import_module("aeat.tests._justificante_parse_cache")
+        return module.parse_committed_justificante_fixture
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

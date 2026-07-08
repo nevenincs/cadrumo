@@ -34,7 +34,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # Modules that publish resolver symbols through their ``__all__`` surface.
 _RESOLVER_MODULES = (
     "aeat.application.aggregation",
-    "aeat.application.aggregation._atribucion_member",
     "aeat.application.calculations",
     "aeat.application.invoices",
     "aeat.application.modelo",
@@ -54,7 +53,7 @@ _PROTOCOL_QUALNAME = "aeat.application.aggregation.ModeloSourceResolver"
 # gate). All nineteen are enrolled — none may resolve to a silent blank.
 _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
     {
-        "aeat.application.aggregation._atribucion_member.AtribucionMemberSourceResolver",
+        "aeat.application.aggregation.AtribucionMemberSourceResolver",
         "aeat.application.aggregation.ForeignAssetsAggregationSourceResolver",
         "aeat.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
         "aeat.application.aggregation.LedgerIvaAggregationSourceResolver",
