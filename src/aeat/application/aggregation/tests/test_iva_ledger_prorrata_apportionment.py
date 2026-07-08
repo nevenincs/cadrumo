@@ -30,6 +30,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
+from ....domain.iva import InputClassification
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions import (
     BusinessClassification,
@@ -91,6 +92,31 @@ def _fully_taxable_purchase(provider_id: str) -> Transaction:
             "taxable_base": Decimal("50.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("10.50"),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _classified_purchase(provider_id: str, classification: InputClassification) -> Transaction:
+    """A fully-domestic 21% purchase carrying an art. 106 input_classification.
+
+    Same base/cuota shape as :func:`_fully_taxable_purchase` (taxable_base
+    50.00, iva 10.50) so the three art. 106 reglas can be exercised against a
+    single deducible cuota binding.
+    """
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(provider_id),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "group_label": None,
+            "category_id": "classified_purchase",
+            "taxable_base": Decimal("50.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("10.50"),
+            "input_classification": classification,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -229,10 +255,166 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
     assert baseline.prorrata_apportionment is None
     assert apportioned.prorrata_apportionment is not None
     assert apportioned.prorrata_apportionment.percentage == Decimal("80")
-    assert (
-        apportioned.prorrata_apportionment.provenance
-        is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
-    )
+    assert apportioned.prorrata_apportionment.regime is ProrrataRegisterRegime.GENERAL
+    assert apportioned.prorrata_apportionment.provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
     assert apportioned_values[_DEDUCIBLE_CUOTA_BINDING] < baseline_values[_DEDUCIBLE_CUOTA_BINDING]
     assert apportioned_values[_DEDUCIBLE_BASE_BINDING] == baseline_values[_DEDUCIBLE_BASE_BINDING]
     assert apportioned_values[_DEVENGADO_CUOTA_BINDING] == baseline_values[_DEVENGADO_CUOTA_BINDING]
+
+
+def _seed_register(objects: object, *, regime: ProrrataRegisterRegime, percentage: Decimal) -> None:
+    ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=2026,
+                    regime=regime,
+                    provisional_percentage=percentage,
+                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    source_observation_ref="303:2025:4T",
+                ),
+            ),
+        ),
+    )
+
+
+def test_general_regime_apportionment_is_byte_identical_to_pre_especial(tmp_path: Path) -> None:
+    """The GENERAL path stays the flat `cuota * percentage` behaviour after S12.
+
+    The deducible cuota is pinned to the exact pre-especial value
+    (10.50 * 80% = 8.400): the regime-aware branch must not perturb a single
+    Decimal on the general path. The base and devengado bindings are untouched.
+    """
+    revision = resources().modelos.get("303").revisions["2009-y-siguientes"]
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-general"),
+                    _fully_taxable_purchase("purchase-general"),
+                ),
+            ),
+        )
+        _seed_register(objects, regime=ProrrataRegisterRegime.GENERAL, percentage=Decimal("80"))
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        values = resolve_iva_ledger_binding_values(
+            revision,
+            aggregation.observations,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
+        )
+
+    assert aggregation.prorrata_apportionment is not None
+    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime.GENERAL
+    # 10.50 * 80/100 == 8.400, exactly as the pre-especial flat multiplier produced.
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") * (Decimal("80") / Decimal("100"))
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("8.400")
+    assert values[_DEDUCIBLE_BASE_BINDING] == Decimal("50.00")
+    assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")
+
+
+def test_especial_regime_routes_each_input_by_art_106_classification(tmp_path: Path) -> None:
+    """Prorrata especial routes deducible cuota per LIVA art. 106.Uno reglas.
+
+    Three domestic 21% purchases each carrying iva cuota 10.50 are classified
+    exclusively-deductible (regla 1.ª, 100%), exclusively-non-deductible
+    (regla 2.ª, 0%) and common-use (regla 3.ª, the general 80%). The deducible
+    interiores cuota is therefore 10.50 (full) + 0 (dropped) + 8.40 (10.50*80%)
+    = 18.90 — an art. 106 result, not the flat general 80% of the whole
+    (which would be 25.20). Bases stay full; devengado is untouched.
+    """
+    revision = resources().modelos.get("303").revisions["2009-y-siguientes"]
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-especial"),
+                    _classified_purchase("buy-excl-ded", InputClassification.EXCLUSIVELY_DEDUCTIBLE),
+                    _classified_purchase("buy-excl-non", InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE),
+                    _classified_purchase("buy-common", InputClassification.COMMON),
+                ),
+            ),
+        )
+        _seed_register(objects, regime=ProrrataRegisterRegime.ESPECIAL, percentage=Decimal("80"))
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        values = resolve_iva_ledger_binding_values(
+            revision,
+            aggregation.observations,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
+        )
+
+    assert aggregation.prorrata_apportionment is not None
+    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime.ESPECIAL
+    # regla 1.ª (100%) + regla 2.ª (0%) + regla 3.ª (general 80%): 10.50 + 0 + 8.40.
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") + Decimal("10.50") * (Decimal("80") / Decimal("100"))
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("18.900")
+    # Strictly less than the flat general 80% of the whole 31.50 soportado (25.20).
+    assert values[_DEDUCIBLE_CUOTA_BINDING] < Decimal("31.50") * (Decimal("80") / Decimal("100"))
+    # Bases are declared in full under especial (only cuotas apportion).
+    assert values[_DEDUCIBLE_BASE_BINDING] == Decimal("150.00")
+    assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")
+
+
+def test_especial_all_common_reduces_to_general_byte_identical(tmp_path: Path) -> None:
+    """An all-common especial bucket collapses to the general result, byte-identical.
+
+    Especial reuses the one canonical binding resolver: when every input is
+    common-use (regla 3.ª), the art. 106 routing must reproduce the general
+    percentage applied to the whole deducible cuota, proving especial is an
+    extension of the single aggregation path rather than a fork.
+    """
+    revision = resources().modelos.get("303").revisions["2009-y-siguientes"]
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-cmp"),
+                    _classified_purchase("buy-common-a", InputClassification.COMMON),
+                    _classified_purchase("buy-common-b", InputClassification.COMMON),
+                ),
+            ),
+        )
+        _seed_register(objects, regime=ProrrataRegisterRegime.ESPECIAL, percentage=Decimal("80"))
+        especial = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        especial_bytes = _canonical_binding_bytes(
+            resolve_iva_ledger_binding_values(
+                revision,
+                especial.observations,
+                prorrata_apportionment=especial.prorrata_apportionment,
+            ),
+        )
+
+        _seed_register(objects, regime=ProrrataRegisterRegime.GENERAL, percentage=Decimal("80"))
+        general = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        general_bytes = _canonical_binding_bytes(
+            resolve_iva_ledger_binding_values(
+                revision,
+                general.observations,
+                prorrata_apportionment=general.prorrata_apportionment,
+            ),
+        )
+
+    assert especial.prorrata_apportionment is not None
+    assert especial.prorrata_apportionment.regime is ProrrataRegisterRegime.ESPECIAL
+    assert especial_bytes == general_bytes
