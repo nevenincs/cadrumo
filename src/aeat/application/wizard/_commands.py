@@ -766,7 +766,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ..user_profile import profile_storage_session, read_active_profile, record_to_path_values
+    from ..user_profile import profile_storage_session, record_to_path_values
     from ..workflow import workflow_state_repository
     from ._persistence import persist_patch, profile_values_from_patch, project_answers
 
@@ -778,7 +778,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
 
         def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
             nonlocal merged_values
-            values = record_to_path_values(read_active_profile(state))
+            values = record_to_path_values(state.active_profile_record())
             values.update(patched_values)
             merged_values = values
             missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
@@ -822,7 +822,6 @@ def _run_full_flow(
     from ..user_profile import (
         profile_create_storage_span,
         profile_storage_session,
-        read_active_profile,
         record_to_path_values,
     )
     from ..workflow import workflow_state_repository
@@ -900,7 +899,7 @@ def _run_full_flow(
 
         def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
             if mode == "edit":
-                values = record_to_path_values(read_active_profile(state))
+                values = record_to_path_values(state.active_profile_record())
                 values.update({path: value for path, value in profile_values.items() if value})
                 missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
                 if missing_baseline:

@@ -709,39 +709,6 @@ def remove_active_profile(
     return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
 
 
-def read_active_profile(
-    state: WorkflowState,
-    *,
-    secure_objects: SecureObjectRepository | None = None,
-    schema: ProfileSchemaDefinition | None = None,
-) -> UserProfileRecord | None:
-    """Return the active profile record, or ``None`` when none is selected.
-
-    The active bucket id resolves through
-    :func:`~aeat.core.resolve_active_bucket_id`, then the record is read
-    through :func:`~aeat.application.user_profile.build_lifecycle_service`.
-
-    ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-    override.
-
-    Returns:
-        The active :class:`~aeat.domain.user_profile.UserProfileRecord`,
-        or :data:`None` when no active pointer or readable record exists.
-    """
-    from ...core import resolve_active_bucket_id
-
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return None
-    service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
-    try:
-        return service.read(bucket_id)
-    except ProfileNotFoundError:
-        _log.debug("active profile selection resolved to a missing profile record; returning no active profile")
-        return None
-
-
 def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
     """Return the live string-rendered value of one fact path on ``record``.
 
@@ -830,7 +797,6 @@ __all__ = [
     "profile_create_storage_span",
     "profile_storage_session",
     "reactivate_profile_with_lifecycle_span",
-    "read_active_profile",
     "register_active_profile",
     "remove_active_profile",
     "rename_profile",

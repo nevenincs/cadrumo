@@ -40,7 +40,6 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
-    read_active_profile,
     register_active_profile,
 )
 from .._projections import projection_for_taxpayer
@@ -130,7 +129,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     non-default values through ``register_active_profile`` (which
     delegates the cross-store create to ``ProfileRepository``), reloads
     the :class:`UserProfileRecord` from the encrypted store via
-    ``read_active_profile``, and asserts every fact survived. The
+    ``WorkflowState.active_profile_record``, and asserts every fact survived. The
     reloaded record is then projected through the canonical
     ``taxpayer_profile_from_mapping`` path to confirm the typed
     three-axis model reconstructs correctly on the far side.
@@ -151,7 +150,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 
@@ -228,7 +227,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
     # No taxpayer-axis facts crossed the boundary.
@@ -300,7 +299,7 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "ffffffff-ffff-4fff-8fff-ffffffffffff"
     # The fact survives the encrypted boundary with its exact value;
