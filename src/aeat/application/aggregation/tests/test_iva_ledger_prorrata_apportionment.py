@@ -27,11 +27,16 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import (
+    Period,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.iva import InputClassification
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -418,3 +423,204 @@ def test_especial_all_common_reduces_to_general_byte_identical(tmp_path: Path) -
     assert especial.prorrata_apportionment is not None
     assert especial.prorrata_apportionment.regime is ProrrataRegisterRegime.ESPECIAL
     assert especial_bytes == general_bytes
+
+
+# --- Sectores diferenciados (LIVA arts. 9.1.c / 101, W03.P04.S18) -------------
+
+
+def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
+    """A fully-domestic 21% purchase (base 50, cuota 10.50) tagged to a sector.
+
+    ``sector_id`` ``None`` is a common-use input; a value references a declared
+    differentiated sector so the sector-aware apportionment applies that sector's
+    percentage.
+    """
+    payload: dict[str, object] = {
+        "raw": _raw_transaction(provider_id),
+        "direction": TransactionDirection.OUTGOING,
+        "business_classification": BusinessClassification.BUSINESS,
+        "source_jurisdiction": "ES",
+        "group_label": None,
+        "category_id": "sectored_purchase",
+        "taxable_base": Decimal("50.00"),
+        "iva_rate": Decimal("0.21"),
+        "iva_amount": Decimal("10.50"),
+        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_by": "manual",
+    }
+    if sector_id is not None:
+        payload["prorrata_sector_id"] = sector_id
+    return Transaction.model_validate(payload)
+
+
+def _sector_entry(sector_id: str | None, percentage: Decimal) -> ProrrataRegisterEntry:
+    return ProrrataRegisterEntry(
+        ejercicio=2026,
+        regime=ProrrataRegisterRegime.GENERAL,
+        sector_id=sector_id,
+        provisional_percentage=percentage,
+        provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        source_observation_ref=f"303:2025:4T:{sector_id or 'comun'}",
+    )
+
+
+def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(tmp_path: Path) -> None:
+    """A one-sector register with every input in that sector equals whole-entity general.
+
+    Routing every deducible cuota through a single differentiated sector at 80%
+    must reproduce, byte-for-byte, the whole-entity general 80% result — proving
+    the sector-aware path composes correctly and does not perturb the aggregate
+    when the partition is trivial.
+    """
+    revision = resources().modelos.get("303").revisions["2009-y-siguientes"]
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-1sec"),
+                    _sectored_purchase("buy-1sec-a", "comercio"),
+                    _sectored_purchase("buy-1sec-b", "comercio"),
+                ),
+            ),
+        )
+        ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+            ProrrataRegister(
+                entries=(
+                    _sector_entry(None, Decimal("80")),
+                    _sector_entry("comercio", Decimal("80")),
+                ),
+                sector_definitions=(
+                    SectorDefinition(
+                        sector_id="comercio",
+                        letra=SectorDiferenciadoLetra.A,
+                        member_activity_codes=("4711",),
+                    ),
+                ),
+            ),
+        )
+        sectored = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        sectored_bytes = _canonical_binding_bytes(
+            resolve_iva_ledger_binding_values(
+                revision,
+                sectored.observations,
+                prorrata_apportionment=sectored.prorrata_apportionment,
+            ),
+        )
+
+        # Untag every purchase and drop the partition: whole-entity general 80%.
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-1sec"),
+                    _sectored_purchase("buy-1sec-a", None),
+                    _sectored_purchase("buy-1sec-b", None),
+                ),
+            ),
+        )
+        ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+            ProrrataRegister(entries=(_sector_entry(None, Decimal("80")),)),
+        )
+        whole_entity = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        whole_entity_bytes = _canonical_binding_bytes(
+            resolve_iva_ledger_binding_values(
+                revision,
+                whole_entity.observations,
+                prorrata_apportionment=whole_entity.prorrata_apportionment,
+            ),
+        )
+
+    assert sectored.prorrata_apportionment is not None
+    assert sectored.prorrata_apportionment.sector_apportionments  # sectorized carrier
+    assert whole_entity.prorrata_apportionment is not None
+    assert not whole_entity.prorrata_apportionment.sector_apportionments  # whole-entity carrier
+    assert sectored_bytes == whole_entity_bytes
+
+
+def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
+    """Two differentiated sectors (>50pp spread) each apply their own percentage.
+
+    Wiring proof for the per-sector routing: a purchase in the high-deduction
+    sector (90%), a purchase in the low-deduction sector (20%, a 70-point spread)
+    and a common-use purchase (art. 104.Dos common 50%) each contribute their own
+    apportioned cuota. The declared-sector percentages must each bite on their
+    own input, not a single whole-entity percentage across all three. The exact
+    figure is an oracle claim proven in the S20 verification test; here the
+    structural claim is that the three percentages are applied independently.
+    """
+    revision = resources().modelos.get("303").revisions["2009-y-siguientes"]
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+        tx_repo.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _fully_taxable_sale("sale-2sec"),
+                    _sectored_purchase("buy-high", "comercio"),
+                    _sectored_purchase("buy-low", "arrendamiento"),
+                    _sectored_purchase("buy-common", None),
+                ),
+            ),
+        )
+        ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+            ProrrataRegister(
+                entries=(
+                    _sector_entry(None, Decimal("50")),
+                    _sector_entry("comercio", Decimal("90")),
+                    _sector_entry("arrendamiento", Decimal("20")),
+                ),
+                sector_definitions=(
+                    SectorDefinition(
+                        sector_id="comercio",
+                        letra=SectorDiferenciadoLetra.A,
+                        member_activity_codes=("4711",),
+                    ),
+                    SectorDefinition(
+                        sector_id="arrendamiento",
+                        letra=SectorDiferenciadoLetra.A,
+                        member_activity_codes=("6820",),
+                    ),
+                ),
+            ),
+        )
+        aggregation = aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_PERIOD,
+            transaction_repository=tx_repo,
+        )
+        values = resolve_iva_ledger_binding_values(
+            revision,
+            aggregation.observations,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
+        )
+
+    apportionment = aggregation.prorrata_apportionment
+    assert apportionment is not None
+    # The common (art. 104.Dos) percentage is the top-level carrier percentage.
+    assert apportionment.percentage == Decimal("50")
+    # Both sectors resolve independently with a >50-point spread.
+    by_sector = {sector.sector_id: sector.percentage for sector in apportionment.sector_apportionments}
+    assert by_sector == {"comercio": Decimal("90"), "arrendamiento": Decimal("20")}
+    assert max(by_sector.values()) - min(by_sector.values()) > Decimal("50")
+    # comercio 10.50*90% + arrendamiento 10.50*20% + common 10.50*50%.
+    expected = (
+        Decimal("10.50") * (Decimal("90") / Decimal("100"))
+        + Decimal("10.50") * (Decimal("20") / Decimal("100"))
+        + Decimal("10.50") * (Decimal("50") / Decimal("100"))
+    )
+    assert values[_DEDUCIBLE_CUOTA_BINDING] == expected
+    # Not a single whole-entity percentage across the 31.50 soportado.
+    for single in (Decimal("90"), Decimal("50"), Decimal("20")):
+        assert values[_DEDUCIBLE_CUOTA_BINDING] != Decimal("31.50") * (single / Decimal("100"))
+    # Bases stay full; devengado untouched.
+    assert values[_DEDUCIBLE_BASE_BINDING] == Decimal("150.00")
+    assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")

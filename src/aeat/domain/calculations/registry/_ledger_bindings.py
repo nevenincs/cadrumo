@@ -368,6 +368,17 @@ class IvaLedgerObservation(BaseModel):
     especial or carrying no per-input use declaration; the general-regime
     apportionment ignores it.
     """
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+    """Operator-declared LIVA arts. 9.1.c / 101 differentiated sector.
+
+    Carried from the source ledger transaction's ``prorrata_sector_id``.
+    Meaningful only for ``SOPORTADO`` (input IVA) rows in a sectorized bucket:
+    the sector-aware ledger IVA apportionment applies THAT sector's provisional
+    percentage to the deducible cuota. ``None`` is a common-use input in a
+    sectorized bucket (apportioned by the art. 104.Dos common percentage) and
+    the whole-entity default otherwise; the non-sectorized apportionment ignores
+    it.
+    """
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
