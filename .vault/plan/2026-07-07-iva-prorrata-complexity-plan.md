@@ -77,7 +77,7 @@ Operator-declared sector identification (CNAE/IAE) driving per-(ejercicio,sector
 - [x] `W03.P04.S17` - Add operator-declared sector identification (CNAE/IAE) on the contribuyente profile and the sector reference on the ledger transaction; `src/aeat/domain/contribuyente/, src/aeat/domain/transactions/_models.py`.
 - [x] `W03.P04.S18` - Orchestrate per-(ejercicio,sector) register entries and per-sector routing in the regime-aware aggregation; `src/aeat/domain/prorrata_register/__init__.py, src/aeat/application/aggregation/_iva_ledger.py`.
 - [x] `W03.P04.S19` - Run the per-sector provisional/definitive lifecycle (seed and settlement per sector); `src/aeat/application/prorrata_register/, src/aeat/application/calculations/_prorrata_regularizacion.py`.
-- [ ] `W03.P04.S20` - Verify per-sector prorrata against a worked example with a greater-than-50-percentage-point sector spread; `src/aeat/domain/prorrata_register/tests/`.
+- [x] `W03.P04.S20` - Verify per-sector prorrata against a worked example with a greater-than-50-percentage-point sector spread; `src/aeat/domain/prorrata_register/tests/`.
 
 ## Description
 
