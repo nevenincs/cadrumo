@@ -10,39 +10,50 @@ related:
   - '[[2026-07-08-mcp-console-review-audit]]'
   - '[[2026-07-08-mcp-identity-linked-operation-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `mcp-identity-linked-operation` plan
 
 ### Phase `P01` - Envelope-spine active-profile field
 
 Add the optional active_profile human-label field to the shared SchemaEnvelope spine and its stderr ErrorEnvelope sibling, populated at emit for profile-bound commands, so every response carries the identity anchor without a per-command blast radius (ADR I3).
 
-- [ ] `P01.S01` - Add the optional active_profile label field to the shared SchemaEnvelope spine and the stderr ErrorEnvelope sibling, defaulting null before a profile exists; `src/aeat/core/json_contract.py`.
-- [ ] `P01.S02` - Populate active_profile at emit for profile-bound commands from the active-profile resolution, leaving the redacted bucket/profile UUIDs untouched; `src/aeat/entrypoints/cli/_config/_active_profile.py`.
-- [ ] `P01.S03` - Extend the shared-spine conformance test so the success and error envelopes both carry active_profile and a profile-bound command populates it; `src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [x] `P01.S01` - Add the optional active_profile label field to the shared SchemaEnvelope spine and the stderr ErrorEnvelope sibling, defaulting null before a profile exists; `src/aeat/core/json_contract.py`.
+- [x] `P01.S02` - Populate active_profile at emit for profile-bound commands from the active-profile resolution, leaving the redacted bucket/profile UUIDs untouched; `src/aeat/entrypoints/cli/_config/_active_profile.py`.
+- [x] `P01.S03` - Extend the shared-spine conformance test so the success and error envelopes both carry active_profile and a profile-bound command populates it; `src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
 ### Phase `P02` - whoami core tool
 
 Add a whoami always-on core read-only tool over the existing profile-health assessment and put the same identity block in the harness floor, giving an agent an always-present identity-assertion tool (ADR I1).
 
-- [ ] `P02.S04` - Add the whoami console tool over assess_active_profile_health returning the active-profile label, tax_id_present, readiness, and next_action, with a description stating its identity-safety job; `src/aeat/entrypoints/mcp/_harness_tools.py`.
-- [ ] `P02.S05` - Advertise whoami in the hand-built orientation core (15 tools) and add the same identity block to the harness floor payload; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P02.S06` - Add whoami tests: it is always advertised, returns the active label, and is never persona-scoped away; `src/aeat/entrypoints/mcp/tests/test_harness_delivery.py`.
+- [x] `P02.S04` - Add the whoami console tool over assess_active_profile_health returning the active-profile label, tax_id_present, readiness, and next_action, with a description stating its identity-safety job; `src/aeat/entrypoints/mcp/_harness_tools.py`.
+- [x] `P02.S05` - Advertise whoami in the hand-built orientation core (15 tools) and add the same identity block to the harness floor payload; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P02.S06` - Add whoami tests: it is always advertised, returns the active label, and is never persona-scoped away; `src/aeat/entrypoints/mcp/tests/test_harness_delivery.py`.
 
 ### Phase `P03` - Live identity gate and elicitation echo
 
 Block the first mutating call of a session, re-armed on any profile-changing verb, until an identity read has occurred, byte-identical on the direct and execute paths, and name the active-profile label in CONFIRM elicitations (ADR I2, I4).
 
-- [ ] `P03.S07` - Add per-session identity-read state and the block-first-mutation gate, re-armed on any profile-changing verb, refusing an unconfirmed first mutating call with an instructive localized refusal keyed off the risk table; `src/aeat/entrypoints/mcp/_identity_gate.py`.
-- [ ] `P03.S08` - Wire the identity gate into the pre-tool-use path byte-identically on the direct and execute paths, and name the active-profile label in the CONFIRM elicitation prompt; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P03.S09` - Author the identity-refusal and elicitation-echo locale strings through the locales CLI across all four catalogues; `src/aeat/locales`.
-- [ ] `P03.S10` - Add identity-gate tests: unconfirmed first mutation refuses, a prior identity read clears it, a profile switch re-arms it, and the refusals are byte-identical on both call paths; `src/aeat/entrypoints/mcp/tests/test_identity_gate.py`.
+- [x] `P03.S07` - Add per-session identity-read state and the block-first-mutation gate, re-armed on any profile-changing verb, refusing an unconfirmed first mutating call with an instructive localized refusal keyed off the risk table; `src/aeat/entrypoints/mcp/_identity_gate.py`.
+- [x] `P03.S08` - Wire the identity gate into the pre-tool-use path byte-identically on the direct and execute paths, and name the active-profile label in the CONFIRM elicitation prompt; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P03.S09` - Author the identity-refusal and elicitation-echo locale strings through the locales CLI across all four catalogues; `src/aeat/locales`.
+- [x] `P03.S10` - Add identity-gate tests: unconfirmed first mutation refuses, a prior identity read clears it, a profile switch re-arms it, and the refusals are byte-identical on both call paths; `src/aeat/entrypoints/mcp/tests/test_identity_gate.py`.
 
 ### Phase `P04` - Erik/Erika measurement
 
 Turn the profile-switch wrong-identity scenario into a scored live-harness golden scenario, run before and after as the acceptance gate (ADR Implementation / measurement).
 
-- [ ] `P04.S11` - Author the Erik/Erika profile-switch golden scenario where a mutation under the wrong active profile must be blocked until identity is re-confirmed; `src/aeat/agent/eval/scenarios/identidad_perfil.toml`.
-- [ ] `P04.S12` - Extend the live scoring with an identity-confirmation dimension and run the scenario before and after as the acceptance gate; `src/aeat/agent/eval/_live_scoring.py`.
+- [x] `P04.S11` - Author the Erik/Erika profile-switch golden scenario where a mutation under the wrong active profile must be blocked until identity is re-confirmed; `src/aeat/agent/eval/scenarios/identidad_perfil.toml`.
+- [x] `P04.S12` - Extend the live scoring with an identity-confirmation dimension and run the scenario before and after as the acceptance gate; `src/aeat/agent/eval/_live_scoring.py`.
 
 ## Description
 
