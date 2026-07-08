@@ -26,12 +26,6 @@ See Also:
     :func:`~tests._inventory.production_python_files`
         Shared production source inventory scanned for parallel resource
         locator constants.
-    ``.vault/adr/2026-05-16-resource-management-api-adr.md``
-        Establishes the repository-per-resource registry as the single
-        read-only bundled-data access surface.
-    ``.vault/adr/2026-05-15-corpus-registry-packaging-adr.md``
-        Governs packaging corpus and registry trees through
-        ``importlib.resources`` instead of checkout-relative paths.
 """
 
 from __future__ import annotations

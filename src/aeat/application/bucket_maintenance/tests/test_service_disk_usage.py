@@ -24,9 +24,6 @@ See Also:
         Result payload whose totals and per-subdir rows are asserted.
     :mod:`~entrypoints.cli._config._sandbox`
         CLI sandbox usage surface that consumes the same service report.
-    ``2026-05-12-cli-workflow-redesign-bucket-adr`` and
-    ``2026-05-22-secure-storage-production-hardening-architecture-adr``
-        Bucket-maintenance and secure-storage boundaries this measurement keeps.
 """
 
 from __future__ import annotations

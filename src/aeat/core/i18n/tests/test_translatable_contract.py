@@ -9,12 +9,6 @@ See Also:
         shadowed outside the i18n renderer.
     :func:`~tests._inventory.package_ast_items`
         Shared AST inventory used to scan declarations across the repository.
-    ``.vault/adr/2026-05-01-quadlingual-i18n-adr.md``
-        Establishes the four-language output contract that this guard keeps
-        coherent.
-    ``.vault/adr/2026-05-04-multilang-externalization-phase1-adr.md``
-        Supersedes inline translation dictionaries with the key-based
-        localization backend that ``Translatable`` represents.
 """
 
 from __future__ import annotations

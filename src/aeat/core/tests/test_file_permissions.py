@@ -9,10 +9,6 @@ See Also:
         Public hardening primitive for legacy/plaintext auth-state files.
     :func:`~core.file_permissions._run_permission_command`
         Time-bounded subprocess wrapper used by the Windows ACL branch.
-    ``2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit``
-        Review that closed silent POSIX failure swallowing and bounded ACL calls.
-    ``2026-06-05-secure-storage-production-hardening-W12-P26-S297``
-        Execution record confirming active browser sessions use secure objects.
 """
 
 from __future__ import annotations

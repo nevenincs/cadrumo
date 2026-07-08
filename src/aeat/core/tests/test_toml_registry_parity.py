@@ -1,7 +1,7 @@
 """Parity gate: the live TOML parser must reproduce known-correct registry values.
 
-The ``registry-toml-parser`` ADR swaps :func:`aeat.core.read_toml` from stdlib
-:mod:`tomllib` to the Rust-backed :mod:`rtoml`. This test does NOT compare the
+:func:`aeat.core.read_toml` was swapped from stdlib :mod:`tomllib` to the
+Rust-backed :mod:`rtoml`. This test does NOT compare the
 parser's output against itself or against a second parser's output (either
 shape would pass even if both parsers silently agreed on a WRONG value); it
 asserts the CURRENTLY WIRED parser reproduces expected values hand-derived

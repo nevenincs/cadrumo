@@ -12,10 +12,6 @@ See Also:
         Bucket-scoped live snapshot payload that stores a ``SnapshotId``.
     :mod:`~application.live._snapshot_base`
         Shared secure snapshot persistence base for live capture services.
-    Governing vault records
-        ``2026-05-30-identity-primitives-adr`` promotes ``SnapshotId`` to
-        ``core.identity``; the live-pull verification sweep records authenticated
-        notification snapshot identity handling.
 """
 
 from __future__ import annotations

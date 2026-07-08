@@ -18,9 +18,6 @@ See Also:
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
         Text-layer-first orchestration path that routes scan-only evidence to
         this local vision fallback.
-    ``2026-05-30-purchase-invoice-ocr-extraction-discipline-adr`` and
-    ``2026-06-13-llm-evidence-classification-adr``
-        Accepted local-OCR / local-vision posture these tests keep executable.
 """
 
 from __future__ import annotations

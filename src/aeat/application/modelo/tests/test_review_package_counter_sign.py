@@ -31,10 +31,6 @@ See Also:
     :mod:`~application.modelo.tests.test_review_package_signing`
         Baseline anti-tautology signing tests mirrored by this counter-sign
         slice.
-    ``2026-07-04-recipient-encryption-adr``
-        Accepted collaboration-envelope decision that keeps signing,
-        counter-signing, and recipient encryption as distinct integrity and
-        confidentiality layers.
 """
 
 from __future__ import annotations

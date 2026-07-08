@@ -35,9 +35,6 @@ See Also:
         Predicate helper exercised directly by the focused firing cases.
     ``src/aeat/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml``
         Registry-authored 2025 advisory predicate declarations under test.
-    ``2026-07-01-modelo-131-eo-modulos-engine-adr`` and
-    ``2026-04-27-modelo-131-calc-verify-adr``
-        Module-engine and calc/verify decisions that govern the advisory.
 """
 
 from __future__ import annotations

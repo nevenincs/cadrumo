@@ -30,9 +30,6 @@ See Also:
         1548 result.
     ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
         Registry-authored Fase 1ª-3ª formula chain under test.
-    ``2026-07-01-modelo-131-eo-modulos-engine-adr`` and
-    ``2026-05-19-schema-hardening-m100-actividad-agraria-audit``
-        Objective-estimation engine and M100 agraria schema-grounding context.
 """
 
 from __future__ import annotations

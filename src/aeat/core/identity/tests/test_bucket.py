@@ -14,10 +14,6 @@ See Also:
     :mod:`~application.bucket_maintenance`
         Application service layer that composes bucket lifecycle operations
         without owning the identity constraint.
-    Governing vault records
-        ``2026-05-14-profile-bucket-lifecycle-adr`` defines the per-profile
-        bucket model; ``2026-05-30-identity-primitives-adr`` promotes
-        ``BucketId`` to ``core.identity``.
 """
 
 from __future__ import annotations

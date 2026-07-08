@@ -24,10 +24,6 @@ See Also:
         Baseline 2025 módulos-engine behavior this roll-forward must preserve.
     ``src/aeat/_data/registry/aeat/modelos/131/revisions/2026/formulas/0003-modulos-engine.toml``
         Registry-authored 2026 formula chain under test.
-    ``2026-07-01-modelo-131-eo-modulos-engine-adr`` and
-    ``2026-04-27-modelo-131-rule-delta-reference``
-        Decision and rule-delta trail for the table-driven engine and 2026
-        no-numeric-drift roll-forward.
 """
 
 from __future__ import annotations
