@@ -6013,7 +6013,7 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: mcp.call.timeout
+    timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s) y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente en un terminal.'
   elicitation:
     confirm:
       consequence_handoff: Esto genera el documento de presentación que el contribuyente

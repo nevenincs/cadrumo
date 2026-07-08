@@ -1,0 +1,164 @@
+"""Supervised subprocess runtime for the MCP call path.
+
+Every MCP tool call shells the deterministic ``aeat`` CLI. Before this module
+that shell was one ``subprocess.run`` with NO timeout (research finding F1): a
+Playwright-backed live pull that stalls - a network hang, a changed AEAT DOM
+selector - hangs the MCP call forever, and many clients time out a ``tools/call``
+well under a minute, misreading a legitimate slow pull as failure. There was
+also no way to terminate a hung child.
+
+This runtime wraps the call in a per-tier timeout (ADR ``mcp-protocol-hardening``
+H1): generous for the AEAT-sede / live family, tighter for local mutations,
+tight for local reads. On timeout it terminates the WHOLE process tree - a
+Playwright pull spawns a browser child, so killing only the ``aeat`` process
+would strand the browser - and returns a typed timed-out result the caller
+renders as an instructive, localized refusal. The tier is derived from the
+command's own annotations, so it tracks the classification the gates already use.
+Migration to the (deprecated-in-v1, redesigned-in-RC) MCP Tasks mechanism is
+deferred until the v2 SDK is stable.
+"""
+
+from __future__ import annotations
+
+import os
+import signal
+import subprocess
+import sys
+from collections.abc import Sequence
+from enum import StrEnum
+
+from pydantic import BaseModel, ConfigDict
+
+_STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+
+class CallTier(StrEnum):
+    """The timeout tier a command runs under.
+
+    ``LIVE`` is the AEAT-sede / open-world family (a portal pull that may take
+    minutes); ``MUTATE`` is a local state change; ``READ`` is a local read.
+    """
+
+    READ = "read"
+    MUTATE = "mutate"
+    LIVE = "live"
+
+
+#: The per-tier wall-clock ceiling, in seconds. Generous for the live/sede family
+#: (a Playwright portal pull legitimately runs for minutes), tighter for local
+#: work so a stuck local call fails fast.
+_TIER_TIMEOUTS: dict[CallTier, float] = {
+    CallTier.READ: 45.0,
+    CallTier.MUTATE: 120.0,
+    CallTier.LIVE: 420.0,
+}
+
+
+def tier_for(*, read_only: bool, open_world: bool) -> CallTier:
+    """Choose the timeout tier from a command's annotations.
+
+    Open-world (AEAT-sede) verbs get the live tier regardless of read/write - a
+    portal read can be as slow as a portal write; a local read gets the read
+    tier; everything else gets the mutate tier.
+    """
+    if open_world:
+        return CallTier.LIVE
+    if read_only:
+        return CallTier.READ
+    return CallTier.MUTATE
+
+
+def timeout_seconds(tier: CallTier) -> float:
+    """Return the wall-clock ceiling in seconds for ``tier``."""
+    return _TIER_TIMEOUTS[tier]
+
+
+class SupervisedResult(BaseModel):
+    """The outcome of a supervised subprocess run.
+
+    ``timed_out`` is true when the process exceeded its tier ceiling and its
+    process tree was terminated; ``stdout``/``stderr``/``returncode`` carry the
+    completed process output otherwise (and best-effort partial output on
+    timeout).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    stdout: str
+    stderr: str
+    returncode: int
+    timed_out: bool
+
+
+def _terminate_tree(process: subprocess.Popen[str]) -> None:
+    """Terminate ``process`` and every child it spawned.
+
+    A live pull spawns a browser child, so killing only the top process would
+    strand it. On Windows ``taskkill /T`` walks the tree; on POSIX the child was
+    started in its own session so the whole process group is signalled.
+    """
+    if process.poll() is not None:
+        return
+    if sys.platform == "win32":
+        subprocess.run(  # noqa: S603, S607 - Windows system taskkill, fixed argv, our own child's PID
+            ["taskkill", "/F", "/T", "/PID", str(process.pid)],
+            capture_output=True,
+            check=False,
+        )
+        return
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        process.kill()
+
+
+def run_supervised(
+    argv: Sequence[str],
+    *,
+    timeout_s: float,
+    encoding: str,
+    errors: str = "replace",
+) -> SupervisedResult:
+    """Run ``argv`` with a wall-clock ceiling and process-tree termination.
+
+    The child is started in its own process group / session so its whole tree can
+    be signalled, ``stdin`` is isolated to ``DEVNULL`` (an agent console never
+    answers an interactive prompt), and on timeout the tree is terminated and
+    ``timed_out`` is set. Best-effort partial output is captured after a kill.
+
+    Returns:
+        The :class:`SupervisedResult`.
+    """
+    creationflags = 0
+    start_new_session = False
+    if sys.platform == "win32":
+        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        start_new_session = True
+
+    process = subprocess.Popen(  # noqa: S603 - fixed argv (our CLI), no shell
+        list(argv),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
+        text=True,
+        encoding=encoding,
+        errors=errors,
+        creationflags=creationflags,
+        start_new_session=start_new_session,
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_s)
+    except subprocess.TimeoutExpired:
+        _terminate_tree(process)
+        try:
+            stdout, stderr = process.communicate(timeout=5.0)
+        except subprocess.TimeoutExpired:
+            stdout, stderr = "", ""
+        return SupervisedResult(stdout=stdout or "", stderr=stderr or "", returncode=-1, timed_out=True)
+    return SupervisedResult(
+        stdout=stdout or "",
+        stderr=stderr or "",
+        returncode=process.returncode,
+        timed_out=False,
+    )

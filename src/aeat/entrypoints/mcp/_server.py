@@ -37,14 +37,13 @@ from __future__ import annotations
 import contextlib
 import json
 import os
-import subprocess
 import sys
 import time
 import uuid
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...core.external_constants import UTF_8_ENCODING
+from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
     build_corpus_search_payload,
@@ -237,52 +236,62 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
     return tools
 
 
+def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
+    """Build the localized timed-out refusal envelope for a hung CLI call."""
+    from ...core.i18n import tr
+
+    message = tr(
+        "mcp.call.timeout",
+        command=command_key,
+        tier=tier.value,
+        seconds=int(timeout_s),
+        default=(
+            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled. "
+            "Retry, or run the equivalent aeat command directly in a terminal for a long operation."
+        ),
+    )
+    return {"status": "error", "refusal": message, "timed_out": True}
+
+
 def _run_subprocess_tool(
     descriptor: McpToolDescriptor,
     arguments: dict[str, object],
-    *,
-    run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> tuple[dict[str, object], bool]:
-    """Run one tool's CLI command in a subprocess and return (envelope, is_error).
+    """Run one tool's CLI command under the supervised runtime and return (envelope, is_error).
 
     The argv is reconstructed from the descriptor's per-verb input schema and the
     named ``arguments`` the client supplied - positional arguments in CLI order,
     then options - so the retired ``{args: [string]}`` bag has no path back in.
 
-    ``stdin`` is isolated to ``DEVNULL``. Over the stdio transport the server's
-    own stdin IS the MCP client pipe; without this isolation the spawned CLI
-    child inherits that pipe and any read from it (a prompt, a confirm, or the
-    secret-store passphrase fallback) blocks forever, competing with the client
-    for the transport and deadlocking the session on the first CLI-backed call.
-    A non-interactive stdin also makes every CLI verb take its explicit-flag /
-    env path rather than an interactive prompt, which is the only correct mode
-    for an agent-operated console.
+    The call runs through :func:`~entrypoints.mcp._call_runtime.run_supervised`
+    with a per-tier wall-clock ceiling derived from the command's annotations
+    (ADR ``mcp-protocol-hardening`` H1): a hung call is terminated together with
+    its whole process tree (a live pull spawns a browser child) and returns an
+    instructive, localized timed-out refusal rather than hanging the MCP call.
+
+    ``stdin`` is isolated to ``DEVNULL`` inside the runtime. Over the stdio
+    transport the server's own stdin IS the MCP client pipe; without this
+    isolation the spawned CLI child inherits that pipe and any read from it
+    blocks forever. Output is decoded as UTF-8 explicitly (the CLI always emits
+    UTF-8; the platform default is cp1252 on Windows, which would mojibake every
+    accented character for the LLM client), with ``errors="replace"`` matching the
+    CLI's own emit-side fallback.
     """
-    # Decode the child's output as UTF-8 explicitly. The CLI always emits UTF-8
-    # (its stdout JSON is UTF-8 and `write_stderr` reconfigures stderr to UTF-8),
-    # but `text=True` alone would decode with the platform default —
-    # ``locale.getpreferredencoding()`` is cp1252 on Windows — turning every
-    # accented Spanish character in a relayed envelope or error into double-
-    # encoded mojibake (``encontró`` -> ``encontrÃ³``) for the LLM client. The
-    # live-model persona measurement observed exactly this. ``errors="replace"``
-    # matches the CLI's own emit-side fallback so a stray non-UTF-8 byte degrades
-    # to the replacement character rather than raising.
-    argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
-    completed = run_process(
-        argv,
-        capture_output=True,
-        text=True,
-        encoding=UTF_8_ENCODING,
-        errors="replace",
-        check=False,
-        stdin=subprocess.DEVNULL,
+    tier = tier_for(
+        read_only=descriptor.annotations.read_only_hint,
+        open_world=descriptor.annotations.open_world_hint,
     )
-    raw = completed.stdout.strip() or completed.stderr.strip()
+    timeout_s = timeout_seconds(tier)
+    argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
+    result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+    if result.timed_out:
+        return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
+    raw = result.stdout.strip() or result.stderr.strip()
     try:
         envelope = json.loads(raw)
     except json.JSONDecodeError:
         return ({"status": "error", "raw": raw}, True)
-    is_error = envelope.get("status") == "error" or completed.returncode != 0
+    is_error = envelope.get("status") == "error" or result.returncode != 0
     return (envelope, is_error)
 
 
@@ -553,6 +562,52 @@ def build_server(
 
     server: Server = Server(_SERVER_NAME)
 
+    async def _run_tool_with_progress(
+        descriptor: McpToolDescriptor,
+        arguments: dict[str, object],
+    ) -> tuple[dict[str, object], bool]:
+        """Run the CLI subprocess off the event loop, heart-beating progress.
+
+        The supervised call blocks (Popen.communicate); running it in a worker
+        thread keeps the event loop responsive for the whole - possibly
+        minutes-long - live pull. When the client supplied a progress token
+        (ADR ``mcp-protocol-hardening`` H1) an elapsed-seconds heartbeat is sent
+        every few seconds until the call completes, so a slow pull looks alive
+        rather than hung; a client that sent no token still gets the off-loop run.
+        """
+        import anyio
+
+        progress_token = None
+        with contextlib.suppress(LookupError, AttributeError):
+            meta = server.request_context.meta
+            progress_token = getattr(meta, "progressToken", None) if meta is not None else None
+
+        if progress_token is None:
+            return await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
+
+        holder: dict[str, tuple[dict[str, object], bool]] = {}
+
+        async def _work(task_status: object = None) -> None:
+            holder["result"] = await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
+            task_group.cancel_scope.cancel()
+
+        async def _heartbeat() -> None:
+            elapsed = 0
+            while True:
+                await anyio.sleep(5)
+                elapsed += 5
+                with contextlib.suppress(Exception):
+                    await server.request_context.session.send_progress_notification(
+                        progress_token=progress_token,
+                        progress=float(elapsed),
+                        total=None,
+                    )
+
+        async with anyio.create_task_group() as task_group:
+            task_group.start_soon(_heartbeat)
+            task_group.start_soon(_work)
+        return holder["result"]
+
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
         # The harness.load floor tool is advertised first and is never persona-scoped
@@ -717,7 +772,7 @@ def build_server(
                 isError=True,
             )
         started = time.monotonic()
-        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
+        envelope, is_error = await _run_tool_with_progress(descriptor, arguments)
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
         _record_telemetry(
