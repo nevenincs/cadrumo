@@ -285,6 +285,10 @@ ignore_imports =
     aeat.application.aggregation._oss_ioss -> aeat.adapters.**
     aeat.application.aggregation._percepciones_observations_repository -> aeat.adapters.persistence.storage
     aeat.application.aggregation._retencion_observations_repository -> aeat.adapters.persistence.storage
+    # _observation_window carries the shared replace-observations helper extracted from
+    # the two observation repos above (P02.S08); it holds the same safe_repository_id
+    # path-safety utility import - a plain storage helper with no port to invert.
+    aeat.application.aggregation._observation_window -> aeat.adapters.persistence.storage
     aeat.application.aggregation._withholding_source -> aeat.adapters.persistence.storage
     aeat.application.auth -> aeat.adapters.outbound.aeat.auth
     aeat.application.auth._apoderado -> aeat.adapters.persistence.storage
