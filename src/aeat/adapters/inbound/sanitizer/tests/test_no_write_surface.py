@@ -19,13 +19,6 @@ verbs.
 See Also:
     :mod:`~entrypoints.cli.sanitize`
         Read-only CLI bridge whose public verbs are covered by this guard.
-    ``.vault/adr/2026-04-25-pdf-sanitizer-adr.md``
-        Establishes the sanitizer's no-AEAT-mutation and no-persistence
-        boundary.
-    ``.vault/plan/2026-04-25-pdf-sanitizer-plan.md``
-        Defines the Phase 8 no-write-surface gate implemented here.
-    ``.vault/audit/2026-04-26-aeat-verify-audit.md``
-        Records the parent AEAT verify write-guard re-verification.
 """
 
 from __future__ import annotations

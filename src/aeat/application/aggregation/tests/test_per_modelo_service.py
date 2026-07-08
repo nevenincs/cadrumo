@@ -21,10 +21,6 @@ See Also:
         Modelo 347/349 evidence.
     :class:`~application.aggregation.ForeignAssetsAggregationSourceResolver`
         Foreign-assets resolver compared with Modelo 720 row projections.
-    Governing vault records
-        ``2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr``
-        introduced the service boundary; ``2026-07-02-binding-resolver-contract-unification-audit``
-        records the counterpart/foreign-assets parity evidence this suite pins.
 """
 
 from __future__ import annotations

@@ -26,12 +26,10 @@ See Also:
         Cached AST lookup used by the structural boundary scans.
     :mod:`~entrypoints.cli.tests.test_cli_module_size`
         Companion size-budget guard for CLI decomposition.
-    ``.vault/adr/2026-06-05-modelo-work-revision-cli-decomposition-adr.md``
-        Governs modelo revision commands as thin transports over public
-        application facades.
-    ``.vault/adr/2026-05-12-cli-workflow-redesign-app-modelo-shape-adr.md``
-        Establishes the broader CLI backend-boundary rule this test enforces
-        for modelo command modules.
+
+Modelo revision commands must stay thin transports over public application
+facades, and every modelo command module must respect the CLI's
+backend-boundary rule.
 """
 
 from __future__ import annotations

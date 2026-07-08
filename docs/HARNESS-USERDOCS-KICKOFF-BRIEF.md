@@ -114,7 +114,7 @@ consumer path is the **Claude plugin** — generated from the harness source by
 Code / Claude Desktop. Its `.mcp.json` launches the server via
 `uvx --from "aeat-cli[agent]==<version>" aeat-mcp` from the published PyPI package (slim
 ~39 MB wheel; corpus source binaries ride the two optional `aeat-data-*`
-companions via `aeat[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
+companions via `aeat-cli[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
 a DEMOTED secondary — do not document it as the install path. See RELEASING.md
 for the publish sequencing and `docs/verification/claude-code-install-proof.md`
 for the live install proof and verified support matrix.
@@ -229,7 +229,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
   environment variables; link to the generated CLI/API reference, do not
   re-author it.
 - **Troubleshooting** — the assistant refused / paused / degraded (schedule-only
-  calendar, lexical-only search without the `aeat[search]` extra); how to read a
+  calendar, lexical-only search without the `aeat-cli[search]` extra); how to read a
   `notice`.
 
 ## 8. Known state and constraints
@@ -242,7 +242,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
   `2026-07-03-…-audit` has concrete, quotable real assistant output.
 - **Unsigned `.mcpb`** — document install honestly (unverified-publisher warning);
   the signing mechanism is wired but awaits a release identity.
-- **Semantic search is opt-in** behind the `aeat[search]` extra (a ~0.5 GB model
+- **Semantic search is opt-in** behind the `aeat-cli[search]` extra (a ~0.5 GB model
   download on first use); the default is lexical-only. Set expectations.
 - **Shared multi-agent worktree.** NEVER use destructive git; commit
   explicit-path only; `git diff -- <file>` before editing and abort on

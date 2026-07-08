@@ -54,11 +54,6 @@ See Also:
     :class:`~application.aggregation.RetencionesAggregationSourceResolver`
         RET-1 source resolver seeded explicitly so M180 count parity is not
         faked by summing quarterly relation values.
-    Governing vault records
-        ``2026-06-10-calculation-engine-foundations-audit`` codifies
-        ``one-aggregation-path-pull-equals-calculate`` and
-        ``no-dormant-source-resolvers``; ``2026-06-26-binding-resolver-contract-unification-adr``
-        keeps pull and calculate paths on one resolver set.
 """
 
 from __future__ import annotations

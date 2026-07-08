@@ -17,10 +17,6 @@ See Also:
         ``declaration_key``.
     :class:`~core.Period`
         Typed period identity required instead of combined string period tokens.
-    Governing vault records
-        ``2026-06-01-domain-boundary-audit-audit`` DB-05 and
-        ``2026-06-01-domain-boundary-audit-plan`` W07.P19.S67-S69 record the
-        duplicate-helper collapse and this regression surface.
 """
 
 from __future__ import annotations

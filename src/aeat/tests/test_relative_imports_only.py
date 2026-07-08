@@ -15,12 +15,10 @@ See Also:
     :mod:`~tests._inventory`
         Provides the package AST inventory and repository-relative path
         rendering used by this architecture gate.
-    ``.vault/plan/2026-06-04-repo-health-triage-plan.md``
-        Tracks the structural import-gate repair wave that made this ratchet
-        dependable.
-    ``.vault/adr/2026-07-01-import-centralization-adr.md``
-        Governs the broader import-hygiene campaign this relative-import gate
-        complements.
+
+This relative-import discipline is the local companion to the broader
+cross-package import-hygiene contract: it keeps a module's position in its own
+package explicit even before a symbol crosses a package boundary.
 """
 
 from __future__ import annotations

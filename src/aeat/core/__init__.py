@@ -105,7 +105,11 @@ from ._prorrata_exclusions import (
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
     Art104TresExclusion,
 )
-from ._prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ._prorrata_register import (
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ._refund_election import RefundElection
 from ._rescate_type import RescateType
 from ._result_disposition import (
@@ -189,6 +193,7 @@ __all__: list[str] = [
     "RegistryPeriodCode",
     "RescateType",
     "ResultDisposition",
+    "SectorDiferenciadoLetra",
     "SecureObjectWrite",
     "ServiceCapability",
     "StandardPeriodCode",

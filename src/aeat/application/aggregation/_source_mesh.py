@@ -85,6 +85,8 @@ CalculationSourceDiagnosticReason = Literal[
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
     "settlement_not_computed",
+    "prorrata_especial_obligatoria",
+    "prorrata_especial_check_unavailable",
     "dt12_regime_window_closed",
     "dt12_regime_window_unverified",
     "dt12_parcial_rescate_guidance",

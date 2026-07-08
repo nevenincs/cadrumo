@@ -33,11 +33,13 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "check",
         "classify",
         "doclink",
+        "exclude",
         "export",
         "history",
         "import",
         "link",
         "list",
+        "llm-diagnostics",
         "merge",
         "preflight",
         "providers",
@@ -99,8 +101,9 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 # missing and the extra are accounted for in the expected set update.
 _CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
-_RATIFIED_WORKFLOW_AXIS_COUNT: int = 17  # allocate attach categories classify
-# doclink export history import merge providers pull-folder restore review split stash status track
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 19  # allocate attach categories classify
+# doclink exclude export history import llm-diagnostics merge providers pull-folder
+# restore review split stash status track
 _EXPECTED_LEDGER_VERB_COUNT: int = _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 
 
@@ -192,6 +195,7 @@ def test_modelo_help_enumerates_every_registered_verb() -> None:
 EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
     {
         "aggregate",
+        "casilla",
         "casillas",
         "compare",
         "describe",
@@ -201,6 +205,8 @@ EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
         "list",
         "project",
         "readiness",
+        "requires",
+        "support-matrix",
     },
 )
 

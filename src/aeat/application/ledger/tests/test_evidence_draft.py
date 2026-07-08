@@ -17,10 +17,6 @@ See Also:
         catalogue write.
     :func:`~application.invoices.create_catalogue_invoice`
         Sole sanctioned invoice-catalogue writer used by confirmation.
-    ``2026-06-10-llm-evidence-classification-adr`` and
-    ``2026-05-30-purchase-invoice-ocr-extraction-discipline-adr``
-        Decisions requiring on-host/local-first evidence reading and no
-        fabricated fields.
 """
 
 from __future__ import annotations

@@ -183,7 +183,7 @@ def test_invoice_register_line_with_records_names_the_register() -> None:
 
 
 def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap() -> None:
-    """S302 warning rows must render operator text, not raw locale keys."""
+    """A régimen simplificado calendar-gap warning must render operator text, not a raw locale key."""
 
     profile = TaxpayerProfile(
         tax_id="X1234567L",

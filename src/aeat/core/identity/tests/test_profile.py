@@ -14,10 +14,6 @@ See Also:
     :func:`~application.user_profile.verify_profile_integrity`
         Cross-store read gate that compares profile UUID copies across physical
         stores.
-    Governing vault records
-        ``2026-05-21-profile-uuid-identity-adr`` decouples mutable display
-        labels from stable identities; ``2026-05-30-identity-primitives-adr``
-        promotes ``ProfileId`` to the shared identity package.
 """
 
 from __future__ import annotations

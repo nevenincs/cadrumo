@@ -30,10 +30,6 @@ See Also:
         Secure-object namespace that keeps run telemetry local and diagnostic.
     :class:`~core.config.Settings`
         Central source for the default telemetry retention window and cap.
-    ``2026-07-04-remote-telemetry-adr`` and
-    ``2026-04-30-secure-persistence-foundation-wave6-adr``
-        Decisions separating local-only diagnostic telemetry from consent-gated
-        remote telemetry and preserving diagnostic redaction discipline.
 """
 
 from __future__ import annotations

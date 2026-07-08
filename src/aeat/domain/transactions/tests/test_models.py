@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from ....core import Art104TresExclusion
 from ...iva import (
+    InputClassification,
     IvaCategory,
     IvaExemptionArticle,
 )
@@ -325,6 +326,91 @@ def test_art_104_tres_exclusion_rejects_tampered_auto_derived_value_on_load() ->
     storage_payload["art_104_tres_exclusion"] = Art104TresExclusion.DIRECT_IVA_CUOTAS.value
 
     with pytest.raises(ValidationError, match="art_104_tres_exclusion is operator-declared only"):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
+def test_input_classification_roundtrips_for_especial_common_use() -> None:
+    """The operator-declared LIVA art. 106 input_classification survives a strict JSON cycle.
+
+    The field is populated with a NON-default member so a save-drops / load-re-defaults
+    regression cannot hide behind the ``None`` default.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00"), description="Compra de uso comun"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "input_classification": InputClassification.COMMON,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.input_classification is InputClassification.COMMON
+
+
+def test_input_classification_rejects_unknown_member_on_load() -> None:
+    """A persisted payload mutated to a non-member input_classification is refused at load."""
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00"), description="Compra exclusiva deducible"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "input_classification": InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["input_classification"] = "not_a_real_classification"
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
+def test_prorrata_sector_id_roundtrips_for_declared_sector() -> None:
+    """The operator-declared LIVA arts. 9.1.c/101 sector reference survives a strict JSON cycle.
+
+    The field is populated with a NON-default sector id so a save-drops / load-re-defaults
+    regression cannot hide behind the ``None`` (common-use / whole-entity) default.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("242.00"), description="Compra sector arrendamiento"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "prorrata_sector_id": "arrendamiento",
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.prorrata_sector_id == "arrendamiento"
+
+
+def test_prorrata_sector_id_rejects_blank_value_on_load() -> None:
+    """A persisted payload mutated to an empty prorrata_sector_id is refused at load.
+
+    Anti-tautology: the ``min_length=1`` constraint fires on the load path, not
+    only at construction, so a corrupted on-disk empty string cannot silently
+    masquerade as a declared sector (which would mis-route the deducible cuota).
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("242.00"), description="Compra sector arrendamiento"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "prorrata_sector_id": "arrendamiento",
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["prorrata_sector_id"] = ""
+
+    with pytest.raises(ValidationError):
         Transaction.model_validate_json(json.dumps(storage_payload))
 
 
@@ -821,8 +907,7 @@ def test_python_mode_dict_with_real_instances_round_trips() -> None:
 def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
     """The diagnostics-only summary is structurally incapable of leaking decrypted facts.
 
-    ``OutOfWindowTransactionSummary`` (the 2026-07-06 diagnostic-summary
-    amendment to the latency ADR) collapses N out-of-window
+    ``OutOfWindowTransactionSummary`` collapses N out-of-window
     ``OutOfWindowTransactionStub`` rows into one summary carrying ONLY the
     excluded-row count and the filing-date span. This pins that guarantee
     structurally -- the declared field set is exactly

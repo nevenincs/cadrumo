@@ -13,9 +13,9 @@ See Also:
         Provides the shared production AST inventory consumed by the ratchet.
     :mod:`~core.time`
         Public home for the canonical UTC coercion and validation helpers.
-    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
-        Tracks the W03.P16 UTC validator enrollment sweep and S348 inventory
-        gate.
+
+A timezone-awareness check must delegate to the canonical validator so a
+future rule change (leap-second handling, offset tolerance) is fixed once.
 """
 
 from __future__ import annotations

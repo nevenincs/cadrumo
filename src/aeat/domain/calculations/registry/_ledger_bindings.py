@@ -14,6 +14,7 @@ from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregation
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
+    InputClassification,
     InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
@@ -355,6 +356,28 @@ class IvaLedgerObservation(BaseModel):
     Modelo 303 base/cuota bindings. Informational observations for boxes
     62/63/74/75 carry the actual cash-accounting treatment so ordinary
     domestic rows cannot be confused with art. 75 projections.
+    """
+    input_classification: InputClassification | None = None
+    """Operator-declared LIVA art. 106 prorrata-especial per-input use class.
+
+    Carried from the source ledger transaction's
+    ``input_classification``. Meaningful only for ``SOPORTADO`` (input IVA)
+    rows in a bucket under prorrata especial: the regime-aware ledger IVA
+    apportionment routes the deducible cuota by this classification (the
+    art. 106.Uno reglas 100%/0%/general). ``None`` for every row not under
+    especial or carrying no per-input use declaration; the general-regime
+    apportionment ignores it.
+    """
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+    """Operator-declared LIVA arts. 9.1.c / 101 differentiated sector.
+
+    Carried from the source ledger transaction's ``prorrata_sector_id``.
+    Meaningful only for ``SOPORTADO`` (input IVA) rows in a sectorized bucket:
+    the sector-aware ledger IVA apportionment applies THAT sector's provisional
+    percentage to the deducible cuota. ``None`` is a common-use input in a
+    sectorized bucket (apportioned by the art. 104.Dos common percentage) and
+    the whole-entity default otherwise; the non-sectorized apportionment ignores
+    it.
     """
 
     @model_validator(mode="after")

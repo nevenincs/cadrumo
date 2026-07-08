@@ -1,7 +1,7 @@
 """MCP server shell: the thin protocol wiring over the SDK-independent core.
 
 The Model Context Protocol runtime is an optional dependency behind the
-``aeat[agent]`` extra. :func:`serve` imports it lazily and, when it is absent,
+``aeat-cli[agent]`` extra. :func:`serve` imports it lazily and, when it is absent,
 refuses with the install hint and a non-zero exit instead of raising a raw
 ``ModuleNotFoundError`` - the same graceful-degradation contract the Google,
 browser, and Anthropic integrations follow. The tool list, annotations, and the
@@ -34,15 +34,17 @@ manifest family and are not distinguished by this gate).
 
 from __future__ import annotations
 
+import contextlib
 import json
-import subprocess
+import os
 import sys
 import time
 import uuid
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...core.external_constants import UTF_8_ENCODING
+from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
+from ._completions import complete_prompt_argument
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
     build_corpus_search_payload,
@@ -72,7 +74,13 @@ from ._hitl import (
     requires_user_interaction,
 )
 from ._input_schema import cli_argv_for
-from ._meta_tools import meta_execute, search_commands
+from ._meta_tools import (
+    build_command_search_index,
+    describe_command,
+    manage_toolsets,
+    meta_execute,
+    search_commands_response,
+)
 from ._persona_scope import (
     AgentPersona,
     active_persona,
@@ -87,6 +95,12 @@ from ._resources import (
     list_harness_resources,
     read_harness_resource,
 )
+from ._surface import (
+    SURFACE_ENV_VAR,
+    SurfaceMode,
+    advertised_descriptors,
+    resolve_surface_mode,
+)
 from ._telemetry import SessionTelemetryWriter
 from ._terminology_tools import (
     TERMINOLOGY_SEARCH_TOOL,
@@ -95,9 +109,10 @@ from ._terminology_tools import (
     render_terminology_search_text,
 )
 from ._tools import McpToolDescriptor, build_tool_descriptors
+from ._toolsets import Toolset, command_keys_for_toolsets
 
 if TYPE_CHECKING:
-    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat[agent]``),
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``),
     # so every real import of it is deferred to inside a function body (see the
     # module docstring). These names are never evaluated at runtime (deferred
     # annotations, `from __future__ import annotations`); they exist solely so
@@ -106,7 +121,7 @@ if TYPE_CHECKING:
     from mcp.server import Server
     from mcp.types import ContentBlock, Tool
 
-_INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat[agent]'"
+_INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat-cli[agent]'"
 _SERVER_NAME = "aeat"
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
@@ -114,6 +129,15 @@ _SERVER_NAME = "aeat"
 # persona-scoped away (``execute`` applies the persona gate internally).
 _META_SEARCH_TOOL = "search"
 _META_EXECUTE_TOOL = "execute"
+# The toolset-activation meta-tool (ADR mcp-progressive-discovery P3): activating
+# a domain toolset adds its per-verb tools to the advertised surface (within the
+# active persona's scope) and emits tools/list_changed for clients that honour it.
+_META_TOOLSETS_TOOL = "toolsets"
+# The per-command descriptor meta-tool (ADR mcp-progressive-discovery P2/S10):
+# returns one command's full shape by key - schema, annotations, confirmation
+# tier, declared risk, owning toolset, and reachable personas - so a model can
+# inspect a verb fully before spending an ``execute`` round-trip on it.
+_META_DESCRIBE_TOOL = "describe"
 
 
 def emit_missing_sdk_refusal() -> None:
@@ -136,12 +160,13 @@ def serve() -> None:
     regardless of whether the optional SDK is installed.
     """
     persona = active_persona()
+    surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
         import mcp.server  # noqa: F401
     except ModuleNotFoundError:
         emit_missing_sdk_refusal()
         return
-    _run_server(build_tool_descriptors(), persona=persona)
+    _run_server(build_tool_descriptors(), persona=persona, surface_mode=surface_mode)
 
 
 def filter_descriptors_for_persona(
@@ -188,7 +213,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
     """Adapt the SDK-independent descriptors into MCP SDK ``Tool`` objects.
 
     Lazily imports the SDK types so the module still imports (and ``serve`` still
-    refuses gracefully) when the ``aeat[agent]`` extra is absent. Exposed at module
+    refuses gracefully) when the ``aeat-cli[agent]`` extra is absent. Exposed at module
     level so the adaptation - including the mutability-to-annotation projection -
     is unit-tested against the real SDK types when they are installed.
     """
@@ -202,7 +227,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
         # server's PreToolUse path enforces, so a tool that would be confirmed
         # server-side also forces the client's permission prompt. Non-CONFIRM tools
         # carry no ``_meta`` (``None`` omits it from the wire descriptor).
-        policy = confirmation_for_tool(command_key=descriptor.command_key, annotations=annotations)
+        policy = confirmation_for_tool(command_key=descriptor.command_key)
         meta = {REQUIRES_USER_INTERACTION_META_KEY: True} if requires_user_interaction(policy) else None
         tools.append(
             Tool(
@@ -215,6 +240,7 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
                     readOnlyHint=annotations.read_only_hint,
                     destructiveHint=annotations.destructive_hint,
                     idempotentHint=annotations.idempotent_hint,
+                    openWorldHint=annotations.open_world_hint,
                 ),
                 _meta=meta,
             ),
@@ -222,71 +248,86 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
     return tools
 
 
+def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
+    """Build the localized timed-out refusal envelope for a hung CLI call."""
+    from ...core.i18n import tr
+
+    message = tr(
+        "mcp.call.timeout",
+        command=command_key,
+        tier=tier.value,
+        seconds=int(timeout_s),
+        default=(
+            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled. "
+            "Retry, or run the equivalent aeat command directly in a terminal for a long operation."
+        ),
+    )
+    return {"status": "error", "refusal": message, "timed_out": True}
+
+
 def _run_subprocess_tool(
     descriptor: McpToolDescriptor,
     arguments: dict[str, object],
-    *,
-    run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> tuple[dict[str, object], bool]:
-    """Run one tool's CLI command in a subprocess and return (envelope, is_error).
+    """Run one tool's CLI command under the supervised runtime and return (envelope, is_error).
 
     The argv is reconstructed from the descriptor's per-verb input schema and the
     named ``arguments`` the client supplied - positional arguments in CLI order,
     then options - so the retired ``{args: [string]}`` bag has no path back in.
 
-    ``stdin`` is isolated to ``DEVNULL``. Over the stdio transport the server's
-    own stdin IS the MCP client pipe; without this isolation the spawned CLI
-    child inherits that pipe and any read from it (a prompt, a confirm, or the
-    secret-store passphrase fallback) blocks forever, competing with the client
-    for the transport and deadlocking the session on the first CLI-backed call.
-    A non-interactive stdin also makes every CLI verb take its explicit-flag /
-    env path rather than an interactive prompt, which is the only correct mode
-    for an agent-operated console.
+    The call runs through :func:`~entrypoints.mcp._call_runtime.run_supervised`
+    with a per-tier wall-clock ceiling derived from the command's annotations
+    (ADR ``mcp-protocol-hardening`` H1): a hung call is terminated together with
+    its whole process tree (a live pull spawns a browser child) and returns an
+    instructive, localized timed-out refusal rather than hanging the MCP call.
+
+    ``stdin`` is isolated to ``DEVNULL`` inside the runtime. Over the stdio
+    transport the server's own stdin IS the MCP client pipe; without this
+    isolation the spawned CLI child inherits that pipe and any read from it
+    blocks forever. Output is decoded as UTF-8 explicitly (the CLI always emits
+    UTF-8; the platform default is cp1252 on Windows, which would mojibake every
+    accented character for the LLM client), with ``errors="replace"`` matching the
+    CLI's own emit-side fallback.
     """
-    # Decode the child's output as UTF-8 explicitly. The CLI always emits UTF-8
-    # (its stdout JSON is UTF-8 and `write_stderr` reconfigures stderr to UTF-8),
-    # but `text=True` alone would decode with the platform default —
-    # ``locale.getpreferredencoding()`` is cp1252 on Windows — turning every
-    # accented Spanish character in a relayed envelope or error into double-
-    # encoded mojibake (``encontró`` -> ``encontrÃ³``) for the LLM client. The
-    # live-model persona measurement observed exactly this. ``errors="replace"``
-    # matches the CLI's own emit-side fallback so a stray non-UTF-8 byte degrades
-    # to the replacement character rather than raising.
-    argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
-    completed = run_process(
-        argv,
-        capture_output=True,
-        text=True,
-        encoding=UTF_8_ENCODING,
-        errors="replace",
-        check=False,
-        stdin=subprocess.DEVNULL,
+    tier = tier_for(
+        read_only=descriptor.annotations.read_only_hint,
+        open_world=descriptor.annotations.open_world_hint,
     )
-    raw = completed.stdout.strip() or completed.stderr.strip()
+    timeout_s = timeout_seconds(tier)
+    argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
+    result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
+    if result.timed_out:
+        return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
+    raw = result.stdout.strip() or result.stderr.strip()
     try:
         envelope = json.loads(raw)
     except json.JSONDecodeError:
         return ({"status": "error", "raw": raw}, True)
-    is_error = envelope.get("status") == "error" or completed.returncode != 0
+    is_error = envelope.get("status") == "error" or result.returncode != 0
     return (envelope, is_error)
 
 
 def build_meta_sdk_tools() -> list[Tool]:
-    """Build the SDK ``Tool`` objects for the ``search`` and ``execute`` meta-tools.
+    """Build the SDK ``Tool`` objects for the core-surface meta-tools.
 
     Lazily imports the SDK ``Tool`` type so the module still imports when the
-    ``aeat[agent]`` extra is absent. Exposed at module level so the meta-tool
+    ``aeat-cli[agent]`` extra is absent. Exposed at module level so the meta-tool
     surface is unit-tested against the real SDK types when they are installed.
 
     Returns:
-        The ``search`` and ``execute`` :class:`mcp.types.Tool` objects.
+        The ``search``, ``execute``, ``toolsets``, and ``describe``
+        :class:`mcp.types.Tool` objects.
     """
     from mcp.types import Tool
 
     return [
         Tool(
             name=_META_SEARCH_TOOL,
-            description="Search aeat commands by keyword; returns matching command keys with mutability hints.",
+            description=(
+                "Search aeat commands by keyword; returns matching command keys with mutability hints. "
+                "Pass a hit to describe for its full schema before you run it, or activate a toolset to "
+                "advertise a whole domain's verbs directly."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -301,7 +342,10 @@ def build_meta_sdk_tools() -> list[Tool]:
         ),
         Tool(
             name=_META_EXECUTE_TOOL,
-            description="Execute one aeat command by key with named arguments, through the same safety gates.",
+            description=(
+                "Execute one aeat command by key with named arguments, through the same safety gates. "
+                "Call describe first to read the command's full input schema before you build the arguments."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -310,6 +354,49 @@ def build_meta_sdk_tools() -> list[Tool]:
                         "description": "The registry command key to run, e.g. modelo.work.calculate.",
                     },
                     "arguments": {"type": "object", "description": "The named arguments for the command."},
+                },
+                "required": ["command_key"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name=_META_TOOLSETS_TOOL,
+            description=(
+                "Manage domain toolsets: list them, or activate/deactivate one to add or remove its "
+                "per-verb tools from the advertised tool list (renta, iva, ledger, censo, modelo-lifecycle). "
+                "Activate a toolset when you will do repeated work in that domain, so its verbs are advertised "
+                "directly instead of reached one at a time through search and execute."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["list", "activate", "deactivate"],
+                        "description": "list the toolsets, or activate/deactivate one by name.",
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The toolset to activate/deactivate (omit for list).",
+                    },
+                },
+                "required": ["action"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name=_META_DESCRIBE_TOOL,
+            description=(
+                "Return one aeat command's full descriptor by key: schema, annotations, confirmation "
+                "tier, risk, owning toolset, and which personas may call it."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "command_key": {
+                        "type": "string",
+                        "description": "The registry command key to describe, e.g. modelo.export.",
+                    }
                 },
                 "required": ["command_key"],
                 "additionalProperties": False,
@@ -391,6 +478,7 @@ def build_server(
     *,
     persona: AgentPersona | None = None,
     telemetry: SessionTelemetryWriter | None = None,
+    surface_mode: SurfaceMode = SurfaceMode.CORE,
 ) -> Server:
     """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
@@ -410,9 +498,12 @@ def build_server(
     from mcp.server.lowlevel.helper_types import ReadResourceContents
     from mcp.types import (
         CallToolResult,
+        Completion,
+        CompletionArgument,
         EmbeddedResource,
         GetPromptResult,
         Prompt,
+        PromptArgument,
         PromptMessage,
         Resource,
         ResourceTemplate,
@@ -427,8 +518,32 @@ def build_server(
         if persona is None or not is_handoff_denied(persona=persona, command_key=descriptor.command_key)
     )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
-    sdk_tools = build_sdk_tools(scoped_descriptors)
+    # The advertised per-verb surface (ADR mcp-progressive-discovery P1): CORE
+    # (default) advertises only the persona-scoped orientation slice up front;
+    # FULL advertises the whole persona-scoped set (the pre-ADR flat surface).
+    # ``by_name`` above still spans EVERY descriptor, so a verb outside the
+    # advertised surface stays reachable through the ``execute`` meta-tool and a
+    # direct call by name - it is discovered, not listed.
     meta_tools = build_meta_sdk_tools()
+    # The hybrid command-search index backing the ``search`` meta-tool, built once
+    # over the FULL descriptor set (ADR mcp-progressive-discovery P2) so discovery
+    # reaches every verb, not only the advertised surface.
+    command_index = build_command_search_index(descriptors)
+    # Per-session toolset activation state (ADR mcp-progressive-discovery P3). The
+    # advertised surface is the orientation core PLUS the persona-scoped verbs of
+    # any active toolset; activating a toolset emits ``tools/list_changed``.
+    active_toolsets: set[Toolset] = set()
+
+    def _advertised_tools() -> list[Tool]:
+        advertised = advertised_descriptors(scoped_descriptors, mode=surface_mode)
+        advertised_keys = {descriptor.command_key for descriptor in advertised}
+        active_keys = command_keys_for_toolsets(frozenset(active_toolsets))
+        activated = tuple(
+            descriptor
+            for descriptor in scoped_descriptors
+            if descriptor.command_key in active_keys and descriptor.command_key not in advertised_keys
+        )
+        return build_sdk_tools((*advertised, *activated))
     floor_tool = build_harness_floor_tool()
     # Grounding tools (ADR R3): read-only search over the bundled legal corpus
     # and the taxpayer-facing terminology handbook. Always advertised (never
@@ -455,7 +570,7 @@ def build_server(
         direct path.
         """
         key = descriptor.command_key
-        policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
+        policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
             _record_telemetry(telemetry, tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
@@ -490,13 +605,61 @@ def build_server(
 
     server: Server = Server(_SERVER_NAME)
 
+    async def _run_tool_with_progress(
+        descriptor: McpToolDescriptor,
+        arguments: dict[str, object],
+    ) -> tuple[dict[str, object], bool]:
+        """Run the CLI subprocess off the event loop, heart-beating progress.
+
+        The supervised call blocks (Popen.communicate); running it in a worker
+        thread keeps the event loop responsive for the whole - possibly
+        minutes-long - live pull. When the client supplied a progress token
+        (ADR ``mcp-protocol-hardening`` H1) an elapsed-seconds heartbeat is sent
+        every few seconds until the call completes, so a slow pull looks alive
+        rather than hung; a client that sent no token still gets the off-loop run.
+        """
+        import anyio
+
+        progress_token = None
+        with contextlib.suppress(LookupError, AttributeError):
+            meta = server.request_context.meta
+            progress_token = getattr(meta, "progressToken", None) if meta is not None else None
+
+        if progress_token is None:
+            return await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
+
+        holder: dict[str, tuple[dict[str, object], bool]] = {}
+
+        async def _work() -> None:
+            holder["result"] = await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
+            task_group.cancel_scope.cancel()
+
+        async def _heartbeat() -> None:
+            elapsed = 0
+            while True:
+                await anyio.sleep(5)
+                elapsed += 5
+                with contextlib.suppress(Exception):
+                    await server.request_context.session.send_progress_notification(
+                        progress_token=progress_token,
+                        progress=float(elapsed),
+                        total=None,
+                    )
+
+        async with anyio.create_task_group() as task_group:
+            task_group.start_soon(_heartbeat)
+            task_group.start_soon(_work)
+        return holder["result"]
+
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
         # The harness.load floor tool is advertised first and is never persona-scoped
         # away: per ADR R4 it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The grounding tools follow
-        # for the same always-available reason (ADR R3).
-        return [floor_tool, *grounding_tools, *sdk_tools, *meta_tools]
+        # for the same always-available reason (ADR R3). The per-verb surface is the
+        # orientation core plus any active toolset (rebuilt per call so a toolset
+        # activation is reflected — ADR mcp-progressive-discovery P1/P3).
+        return [floor_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
@@ -540,12 +703,48 @@ def build_server(
                 isError=False,
             )
         if name == _META_SEARCH_TOOL:
-            results = search_commands(str(arguments.get("query", "") or ""), descriptors=descriptors)
-            payload: dict[str, object] = {"results": [result.model_dump() for result in results]}
+            response = search_commands_response(
+                str(arguments.get("query", "") or ""),
+                descriptors=descriptors,
+                index=command_index,
+            )
+            search_payload = response.model_dump(mode="json")
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(search_payload, indent=2))],
+                structuredContent=search_payload,
+                isError=False,
+            )
+        if name == _META_DESCRIBE_TOOL:
+            describe_key = str(arguments.get("command_key", "") or "")
+            described = describe_command(describe_key, descriptors=descriptors)
+            if described is None:
+                return CallToolResult(
+                    content=[TextContent(type="text", text=f"unknown command: {describe_key}")],
+                    isError=True,
+                )
+            describe_payload = described.model_dump(mode="json")
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(describe_payload, indent=2))],
+                structuredContent=describe_payload,
+                isError=False,
+            )
+        if name == _META_TOOLSETS_TOOL:
+            outcome = manage_toolsets(
+                str(arguments.get("action", "list") or "list"),
+                (str(arguments["name"]) if arguments.get("name") is not None else None),
+                active=active_toolsets,
+            )
+            if outcome.changed:
+                # Best-effort per the floor/enhancement rule: a client that does not
+                # honour list-changed still sees the widened surface on its next
+                # tools/list, so a send failure must not break the call.
+                with contextlib.suppress(Exception):
+                    await server.request_context.session.send_tool_list_changed()
+            payload = outcome.model_dump(mode="json")
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
                 structuredContent=payload,
-                isError=False,
+                isError=outcome.refused is not None,
             )
         if name == _META_EXECUTE_TOOL:
             raw_args = arguments.get("arguments", {})
@@ -579,7 +778,7 @@ def build_server(
                 content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
                 isError=True,
             )
-        policy = confirmation_for_tool(command_key=key, annotations=descriptor.annotations)
+        policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(
             policy=policy,
             command_key=key,
@@ -630,7 +829,7 @@ def build_server(
                 isError=True,
             )
         started = time.monotonic()
-        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
+        envelope, is_error = await _run_tool_with_progress(descriptor, arguments)
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
         _record_telemetry(
@@ -657,14 +856,22 @@ def build_server(
     @server.list_prompts()
     async def _list_prompts() -> list[Prompt]:
         return [
-            Prompt(name=entry.name, title=entry.title, description=entry.description, arguments=[])
+            Prompt(
+                name=entry.name,
+                title=entry.title,
+                description=entry.description,
+                arguments=[
+                    PromptArgument(name=argument.name, description=argument.description, required=argument.required)
+                    for argument in entry.arguments
+                ],
+            )
             for entry in build_prompt_catalogue()
         ]
 
     @server.get_prompt()
     async def _get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
         try:
-            document = prompt_document(name)
+            document = prompt_document(name, arguments)
         except PromptNotFoundError as exc:
             raise ValueError(str(exc)) from exc
         messages: list[PromptMessage] = [
@@ -722,17 +929,44 @@ def build_server(
             raise ValueError(str(exc)) from exc
         return [ReadResourceContents(content=content.text, mime_type=content.ref.mime_type)]
 
+    # Argument autocompletion for the guided-workflow prompts (ADR
+    # mcp-progressive-discovery P5): a client completing a prompt argument
+    # (filing year, period) gets the accepted values from the typed axes.
+    @server.completion()
+    async def _complete(ref: object, argument: CompletionArgument, context: object) -> Completion | None:
+        from mcp.types import PromptReference
+
+        if not isinstance(ref, PromptReference):
+            return None
+        values = complete_prompt_argument(argument.name, argument.value)
+        return Completion(values=list(values), total=len(values), hasMore=False)
+
     return server
+
+
+def server_initialization_options(server: Server) -> object:
+    """Build the negotiated initialization options for ``server``.
+
+    Declares ``tools.listChanged`` because the console emits
+    ``tools/list_changed`` when a toolset is activated (ADR
+    ``mcp-progressive-discovery`` P3). Centralised so production
+    (:func:`_run_server`) and the capability-posture conformance test negotiate
+    the SAME capability set and cannot drift.
+    """
+    from mcp.server.lowlevel import NotificationOptions
+
+    return server.create_initialization_options(NotificationOptions(tools_changed=True))
 
 
 def _run_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
     persona: AgentPersona | None = None,
+    surface_mode: SurfaceMode = SurfaceMode.CORE,
 ) -> None:  # pragma: no cover - requires the SDK runtime
     """Build and run the MCP stdio server from the tool descriptors.
 
-    Exercised only when the ``aeat[agent]`` extra is installed; the descriptor,
+    Exercised only when the ``aeat-cli[agent]`` extra is installed; the descriptor,
     annotation, dispatch, block, and capability-registration logic it composes are
     unit-tested without the stdio transport via :func:`build_server`.
     """
@@ -740,10 +974,10 @@ def _run_server(
     from mcp.server.stdio import stdio_server
 
     telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
-    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)
+    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):
-            await server.run(read_stream, write_stream, server.create_initialization_options())
+            await server.run(read_stream, write_stream, server_initialization_options(server))
 
     anyio.run(_amain)

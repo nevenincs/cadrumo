@@ -46,8 +46,13 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core import (
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ...core.errors import AeatError as _AeatError
+from ._protocols import ProrrataRegisterRepositoryProtocol
 
 
 class ProrrataRegisterError(_AeatError):
@@ -87,7 +92,50 @@ _PROVENANCE_PRECEDENCE: tuple[ProrrataProvisionalProvenance, ...] = (
     ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
     ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
     ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
 )
+
+
+class SectorDefinition(BaseModel):
+    """One operator-declared differentiated sector (LIVA arts. 9.1.c / 101).
+
+    Strict, frozen, no extra fields. The art. 9.1.c partition of a taxpayer's
+    activities into differentiated sectors is a legal judgment the ledger cannot
+    infer (which CNAE groups are run, whether their prorrata percentages diverge
+    by more than 50 percentage points, whether a special-regime activity is
+    present), so it is operator-declared: each sector carries a stable
+    ``sector_id`` (the key the register entries and the ledger rows reference),
+    the member activity codes it groups, and the :class:`~core.SectorDiferenciadoLetra`
+    that makes it differentiated. Fail-closed: a register with no sector
+    definitions is a whole-entity register (``sector_id = None`` throughout), the
+    landed cross-period behaviour, never a silently inferred partition.
+
+    Attributes:
+        sector_id: Stable identifier the register entries and ledger rows
+            reference. Must match the ``sector_id`` on the per-sector
+            :class:`ProrrataRegisterEntry` rows.
+        letra: The :class:`~core.SectorDiferenciadoLetra` (art. 9.1.c letra
+            a'/b'/c'/d') on which this sector is differentiated.
+        member_activity_codes: The CNAE / IAE-epígrafe activity codes grouped
+            into this sector. Non-empty: a declared sector groups at least one
+            activity. Recorded for provenance and operator audit; the per-sector
+            routing keys on ``sector_id``, never on these codes.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    letra: SectorDiferenciadoLetra
+    member_activity_codes: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("member_activity_codes")
+    @classmethod
+    def _member_codes_non_empty_tokens(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Reject a blank member activity code — every grouped code is a real token."""
+        for code in value:
+            if not code.strip():
+                raise ProrrataRegisterValidationError("member_activity_codes must not contain a blank code")
+        return value
 
 
 class ProrrataRegisterEntry(BaseModel):
@@ -107,6 +155,13 @@ class ProrrataRegisterEntry(BaseModel):
         sector_id: Sector identifier for a sectores-diferenciados register, or
             ``None`` for the whole-entity register. Present from birth so
             sectores land without migration; the per-sector compute is deferred.
+        interrupted: The art. 105.Cinco "sin operaciones" marker — ``True`` when
+            the taxpayer (or the differentiated sector) performed no operations
+            during the ejercicio. Distinct from the ``ninguna`` regime (an
+            *active* year under no prorrata): an interrupted year is *inactive*.
+            An interrupted entry carries no provisional or definitive percentage
+            and no volume inputs; the three-active-years seed walk skips it. The
+            register thereby retains a truthful active/inactive history.
         provisional_percentage: The provisional deduction percentage (0-100) in
             force during the year's liquidations (art. 104.Uno + 105.Uno), or
             ``None`` when no percentage has resolved yet (never a fabricated
@@ -139,6 +194,7 @@ class ProrrataRegisterEntry(BaseModel):
     ejercicio: int = Field(ge=_MIN_EJERCICIO, le=_MAX_EJERCICIO)
     regime: ProrrataRegisterRegime
     sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+    interrupted: bool = False
     provisional_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=_HUNDRED)
     provisional_provenance: ProrrataProvisionalProvenance | None = None
     authorisation_reference: str | None = Field(default=None, min_length=1)
@@ -159,6 +215,22 @@ class ProrrataRegisterEntry(BaseModel):
     @model_validator(mode="after")
     def _validate_field_coupling(self) -> ProrrataRegisterEntry:
         """Enforce that the provisional, referenced, and settlement field groups are coherent."""
+        if self.interrupted and any(
+            field is not None
+            for field in (
+                self.provisional_percentage,
+                self.provisional_provenance,
+                self.authorisation_reference,
+                self.definitive_percentage,
+                self.definitive_volume_con_derecho,
+                self.definitive_volume_sin_derecho,
+                self.source_observation_ref,
+            )
+        ):
+            raise ProrrataRegisterValidationError(
+                "an interrupted (sin operaciones) ejercicio carries no provisional/definitive percentage, "
+                "volume inputs, authorisation, or source-observation reference"
+            )
         if (self.provisional_percentage is None) != (self.provisional_provenance is None):
             raise ProrrataRegisterValidationError(
                 "provisional_percentage and provisional_provenance must be present or absent together"
@@ -253,6 +325,39 @@ def resolve_provisional_percentage(
     )
 
 
+class ThreeActiveYearsAggregate(BaseModel):
+    """Aggregated volume inputs of the last three ACTIVE años naturales (LIVA art. 105.Cinco).
+
+    The art. 105.Cinco interrupted-activity rule seeds a resumed ejercicio from
+    the percentage that "globalmente corresponda al conjunto de los tres últimos
+    años naturales en que se hubiesen realizado operaciones": a GLOBAL percentage
+    over the AGGREGATE volumes of the last three active years, not the average of
+    their three definitive percentages. This carrier holds those summed volumes
+    and the contributing ejercicios (newest-first). :attr:`sufficient` is ``True``
+    only when a full three active years were found; with fewer, the application
+    seed surfaces an advisory rather than assuming a percentage.
+
+    Attributes:
+        contributing_ejercicios: The active ejercicios whose volumes were summed,
+            newest first (at most three).
+        summed_volume_con_derecho: Sum of the contributing years' annual
+            con-derecho operation volumes.
+        summed_volume_sin_derecho: Sum of the contributing years' annual
+            sin-derecho operation volumes.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    contributing_ejercicios: tuple[int, ...] = ()
+    summed_volume_con_derecho: Decimal = Decimal("0")
+    summed_volume_sin_derecho: Decimal = Decimal("0")
+
+    @property
+    def sufficient(self) -> bool:
+        """Whether a full three active años naturales contributed."""
+        return len(self.contributing_ejercicios) == 3
+
+
 class ProrrataRegister(BaseModel):
     """Encrypted JSON document holding the per-ejercicio prorrata register.
 
@@ -264,12 +369,18 @@ class ProrrataRegister(BaseModel):
     Attributes:
         schema_version: Forward-compatible schema version. ``"1"``.
         entries: Tuple of :class:`ProrrataRegisterEntry` rows.
+        sector_definitions: The operator-declared differentiated-sector partition
+            (LIVA arts. 9.1.c / 101). Empty for a whole-entity register — the
+            fail-closed default; when non-empty every per-sector
+            :class:`ProrrataRegisterEntry` ``sector_id`` and every sectored
+            ledger row references one of these declared sectors.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
 
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
     entries: tuple[ProrrataRegisterEntry, ...] = ()
+    sector_definitions: tuple[SectorDefinition, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
@@ -286,6 +397,35 @@ class ProrrataRegister(BaseModel):
         if len(seen) != len(set(seen)):
             raise ProrrataRegisterValidationError("register carries duplicate (ejercicio, sector) entries")
         return self
+
+    @model_validator(mode="after")
+    def _sector_definitions_unique(self) -> ProrrataRegister:
+        """Reject a register that declares two sector definitions for the same sector_id."""
+        sector_ids = [definition.sector_id for definition in self.sector_definitions]
+        if len(sector_ids) != len(set(sector_ids)):
+            raise ProrrataRegisterValidationError("register carries duplicate sector_id definitions")
+        return self
+
+    @property
+    def is_sectorized(self) -> bool:
+        """Whether the register declares a differentiated-sector partition.
+
+        Fail-closed: ``False`` (whole-entity) when no sector definition exists,
+        so a taxpayer with no declared partition keeps the landed cross-period
+        behaviour byte-identical.
+        """
+        return bool(self.sector_definitions)
+
+    def sector_ids(self) -> tuple[str, ...]:
+        """Return the declared sector ids, in declaration order."""
+        return tuple(definition.sector_id for definition in self.sector_definitions)
+
+    def sector_definition_for(self, sector_id: str) -> SectorDefinition | None:
+        """Return the declared :class:`SectorDefinition` for ``sector_id``, or ``None``."""
+        for definition in self.sector_definitions:
+            if definition.sector_id == sector_id:
+                return definition
+        return None
 
     def entries_for_ejercicio(self, ejercicio: int) -> tuple[ProrrataRegisterEntry, ...]:
         """Return every entry recorded for ``ejercicio`` across all sectors."""
@@ -308,6 +448,54 @@ class ProrrataRegister(BaseModel):
         entry = self.entry_for(ejercicio, sector_id=sector_id)
         return resolve_provisional_percentage(() if entry is None else (entry,))
 
+    def collect_last_three_active_years(
+        self,
+        *,
+        before_ejercicio: int,
+        sector_id: str | None = None,
+    ) -> ThreeActiveYearsAggregate:
+        """Aggregate the volume inputs of the last three ACTIVE años naturales (LIVA art. 105.Cinco).
+
+        Walks the register backward from ``before_ejercicio`` for the given
+        ``sector_id``, SKIPPING interrupted (sin operaciones) years and any year
+        that has not settled (no definitive volumes), and sums the con-derecho and
+        sin-derecho volume inputs of the last three active años naturales. An
+        "active" year is a settled, non-interrupted entry; the walk is over
+        *active* years, not calendar years, so the interruption gap is skipped.
+
+        Returns a :class:`ThreeActiveYearsAggregate` whose ``sufficient`` is
+        ``True`` only when three active years contributed; the application seed
+        turns an insufficient aggregate into a visible advisory rather than
+        assuming a percentage.
+        """
+        active = sorted(
+            (
+                entry
+                for entry in self.entries
+                if entry.sector_id == sector_id
+                and entry.ejercicio < before_ejercicio
+                and not entry.interrupted
+                and entry.definitive_percentage is not None
+                and entry.definitive_volume_con_derecho is not None
+                and entry.definitive_volume_sin_derecho is not None
+            ),
+            key=lambda entry: entry.ejercicio,
+            reverse=True,
+        )[:3]
+        summed_con = sum(
+            (entry.definitive_volume_con_derecho for entry in active),
+            Decimal("0"),
+        )
+        summed_sin = sum(
+            (entry.definitive_volume_sin_derecho for entry in active),
+            Decimal("0"),
+        )
+        return ThreeActiveYearsAggregate(
+            contributing_ejercicios=tuple(entry.ejercicio for entry in active),
+            summed_volume_con_derecho=summed_con,
+            summed_volume_sin_derecho=summed_sin,
+        )
+
 
 __all__ = [
     "PRORRATA_REGISTER_SCHEMA_VERSION",
@@ -315,6 +503,9 @@ __all__ = [
     "ProrrataRegister",
     "ProrrataRegisterEntry",
     "ProrrataRegisterError",
+    "ProrrataRegisterRepositoryProtocol",
     "ProrrataRegisterValidationError",
+    "SectorDefinition",
+    "ThreeActiveYearsAggregate",
     "resolve_provisional_percentage",
 ]

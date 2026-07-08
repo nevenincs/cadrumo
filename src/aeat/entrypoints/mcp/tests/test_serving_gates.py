@@ -30,6 +30,7 @@ from .._dispatch import tool_name_for_command
 from .._faithfulness import SessionGroundingWindow, arguments_faithfulness
 from .._persona_scope import AgentPersona
 from .._server import build_server
+from .._surface import SurfaceMode
 from .._telemetry import SessionTelemetryWriter, read_session_records
 from .._tools import build_tool_descriptors
 
@@ -76,7 +77,12 @@ async def _accept_but_unconfirmed(
 
 
 async def _list_tool_names(persona: AgentPersona | None) -> set[str]:
-    server = build_server(build_tool_descriptors(), persona=persona)
+    # FULL surface: this helper asserts the persona-scope and handoff-deny
+    # filtering of the per-verb tool list, a property that only manifests when
+    # the per-verb tools are actually advertised. The default-surface policy
+    # (CORE advertises only the orientation slice) is owned by
+    # ``test_surface_policy.py``; here it must not hide the verbs under test.
+    server = build_server(build_tool_descriptors(), persona=persona, surface_mode=SurfaceMode.FULL)
     async with connect(server) as session:
         listed = await session.list_tools()
         return {tool.name for tool in listed.tools}

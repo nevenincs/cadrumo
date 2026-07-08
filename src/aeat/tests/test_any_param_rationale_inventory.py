@@ -38,11 +38,6 @@ See Also:
         pattern for ``# type: ignore`` sites.
     :mod:`~tests.test_cast_rationale_inventory`
         Typed-boundary escape-hatch guard for runtime ``cast()`` calls.
-    ``.vault/plan/2026-05-28-codebase-solidification-plan.md``
-        Records the W21 parameter-Any prevention lane and marker convention.
-    ``.vault/exec/2026-05-28-codebase-solidification/2026-05-31-codebase-solidification-w21-p53-s646-s650-exec.md``
-        Captures the original ratchet creation and parameter-Any marker
-        batches that this module keeps from drifting.
 """
 
 from __future__ import annotations

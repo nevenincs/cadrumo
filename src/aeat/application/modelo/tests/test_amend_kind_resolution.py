@@ -24,10 +24,6 @@ See Also:
     :class:`~domain.modelos.CalculationRevisionAmendmentKind`
         Domain enum for ``complementaria``, ``rectificativa``, and
         ``sustitutiva`` values.
-    Governing vault records
-        ``2026-04-13-filing-complementaria-adr`` and
-        ``2026-04-13-filing-complementaria-research`` ground the
-        complementaria/sustitutiva/rectificativa routing rules.
 """
 
 from __future__ import annotations

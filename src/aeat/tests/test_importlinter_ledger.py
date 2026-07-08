@@ -7,11 +7,9 @@ See Also:
     ``.importlinter``
         Layered architecture contract and ignore ledger ratcheted by these
         tests.
-    ``.vault/adr/2026-04-30-aeat-restructure-adr.md``
-        Establishes the import-boundary model and sanctioned exception
-        registry.
-    ``.vault/audit/2026-07-02-aeat-architecture-review-audit.md``
-        Records the ledger-drift risk that makes this ratchet load-bearing.
+
+The layered import-boundary model and its sanctioned exception registry must
+not drift unnoticed; this ratchet is what makes that drift visible.
 """
 
 from __future__ import annotations

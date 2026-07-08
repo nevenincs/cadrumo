@@ -10,7 +10,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import Art104TresExclusion, Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -22,6 +22,7 @@ from ...core.external_constants import (
 from ...core.identity import BucketId, TransactionId
 from ...domain.iva import (
     EUMemberState,
+    InputClassification,
     IvaCategory,
 )
 from ...domain.modelos import (
@@ -101,6 +102,9 @@ class ManualLedgerTransactionCommand(BaseModel):
     notes: str = ""
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    art_104_tres_exclusion: Art104TresExclusion | None = None
+    input_classification: InputClassification | None = None
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     actor: str = Field(default="operator", min_length=1)
     source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
@@ -205,6 +209,9 @@ class ManualLedgerTransactionCommand(BaseModel):
             "irpf_category": self.irpf_category,
             "usage_ratio_id": self.usage_ratio_id,
             "prorrata_reference": self.prorrata_reference,
+            "art_104_tres_exclusion": self.art_104_tres_exclusion,
+            "input_classification": self.input_classification,
+            "prorrata_sector_id": self.prorrata_sector_id,
             "purchase_invoice_evidence_id": self.purchase_invoice_evidence_id,
             "attachment_ids": self.attachment_ids,
         }

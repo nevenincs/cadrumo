@@ -27,9 +27,6 @@ See Also:
     :mod:`~core.corpus_manifest._bundle_signing`
         Corpus-bundle signing analogue that reuses the same manifest-digest
         signing pattern.
-    ``2026-07-04-recipient-encryption-adr``
-        Collaboration-envelope decision that keeps signing, counter-signing,
-        and recipient encryption as distinct layers.
 """
 
 from __future__ import annotations

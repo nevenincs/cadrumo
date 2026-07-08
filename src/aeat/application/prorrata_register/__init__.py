@@ -38,7 +38,12 @@ from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
+    SectorDefinition,
     resolve_provisional_percentage,
+)
+from ._sector_lifecycle import (
+    seed_sector_carried_definitive_from_register,
+    settle_sector_definitive,
 )
 from ._seed import (
     ProrrataPriorDefinitivaSeed,
@@ -130,6 +135,22 @@ class ProrrataRegisterService:
         )
         return self.declare(entry)
 
+    def declare_sector(self, definition: SectorDefinition) -> ProrrataRegister:
+        """Atomically add or replace a differentiated-sector definition by ``sector_id``.
+
+        The operator's art. 9.1.c partition is a legal judgment the ledger cannot
+        infer, so it is declared here; once at least one sector is declared the
+        register is sectorized and the per-sector apportionment routing applies
+        (LIVA arts. 9.1.c / 101). Existing per-ejercicio entries are preserved.
+
+        Args:
+            definition: The differentiated-sector partition entry to persist.
+
+        Returns:
+            The updated :class:`ProrrataRegister`.
+        """
+        return self._repository.upsert_sector_definition(definition)
+
     def list_all(self) -> ProrrataRegister:
         """Return the full active-profile register.
 
@@ -196,4 +217,6 @@ __all__ = [
     "cross_check_prorrata_entry_against_prior_observation",
     "evaluate_carried_prior_definitiva_seed",
     "seed_carried_prior_definitiva_entry",
+    "seed_sector_carried_definitive_from_register",
+    "settle_sector_definitive",
 ]

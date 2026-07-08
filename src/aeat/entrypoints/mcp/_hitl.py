@@ -12,21 +12,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ._annotations import McpAnnotations
-
-# Leaf verbs that hand a filing-grade artefact off (an export, a local file
-# marker). They are not destructive, but they are deliberate outputs a human
-# should confirm. Public: the single declaration the elicitation matrix and
-# the persona handoff-deny rules also consume.
-HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
-# Leaf verbs that would write to AEAT. None are exposed today (the live tree is
-# read-only and live submission is permanently forbidden); this guard blocks one
-# defensively if it ever appears in the command set. "declare" is deliberately
-# excluded: it collides with the local ledger bien-de-inversion verb
-# (``ledger.bienes_inversion.declare``), a non-AEAT local write, so a bare leaf
-# match would false-positive a legitimate exposed tool as a forbidden live-write.
-# The remaining verbs are AEAT-submission-specific (submit/present/send).
-_LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
+from ...application.operator_surface import command_classification
 
 
 class ConfirmationPolicy(StrEnum):
@@ -61,24 +47,26 @@ def requires_user_interaction(policy: ConfirmationPolicy) -> bool:
     return policy is ConfirmationPolicy.CONFIRM
 
 
-def confirmation_for_tool(*, command_key: str, annotations: McpAnnotations) -> ConfirmationPolicy:
+def confirmation_for_tool(*, command_key: str) -> ConfirmationPolicy:
     """Return the confirmation tier for one tool.
 
-    Order matters: a forbidden live-write blocks before any approval; a
-    destructive or filing-handoff verb requires confirmation; everything else
-    (reads and non-destructive local mutations) auto-approves.
+    Reads the declared classification (:func:`command_classification`) - the same
+    authority the annotation projection reads - so the client hint and the server
+    gate cannot drift. Order matters: a forbidden live-write blocks before any
+    approval; a destructive or filing-handoff verb requires confirmation;
+    everything else (reads and non-destructive local mutations) auto-approves.
 
     Returns:
         :class:`ConfirmationPolicy` selected for the command.
     """
-    leaf = command_key.rsplit(".", 1)[-1]
-    if leaf in _LIVE_WRITE_LEAVES:
+    classification = command_classification(command_key)
+    if classification.live_write:
         return ConfirmationPolicy.BLOCK
-    if annotations.destructive_hint or leaf in HANDOFF_LEAVES:
+    if classification.destructive or classification.handoff:
         return ConfirmationPolicy.CONFIRM
     return ConfirmationPolicy.AUTO_APPROVE
 
 
 def is_handoff_command(command_key: str) -> bool:
-    """True when the command's leaf verb is the irreversible filing-handoff boundary."""
-    return command_key.rsplit(".", 1)[-1] in HANDOFF_LEAVES
+    """True when the command produces the irreversible filing-handoff artefact."""
+    return command_classification(command_key).handoff

@@ -25,11 +25,6 @@ See Also:
     :func:`~application.state_projection.build_pending_obligations`
         Projection consumer checked against the engine's shared deadline
         schedule.
-    Governing vault records
-        ``2026-04-12-workflow-engine-plan`` introduced the engine stages and
-        Protocol harness; the workflow-engine harvest ADR keeps the engine as
-        an application-layer lifecycle gate rather than a standalone CLI
-        surface.
 """
 
 from __future__ import annotations

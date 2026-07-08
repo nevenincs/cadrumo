@@ -16,10 +16,6 @@ See Also:
         Aggregation service consumers that alias modelo-id group constants.
     :mod:`~application.inventory._service`
         Inventory service consumer of the default IVA general-rate constant.
-    Governing vault records
-        ``2026-06-14-legal-grounding-centralization-adr`` and
-        ``2026-05-06-vat-rate-shadow-sweep-audit`` govern the centralization
-        mechanism and VAT literal shadow checks covered here.
 """
 
 from __future__ import annotations

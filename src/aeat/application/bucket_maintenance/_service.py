@@ -47,7 +47,7 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ..user_profile import (
-    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
+    UnsupportedBundleSchemaVersionError,
     delete_profile_with_lifecycle_span,
     deserialize_profile_bundle,
     missing_filing_baseline_flags,
@@ -59,6 +59,7 @@ from ..user_profile import (
     remove_profile_bucket_directory,
     rename_profile,
     serialize_profile_bundle,
+    validate_bundle_payload,
 )
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
@@ -100,7 +101,44 @@ _RESTORE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
 _ARCHIVE_SCHEMA_VERSION = 2
+
+#: Oldest sealed-archive schema version the import path keeps readable.
+#: Starts at the current version (no released archives exist below it);
+#: moves forward only through a superseding accepted ADR
+#: (``2026-07-08-released-data-durability-adr``).
+_ARCHIVE_DURABILITY_FLOOR = 2
 _RECOVERY_WRAP_SALT_BYTES = 16
+
+
+def ensure_archive_schema_readable(archive_schema_version: int) -> None:
+    """Refuse a sealed-archive version this application cannot restore.
+
+    The gate is a ceiling with a durability floor, not an equality: a
+    version above ``_ARCHIVE_SCHEMA_VERSION`` was exported by a newer
+    application and is refused as such, and a version below
+    ``_ARCHIVE_DURABILITY_FLOOR`` predates the durability guarantee.
+    Every version between the floor and the ceiling must stay importable;
+    the schema-lineage gate holds this function to that contract so a
+    future archive-version bump cannot silently orphan a taxpayer's
+    existing backups.
+
+    Raises:
+        BucketImportError: When the version is above the ceiling or below
+            the durability floor.
+    """
+    if archive_schema_version > _ARCHIVE_SCHEMA_VERSION:
+        raise BucketImportError(
+            translated_message="application.bucket_maintenance.errors.archive_schema_version_from_future",
+            context={
+                "archive_schema_version": str(archive_schema_version),
+                "max_supported": str(_ARCHIVE_SCHEMA_VERSION),
+            },
+        )
+    if archive_schema_version < _ARCHIVE_DURABILITY_FLOOR:
+        raise BucketImportError(
+            translated_message="application.bucket_maintenance.errors.unsupported_archive_schema_version",
+            context={"archive_schema_version": str(archive_schema_version)},
+        )
 
 
 def _directory_byte_total(directory: Path) -> tuple[int, int]:
@@ -707,15 +745,10 @@ class BucketMaintenanceService:
             decrypt_record,
         )
         from ...adapters.persistence.storage.master_key import derive_kek_with_params, get_active_master_key
-        from ...domain.user_profile import UserProfilePortableExport
 
         contents = read_sealed_archive(command.source_path)
         header = contents.header
-        if header.archive_schema_version != _ARCHIVE_SCHEMA_VERSION:
-            raise BucketImportError(
-                translated_message="application.bucket_maintenance.errors.unsupported_archive_schema_version",
-                context={"archive_schema_version": str(header.archive_schema_version)},
-            )
+        ensure_archive_schema_readable(header.archive_schema_version)
         existing = read_profile_bucket_by_id(header.bucket_id)
         if existing is not None and not command.force_replace:
             raise BucketImportError(
@@ -750,23 +783,24 @@ class BucketMaintenanceService:
                 key=sealing_key,
                 associated_data=_archive_associated_data(header.bucket_id, header.manifest_digest),
             )
-            bundle = UserProfilePortableExport.model_validate_json(decrypted)
         except Exception as exc:
             raise BucketImportError(
                 translated_message="application.bucket_maintenance.errors.import_payload_invalid",
                 context={"bucket_id": header.bucket_id, "error": str(exc)},
             ) from exc
 
-        if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+        try:
+            bundle = validate_bundle_payload(decrypted)
+        except UnsupportedBundleSchemaVersionError as exc:
             raise BucketImportError(
                 translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
-                context={
-                    "bundle_schema_version": str(bundle.bundle_schema_version),
-                    "supported_versions": ",".join(
-                        str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)
-                    ),
-                },
-            )
+                context=exc.context,
+            ) from exc
+        except Exception as exc:
+            raise BucketImportError(
+                translated_message="application.bucket_maintenance.errors.import_payload_invalid",
+                context={"bucket_id": header.bucket_id, "error": str(exc)},
+            ) from exc
 
         self._validate_imported_profile_filing_baseline(bundle)
         # Recovery is same-id: the bucket is provisioned under the bundle's

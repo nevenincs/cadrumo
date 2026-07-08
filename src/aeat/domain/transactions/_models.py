@@ -29,6 +29,7 @@ from ...core.time import now
 from .._identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
+    InputClassification,
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
     IvaCategory,
@@ -605,6 +606,23 @@ class Transaction(BaseModel):
             both terms of the art. 104.Dos ratio; the operation's own IVA
             cuota treatment is unaffected. ``None`` for every operation that
             is not an art. 104.Tres judgment exclusion.
+        input_classification: Operator-declared LIVA art. 106 prorrata-especial
+            per-input use classification (:class:`~domain.iva.InputClassification`):
+            ``EXCLUSIVELY_DEDUCTIBLE`` (regla 1.ª, deducted in full),
+            ``EXCLUSIVELY_NON_DEDUCTIBLE`` (regla 2.ª, no deduction), or
+            ``COMMON`` (regla 3.ª, deducted at the general percentage). Meaningful
+            only for a purchase row in a bucket whose prorrata register regime is
+            especial; the regime-aware aggregation routes the deducible cuota by
+            this classification. ``None`` for rows that are not under especial or
+            carry no per-input use declaration.
+        prorrata_sector_id: Operator-declared LIVA arts. 9.1.c / 101 differentiated
+            sector this input belongs to. References a ``sector_id`` declared in
+            the bucket's prorrata register sector definitions; the sector-aware
+            aggregation applies THAT sector's provisional percentage to the row's
+            deducible cuota. ``None`` means common-use (usable across sectors),
+            apportioned by the art. 104.Dos common percentage in a sectorized
+            bucket; in a non-sectorized bucket ``None`` is the whole-entity
+            default (today's behaviour), so an unsectored taxpayer is unaffected.
         purchase_invoice_evidence_id: Canonical purchase-invoice evidence
             reference attached to the row.
         attachment_ids: Supplementary attachment references.
@@ -707,6 +725,8 @@ class Transaction(BaseModel):
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
+    input_classification: InputClassification | None = None
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     created_by: str | None = None
@@ -781,6 +801,7 @@ class Transaction(BaseModel):
         "counterparty_eu_member_state",
         "cash_accounting_treatment",
         "art_104_tres_exclusion",
+        "input_classification",
         mode="before",
     )
     @classmethod
@@ -803,6 +824,7 @@ class Transaction(BaseModel):
             "counterparty_eu_member_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,
             "art_104_tres_exclusion": Art104TresExclusion,
+            "input_classification": InputClassification,
         }
         return enum_by_field[info.field_name or ""](value)
 

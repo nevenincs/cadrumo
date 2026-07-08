@@ -15,10 +15,6 @@ See Also:
     :mod:`~application.calculations.tests.test_modelo_303_special_case_casilla_routing`
         Ledger aggregation regression proving retailer-side recargo purchases
         are surfaced instead of silently deducted.
-    Governing vault records
-        ``2026-06-19-silent-zero-base-aggregation-adr`` records the supplier-side
-        recargo model and M303 binding path; the legal-grounding centralization
-        audit lists the LIVA art. 161 ladder as registry-clean.
 """
 
 from __future__ import annotations

@@ -29,10 +29,15 @@ See Also:
 
 from __future__ import annotations
 
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.config import load_settings
 from ....core.resources import bundled_path
+
+REGISTRY_DISK_CACHE_DIR_ENV_VAR = "AEAT_REGISTRY_DISK_CACHE_DIR"
+"""Environment variable backing :attr:`~core.config.Settings.aeat_registry_disk_cache_dir`."""
 
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
@@ -116,3 +121,28 @@ def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
     if under_pytest:
         return is_bundled
     return True
+
+
+def registry_disk_cache_dir() -> Path:
+    """Return the directory the cross-process registry disk pickle lives in.
+
+    Reads :attr:`~core.config.Settings.aeat_registry_disk_cache_dir` (the
+    ``AEAT_REGISTRY_DISK_CACHE_DIR`` env var) before falling back to
+    ``tempfile.gettempdir()``, so a test can redirect the disk-cache pickle to
+    a test-owned directory. Production and the ordinary bundled-root sharing
+    path never set this field and always use the real OS temp directory; only
+    a test that needs to assert EXCLUSIVE state on the pickle (e.g. "exactly
+    one file exists", "the mtime is unchanged") -- which the real OS temp
+    directory cannot guarantee once sibling pytest-xdist workers are also
+    touching the shared bundled-root pickle -- sets this var to isolate its
+    own assertions from that sibling traffic, while still exercising the real
+    filesystem and the real pickle read/write path (no mock of the loader's
+    own behavior). It rides the env var (rather than a plain monkeypatched
+    function) because it also needs to propagate to a subprocess a test
+    spawns via ``env=``, so a cross-process sharing proof can isolate BOTH
+    ends of the process pair onto the same test-owned directory.
+    """
+    override = load_settings().aeat_registry_disk_cache_dir
+    if override is not None:
+        return override
+    return Path(tempfile.gettempdir())

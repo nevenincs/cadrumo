@@ -20,8 +20,9 @@ See Also:
         CSV/XLSX reader covering required-column and unknown-column refusal.
     :data:`~application.invoices.BULK_INVOICE_IMPORT_REQUIRED_COLUMNS`
         Public row-shape contract asserted by the CLI regression.
-    ``2026-04-17-invoice-catalogue-adr``
-        Catalogue identity and validation contract preserved by bulk imports.
+
+Catalogue identity and validation are the same contract bulk imports must
+preserve as any other invoice-creation path.
 """
 
 from __future__ import annotations

@@ -52,6 +52,7 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
+    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_schema_lineage.py",
     "src/aeat/adapters/persistence/storage/sql/tests/_secure_objects_support.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_session.py",
     "src/aeat/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py",

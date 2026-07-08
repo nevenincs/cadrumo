@@ -157,7 +157,7 @@ def test_explain_degrades_gracefully_for_modelo_without_deadline_windows() -> No
 def test_explain_historical_modelo_100_carries_out_of_plazo_warning() -> None:
     """A historical applicable return must say its voluntary filing window is closed.
 
-    S347 repro: M100 for tax year 2022 in 2026 is still applicable for a
+    M100 for tax year 2022, evaluated in 2026, is still applicable for a
     natural person, but it is no longer an ordinary in-window filing. The warning
     is derived from the real registered Modelo 100 2022 deadline window.
     """
@@ -173,7 +173,7 @@ def test_explain_historical_modelo_100_carries_out_of_plazo_warning() -> None:
 
 
 def test_explain_recent_modelo_100_does_not_emit_out_of_plazo_warning() -> None:
-    """A just-closed M100 window is not the S347 stale-year case."""
+    """A just-closed M100 window is not the historical stale-year case."""
 
     result = build_overview_explain(_autonomo_profile(), modelo="100", year=2025, today=date(2026, 7, 7))
 

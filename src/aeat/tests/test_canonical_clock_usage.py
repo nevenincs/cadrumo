@@ -16,13 +16,6 @@ See Also:
         Canonical wall-clock facade and deterministic replay seam.
     :mod:`~tests._inventory`
         Shared production AST inventory surface used by this ratchet.
-    ``2026-07-01-determinism-replay-residual-adr``
-        Decision that adds a seam-coverage gate for bare clock reads.
-    ``2026-07-01-determinism-replay-residual-P01-S01``
-        Execution record for the AST clock-seam conformance gate.
-    ``2026-05-28-codebase-solidification-plan``
-        W03.P15 clock enrollment sweep that removed inline
-        ``datetime.now(UTC)`` call sites.
 """
 
 from __future__ import annotations

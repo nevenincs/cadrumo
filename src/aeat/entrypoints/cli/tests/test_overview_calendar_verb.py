@@ -39,6 +39,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from .._overview import _calendar_shift_reason_text
 from ._overview_calendar_support import (
     _SOURCE_URL,
+    PRIMARY_PROFILE_ID,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
     _stamp_calendar_enrolment_from_censo,
@@ -329,7 +330,7 @@ def test_calendar_output_language_applies_before_refusal_rendering() -> None:
 
 def test_calendar_json_includes_local_live_snapshot_events() -> None:
     ExpedientesService().capture(
-        bucket_id="operator",
+        bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
                 Declaracion(
@@ -347,7 +348,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
         ),
     )
     NotificationsService().capture(
-        bucket_id="operator",
+        bucket_id=PRIMARY_PROFILE_ID,
         snapshot=NotificationsSnapshot(
             rows=(
                 RemoteNotification(
@@ -413,7 +414,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
 def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
     _stamp_calendar_enrolment_from_censo()
     ExpedientesService().capture(
-        bucket_id="operator",
+        bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
                 Declaracion(
@@ -475,11 +476,11 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
         csv=local_ref,
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     )
-    with profile_storage_session("operator"):
-        repo = ModeloRecordCatalogueRepository(bucket_id="operator")
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
     ExpedientesService().capture(
-        bucket_id="operator",
+        bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
                 Declaracion(
@@ -563,11 +564,11 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         csv=local_ref,
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     )
-    with profile_storage_session("operator"):
-        repo = ModeloRecordCatalogueRepository(bucket_id="operator")
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
     ExpedientesService().capture(
-        bucket_id="operator",
+        bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
                 Declaracion(
@@ -629,8 +630,8 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
         csv=csv,
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
     )
-    with profile_storage_session("operator"):
-        repo = ModeloRecordCatalogueRepository(bucket_id="operator")
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
 
     strict = _invoke(
@@ -680,8 +681,8 @@ def test_calendar_text_output_names_verified_aeat_evidence() -> None:
     csv = "JUST-303-2025-1T"
     record = _modelo_record_with_external_justificante(csv=csv)
     _stamp_calendar_enrolment_from_censo()
-    with profile_storage_session("operator"):
-        repo = ModeloRecordCatalogueRepository(bucket_id="operator")
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
         JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="88874275K"))
 

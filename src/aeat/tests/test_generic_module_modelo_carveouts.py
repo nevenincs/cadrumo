@@ -34,10 +34,6 @@ See Also:
     :class:`~core.Modelo`
         Closed modelo identifier enum whose ``M###`` members are detected when
         they appear in generic application logic.
-    ``.vault/adr/2026-07-02-arch-remediation-modelo-surface-adr.md``
-        Establishes the per-modelo extension surface this ratchet protects.
-    ``.vault/audit/2026-07-04-arch-remediation-modelo-surface-audit.md``
-        Records the campaign-close verification that includes this gate.
 """
 
 from __future__ import annotations

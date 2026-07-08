@@ -12,11 +12,9 @@ See Also:
         repositories.
     :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`
         Runtime storage factory that refuses unready bucket sessions.
-    Governing vault records
-        ``2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit``
-        closes the filing runtime helper as runtime-default; the secure-storage
-        production-hardening architecture ADR requires this fail-closed runtime
-        readiness gate.
+
+The secure-storage architecture requires this fail-closed runtime readiness
+gate: an unready bucket session must refuse rather than silently degrade.
 """
 
 from __future__ import annotations

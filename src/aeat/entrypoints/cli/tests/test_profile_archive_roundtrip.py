@@ -184,10 +184,9 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
 def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path) -> None:
     """A passphrase-wrapped transfer archive does not expose raw profile identity bytes.
 
-    This is the S308 persona path: a gestor needs a bundle suitable for
-    cross-host/email transfer. The sealed archive may expose only its header
-    metadata in clear; the profile payload containing NIF/name/surnames must
-    stay inside the AEAD envelope.
+    A gestor needs a bundle suitable for cross-host/email transfer. The sealed
+    archive may expose only its header metadata in clear; the profile payload
+    containing NIF/name/surnames must stay inside the AEAD envelope.
     """
     import tarfile
 

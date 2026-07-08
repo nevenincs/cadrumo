@@ -29,12 +29,6 @@ See Also:
         bypass.
     :func:`~tests._inventory.production_ast_items`
         Shared production AST inventory scanned by this structural guard.
-    ``.vault/audit/2026-05-26-secure-storage-settings-env-audit.md``
-        Records the settings and environment handling audit that motivates
-        centralizing AEAT env access.
-    ``.vault/adr/2026-06-03-settings-di-deferral-adr.md``
-        Preserves the Settings dependency-injection migration decision and
-        direct ``os.environ`` remediation path.
 """
 
 from __future__ import annotations
@@ -46,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests._inventory import SRC_AEAT, aeat_relative, ast_for_path, production_ast_items
+from ...tests import SRC_AEAT, aeat_relative, ast_for_path, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

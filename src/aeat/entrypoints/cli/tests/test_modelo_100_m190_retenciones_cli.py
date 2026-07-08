@@ -21,7 +21,7 @@ from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "m100-m190-retenciones-cli"
+_PROFILE_ID = "568d7ee0-33e4-4efb-8bae-5c4e97d9a1b7"
 _CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 
 

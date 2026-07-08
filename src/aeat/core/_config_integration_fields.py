@@ -69,6 +69,16 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
         default=PROJECT_ROOT / "var" / "audit" / "registry" / "parity",
         description="Directory where registry parity tape artifacts are archived by default",
     )
+    aeat_registry_disk_cache_dir: Path | None = Field(
+        default=None,
+        description=(
+            "Override for the cross-process registry disk-pickle directory "
+            "(default: the platform temp directory). Set only by test isolation "
+            "to redirect the shared bundled-root cache onto a test-owned "
+            "directory, so a test asserting exclusive pickle state never races "
+            "sibling pytest-xdist workers sharing the real OS temp directory."
+        ),
+    )
     aeat_calc_sheets_recalc_delay_s: float = Field(
         default=2.0,
         gt=0,

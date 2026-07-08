@@ -12,10 +12,6 @@ See Also:
         Adjacent wall-clock seam that produces UTC-aware ``now`` values.
     :class:`~datetime.datetime`
         Runtime value type whose ``tzinfo`` and offset semantics are exercised.
-    Governing vault records
-        ``2026-05-28-codebase-solidification-W01-P05-S137`` and
-        ``2026-05-28-codebase-solidification-W01-P05-S139`` document the split
-        from local ``_ensure_utc`` helpers into canonical core time helpers.
 """
 
 from __future__ import annotations

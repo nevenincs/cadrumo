@@ -12,9 +12,9 @@ See Also:
     :mod:`~adapters.outbound.aeat.sede._browser_constants`
         Adapter-local Playwright and Sede body-encoding constants excluded as
         authoritative definition sites.
-    ``.vault/adr/2026-05-26-aeat-sede-constants-centralization-adr.md``
-        Governs centralising executable AEAT/Sede constants in schema-owned
-        surfaces instead of scattered literals.
+
+Executable AEAT/Sede constants must live in a schema-owned canonical surface,
+never as scattered literals across production modules.
 """
 
 from __future__ import annotations

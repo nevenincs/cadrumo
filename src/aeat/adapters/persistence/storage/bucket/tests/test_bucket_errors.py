@@ -13,10 +13,9 @@ See Also:
         Manifest read/write boundary that raises bucket validation failures.
     :mod:`~adapters.persistence.storage.bucket._lockfile`
         PID-stamped lock primitive that raises busy / locked bucket failures.
-    Governing vault records
-        ``2026-05-14-profile-bucket-lifecycle-adr`` defines the bucket storage
-        model; the secure-storage production-hardening architecture ADR requires
-        adverse storage failures to fail closed with redacted diagnostics.
+
+Adverse storage failures must fail closed with redacted diagnostics rather
+than leak raw storage details to the operator.
 """
 
 from __future__ import annotations

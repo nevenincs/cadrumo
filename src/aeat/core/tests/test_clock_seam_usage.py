@@ -33,9 +33,6 @@ See Also:
     :mod:`~core.time`
         Canonical clock and frozen-clock seam protected from direct wall-clock
         reads.
-    ``.vault/exec/2026-05-28-codebase-solidification/2026-05-28-codebase-solidification-W01-P05-S141.md``
-        Records the canonical clock extraction and initial local-clock
-        migration.
 """
 
 from __future__ import annotations
@@ -46,7 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._inventory import aeat_relative, production_ast_items
+from ...tests import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

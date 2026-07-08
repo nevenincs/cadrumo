@@ -18,10 +18,10 @@ See Also:
     :class:`~domain.iva.IvaCashAccountingPaymentEvidence`
         Cash-accounting payment evidence whose Decimal/date fields must survive
         JSON-shaped persistence roundtrips.
-    ``2026-05-13-cli-workflow-redesign-w61-p301-s1801-ledger-storage-ownership-audit``
-        Audit that required bucket-scoped transaction catalogue storage.
-    ``2026-06-30-bucket-custody-completeness-adr``
-        Secure-object custody decision that keeps financial records encrypted.
+
+Transaction storage is bucket-scoped (never a cross-profile shared store) and
+every persisted record stays encrypted at rest under the profile's
+secure-object substrate.
 """
 
 from __future__ import annotations
@@ -907,13 +907,12 @@ def test_load_then_save_reuses_the_memoized_hash_for_an_unchanged_row(
 ) -> None:
     """The SAME repository instance's load-then-save skips re-serializing an untouched row.
 
-    Proves the O3 write-path cache (``2026-07-06-ledger-perf-optimization-adr``)
-    is actually consulted, not merely present: after ``load()`` populates
-    ``_serialized_hash_cache`` keyed by ``id(transaction)``, saving the exact
-    catalogue that ``load()`` returned must reach the cache-hit branch in
-    ``_reconcile`` -- proven by monkeypatching ``_serialise_transaction`` to
-    raise if it is ever called for the untouched row and asserting the row's
-    revision stays byte-identical.
+    Proves the identity-keyed write-path hash cache is actually consulted, not
+    merely present: after ``load()`` populates ``_serialized_hash_cache`` keyed
+    by ``id(transaction)``, saving the exact catalogue that ``load()`` returned
+    must reach the cache-hit branch in ``_reconcile`` -- proven by
+    monkeypatching ``_serialise_transaction`` to raise if it is ever called for
+    the untouched row and asserting the row's revision stays byte-identical.
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -1017,14 +1016,13 @@ def test_cache_miss_on_content_edited_replacement_instance_still_detects_the_cha
 def test_loaded_envelope_bytes_equal_fresh_serialization_of_the_same_instance(
     tmp_path: Path,
 ) -> None:
-    """Pins the O3 equivalence assumption: stored bytes == fresh re-serialization.
+    """Pins the write-path cache's equivalence assumption: stored bytes == fresh re-serialization.
 
     The cache is only sound if the plaintext envelope bytes ``load()``
     persisted at write time are byte-identical to what
-    ``_serialise_transaction`` would recompute for the SAME loaded instance
-    (``2026-07-06-ledger-perf-optimization-adr``, "O3 equivalence
-    assumption, pinned by test"). This directly proves that equality, not
-    just the cache's observable skip-behaviour.
+    ``_serialise_transaction`` would recompute for the SAME loaded instance.
+    This directly proves that equality, not just the cache's observable
+    skip-behaviour.
     """
 
     from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key

@@ -251,8 +251,11 @@ def _register_profile_export_command(
         ),
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
-        from ....application.user_profile import profile_storage_session, serialize_profile_bundle
-        from ....application.user_profile._bundle_encryption import encrypt_profile_bundle_for_passphrase
+        from ....application.user_profile import (
+            encrypt_profile_bundle_for_passphrase,
+            profile_storage_session,
+            serialize_profile_bundle,
+        )
         from ....domain.buckets import BucketEventType
         from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
         from .._config_payloads import ConfigProfileExportResult
@@ -445,22 +448,20 @@ def _register_profile_import_command(
         """Read a portable profile bundle from a JSON file and register it."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.user_profile import (
+            EncryptedProfileBundleError,
+            EncryptedProfileBundleExport,
             ProfileAlreadyRegisteredError,
             UnsupportedBundleSchemaVersionError,
+            decrypt_profile_bundle_with_passphrase,
             deserialize_profile_bundle,
             missing_filing_baseline_flags,
             profile_storage_session,
             record_to_path_values,
-        )
-        from ....application.user_profile._bundle_encryption import (
-            EncryptedProfileBundleError,
-            EncryptedProfileBundleExport,
-            decrypt_profile_bundle_with_passphrase,
+            validate_bundle_payload,
         )
         from ....application.workflow import read_profile_bucket as _read_profile_bucket
         from ....application.workflow import read_profile_bucket_by_id
         from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import UserProfilePortableExport
         from .._config_payloads import ConfigProfileImportResult
 
         if not path.is_file():
@@ -471,10 +472,12 @@ def _register_profile_import_command(
         try:
             raw_bundle_text = path.read_text(encoding="utf-8")
             if passphrase is None:
-                bundle = UserProfilePortableExport.model_validate_json(raw_bundle_text)
+                bundle = validate_bundle_payload(raw_bundle_text)
             else:
                 encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
                 bundle = decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
+        except UnsupportedBundleSchemaVersionError as exc:
+            raise _CliRefusedBoundaryError(str(exc)) from exc
         except EncryptedProfileBundleError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.import_encrypted_bundle_invalid",
@@ -490,10 +493,6 @@ def _register_profile_import_command(
                 translated_message="cli.config.profile.import_invalid_bundle",
                 context={"error": str(exc)},
             ) from exc
-        try:
-            _validate_bundle_schema_version(bundle)
-        except UnsupportedBundleSchemaVersionError as exc:
-            raise _CliRefusedBoundaryError(str(exc)) from exc
         record = bundle.profile
         _validate_imported_profile_tax_id(record)
         _validate_imported_profile_filing_baseline(
@@ -587,22 +586,6 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
         suggestion=f"aeat config switch {target_label}",
         context={"active_profile": target_label},
     )
-
-
-def _validate_bundle_schema_version(bundle: object) -> None:
-    """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""
-    from ....application.user_profile import (
-        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
-        UnsupportedBundleSchemaVersionError,
-    )
-
-    version = getattr(bundle, "bundle_schema_version", None)
-    if version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
-        raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
-            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
-        )
 
 
 def _validate_imported_profile_tax_id(record: object) -> None:

@@ -14,8 +14,9 @@ See Also:
     :class:`~core.observability.JsonlRunSink`
         Logging sink whose stdlib ``logging.Handler`` inheritance justifies the
         logging import survivor.
-    ``.vault/exec/2026-05-31-codebase-solidification-w13p45-exec.md``
-        Records the S602/S605 closure steps enforced by this aggregate test.
+
+Aggregates the narrowed-exception and dotted-path-constant checks these two
+modules previously required broad lint suppressions to pass.
 """
 
 from __future__ import annotations

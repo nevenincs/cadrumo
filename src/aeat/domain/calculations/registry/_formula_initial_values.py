@@ -129,7 +129,9 @@ def initial_value_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     Source-resolution preview passes can use this to distinguish declared or
     bound input slots from values that only exist after the formula engine runs.
     It is intentionally descriptive only; computed casillas still cannot be
-    supplied through the input channel.
+    supplied through the input channel. ``revision`` is the compiled
+    :class:`ModeloRevision` whose casillas are scanned for their declared
+    ``input_kind``.
     """
     return frozenset(casilla.id for casilla in revision.casillas if casilla.input_kind != InputKind.COMPUTED)
 

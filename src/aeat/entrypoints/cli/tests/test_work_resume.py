@@ -73,7 +73,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
         )
-        _seed_ready_profile_record("operator")
+        _seed_ready_profile_record("11111111-1111-4111-8111-111111111111")
         yield
 
 

@@ -15,10 +15,6 @@ See Also:
     :class:`~decimal.Decimal`
         Standard-library value contract whose fixed-point formatting and
         ``normalize`` behaviour these cases pin.
-    Governing vault records
-        ``2026-05-28-codebase-solidification-W01-P05-S151`` and
-        ``2026-05-30-codebase-solidification-W03-P18-S358`` document the
-        canonical decimal helper consolidation and enrollment.
 """
 
 from __future__ import annotations

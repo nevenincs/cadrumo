@@ -17,10 +17,6 @@ See Also:
     :mod:`~domain.calculations.registry._bindings`
         Registry binding resolver layer that consumes typed IVA aggregation
         dimensions.
-    Governing vault records
-        ``2026-05-20-calculation-source-connectivity-adr`` identifies the IVA
-        flow axis as part of the calculation substrate; the silent-zero-base
-        aggregation audit records the M303 flow-direction binding checks.
 """
 
 from __future__ import annotations

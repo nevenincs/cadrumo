@@ -15,10 +15,6 @@ See Also:
     :mod:`~adapters.persistence.profile.modelos_work_units`
         Representative modelo catalogue repository covered by this shared
         sensitivity guard.
-    Governing vault records
-        ``2026-05-22-secure-storage-production-hardening-architecture-adr``
-        defines the secure-storage architecture; the June 2026 hardening
-        reviews record the modelo catalogue ``FINANCIAL`` metadata checks.
 """
 
 from __future__ import annotations

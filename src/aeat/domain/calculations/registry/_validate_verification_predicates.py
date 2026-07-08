@@ -15,6 +15,7 @@ evaluator's defensive bad-arity branch silently hold (or, for the ADVISORY
 form, silently never fire) — see
 :mod:`~application.modelo._verification_actions` for the runtime
 counterpart these gates keep honest.
+
 See Also:
     :data:`~domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS`
         Canonical operator set shared by the validator and runtime evaluator.

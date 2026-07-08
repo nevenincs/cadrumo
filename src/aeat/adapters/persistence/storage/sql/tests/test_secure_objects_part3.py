@@ -325,8 +325,15 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
     assert len(readable) == 1
     assert readable[0].payload == single.payload
     assert len(unreadable) == 1
+    from ......core.i18n import tr
+
     assert unreadable[0].schema_version == 2
-    assert "schema version 2" in unreadable[0].reason
+    assert unreadable[0].reason == tr(
+        "errors.storage.namespace.schema_version_from_future",
+        namespace="aeat.batch.failures",
+        schema_version=2,
+        expected=1,
+    )
 
 
 def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
@@ -542,4 +549,4 @@ def test_registry_bound_repository_rejects_on_disk_schema_newer_than_registry(tm
                 expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
                 max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version + 1,
             )
-        assert raised.value.translated_message == "errors.storage.namespace.schema_mismatch"
+        assert raised.value.translated_message == "errors.storage.namespace.schema_version_from_future"

@@ -52,14 +52,12 @@ See Also:
         Companion typed-boundary guard whose ``CAST-RATIONALE-*`` markers also
         satisfy historical type-ignore escape sites.
     :mod:`~tests.test_any_param_rationale_inventory`
-        Parameter-level ``Any`` rationale ratchet mirrored by the W26
-        type-ignore enrollment pattern.
-    ``.vault/audit/2026-05-31-codebase-solidification-audit.md``
-        Records the W26 type-ignore corpus paydown from 99 enrolled sites to
-        the 7 hard-deferred residuals guarded here.
-    ``.vault/exec/2026-05-28-codebase-solidification/2026-06-01-codebase-solidification-w26-p55-s654-s656-exec.md``
-        Captures the original ratchet creation, convention docstring, and
-        aggregate closure test for this module.
+        Parameter-level ``Any`` rationale ratchet mirroring the same
+        enrollment pattern for parameter-level type escapes.
+
+The type-ignore corpus paid down from 99 enrolled sites to the 7 hard-deferred
+residuals this ratchet guards; every remaining suppression must carry a
+rationale marker or a named, justified ratchet entry.
 """
 
 from __future__ import annotations

@@ -10,10 +10,6 @@ See Also:
         Construct grounding gate exercised through the public validator.
     :class:`~domain.calculations.registry._validate.RegistryValidator`
         Modelo-level validator whose call path this regression pins.
-    ``2026-05-04-calculation-authority-evidence-tiering-adr``
-        Decision that separates official source guidance from layout authority.
-    ``2026-05-15-catalogue-validation-audit``
-        Audit trail for construct source-ref closure validation.
 """
 
 from __future__ import annotations

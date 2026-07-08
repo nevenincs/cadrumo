@@ -14,10 +14,6 @@ See Also:
     :class:`~domain.portals.PortalCategory`
         Category axis used by ``portals_for_modelo`` and
         ``portals_by_category``.
-    Governing vault records
-        ``2026-04-17-portal-catalogue-adr`` defines the frozen portal catalogue;
-        ``2026-05-26-aeat-sede-constants-centralization-adr`` keeps portal host
-        and Sede route constants schema-owned.
 """
 
 from __future__ import annotations

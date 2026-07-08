@@ -31,6 +31,7 @@ Submodules
    aeat.adapters.persistence.storage._namespace_registry
    aeat.adapters.persistence.storage._path_safety
    aeat.adapters.persistence.storage._rotation
+   aeat.adapters.persistence.storage._schema_lineage
    aeat.adapters.persistence.storage.attachment
    aeat.adapters.persistence.storage.errors
    aeat.adapters.persistence.storage.runtime

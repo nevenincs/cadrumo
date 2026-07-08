@@ -326,7 +326,7 @@ finally:
 try:
     LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install aeat[anthropic]":
+    if exc.suggestion != "pip install aeat-cli[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {exc.suggestion!r}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
@@ -465,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--browser",
         action="store_true",
-        help="Install aeat[browser], provision Chromium with system deps, and run browser health.",
+        help="Install aeat-cli[browser], provision Chromium with system deps, and run browser health.",
     )
     parser.add_argument("--timeout", type=int, help="Docker probe timeout in seconds.")
     args = parser.parse_args(argv)

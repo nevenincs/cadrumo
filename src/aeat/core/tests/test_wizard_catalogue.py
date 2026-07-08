@@ -19,11 +19,6 @@ See Also:
     :mod:`~domain.contribuyente._keys`
         Domain registry that must receive pushed profile keys without pulling
         upward into the application wizard layer.
-    ``2026-06-02-wizard-registration-bootstrap-adr``
-        DB-17 decision that centralised wizard/profile-key registration.
-    ``2026-06-03-wizard-catalogue-startup-ordering-adr``
-        Composition-root decision that prevents order-dependent registration
-        failures.
 """
 
 from __future__ import annotations

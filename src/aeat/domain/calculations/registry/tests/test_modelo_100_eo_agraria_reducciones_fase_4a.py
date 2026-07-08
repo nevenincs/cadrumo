@@ -45,9 +45,6 @@ See Also:
         Registry-authored Fase 4ª formula chain under test.
     ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0295-renta-2025-eo-agraria-reduccion-irregularidad.toml``
         Registry-authored Fase 5ª irregularidad reduction chain under test.
-    ``2026-07-03-y-siguientes-verification-audit`` and
-    ``2026-07-01-modelo-131-eo-modulos-engine-adr``
-        Audit and objective-estimation engine context for the reduction chain.
 """
 
 from __future__ import annotations

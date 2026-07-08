@@ -28,10 +28,6 @@ See Also:
         directory.
     :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`
         Reactivation primitive composed by restore.
-    ``2026-05-12-cli-workflow-redesign-bucket-adr`` and
-    ``2026-06-03-bucket-sealed-archive-adr``
-        Bucket-maintenance lifecycle and composition-pattern decisions that
-        govern the service surface.
 """
 
 from __future__ import annotations

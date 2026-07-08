@@ -40,9 +40,6 @@ See Also:
     :class:`~application.aggregation.RetencionesAggregation`
         Repository-backed retenciones summary source enrolled on the calculate
         mesh for M180/M193 distinct-NIF counts.
-    ``2026-06-24-retenciones-perceptor-count-adr`` and
-    ``2026-06-30-retenciones-perceptor-count-audit``
-        Decision and current-state audit governing the RET-1 source split.
 """
 
 from __future__ import annotations

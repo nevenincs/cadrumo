@@ -33,9 +33,13 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from .....core import (
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from .....core.external_constants import UTF_8_ENCODING
-from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
@@ -62,7 +66,20 @@ def _populated_register() -> ProrrataRegister:
         provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
         authorisation_reference="AEAT-AUTH-2024-0007",
     )
-    return ProrrataRegister(entries=(carried_settled, authorised_sector))
+    interrupted = ProrrataRegisterEntry(
+        ejercicio=2023,
+        regime=ProrrataRegisterRegime.NINGUNA,
+        interrupted=True,
+    )
+    sector_definition = SectorDefinition(
+        sector_id="arrendamiento",
+        letra=SectorDiferenciadoLetra.A,
+        member_activity_codes=("6820",),
+    )
+    return ProrrataRegister(
+        entries=(carried_settled, authorised_sector, interrupted),
+        sector_definitions=(sector_definition,),
+    )
 
 
 def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
@@ -87,6 +104,16 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert authorised.sector_id == "arrendamiento"
         assert authorised.provisional_provenance is ProrrataProvisionalProvenance.AEAT_AUTORIZADA
         assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
+        assert loaded.is_sectorized is True
+        assert loaded.sector_definition_for("arrendamiento").letra is SectorDiferenciadoLetra.A
+        assert loaded.sector_definition_for("arrendamiento").member_activity_codes == ("6820",)
+        # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
+        # encrypted boundary: an inactive ejercicio carries no percentage/volume.
+        interrupted = loaded.entry_for(2023)
+        assert interrupted is not None
+        assert interrupted.interrupted is True
+        assert interrupted.provisional_percentage is None
+        assert interrupted.definitive_percentage is None
 
 
 def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:

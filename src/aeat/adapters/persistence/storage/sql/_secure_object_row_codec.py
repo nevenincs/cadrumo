@@ -3,9 +3,11 @@
 This module keeps the encrypted row decode path and post-write revision
 metadata update close to the SQL secure-object adapter without leaving both
 algorithms embedded in the repository class. It derives and persists revision
-lineage after ciphertext is written, validates row classification and schema
-contracts before decrypting, and refuses rows whose revision hashes no longer
-match their stored metadata.
+lineage after ciphertext is written, validates row classification and the
+schema-lineage ceiling before decrypting (a version above the consumer's
+current version is refused; an older version decrypts under its written
+version and is chain-upgraded to current), and refuses rows whose revision
+hashes no longer match their stored metadata.
 
 See Also:
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
@@ -21,6 +23,8 @@ See Also:
         AEAD checks pass.
     :func:`~adapters.persistence.storage.crypto.secure_object_payload_aad`
         Associated-data builder that binds ciphertext to row identity.
+    :class:`SensitivityClass`
+        Expected row classification validated before a row is decoded.
     Governing vault records
         ``2026-05-22-secure-storage-production-hardening-architecture-adr`` and
         ``2026-05-28-secure-storage-production-hardening-w04-p07-s30-review-audit``
@@ -40,8 +44,9 @@ from .....core.classification import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .._namespace_registry import SecureObjectNamespaceDefinition
+from .._schema_lineage import ensure_schema_version_readable, upgrade_secure_object_payload
 from ..crypto import decrypt_secure_object_payload, secure_object_payload_aad
-from ..errors import ClassificationError, EnvelopeVersionError, SecureObjectUnreadableError
+from ..errors import ClassificationError, SecureObjectUnreadableError
 from . import _orm
 from ._secure_object_crypto import derive_revision_id, verify_revision_self_consistency
 from ._secure_object_records import SecureObjectRecord
@@ -133,15 +138,11 @@ def secure_object_record_from_row(
             },
             translated_message="errors.storage.namespace.classification_mismatch",
         )
-    if row.schema_version != max_supported_version:
-        raise EnvelopeVersionError(
-            context={
-                "namespace": row.namespace,
-                "schema_version": row.schema_version,
-                "expected": max_supported_version,
-            },
-            translated_message="errors.storage.namespace.schema_mismatch",
-        )
+    ensure_schema_version_readable(
+        namespace=row.namespace,
+        schema_version=row.schema_version,
+        current_version=max_supported_version,
+    )
     enforce_registered_row_schema(
         namespace=row.namespace,
         schema_version=row.schema_version,
@@ -172,11 +173,18 @@ def secure_object_record_from_row(
             row.schema_version,
         ),
     )
+    if row.schema_version < max_supported_version:
+        payload_plain = upgrade_secure_object_payload(
+            payload_plain,
+            namespace=row.namespace,
+            from_version=row.schema_version,
+            to_version=max_supported_version,
+        )
     return SecureObjectRecord(
         namespace=row.namespace,
         object_key=bytes(row.object_key),
         classification=classification,
-        schema_version=row.schema_version,
+        schema_version=max_supported_version,
         written_at=row.written_at,
         payload=payload_plain,
     )

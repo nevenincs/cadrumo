@@ -29,8 +29,6 @@ See Also:
     ``test_parser_boundary_m131_current_year.py``
         Sibling current-year synthetic-fixture discipline for provisional
         declaration profiles.
-    ``2026-05-21-declaracion-extraction-architecture-adr``
-        Accepted registry-driven declaration extraction architecture.
 """
 
 from __future__ import annotations

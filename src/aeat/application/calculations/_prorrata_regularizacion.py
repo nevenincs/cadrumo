@@ -48,9 +48,11 @@ from ...core import (
     CasillaId,
     Modelo,
     Period,
+    ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
@@ -64,15 +66,20 @@ from ...domain.iva import (
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
+    ProrrataInputs,
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
+    compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
+    is_especial_mandatory,
 )
 from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
+    ProrrataRegisterRepositoryProtocol,
+    ThreeActiveYearsAggregate,
 )
 from ..aggregation import (
     CalculationSourceContext,
@@ -312,6 +319,88 @@ def build_prorrata_missing_provisional_advisory(
         message=message,
         casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     )
+
+
+class ProrrataInterruptedSeed(BaseModel):
+    """The LIVA art. 105.Cinco resumption seed for an ejercicio after an interruption.
+
+    Carries the global definitive percentage over the aggregate of the last three
+    active años naturales and the :class:`~core.ProrrataProvisionalProvenance`
+    stamping it as the art. 105.Cinco three-year rule. When the register holds
+    fewer than three active years the seed is unresolved (``percentage is None``)
+    and the caller surfaces the insufficient-history advisory rather than assuming
+    a percentage.
+
+    See Also:
+        :func:`build_interrumpida_tres_ultimos_seed`
+            Builds this seed and the optional insufficient-history diagnostic.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    percentage: Decimal | None = None
+    provenance: ProrrataProvisionalProvenance | None = None
+    contributing_ejercicios: tuple[int, ...] = ()
+    aggregate: ThreeActiveYearsAggregate | None = None
+
+    @property
+    def resolved(self) -> bool:
+        """Whether the three-active-years rule resolved a percentage."""
+        return self.percentage is not None
+
+
+def build_interrumpida_tres_ultimos_seed(
+    register: ProrrataRegister,
+    *,
+    ejercicio: int,
+    sector_id: str | None = None,
+) -> tuple[ProrrataInterruptedSeed, CalculationSourceDiagnostic | None]:
+    """Seed a resumed ejercicio from the LIVA art. 105.Cinco three-active-years rule.
+
+    When the immediately prior year is interrupted, seed the resuming ejercicio
+    from the GLOBAL definitive percentage over the AGGREGATE volumes of the last
+    three active años naturales (skipping the interruption gap), computed via
+    :func:`~domain.iva.compute_prorrata_definitiva_anual` over the summed volumes -
+    never the average of the three definitive percentages, never silently the
+    single pre-interruption year. With fewer than three active years no percentage
+    is assumed: a visible insufficient-history advisory is returned instead
+    (``no-silent-under-declaration``).
+
+    See Also:
+        :meth:`~domain.prorrata_register.ProrrataRegister.collect_last_three_active_years`
+            The register walk that aggregates the three active years' volumes.
+    """
+    aggregate = register.collect_last_three_active_years(before_ejercicio=ejercicio, sector_id=sector_id)
+    if not aggregate.sufficient:
+        found = len(aggregate.contributing_ejercicios)
+        years = ", ".join(str(year) for year in aggregate.contributing_ejercicios) or "ninguno"
+        message = (
+            f"Prorrata art. 105.Cinco para {ejercicio}: historial insuficiente para la siembra por interrupción "
+            f"(se requieren tres años naturales con operaciones; se encontraron {found}: {years}). "
+            "Registre o siembre el porcentaje manualmente; no se aplica un porcentaje por defecto."
+        )
+        diagnostic = CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+            message=message,
+            casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
+        )
+        return ProrrataInterruptedSeed(contributing_ejercicios=aggregate.contributing_ejercicios), diagnostic
+
+    result = compute_prorrata_definitiva_anual(
+        ProrrataInputs(
+            operaciones_con_derecho_deduccion=aggregate.summed_volume_con_derecho,
+            operaciones_sin_derecho_deduccion=aggregate.summed_volume_sin_derecho,
+        ),
+        year=ejercicio,
+    )
+    seed = ProrrataInterruptedSeed(
+        percentage=result.percentage,
+        provenance=ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
+        contributing_ejercicios=aggregate.contributing_ejercicios,
+        aggregate=aggregate,
+    )
+    return seed, None
 
 
 def build_prorrata_declared_volume_divergence_advisory(
@@ -742,7 +831,7 @@ class ProrrataRegularizacionSourceResolver:
         current_year_values: Mapping[CasillaId, Decimal] | None = None,
         missing_current_year_casilla_ids: Iterable[CasillaId] = (),
         unresolved_current_year_casilla_ids: Iterable[CasillaId] = (),
-        prorrata_register_repository: ProrrataRegisterRepository | None = None,
+        prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
         observation_repository: CalculationObservationRepository | None = None,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
@@ -989,13 +1078,74 @@ def build_prorrata_regularizacion_advisory(
     return result, diagnostic
 
 
+#: The binding provision of the +10% mandatory-especial obligation (LIVA art.
+#: 103.Dos.2, "cuando el montante total de las cuotas deducibles ... exceda en un
+#: 10 por ciento o más ... por aplicación de la regla de prorrata especial"),
+#: authored into ``legal/iva.toml`` by W02.P03.S10.
+_ESPECIAL_MANDATORY_LEGAL_REF: Final = "ley-37-1992:art-103"
+
+
+def build_prorrata_especial_mandatory_advisory(
+    *,
+    deduction_under_general: Decimal,
+    deduction_under_especial: Decimal,
+    ejercicio: int,
+) -> Notice | None:
+    """Build the LIVA art. 103.Dos.2 +10% mandatory-especial settlement advisory.
+
+    At settlement (4T / 0A), once the ejercicio's deducción computed under the
+    general regime and under the especial regime are both known, art. 103.Dos.2
+    makes prorrata especial OBLIGATORY when the general-regime deduction exceeds
+    the especial-regime deduction by ten percent or more
+    (:func:`~domain.iva.is_especial_mandatory`). This surfaces that obligation as
+    a NON-BLOCKING warning :class:`~core.json_contract.Notice` so the operator
+    elects and records especial before filing; it NEVER refuses the in-progress
+    filing (the especial election is a filed taxpayer decision and the
+    classification data may still be incomplete). Both compared totals ride on
+    ``Notice.context`` alongside the ejercicio and the binding legal reference.
+
+    Returns ``None`` when especial is not obligatory (no noise); the two amounts
+    must be non-negative (:func:`is_especial_mandatory` refuses negatives).
+
+    Args:
+        deduction_under_general: The ejercicio's total deducible IVA under the
+            prorrata general regime (single whole-entity percentage).
+        deduction_under_especial: The ejercicio's total deducible IVA under the
+            prorrata especial regime (per-input art. 106 routing).
+        ejercicio: The filing year being settled (for the message and context).
+    """
+    if not is_especial_mandatory(deduction_under_general, deduction_under_especial):
+        return None
+    message = (
+        f"Prorrata especial obligatoria para {ejercicio} (LIVA art. 103.Dos.2): la deducción por "
+        f"prorrata general ({deduction_under_general}) supera en un 10% o más la deducción por prorrata "
+        f"especial ({deduction_under_especial}). Aplique y registre la prorrata especial del ejercicio; "
+        "este aviso no bloquea la presentación."
+    )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.work.calculate.prorrata_especial_obligatoria",
+        message=message,
+        context={
+            "ejercicio": str(ejercicio),
+            "regime": ProrrataRegisterRegime.ESPECIAL.value,
+            "deduction_under_general": str(deduction_under_general),
+            "deduction_under_especial": str(deduction_under_especial),
+            "legal_refs": _ESPECIAL_MANDATORY_LEGAL_REF,
+        },
+    )
+
+
 __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
+    "ProrrataInterruptedSeed",
     "ProrrataRegularizacionFeedProjection",
     "ProrrataRegularizacionSourceResolver",
+    "build_interrumpida_tres_ultimos_seed",
     "build_prorrata_declared_volume_divergence_advisory",
+    "build_prorrata_especial_mandatory_advisory",
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
     "derive_prorrata_applicability",

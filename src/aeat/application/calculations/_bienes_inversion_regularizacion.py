@@ -13,6 +13,11 @@ advisory functions remain as the visible fallback for operator review.
 The pure projections never derive the definitive percentage. M303 supplies it
 from the registry materialisation seam, while M390 may read the stamped current
 year M303 settlement observation that already owns ``iva.prorrata-porcentaje``.
+
+See Also:
+    :class:`ModeloRevision`
+        Compiled revision whose bindings the advisory functions resolve their
+        Modelo 303 / 390 output casillas against.
 """
 
 from __future__ import annotations

@@ -13,12 +13,6 @@ See Also:
     :mod:`~domain.portals`
         Portal catalogue whose host and route keys resolve through the AEAT
         registry surfaces checked here.
-    ``.vault/adr/2026-05-26-aeat-sede-constants-centralization-adr.md``
-        Governs centralising AEAT/Sede host, route, selector, and portal
-        constants in schema-owned authority data.
-    ``.vault/audit/2026-06-05-secure-storage-production-hardening-w12-p26-s296-review-audit.md``
-        Classifies the external constants module as a read-only remote-mirror
-        registry with non-tautological guards.
 """
 
 from __future__ import annotations
@@ -32,8 +26,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...tests import ast_for_path, package_ast_items, repo_path, repo_relative
-from ...tests._inventory import discover_test_control_modules
+from ...tests import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
 from ...tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LITERAL_SCAN_TOKENS,

@@ -165,10 +165,10 @@ def test_handoff_denial_fires_for_the_modelo_filing_leaves() -> None:
     # The R6(iii) irreversible-boundary denial: the modelo-preparer and the
     # reconciler are structurally barred from the modelo export and record marker.
     for persona in (AgentPersona.MODELO_PREPARER, AgentPersona.RECONCILER):
-        assert is_handoff_denied(persona=persona, command_key="app.modelo.export") is True
-        assert is_handoff_denied(persona=persona, command_key="app.modelo.file") is True
+        assert is_handoff_denied(persona=persona, command_key="modelo.export") is True
+        assert is_handoff_denied(persona=persona, command_key="modelo.work.file") is True
     # The verifier owns the handoff and is never denied it.
-    assert is_handoff_denied(persona=AgentPersona.VERIFIER, command_key="app.modelo.export") is False
+    assert is_handoff_denied(persona=AgentPersona.VERIFIER, command_key="modelo.export") is False
 
 
 def test_handoff_denial_is_scoped_to_the_modelo_family_not_any_export_leaf() -> None:

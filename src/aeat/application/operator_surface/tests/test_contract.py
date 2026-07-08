@@ -21,10 +21,6 @@ See Also:
         Agent-facing manifest builder that consumes the same backend contract.
     :mod:`~entrypoints.cli._app_contract`
         CLI adapter that emits the manifest without owning the contract.
-    Governing vault records
-        ``2026-06-10-cli-operator-surface-adr`` and
-        ``2026-06-10-cli-operator-surface-audit`` define the accepted operator
-        vocabulary and lifecycle constraints this suite protects.
 """
 
 from __future__ import annotations

@@ -21,27 +21,20 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel, ConfigDict
 
-from ...application.operator_surface import OperatorMutability
+from ...application.operator_surface import OperatorMutability, classify_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-# Leaf verbs that destroy or irreversibly overwrite local state. A command key
-# whose final segment is one of these is destructive regardless of its family.
-_DESTRUCTIVE_LEAVES: frozenset[str] = frozenset(
-    {"remove", "reset", "delete", "discard", "rekey", "recover", "logout", "clear", "merge", "stash"},
-)
-# Leaf verbs that are safe to repeat with the same effect (pure reads).
-_IDEMPOTENT_LEAVES: frozenset[str] = frozenset(
-    {"list", "show", "view", "status", "describe", "casillas", "history", "calendar", "agenda", "backlog"},
-)
 
 
 class McpAnnotations(BaseModel):
     """SDK-independent MCP tool annotations for one command.
 
-    Maps to the MCP ``ToolAnnotations`` hint fields. ``read_only_hint`` mirrors the
-    family mutability; ``destructive_hint`` is true only for irreversible
-    state-destroying verbs; ``idempotent_hint`` is true for pure repeatable reads.
+    Maps to the MCP ``ToolAnnotations`` hint fields, derived from the single
+    :func:`~application.operator_surface.classify_command` authority (ADR
+    ``mcp-protocol-hardening`` H3). ``read_only_hint`` mirrors the family
+    mutability; ``destructive_hint`` is true only for irreversible
+    state-destroying verbs; ``idempotent_hint`` for pure repeatable reads;
+    ``open_world_hint`` for a verb that reaches the outside AEAT sede.
     """
 
     model_config = _STRICT_FROZEN
@@ -50,10 +43,18 @@ class McpAnnotations(BaseModel):
     read_only_hint: bool
     destructive_hint: bool
     idempotent_hint: bool
+    # Defaults False so a direct construction (tests) need not restate it; the
+    # single production path (:func:`annotations_for_command`) always sets it
+    # explicitly from the command classification.
+    open_world_hint: bool = False
 
 
 def annotations_for_command(*, command_key: str, mutability: OperatorMutability, title: str) -> McpAnnotations:
     """Build the MCP annotations for one command key.
+
+    Derived from :func:`~application.operator_surface.classify_command` - the one
+    authority the HITL confirmation tier also reads - so the client hint and the
+    server gate cannot drift.
 
     Args:
         command_key: The registry command key (e.g. ``"ledger.remove"``).
@@ -63,15 +64,13 @@ def annotations_for_command(*, command_key: str, mutability: OperatorMutability,
     Returns:
         :class:`McpAnnotations` for the command's MCP descriptor.
     """
-    leaf = command_key.rsplit(".", 1)[-1]
-    read_only = mutability is OperatorMutability.READ_ONLY
-    destructive = (not read_only) and leaf in _DESTRUCTIVE_LEAVES
-    idempotent = read_only or leaf in _IDEMPOTENT_LEAVES
+    classification = classify_command(command_key, mutability=mutability)
     annotations = McpAnnotations(
         title=title,
-        read_only_hint=read_only,
-        destructive_hint=destructive,
-        idempotent_hint=idempotent,
+        read_only_hint=classification.read_only,
+        destructive_hint=classification.destructive,
+        idempotent_hint=classification.idempotent,
+        open_world_hint=classification.open_world,
     )
     # Close the coverage gap at construction: every emitted annotation must carry
     # consistent read-only / destructive hints, so the server build and the tests

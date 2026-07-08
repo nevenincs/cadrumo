@@ -15,10 +15,9 @@ See Also:
     :func:`~entrypoints.cli._modelo._missing_binding_guidance`
         Work-calculate refusal helper that turns registry missing-input errors
         into operator guidance.
-    Governing vault records
-        ``2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`` locks
-        the bindings discovery surface; the modelo calculate-engine wiring ADR
-        wires ``work calculate`` to registry truth.
+
+The bindings discovery surface is locked to the registry as its single
+source of truth, and ``work calculate`` reads from that same registry.
 """
 
 from __future__ import annotations

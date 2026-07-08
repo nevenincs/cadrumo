@@ -395,11 +395,20 @@ def compute_prorrata_general(
         raise ProrrataInputError(f"invalid prorrata result window: year={year} period={period!r}") from exc
 
 
-def _deductible_percentage_for(
+def deductible_percentage_for(
     classification: InputClassification,
     general_percentage: Decimal,
 ) -> Decimal:
-    """Map an input classification to its deductible percentage under LIVA art. 103."""
+    """Map an input classification to its deductible percentage under LIVA arts. 103/106.
+
+    The single canonical mapping of the art. 106.Uno reglas:
+    ``EXCLUSIVELY_DEDUCTIBLE`` → 100 (regla 1.ª, deducted in full),
+    ``EXCLUSIVELY_NON_DEDUCTIBLE`` → 0 (regla 2.ª, no deduction),
+    ``COMMON`` → ``general_percentage`` (regla 3.ª, deducted at the general
+    prorrata percentage). Consumed both by :func:`classify_input_deduction`
+    (per-input deduction) and by the ledger IVA aggregation's regime-aware
+    especial apportionment, so the reglas live in exactly one place.
+    """
     if classification is InputClassification.EXCLUSIVELY_DEDUCTIBLE:
         return Decimal("100")
     if classification is InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE:
@@ -424,7 +433,7 @@ def classify_input_deduction(
     if general_percentage < 0 or general_percentage > 100:
         raise ProrrataInputError(f"general_percentage out of range 0..100, got {general_percentage}")
 
-    deductible_percentage = _deductible_percentage_for(classification, general_percentage)
+    deductible_percentage = deductible_percentage_for(classification, general_percentage)
     deductible_amount = _round_to_cents(input_iva_amount * deductible_percentage / Decimal("100"))
     return ProrrataInputDeduction(
         classification=classification,
@@ -719,6 +728,7 @@ __all__ = (
     "compute_prorrata_general",
     "compute_regularizacion_prorrata_anual",
     "compute_sectoral_prorrata",
+    "deductible_percentage_for",
     "is_especial_mandatory",
     "requires_sectoral_separation",
     "sum_deductible_amounts",

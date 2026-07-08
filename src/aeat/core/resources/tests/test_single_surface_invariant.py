@@ -26,12 +26,6 @@ See Also:
     :func:`~tests._inventory.production_python_files`
         Shared production source inventory scanned for parallel resource
         locator constants.
-    ``.vault/adr/2026-05-16-resource-management-api-adr.md``
-        Establishes the repository-per-resource registry as the single
-        read-only bundled-data access surface.
-    ``.vault/adr/2026-05-15-corpus-registry-packaging-adr.md``
-        Governs packaging corpus and registry trees through
-        ``importlib.resources`` instead of checkout-relative paths.
 """
 
 from __future__ import annotations
@@ -41,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests._inventory import SRC_AEAT, package_python_files, production_python_files, repo_path, repo_relative
+from ....tests import SRC_AEAT, package_python_files, production_python_files, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

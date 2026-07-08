@@ -24,7 +24,11 @@ does execute today) and is the structural half of the fix:
    (no mocks, no stubs), that every catalogued wall's guarding test both
    COLLECTS and PASSES right now. A wall whose test has been deleted, renamed,
    or made uncollectible fails this assertion -- the "the wall reopened and
-   nobody noticed" failure mode issue ``#406`` names.
+   nobody noticed" failure mode issue ``#406`` names. Every catalogued wall's
+   node id runs inside ONE shared subprocess boot (the module-scoped
+   ``_batched_wall_results`` fixture, parsed from a real ``--junitxml``
+   report), not one boot per wall, while each wall stays its own pytest test
+   item with its own pass/fail attribution.
 3. :func:`test_a_regressed_wall_assertion_is_caught_by_the_gate` is the
    anti-tautology proof: it materialises a temporary sibling copy of a
    catalogued wall's test module with its core assertion deliberately flipped
@@ -49,19 +53,29 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
+from defusedxml import ElementTree
 
 from .acceptance_wall_catalogue import ACCEPTANCE_WALL_CATALOGUE, AcceptanceWallEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_SUBPROCESS_TIMEOUT_SECONDS = 120
+# 30 catalogued walls now run inside ONE subprocess boot (see
+# _batched_wall_results below) rather than one boot each, so the ceiling
+# covers the summed real runtime of every wall's own CLI-driven test, not
+# just one node's worth of interpreter/collection overhead.
+_SUBPROCESS_TIMEOUT_SECONDS = 600
+
+#: Per-testcase pass/fail result keyed by (junit classname, test function name).
+#: ``None`` means the testcase passed; a non-``None`` value is its failure/error message.
+_JunitResults = dict[tuple[str, str], "str | None"]
 
 
-def _run_pytest_subprocess(*node_ids: str) -> subprocess.CompletedProcess[str]:
+def _run_pytest_subprocess(*node_ids: str, junit_xml_path: Path | None = None) -> subprocess.CompletedProcess[str]:
     """Run the catalogued wall test(s) in a real, fresh ``pytest`` subprocess.
 
     Forces ``-m integration`` explicitly so the invocation is not silently
@@ -69,33 +83,100 @@ def _run_pytest_subprocess(*node_ids: str) -> subprocess.CompletedProcess[str]:
     scoping gap this gate exists to close.
 
     Passes ``-n0`` to override the inherited ``addopts`` ``-n auto``: without
-    it, every one of these per-wall subprocesses spins up a full fleet of
-    ``xdist`` workers (one per core) just to run a single node, and in the
-    shared multi-agent worktree the outer suite is itself an ``-n auto`` run,
-    so the nested worker fleets oversubscribe every core many times over. ``-n0``
-    keeps ``xdist`` loaded (so the ``-n`` argument stays valid) but runs the
-    node in-process, collapsing each subprocess to just its one node's cost.
+    it, this subprocess spins up a full fleet of ``xdist`` workers (one per
+    core) just to run its node(s), and in the shared multi-agent worktree the
+    outer suite is itself an ``-n auto`` run, so the nested worker fleet
+    oversubscribes every core many times over. ``-n0`` keeps ``xdist`` loaded
+    (so the ``-n`` argument stays valid) but runs the node(s) in-process,
+    collapsing the subprocess to just its own node(s)' cost.
+
+    ``junit_xml_path``, when supplied, requests a structured JUnit XML report
+    at that path so a caller running MULTIPLE node ids in one boot can still
+    attribute pass/fail per node id (see :func:`_parse_junit_results`) rather
+    than reading only the aggregate return code.
     """
+    argv = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "--no-header",
+        "-p",
+        "no:cacheprovider",
+        "-n0",
+        "-m",
+        "integration",
+    ]
+    if junit_xml_path is not None:
+        argv.append(f"--junitxml={junit_xml_path}")
+    argv.extend(node_ids)
     return subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "--no-header",
-            "-p",
-            "no:cacheprovider",
-            "-n0",
-            "-m",
-            "integration",
-            *node_ids,
-        ],
+        argv,
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
         check=False,
         timeout=_SUBPROCESS_TIMEOUT_SECONDS,
     )
+
+
+def _junit_classname_for_module(test_module: str) -> str:
+    """Return the pytest JUnit XML ``classname`` for a repo-relative test module path.
+
+    pytest's JUnit report keys a plain (non-class) test function by the
+    dotted module path (path separators replaced with ``.``, ``.py``
+    stripped) plus the bare function name -- confirmed directly against a
+    real ``--junitxml`` run of two catalogued walls on this pytest version,
+    not assumed from the JUnit spec (the ``file``/``line`` testcase
+    attributes some pytest configurations add are absent here).
+    """
+    return test_module.removesuffix(".py").replace("/", ".")
+
+
+def _parse_junit_results(junit_xml_path: Path) -> _JunitResults:
+    """Parse a pytest ``--junitxml`` report into per-testcase pass/fail results.
+
+    Returns a mapping ``(classname, name) -> failure_message_or_None``. A
+    catalogued wall absent from the mapping entirely means pytest could not
+    even report on it (a collection-level failure so severe no testcase
+    element was emitted); callers must treat a missing key as a failure too,
+    not silently skip it.
+    """
+    tree = ElementTree.parse(junit_xml_path)
+    results: _JunitResults = {}
+    for testcase in tree.iter("testcase"):
+        classname = testcase.get("classname", "")
+        name = testcase.get("name", "")
+        problem = testcase.find("failure")
+        if problem is None:
+            problem = testcase.find("error")
+        message = None
+        if problem is not None:
+            message = problem.get("message") or (problem.text or "").strip() or "(no failure detail captured)"
+        results[(classname, name)] = message
+    return results
+
+
+@pytest.fixture(scope="module")
+def _batched_wall_results() -> _JunitResults:
+    """Run every catalogued wall's guarding test in ONE real pytest subprocess boot.
+
+    Collapses the prior per-wall subprocess-boot cost (~30 cold pytest
+    interpreter + collection boots, one per catalogued wall) into a single
+    boot: one real, fresh ``pytest -m integration`` process runs every
+    catalogued wall's node id, and ``--junitxml`` gives per-testcase pass/fail
+    attribution from that ONE run instead of an aggregate return code. Module
+    scope means pytest computes this exactly once and every parametrized
+    ``test_every_catalogued_wall_test_is_collectible_and_passes[...]`` item
+    reads its own wall's result from the same cached run -- each wall stays
+    its own pytest test item (same per-wall attribution and reporting
+    granularity as before), only the expensive subprocess boot is shared.
+    """
+    node_ids = tuple(entry.node_id for entry in ACCEPTANCE_WALL_CATALOGUE)
+    with tempfile.TemporaryDirectory(prefix="acceptance-wall-junit-") as tmp_dir:
+        junit_xml_path = Path(tmp_dir) / "acceptance_wall_junit.xml"
+        _run_pytest_subprocess(*node_ids, junit_xml_path=junit_xml_path)
+        return _parse_junit_results(junit_xml_path)
 
 
 def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
@@ -118,23 +199,33 @@ def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
     ACCEPTANCE_WALL_CATALOGUE,
     ids=[entry.label for entry in ACCEPTANCE_WALL_CATALOGUE],
 )
-def test_every_catalogued_wall_test_is_collectible_and_passes(entry: AcceptanceWallEntry) -> None:
+def test_every_catalogued_wall_test_is_collectible_and_passes(
+    entry: AcceptanceWallEntry,
+    _batched_wall_results: _JunitResults,
+) -> None:
     """Each catalogued closed-wall test still collects and passes today.
 
-    Runs the REAL repository test file end-to-end through a fresh pytest
-    subprocess (matching the ``test_console_script_imports.py`` subprocess
-    idiom already established for this kind of cold-start/CI-parity gate).
-    A wall whose guarding test regresses, or whose module stops being
-    collectible, fails this assertion -- which is exactly the reopened-wall
-    signal issue ``#406`` asks CI to surface.
+    Reads this wall's own result out of the ONE real, fresh pytest subprocess
+    boot the module-scoped ``_batched_wall_results`` fixture runs for every
+    catalogued wall together (matching the ``test_console_script_imports.py``
+    subprocess idiom already established for this kind of cold-start/CI-parity
+    gate, batched across the whole catalogue instead of once per wall). A wall
+    whose guarding test regresses, or whose module stops being collectible,
+    fails this assertion -- which is exactly the reopened-wall signal issue
+    ``#406`` asks CI to surface.
     """
-    completed = _run_pytest_subprocess(entry.node_id)
-    assert completed.returncode == 0, (
+    classname = _junit_classname_for_module(entry.test_module)
+    key = (classname, entry.test_function)
+    assert key in _batched_wall_results, (
+        f"acceptance wall {entry.label} was not reported by the batched subprocess run "
+        f"(node id: {entry.node_id}) -- collection may have failed entirely"
+    )
+    failure_message = _batched_wall_results[key]
+    assert failure_message is None, (
         f"acceptance wall {entry.label} has REGRESSED (its guarding test no longer passes):\n"
         f"  node id: {entry.node_id}\n"
         f"  capability: {entry.capability}\n"
-        f"  stdout: {completed.stdout}\n"
-        f"  stderr: {completed.stderr}"
+        f"  failure: {failure_message}"
     )
 
 

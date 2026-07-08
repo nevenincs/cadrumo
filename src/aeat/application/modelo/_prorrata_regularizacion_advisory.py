@@ -56,12 +56,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import BindingSourceKind, Modelo
+from ...core import BindingSourceKind, Modelo, ProrrataRegisterRegime
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ...domain.prorrata_register import ProrrataRegisterError
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
 from ..calculations import (
     CalculationObservationRepository,
+    build_prorrata_especial_mandatory_advisory,
     build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
     derive_prorrata_applicability,
@@ -84,6 +85,13 @@ _PORCENTAJE_SEMANTIC_ROLE = "iva_prorrata_porcentaje"
 _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE = "iva_cuota_deducible_total"
 
 _PENDING_PROVISIONAL_SOURCE_KIND = "prorrata_regularizacion_provisional_pending"
+
+#: Shared ``source_kind`` for both LIVA art. 103.Dos.2 +10% mandatory-especial
+#: settlement diagnostics — the CHECK-branch obligation advisory and the
+#: PROMPT-branch classify-to-enable advisory. The distinguishing ``reason``
+#: (``prorrata_especial_obligatoria`` vs ``prorrata_especial_check_unavailable``)
+#: rides alongside on ``Notice.context`` at the CLI projection.
+_ESPECIAL_MANDATORY_SOURCE_KIND = "prorrata_especial_mandatory"
 
 
 def _casilla_id_for_role(revision: ModeloRevision, semantic_role: str, *, modelo_id: str) -> CasillaId | None:
@@ -163,10 +171,14 @@ def collect_prorrata_regularizacion_diagnostics(
             scanned for the prior-year definitive-percentage carry.
 
     Returns:
-        A tuple carrying at most one advisory: the pure builder's advisory
-        when a prior-year percentage is available, a pending advisory when it
-        is not, or an empty tuple when no regularización is due or not yet
-        relevant (non-settlement period, no exempt-without-right operations).
+        A tuple of advisories. At the settlement period it may carry the
+        casilla-44 regularización advisory (or the pending-percentage advisory),
+        the per-period missing-provisional-carry advisory, and the LIVA
+        art. 103.Dos.2 +10% mandatory-especial advisory (the obligation check
+        when both regime totals are honestly computable, or the
+        classify-to-enable prompt for a general filer whose especial total is
+        not yet derivable). Empty when no advisory fires (non-settlement period,
+        no exempt-without-right operations, no resolvable prorrata register).
     """
     if modelo != Modelo.M303.value:
         return ()
@@ -181,20 +193,32 @@ def collect_prorrata_regularizacion_diagnostics(
     if period_token not in _SETTLEMENT_PERIOD_TOKENS:
         return missing_carry_diagnostics
 
+    # LIVA art. 103.Dos.2 +10% mandatory-especial settlement check / prompt. This
+    # is independent of the casilla-44 regularización below (it reads the annual
+    # ledger totals under both regimes, not the current period's casilla_values),
+    # so it is computed once here and appended to every settlement return path —
+    # including the early-return paths where the regularización roles are absent.
+    especial_diagnostics = _especial_mandatory_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+    )
+
     volumen_total_id = _casilla_id_for_role(revision, _VOLUMEN_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
     volumen_con_derecho_id = _casilla_id_for_role(revision, _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE, modelo_id=modelo)
     porcentaje_id = _casilla_id_for_role(revision, _PORCENTAJE_SEMANTIC_ROLE, modelo_id=modelo)
     cuota_deducible_id = _casilla_id_for_role(revision, _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
     if volumen_total_id is None or volumen_con_derecho_id is None:
-        return ()
+        return especial_diagnostics
     if porcentaje_id is None or cuota_deducible_id is None:
-        return ()
+        return especial_diagnostics
 
     volumen_total = casilla_values.get(volumen_total_id, Decimal(0))
     volumen_con_derecho = casilla_values.get(volumen_con_derecho_id, Decimal(0))
     operaciones_sin_derecho_deduccion = volumen_total - volumen_con_derecho
     if operaciones_sin_derecho_deduccion <= Decimal(0):
-        return ()
+        return especial_diagnostics
 
     prorrata_definitiva_pct = casilla_values.get(porcentaje_id, Decimal(0))
     cuotas_soportadas_deducibles = casilla_values.get(cuota_deducible_id, Decimal(0))
@@ -217,7 +241,7 @@ def collect_prorrata_regularizacion_diagnostics(
             ),
             casilla_id=porcentaje_id,
         )
-        return missing_carry_diagnostics or (pending_diagnostic,)
+        return (*(missing_carry_diagnostics or (pending_diagnostic,)), *especial_diagnostics)
 
     _result, diagnostic = build_prorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
@@ -227,8 +251,81 @@ def collect_prorrata_regularizacion_diagnostics(
         regularizacion_year=filing_year,
     )
     if diagnostic is None:
-        return missing_carry_diagnostics
-    return (*missing_carry_diagnostics, diagnostic)
+        return (*missing_carry_diagnostics, *especial_diagnostics)
+    return (*missing_carry_diagnostics, diagnostic, *especial_diagnostics)
+
+
+def _especial_mandatory_diagnostics(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    bucket_id: str | None,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return the LIVA art. 103.Dos.2 +10% mandatory-especial settlement diagnostic.
+
+    Computes the ejercicio's whole-year deducible IVA cuota under both prorrata
+    regimes (one annual aggregation, two apportionment passes) and branches on
+    whether the especial total is honestly computable:
+
+    * CHECK branch (register regime ESPECIAL — the general shadow is mechanical —
+      or regime GENERAL with every deducible soportado row classified): run the
+      real +10% comparison through
+      :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
+      and surface its message verbatim as a ``prorrata_especial_obligatoria``
+      diagnostic. A non-breach returns nothing (no noise).
+    * PROMPT branch (register regime GENERAL with unclassified deducible soportado
+      rows — the intended general-filer audience whose especial total is not yet
+      derivable): emit one ``prorrata_especial_check_unavailable`` diagnostic that
+      names the obligation and the enabling ``--input-classification`` /
+      ``elect-especial`` actions, carrying NO fabricated amounts.
+
+    Returns an empty tuple when no register apportionment resolves, the register
+    is sectorized (a named v1 deferral), or the bucket id is absent.
+    """
+    if bucket_id is None:
+        return ()
+    totals = compute_annual_deducible_totals_by_regime(
+        bucket_id=bucket_id,
+        ejercicio=filing_year,
+        revision=revision,
+    )
+    if totals is None:
+        return ()
+
+    especial_total_is_honest = (
+        totals.regime is ProrrataRegisterRegime.ESPECIAL or totals.unclassified_deducible_count == 0
+    )
+    if especial_total_is_honest:
+        notice = build_prorrata_especial_mandatory_advisory(
+            deduction_under_general=totals.deduction_under_general,
+            deduction_under_especial=totals.deduction_under_especial,
+            ejercicio=filing_year,
+        )
+        if notice is None:
+            return ()
+        return (
+            CalculationSourceDiagnostic(
+                reason="prorrata_especial_obligatoria",
+                source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
+                message=notice.message,
+            ),
+        )
+
+    return (
+        CalculationSourceDiagnostic(
+            reason="prorrata_especial_check_unavailable",
+            source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
+            message=(
+                f"La prorrata especial puede ser obligatoria para {filing_year} (LIVA art. 103.Dos.2.º: "
+                "se aplica cuando las cuotas deducibles por prorrata general exceden en un 10 por ciento "
+                "o más de las que resultarían por la regla especial). La comprobación requiere clasificar "
+                "el uso de cada cuota soportada (art. 106): declare '--input-classification' en las "
+                "operaciones del ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial "
+                f"--ejercicio {filing_year}'. Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
+            ),
+        ),
+    )
 
 
 def _missing_carry_diagnostics(

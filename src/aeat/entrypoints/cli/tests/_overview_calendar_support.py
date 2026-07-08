@@ -16,6 +16,7 @@ from ....application.user_profile import (
     CENSO_SOURCE_TAG,
     UserProfileLifecycleRepository,
     profile_create_storage_span,
+    profile_storage_session,
     register_minimal_profile,
 )
 from ....application.workflow import workflow_state_repository
@@ -39,15 +40,26 @@ _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64
 _CALCULATION_REVISION_ID = "b" * 64
 
+#: Canonical bucket id the calendar fixtures register and open a storage
+#: span for. Every direct repository/service call in this module and in
+#: ``test_overview_calendar_verb.py`` must address this same bucket id, or
+#: the strict per-bucket route binding (D10) refuses the call with
+#: ``the primary database route does not match the active bucket session``.
+PRIMARY_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+
 
 @contextmanager
 def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
+        profile_create_storage_span(PRIMARY_PROFILE_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111"),
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=PRIMARY_PROFILE_ID,
+                display_name="operator",
+            ),
         )
         yield
 
@@ -74,7 +86,7 @@ def _observed_casilla_observations(value: Decimal):
 def _modelo_record_with_external_justificante(
     *,
     csv: str,
-    bucket_id: str = "operator",
+    bucket_id: str = PRIMARY_PROFILE_ID,
     evidence_kind: ExternalEvidenceKind = ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
 ) -> ModeloRecord:
     filed_at = datetime(2025, 4, 16, 12, 0, tzinfo=UTC)
@@ -122,23 +134,24 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
 
 
 def _stamp_calendar_enrolment_from_censo() -> None:
-    repository = UserProfileLifecycleRepository(bucket_id="operator")
-    record = repository.load("operator")
-    censo_paths = {
-        "iva.regime": CENSO_SOURCE_TAG,
-        "taxpayer_type.entity_type": CENSO_DERIVED_SOURCE_TAG,
-        "taxpayer_type.irpf_income_categories": CENSO_DERIVED_SOURCE_TAG,
-    }
-    facts = [
-        fact.model_copy(update={"source": censo_paths[fact.path]}) if fact.path in censo_paths else fact
-        for fact in record.facts
-    ]
-    if not any(fact.path == "activities.iae_epigraph" for fact in facts):
-        facts.append(
-            UserProfileFact(
-                path="activities.iae_epigraph",
-                value="763",
-                source=CENSO_SOURCE_TAG,
-            ),
-        )
-    repository.save(record.model_copy(update={"facts": tuple(facts)}))
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        repository = UserProfileLifecycleRepository(bucket_id=PRIMARY_PROFILE_ID)
+        record = repository.load(PRIMARY_PROFILE_ID)
+        censo_paths = {
+            "iva.regime": CENSO_SOURCE_TAG,
+            "taxpayer_type.entity_type": CENSO_DERIVED_SOURCE_TAG,
+            "taxpayer_type.irpf_income_categories": CENSO_DERIVED_SOURCE_TAG,
+        }
+        facts = [
+            fact.model_copy(update={"source": censo_paths[fact.path]}) if fact.path in censo_paths else fact
+            for fact in record.facts
+        ]
+        if not any(fact.path == "activities.iae_epigraph" for fact in facts):
+            facts.append(
+                UserProfileFact(
+                    path="activities.iae_epigraph",
+                    value="763",
+                    source=CENSO_SOURCE_TAG,
+                ),
+            )
+        repository.save(record.model_copy(update={"facts": tuple(facts)}))

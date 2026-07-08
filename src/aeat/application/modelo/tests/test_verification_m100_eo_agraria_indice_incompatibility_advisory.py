@@ -32,10 +32,6 @@ See Also:
     ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/verification_expectations/0002-verification_predicates.toml``
         Registry-authored 2025 EO agraria incompatibility predicate declarations
         under test.
-    ``2026-07-01-modelo-131-eo-modulos-engine-adr`` and
-    ``2026-04-27-modelo-100-renta-full-calc-research``
-        Objective-estimation engine and M100 full-calculation context for this
-        agrarian advisory surface.
 """
 
 from __future__ import annotations

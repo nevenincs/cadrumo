@@ -61,6 +61,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.iva import (
     EUMemberState,
+    InputClassification,
     InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
@@ -70,10 +71,12 @@ from ...domain.iva import (
     IvaRateNotFoundError,
     ProrrataInputError,
     ProrrataReference,
+    deductible_percentage_for,
     derive_flow_for_classification,
     lookup_rate,
     validate_prorrata_reference,
 )
+from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
 from ...domain.transactions import (
     BusinessClassification,
     OutOfWindowTransactionSummary,
@@ -152,8 +155,44 @@ class ProrrataLedgerReference(BaseModel):
     input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
 
 
+class IvaLedgerSectorApportionment(BaseModel):
+    """Per-sector prorrata apportionment for a sectores-diferenciados bucket.
+
+    Under LIVA arts. 9.1.c / 101 a taxpayer with differentiated sectors applies
+    the deduction regime separately per sector. Each declared sector carries its
+    own provisional ``percentage`` and its own ``regime`` (a sector may run
+    general while another runs especial); the sector-aware binding resolver
+    applies THIS sector's apportionment to every deducible cuota whose
+    observation carries the matching ``sector_id``.
+
+    See Also:
+        :class:`~domain.prorrata_register.SectorDefinition`
+            Operator-declared sector this apportionment resolves for.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
+    regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
+
+
 class IvaLedgerProrrataApportionment(BaseModel):
-    """General-prorrata percentage applied to deducible ledger IVA cuotas.
+    """Prorrata percentage applied to deducible ledger IVA cuotas.
+
+    Under ``regime == GENERAL`` (LIVA art. 104) the single ``percentage`` is
+    applied to every deducible cuota binding. Under ``regime == ESPECIAL``
+    (LIVA art. 106) ``percentage`` is the general percentage that applies only
+    to the COMMON-use inputs; exclusively-deductible inputs deduct in full and
+    exclusively-non-deductible inputs deduct nothing, routed per the
+    observation's ``input_classification``.
+
+    When ``sector_apportionments`` is non-empty (LIVA arts. 9.1.c / 101), the
+    bucket is sectorized: the top-level ``percentage`` / ``regime`` describe the
+    COMMON-use apportionment (art. 104.Dos common percentage, for inputs with no
+    ``prorrata_sector_id``), and each :class:`IvaLedgerSectorApportionment`
+    describes one declared sector. Empty ``sector_apportionments`` is the
+    whole-entity register (byte-identical to the pre-sectores behaviour).
 
     See Also:
         :class:`~core.ProrrataProvisionalProvenance`
@@ -167,8 +206,40 @@ class IvaLedgerProrrataApportionment(BaseModel):
 
     percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
     provenance: ProrrataProvisionalProvenance
+    regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
     source_observation_ref: str | None = Field(default=None, min_length=1)
     authorisation_reference: str | None = Field(default=None, min_length=1)
+    sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
+
+
+class AnnualDeducibleTotalsByRegime(BaseModel):
+    """The ejercicio's whole-year deducible IVA cuota under both prorrata regimes.
+
+    The settlement input to the LIVA art. 103.Dos.2 +10% mandatory-especial
+    check (``build_prorrata_especial_mandatory_advisory``): art. 103.Dos.2 makes
+    prorrata especial obligatory when the deducción under the general regime
+    exceeds the deducción under the especial regime by ten percent or more.
+    ``deduction_under_general`` is mechanically derivable for any bucket (art. 104
+    applies one whole-entity percentage), so it is always honest; the especial
+    total (art. 106 per-input classification) is honest only when the register
+    regime is ESPECIAL, or when every deducible soportado row of the ejercicio
+    carries a declared ``input_classification`` — ``unclassified_deducible_count``
+    records how many deducible soportado observations are still unclassified, so
+    the caller can decide whether the especial total is honestly computable or the
+    filer must first classify.
+
+    See Also:
+        :func:`compute_annual_deducible_totals_by_regime`
+            Builds this record from one annual observation aggregation and two
+            apportionment passes.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    deduction_under_general: Decimal = Field(..., ge=Decimal("0"))
+    deduction_under_especial: Decimal = Field(..., ge=Decimal("0"))
+    unclassified_deducible_count: int = Field(..., ge=0)
+    regime: ProrrataRegisterRegime
 
 
 class IvaLedgerInputKind(StrEnum):
@@ -298,7 +369,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    prorrata_register_repository: ProrrataRegisterRepository | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations.
 
@@ -315,7 +386,7 @@ def aggregate_iva_ledger_observations_from_repositories(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    prorrata_apportionment = _active_general_prorrata_apportionment(
+    prorrata_apportionment = _active_prorrata_apportionment(
         bucket_id=bucket_id,
         ejercicio=period.year,
         prorrata_register_repository=prorrata_register_repository,
@@ -539,6 +610,14 @@ def resolve_iva_ledger_binding_values(
             :class:`IvaLedgerProrrataApportionment` applied only to deducible
             cuota bindings.
 
+    Under ``regime == GENERAL`` the single provisional percentage multiplies
+    every deducible cuota binding (LIVA art. 104). Under ``regime == ESPECIAL``
+    the deducible cuota is routed per the observation's ``input_classification``
+    (LIVA art. 106.Uno: exclusively-deductible 100%, exclusively-non-deductible
+    0%, common at the general percentage) by
+    :func:`_apply_especial_apportionment`; the general-regime code path is
+    unchanged.
+
     See Also:
         :func:`~domain.calculations.registry.resolve_ledger_iva_aggregation_binding_values`
             Registry selector resolver that produces the unapportioned binding
@@ -547,8 +626,28 @@ def resolve_iva_ledger_binding_values(
             Source record for the active provisional percentage represented by
             :class:`IvaLedgerProrrataApportionment`.
     """
+    observations = tuple(observations)
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    if prorrata_apportionment is None or prorrata_apportionment.percentage == _HUNDRED:
+    if prorrata_apportionment is None:
+        return binding_values
+    if prorrata_apportionment.sector_apportionments:
+        # Sectores diferenciados (LIVA arts. 9.1.c / 101): route each input to
+        # its sector's percentage; common-use (no sector) at art. 104.Dos.
+        return _apply_sector_apportionment(
+            revision,
+            observations,
+            binding_values,
+            prorrata_apportionment,
+        )
+    if prorrata_apportionment.regime is ProrrataRegisterRegime.ESPECIAL:
+        return _apply_especial_apportionment(
+            revision,
+            observations,
+            binding_values,
+            prorrata_apportionment,
+        )
+    # GENERAL regime — byte-identical to the pre-especial behaviour.
+    if prorrata_apportionment.percentage == _HUNDRED:
         return binding_values
     multiplier = prorrata_apportionment.percentage / _HUNDRED
     deducible_binding_ids = _deducible_cuota_binding_ids(revision)
@@ -560,23 +659,221 @@ def resolve_iva_ledger_binding_values(
     }
 
 
-def _active_general_prorrata_apportionment(
+def _apply_especial_apportionment(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    binding_values: dict[BindingId, Decimal],
+    apportionment: IvaLedgerProrrataApportionment,
+) -> dict[BindingId, Decimal]:
+    """Route deducible cuota bindings per LIVA art. 106 prorrata especial.
+
+    Each deducible cuota binding value is recomputed as the sum, over the
+    per-classification partitions of ``observations``, of the partition's
+    canonically-resolved binding value weighted by that classification's
+    art. 106 deductible percentage (:func:`~domain.iva.deductible_percentage_for`):
+    exclusively-deductible at 100%, exclusively-non-deductible at 0%, and
+    common-use (and unclassified inputs, the mixed-use default) at the
+    ``apportionment.percentage`` general percentage. Non-deducible bindings
+    (output cuotas, bases, recargo) keep their unapportioned aggregate.
+
+    The partitions are resolved through the SAME canonical registry resolver
+    the general path uses (:func:`~domain.calculations.registry.resolve_ledger_iva_aggregation_binding_values`),
+    so especial reuses one aggregation path rather than forking selector logic.
+    An all-common (or wholly-unclassified) especial bucket therefore reduces to
+    the general-percentage result exactly.
+    """
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    if not deducible_binding_ids:
+        return binding_values
+    general_percentage = apportionment.percentage
+    partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
+        classification: [] for classification in InputClassification
+    }
+    for observation in observations:
+        classification = observation.input_classification or InputClassification.COMMON
+        partitions[classification].append(observation)
+    apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
+    for classification, partition_observations in partitions.items():
+        if not partition_observations:
+            continue
+        multiplier = deductible_percentage_for(classification, general_percentage) / _HUNDRED
+        if multiplier == 0:
+            # exclusively-non-deductible: contributes nothing to any deducible cuota.
+            continue
+        partition_values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
+        for binding_id in deducible_binding_ids:
+            apportioned[binding_id] += partition_values.get(binding_id, Decimal("0")) * multiplier
+    return {
+        binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
+        for binding_id, value in binding_values.items()
+    }
+
+
+def _apportioned_deducible_cuota(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    *,
+    percentage: Decimal,
+    regime: ProrrataRegisterRegime,
+    deducible_binding_ids: frozenset[BindingId],
+) -> dict[BindingId, Decimal]:
+    """Return only the deducible-cuota binding contributions for one observation set.
+
+    Applies the observation set's regime at ``percentage``: ``GENERAL`` multiplies
+    every deducible cuota by ``percentage`` (LIVA art. 104); ``ESPECIAL`` routes
+    each deducible cuota per the observation's ``input_classification`` (LIVA
+    art. 106.Uno reglas 100%/0%/general), with ``percentage`` as the common
+    (regla 3.ª) percentage. Both branches resolve through the SAME canonical
+    registry resolver, so one aggregation path drives every regime. This is the
+    per-partition primitive the sectores-diferenciados routing composes over each
+    sector.
+    """
+    result: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
+    if regime is ProrrataRegisterRegime.ESPECIAL:
+        partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
+            classification: [] for classification in InputClassification
+        }
+        for observation in observations:
+            classification = observation.input_classification or InputClassification.COMMON
+            partitions[classification].append(observation)
+        for classification, partition_observations in partitions.items():
+            if not partition_observations:
+                continue
+            multiplier = deductible_percentage_for(classification, percentage) / _HUNDRED
+            if multiplier == 0:
+                continue
+            partition_values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
+            for binding_id in deducible_binding_ids:
+                result[binding_id] += partition_values.get(binding_id, Decimal("0")) * multiplier
+        return result
+    # GENERAL regime: a single multiplier over the whole observation set.
+    multiplier = percentage / _HUNDRED
+    partition_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    for binding_id in deducible_binding_ids:
+        result[binding_id] = partition_values.get(binding_id, Decimal("0")) * multiplier
+    return result
+
+
+def _apply_sector_apportionment(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    binding_values: dict[BindingId, Decimal],
+    apportionment: IvaLedgerProrrataApportionment,
+) -> dict[BindingId, Decimal]:
+    """Route deducible cuota bindings per sector (LIVA arts. 9.1.c / 101).
+
+    Partitions ``observations`` by ``prorrata_sector_id`` and recomputes each
+    deducible cuota binding as the sum, over the partitions, of that sector's
+    :func:`_apportioned_deducible_cuota` contribution (each sector applies its
+    own percentage and regime). An input with no sector — or one referencing a
+    sector not present in ``sector_apportionments`` — falls to the COMMON-use
+    apportionment: the top-level ``apportionment.percentage`` / ``regime`` (the
+    art. 104.Dos common percentage). Non-deducible bindings keep their
+    unapportioned aggregate. Resolution runs through the SAME canonical registry
+    resolver, so the sectored path is one more consumer of the single
+    aggregation path.
+    """
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    if not deducible_binding_ids:
+        return binding_values
+    by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
+    partitions: dict[str | None, list[IvaLedgerObservation]] = {}
+    for observation in observations:
+        sector_key = observation.prorrata_sector_id if observation.prorrata_sector_id in by_sector else None
+        partitions.setdefault(sector_key, []).append(observation)
+    apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
+    for sector_key, partition_observations in partitions.items():
+        if sector_key is None:
+            percentage = apportionment.percentage
+            regime = apportionment.regime
+        else:
+            sector = by_sector[sector_key]
+            percentage = sector.percentage
+            regime = sector.regime
+        partition_deducible = _apportioned_deducible_cuota(
+            revision,
+            partition_observations,
+            percentage=percentage,
+            regime=regime,
+            deducible_binding_ids=deducible_binding_ids,
+        )
+        for binding_id in deducible_binding_ids:
+            apportioned[binding_id] += partition_deducible[binding_id]
+    return {
+        binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
+        for binding_id, value in binding_values.items()
+    }
+
+
+def _active_prorrata_apportionment(
     *,
     bucket_id: str,
     ejercicio: int,
-    prorrata_register_repository: ProrrataRegisterRepository | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None,
 ) -> IvaLedgerProrrataApportionment | None:
+    """Resolve the regime-aware prorrata apportionment for the ejercicio.
+
+    Returns ``None`` when no register entry applies, the entry's regime carries
+    no apportionment (``NINGUNA``), or no provisional percentage is resolvable.
+    A ``GENERAL`` entry carries the single provisional percentage; an
+    ``ESPECIAL`` entry carries the same provisional percentage as the general
+    percentage applied to common-use inputs (LIVA art. 106.Uno regla 3.ª),
+    with the regime stamped so the binding resolver routes per-input.
+
+    When the register declares a differentiated-sector partition
+    (LIVA arts. 9.1.c / 101), the whole-entity (``sector_id = None``) entry is
+    the COMMON-use apportionment (art. 104.Dos common percentage) and each
+    declared sector's ``(ejercicio, sector_id)`` entry contributes a
+    :class:`IvaLedgerSectorApportionment`; a sectorized register therefore also
+    requires its common ``sector_id = None`` entry to apportion common-use
+    inputs (absent it, no apportionment applies, exactly as for any register
+    with no whole-entity entry).
+    """
     repository = prorrata_register_repository or ProrrataRegisterRepository(bucket_id=bucket_id)
     register = repository.load()
-    entry = register.entry_for(ejercicio)
-    if entry is None or entry.regime is not ProrrataRegisterRegime.GENERAL:
+    base = _sector_scoped_apportionment(register, ejercicio, sector_id=None)
+    if base is None:
         return None
-    resolution = register.resolve_provisional(ejercicio)
+    if not register.is_sectorized:
+        return base
+    sector_apportionments = tuple(
+        IvaLedgerSectorApportionment(
+            sector_id=sector_id,
+            percentage=sector.percentage,
+            regime=sector.regime,
+        )
+        for sector_id in register.sector_ids()
+        if (sector := _sector_scoped_apportionment(register, ejercicio, sector_id=sector_id)) is not None
+    )
+    if not sector_apportionments:
+        return base
+    return base.model_copy(update={"sector_apportionments": sector_apportionments})
+
+
+def _sector_scoped_apportionment(
+    register: ProrrataRegister,
+    ejercicio: int,
+    *,
+    sector_id: str | None,
+) -> IvaLedgerProrrataApportionment | None:
+    """Resolve the apportionment for one ``(ejercicio, sector_id)`` register key.
+
+    Returns ``None`` when the key has no apportioning entry (``NINGUNA`` /
+    interrupted / absent) or no provisional percentage is resolvable.
+    """
+    entry = register.entry_for(ejercicio, sector_id=sector_id)
+    if entry is None or entry.regime not in (
+        ProrrataRegisterRegime.GENERAL,
+        ProrrataRegisterRegime.ESPECIAL,
+    ):
+        return None
+    resolution = register.resolve_provisional(ejercicio, sector_id=sector_id)
     if resolution.percentage is None or resolution.provenance is None:
         return None
     return IvaLedgerProrrataApportionment(
         percentage=resolution.percentage,
         provenance=resolution.provenance,
+        regime=entry.regime,
         source_observation_ref=entry.source_observation_ref,
         authorisation_reference=entry.authorisation_reference,
     )
@@ -597,6 +894,130 @@ def _deducible_cuota_binding_ids(revision: ModeloRevision) -> frozenset[BindingI
             if binding_id is not None and binding_id in ledger_iva_amount_bindings:
                 binding_ids.add(binding_id)
     return frozenset(binding_ids)
+
+
+def _unclassified_deducible_soportado_count(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    deducible_binding_ids: frozenset[BindingId],
+) -> int:
+    """Count deducible-cuota observations that carry no ``input_classification``.
+
+    A deducible soportado observation is one whose own canonically-resolved
+    contribution lands on at least one deducible cuota binding (the registry
+    selector decides membership; no category is hard-coded here). An observation
+    with no declared ``input_classification`` is one the art. 106 especial total
+    cannot honestly route, so the general filer must classify it before the +10%
+    check can run. The signal drives the CHECK-vs-PROMPT branch in the settlement
+    collector.
+    """
+    count = 0
+    for observation in observations:
+        if observation.input_classification is not None:
+            continue
+        single = resolve_ledger_iva_aggregation_binding_values(revision, (observation,))
+        if any(single.get(binding_id, Decimal("0")) != Decimal("0") for binding_id in deducible_binding_ids):
+            count += 1
+    return count
+
+
+def compute_annual_deducible_totals_by_regime(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    revision: ModeloRevision,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+) -> AnnualDeducibleTotalsByRegime | None:
+    """Compute the ejercicio's deducible IVA cuota under both prorrata regimes.
+
+    The plumbing for the LIVA art. 103.Dos.2 +10% mandatory-especial settlement
+    check. Aggregates the ejercicio's annual IVA observations ONCE
+    (:func:`aggregate_iva_ledger_observations_from_repositories` over the
+    canonical ``0A`` annual :class:`~core.Period`), then resolves
+    :func:`resolve_iva_ledger_binding_values` TWICE over the same observations —
+    once with a GENERAL-stamped and once with an ESPECIAL-stamped
+    :class:`IvaLedgerProrrataApportionment` at the register's resolved percentage
+    — and sums the deducible-cuota binding ids under each. One aggregation, two
+    apportionment passes through the one canonical resolver
+    (``one-aggregation-path-pull-equals-calculate``); no second aggregation
+    implementation is introduced.
+
+    Returns ``None`` when no register apportionment resolves for the ejercicio
+    (prorrata inapplicable), when the register is sectorized (LIVA arts. 9.1.c /
+    101 — the art-103.Dos.2 comparison composes per sector, a named v1 deferral),
+    or when the revision declares no deducible cuota bindings. A negative
+    deducible total (an adjustment-heavy degenerate case the art-103.Dos.2
+    comparison is undefined over) also returns ``None`` so the check stays silent
+    rather than crashing on a non-comparable input.
+
+    Args:
+        bucket_id: Active bucket whose annual ledger and prorrata register are
+            read.
+        ejercicio: The filing year whose annual deducible totals are computed.
+        revision: The target :class:`ModeloRevision` whose deducible cuota
+            bindings are summed.
+        transaction_repository: Optional catalogue repository (defaults to the
+            active bucket's).
+        prorrata_register_repository: Optional register repository (defaults to
+            the active bucket's).
+
+    See Also:
+        :class:`AnnualDeducibleTotalsByRegime`
+            The frozen record returned.
+        :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
+            Consumes the two totals to build the +10% advisory.
+    """
+    period = Period.from_year_and_code(ejercicio, "0A")
+    aggregation = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=bucket_id,
+        period=period,
+        transaction_repository=transaction_repository,
+        prorrata_register_repository=prorrata_register_repository,
+    )
+    apportionment = aggregation.prorrata_apportionment
+    if apportionment is None:
+        return None
+    if apportionment.sector_apportionments:
+        # Sectorized register: the art-103.Dos.2 comparison composes per sector,
+        # a named v1 deferral (LIVA arts. 9.1.c / 101). No branch in v1.
+        return None
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    if not deducible_binding_ids:
+        return None
+    observations = tuple(aggregation.observations)
+    general_apportionment = apportionment.model_copy(update={"regime": ProrrataRegisterRegime.GENERAL})
+    especial_apportionment = apportionment.model_copy(update={"regime": ProrrataRegisterRegime.ESPECIAL})
+    general_values = resolve_iva_ledger_binding_values(
+        revision,
+        observations,
+        prorrata_apportionment=general_apportionment,
+    )
+    especial_values = resolve_iva_ledger_binding_values(
+        revision,
+        observations,
+        prorrata_apportionment=especial_apportionment,
+    )
+    deduction_under_general = sum(
+        (general_values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids),
+        Decimal("0"),
+    )
+    deduction_under_especial = sum(
+        (especial_values.get(binding_id, Decimal("0")) for binding_id in deducible_binding_ids),
+        Decimal("0"),
+    )
+    if deduction_under_general < Decimal("0") or deduction_under_especial < Decimal("0"):
+        return None
+    return AnnualDeducibleTotalsByRegime(
+        deduction_under_general=deduction_under_general,
+        deduction_under_especial=deduction_under_especial,
+        unclassified_deducible_count=_unclassified_deducible_soportado_count(
+            revision,
+            observations,
+            deducible_binding_ids,
+        ),
+        regime=apportionment.regime,
+    )
 
 
 @dataclass(frozen=True)
@@ -842,6 +1263,8 @@ def _classify_iva_transaction(
         iva_amount=iva_amount,
         recargo_amount=recargo_amount,
         prorrata_reference_id=linked_prorrata_id,
+        input_classification=transaction.input_classification,
+        prorrata_sector_id=transaction.prorrata_sector_id,
     )
     return _IvaTransactionOutcome(
         observations=(observation,),
@@ -863,6 +1286,8 @@ def _iva_observation(
     recargo_amount: Decimal = Decimal("0"),
     prorrata_reference_id: str | None = None,
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
+    input_classification: InputClassification | None = None,
+    prorrata_sector_id: str | None = None,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -876,6 +1301,8 @@ def _iva_observation(
         recargo_amount=recargo_amount,
         prorrata_reference_id=prorrata_reference_id,
         cash_accounting_treatment=cash_accounting_treatment,
+        input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector_id,
     )
 
 
@@ -908,6 +1335,8 @@ def _cash_accounting_observations(
                 iva_amount=iva_amount * proportionality,
                 recargo_amount=recargo_amount * proportionality,
                 prorrata_reference_id=linked_prorrata_id,
+                input_classification=transaction.input_classification,
+                prorrata_sector_id=transaction.prorrata_sector_id,
             ),
         )
     if resolved_period.contains(operation_date):
@@ -922,6 +1351,8 @@ def _cash_accounting_observations(
                 base_amount=full_base_amount,
                 iva_amount=full_iva_amount,
                 cash_accounting_treatment=transaction.cash_accounting_treatment,
+                input_classification=transaction.input_classification,
+                prorrata_sector_id=transaction.prorrata_sector_id,
             ),
         )
     return tuple(observations)
@@ -1164,17 +1595,20 @@ def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
 
 
 __all__ = [
+    "AnnualDeducibleTotalsByRegime",
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
     "IvaLedgerProrrataApportionment",
+    "IvaLedgerSectorApportionment",
     "ProrrataLedgerReference",
     "aggregate_iva_ledger_candidate_bindings",
     "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
+    "compute_annual_deducible_totals_by_regime",
     "iva_ledger_missing_fact_reasons",
     "resolve_iva_ledger_binding_values",
     "validate_iva_ledger_counterparty_category",

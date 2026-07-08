@@ -13,10 +13,6 @@ See Also:
         Resolver that maps provider IDs to concrete parser implementations.
     :mod:`~adapters.inbound.financial.providers`
         Provider package supplying CSV, OFX, XLSX, and N26 PDF parsers.
-    ``2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr``
-        Decision trail for the shipped bank-statement provider catalogue.
-    ``2026-04-14-n26-data-source-adr``
-        Decision that introduced the N26 PDF provider into the import surface.
 """
 
 from __future__ import annotations

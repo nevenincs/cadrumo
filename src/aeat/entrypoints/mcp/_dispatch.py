@@ -21,6 +21,26 @@ _TOOL_PREFIX = "aeat_"
 # tools. They are excluded from the exposed tool set.
 _NON_TOOL_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
 
+# The client-side namespace prefix a Claude plugin prepends to every tool name
+# (``mcp__plugin_<plugin>_<server>__``). The plugin and the server are both named
+# ``aeat``, so the prefix triples the namespace; rather than rename the server (it
+# would invalidate every installed plugin's tool allowlist and slash-command
+# names), the budget accounts for this prefix and the over-length verbs carry
+# declared short forms (ADR mcp-progressive-discovery P4).
+CLIENT_NAME_PREFIX = "mcp__plugin_aeat_aeat__"
+# The practical prefixed-name ceiling clients enforce.
+TOOL_NAME_BUDGET = 64
+
+# Declared short forms for the command-key segments that would otherwise overflow
+# the budget. Applied to the underscored key; each is unambiguous (no two keys
+# collapse to one name) and reversible through the forward-match resolver below.
+_SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
+    ("review_package", "rpkg"),
+    ("preview_maritime_exemption", "preview_maritime"),
+    ("subject_access_request", "sar"),
+    ("certificate_secret", "cert_secret"),
+)
+
 
 def is_exposable_command(command_key: str) -> bool:
     """Return True when a registry command key should surface as an MCP tool."""
@@ -30,9 +50,20 @@ def is_exposable_command(command_key: str) -> bool:
 def tool_name_for_command(command_key: str) -> str:
     """Render a registry command key as a namespaced MCP tool name.
 
-    ``modelo.work.calculate`` becomes ``aeat_modelo_work_calculate``.
+    ``modelo.work.calculate`` becomes ``aeat_modelo_work_calculate``. Declared
+    short forms shrink the few command keys that would otherwise overflow the
+    client-prefixed name budget (P4), e.g. ``modelo.review_package.verify.signature``
+    becomes ``aeat_modelo_rpkg_verify_signature``.
     """
-    return _TOOL_PREFIX + command_key.replace(".", "_")
+    underscored = command_key.replace(".", "_")
+    for long_form, short_form in _SEGMENT_ABBREVIATIONS:
+        underscored = underscored.replace(long_form, short_form)
+    return _TOOL_PREFIX + underscored
+
+
+def prefixed_tool_name_length(command_key: str) -> int:
+    """Return the length of a command's tool name including the client prefix."""
+    return len(CLIENT_NAME_PREFIX) + len(tool_name_for_command(command_key))
 
 
 def command_key_for_tool(tool_name: str, *, command_keys: Iterable[str]) -> str | None:

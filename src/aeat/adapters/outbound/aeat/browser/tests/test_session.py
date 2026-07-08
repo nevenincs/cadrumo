@@ -22,15 +22,6 @@ See Also:
     :class:`~adapters.outbound.aeat.auth.BrowserSessionLike`
         Auth-provider protocol that mirrors context creation while allowing
         lightweight tests to omit concrete browser ownership.
-    ``2026-04-17-browser-leak-adr``
-        Governing decision for one live browser, partial-failure cleanup, and
-        explicit ``close()`` semantics.
-    ``2026-04-17-session-persistence-adr``
-        Decision that storage-state paths are replayed only when real persisted
-        JSON exists.
-    ``2026-04-16-live-cert-auth-adr``
-        Decision that Playwright client-certificate attachment lives at the
-        browser-session boundary.
 """
 
 from datetime import UTC, datetime

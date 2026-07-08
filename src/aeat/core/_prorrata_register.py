@@ -77,14 +77,51 @@ class ProrrataProvisionalProvenance(StrEnum):
         INICIO_ACTIVIDAD: The inicio-de-actividades proposed percentage
             (art. 105.Tres via art. 111.Dos) for a taxpayer with no prior
             definitive to carry, recorded with its proposal reference.
+        INTERRUMPIDA_TRES_ULTIMOS: The art. 105.Cinco interrupted-activity
+            percentage — the global percentage over the aggregate volumes of the
+            last three activo años naturales (skipping the interruption gap),
+            used to seed an ejercicio whose immediately prior year had no
+            operations. Computed from the register's own stored volumes, never a
+            fabricated default and never silently the single pre-interruption
+            year.
     """
 
     CARRIED_PRIOR_DEFINITIVA = "carried_prior_definitiva"
     AEAT_AUTORIZADA = "aeat_autorizada"
     INICIO_ACTIVIDAD = "inicio_actividad"
+    INTERRUMPIDA_TRES_ULTIMOS = "interrumpida_tres_ultimos"
+
+
+class SectorDiferenciadoLetra(StrEnum):
+    """The LIVA art. 9.1.c letra that makes an operator-declared sector differentiated.
+
+    Art. 9, número 1.º, letra c) enumerates the four grounds on which two economic
+    activities belong to distinct "sectores diferenciados". The register's
+    operator-declared sector definition tags each sector with the letra that makes
+    it differentiated so the art. 9.1.c judgment is recorded, not inferred. Distinct
+    from :class:`ProrrataRegisterRegime` (the deduction regime in force per sector);
+    this axis is *why the sector is a separate sector*, not *how it deducts*.
+
+    Attributes:
+        A: Letra a' — distinct CNAE groups whose art. 104 general prorrata
+            percentages differ by more than 50 percentage points
+            (``PRORRATA_SECTORAL_SEPARATION_SPREAD_PP``). The only ground on which
+            the art. 101.Dos AEAT-authorised common regime may later apply.
+        B: Letra b' — activities under the regímenes especiales (simplificado,
+            agricultura/ganadería/pesca, oro de inversión, recargo de
+            equivalencia); their deduction is governed by their special regime.
+        C: Letra c' — arrendamiento financiero operations (DA 3.ª Ley 10/2014).
+        D: Letra d' — cesión de créditos o préstamos (except factoring).
+    """
+
+    A = "a"
+    B = "b"
+    C = "c"
+    D = "d"
 
 
 __all__ = [
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
+    "SectorDiferenciadoLetra",
 ]

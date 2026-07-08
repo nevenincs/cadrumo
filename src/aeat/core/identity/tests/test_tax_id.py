@@ -24,10 +24,6 @@ See Also:
     :mod:`~domain.calculations.registry._schema_scalars`
         Registry schema consumer that re-raises identity validation failures as
         registry validation errors.
-    Governing vault records
-        ``2026-05-13-identity-adr`` places Spanish tax-id validation in core as
-        a security primitive; ``2026-05-30-identity-primitives-reference``
-        tracks ``SubjectTaxId`` as the pydantic-ready alias for this validator.
 """
 
 from __future__ import annotations

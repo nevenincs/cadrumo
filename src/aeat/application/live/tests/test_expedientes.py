@@ -14,10 +14,6 @@ See Also:
     :data:`~adapters.persistence.storage.LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE`
         Registered namespace, sensitivity, schema-version, and object-key
         grammar for persisted expedientes captures.
-    Governing vault records
-        ``2026-05-12-cli-workflow-redesign-adr`` locks live reads under
-        ``app live`` with no write surface; the secure-storage side-store audit
-        records expedientes snapshots as secure-object migrated remote mirrors.
 """
 
 from __future__ import annotations

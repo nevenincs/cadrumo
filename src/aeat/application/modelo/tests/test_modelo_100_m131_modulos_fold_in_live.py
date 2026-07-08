@@ -23,8 +23,6 @@ See Also:
     ``renta-2024-rel-131-rendimiento-neto-modulos``
         M100/2024 relation that sums the quarterly Modelo 131 source
         observations.
-    ``2026-05-26-cross-domain-continuity-W09-P41-S298``
-        Execution record for the missing M100 módulos net-income binding.
 """
 
 from __future__ import annotations

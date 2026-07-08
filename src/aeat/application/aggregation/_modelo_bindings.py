@@ -817,7 +817,7 @@ def _iva_prorrata_apportionment_source_ref(
     apportionment: IvaLedgerProrrataApportionment,
 ) -> str:
     source_ref = (
-        f"prorrata-apportionment:{period.year}:general:"
+        f"prorrata-apportionment:{period.year}:{apportionment.regime.value}:"
         f"percentage:{apportionment.percentage}:provenance:{apportionment.provenance.value}"
     )
     if apportionment.source_observation_ref is not None:

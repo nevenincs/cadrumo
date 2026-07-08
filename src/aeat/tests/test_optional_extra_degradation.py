@@ -6,7 +6,7 @@ The optional integration stacks (``google`` / ``browser`` / ``anthropic``) live 
 ``sys.meta_path`` finder that makes the package genuinely unimportable, the same
 condition a fresh ``pip install aeat`` (no extras) produces — rather than a mock.
 With the extra blocked the core CLI must still build, and reaching the feature
-must raise the feature's own typed error naming ``pip install aeat[<extra>]``.
+must raise the feature's own typed error naming ``pip install aeat-cli[<extra>]``.
 """
 
 from __future__ import annotations
@@ -102,7 +102,7 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     client = LLMClient(settings=load_settings())
     with _block_imports("anthropic"), pytest.raises(LLMConfigError) as raised:
         client._build_adapter(LLMProvider.ANTHROPIC)
-    assert raised.value.suggestion == "pip install aeat[anthropic]"
+    assert raised.value.suggestion == "pip install aeat-cli[anthropic]"
 
 
 @pytest.mark.asyncio
@@ -115,7 +115,7 @@ async def test_browser_boundary_refuses_instructively_without_the_extra() -> Non
 
         with pytest.raises(BrowserError) as raised:
             await _factory._start_playwright()
-    assert raised.value.suggestion == "pip install aeat[browser]"
+    assert raised.value.suggestion == "pip install aeat-cli[browser]"
 
 
 def test_google_extra_unavailable_is_observed_by_the_probe_without_the_extra() -> None:
