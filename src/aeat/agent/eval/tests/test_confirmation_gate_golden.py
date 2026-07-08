@@ -120,6 +120,10 @@ def _declared_live_write(command_key: str) -> Iterator[None]:
 async def _call_tool(name: str, arguments: Mapping[str, object]) -> mcp_types.CallToolResult:
     server = build_server(build_tool_descriptors(), persona=None)
     async with connect(server) as session:
+        # Clear the block-first-mutation identity gate (ADR mcp-identity-linked-operation
+        # I2) with a real whoami identity read, so this confirmation-gate proof reaches
+        # the CONFIRM tier under test rather than the identity gate in front of it.
+        await session.call_tool("aeat_whoami", {})
         return await session.call_tool(name, dict(arguments))
 
 

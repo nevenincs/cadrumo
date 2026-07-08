@@ -22,6 +22,11 @@ from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
 from ._faithfulness import FaithfulnessResult, faithfulness_check
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
+from ._identity_gate import (
+    IDENTITY_READ_CONSOLE_TOOLS,
+    SessionIdentityState,
+    identity_gate_refusal,
+)
 from ._persona_scope import (
     PERSONA_TOOL_SCOPES,
     AgentPersona,
@@ -34,6 +39,7 @@ from ._server import build_server
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 __all__ = [
+    "IDENTITY_READ_CONSOLE_TOOLS",
     "PERSONA_TOOL_SCOPES",
     "AgentPersona",
     "ConfirmationPolicy",
@@ -41,12 +47,14 @@ __all__ = [
     "McpAnnotations",
     "McpToolDescriptor",
     "PersonaToolScope",
+    "SessionIdentityState",
     "annotations_for_command",
     "build_server",
     "build_tool_descriptors",
     "command_key_for_tool",
     "confirmation_for_tool",
     "faithfulness_check",
+    "identity_gate_refusal",
     "is_tool_in_persona_scope",
     "live_family_mutability",
     "main",
