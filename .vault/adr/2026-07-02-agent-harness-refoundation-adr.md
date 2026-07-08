@@ -3,10 +3,12 @@ tags:
   - '#adr'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-03'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
+  - "[[2026-07-08-mcp-progressive-discovery-adr]]"
+  - "[[2026-07-08-mcp-protocol-hardening-adr]]"
 ---
 
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
@@ -40,6 +42,17 @@ This ADR re-founds the concept against that definition. It records precisely wha
 **Chosen — the black-box tool universe with one MCP operating console, serving any language model.** The CLI is a confined, deterministic tool universe; the harness is the framework of rules and regulations for operating within it; the console is the single operating surface that any MCP-capable client connects to. This re-founds, not discards, the prior work. **Carried over unchanged:** the accepted ADR's `Q1`–`Q6` (MCP as the end-state tool surface, the `src/aeat/_data/agent/` artifact home behind the `aeat[agent]` extra, the HITL tier taxonomy, the advisory-then-blocking faithfulness posture, the golden-scenario eval methodology, and Spanish-stem naming) and the proposed ADR's `D1`–`D7` (the manifest as the single capability authority, the three-tier skill taxonomy, the verifier owning the export/record-marker boundary, and the D5 profile-fact derivation principle). **Superseded:** the workspace materialiser as the *primary* delivery vehicle (it is demoted to an optional Claude-native mirror under R4), the flat `tools/list` surface (replaced by domain toolsets under R2), and any notion that the harness targets a bespoke future runtime (it targets the user's existing client). The origin of this decision is the operator directive recorded 2026-07-02.
 
 ### R2 — Console tool architecture
+
+**Status: AMENDED by the proposed `2026-07-08-mcp-progressive-discovery-adr` (P1–P4).**
+The 2026-07-08 review found R2's toolsets shipped as grouping metadata that never
+reaches the protocol — `tools/list` still returns the full flat verb surface, the
+exact posture R2 rejected. The amending ADR retires the flat listing as the
+default advertised surface (orientation core + search/execute spine, P1–P2),
+wires the existing toolsets to runtime activation over `tools/listChanged` (P3),
+and adds a tool-name length budget (P4). R2's INTENT — progressive disclosure,
+toolsets for the common path, meta-tools for the tail — carries over unchanged;
+only the delivery posture is amended. The original ruling follows for the
+decision trail.
 
 *Flat surface (status quo):* one tool per operator-callable CLI command key, no schemas, no annotations — rejected: dumping the whole verb tree into `tools/list` crowds out the user's question and degrades tool selection, and the `{args: [string]}` bag forces the model to run `--help` per verb.
 
