@@ -37,10 +37,10 @@ aeat app ledger prorrata elect-general --ejercicio 2026 --percentage 80
 - `--ejercicio` is the filing year the election covers.
 - `--percentage` is the provisional deduction percentage, 0 to 100 (LIVA
   art. 104.Uno + 105.Uno).
-- The percentage source defaults to the prior year's definitive percentage. Pass
-  `--provenance aeat_autorizada` with `--reference` for an AEAT-authorised
-  percentage, or `--provenance inicio_actividad` with `--reference` for a
-  start-of-activity proposal.
+- The percentage source (`--provenance`) defaults to `carried_prior_definitiva`
+  (the prior year's definitive percentage). Pass `--provenance aeat_autorizada`
+  with `--reference` for an AEAT-authorised percentage, or `--provenance
+  inicio_actividad` with `--reference` for a start-of-activity proposal.
 
 ## Elect especial prorrata and classify inputs
 
