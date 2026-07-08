@@ -38,6 +38,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Art104TresExclusion
+from ....domain.iva import InputClassification
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._models import ManualLedgerTransactionCommand
 
@@ -66,6 +67,7 @@ def _populated_command() -> ManualLedgerTransactionCommand:
         usage_ratio_id="usage.home-office.2025",
         prorrata_reference="prorrata.iva.2025",
         art_104_tres_exclusion=Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+        input_classification=InputClassification.COMMON,
         purchase_invoice_evidence_id="evidence.invoice.AC-2025-042",
         attachment_ids=("attach.invoice.pdf", "attach.delivery-note.pdf"),
         notes="Q2 office expense, mixed personal/business",
@@ -115,6 +117,14 @@ def test_command_preserves_art_104_tres_exclusion_through_json() -> None:
     assert original.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
     assert roundtripped.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+
+
+def test_command_preserves_input_classification_through_json() -> None:
+    """The operator-declared LIVA art. 106 input_classification survives the command wire contract."""
+    original = _populated_command()
+    assert original.input_classification is InputClassification.COMMON
+    roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
+    assert roundtripped.input_classification is InputClassification.COMMON
 
 
 def test_command_json_roundtrip_preserves_decimal_precision() -> None:

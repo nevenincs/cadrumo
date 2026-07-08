@@ -3339,6 +3339,7 @@ cli:
         <ratio>'. Not arbitrary prose.
       value_date_help: Value date (YYYY-MM-DD)
       art_104_tres_exclusion_help: 'Operator-declared LIVA art. 104.Tres denominator exclusion (foreign permanent establishment or non-habitual real-estate/financial operation); excludes the operation from both terms of the prorrata ratio.'
+      input_classification_help: 'Operator-declared LIVA art. 106 prorrata-especial per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible: no deduction; common: deducted at the general prorrata percentage); meaningful only for input rows in a bucket under prorrata especial.'
     allocate:
       actor_help: Operator name recorded on the bucket event
       business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;

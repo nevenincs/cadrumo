@@ -41,6 +41,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.iva import (
     EUMemberState,
+    InputClassification,
     IvaCategory,
 )
 from ...domain.transactions import (
@@ -241,6 +242,11 @@ def ledger_add(
         "--art-104-tres-exclusion",
         help=tr("cli.ledger.add.art_104_tres_exclusion_help"),
     ),
+    input_classification: InputClassification | None = typer.Option(
+        None,
+        "--input-classification",
+        help=tr("cli.ledger.add.input_classification_help"),
+    ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
         "--purchase-invoice-evidence-id",
@@ -322,6 +328,7 @@ def ledger_add(
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
             art_104_tres_exclusion=art_104_tres_exclusion,
+            input_classification=input_classification,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             attachment_ids=tuple(attachment_ids),
             notes=notes,
