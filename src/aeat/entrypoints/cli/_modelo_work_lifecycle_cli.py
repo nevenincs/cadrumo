@@ -47,6 +47,12 @@ from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099
 
+_WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
+_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
+_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
+_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
+_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
+
 
 @dataclass(frozen=True, slots=True)
 class _LifecycleDeps:
@@ -156,10 +162,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             str,
             typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
         ],
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        revision: _RevisionOpt = None,
         bucket_id: Annotated[
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
@@ -465,26 +468,11 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
     @work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
     def work_status(
         ctx: typer.Context,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        work_unit_id: _WorkUnitIdArg = None,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        revision: _RevisionOpt = None,
         bucket_id: Annotated[
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
@@ -516,26 +504,11 @@ def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -
     @work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
     def work_rename(
         ctx: typer.Context,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        work_unit_id: _WorkUnitIdArg = None,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        revision: _RevisionOpt = None,
         bucket_id: Annotated[
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
@@ -574,26 +547,11 @@ def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) 
     @work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
     def work_discard(
         ctx: typer.Context,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        work_unit_id: _WorkUnitIdArg = None,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        revision: _RevisionOpt = None,
         bucket_id: Annotated[
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
