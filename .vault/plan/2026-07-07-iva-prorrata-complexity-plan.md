@@ -95,6 +95,7 @@ Build the operator surface that writes an ESPECIAL ProrrataRegisterEntry and a S
 - [x] `W04.P05.S25` - Prove especial and sector apportionment fire from the operator flow: an anti-dormant end-to-end test that elects especial and declares sectors and tags inputs through the service the CLI calls then runs the live aggregation and asserts the especial and sector apportionment change the deducible cuota, with the non-electing path byte-identical; `src/aeat/application/aggregation/tests/test_prorrata_operator_ingress_end_to_end.py`.
 - [x] `W04.P05.S26` - Reconcile the MEDIUM oracle-claim: amend the plan Verification bullet and the S15 and S20 exec notes to state especial and sectores are proven by law-derived-scenario-through-the-production-path with no bundled AEAT especial or two-sector oracle; `.vault/plan/2026-07-07-iva-prorrata-complexity-plan.md, .vault/exec/2026-07-07-iva-prorrata-complexity/`.
 - [x] `W04.P05.S27` - Add an is_interrupted=True entry to the encrypted-SQL prorrata register roundtrip fixture so the interrupted marker crosses the encrypted boundary under test; `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
+- [x] `W04.P05.S28` - Surface a non-blocking WARNING Notice on ledger add when --sector names a sector absent from the bucket's declared SectorDefinition partition, so a typo'd sector tag that would silently deduct at the common-use percentage is instead disclosed (LIVA arts. 9.1.c / 101); `mirror the S24 inert-classification notice pattern and stay silent when the sector is declared; `src/aeat/entrypoints/cli/_ledger.py, src/aeat/locales/, src/aeat/entrypoints/cli/tests/test_prorrata_register_cli.py`.
 
 ## Description
 
@@ -110,12 +111,6 @@ the future implementation, grounded verbatim in the bundled consolidated LIVA
 (`ley-37-1992.html`, arts 101 / 103 / 104.Tres / 105.Cinco / 106).
 
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 

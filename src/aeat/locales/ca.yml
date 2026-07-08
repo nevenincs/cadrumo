@@ -1620,23 +1620,41 @@ cli:
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
       prorrata:
-        activity_code_help: 'Codi d''activitat CNAE / IAE agrupat en aquest sector (repetible, com a minim un).'
-        declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101): la particio de l''art. 9.1.c que declara l''operador, mai inferida del llibre.'
-        ejercicio_help: 'Exercici (any) que cobreix l''eleccio.'
-        elect_especial_help: 'Tria prorrata especial per a un exercici (LIVA art. 103.Dos.1): la deduccio per input s''enruta amb --input-classification a cada apunt.'
-        elect_general_help: 'Tria prorrata general per a un exercici (LIVA art. 104): un unic percentatge de deduccio s''aplica a cada quota deduible.'
-        general_percentage_help: 'Percentatge de deduccio provisional 0-100 (LIVA art. 104.Uno + 105.Uno).'
-        group_help: 'Registre de prorrata d''IVA entre exercicis: tria el regim (general / especial) i declara sectors diferenciats (LIVA arts. 101 / 103 / 105 / 106).'
-        letra_help: 'Lletra de l''art. 9.1.c de la LIVA (a/b/c/d) que fa diferenciat aquest sector.'
-        list_help: 'Llista cada entrada del registre i cada sector diferenciat declarat al perfil actiu.'
-        percentage_help: 'Percentatge de deduccio d''us comu 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).'
-        provenance_help: 'Origen del percentatge provisional segons LIVA art. 105.'
-        provenance_not_electable: 'L''origen {provenance!r} no es declarable per l''operador; acceptats: {accepted}. El percentatge d''interrupcio de l''art. 105.Cinco es calcula des del registre.'
-        reference_help: 'Referencia de l''autoritzacio de l''AEAT (art. 105.Dos) o de la proposta d''inici (art. 105.Tres).'
-        reference_not_permitted: '--reference nomes es permet amb un origen aeat_autorizada o inicio_actividad.'
-        reference_required: 'L''origen {provenance!r} (LIVA art. 105.Dos / 105.Tres) requereix --reference.'
-        sector_help: 'Identificador del sector diferenciat que cobreix aquesta entrada; ometre per a l''entrada de tota l''activitat.'
-        sector_id_help: 'Identificador estable del sector al qual fan referencia les entrades del registre i els apunts del llibre.'
+        activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
+          com a minim un).
+        declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101):
+          la particio de l''art. 9.1.c que declara l''operador, mai inferida del llibre.'
+        ejercicio_help: Exercici (any) que cobreix l'eleccio.
+        elect_especial_help: 'Tria prorrata especial per a un exercici (LIVA art.
+          103.Dos.1): la deduccio per input s''enruta amb --input-classification a
+          cada apunt.'
+        elect_general_help: 'Tria prorrata general per a un exercici (LIVA art. 104):
+          un unic percentatge de deduccio s''aplica a cada quota deduible.'
+        general_percentage_help: Percentatge de deduccio provisional 0-100 (LIVA art.
+          104.Uno + 105.Uno).
+        group_help: 'Registre de prorrata d''IVA entre exercicis: tria el regim (general
+          / especial) i declara sectors diferenciats (LIVA arts. 101 / 103 / 105 /
+          106).'
+        letra_help: Lletra de l'art. 9.1.c de la LIVA (a/b/c/d) que fa diferenciat
+          aquest sector.
+        list_help: Llista cada entrada del registre i cada sector diferenciat declarat
+          al perfil actiu.
+        percentage_help: Percentatge de deduccio d'us comu 0-100 (LIVA art. 106.Uno
+          regla 3.a / art. 104.Dos).
+        provenance_help: Origen del percentatge provisional segons LIVA art. 105.
+        provenance_not_electable: 'L''origen {provenance!r} no es declarable per l''operador;
+          acceptats: {accepted}. El percentatge d''interrupcio de l''art. 105.Cinco
+          es calcula des del registre.'
+        reference_help: Referencia de l'autoritzacio de l'AEAT (art. 105.Dos) o de
+          la proposta d'inici (art. 105.Tres).
+        reference_not_permitted: --reference nomes es permet amb un origen aeat_autorizada
+          o inicio_actividad.
+        reference_required: L'origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
+          requereix --reference.
+        sector_help: Identificador del sector diferenciat que cobreix aquesta entrada;
+          ometre per a l'entrada de tota l'activitat.
+        sector_id_help: Identificador estable del sector al qual fan referencia les
+          entrades del registre i els apunts del llibre.
       ratios:
         category_help: Id de categoria de despesa (p. ex. USAGE_RATIO_VEHICLE)
         eligible_help: Llista les categories que admeten proporció específica
@@ -3581,17 +3599,26 @@ cli:
         exclusively_non_deductible sense deduccio; common al percentatge general de
         prorrata); nomes rellevant per a operacions suportades en un bucket amb prorrata
         especial.'
-      input_classification_inert: '--input-classification es inert per a l''exercici {ejercicio}: no s''aplica cap eleccio de prorrata especial, de manera que l''input es dedueix al percentatge general. Executa ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons LIVA art. 106.'
+      input_classification_inert: '--input-classification es inert per a l''exercici
+        {ejercicio}: no s''aplica cap eleccio de prorrata especial, de manera que
+        l''input es dedueix al percentatge general. Executa ''app ledger prorrata
+        elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons LIVA art. 106.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
-      prorrata_sector_help: 'Identificador del sector diferenciat (LIVA arts. 9.1.c / 101) al qual pertany aquest input; ha de coincidir amb un sector declarat amb ''app ledger prorrata declare-sector''.'
+      prorrata_sector_help: Identificador del sector diferenciat (LIVA arts. 9.1.c
+        / 101) al qual pertany aquest input; ha de coincidir amb un sector declarat
+        amb 'app ledger prorrata declare-sector'.
       purchase_invoice_evidence_help: Id de justificant de factura de compra
       recargo_amount_help: Quota del recàrrec d'equivalència repercutida en aquesta
         venda a un minorista en recàrrec (art. 161 LIVA); s'agrega a la quota de recàrrec
         del Model 303 per tipus d'IVA
+      sector_unmatched: --sector '{sector_id}' no coincideix amb cap sector diferenciat
+        declarat (LIVA arts. 9.1.c / 101), de manera que aquest input es dedueix al
+        percentatge d'us comu en lloc del propi del sector. Executa 'app ledger prorrata
+        declare-sector --sector-id {sector_id} ...' per enrutar-lo, o corregeix l'etiqueta.
       source_jurisdiction_help: Codi de país ISO 3166-1 alfa-2 (dues lletres) que
         identifica la jurisdicció fiscal d'origen de l'ingrés o despesa (p. ex. ES
         per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre
@@ -5930,6 +5957,8 @@ locales:
     set:
       updated: updated %{locale_file}:%{key}
 mcp:
+  call:
+    timeout: mcp.call.timeout
   elicitation:
     confirm:
       consequence_handoff: Això genera el document de presentació que el contribuent

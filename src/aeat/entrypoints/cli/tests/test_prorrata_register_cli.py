@@ -335,3 +335,33 @@ def test_input_classification_with_especial_election_is_not_inert() -> None:
     result = _add_row(key="tx-especial", input_classification="exclusively_deductible")
     assert result.exit_code == 0, result.output
     assert "ledger.add.input_classification_inert" not in _envelope_notice_codes(result)
+
+
+def test_sector_tag_naming_absent_sector_warns() -> None:
+    # No sector declared: the tag matches nothing, so the input would silently
+    # deduct at the common-use percentage. The advisory makes that visible.
+    result = _add_row(key="tx-sector-typo", sector="comercio-typo")
+    assert result.exit_code == 0, result.output
+    assert "ledger.add.sector_unmatched" in _envelope_notice_codes(result)
+
+
+def test_sector_tag_naming_declared_sector_is_silent() -> None:
+    declared = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "declare-sector",
+            "--sector-id",
+            "arrendamiento",
+            "--letra",
+            SectorDiferenciadoLetra.A.value,
+            "--activity-code",
+            "6820",
+        ],
+    )
+    assert declared.exit_code == 0, declared.output
+
+    result = _add_row(key="tx-sector-declared", sector="arrendamiento")
+    assert result.exit_code == 0, result.output
+    assert "ledger.add.sector_unmatched" not in _envelope_notice_codes(result)
