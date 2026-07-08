@@ -581,7 +581,8 @@ application:
         altre perfil.
       archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
         confirmació explícita.
-      archive_schema_version_from_future: 'La versió d''esquema de l''arxiu {archive_schema_version} és més recent del que admet aquesta aplicació (fins a {max_supported}).'
+      archive_schema_version_from_future: La versió d'esquema de l'arxiu {archive_schema_version}
+        és més recent del que admet aquesta aplicació (fins a {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -5881,9 +5882,14 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
-      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version} cap a {expected}.'
-      schema_upgrader_already_registered: 'Ja hi ha un actualitzador d''esquema registrat per a l''espai de noms {namespace} des de la versió {from_version}.'
-      schema_version_from_future: 'La versió d''esquema emmagatzemada {schema_version} de l''espai de noms {namespace} és més recent del que admet aquesta aplicació (fins a {expected}); no es pot llegir.'
+      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per
+        a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version}
+        cap a {expected}.'
+      schema_upgrader_already_registered: Ja hi ha un actualitzador d'esquema registrat
+        per a l'espai de noms {namespace} des de la versió {from_version}.
+      schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
+        de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
+        (fins a {expected}); no es pot llegir.
       unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
@@ -5998,6 +6004,9 @@ mcp:
       d''evidència — MAI no surten del vostre equip: romanen en emmagatzematge local
       xifrat i mai no es transmeten. Si actueu per compte d''un tercer (un gestor
       o professional), confirmeu que això és acceptable abans de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuant com el perfil del contribuent: %{label}.'
+    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer canvi d''aquesta sessio. Una presentacio o edicio mai no s''ha d''executar sota la identitat equivocada. Executa whoami (o ''config profile status'' / ''overview status'') per veure quin contribuent esta actiu i torna-ho a provar; una sola lectura d''identitat ho desbloqueja durant la sessio fins que canviis de perfil.'
   persona:
     handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la
       presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la
