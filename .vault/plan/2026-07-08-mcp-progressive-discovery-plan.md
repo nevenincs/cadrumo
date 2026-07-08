@@ -10,12 +10,15 @@ related:
   - '[[2026-07-08-mcp-progressive-discovery-research]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `mcp-progressive-discovery` plan
 
@@ -23,12 +26,10 @@ related:
 
 Retire the flat default listing: a surface-policy module computes the orientation core (floor, grounding, meta pair, manifest-derived overview and contract slice, persona-filtered) and an env toggle preserves the full surface for opt-out and A/B measurement (ADR P1).
 
-
-
-- [ ] `P01.S01` - Add the surface-policy module computing the default orientation core (floor, grounding, meta pair, manifest-derived overview and contract slice, persona-filtered) plus the activated-set union; `src/aeat/entrypoints/mcp/_surface.py`.
-- [ ] `P01.S02` - Read the AEAT_MCP_SURFACE toggle (core default, full opt-out) at serve start, thread the surface policy into build_server, and render tools/list from the policy instead of the flat descriptor concatenation; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P01.S03` - Declare the surface userConfig option on the generated plugin with core as the shipped default and a migration note in the plugin description; `src/aeat/agent/_workspace.py`.
-- [ ] `P01.S04` - Add surface-policy tests covering core composition, full opt-out, persona filtering, and gate invariance across surfaces; `src/aeat/entrypoints/mcp/tests/test_surface_policy.py`.
+- [x] `P01.S01` - Add the surface-policy module computing the default orientation core (floor, grounding, meta pair, manifest-derived overview and contract slice, persona-filtered) plus the activated-set union; `src/aeat/entrypoints/mcp/_surface.py`.
+- [x] `P01.S02` - Read the AEAT_MCP_SURFACE toggle (core default, full opt-out) at serve start, thread the surface policy into build_server, and render tools/list from the policy instead of the flat descriptor concatenation; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P01.S03` - Declare the surface userConfig option on the generated plugin with core as the shipped default and a migration note in the plugin description; `src/aeat/agent/_workspace.py`.
+- [x] `P01.S04` - Add surface-policy tests covering core composition, full opt-out, persona filtering, and gate invariance across surfaces; `src/aeat/entrypoints/mcp/tests/test_surface_policy.py`.
 
 ### Phase `P02` - Command index and discovery search
 
