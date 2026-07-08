@@ -93,7 +93,7 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-_TAX_ID_FACT_PATH = "identity.tax_id"
+TAX_ID_FACT_PATH = "identity.tax_id"
 """Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
 
 
@@ -104,7 +104,7 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
     it carries no value, so a profile without a tax id never collides.
     """
     for fact in facts:
-        if fact.path == _TAX_ID_FACT_PATH and fact.value is not None:
+        if fact.path == TAX_ID_FACT_PATH and fact.value is not None:
             text = str(fact.value).strip().upper()
             if text:
                 return text

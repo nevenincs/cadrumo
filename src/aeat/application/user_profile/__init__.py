@@ -398,10 +398,10 @@ def __getattr__(name: str):
         from . import _repository
 
         return getattr(_repository, name)
-    if name == "ProfileRepository":
-        from ._profile_repository import ProfileRepository
+    if name in ("ProfileRepository", "TAX_ID_FACT_PATH"):
+        from . import _profile_repository
 
-        return ProfileRepository
+        return getattr(_profile_repository, name)
     if name in (
         "CapabilityDecision",
         "CapabilitySource",
@@ -528,6 +528,7 @@ __all__ = [
     "set_active_field",
     "set_active_fields",
     "snapshot_to_values",
+    "TAX_ID_FACT_PATH",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
     "validate_bundle_payload",
