@@ -35,6 +35,7 @@ manifest family and are not distinguished by this gate).
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -94,6 +95,12 @@ from ._terminology_tools import (
     build_terminology_search_tool,
     render_terminology_search_text,
 )
+from ._surface import (
+    SURFACE_ENV_VAR,
+    SurfaceMode,
+    advertised_descriptors,
+    resolve_surface_mode,
+)
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 if TYPE_CHECKING:
@@ -136,12 +143,13 @@ def serve() -> None:
     regardless of whether the optional SDK is installed.
     """
     persona = active_persona()
+    surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
         import mcp.server  # noqa: F401
     except ModuleNotFoundError:
         emit_missing_sdk_refusal()
         return
-    _run_server(build_tool_descriptors(), persona=persona)
+    _run_server(build_tool_descriptors(), persona=persona, surface_mode=surface_mode)
 
 
 def filter_descriptors_for_persona(
@@ -391,6 +399,7 @@ def build_server(
     *,
     persona: AgentPersona | None = None,
     telemetry: SessionTelemetryWriter | None = None,
+    surface_mode: SurfaceMode = SurfaceMode.CORE,
 ) -> Server:
     """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
@@ -427,7 +436,14 @@ def build_server(
         if persona is None or not is_handoff_denied(persona=persona, command_key=descriptor.command_key)
     )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
-    sdk_tools = build_sdk_tools(scoped_descriptors)
+    # The advertised per-verb surface (ADR mcp-progressive-discovery P1): CORE
+    # (default) advertises only the persona-scoped orientation slice up front;
+    # FULL advertises the whole persona-scoped set (the pre-ADR flat surface).
+    # ``by_name`` above still spans EVERY descriptor, so a verb outside the
+    # advertised surface stays reachable through the ``execute`` meta-tool and a
+    # direct call by name - it is discovered, not listed.
+    advertised = advertised_descriptors(scoped_descriptors, mode=surface_mode)
+    sdk_tools = build_sdk_tools(advertised)
     meta_tools = build_meta_sdk_tools()
     floor_tool = build_harness_floor_tool()
     # Grounding tools (ADR R3): read-only search over the bundled legal corpus
@@ -729,6 +745,7 @@ def _run_server(
     descriptors: tuple[McpToolDescriptor, ...],
     *,
     persona: AgentPersona | None = None,
+    surface_mode: SurfaceMode = SurfaceMode.CORE,
 ) -> None:  # pragma: no cover - requires the SDK runtime
     """Build and run the MCP stdio server from the tool descriptors.
 
@@ -740,7 +757,7 @@ def _run_server(
     from mcp.server.stdio import stdio_server
 
     telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
-    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry)
+    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):
