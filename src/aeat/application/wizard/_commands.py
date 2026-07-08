@@ -1204,7 +1204,15 @@ def _emit_wizard_success(
         payload["active_profile"] = profile_name
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        emit_json_success(command_path, payload, notices=notices)
+        # Populate the envelope-spine active_profile identity anchor (ADR
+        # mcp-identity-linked-operation I3). The wizard emits through
+        # emit_json_success directly rather than the CLI _emit_envelope funnel
+        # that resolves the active label, so it must supply the label itself. On
+        # create the newly-created profile IS the active one, so its name is the
+        # label; on edit the active profile is not necessarily the edited one, so
+        # the spine stays null (the label is not the wizard's to assert there).
+        active_profile = profile_name if mode == "create" else None
+        emit_json_success(command_path, payload, notices=notices, active_profile=active_profile)
         return
 
     lines = [

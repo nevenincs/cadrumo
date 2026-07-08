@@ -81,10 +81,12 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
         document = json.loads(capsys.readouterr().out)
 
         assert set(document) == {"schema_version", "command", "active_profile", "status", "result", "notices"}
-        # The shared spine carries the active_profile identity anchor; the wizard
-        # emit path does not yet inject the label (tracked follow-up), so it is
-        # present-but-null here rather than absent.
-        assert document["active_profile"] is None
+        # The shared spine carries the active_profile identity anchor (ADR
+        # mcp-identity-linked-operation I3). On create the newly-created profile
+        # IS the active one, so the wizard injects its name as the label; on edit
+        # the active profile is not necessarily the edited one, so the spine stays
+        # null (the label is not the wizard's to assert there).
+        assert document["active_profile"] == ("probe-profile" if mode == "create" else None)
         assert document["command"] == command_path
         assert document["status"] == "success"
 
