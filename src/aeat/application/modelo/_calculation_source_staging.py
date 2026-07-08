@@ -109,7 +109,13 @@ def resolve_prorrata_regularizacion_sources(
     relation_values: Mapping[RelationId, Decimal] | None,
     filing_period_date: date | None,
 ) -> CalculationSourceResolution:
-    """Resolve prorrata and dependent capital-goods staged mesh sources."""
+    """Resolve prorrata and dependent capital-goods staged mesh sources.
+
+    Args:
+        registry_snapshot: The target revision's :class:`RegistrySnapshot`,
+            consulted to check whether the revision declares a
+            ``prorrata_regularizacion``-sourced binding at all.
+    """
     snapshot_revision = registry_snapshot.revision
     if not any(binding.source is BindingSourceKind.PRORRATA_REGULARIZACION for binding in snapshot_revision.bindings):
         return source_resolution
@@ -167,7 +173,13 @@ def materialise_prorrata_regularizacion_current_year_values(
     unresolved_binding_ids: tuple[BindingId, ...] = (),
     filing_period_date: date | None = None,
 ) -> SourceResolutionRegistryValues:
-    """Materialise the current-year values needed by ``prorrata_regularizacion``."""
+    """Materialise the current-year values needed by ``prorrata_regularizacion``.
+
+    Args:
+        registry_snapshot: The target revision's :class:`RegistrySnapshot`,
+            used to resolve the current-year casilla ids through the
+            registry engine.
+    """
     revision = registry_snapshot.revision
     revision_casillas = casillas_by_id(revision)
     if any(casilla_id not in revision_casillas for casilla_id in _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS):
