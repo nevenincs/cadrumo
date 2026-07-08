@@ -27,7 +27,6 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
-    read_active_profile,
     register_active_profile,
 )
 
@@ -105,7 +104,7 @@ def test_marriage_date_fact_survives_encrypted_sql_roundtrip(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 
@@ -136,7 +135,7 @@ def test_marriage_date_absent_when_not_stored(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
 
     # The marriage_date fact must be absent — the store must not fabricate it.
