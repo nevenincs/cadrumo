@@ -109,9 +109,14 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         mutability = _mutability_for_key(key, family_map)
         cli_form = "aeat app " + key.replace(".", " ")
         intent = _family_intent(key, intent_map)
+        verb_schema = verb_schemas[key]
+        # The model-facing description stays English (ADR mcp-protocol-hardening
+        # H5): the CLI form carries the verb path and the shared family intent
+        # follows. The command's own (Spanish) per-verb help is NOT put here - it
+        # feeds the search index instead (P02/S05), so discovery gains the verb
+        # vocabulary without a Spanish string on the model-facing surface.
         description = f"Run `{cli_form}`." + (f" {intent}." if intent else "")
         annotations = annotations_for_command(command_key=key, mutability=mutability, title=cli_form)
-        verb_schema = verb_schemas[key]
         descriptors.append(
             McpToolDescriptor(
                 name=tool_name_for_command(key),
