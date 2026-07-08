@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.application.operator_surface._classification
    aeat.application.operator_surface._contract
    aeat.application.operator_surface._crud_contract
    aeat.application.operator_surface._crud_registry

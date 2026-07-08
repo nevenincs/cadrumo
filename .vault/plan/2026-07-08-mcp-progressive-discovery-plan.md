@@ -72,11 +72,11 @@ Give the guided-workflow prompts typed arguments and serve completion/complete s
 
 Prove the core surface with the live persona harness (discovery scenario, core-vs-full A/B), align the plugin generator and conformance floor, and regenerate the docs stubs (ADR Implementation, R7 discipline).
 
-- [ ] `P06.S22` - Author the live discovery golden scenario: an unprimed persona must locate and correctly invoke a long-tail verb through the core surface; `src/aeat/agent/eval/scenarios/descubrimiento_verbo.toml`.
-- [ ] `P06.S23` - Extend live scoring with discovery metrics (rounds-to-correct-verb, selection quality) and the surface A/B comparison surface; `src/aeat/agent/eval/_live_scoring.py`.
-- [ ] `P06.S24` - Run the live core-vs-full A/B measurement over the golden scenarios and persist the rendered report as a vault audit record; `.vault/audit/2026-07-08-mcp-progressive-discovery-measurement-audit.md`.
-- [ ] `P06.S25` - Update the real-client handshake conformance floor for the core surface, the list-changed capability, and the renamed identity; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
-- [ ] `P06.S26` - Regenerate the API reference stubs for the new and renamed modules via the apidocs CLI; `docs/api`.
+- [x] `P06.S22` - Author the live discovery golden scenario: an unprimed persona must locate and correctly invoke a long-tail verb through the core surface; `src/aeat/agent/eval/scenarios/descubrimiento_verbo.toml`.
+- [x] `P06.S23` - Extend live scoring with discovery metrics (rounds-to-correct-verb, selection quality) and the surface A/B comparison surface; `src/aeat/agent/eval/_live_scoring.py`.
+- [x] `P06.S24` - Run the live core-vs-full A/B measurement over the golden scenarios and persist the rendered report as a vault audit record; `.vault/audit/2026-07-08-mcp-progressive-discovery-measurement-audit.md`.
+- [x] `P06.S25` - Update the real-client handshake conformance floor for the core surface, the list-changed capability, and the renamed identity; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
+- [x] `P06.S26` - Regenerate the API reference stubs for the new and renamed modules via the apidocs CLI; `docs/api`.
 
 ## Description
 

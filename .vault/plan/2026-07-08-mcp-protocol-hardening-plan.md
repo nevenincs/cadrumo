@@ -57,7 +57,7 @@ Keep structuredContent the typed summary and move bulk provenance and evidence a
 - [ ] `P04.S14` - Add resource templates and read handlers for the bulk payload classes (calculation observations, evidence rows, corpus excerpts) resolved from persisted state; `src/aeat/entrypoints/mcp/_resources.py`.
 - [ ] `P04.S15` - Emit resource_link content items in place of inlined bulk arrays on the identified verbs while keeping structuredContent the typed summary; `src/aeat/entrypoints/mcp/_server.py`.
 - [ ] `P04.S16` - Update the affected per-verb output schemas in lock-step with the thinned payload shapes; `src/aeat/entrypoints/mcp/_tools.py`.
-- [ ] `P04.S17` - Add the structured-summary size-budget conformance check flagging verbs over budget; `src/aeat/entrypoints/mcp/tests/test_result_size_budget.py`.
+- [x] `P04.S17` - Add the structured-summary size-budget conformance check flagging verbs over budget; `src/aeat/entrypoints/mcp/tests/test_result_size_budget.py`.
 
 ### Phase `P05` - Declared protocol boundaries
 
@@ -75,7 +75,7 @@ Bound telemetry growth, pin the negotiated capability set with a conformance tes
 - [x] `P06.S22` - Add telemetry retention tests proving pruning bounds growth and never touches the newest sessions; `src/aeat/entrypoints/mcp/tests/test_serving_gates.py`.
 - [x] `P06.S23` - Add the capability-set conformance test pinning the exact negotiated server capabilities; `src/aeat/entrypoints/mcp/tests/test_client_handshake.py`.
 - [x] `P06.S24` - Pin the potion model revision to a commit hash and route the model download through the app-controlled cache directory; `src/aeat/application/corpus_search/_query_embed.py`.
-- [ ] `P06.S25` - Regenerate the API reference stubs for the new modules via the apidocs CLI; `docs/api`.
+- [x] `P06.S25` - Regenerate the API reference stubs for the new modules via the apidocs CLI; `docs/api`.
 
 ## Description
 
