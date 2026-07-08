@@ -36,11 +36,11 @@ Retire the flat default listing: a surface-policy module computes the orientatio
 Make the search meta-tool the real discovery spine: hybrid lexical plus semantic retrieval over a manifest-derived command index, verb-specific descriptions from the CLI help authority, and search results actionable in one round-trip (ADR P2).
 
 - [ ] `P02.S05` - Derive verb-specific description first lines from the per-verb Typer help text with the family operator_question demoted to a suffix; `src/aeat/entrypoints/mcp/_tools.py`.
-- [ ] `P02.S06` - Build the command-retrieval index (FTS5 lexical with Spanish stemming plus optional model2vec vectors, RRF fusion, lexical-only degraded mode) over tool name, CLI path, per-verb help, and toolset; `src/aeat/application/command_search/_index.py`.
-- [ ] `P02.S07` - Re-back search_commands with the hybrid command index, keeping the token-overlap scorer as the no-index fallback; `src/aeat/entrypoints/mcp/_meta_tools.py`.
-- [ ] `P02.S08` - Make search results actionable in one round-trip: carry annotations, confirmation tier, and the per-verb input schema (or add a describe meta-tool if measurably cheaper); `src/aeat/entrypoints/mcp/_meta_tools.py`.
-- [ ] `P02.S09` - Add command-index tests including a cross-vocabulary recall case the token-overlap scorer misses and the lexical-only degraded mode; `src/aeat/application/command_search/tests/test_command_index.py`.
-- [ ] `P02.S10` - Extend the meta-tool tests for enriched, schema-carrying search results; `src/aeat/entrypoints/mcp/tests/test_meta_tools.py`.
+- [x] `P02.S06` - Build the command-retrieval index (FTS5 lexical with Spanish stemming plus optional model2vec vectors, RRF fusion, lexical-only degraded mode) over tool name, CLI path, per-verb help, and toolset; `src/aeat/application/command_search/_index.py`.
+- [x] `P02.S07` - Re-back search_commands with the hybrid command index, keeping the token-overlap scorer as the no-index fallback; `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `P02.S08` - Make search results actionable in one round-trip: carry annotations, confirmation tier, and the per-verb input schema (or add a describe meta-tool if measurably cheaper); `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `P02.S09` - Add command-index tests including a cross-vocabulary recall case the token-overlap scorer misses and the lexical-only degraded mode; `src/aeat/application/command_search/tests/test_command_index.py`.
+- [x] `P02.S10` - Extend the meta-tool tests for enriched, schema-carrying search results; `src/aeat/entrypoints/mcp/tests/test_meta_tools.py`.
 
 ### Phase `P03` - Toolset activation over list-changed
 

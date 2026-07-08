@@ -18,9 +18,11 @@ this module stays SDK-independent and unit-tested.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...application.command_search import CommandDoc, CommandIndex, build_command_index
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
@@ -34,7 +36,13 @@ ToolRunner = Callable[[McpToolDescriptor, dict[str, object]], tuple[dict[str, ob
 
 
 class MetaSearchResult(BaseModel):
-    """One command matched by :func:`search_commands`, with its decision hints."""
+    """One command matched by :func:`search_commands`, with its decision hints.
+
+    The result is self-sufficient (ADR ``mcp-progressive-discovery`` P2): besides
+    the mutability hints it carries the per-verb ``input_schema``, so a model that
+    finds a verb through ``search`` can call it through ``execute`` in ONE more
+    round-trip without a separate schema lookup.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -43,7 +51,8 @@ class MetaSearchResult(BaseModel):
     description: str = Field(min_length=1)
     read_only: bool
     destructive: bool
-    score: int = Field(ge=1)
+    score: float
+    input_schema: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetaExecuteResult(BaseModel):
@@ -62,61 +71,69 @@ class MetaExecuteResult(BaseModel):
     is_error: bool = False
 
 
-def _query_tokens(query: str) -> tuple[str, ...]:
-    return tuple(token for token in query.lower().replace("-", " ").replace(".", " ").split() if token)
+def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
+    """Build the searchable document for one command.
 
-
-def _score(descriptor: McpToolDescriptor, tokens: tuple[str, ...]) -> int:
-    """Score a descriptor against the query tokens.
-
-    A token in the command key weighs more than one only in the description, so a
-    verb named for the query outranks a verb that merely mentions it.
+    The doc text unions the command key (its dotted tokens carry the verb-level
+    vocabulary - ``calculate``, ``export``, ``iva_wallet``), the tool name, and
+    the human description, so a concept query matches whichever field carries it.
     """
-    key = descriptor.command_key.lower()
-    description = descriptor.description.lower()
-    total = 0
-    for token in tokens:
-        if token in key:
-            total += 2
-        elif token in description:
-            total += 1
-    return total
+    key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
+    text = f"{descriptor.command_key} {key_tokens} {descriptor.name} {descriptor.description}"
+    return CommandDoc(command_key=descriptor.command_key, tool_name=descriptor.name, text=text)
+
+
+def build_command_search_index(descriptors: tuple[McpToolDescriptor, ...]) -> CommandIndex:
+    """Build the hybrid command-search index over the descriptor set.
+
+    Built once per server from the full descriptor set so ``search`` reaches the
+    whole verb universe, not just the advertised surface.
+    """
+    return build_command_index(_command_doc(descriptor) for descriptor in descriptors)
 
 
 def search_commands(
     query: str,
     *,
     descriptors: tuple[McpToolDescriptor, ...],
+    index: CommandIndex | None = None,
     limit: int = 20,
 ) -> tuple[MetaSearchResult, ...]:
     """Rank the command surface against ``query`` for the ``search`` meta-tool.
 
-    Every descriptor with a non-zero token overlap is returned, ordered by score
-    then command key, capped at ``limit``. The result carries the read-only and
-    destructive hints so the caller sees a verb's mutability before executing it.
+    Backed by the hybrid command index (FTS5 lexical + Spanish stemming +
+    diacritics folding, degrading to token overlap on a minimal install), so a
+    concept query bridges the operator's vocabulary to the command's own tokens
+    where a bare substring match would miss it (ADR ``mcp-progressive-discovery``
+    P2). Each result carries the mutability hints AND the per-verb input schema so
+    it is actionable in one further ``execute`` round-trip. ``index`` may be a
+    prebuilt index (the server builds it once); when omitted it is built from
+    ``descriptors``.
 
     Returns:
-        The matched commands, highest score first.
-
-    Returns:
-        A :class:`MetaSearchResult`.
+        The matched commands, highest score first, capped at ``limit``.
     """
-    tokens = _query_tokens(query)
-    if not tokens:
+    if not query.strip():
         return ()
-    scored = ((score, descriptor) for descriptor in descriptors if (score := _score(descriptor, tokens)) > 0)
-    ordered = sorted(scored, key=lambda pair: (-pair[0], pair[1].command_key))
-    return tuple(
-        MetaSearchResult(
-            command_key=descriptor.command_key,
-            tool_name=descriptor.name,
-            description=descriptor.description,
-            read_only=descriptor.annotations.read_only_hint,
-            destructive=descriptor.annotations.destructive_hint,
-            score=score,
+    search_index = index if index is not None else build_command_search_index(descriptors)
+    by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    results: list[MetaSearchResult] = []
+    for hit in search_index.search(query, limit=limit):
+        descriptor = by_key.get(hit.command_key)
+        if descriptor is None:
+            continue
+        results.append(
+            MetaSearchResult(
+                command_key=descriptor.command_key,
+                tool_name=descriptor.name,
+                description=descriptor.description,
+                read_only=descriptor.annotations.read_only_hint,
+                destructive=descriptor.annotations.destructive_hint,
+                score=hit.score,
+                input_schema=descriptor.input_schema,
+            )
         )
-        for score, descriptor in ordered[:limit]
-    )
+    return tuple(results)
 
 
 def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor) -> str | None:

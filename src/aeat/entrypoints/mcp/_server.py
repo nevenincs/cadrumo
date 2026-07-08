@@ -73,7 +73,7 @@ from ._hitl import (
     requires_user_interaction,
 )
 from ._input_schema import cli_argv_for
-from ._meta_tools import meta_execute, search_commands
+from ._meta_tools import build_command_search_index, meta_execute, search_commands
 from ._persona_scope import (
     AgentPersona,
     active_persona,
@@ -88,18 +88,18 @@ from ._resources import (
     list_harness_resources,
     read_harness_resource,
 )
+from ._surface import (
+    SURFACE_ENV_VAR,
+    SurfaceMode,
+    advertised_descriptors,
+    resolve_surface_mode,
+)
 from ._telemetry import SessionTelemetryWriter
 from ._terminology_tools import (
     TERMINOLOGY_SEARCH_TOOL,
     build_terminology_search_payload,
     build_terminology_search_tool,
     render_terminology_search_text,
-)
-from ._surface import (
-    SURFACE_ENV_VAR,
-    SurfaceMode,
-    advertised_descriptors,
-    resolve_surface_mode,
 )
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
@@ -445,6 +445,10 @@ def build_server(
     advertised = advertised_descriptors(scoped_descriptors, mode=surface_mode)
     sdk_tools = build_sdk_tools(advertised)
     meta_tools = build_meta_sdk_tools()
+    # The hybrid command-search index backing the ``search`` meta-tool, built once
+    # over the FULL descriptor set (ADR mcp-progressive-discovery P2) so discovery
+    # reaches every verb, not only the advertised surface.
+    command_index = build_command_search_index(descriptors)
     floor_tool = build_harness_floor_tool()
     # Grounding tools (ADR R3): read-only search over the bundled legal corpus
     # and the taxpayer-facing terminology handbook. Always advertised (never
@@ -556,7 +560,11 @@ def build_server(
                 isError=False,
             )
         if name == _META_SEARCH_TOOL:
-            results = search_commands(str(arguments.get("query", "") or ""), descriptors=descriptors)
+            results = search_commands(
+                str(arguments.get("query", "") or ""),
+                descriptors=descriptors,
+                index=command_index,
+            )
             payload: dict[str, object] = {"results": [result.model_dump() for result in results]}
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
