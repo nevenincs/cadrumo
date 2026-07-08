@@ -371,7 +371,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
                 max_supported_version=3,
             )
         rendered = str(raised.value)
-        assert raised.value.translated_message == "errors.storage.namespace.schema_mismatch"
+        assert raised.value.translated_message == "errors.storage.namespace.schema_version_from_future"
         assert raised.value.context == {
             "namespace": namespace,
             "schema_version": 4,
@@ -382,7 +382,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
 
 
 def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) -> None:
-    """A row below the consumer's current schema version is refused."""
+    """A row below the consumer's current version refuses when no upgrade chain is registered."""
 
     with _ephemeral_secure_repo(tmp_path, "record-older-schema.db") as (_db_path, _engine, repo):
         namespace = "aeat-test.record.older-schema"
@@ -404,11 +404,12 @@ def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) ->
                 max_supported_version=3,
             )
 
-        assert raised.value.translated_message == "errors.storage.namespace.schema_mismatch"
+        assert raised.value.translated_message == "errors.storage.namespace.schema_upgrade_path_missing"
         assert raised.value.context == {
             "namespace": namespace,
             "schema_version": 2,
             "expected": 3,
+            "missing_from_version": 2,
         }
 
 
@@ -766,5 +767,15 @@ def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: 
         assert len(outcomes) == 2
         assert all(isinstance(item, SecureObjectUnreadable) for item in outcomes)
         reasons = {item.reason for item in outcomes if isinstance(item, SecureObjectUnreadable)}
+        from ......core.i18n import tr
+
         assert any("classification" in reason for reason in reasons)
-        assert any("schema version" in reason for reason in reasons)
+        assert (
+            tr(
+                "errors.storage.namespace.schema_version_from_future",
+                namespace=namespace,
+                schema_version=2,
+                expected=1,
+            )
+            in reasons
+        )

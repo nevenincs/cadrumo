@@ -18,8 +18,14 @@ their owning repositories; import saves those records through the target
 bucket's repository save paths so the target bucket re-encrypts them
 under its own data-encryption key.
 
-Only the current v3 shape is accepted in this pre-beta codebase. Older
-bundle shapes are not bridged. Callers must provision and
+The bundle version gate is a ceiling with a durability floor: a version
+above :data:`BUNDLE_SCHEMA_VERSION` was written by a newer application
+and is refused; a version at or above :data:`BUNDLE_DURABILITY_FLOOR` is
+readable exactly when the per-hop chain in
+:data:`BUNDLE_PAYLOAD_UPGRADERS` reaches the current version. The floor
+starts at the current version (no released bundles exist below it) and
+moves forward only through a superseding accepted ADR
+(``2026-07-08-released-data-durability-adr``). Callers must provision and
 collision-check the target bucket and hold the appropriate bucket
 session before deserialising; this module performs schema-version
 validation and typed repository writes.
@@ -27,7 +33,9 @@ validation and typed repository writes.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import json
+from collections.abc import Callable, Mapping
+from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import AeatError
@@ -40,11 +48,108 @@ if TYPE_CHECKING:
     )
 
 
-#: Versions the import path will accept.  This is a pre-beta project with no
-#: released bundles (no-legacy-compatibility): only the current shape (v3) is
-#: accepted; earlier shapes are deleted, not bridged.  Add a new
-#: integer here when a new schema version is introduced.
-SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({3})
+#: Current bundle write version. Every export stamps this.
+BUNDLE_SCHEMA_VERSION: Final[int] = 3
+
+#: Oldest bundle version the import path keeps readable. Starts at the
+#: current version (no released bundles exist below it); moves forward only
+#: through a superseding accepted ADR.
+BUNDLE_DURABILITY_FLOOR: Final[int] = 3
+
+#: One-hop raw-payload upgraders keyed by ``from_version``: each transforms
+#: the parsed JSON mapping of a version-N bundle into the version-N+1 shape
+#: (including restamping ``bundle_schema_version``) BEFORE strict pydantic
+#: validation — the raw mapping is the one sanctioned pre-validation
+#: boundary. Empty while the floor equals the current version; a version
+#: bump MUST land its hop here in the same change or the lineage gate fails.
+BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, object]]] = {}
+
+#: Versions the import path accepts: the complete floor-to-current range.
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(
+    range(BUNDLE_DURABILITY_FLOOR, BUNDLE_SCHEMA_VERSION + 1),
+)
+
+
+def validate_bundle_payload(
+    raw_json: bytes | str,
+    *,
+    expected_written_version: int | None = None,
+) -> UserProfilePortableExport:
+    """Parse, chain-upgrade, and strictly validate a serialized bundle payload.
+
+    Reads the payload's own ``bundle_schema_version``, refuses a future
+    version (above :data:`BUNDLE_SCHEMA_VERSION`) or one below
+    :data:`BUNDLE_DURABILITY_FLOOR`, chain-upgrades an older supported
+    payload hop by hop through :data:`BUNDLE_PAYLOAD_UPGRADERS`, and
+    validates the result against the current strict
+    :class:`~aeat.domain.user_profile.UserProfilePortableExport` model.
+
+    Args:
+        raw_json: The serialized bundle payload (decrypted transport bytes
+            or the plaintext export text).
+        expected_written_version: When set, the version a transport envelope
+            declared for this payload; a payload whose own stamped version
+            differs is refused before any upgrade runs.
+
+    Raises:
+        UnsupportedBundleSchemaVersionError: When the payload does not carry
+            an integer ``bundle_schema_version``, the version is outside the
+            floor-to-current range, an upgrade hop is unregistered, or the
+            stamped version contradicts ``expected_written_version``.
+    """
+    from ...domain.user_profile import UserProfilePortableExport
+
+    payload = json.loads(raw_json)
+    if not isinstance(payload, dict):
+        raise UnsupportedBundleSchemaVersionError("bundle payload is not a JSON object")
+    written_version = payload.get("bundle_schema_version")
+    if not isinstance(written_version, int) or isinstance(written_version, bool):
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle payload carries no integer bundle_schema_version (got {written_version!r})",
+        )
+    if expected_written_version is not None and written_version != expected_written_version:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle payload is stamped bundle_schema_version {written_version} but its "
+            f"transport envelope declares {expected_written_version}",
+        )
+    supported = ",".join(str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS))
+    if written_version > BUNDLE_SCHEMA_VERSION:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle_schema_version {written_version} was written by a newer application; "
+            f"this application reads up to version {BUNDLE_SCHEMA_VERSION}",
+            context={
+                "bundle_schema_version": str(written_version),
+                "supported_versions": supported,
+            },
+            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+        )
+    if written_version < BUNDLE_DURABILITY_FLOOR:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle_schema_version {written_version!r} is not supported; "
+            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
+            context={
+                "bundle_schema_version": str(written_version),
+                "supported_versions": supported,
+            },
+            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+        )
+    for hop in range(written_version, BUNDLE_SCHEMA_VERSION):
+        upgrader = BUNDLE_PAYLOAD_UPGRADERS.get(hop)
+        if upgrader is None:
+            raise UnsupportedBundleSchemaVersionError(
+                f"bundle_schema_version {written_version} has no registered upgrade "
+                f"from version {hop}; the payload is supported but this build cannot upgrade it",
+                context={
+                    "bundle_schema_version": str(written_version),
+                    "missing_from_version": str(hop),
+                },
+                translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+            )
+        payload = upgrader(payload)
+    # JSON-mode validation: the strict model accepts JSON arrays as tuple
+    # fields only on the json path, so the (possibly upgraded) mapping is
+    # re-serialized rather than validated as python objects.
+    return UserProfilePortableExport.model_validate_json(json.dumps(payload))
 
 
 # ---------------------------------------------------------------------------

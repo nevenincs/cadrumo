@@ -121,7 +121,8 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
 
 
 def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) -> None:
-    """Rows below the consumer's current schema version are unreadable."""
+    """Rows below the current version with no upgrade chain are unreadable."""
+    from ......core.i18n import tr
 
     with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
         namespace = "aeat-test.older.schema"
@@ -145,7 +146,13 @@ def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) ->
         assert len(outcomes) == 1
         assert isinstance(outcomes[0], SecureObjectUnreadable)
         assert outcomes[0].schema_version == 1
-        assert "does not match expected" in outcomes[0].reason
+        assert outcomes[0].reason == tr(
+            "errors.storage.namespace.schema_upgrade_path_missing",
+            namespace=namespace,
+            schema_version=1,
+            expected=2,
+            missing_from_version=1,
+        )
 
 
 def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:

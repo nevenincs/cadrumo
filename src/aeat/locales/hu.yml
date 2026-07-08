@@ -541,6 +541,7 @@ application:
       archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
       archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
         megerősítést igényel.
+      archive_schema_version_from_future: 'Az archívum sémaverziója ({archive_schema_version}) újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).'
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -3546,7 +3547,13 @@ cli:
         levonas; exclusively_non_deductible: nincs levonas; common: az altalanos prorrata
         szazalekaval); csak prorrata especial ala tartozo bucket bemeneti soraira
         ertelmes.'
-      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio} ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet az altalanos szazalekkal vonhato le. Az ejercicio minden bemenetenek osztalyozasa a liquidacioban a LIVA art. 103.Dos.2 kotelezo prorrata especial ellenorzest is engedelyezi altalanos szabalyu keret eseten. Futtasd az ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint iranyitsd.'
+      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio}
+        ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet
+        az altalanos szazalekkal vonhato le. Az ejercicio minden bemenetenek osztalyozasa
+        a liquidacioban a LIVA art. 103.Dos.2 kotelezo prorrata especial ellenorzest
+        is engedelyezi altalanos szabalyu keret eseten. Futtasd az ''app ledger prorrata
+        elect-especial --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint
+        iranyitsd.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
@@ -5762,6 +5769,9 @@ errors:
         használt.
       schema_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z) %{expected}
         sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
+      schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace} névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z) {expected} felé.'
+      schema_upgrader_already_registered: 'A(z) {namespace} névtérhez már regisztrálva van sémafrissítő a(z) {from_version} verziótól.'
+      schema_version_from_future: 'A(z) {namespace} névtér tárolt sémaverziója ({schema_version}) újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.'
       unknown_classification: 'A(z) %{namespace} biztonságos objektum névtér ismeretlen
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva
@@ -5841,7 +5851,8 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: 'A(z) ''{command}'' tullepte a(z) {tier} szint idokorlatjat ({seconds}s), es megszakadt. Probald ujra, vagy futtasd a megfelelo aeat parancsot a terminalban.'
+    timeout: A(z) '{command}' tullepte a(z) {tier} szint idokorlatjat ({seconds}s),
+      es megszakadt. Probald ujra, vagy futtasd a megfelelo aeat parancsot a terminalban.
   elicitation:
     confirm:
       consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet

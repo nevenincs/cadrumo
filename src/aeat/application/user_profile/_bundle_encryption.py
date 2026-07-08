@@ -11,7 +11,11 @@ from ...adapters.persistence.storage.master_key import KdfParams, derive_kek_wit
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.user_profile import UserProfilePortableExport
-from ._bundle import SUPPORTED_BUNDLE_SCHEMA_VERSIONS
+from ._bundle import (
+    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
+    UnsupportedBundleSchemaVersionError,
+    validate_bundle_payload,
+)
 
 _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION = 1
 _ENCRYPTED_BUNDLE_AAD = b"aeat.user-profile.portable-export.v1"
@@ -75,10 +79,17 @@ def decrypt_profile_bundle_with_passphrase(
     *,
     passphrase: str,
 ) -> UserProfilePortableExport:
-    """Decrypt ``envelope`` and validate the wrapped ``UserProfilePortableExport``."""
-    if envelope.encrypted_bundle_schema_version != _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
+    """Decrypt ``envelope`` and validate the wrapped ``UserProfilePortableExport``.
+
+    Payload validation routes through
+    :func:`~aeat.application.user_profile.validate_bundle_payload`, so an
+    out-of-range or non-upgradeable ``bundle_schema_version`` propagates as
+    :class:`UnsupportedBundleSchemaVersionError` (naming the version) rather
+    than being flattened into the generic envelope error.
+    """
+    if envelope.encrypted_bundle_schema_version > _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
         raise EncryptedProfileBundleError(
-            "unsupported encrypted profile-bundle envelope schema",
+            "encrypted profile-bundle envelope schema was written by a newer application",
         )
     if envelope.payload_model != "UserProfilePortableExport":
         raise EncryptedProfileBundleError(
@@ -107,16 +118,21 @@ def decrypt_profile_bundle_with_passphrase(
             key=sealing_key,
             associated_data=_ENCRYPTED_BUNDLE_AAD,
         )
-        bundle = UserProfilePortableExport.model_validate_json(plaintext)
     except Exception as exc:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle payload could not be decrypted or validated",
+            "encrypted profile-bundle payload could not be decrypted",
         ) from exc
-    if bundle.bundle_schema_version != envelope.payload_schema_version:
-        raise EncryptedProfileBundleError(
-            "encrypted profile-bundle payload schema does not match its envelope",
+    try:
+        return validate_bundle_payload(
+            plaintext,
+            expected_written_version=envelope.payload_schema_version,
         )
-    return bundle
+    except UnsupportedBundleSchemaVersionError:
+        raise
+    except Exception as exc:
+        raise EncryptedProfileBundleError(
+            "encrypted profile-bundle payload could not be validated",
+        ) from exc
 
 
 __all__ = [
