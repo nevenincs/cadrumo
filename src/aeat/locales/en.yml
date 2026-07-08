@@ -359,8 +359,10 @@ aggregation:
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
-      out_of_window_summary_date_span_invalid: 'An out-of-window summary''s maximum filing date must not precede its minimum filing date.'
-      out_of_window_summary_incomplete: 'An out-of-window summary must set the count, minimum filing date, and maximum filing date together.'
+      out_of_window_summary_date_span_invalid: An out-of-window summary's maximum
+        filing date must not precede its minimum filing date.
+      out_of_window_summary_incomplete: An out-of-window summary must set the count,
+        minimum filing date, and maximum filing date together.
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
@@ -1514,6 +1516,24 @@ cli:
         view_help: Show one business invoice
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+      prorrata:
+        activity_code_help: 'CNAE / IAE activity code grouped into this sector (repeatable, at least one).'
+        declare_sector_help: 'Declare one differentiated sector (LIVA arts. 9.1.c / 101): the operator''s art. 9.1.c partition, never inferred from the ledger.'
+        ejercicio_help: 'Filing year the election covers.'
+        elect_especial_help: 'Elect prorrata especial for an ejercicio (LIVA art. 103.Dos.1): per-input deduction routes by --input-classification on each ledger row.'
+        elect_general_help: 'Elect prorrata general for an ejercicio (LIVA art. 104): one deduction percentage applies to every deducible cuota.'
+        general_percentage_help: 'Provisional deduction percentage 0-100 (LIVA art. 104.Uno + 105.Uno).'
+        group_help: 'Cross-period IVA prorrata register: elect the regime (general / especial) and declare differentiated sectors (LIVA arts. 101 / 103 / 105 / 106).'
+        letra_help: 'LIVA art. 9.1.c letra (a/b/c/d) that makes this sector differentiated.'
+        list_help: 'List every register entry and declared differentiated sector on the active profile.'
+        percentage_help: 'Common-use deduction percentage 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).'
+        provenance_help: 'LIVA art. 105 source of the provisional percentage.'
+        provenance_not_electable: 'Provenance {provenance!r} is not operator-declarable; accepted: {accepted}. The art. 105.Cinco interrupted percentage is computed from the register.'
+        reference_help: 'AEAT authorisation (art. 105.Dos) or inicio proposal (art. 105.Tres) reference.'
+        reference_not_permitted: '--reference is permitted only with an aeat_autorizada or inicio_actividad provenance.'
+        reference_required: 'Provenance {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires --reference.'
+        sector_help: 'Differentiated-sector id this entry covers; omit for the whole-entity entry.'
+        sector_id_help: 'Stable sector id the register entries and ledger rows reference.'
       ratios:
         category_help: Spending category id (e.g. USAGE_RATIO_VEHICLE)
         eligible_help: List categories that accept a specific ratio
@@ -1920,20 +1940,22 @@ cli:
         note_help: Optional operator note (up to 512 chars).
         view_help: View one recorded M036 declaration by id (or unambiguous prefix).
       m145:
-        actor_help: 'Operator label for the event.'
-        casilla_help: 'Repeatable registry field assignment, ID=VALUE.'
-        communication_record_id_help: 'Communication record id or unambiguous prefix.'
-        create_help: 'Create a Modelo 145 local payer communication record.'
+        actor_help: Operator label for the event.
+        casilla_help: Repeatable registry field assignment, ID=VALUE.
+        communication_record_id_help: Communication record id or unambiguous prefix.
+        create_help: Create a Modelo 145 local payer communication record.
         errors:
-          casilla_required: 'Provide at least one --casilla ID=VALUE entry.'
-        export_help: 'Export a Modelo 145 local payer communication record.'
-        group_help: 'Manage Modelo 145 local payer communication records.'
-        mark_delivered_to_payer_help: 'Mark a Modelo 145 local communication record delivered to the payer.'
-        mark_locally_completed_help: 'Mark a Modelo 145 local communication record locally completed.'
-        note_help: 'Optional operator note.'
+          casilla_required: Provide at least one --casilla ID=VALUE entry.
+        export_help: Export a Modelo 145 local payer communication record.
+        group_help: Manage Modelo 145 local payer communication records.
+        mark_delivered_to_payer_help: Mark a Modelo 145 local communication record
+          delivered to the payer.
+        mark_locally_completed_help: Mark a Modelo 145 local communication record
+          locally completed.
+        note_help: Optional operator note.
         period_help: 'Communication period token: comunicacion or variacion.'
-        validate_help: 'Validate a Modelo 145 local payer communication record.'
-        year_help: 'Communication year.'
+        validate_help: Validate a Modelo 145 local payer communication record.
+        year_help: Communication year.
       project:
         binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
           Retenciones bindings default to zero when not supplied.
@@ -2592,7 +2614,7 @@ cli:
         list_help: List every trusted recipient registered on the active profile.
         public_key_help: The recipient's raw X25519 public key, as 64 lowercase hex
           characters.
-        recipient_id_help: 'Stable operator-chosen label (e.g. ''my-accountant'').'
+        recipient_id_help: Stable operator-chosen label (e.g. 'my-accountant').
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
@@ -2873,9 +2895,9 @@ cli:
       export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
         financial data: the raw tax id (not redacted), names/surnames, the full ledger,
         calculation revisions, and filing records. It was written to {out}. Use it
-        only for local/SAR handling; do not email, sync, or transfer it. Delete
-        it after that local/SAR handling is complete. Use ''aeat config profile
-        export --passphrase ...'' for an AEAD-encrypted structured transfer bundle.'
+        only for local/SAR handling; do not email, sync, or transfer it. Delete it
+        after that local/SAR handling is complete. Use ''aeat config profile export
+        --passphrase ...'' for an AEAD-encrypted structured transfer bundle.'
       export_transport_conflict: Choose either --passphrase or --cleartext-local,
         not both.
       help: Manage active profile configuration values
@@ -2898,8 +2920,8 @@ cli:
       import_active_switch_info: The imported profile {name} is now the ACTIVE profile;
         subsequent commands operate on it. Run 'aeat config switch <name>' to change
         the active profile.
-      import_encrypted_bundle_invalid: The encrypted profile bundle could not be
-        decrypted or validated. Check the passphrase and file.
+      import_encrypted_bundle_invalid: The encrypted profile bundle could not be decrypted
+        or validated. Check the passphrase and file.
       import_help: Register a portable profile bundle from a file
       import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
         the profile bundle schema.'
@@ -3291,6 +3313,9 @@ cli:
     add:
       actor_help: Operator name recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
+      art_104_tres_exclusion_help: Operator-declared LIVA art. 104.Tres denominator
+        exclusion (foreign permanent establishment or non-habitual real-estate/financial
+        operation); excludes the operation from both terms of the prorrata ratio.
       attachment_help: Supplementary attachment id (repeatable)
       business_pct_help: Business-use share from 0 to 1; only for MIXED rows. Omit
         for fully BUSINESS rows.
@@ -3309,11 +3334,17 @@ cli:
         a deliberate duplicate.'
       idempotent_noop: 'Idempotent no-op: a transaction with this idempotency key
         already exists (%{transaction_id}); nothing was added.'
+      input_classification_help: 'Operator-declared LIVA art. 106 prorrata-especial
+        per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible:
+        no deduction; common: deducted at the general prorrata percentage); meaningful
+        only for input rows in a bucket under prorrata especial.'
+      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}: no prorrata especial election applies, so the input deducts under the general percentage. Run ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' to route it by LIVA art. 106.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
       notes_help: Operator notes stored with the transaction
       prorrata_reference_help: IVA prorrata substrate reference
+      prorrata_sector_help: 'Differentiated-sector id (LIVA arts. 9.1.c / 101) this input belongs to; must match a sector declared via ''app ledger prorrata declare-sector''.'
       purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
       recargo_amount_help: Recargo de equivalencia cuota charged on this sale to a
         recargo-regime retailer (LIVA art. 161); aggregated into the Modelo 303 recargo
@@ -3338,8 +3369,6 @@ cli:
         ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
         <ratio>'. Not arbitrary prose.
       value_date_help: Value date (YYYY-MM-DD)
-      art_104_tres_exclusion_help: 'Operator-declared LIVA art. 104.Tres denominator exclusion (foreign permanent establishment or non-habitual real-estate/financial operation); excludes the operation from both terms of the prorrata ratio.'
-      input_classification_help: 'Operator-declared LIVA art. 106 prorrata-especial per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible: no deduction; common: deducted at the general prorrata percentage); meaningful only for input rows in a bucket under prorrata especial.'
     allocate:
       actor_help: Operator name recorded on the bucket event
       business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
@@ -4037,10 +4066,6 @@ cli:
       investigate: '%{count} filing obligation(s) could not be positively scoped for
         this profile and may be under-reported: %{modelos}. Investigate each with
         ''aeat app overview explain <modelo>''.'
-    warning:
-      m303_simplificado_forfait_unavailable: Modelo 303 is applicable, but the
-        regimen simplificado forfait calculation engine is not yet available; review
-        the simplified-regime casillas before filing.
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -4140,6 +4165,10 @@ cli:
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
+    warning:
+      m303_simplificado_forfait_unavailable: Modelo 303 is applicable, but the regimen
+        simplificado forfait calculation engine is not yet available; review the simplified-regime
+        casillas before filing.
     year_help: Filing year for --period (e.g. 2024).
   registry:
     app_help: Tax models registry management
@@ -4830,8 +4859,10 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
-    m145_communication_record_not_found: 'No Modelo 145 local communication record matches the requested id.'
-    m145_communication_service: 'A Modelo 145 local communication service operation failed.'
+    m145_communication_record_not_found: No Modelo 145 local communication record
+      matches the requested id.
+    m145_communication_service: A Modelo 145 local communication service operation
+      failed.
     modelo_calculation_revision_selector: Calculation revision selection failed.
     modelo_calculation_revision_selector_not_found: No calculation revision matched
       the requested selector.
@@ -5129,10 +5160,14 @@ errors:
       for IAE, or your certificate may not be registered against your NIF.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
-    m145_communication_record_ambiguous: 'The Modelo 145 communication record id prefix matches multiple records.'
-    m145_communication_record_export: 'The Modelo 145 local communication record could not be exported.'
-    m145_communication_record_transition: 'The Modelo 145 local communication record does not allow that state transition.'
-    m145_communication_record_validation: 'The Modelo 145 local communication operation is blocked by validation.'
+    m145_communication_record_ambiguous: The Modelo 145 communication record id prefix
+      matches multiple records.
+    m145_communication_record_export: The Modelo 145 local communication record could
+      not be exported.
+    m145_communication_record_transition: The Modelo 145 local communication record
+      does not allow that state transition.
+    m145_communication_record_validation: The Modelo 145 local communication operation
+      is blocked by validation.
     modelo_036_prior_alta_required: A Modelo 036 modification or deregistration cannot
       be requested without a prior registration.
     modelo_036_terminal_state: The Modelo 036 record is already deregistered and accepts
@@ -5879,22 +5914,6 @@ wizard:
           LIS modality; below it both modalities are available. Optional.
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
-      objective-estimation-modulos-iae-epigraph:
-        help: IAE epigraph for objective-estimation modules, such as 972.
-      objective-estimation-modulos-module-1-units:
-        help: Annual module 1 units for objective-estimation modules.
-      objective-estimation-modulos-module-2-units:
-        help: Annual module 2 units for objective-estimation modules.
-      objective-estimation-modulos-module-3-units:
-        help: Annual module 3 units for objective-estimation modules.
-      objective-estimation-modulos-module-4-units:
-        help: Annual module 4 units for objective-estimation modules.
-      objective-estimation-modulos-module-5-units:
-        help: Annual module 5 units for objective-estimation modules.
-      objective-estimation-modulos-module-6-units:
-        help: Annual module 6 units for objective-estimation modules.
-      objective-estimation-modulos-module-7-units:
-        help: Annual module 7 units for objective-estimation modules.
       irpf-income-categories:
         help: IRPF income category; pass --irpf-income-categories once per category
       irpf-special-regime:
@@ -5952,6 +5971,22 @@ wizard:
           rate. Optional; unset leaves the entity on its otherwise-applicable rate.
       notes:
         help: Notes for your own records (optional)
+      objective-estimation-modulos-iae-epigraph:
+        help: IAE epigraph for objective-estimation modules, such as 972.
+      objective-estimation-modulos-module-1-units:
+        help: Annual module 1 units for objective-estimation modules.
+      objective-estimation-modulos-module-2-units:
+        help: Annual module 2 units for objective-estimation modules.
+      objective-estimation-modulos-module-3-units:
+        help: Annual module 3 units for objective-estimation modules.
+      objective-estimation-modulos-module-4-units:
+        help: Annual module 4 units for objective-estimation modules.
+      objective-estimation-modulos-module-5-units:
+        help: Annual module 5 units for objective-estimation modules.
+      objective-estimation-modulos-module-6-units:
+        help: Annual module 6 units for objective-estimation modules.
+      objective-estimation-modulos-module-7-units:
+        help: Annual module 7 units for objective-estimation modules.
       output-language:
         help: CLI output language for this profile
       pays-capital-income-with-retencion:
@@ -6082,25 +6117,6 @@ wizard:
         help: How economic-activity net income is determined; selects Modelo 130 vs
           131
         prompt: IRPF estimation regime
-      objective-estimation-modulos-iae-epigraph:
-        help: Stored once per annual profile. Coefficients remain in the modelo registry.
-        prompt: IAE epigraph for objective-estimation modules
-      objective-estimation-modulos-module-1-units:
-        prompt: Annual module 1 units
-      objective-estimation-modulos-module-2-units:
-        prompt: Annual module 2 units
-      objective-estimation-modulos-module-3-units:
-        prompt: Annual module 3 units
-      objective-estimation-modulos-module-4-units:
-        prompt: Annual module 4 units
-      objective-estimation-modulos-module-5-units:
-        prompt: Annual module 5 units
-      objective-estimation-modulos-module-6-units:
-        prompt: Annual module 6 units
-      objective-estimation-modulos-module-7-units:
-        prompt: Annual module 7 units
-      objective-estimation-modulos-module-units:
-        help: Stable annual unit count for this module slot. The selected IAE epigraph defines whether the slot means employees, local surface, electricity consumption, or another official module.
       irpf-special-regime:
         choices:
           general:
@@ -6120,6 +6136,27 @@ wizard:
         prompt: Modelo 111 no-retenciones periods
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
+      objective-estimation-modulos-iae-epigraph:
+        help: Stored once per annual profile. Coefficients remain in the modelo registry.
+        prompt: IAE epigraph for objective-estimation modules
+      objective-estimation-modulos-module-1-units:
+        prompt: Annual module 1 units
+      objective-estimation-modulos-module-2-units:
+        prompt: Annual module 2 units
+      objective-estimation-modulos-module-3-units:
+        prompt: Annual module 3 units
+      objective-estimation-modulos-module-4-units:
+        prompt: Annual module 4 units
+      objective-estimation-modulos-module-5-units:
+        prompt: Annual module 5 units
+      objective-estimation-modulos-module-6-units:
+        prompt: Annual module 6 units
+      objective-estimation-modulos-module-7-units:
+        prompt: Annual module 7 units
+      objective-estimation-modulos-module-units:
+        help: Stable annual unit count for this module slot. The selected IAE epigraph
+          defines whether the slot means employees, local surface, electricity consumption,
+          or another official module.
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:

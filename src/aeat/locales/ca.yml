@@ -394,8 +394,10 @@ aggregation:
       duplicate_relation_owner: 'Error intern: propietari de relacio duplicat a la
         malla de fonts.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
-      out_of_window_summary_date_span_invalid: 'La data màxima de presentació d''un resum fora de finestra no pot ser anterior a la seva data mínima.'
-      out_of_window_summary_incomplete: 'Un resum fora de finestra ha d''establir conjuntament el recompte, la data mínima de presentació i la data màxima de presentació.'
+      out_of_window_summary_date_span_invalid: La data màxima de presentació d'un
+        resum fora de finestra no pot ser anterior a la seva data mínima.
+      out_of_window_summary_incomplete: Un resum fora de finestra ha d'establir conjuntament
+        el recompte, la data mínima de presentació i la data màxima de presentació.
       owned_sources_blank: Les fonts propietat de la malla de fonts no poden contenir
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
@@ -1617,6 +1619,24 @@ cli:
         view_help: Mostra una factura de negoci
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
+      prorrata:
+        activity_code_help: 'Codi d''activitat CNAE / IAE agrupat en aquest sector (repetible, com a minim un).'
+        declare_sector_help: 'Declara un sector diferenciat (LIVA arts. 9.1.c / 101): la particio de l''art. 9.1.c que declara l''operador, mai inferida del llibre.'
+        ejercicio_help: 'Exercici (any) que cobreix l''eleccio.'
+        elect_especial_help: 'Tria prorrata especial per a un exercici (LIVA art. 103.Dos.1): la deduccio per input s''enruta amb --input-classification a cada apunt.'
+        elect_general_help: 'Tria prorrata general per a un exercici (LIVA art. 104): un unic percentatge de deduccio s''aplica a cada quota deduible.'
+        general_percentage_help: 'Percentatge de deduccio provisional 0-100 (LIVA art. 104.Uno + 105.Uno).'
+        group_help: 'Registre de prorrata d''IVA entre exercicis: tria el regim (general / especial) i declara sectors diferenciats (LIVA arts. 101 / 103 / 105 / 106).'
+        letra_help: 'Lletra de l''art. 9.1.c de la LIVA (a/b/c/d) que fa diferenciat aquest sector.'
+        list_help: 'Llista cada entrada del registre i cada sector diferenciat declarat al perfil actiu.'
+        percentage_help: 'Percentatge de deduccio d''us comu 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).'
+        provenance_help: 'Origen del percentatge provisional segons LIVA art. 105.'
+        provenance_not_electable: 'L''origen {provenance!r} no es declarable per l''operador; acceptats: {accepted}. El percentatge d''interrupcio de l''art. 105.Cinco es calcula des del registre.'
+        reference_help: 'Referencia de l''autoritzacio de l''AEAT (art. 105.Dos) o de la proposta d''inici (art. 105.Tres).'
+        reference_not_permitted: '--reference nomes es permet amb un origen aeat_autorizada o inicio_actividad.'
+        reference_required: 'L''origen {provenance!r} (LIVA art. 105.Dos / 105.Tres) requereix --reference.'
+        sector_help: 'Identificador del sector diferenciat que cobreix aquesta entrada; ometre per a l''entrada de tota l''activitat.'
+        sector_id_help: 'Identificador estable del sector al qual fan referencia les entrades del registre i els apunts del llibre.'
       ratios:
         category_help: Id de categoria de despesa (p. ex. USAGE_RATIO_VEHICLE)
         eligible_help: Llista les categories que admeten proporció específica
@@ -2045,20 +2065,26 @@ cli:
         note_help: Nota opcional de l'operador (fins a 512 caràcters).
         view_help: Mostra una declaració M036 registrada pel seu id (o un prefix inequívoc).
       m145:
-        actor_help: 'Etiqueta de l''operador per a l''esdeveniment.'
-        casilla_help: 'Assignació de camp del registre repetible, ID=VALOR.'
-        communication_record_id_help: 'L''id del registre de comunicació (o un prefix inequívoc).'
-        create_help: 'Crea un registre local de comunicació al pagador del Model 145.'
+        actor_help: Etiqueta de l'operador per a l'esdeveniment.
+        casilla_help: Assignació de camp del registre repetible, ID=VALOR.
+        communication_record_id_help: L'id del registre de comunicació (o un prefix
+          inequívoc).
+        create_help: Crea un registre local de comunicació al pagador del Model 145.
         errors:
-          casilla_required: 'Proporcioneu almenys una entrada --casilla ID=VALOR.'
-        export_help: 'Exporta un registre local de comunicació al pagador del Model 145.'
-        group_help: 'Gestiona els registres locals de comunicació al pagador del Model 145.'
-        mark_delivered_to_payer_help: 'Marca un registre local de comunicació del Model 145 com a lliurat al pagador.'
-        mark_locally_completed_help: 'Marca un registre local de comunicació del Model 145 com a completat localment.'
-        note_help: 'Nota opcional de l''operador.'
+          casilla_required: Proporcioneu almenys una entrada --casilla ID=VALOR.
+        export_help: Exporta un registre local de comunicació al pagador del Model
+          145.
+        group_help: Gestiona els registres locals de comunicació al pagador del Model
+          145.
+        mark_delivered_to_payer_help: Marca un registre local de comunicació del Model
+          145 com a lliurat al pagador.
+        mark_locally_completed_help: Marca un registre local de comunicació del Model
+          145 com a completat localment.
+        note_help: Nota opcional de l'operador.
         period_help: 'Token del període de la comunicació: comunicacion o variacion.'
-        validate_help: 'Valida un registre local de comunicació al pagador del Model 145.'
-        year_help: 'Any de la comunicació.'
+        validate_help: Valida un registre local de comunicació al pagador del Model
+          145.
+        year_help: Any de la comunicació.
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA_ID=DECIMAL (repetible).
@@ -2767,7 +2793,7 @@ cli:
           actiu.
         public_key_help: La clau publica X25519 en brut del destinatari, en 64 caracters
           hexadecimals en minuscula.
-        recipient_id_help: 'Etiqueta estable triada per l''operador (p. ex. ''el-meu-gestor'').'
+        recipient_id_help: Etiqueta estable triada per l'operador (p. ex. 'el-meu-gestor').
         remove_help: Elimina un destinatari de confianca pel seu id del perfil actiu.
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
@@ -2979,8 +3005,8 @@ cli:
           entre equips per a paquets de perfil. Desa''l en un lloc segur; restaura''l
           amb ''aeat config profile archive import''.'
         export_help: Escriu un arxiu de còpia de seguretat completa, segellat i xifrat
-          AEAD, a CAMÍ; afegeix --recovery-wrap-passphrase abans d'enviar-lo per
-          correu o transferir-lo entre equips.
+          AEAD, a CAMÍ; afegeix --recovery-wrap-passphrase abans d'enviar-lo per correu
+          o transferir-lo entre equips.
         export_name_help: Perfil a copiar; per defecte l'actiu.
         export_out_help: Camí de destinació de l'arxiu.
         export_recovery_wrap_help: Frase de pas opcional per segellar l'arxiu, en
@@ -3053,17 +3079,15 @@ cli:
       export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
         no és segur per a correu, sincronització ni transferència.
       export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
-        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import
-        PATH --passphrase ...'. Només conté el paquet estructurat del perfil; usa
-        l'arxiu de recuperació xifrat per a una còpia completa amb evidències adjuntes
-        i auditoria.
+        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import PATH
+        --passphrase ...'. Només conté el paquet estructurat del perfil; usa l'arxiu
+        de recuperació xifrat per a una còpia completa amb evidències adjuntes i auditoria.
       export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
-        a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús
-        local/SAR.
+        a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús local/SAR.
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
       export_out_help: Ruta de destinació per al paquet de perfil
-      export_passphrase_help: Frase de contrasenya per xifrar amb AEAD el paquet
-        de perfil serialitzat per a transferència.
+      export_passphrase_help: Frase de contrasenya per xifrar amb AEAD el paquet de
+        perfil serialitzat per a transferència.
       export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
         ha de tenir almenys 8 caràcters.
       export_requires_transport: Usa --passphrase per a un paquet xifrat de transferència,
@@ -3117,8 +3141,8 @@ cli:
       import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
         per presentar models. Corregeix el paquet o torna a exportar un perfil complet
         amb aquests camps: %{missing_flags}.'
-      import_passphrase_help: Frase de contrasenya per a un paquet exportat amb
-        'config profile export --passphrase'.
+      import_passphrase_help: Frase de contrasenya per a un paquet exportat amb 'config
+        profile export --passphrase'.
       import_path_help: Ruta al fitxer del paquet de perfil
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
@@ -3531,6 +3555,10 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
+      art_104_tres_exclusion_help: 'Exclusio del denominador de prorrata declarada
+        per l''operador (LIVA art. 104.Tres: establiment permanent a l''estranger
+        o operacio immobiliaria o financera no habitual); exclou l''operacio dels
+        dos termes de la prorrata.'
       attachment_help: Id d'adjunt segur addicional; es pot repetir
       business_pct_help: Proporció d'ús professional de 0 a 1; només per a files MIXED.
         Omet-la en files totalment BUSINESS.
@@ -3548,11 +3576,18 @@ cli:
         dupliquen la fila. Ometeu-la per afegir un duplicat deliberat.'
       idempotent_noop: 'Operació idempotent sense efecte: ja existeix una transacció
         amb aquesta clau d''idempotència (%{transaction_id}); no s''ha afegit res.'
+      input_classification_help: 'Classificacio d''us per input declarada per l''operador
+        (LIVA art. 106 prorrata especial: exclusively_deductible deduccio integra;
+        exclusively_non_deductible sense deduccio; common al percentatge general de
+        prorrata); nomes rellevant per a operacions suportades en un bucket amb prorrata
+        especial.'
+      input_classification_inert: '--input-classification es inert per a l''exercici {ejercicio}: no s''aplica cap eleccio de prorrata especial, de manera que l''input es dedueix al percentatge general. Executa ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons LIVA art. 106.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
+      prorrata_sector_help: 'Identificador del sector diferenciat (LIVA arts. 9.1.c / 101) al qual pertany aquest input; ha de coincidir amb un sector declarat amb ''app ledger prorrata declare-sector''.'
       purchase_invoice_evidence_help: Id de justificant de factura de compra
       recargo_amount_help: Quota del recàrrec d'equivalència repercutida en aquesta
         venda a un minorista en recàrrec (art. 161 LIVA); s'agrega a la quota de recàrrec
@@ -3577,8 +3612,6 @@ cli:
         ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
         <ratio>'. No és text lliure.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
-      art_104_tres_exclusion_help: 'Exclusio del denominador de prorrata declarada per l''operador (LIVA art. 104.Tres: establiment permanent a l''estranger o operacio immobiliaria o financera no habitual); exclou l''operacio dels dos termes de la prorrata.'
-      input_classification_help: 'Classificacio d''us per input declarada per l''operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccio integra; exclusively_non_deductible sense deduccio; common al percentatge general de prorrata); nomes rellevant per a operacions suportades en un bucket amb prorrata especial.'
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;
@@ -4307,10 +4340,6 @@ cli:
       investigate: 'No s''han pogut determinar amb certesa %{count} obligacio(ns)
         de presentacio per a aquest perfil i podrien quedar sense declarar: %{modelos}.
         Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
-    warning:
-      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor
-        de calcul forfait del regim simplificat encara no esta disponible; reviseu
-        les caselles del regim simplificat abans de presentar.
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -4414,6 +4443,10 @@ cli:
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
+    warning:
+      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
+        calcul forfait del regim simplificat encara no esta disponible; reviseu les
+        caselles del regim simplificat abans de presentar.
     year_help: Any de declaració per a --period (p. ex. 2024).
   registry:
     app_help: Gestió del registre de models fiscals
@@ -5147,8 +5180,10 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
-    m145_communication_record_not_found: 'Cap registre local de comunicació del Model 145 coincideix amb l''id sol·licitat.'
-    m145_communication_service: 'Ha fallat una operació del servei local de comunicació del Model 145.'
+    m145_communication_record_not_found: Cap registre local de comunicació del Model
+      145 coincideix amb l'id sol·licitat.
+    m145_communication_service: Ha fallat una operació del servei local de comunicació
+      del Model 145.
     modelo_calculation_revision_selector: La seleccio de revisio de calcul ha fallat.
     modelo_calculation_revision_selector_not_found: Cap revisio de calcul coincideix
       amb el selector indicat.
@@ -5472,10 +5507,14 @@ errors:
       al teu NIF.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
-    m145_communication_record_ambiguous: 'El prefix de l''id de registre de comunicació del Model 145 coincideix amb diversos registres.'
-    m145_communication_record_export: 'El registre local de comunicació del Model 145 no s''ha pogut exportar.'
-    m145_communication_record_transition: 'El registre local de comunicació del Model 145 no permet aquesta transició d''estat.'
-    m145_communication_record_validation: 'L''operació local de comunicació del Model 145 està bloquejada per la validació.'
+    m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
+      del Model 145 coincideix amb diversos registres.
+    m145_communication_record_export: El registre local de comunicació del Model 145
+      no s'ha pogut exportar.
+    m145_communication_record_transition: El registre local de comunicació del Model
+      145 no permet aquesta transició d'estat.
+    m145_communication_record_validation: L'operació local de comunicació del Model
+      145 està bloquejada per la validació.
     modelo_036_prior_alta_required: No es pot sol·licitar una modificació o baixa
       del Model 036 sense una alta prèvia.
     modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
@@ -6250,22 +6289,6 @@ wizard:
           LIS; per sota, totes dues modalitats són possibles. Opcional.
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
-      objective-estimation-modulos-iae-epigraph:
-        help: Epígraf IAE per a mòduls d'estimació objectiva, per exemple 972.
-      objective-estimation-modulos-module-1-units:
-        help: Unitats anuals del mòdul 1 per a estimació objectiva.
-      objective-estimation-modulos-module-2-units:
-        help: Unitats anuals del mòdul 2 per a estimació objectiva.
-      objective-estimation-modulos-module-3-units:
-        help: Unitats anuals del mòdul 3 per a estimació objectiva.
-      objective-estimation-modulos-module-4-units:
-        help: Unitats anuals del mòdul 4 per a estimació objectiva.
-      objective-estimation-modulos-module-5-units:
-        help: Unitats anuals del mòdul 5 per a estimació objectiva.
-      objective-estimation-modulos-module-6-units:
-        help: Unitats anuals del mòdul 6 per a estimació objectiva.
-      objective-estimation-modulos-module-7-units:
-        help: Unitats anuals del mòdul 7 per a estimació objectiva.
       irpf-income-categories:
         help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
           per categoria
@@ -6325,6 +6348,22 @@ wizard:
           del 15 per cent. Opcional; sense marcar no s'aplica el tipus reduït.
       notes:
         help: Notes per al teu propi record (opcional)
+      objective-estimation-modulos-iae-epigraph:
+        help: Epígraf IAE per a mòduls d'estimació objectiva, per exemple 972.
+      objective-estimation-modulos-module-1-units:
+        help: Unitats anuals del mòdul 1 per a estimació objectiva.
+      objective-estimation-modulos-module-2-units:
+        help: Unitats anuals del mòdul 2 per a estimació objectiva.
+      objective-estimation-modulos-module-3-units:
+        help: Unitats anuals del mòdul 3 per a estimació objectiva.
+      objective-estimation-modulos-module-4-units:
+        help: Unitats anuals del mòdul 4 per a estimació objectiva.
+      objective-estimation-modulos-module-5-units:
+        help: Unitats anuals del mòdul 5 per a estimació objectiva.
+      objective-estimation-modulos-module-6-units:
+        help: Unitats anuals del mòdul 6 per a estimació objectiva.
+      objective-estimation-modulos-module-7-units:
+        help: Unitats anuals del mòdul 7 per a estimació objectiva.
       output-language:
         help: Idioma de sortida de la CLI per a aquest perfil
       pays-capital-income-with-retencion:
@@ -6459,25 +6498,6 @@ wizard:
         help: Com es determina el rendiment net de l'activitat econòmica; selecciona
           Model 130 o 131
         prompt: Règim d'estimació IRPF
-      objective-estimation-modulos-iae-epigraph:
-        help: Es desa una vegada al perfil anual. Els coeficients continuen al registre del model.
-        prompt: Epígraf IAE per a mòduls d'estimació objectiva
-      objective-estimation-modulos-module-1-units:
-        prompt: Unitats anuals del mòdul 1
-      objective-estimation-modulos-module-2-units:
-        prompt: Unitats anuals del mòdul 2
-      objective-estimation-modulos-module-3-units:
-        prompt: Unitats anuals del mòdul 3
-      objective-estimation-modulos-module-4-units:
-        prompt: Unitats anuals del mòdul 4
-      objective-estimation-modulos-module-5-units:
-        prompt: Unitats anuals del mòdul 5
-      objective-estimation-modulos-module-6-units:
-        prompt: Unitats anuals del mòdul 6
-      objective-estimation-modulos-module-7-units:
-        prompt: Unitats anuals del mòdul 7
-      objective-estimation-modulos-module-units:
-        help: Recompte anual estable per a aquesta casella de mòdul. L'epígraf IAE seleccionat defineix si significa personal, superfície del local, consum elèctric o un altre mòdul oficial.
       irpf-special-regime:
         choices:
           general:
@@ -6497,6 +6517,28 @@ wizard:
         prompt: Periodes Modelo 111 sense retencions
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
+      objective-estimation-modulos-iae-epigraph:
+        help: Es desa una vegada al perfil anual. Els coeficients continuen al registre
+          del model.
+        prompt: Epígraf IAE per a mòduls d'estimació objectiva
+      objective-estimation-modulos-module-1-units:
+        prompt: Unitats anuals del mòdul 1
+      objective-estimation-modulos-module-2-units:
+        prompt: Unitats anuals del mòdul 2
+      objective-estimation-modulos-module-3-units:
+        prompt: Unitats anuals del mòdul 3
+      objective-estimation-modulos-module-4-units:
+        prompt: Unitats anuals del mòdul 4
+      objective-estimation-modulos-module-5-units:
+        prompt: Unitats anuals del mòdul 5
+      objective-estimation-modulos-module-6-units:
+        prompt: Unitats anuals del mòdul 6
+      objective-estimation-modulos-module-7-units:
+        prompt: Unitats anuals del mòdul 7
+      objective-estimation-modulos-module-units:
+        help: Recompte anual estable per a aquesta casella de mòdul. L'epígraf IAE
+          seleccionat defineix si significa personal, superfície del local, consum
+          elèctric o un altre mòdul oficial.
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:

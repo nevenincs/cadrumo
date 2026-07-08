@@ -400,8 +400,11 @@ aggregation:
       duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
         en la malla de fuentes.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
-      out_of_window_summary_date_span_invalid: 'La fecha máxima de presentación de un resumen fuera de ventana no puede ser anterior a su fecha mínima.'
-      out_of_window_summary_incomplete: 'Un resumen fuera de ventana debe establecer conjuntamente el recuento, la fecha mínima de presentación y la fecha máxima de presentación.'
+      out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
+        un resumen fuera de ventana no puede ser anterior a su fecha mínima.
+      out_of_window_summary_incomplete: Un resumen fuera de ventana debe establecer
+        conjuntamente el recuento, la fecha mínima de presentación y la fecha máxima
+        de presentación.
       owned_sources_blank: Las fuentes propiedad del mallado de fuentes no pueden
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
@@ -1632,6 +1635,24 @@ cli:
         view_help: Muestra una factura de negocio
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
+      prorrata:
+        activity_code_help: 'Codigo de actividad CNAE / IAE agrupado en este sector (repetible, al menos uno).'
+        declare_sector_help: 'Declara un sector diferenciado (LIVA arts. 9.1.c / 101): la particion del art. 9.1.c que declara el operador, nunca inferida del libro.'
+        ejercicio_help: 'Ejercicio (ano) que cubre la eleccion.'
+        elect_especial_help: 'Elige prorrata especial para un ejercicio (LIVA art. 103.Dos.1): la deduccion por input se enruta con --input-classification en cada apunte.'
+        elect_general_help: 'Elige prorrata general para un ejercicio (LIVA art. 104): un unico porcentaje de deduccion se aplica a cada cuota deducible.'
+        general_percentage_help: 'Porcentaje de deduccion provisional 0-100 (LIVA art. 104.Uno + 105.Uno).'
+        group_help: 'Registro de prorrata de IVA entre ejercicios: elige el regimen (general / especial) y declara sectores diferenciados (LIVA arts. 101 / 103 / 105 / 106).'
+        letra_help: 'Letra del art. 9.1.c de la LIVA (a/b/c/d) que hace diferenciado este sector.'
+        list_help: 'Lista cada entrada del registro y cada sector diferenciado declarado en el perfil activo.'
+        percentage_help: 'Porcentaje de deduccion de uso comun 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).'
+        provenance_help: 'Origen del porcentaje provisional segun LIVA art. 105.'
+        provenance_not_electable: 'El origen {provenance!r} no es declarable por el operador; aceptados: {accepted}. El porcentaje de interrupcion del art. 105.Cinco se calcula desde el registro.'
+        reference_help: 'Referencia de la autorizacion de la AEAT (art. 105.Dos) o de la propuesta de inicio (art. 105.Tres).'
+        reference_not_permitted: '--reference solo se permite con un origen aeat_autorizada o inicio_actividad.'
+        reference_required: 'El origen {provenance!r} (LIVA art. 105.Dos / 105.Tres) requiere --reference.'
+        sector_help: 'Identificador del sector diferenciado que cubre esta entrada; omitir para la entrada de toda la actividad.'
+        sector_id_help: 'Identificador estable del sector al que hacen referencia las entradas del registro y los apuntes del libro.'
       ratios:
         category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
         eligible_help: Lista las categorías que admiten proporción específica
@@ -2073,20 +2094,27 @@ cli:
         view_help: Muestra una declaración M036 registrada por su id (o un prefijo
           inequívoco).
       m145:
-        actor_help: 'Etiqueta del operador para el evento.'
-        casilla_help: 'Asignación de campo del registro repetible, ID=VALOR.'
-        communication_record_id_help: 'El id del registro de comunicación (o un prefijo inequívoco).'
-        create_help: 'Crea un registro local de comunicación al pagador del Modelo 145.'
+        actor_help: Etiqueta del operador para el evento.
+        casilla_help: Asignación de campo del registro repetible, ID=VALOR.
+        communication_record_id_help: El id del registro de comunicación (o un prefijo
+          inequívoco).
+        create_help: Crea un registro local de comunicación al pagador del Modelo
+          145.
         errors:
-          casilla_required: 'Proporcione al menos una entrada --casilla ID=VALOR.'
-        export_help: 'Exporta un registro local de comunicación al pagador del Modelo 145.'
-        group_help: 'Gestiona los registros locales de comunicación al pagador del Modelo 145.'
-        mark_delivered_to_payer_help: 'Marca un registro local de comunicación del Modelo 145 como entregado al pagador.'
-        mark_locally_completed_help: 'Marca un registro local de comunicación del Modelo 145 como completado localmente.'
-        note_help: 'Nota opcional del operador.'
+          casilla_required: Proporcione al menos una entrada --casilla ID=VALOR.
+        export_help: Exporta un registro local de comunicación al pagador del Modelo
+          145.
+        group_help: Gestiona los registros locales de comunicación al pagador del
+          Modelo 145.
+        mark_delivered_to_payer_help: Marca un registro local de comunicación del
+          Modelo 145 como entregado al pagador.
+        mark_locally_completed_help: Marca un registro local de comunicación del Modelo
+          145 como completado localmente.
+        note_help: Nota opcional del operador.
         period_help: 'Token del periodo de la comunicación: comunicacion o variacion.'
-        validate_help: 'Valida un registro local de comunicación al pagador del Modelo 145.'
-        year_help: 'Año de la comunicación.'
+        validate_help: Valida un registro local de comunicación al pagador del Modelo
+          145.
+        year_help: Año de la comunicación.
       project:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
@@ -2797,7 +2825,7 @@ cli:
           activo.
         public_key_help: La clave publica X25519 en bruto del destinatario, en 64
           caracteres hexadecimales en minuscula.
-        recipient_id_help: 'Etiqueta estable elegida por el operador (p. ej. ''mi-gestor'').'
+        recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'mi-gestor').
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
@@ -3089,12 +3117,11 @@ cli:
         no es seguro para correo, sincronización ni transferencia.
       export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
         AEAD por frase de contraseña. Impórtalo con 'aeat config profile import PATH
-        --passphrase ...'. Solo contiene el paquete estructurado del perfil; usa
-        el archivo de recuperación cifrado para una copia completa con evidencias
-        adjuntas y auditoría.
+        --passphrase ...'. Solo contiene el paquete estructurado del perfil; usa el
+        archivo de recuperación cifrado para una copia completa con evidencias adjuntas
+        y auditoría.
       export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
-        en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso
-        local/SAR.
+        en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso local/SAR.
       export_name_help: Perfil que quieres exportar; por defecto, el activo
       export_out_help: Ruta de destino para el paquete de perfil
       export_passphrase_help: Frase de contraseña para cifrar con AEAD el paquete
@@ -3107,9 +3134,9 @@ cli:
         sensibles: el NIF en claro (sin ocultar), nombre y apellidos, el libro de
         movimientos completo, las revisiones de cálculo y los registros de presentación.
         Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
-        correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa
-        gestión local/SAR. Usa ''aeat config profile export --passphrase ...'' para
-        un paquete estructurado de transferencia cifrado AEAD.'
+        correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
+        local/SAR. Usa ''aeat config profile export --passphrase ...'' para un paquete
+        estructurado de transferencia cifrado AEAD.'
       export_transport_conflict: Elige --passphrase o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
@@ -3133,8 +3160,8 @@ cli:
       import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
         las órdenes siguientes operan sobre él. Ejecuta 'aeat config switch <name>'
         para cambiar el perfil activo.
-      import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete
-        de perfil cifrado. Comprueba la frase de contraseña y el archivo.
+      import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete de
+        perfil cifrado. Comprueba la frase de contraseña y el archivo.
       import_help: Registra un paquete portátil de perfil desde un archivo
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
@@ -3151,8 +3178,8 @@ cli:
       import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
         para presentar modelos. Corrige el paquete o vuelve a exportar un perfil completo
         con estos campos: %{missing_flags}.'
-      import_passphrase_help: Frase de contraseña para un paquete exportado con
-        'config profile export --passphrase'.
+      import_passphrase_help: Frase de contraseña para un paquete exportado con 'config
+        profile export --passphrase'.
       import_path_help: Ruta al archivo del paquete de perfil
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
@@ -3570,6 +3597,10 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
+      art_104_tres_exclusion_help: 'Exclusion del denominador de prorrata declarada
+        por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero
+        u operacion inmobiliaria o financiera no habitual); excluye la operacion de
+        ambos terminos de la prorrata.'
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1; solo para filas MIXED.
         Omitir en filas totalmente BUSINESS.
@@ -3587,11 +3618,18 @@ cli:
         la fila. Omítala para añadir un duplicado deliberado.'
       idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción
         con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
+      input_classification_help: 'Clasificacion de uso por input declarada por el
+        operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccion
+        integra; exclusively_non_deductible sin deduccion; common al porcentaje general
+        de prorrata); solo relevante para operaciones soportadas en un bucket con
+        prorrata especial.'
+      input_classification_inert: '--input-classification es inerte para el ejercicio {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que el input se deduce al porcentaje general. Ejecuta ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo segun LIVA art. 106.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       notes_help: Notas del operador guardadas con la transacción
       prorrata_reference_help: Referencia de prorrata de IVA
+      prorrata_sector_help: 'Identificador del sector diferenciado (LIVA arts. 9.1.c / 101) al que pertenece este input; debe coincidir con un sector declarado con ''app ledger prorrata declare-sector''.'
       purchase_invoice_evidence_help: Id de justificante de factura de compra
       recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
         a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
@@ -3618,8 +3656,6 @@ cli:
         list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
         set <category-id> <ratio>'. No es texto libre.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
-      art_104_tres_exclusion_help: 'Exclusion del denominador de prorrata declarada por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero u operacion inmobiliaria o financiera no habitual); excluye la operacion de ambos terminos de la prorrata.'
-      input_classification_help: 'Clasificacion de uso por input declarada por el operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccion integra; exclusively_non_deductible sin deduccion; common al porcentaje general de prorrata); solo relevante para operaciones soportadas en un bucket con prorrata especial.'
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
@@ -4349,10 +4385,6 @@ cli:
       investigate: 'No se han podido determinar con certeza %{count} obligacion(es)
         de presentacion para este perfil y podrian quedar sin declarar: %{modelos}.
         Investigue cada una con ''aeat app overview explain <modelo>''.'
-    warning:
-      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor
-        de calculo forfait del regimen simplificado aun no esta disponible; revise
-        las casillas del regimen simplificado antes de presentar.
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -4460,6 +4492,10 @@ cli:
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
     verbose_help: Mostrar detalles y siguiente acción cuando existan
+    warning:
+      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
+        calculo forfait del regimen simplificado aun no esta disponible; revise las
+        casillas del regimen simplificado antes de presentar.
     year_help: Año de declaración para --period (p. ej. 2024).
   registry:
     app_help: Gestión del registro de modelos fiscales
@@ -5196,8 +5232,10 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
-    m145_communication_record_not_found: 'Ningún registro local de comunicación del Modelo 145 coincide con el id solicitado.'
-    m145_communication_service: 'Falló una operación del servicio local de comunicación del Modelo 145.'
+    m145_communication_record_not_found: Ningún registro local de comunicación del
+      Modelo 145 coincide con el id solicitado.
+    m145_communication_service: Falló una operación del servicio local de comunicación
+      del Modelo 145.
     modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
     modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
       con el selector indicado.
@@ -5518,10 +5556,14 @@ errors:
       NIF.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
-    m145_communication_record_ambiguous: 'El prefijo del id de registro de comunicación del Modelo 145 coincide con varios registros.'
-    m145_communication_record_export: 'El registro local de comunicación del Modelo 145 no pudo exportarse.'
-    m145_communication_record_transition: 'El registro local de comunicación del Modelo 145 no permite esa transición de estado.'
-    m145_communication_record_validation: 'La operación local de comunicación del Modelo 145 está bloqueada por la validación.'
+    m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
+      del Modelo 145 coincide con varios registros.
+    m145_communication_record_export: El registro local de comunicación del Modelo
+      145 no pudo exportarse.
+    m145_communication_record_transition: El registro local de comunicación del Modelo
+      145 no permite esa transición de estado.
+    m145_communication_record_validation: La operación local de comunicación del Modelo
+      145 está bloqueada por la validación.
     modelo_036_prior_alta_required: No se puede solicitar una modificación o baja
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
@@ -6303,22 +6345,6 @@ wizard:
           40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
       irpf-estimation-regime:
         help: Régimen de estimación IRPF para la renta de actividad económica
-      objective-estimation-modulos-iae-epigraph:
-        help: Epígrafe IAE para módulos de estimación objetiva, por ejemplo 972.
-      objective-estimation-modulos-module-1-units:
-        help: Unidades anuales del módulo 1 para estimación objetiva.
-      objective-estimation-modulos-module-2-units:
-        help: Unidades anuales del módulo 2 para estimación objetiva.
-      objective-estimation-modulos-module-3-units:
-        help: Unidades anuales del módulo 3 para estimación objetiva.
-      objective-estimation-modulos-module-4-units:
-        help: Unidades anuales del módulo 4 para estimación objetiva.
-      objective-estimation-modulos-module-5-units:
-        help: Unidades anuales del módulo 5 para estimación objetiva.
-      objective-estimation-modulos-module-6-units:
-        help: Unidades anuales del módulo 6 para estimación objetiva.
-      objective-estimation-modulos-module-7-units:
-        help: Unidades anuales del módulo 7 para estimación objetiva.
       irpf-income-categories:
         help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
           categoría
@@ -6378,6 +6404,22 @@ wizard:
           tipo reducido.
       notes:
         help: Notas para tu propio recuerdo (opcional)
+      objective-estimation-modulos-iae-epigraph:
+        help: Epígrafe IAE para módulos de estimación objetiva, por ejemplo 972.
+      objective-estimation-modulos-module-1-units:
+        help: Unidades anuales del módulo 1 para estimación objetiva.
+      objective-estimation-modulos-module-2-units:
+        help: Unidades anuales del módulo 2 para estimación objetiva.
+      objective-estimation-modulos-module-3-units:
+        help: Unidades anuales del módulo 3 para estimación objetiva.
+      objective-estimation-modulos-module-4-units:
+        help: Unidades anuales del módulo 4 para estimación objetiva.
+      objective-estimation-modulos-module-5-units:
+        help: Unidades anuales del módulo 5 para estimación objetiva.
+      objective-estimation-modulos-module-6-units:
+        help: Unidades anuales del módulo 6 para estimación objetiva.
+      objective-estimation-modulos-module-7-units:
+        help: Unidades anuales del módulo 7 para estimación objetiva.
       output-language:
         help: Idioma de salida de la CLI para este perfil
       pays-capital-income-with-retencion:
@@ -6517,25 +6559,6 @@ wizard:
         help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
           Modelo 130 o 131
         prompt: Régimen de estimación IRPF
-      objective-estimation-modulos-iae-epigraph:
-        help: Se guarda una vez en el perfil anual. Los coeficientes siguen en el registro del modelo.
-        prompt: Epígrafe IAE para módulos de estimación objetiva
-      objective-estimation-modulos-module-1-units:
-        prompt: Unidades anuales del módulo 1
-      objective-estimation-modulos-module-2-units:
-        prompt: Unidades anuales del módulo 2
-      objective-estimation-modulos-module-3-units:
-        prompt: Unidades anuales del módulo 3
-      objective-estimation-modulos-module-4-units:
-        prompt: Unidades anuales del módulo 4
-      objective-estimation-modulos-module-5-units:
-        prompt: Unidades anuales del módulo 5
-      objective-estimation-modulos-module-6-units:
-        prompt: Unidades anuales del módulo 6
-      objective-estimation-modulos-module-7-units:
-        prompt: Unidades anuales del módulo 7
-      objective-estimation-modulos-module-units:
-        help: Recuento anual estable para esta casilla de módulo. El epígrafe IAE seleccionado define si significa personal, superficie del local, consumo eléctrico u otro módulo oficial.
       irpf-special-regime:
         choices:
           general:
@@ -6555,6 +6578,28 @@ wizard:
         prompt: Periodos Modelo 111 sin retenciones
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
+      objective-estimation-modulos-iae-epigraph:
+        help: Se guarda una vez en el perfil anual. Los coeficientes siguen en el
+          registro del modelo.
+        prompt: Epígrafe IAE para módulos de estimación objetiva
+      objective-estimation-modulos-module-1-units:
+        prompt: Unidades anuales del módulo 1
+      objective-estimation-modulos-module-2-units:
+        prompt: Unidades anuales del módulo 2
+      objective-estimation-modulos-module-3-units:
+        prompt: Unidades anuales del módulo 3
+      objective-estimation-modulos-module-4-units:
+        prompt: Unidades anuales del módulo 4
+      objective-estimation-modulos-module-5-units:
+        prompt: Unidades anuales del módulo 5
+      objective-estimation-modulos-module-6-units:
+        prompt: Unidades anuales del módulo 6
+      objective-estimation-modulos-module-7-units:
+        prompt: Unidades anuales del módulo 7
+      objective-estimation-modulos-module-units:
+        help: Recuento anual estable para esta casilla de módulo. El epígrafe IAE
+          seleccionado define si significa personal, superficie del local, consumo
+          eléctrico u otro módulo oficial.
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
       pays-professionals-with-retencion:
