@@ -92,9 +92,9 @@ Build the operator surface that writes an ESPECIAL ProrrataRegisterEntry and a S
 - [x] `W04.P05.S22` - Add the prorrata register CLI verb group (elect-especial, elect-general, list) writing GENERAL/ESPECIAL ProrrataRegisterEntry rows through ProrrataRegisterService.declare, and preserve sector_definitions across entry upsert and settlement write; `src/aeat/entrypoints/cli/_prorrata_register_cli.py, src/aeat/entrypoints/cli/_prorrata_register_payloads.py, src/aeat/adapters/persistence/profile/prorrata_register.py, src/aeat/application/modelo/_revision_persistence.py`.
 - [x] `W04.P05.S23` - Add the declare-sector CLI verb writing a SectorDefinition partition (sector id, art-9.1.c letra, member activity codes) through a new ProrrataRegisterService.declare_sector over an entries-preserving repository upsert; `src/aeat/entrypoints/cli/_prorrata_register_cli.py, src/aeat/application/prorrata_register/__init__.py, src/aeat/adapters/persistence/profile/prorrata_register.py`.
 - [x] `W04.P05.S24` - Thread operator-declared prorrata_sector_id through ManualLedgerTransactionCommand, the manual add action and the idempotency signature, add the --sector flag on ledger add, and surface a non-blocking Notice when --input-classification is set but the bucket has no especial register entry for the row ejercicio; `src/aeat/application/ledger/_models.py, src/aeat/application/ledger/_actions_manual.py, src/aeat/application/ledger/_actions_common.py, src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W04.P05.S25` - Prove especial and sector apportionment fire from the operator flow: an anti-dormant end-to-end test that elects especial and declares sectors and tags inputs through the service the CLI calls then runs the live aggregation and asserts the especial and sector apportionment change the deducible cuota, with the non-electing path byte-identical; `src/aeat/application/aggregation/tests/test_prorrata_operator_ingress_end_to_end.py`.
-- [ ] `W04.P05.S26` - Reconcile the MEDIUM oracle-claim: amend the plan Verification bullet and the S15 and S20 exec notes to state especial and sectores are proven by law-derived-scenario-through-the-production-path with no bundled AEAT especial or two-sector oracle; `.vault/plan/2026-07-07-iva-prorrata-complexity-plan.md, .vault/exec/2026-07-07-iva-prorrata-complexity/`.
-- [ ] `W04.P05.S27` - Add an is_interrupted=True entry to the encrypted-SQL prorrata register roundtrip fixture so the interrupted marker crosses the encrypted boundary under test; `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
+- [x] `W04.P05.S25` - Prove especial and sector apportionment fire from the operator flow: an anti-dormant end-to-end test that elects especial and declares sectors and tags inputs through the service the CLI calls then runs the live aggregation and asserts the especial and sector apportionment change the deducible cuota, with the non-electing path byte-identical; `src/aeat/application/aggregation/tests/test_prorrata_operator_ingress_end_to_end.py`.
+- [x] `W04.P05.S26` - Reconcile the MEDIUM oracle-claim: amend the plan Verification bullet and the S15 and S20 exec notes to state especial and sectores are proven by law-derived-scenario-through-the-production-path with no bundled AEAT especial or two-sector oracle; `.vault/plan/2026-07-07-iva-prorrata-complexity-plan.md, .vault/exec/2026-07-07-iva-prorrata-complexity/`.
+- [x] `W04.P05.S27` - Add an is_interrupted=True entry to the encrypted-SQL prorrata register roundtrip fixture so the interrupted marker crosses the encrypted boundary under test; `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
 
 ## Description
 
@@ -163,8 +163,18 @@ these verifiable criteria:
   `input_classification`, the sector reference, the interrupted-ejercicio marker)
   passes a strict save / load / equality roundtrip plus an anti-tautology proof.
 - Oracle grounding: each apportionment / seed behaviour is proven against an AEAT
-  Manual practico worked example, never against numbers hand-computed from the
-  compute substrate.
+  Manual practico worked example where one is bundled (art-104.Tres uses the real
+  56% AEAT oracle), never against numbers hand-computed from the compute
+  substrate. No bundled AEAT prorrata-especial or two-sector worked-example oracle
+  ships in the corpus, so the especial (S15) and sectores (S20) apportionments are
+  instead proven by a law-derived scenario driven end-to-end through the
+  production aggregation path, with expected values derived from the LIVA
+  art. 106.Uno reglas and the art. 101 per-sector rule (grounded verbatim in the
+  bundled `ley-37-1992` corpus) and a load-bearing anti-tautology assertion
+  (especial/sectored result must differ from the whole-entity general result);
+  values are never taken from the `deductible_percentage_for` substrate under
+  test. The art-105.Cinco interruption seed (S09) likewise uses an
+  ADR-pre-authorised hand-constructed gap scenario.
 - Byte-identity: the general (non-especial, single-sector, no-exclusion) path
   stays byte-identical to the landed cross-period-prorrata behaviour.
 - Non-silence: every unclassified input, insufficient interruption history,
