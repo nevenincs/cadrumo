@@ -14,6 +14,7 @@ from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregation
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
+    InputClassification,
     InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
@@ -355,6 +356,17 @@ class IvaLedgerObservation(BaseModel):
     Modelo 303 base/cuota bindings. Informational observations for boxes
     62/63/74/75 carry the actual cash-accounting treatment so ordinary
     domestic rows cannot be confused with art. 75 projections.
+    """
+    input_classification: InputClassification | None = None
+    """Operator-declared LIVA art. 106 prorrata-especial per-input use class.
+
+    Carried from the source ledger transaction's
+    ``input_classification``. Meaningful only for ``SOPORTADO`` (input IVA)
+    rows in a bucket under prorrata especial: the regime-aware ledger IVA
+    apportionment routes the deducible cuota by this classification (the
+    art. 106.Uno reglas 100%/0%/general). ``None`` for every row not under
+    especial or carrying no per-input use declaration; the general-regime
+    apportionment ignores it.
     """
 
     @model_validator(mode="after")
