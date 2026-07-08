@@ -1558,23 +1558,43 @@ cli:
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
       prorrata:
-        activity_code_help: 'Ebbe a szektorba sorolt CNAE / IAE tevekenysegi kod (ismetelheto, legalabb egy).'
-        declare_sector_help: 'Adj meg egy megkulonboztetett szektort (LIVA 9.1.c / 101. cikk): az uzemelteto art. 9.1.c szerinti felosztasa, sosem a konyvbol kikovetkeztetve.'
-        ejercicio_help: 'A bevallasi ev, amelyre a valasztas vonatkozik.'
-        elect_especial_help: 'Valaszd a prorrata especial rezsimet egy ejercicio-ra (LIVA art. 103.Dos.1): a bemeneti levonas soronkent az --input-classification alapjan tortenik.'
-        elect_general_help: 'Valaszd a prorrata general rezsimet egy ejercicio-ra (LIVA art. 104): egyetlen levonasi szazalek vonatkozik minden levonhato cuota-ra.'
-        general_percentage_help: 'Ideiglenes levonasi szazalek 0-100 (LIVA art. 104.Uno + 105.Uno).'
-        group_help: 'Idoszakok kozotti IVA prorrata nyilvantartas: valaszd ki a rezsimet (general / especial) es add meg a megkulonboztetett szektorokat (LIVA 101 / 103 / 105 / 106. cikk).'
-        letra_help: 'A LIVA 9.1.c cikk betuje (a/b/c/d), amely megkulonboztetette teszi ezt a szektort.'
-        list_help: 'Listaz minden nyilvantartasi bejegyzest es minden bejelentett megkulonboztetett szektort az aktiv profilon.'
-        percentage_help: 'Kozos hasznalatu levonasi szazalek 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).'
-        provenance_help: 'Az ideiglenes szazalek forrasa a LIVA art. 105 szerint.'
-        provenance_not_electable: 'A {provenance!r} forras nem az uzemelteto altal megadhato; elfogadott: {accepted}. Az art. 105.Cinco szerinti megszakitasi szazalekot a nyilvantartasbol szamoljuk.'
-        reference_help: 'Az AEAT engedely (art. 105.Dos) vagy a tevekenyseg-kezdesi javaslat (art. 105.Tres) hivatkozasa.'
-        reference_not_permitted: 'A --reference csak aeat_autorizada vagy inicio_actividad forrassal engedelyezett.'
-        reference_required: 'A {provenance!r} forras (LIVA art. 105.Dos / 105.Tres) megkoveteli a --reference kapcsolot.'
-        sector_help: 'A bejegyzes altal lefedett megkulonboztetett szektor azonositoja; hagyd el a teljes tevekenysegre vonatkozo bejegyzeshez.'
-        sector_id_help: 'Stabil szektorazonosito, amelyre a nyilvantartasi bejegyzesek es a konyvsorok hivatkoznak.'
+        activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevekenysegi kod (ismetelheto,
+          legalabb egy).
+        declare_sector_help: 'Adj meg egy megkulonboztetett szektort (LIVA 9.1.c /
+          101. cikk): az uzemelteto art. 9.1.c szerinti felosztasa, sosem a konyvbol
+          kikovetkeztetve.'
+        ejercicio_help: A bevallasi ev, amelyre a valasztas vonatkozik.
+        elect_especial_help: 'Valaszd a prorrata especial rezsimet egy ejercicio-ra
+          (LIVA art. 103.Dos.1): a bemeneti levonas soronkent az --input-classification
+          alapjan tortenik.'
+        elect_general_help: 'Valaszd a prorrata general rezsimet egy ejercicio-ra
+          (LIVA art. 104): egyetlen levonasi szazalek vonatkozik minden levonhato
+          cuota-ra.'
+        general_percentage_help: Ideiglenes levonasi szazalek 0-100 (LIVA art. 104.Uno
+          + 105.Uno).
+        group_help: 'Idoszakok kozotti IVA prorrata nyilvantartas: valaszd ki a rezsimet
+          (general / especial) es add meg a megkulonboztetett szektorokat (LIVA 101
+          / 103 / 105 / 106. cikk).'
+        letra_help: A LIVA 9.1.c cikk betuje (a/b/c/d), amely megkulonboztetette teszi
+          ezt a szektort.
+        list_help: Listaz minden nyilvantartasi bejegyzest es minden bejelentett megkulonboztetett
+          szektort az aktiv profilon.
+        percentage_help: Kozos hasznalatu levonasi szazalek 0-100 (LIVA art. 106.Uno
+          regla 3.a / art. 104.Dos).
+        provenance_help: Az ideiglenes szazalek forrasa a LIVA art. 105 szerint.
+        provenance_not_electable: 'A {provenance!r} forras nem az uzemelteto altal
+          megadhato; elfogadott: {accepted}. Az art. 105.Cinco szerinti megszakitasi
+          szazalekot a nyilvantartasbol szamoljuk.'
+        reference_help: Az AEAT engedely (art. 105.Dos) vagy a tevekenyseg-kezdesi
+          javaslat (art. 105.Tres) hivatkozasa.
+        reference_not_permitted: A --reference csak aeat_autorizada vagy inicio_actividad
+          forrassal engedelyezett.
+        reference_required: A {provenance!r} forras (LIVA art. 105.Dos / 105.Tres)
+          megkoveteli a --reference kapcsolot.
+        sector_help: A bejegyzes altal lefedett megkulonboztetett szektor azonositoja;
+          hagyd el a teljes tevekenysegre vonatkozo bejegyzeshez.
+        sector_id_help: Stabil szektorazonosito, amelyre a nyilvantartasi bejegyzesek
+          es a konyvsorok hivatkoznak.
       ratios:
         category_help: Kiadási kategóriaazonosító (pl. USAGE_RATIO_VEHICLE).
         eligible_help: Egy adott arányhoz alkalmas kategóriák listázása.
@@ -3526,17 +3546,27 @@ cli:
         levonas; exclusively_non_deductible: nincs levonas; common: az altalanos prorrata
         szazalekaval); csak prorrata especial ala tartozo bucket bemeneti soraira
         ertelmes.'
-      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio} ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet az altalanos szazalekkal vonhato le. Futtasd az ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint iranyitsd.'
+      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio}
+        ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet
+        az altalanos szazalekkal vonhato le. Futtasd az ''app ledger prorrata elect-especial
+        --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint iranyitsd.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
       notes_help: A tranzakcióval együtt tárolt üzemeltetői megjegyzések.
       prorrata_reference_help: IVA prorrata alapjának hivatkozása.
-      prorrata_sector_help: 'A megkulonboztetett szektor azonositoja (LIVA 9.1.c / 101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy ''app ledger prorrata declare-sector'' paranccsal megadott szektorral.'
+      prorrata_sector_help: A megkulonboztetett szektor azonositoja (LIVA 9.1.c /
+        101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy 'app ledger
+        prorrata declare-sector' paranccsal megadott szektorral.
       purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
       recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
         értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
         IVA-kulcs szerint összesítve
+      sector_unmatched: A(z) --sector '{sector_id}' egyetlen deklaralt megkulonboztetett
+        szektorral sem egyezik (LIVA 9.1.c / 101. cikk), ezert ez a bemenet a kozos
+        hasznalatu szazalekkal vonhato le, nem a szektor sajatjaval. Futtasd az 'app
+        ledger prorrata declare-sector --sector-id {sector_id} ...' parancsot az enrutalasahoz,
+        vagy javitsd a cimket.
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
@@ -5813,6 +5843,8 @@ locales:
     set:
       updated: updated %{locale_file}:%{key}
 mcp:
+  call:
+    timeout: mcp.call.timeout
   elicitation:
     confirm:
       consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet

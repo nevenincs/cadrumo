@@ -246,6 +246,50 @@ def _prorrata_especial_inert_notice(
     )
 
 
+def _prorrata_sector_unmatched_notice(
+    *,
+    bucket_id: str,
+    sector_id: str | None,
+) -> Notice | None:
+    """Warn when --sector names a sector absent from the declared partition.
+
+    Sectores diferenciados (LIVA arts. 9.1.c / 101) are operator-declared: the
+    per-sector apportionment routing keys on ``sector_id`` and applies the
+    sector's own percentage only when the tag matches a declared
+    :class:`SectorDefinition`. An unmatched tag — a typo, or a sector not yet
+    declared — is not rejected (declare-order is intentionally free, so a
+    not-yet-declared sector is legitimate), but it falls through to the
+    common-use / whole-entity apportionment at aggregation. Surface a
+    non-blocking advisory naming the sector and the ``declare-sector`` route,
+    so the operator is not silently deducting at the common percentage under a
+    mistyped tag (no-silent-under-declaration), rather than accepting the tag
+    without any signal.
+    """
+    if sector_id is None:
+        return None
+    from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ...application.prorrata_register import ProrrataRegisterService
+
+    service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
+    if service.list_all().sector_definition_for(sector_id) is not None:
+        return None
+    message = tr(
+        "cli.ledger.add.sector_unmatched",
+        sector_id=sector_id,
+        default=(
+            f"--sector '{sector_id}' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), "
+            f"so this input deducts under the common-use percentage rather than the sector's own. Run "
+            f"'app ledger prorrata declare-sector --sector-id {sector_id} ...' to route it, or correct the tag."
+        ),
+    )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="ledger.add.sector_unmatched",
+        message=message,
+        context={"sector_id": sector_id},
+    )
+
+
 @app.command("add", help=tr("cli.ledger.add.help"))
 def ledger_add(
     ctx: typer.Context,
@@ -464,6 +508,13 @@ def ledger_add(
     if especial_notice is not None:
         notices.append(especial_notice)
         noop_lines.append(especial_notice.message)
+    sector_notice = _prorrata_sector_unmatched_notice(
+        bucket_id=result.ref.bucket_id,
+        sector_id=command.prorrata_sector_id,
+    )
+    if sector_notice is not None:
+        notices.append(sector_notice)
+        noop_lines.append(sector_notice.message)
     _emit_envelope(
         ctx,
         command="ledger.add",
