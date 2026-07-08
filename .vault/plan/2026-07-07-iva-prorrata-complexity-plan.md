@@ -24,6 +24,8 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
+<!-- RETIRED: W05 -->
+
 # `iva-prorrata-complexity` plan
 
 ## Wave `W01` - Independent axes (art-104.Tres exclusions parallel-with art-105.Cinco interrupted)
@@ -78,6 +80,21 @@ Operator-declared sector identification (CNAE/IAE) driving per-(ejercicio,sector
 - [x] `W03.P04.S18` - Orchestrate per-(ejercicio,sector) register entries and per-sector routing in the regime-aware aggregation; `src/aeat/domain/prorrata_register/__init__.py, src/aeat/application/aggregation/_iva_ledger.py`.
 - [x] `W03.P04.S19` - Run the per-sector provisional/definitive lifecycle (seed and settlement per sector); `src/aeat/application/prorrata_register/, src/aeat/application/calculations/_prorrata_regularizacion.py`.
 - [x] `W03.P04.S20` - Verify per-sector prorrata against a worked example with a greater-than-50-percentage-point sector spread; `src/aeat/domain/prorrata_register/tests/`.
+
+## Wave `W04` - Operator ingress: reach the especial + sectores engines
+
+The W02 especial and W03 sectores apportionment engines are built, grounded and green but operator-unreachable: no production code writes an ESPECIAL ProrrataRegisterEntry or a SectorDefinition, the register has no CLI, and the S14 --input-classification flag is silently inert without an especial register entry. W04 builds the missing operator ingress (especial-regime election CLI, sector-definition partition CLI, per-row --sector tag) so the elected regime/sector actually fires from a real operator flow, proven by an anti-dormant end-to-end test, with the non-electing path byte-identical. Folds the MEDIUM oracle-claim reconciliation and the LOW interrupted-roundtrip fixture from the campaign-close honesty review. This is the campaign's genuine close.
+
+### Phase `W04.P05` - Especial + sectores operator ingress and campaign-close reconciliation
+
+Build the operator surface that writes an ESPECIAL ProrrataRegisterEntry and a SectorDefinition through the existing ProrrataRegisterService, thread the per-row prorrata_sector_id tag through ledger add, close the S14 inert-flag no-silent concern, and prove the especial/sector apportionment fires from the operator flow (non-electing path byte-identical). Fold the MEDIUM oracle-claim reconciliation and LOW interrupted-roundtrip fixture.
+
+- [x] `W04.P05.S22` - Add the prorrata register CLI verb group (elect-especial, elect-general, list) writing GENERAL/ESPECIAL ProrrataRegisterEntry rows through ProrrataRegisterService.declare, and preserve sector_definitions across entry upsert and settlement write; `src/aeat/entrypoints/cli/_prorrata_register_cli.py, src/aeat/entrypoints/cli/_prorrata_register_payloads.py, src/aeat/adapters/persistence/profile/prorrata_register.py, src/aeat/application/modelo/_revision_persistence.py`.
+- [ ] `W04.P05.S23` - Add the declare-sector CLI verb writing a SectorDefinition partition (sector id, art-9.1.c letra, member activity codes) through a new ProrrataRegisterService.declare_sector over an entries-preserving repository upsert; `src/aeat/entrypoints/cli/_prorrata_register_cli.py, src/aeat/application/prorrata_register/__init__.py, src/aeat/adapters/persistence/profile/prorrata_register.py`.
+- [ ] `W04.P05.S24` - Thread operator-declared prorrata_sector_id through ManualLedgerTransactionCommand, the manual add action and the idempotency signature, add the --sector flag on ledger add, and surface a non-blocking Notice when --input-classification is set but the bucket has no especial register entry for the row ejercicio; `src/aeat/application/ledger/_models.py, src/aeat/application/ledger/_actions_manual.py, src/aeat/application/ledger/_actions_common.py, src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W04.P05.S25` - Prove especial and sector apportionment fire from the operator flow: an anti-dormant end-to-end test that elects especial and declares sectors and tags inputs through the service the CLI calls then runs the live aggregation and asserts the especial and sector apportionment change the deducible cuota, with the non-electing path byte-identical; `src/aeat/application/aggregation/tests/test_prorrata_operator_ingress_end_to_end.py`.
+- [ ] `W04.P05.S26` - Reconcile the MEDIUM oracle-claim: amend the plan Verification bullet and the S15 and S20 exec notes to state especial and sectores are proven by law-derived-scenario-through-the-production-path with no bundled AEAT especial or two-sector oracle; `.vault/plan/2026-07-07-iva-prorrata-complexity-plan.md, .vault/exec/2026-07-07-iva-prorrata-complexity/`.
+- [ ] `W04.P05.S27` - Add an is_interrupted=True entry to the encrypted-SQL prorrata register roundtrip fixture so the interrupted marker crosses the encrypted boundary under test; `src/aeat/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`.
 
 ## Description
 

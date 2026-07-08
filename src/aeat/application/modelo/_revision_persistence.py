@@ -382,7 +382,12 @@ def _build_prorrata_settlement_write(
         for existing in register.entries
         if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
     )
-    return prorrata_register_repository.to_secure_object_write(ProrrataRegister(entries=(*retained, entry)))
+    return prorrata_register_repository.to_secure_object_write(
+        ProrrataRegister(
+            entries=(*retained, entry),
+            sector_definitions=register.sector_definitions,
+        )
+    )
 
 
 def _prorrata_settlement_values(
