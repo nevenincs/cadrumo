@@ -11,39 +11,49 @@ related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `mcp-hardening-conformance` plan
 
 ### Phase `P01` - Declared per-command risk table
 
 Close the mcp-protocol-hardening H3 conformance gap and the one safety-grade finding: replace the hand-listed leaf-name frozensets with a declared per-command risk table keyed by full command key, gated no-silent-default, so a new mutating verb can no longer auto-approve or escape handoff denial (audit finding risk-classification-hand-listed). Ships FIRST.
 
-- [ ] `P01.S01` - Add the CommandRiskDeclaration model and the per-command risk table (destructive, idempotent, handoff, live_write) keyed by full command key, scaffolded from the current frozensets for every command in a mutating family, with a documented human-review pass in the exec record sweeping the known misses (sandbox discard/prune, repair quarantine, config reset, ledger stash, quickfile, modelo.work.file); `src/aeat/application/operator_surface/_risk_table.py`.
-- [ ] `P01.S02` - Rewire classify_command onto the declared table and delete the destructive, idempotent and handoff leaf frozensets as production inference in the same atomic commit, keeping read_only and idempotent derived from manifest mutability and open_world derived from the app.live and pull facts; `src/aeat/application/operator_surface/_classification.py`.
-- [ ] `P01.S03` - Move the _hitl re-exports and the persona handoff-deny set onto the declared handoff axis so the confirmation gate and the handoff denial read the table, not the leaf strings; `src/aeat/entrypoints/mcp/_persona_scope.py`.
-- [ ] `P01.S04` - Add the no-silent-default parity gate: every command in a mutating family carries exactly one risk row, every row references a live command key, and an unclassified mutating verb fails loudly; `src/aeat/application/operator_surface/tests/test_risk_table_parity.py`.
-- [ ] `P01.S05` - Add the live-write leaf tripwire test (any exposed command whose leaf is submit/present/send must declare live_write true) and the bidirectional write-policy-vs-mutability parity gate against PROFILE_BOUND_WRITE_VERB_PATHS; `src/aeat/application/operator_surface/tests/test_write_policy_mutability_parity.py`.
-- [ ] `P01.S06` - Update the annotation and classification tests for the table-backed classification and confirm the existing coherence + annotation-coverage gates stay green; `src/aeat/entrypoints/mcp/tests/test_annotations.py`.
+- [x] `P01.S01` - Add the CommandRiskDeclaration model and the per-command risk table (destructive, idempotent, handoff, live_write) keyed by full command key, scaffolded from the current frozensets for every command in a mutating family, with a documented human-review pass in the exec record sweeping the known misses (sandbox discard/prune, repair quarantine, config reset, ledger stash, quickfile, modelo.work.file); `src/aeat/application/operator_surface/_risk_table.py`.
+- [x] `P01.S02` - Rewire classify_command onto the declared table and delete the destructive, idempotent and handoff leaf frozensets as production inference in the same atomic commit, keeping read_only and idempotent derived from manifest mutability and open_world derived from the app.live and pull facts; `src/aeat/application/operator_surface/_classification.py`.
+- [x] `P01.S03` - Move the _hitl re-exports and the persona handoff-deny set onto the declared handoff axis so the confirmation gate and the handoff denial read the table, not the leaf strings; `src/aeat/entrypoints/mcp/_persona_scope.py`.
+- [x] `P01.S04` - Add the no-silent-default parity gate: every command in a mutating family carries exactly one risk row, every row references a live command key, and an unclassified mutating verb fails loudly; `src/aeat/application/operator_surface/tests/test_risk_table_parity.py`.
+- [x] `P01.S05` - Add the live-write leaf tripwire test (any exposed command whose leaf is submit/present/send must declare live_write true) and the bidirectional write-policy-vs-mutability parity gate against PROFILE_BOUND_WRITE_VERB_PATHS; `src/aeat/application/operator_surface/tests/test_write_policy_mutability_parity.py`.
+- [x] `P01.S06` - Update the annotation and classification tests for the table-backed classification and confirm the existing coherence + annotation-coverage gates stay green; `src/aeat/entrypoints/mcp/tests/test_annotations.py`.
 
 ### Phase `P02` - Discovery quality
 
 Close the mcp-progressive-discovery P2 conformance gap: semantic-back the command index so search stops mis-ranking homonyms, add a describe-by-key meta-tool, and add a search overflow signal (audit findings command-search-lexical-only-mis-ranks, discovery-schema-and-overflow-gaps).
 
-- [ ] `P02.S07` - Add the semantic side to the command index: precompute model2vec embeddings over the command docs at build/first-use, fuse lexical + semantic with RRF, preserve the lexical-only degraded mode, and add per-column BM25 weighting (command key and tool name over description over help); `src/aeat/application/command_search/_index.py`.
-- [ ] `P02.S08` - Add alias vocabulary to the composite quickfile command document so outcome-phrased queries surface it, and re-back search ranking on the hybrid retriever; `src/aeat/entrypoints/mcp/_meta_tools.py`.
-- [ ] `P02.S09` - Add a pinned retrieval golden set built from the review failing queries (import a bank statement ranks ledger.import first, and file my quarterly VAT surfaces quickfile in the top hits) and assert the ranking; `src/aeat/application/command_search/tests/test_command_ranking_golden.py`.
-- [ ] `P02.S10` - Add the describe meta-tool returning one command's full descriptor by key (description, input schema, annotations, confirmation tier, risk classification, owning toolset, persona reachability); `src/aeat/entrypoints/mcp/_meta_tools.py`.
-- [ ] `P02.S11` - Add the search overflow signal (total_matches, truncated, and a hint naming describe and toolset activation) to the search meta-tool result; `src/aeat/entrypoints/mcp/_meta_tools.py`.
-- [ ] `P02.S12` - Wire the describe meta-tool into the server, advertise it in the core surface alongside search/execute/toolsets, and add its tests; `src/aeat/entrypoints/mcp/tests/test_meta_tools.py`.
+- [x] `P02.S07` - Add the semantic side to the command index: precompute model2vec embeddings over the command docs at build/first-use, fuse lexical + semantic with RRF, preserve the lexical-only degraded mode, and add per-column BM25 weighting (command key and tool name over description over help); `src/aeat/application/command_search/_index.py`.
+- [x] `P02.S08` - Add alias vocabulary to the composite quickfile command document so outcome-phrased queries surface it, and re-back search ranking on the hybrid retriever; `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `P02.S09` - Add a pinned retrieval golden set built from the review failing queries (import a bank statement ranks ledger.import first, and file my quarterly VAT surfaces quickfile in the top hits) and assert the ranking; `src/aeat/application/command_search/tests/test_command_ranking_golden.py`.
+- [x] `P02.S10` - Add the describe meta-tool returning one command's full descriptor by key (description, input schema, annotations, confirmation tier, risk classification, owning toolset, persona reachability); `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `P02.S11` - Add the search overflow signal (total_matches, truncated, and a hint naming describe and toolset activation) to the search meta-tool result; `src/aeat/entrypoints/mcp/_meta_tools.py`.
+- [x] `P02.S12` - Wire the describe meta-tool into the server, advertise it in the core surface alongside search/execute/toolsets, and add its tests; `src/aeat/entrypoints/mcp/tests/test_meta_tools.py`.
 
 ### Phase `P03` - Discoverability prose and schema fidelity
 
 Teach the long-tail discovery path and document the toolset feature so a cold agent finds it, and close the schema-fidelity tails (prose-only enums, one-of identifiers) (audit findings toolsets-undiscoverable, discovery-schema-and-overflow-gaps).
 
-- [ ] `P03.S13` - Add a long-tail discovery section to the harness floor content teaching the search then describe then execute then toolsets path and the shell-verb-to-command-key translation, authored in the single harness source; `src/aeat/_data/agent/rules/operator-orientation-routing.md`.
-- [ ] `P03.S14` - Cross-reference the toolsets tool from the search and execute tool descriptions and give the toolsets tool description a when-to-activate explanation; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P03.S15` - Add the toolset non-empty-against-live-keys gate so a renamed carve-out token fails loudly rather than silently emptying a group; `src/aeat/entrypoints/mcp/tests/test_toolset_activation.py`.
-- [ ] `P03.S16` - Render the ledger.import provider field as a JSON enum and express one-of identifier combinations via anyOf where the CLI declares alternatives, or a declared description convention where JSON Schema cannot express it; `src/aeat/entrypoints/mcp/_input_schema.py`.
-- [ ] `P03.S17` - Add the schema-fidelity tests (provider enum present, one-of identifier handling) and confirm the rule-surface drift gate and documented-command conformance stay green; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
+- [x] `P03.S13` - Add a long-tail discovery section to the harness floor content teaching the search then describe then execute then toolsets path and the shell-verb-to-command-key translation, authored in the single harness source; `src/aeat/_data/agent/rules/operator-orientation-routing.md`.
+- [x] `P03.S14` - Cross-reference the toolsets tool from the search and execute tool descriptions and give the toolsets tool description a when-to-activate explanation; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P03.S15` - Add the toolset non-empty-against-live-keys gate so a renamed carve-out token fails loudly rather than silently emptying a group; `src/aeat/entrypoints/mcp/tests/test_toolset_activation.py`.
+- [x] `P03.S16` - Render the ledger.import provider field as a JSON enum and express one-of identifier combinations via anyOf where the CLI declares alternatives, or a declared description convention where JSON Schema cannot express it; `src/aeat/entrypoints/mcp/_input_schema.py`.
+- [x] `P03.S17` - Add the schema-fidelity tests (provider enum present, one-of identifier handling) and confirm the rule-surface drift gate and documented-command conformance stay green; `src/aeat/entrypoints/mcp/tests/test_tools_and_dispatch.py`.
 
 ## Description
 
