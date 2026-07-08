@@ -63,6 +63,7 @@ Wire a typed per-input use-classification from the ledger into a regime-aware ap
 - [x] `W02.P03.S13` - Emit the settlement art-103.Dos.2 +10% mandatory-especial advisory Notice via is_especial_mandatory, non-blocking, both totals on Notice.context; `src/aeat/application/calculations/_prorrata_regularizacion.py`.
 - [x] `W02.P03.S14` - Surface the per-input classification declaration at the CLI and the M303 especial classification metadata; `src/aeat/entrypoints/cli/, src/aeat/_data/registry/aeat/modelos/303/`.
 - [x] `W02.P03.S15` - Verify all three art-106 reglas (100/0/common) and the +10% comparison against an AEAT Manual practico worked example with no substrate-derived expected values; `src/aeat/application/aggregation/tests/`.
+- [ ] `W02.P03.S21` - Emit the art-103.Dos.2 +10% mandatory-especial advisory on the live M303 settlement diagnostics so the mandatory-especial breach surfaces to the operator (requires settlement-time dual-regime annual deducible-total computation); `src/aeat/application/modelo/_prorrata_regularizacion_advisory.py`.
 
 ## Wave `W03` - Sectores diferenciados: per-sector extension
 

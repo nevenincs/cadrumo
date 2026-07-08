@@ -23,6 +23,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S15]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
+  - '[[2026-07-08-iva-prorrata-complexity-audit]]'
 ---
 
 # `iva-prorrata-complexity` feature index
@@ -34,6 +35,10 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 ### adr
 
 - `2026-07-07-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-08-iva-prorrata-complexity-audit` - `iva-prorrata-complexity` audit: `prorrata-especial +10% advisory dormant: live-emit plumbing gap`
 
 ### exec
 
