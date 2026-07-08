@@ -51,3 +51,70 @@ Art. 103.Dos.2 targets a filer computing under GENERAL prorrata, checking whethe
 - Track W02.P03.S21 (added, UNCHECKED) as the explicit follow-up. Do NOT force a hollow emit.
 - Scope S21 to: (a) a settlement-time helper that computes both regime annual deducible totals (dual re-aggregation), non-blocking `Notice`/`CalculationSourceDiagnostic` with both totals in context, and an anti-dormant live-path test that fires on a real breach and stays silent otherwise; PLUS (b) an ADR-level decision on serving the general-filer audience (no classifications -> no especial total). If (b) is unresolved, S21 can land only the confirmatory-especial slice and must document the general-filer case as still deferred.
 - The S13 builder + its four unit tests are correct and land as-is; only the live wiring is deferred.
+
+## Campaign-close honesty review (2026-07-08, fresh-context independent)
+
+Triggered per the campaign-close honesty-review discipline before declaring the
+20-step campaign structurally complete. The compute, persistence, aggregation, and
+grounding layers are genuinely built, corpus-grounded, byte-identical-guarded, and
+tested (real work, not a shell). But the two headline axes have no operator ingress.
+Clean lenses: fabrication (verbatim corpus grounding, subvenciones-as-non-exclusion,
+all `reviewed_by` honestly "operator to re-stamp"), transaction-field roundtrip,
+byte-identical preservation, non-tautological verification, cross-step consistency
+(sector routing composes with especial; art-104.Tres exclusions act on the annual
+volume rollup as a pre-fill proposal, never a filed authority; one aggregation path
+preserved). Findings:
+
+### especial-and-sectores-axes-operator-unreachable | high | dormant, was undocumented
+
+The especial (W02) and sectores (W03) apportionment routings fire ONLY from tests.
+The sole production register writer is the settlement auto-seed in
+`application/modelo/_revision_persistence.py` (`regime = GENERAL if volumen_sin_derecho
+> 0 else NINGUNA` — hardcoded, never ESPECIAL, never a sector). An exhaustive non-test
+grep of `src/aeat` confirms: no production code assigns `regime = ESPECIAL`, constructs
+`SectorDefinition(`, or sets a non-None `sector_id`/`prorrata_sector_id`; no CLI or MCP
+entrypoint reaches `ProrrataRegisterService` / `ProrrataRegisterRepository.save` at all.
+Consequence on the live path (`_active_prorrata_apportionment`, `_iva_ledger.py`):
+`register.is_sectorized` is always False so `_apply_sector_apportionment` is never
+reached, and no register entry can be ESPECIAL so `_apply_especial_apportionment` is
+never reached. The `--input-classification` flag (S14) is accepted but silently inert
+without an especial register entry — a mild no-silent concern (false signal that
+art-106 routing applies). The central ADR promises ("mixed trader deducts each input at
+its lawful rate"; "each sector at its own %") are operator-unreachable. Remediation:
+build the missing operator ingress — (a) an especial-regime election / register-entry
+declaration CLI (the prorrata register has NO CLI at all, partly shared with the parent
+cross-period-prorrata register), (b) a `SectorDefinition` partition declaration CLI,
+(c) a per-row `--sector` tag — each proven by an anti-dormant end-to-end test that the
+especial / sector apportionment now fires from the operator flow.
+
+### aeat-oracle-claim-met-by-law-derived-scenario | medium | S15 + S20
+
+Plan Verification and both axis-ADRs mandate an AEAT Manual práctico oracle. Reality:
+`test_prorrata_especial_art106_oracle.py` (S15) and `test_sectores_diferenciados_verification.py`
+(S20) both state in their docstrings that no bundled AEAT especial/two-sector oracle
+ships and use hand-constructed law-derived registers through the production path with a
+load-bearing anti-tautology assertion (honest, NOT fabrication — values derive from the
+LIVA reglas, not the substrate under test). But S15/S20 are marked [x] as if the
+AEAT-oracle criterion was met; the softening lives only in test docstrings.
+(S05/art-104.Tres uses the real bundled 56% AEAT oracle; S09/art-105.Cinco's ADR
+pre-authorized the hand-constructed alternative — both clean.) Remediation: bundle real
+especial + two-sector AEAT oracles, OR amend the plan Verification bullet + the S15/S20
+exec notes to state the claim as proven by law-derived-scenario-through-production-path,
+so the plan's claim matches what shipped.
+
+### interrupted-marker-encrypted-roundtrip-untested | low
+
+`test_prorrata_register_roundtrip.py::_populated_register` populates carried-settled +
+ESPECIAL sector entry + SectorDefinition non-default with corrupt + missing-field proofs
+(good), but no `is_interrupted=True` entry — the interrupted marker crosses the encrypted
+boundary untested here (covered only at the domain-JSON level). Per aeat-roundtrip-discipline,
+add an interrupted entry to the encrypted fixture.
+
+## Disposition (coordinator)
+
+The 20-step compute/persistence/apportionment core is delivered and green (307 prorrata
+tests pass -n0). The campaign is NOT declared structurally complete: the HIGH
+operator-ingress gap is being CLOSED (a new W04 phase — especial election CLI, sector
+declaration CLI, per-row `--sector` tag, with anti-dormant end-to-end proofs), the
+MEDIUM oracle-claim reconciliation and the LOW interrupted-roundtrip fixture are folded
+into that work, and the S21 +10% live-emit remains the separate ADR-gated follow-up.
