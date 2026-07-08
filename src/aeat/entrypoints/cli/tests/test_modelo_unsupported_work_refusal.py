@@ -142,9 +142,9 @@ def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> N
     """Manual-casilla registry entries for unsupported work-create modelos cite their legal corpus."""
 
     expected = {
-        "151": ("ley-35-2006:art-93", "boe-modelo-151-form"),
-        "714": ("ley-19-1991:art-28", "boe-modelo-714-form"),
-        "721": ("ley-11-2021:da-10", "boe-modelo-721-2023-form"),
+        "151": ("ley-35-2006:art-93", "boe-modelo-151-layout"),
+        "714": ("ley-19-1991:art-28", "boe-modelo-714-layout"),
+        "721": ("ley-11-2021:da-10", "boe-modelo-721-2023-layout"),
     }
     modelos = resources().modelos.all()
     catalogues = resources().modelos.authority.catalogues
