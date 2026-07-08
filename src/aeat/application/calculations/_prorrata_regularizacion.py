@@ -78,6 +78,7 @@ from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
+    ProrrataRegisterRepositoryProtocol,
     ThreeActiveYearsAggregate,
 )
 from ..aggregation import (
@@ -830,7 +831,7 @@ class ProrrataRegularizacionSourceResolver:
         current_year_values: Mapping[CasillaId, Decimal] | None = None,
         missing_current_year_casilla_ids: Iterable[CasillaId] = (),
         unresolved_current_year_casilla_ids: Iterable[CasillaId] = (),
-        prorrata_register_repository: ProrrataRegisterRepository | None = None,
+        prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
         observation_repository: CalculationObservationRepository | None = None,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
