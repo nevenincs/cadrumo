@@ -271,6 +271,27 @@ def test_ledger_import_provider_renders_as_a_json_enum() -> None:
     assert provider_property["enum"], "the recognised provider set must be non-empty"
 
 
+def test_config_reset_scope_renders_as_a_json_enum() -> None:
+    """The ``config.reset`` scope is a closed set, so its schema is an enum.
+
+    ``--scope`` cannot be typed as its ``ConfigResetScope`` enum directly because
+    the enum values are upper-case (``ALL``) while the CLI tokens are lower-case
+    (``all``); it therefore uses ``click_type=click.Choice(<lowercase tokens>)``.
+    Typer wraps that Choice in a ``FuncParamType`` whose own ``.choices`` is
+    ``None`` but whose ``.func`` carries the original Choice, so the input-schema
+    builder unwraps ``.func`` and surfaces the closed set as a JSON ``enum`` rather
+    than a bare string (``aeat-architecture-boundaries``: a closed value set must
+    surface its accepted values). Generic — no per-command special case.
+    """
+    from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES
+
+    by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    scope_property = by_key["config.reset"].input_schema["properties"]["scope"]
+    assert scope_property["type"] == "string"
+    assert scope_property["enum"] == list(CONFIG_RESET_SCOPE_CLI_VALUES)
+    assert scope_property["enum"], "the recognised reset-scope set must be non-empty"
+
+
 def test_modelo_work_addressing_exposes_both_identifier_forms_as_optional() -> None:
     """One-of identifier alternation is enforced in the body, not the schema.
 
