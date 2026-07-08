@@ -23,8 +23,9 @@ See Also:
         CLI Google OAuth payload boundary validated from Cloud Console JSON.
     :class:`~application.invoices.InvoiceRowPayload`
         Invoice import row boundary carried through JSON decoding and parsing.
-    ``2026-05-28-codebase-solidification-plan``
-        W09.P39 plan rows that grouped these locale and typed-boundary closures.
+
+These locale and typed-boundary contracts group the wizard's dynamic-key
+materialization with the Google and invoice payload boundaries it shares.
 """
 
 from __future__ import annotations

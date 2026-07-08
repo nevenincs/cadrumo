@@ -15,11 +15,10 @@ See Also:
         memoisation, and typed stderr emission.
     :class:`~core.errors.AeatError`
         Central typed error base forwarded through the command boundary.
-    ``2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr``
-        Decision requiring every CLI callback to pass through the central
-        error boundary and registry-backed renderer.
-    ``2026-05-08-cli-backend-boundary-adr``
-        Root boundary contract that keeps CLI error handling centralized.
+
+Every CLI callback must pass through the central error boundary and its
+registry-backed renderer; the CLI backend boundary keeps error handling
+centralized, never duplicated per command.
 """
 
 from __future__ import annotations

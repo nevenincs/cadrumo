@@ -26,8 +26,9 @@ See Also:
         On-host evidence reader reused by the confirm path.
     :func:`~application.invoices.create_catalogue_invoice`
         Sole sanctioned catalogue writer reached by confirmed drafts.
-    ``2026-06-10-llm-evidence-classification-adr``
-        Local-first, secure-storage-only evidence reading posture.
+
+Evidence reading stays local-first and secure-storage-only: nothing decrypted
+here is ever written outside the encrypted bucket substrate.
 """
 
 from __future__ import annotations

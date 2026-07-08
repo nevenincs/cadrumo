@@ -22,8 +22,9 @@ See Also:
         Reviewable, non-persisted payload asserted by the command output.
     :func:`~application.ledger.confirm_invoice_draft_from_evidence`
         Follow-on review step that turns a draft into a catalogue invoice.
-    ``2026-06-10-llm-evidence-classification-adr``
-        Local-first, secure-storage-only evidence reading posture.
+
+Evidence reading stays local-first and secure-storage-only: nothing decrypted
+here is ever written outside the encrypted bucket substrate.
 """
 
 from __future__ import annotations

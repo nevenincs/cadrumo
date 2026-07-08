@@ -23,10 +23,9 @@ See Also:
         IVA projection path checked for gating and category/flow fidelity.
     :func:`~application.aggregation.aggregate_renta_income_ledger`
         M130 income projection path checked for trabajo/capital exclusions.
-    Governing vault records
-        ``2026-06-02-ledger-operator-hardening-adr`` defines the raw-corpus +
-        typed-oracle contract; ``2026-06-02-ledger-fx-conversion-adr`` grounds
-        the ECB conversion seam used for foreign-currency rows.
+
+The ledger commits to a raw-corpus-plus-typed-oracle contract, and the ECB
+conversion seam grounds every foreign-currency row's normalisation.
 """
 
 from __future__ import annotations

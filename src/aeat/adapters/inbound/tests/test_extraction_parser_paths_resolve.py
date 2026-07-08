@@ -25,9 +25,6 @@ See Also:
         Borrador parser facade allowed as a sanctioned parser authority.
     :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`
         Domain-layer regression proving only dotted-callable shape is checked.
-    ``2026-07-02-arch-remediation-ports-inversion-adr``
-        Decision record that moved importability and callability checks to this
-        adapter-legal gate.
 """
 
 from __future__ import annotations

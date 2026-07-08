@@ -18,11 +18,6 @@ See Also:
     :mod:`~adapters.outbound.google._session_store`
         Secure per-profile OAuth session persistence enrolled as a deliberate
         package module.
-    ``2026-05-14-google-oauth-w01-p01-closeout-exec``
-        Closeout record that established the package file allow-list and
-        filesystem-introspection gate.
-    ``2026-05-08-google-oauth-adr``
-        Decision record for the v1 Google OAuth adapter surface.
 """
 
 from __future__ import annotations
