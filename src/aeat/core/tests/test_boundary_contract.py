@@ -37,12 +37,6 @@ See Also:
     :mod:`~core.resources`
         Core resource boundary whose deferred outer-layer access pattern is
         intentionally excluded from import-time coupling.
-    ``.vault/adr/2026-06-01-domain-boundary-audit-adr.md``
-        Codifies the hexagonal ownership and layering contract that this core
-        guard enforces.
-    ``.vault/adr/2026-05-15-corpus-registry-packaging-adr.md``
-        Establishes the importlib.resources boundary for packaged corpus and
-        registry data.
 """
 
 from __future__ import annotations

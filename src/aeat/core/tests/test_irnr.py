@@ -18,10 +18,6 @@ See Also:
         Cross-cutting treaty authority that consumes these enum members.
     :func:`~domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
         IRNR rate-resolution path that hydrates and branches on the same axes.
-    Governing vault records
-        ``2026-05-27-m210-irnr-full-engine-adr`` and
-        ``2026-06-30-convenio-doble-imposicion-adr`` ground the typed treaty
-        override framework and the Modelo 210 IRNR rate surface.
 """
 
 from __future__ import annotations

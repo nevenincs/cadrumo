@@ -25,9 +25,6 @@ See Also:
     :func:`~application.auth.set_operator_certificate_source_secret`
         Operator-facing mutation verb whose redaction and rotation behavior is
         covered by the integration cases.
-    ``2026-05-22-secure-storage-production-hardening-architecture-adr``
-        Storage contract requiring secret persistence to remain bucket-scoped,
-        encrypted, and redacted.
 """
 
 from __future__ import annotations

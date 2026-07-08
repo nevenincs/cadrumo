@@ -13,10 +13,6 @@ See Also:
         Value type quantized to the two-decimal euro-cent exponent.
     :data:`~decimal.ROUND_HALF_UP`
         Rounding mode required at filed-money boundaries.
-    Governing vault records
-        ``2026-05-28-codebase-solidification-adr`` and
-        ``2026-05-30-codebase-solidification-W03-P18-S358`` record the recurring
-        hardening and decimal/money canonical-enrollment decisions.
 """
 
 from __future__ import annotations

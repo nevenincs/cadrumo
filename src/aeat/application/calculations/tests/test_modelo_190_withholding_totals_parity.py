@@ -40,10 +40,6 @@ See Also:
     :func:`~domain.calculations.registry.resolve_withholding_binding_values`
         Registry binding resolver that materialises withholding detail facts and
         the distinct-percepción count.
-    ``2026-06-25-modelo-190-percepciones-count-adr`` and
-    ``2026-06-30-retenciones-perceptor-count-audit``
-        Decision and audit records that keep M190 on the withholding/percepción
-        source instead of the RET-1 distinct-NIF source.
 """
 
 from __future__ import annotations

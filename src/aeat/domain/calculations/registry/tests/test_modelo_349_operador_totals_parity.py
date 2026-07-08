@@ -43,10 +43,6 @@ See Also:
     :mod:`~domain.calculations.registry._invoice_bindings`
         Invoice-binding implementation that owns the Modelo 349 row and scalar
         aggregation paths.
-    ``2026-05-30-declaracion-extraction-architecture-W11-P59-S218`` and
-    ``2026-05-26-declaracion-extraction-architecture-W07-P28-S170``
-        Modelo 349 registry and extraction-grounding records for the summary
-        casillas and Tipo-2 row semantics.
 """
 
 from __future__ import annotations

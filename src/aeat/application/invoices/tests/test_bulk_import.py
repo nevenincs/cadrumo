@@ -15,9 +15,6 @@ See Also:
         CSV/XLSX reader whose extension and column validation are covered here.
     :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_import`
         CLI wrapper that feeds operator files into this application service.
-    ``2026-04-17-invoice-catalogue-adr``
-        Accepted catalogue identity and validation contract that bulk import
-        preserves by using the single-invoice writer.
 """
 
 from __future__ import annotations

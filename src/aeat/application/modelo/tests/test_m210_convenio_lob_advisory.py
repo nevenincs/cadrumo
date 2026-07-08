@@ -22,9 +22,6 @@ See Also:
         Rate resolver that owns the blocking missing-row branch.
     :class:`~domain.calculations.registry.ConvenioAuthority`
         Cross-cutting treaty authority consumed by the advisory and resolver.
-    ``2026-06-30-convenio-doble-imposicion-adr`` and
-    ``2026-05-27-m210-irnr-full-engine-adr``
-        Accepted treaty-authority and M210 rate-resolution contracts.
 """
 
 from __future__ import annotations

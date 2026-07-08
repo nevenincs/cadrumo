@@ -23,10 +23,6 @@ See Also:
         core, not from application wizard modules.
     :func:`~core.wizard_catalogue.get_setup_flow`
         Flow descriptor that binds setup answers to the canonical core class.
-    Governing vault records
-        ``2026-06-01-domain-boundary-audit-adr`` D5 and
-        ``2026-05-28-codebase-solidification-plan`` W03.P14.S321-S324 record
-        the setup-answer relocation and import-purity regression surface.
 """
 
 from __future__ import annotations

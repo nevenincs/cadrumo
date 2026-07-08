@@ -33,10 +33,6 @@ See Also:
         Modelo 151 binding values.
     :class:`~domain.transactions.Transaction`
         Ledger record carrying the per-row ``source_jurisdiction`` axis.
-    Governing vault records
-        ``2026-07-01-modelo-151-beckham-source-scope-adr`` and
-        ``2026-07-01-modelo-151-beckham-source-scope-plan`` authorize the
-        Spanish-source aggregation path this suite protects.
 """
 
 from __future__ import annotations

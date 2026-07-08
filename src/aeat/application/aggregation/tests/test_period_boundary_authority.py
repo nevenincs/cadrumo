@@ -25,10 +25,6 @@ See Also:
         :class:`~core.Period` boundary.
     :class:`~core.StandardPeriodCode`
         Canonical AEAT token vocabulary filtered here to span-bearing tokens.
-    Governing vault records
-        ``2026-06-10-ledger-filter-period-adr`` and
-        ``2026-06-10-ledger-filter-period-research`` ratify the single
-        ``Period.contains`` boundary and deletion of legacy calendar notation.
 """
 
 from __future__ import annotations
