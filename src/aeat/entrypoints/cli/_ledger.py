@@ -34,7 +34,7 @@ from ...application.ledger import (
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
 )
-from ...core import Art104TresExclusion, resolve_active_bucket_id
+from ...core import Art104TresExclusion, ProrrataRegisterRegime, resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -53,7 +53,6 @@ from ...domain.transactions import (
     is_classified,
 )
 from ._bienes_inversion_cli import register_bienes_inversion_commands
-from ._prorrata_register_cli import register_prorrata_register_commands
 from ._common import (
     _bad,
     _emit_envelope,
@@ -106,6 +105,7 @@ from ._ledger_support import (
     _validate_business_pct_range,
     _validate_category_id,
 )
+from ._prorrata_register_cli import register_prorrata_register_commands
 from ._schemas import OutputSchema
 
 _log = get_logger(__name__)
@@ -200,6 +200,52 @@ def _emit_update_result(
     )
 
 
+def _prorrata_especial_inert_notice(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    input_classification: InputClassification | None,
+    sector_id: str | None,
+) -> Notice | None:
+    """Warn when --input-classification is set but no especial election applies.
+
+    LIVA art. 106 per-input routing fires only when the ``(ejercicio, sector)``
+    prorrata register entry regime is especial. Absent that election the
+    classification is inert: the input deducts under the general / whole-entity
+    percentage. Surface a non-blocking advisory so the operator is not falsely
+    signalled that art. 106 routing applies, rather than silently ignoring the
+    flag (no-silent-under-declaration).
+    """
+    if input_classification is None:
+        return None
+    from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ...application.prorrata_register import ProrrataRegisterService
+
+    service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
+    entry = service.get(ejercicio, sector_id=sector_id)
+    if entry is not None and entry.regime is ProrrataRegisterRegime.ESPECIAL:
+        return None
+    message = tr(
+        "cli.ledger.add.input_classification_inert",
+        ejercicio=ejercicio,
+        default=(
+            f"--input-classification is inert for ejercicio {ejercicio}: no prorrata especial "
+            f"election applies, so the input deducts under the general percentage. Run "
+            f"'app ledger prorrata elect-especial --ejercicio {ejercicio}' to route it by LIVA art. 106."
+        ),
+    )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="ledger.add.input_classification_inert",
+        message=message,
+        context={
+            "ejercicio": str(ejercicio),
+            "input_classification": input_classification.value,
+            "sector_id": sector_id or "",
+        },
+    )
+
+
 @app.command("add", help=tr("cli.ledger.add.help"))
 def ledger_add(
     ctx: typer.Context,
@@ -247,6 +293,17 @@ def ledger_add(
         None,
         "--input-classification",
         help=tr("cli.ledger.add.input_classification_help"),
+    ),
+    prorrata_sector: str | None = typer.Option(
+        None,
+        "--sector",
+        help=tr(
+            "cli.ledger.add.prorrata_sector_help",
+            default=(
+                "Differentiated-sector id (LIVA arts. 9.1.c / 101) this input belongs to; "
+                "must match a sector declared via 'app ledger prorrata declare-sector'."
+            ),
+        ),
     ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
@@ -330,6 +387,7 @@ def ledger_add(
             prorrata_reference=prorrata_reference,
             art_104_tres_exclusion=art_104_tres_exclusion,
             input_classification=input_classification,
+            prorrata_sector_id=prorrata_sector,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             attachment_ids=tuple(attachment_ids),
             notes=notes,
@@ -397,6 +455,15 @@ def ledger_add(
             )
         )
         noop_lines.append(noop_message)
+    especial_notice = _prorrata_especial_inert_notice(
+        bucket_id=result.ref.bucket_id,
+        ejercicio=command.booked_date.year,
+        input_classification=command.input_classification,
+        sector_id=command.prorrata_sector_id,
+    )
+    if especial_notice is not None:
+        notices.append(especial_notice)
+        noop_lines.append(especial_notice.message)
     _emit_envelope(
         ctx,
         command="ledger.add",

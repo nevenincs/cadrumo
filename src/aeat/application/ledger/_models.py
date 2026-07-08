@@ -104,6 +104,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     counterparty_eu_member_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     actor: str = Field(default="operator", min_length=1)
     source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
@@ -210,6 +211,7 @@ class ManualLedgerTransactionCommand(BaseModel):
             "prorrata_reference": self.prorrata_reference,
             "art_104_tres_exclusion": self.art_104_tres_exclusion,
             "input_classification": self.input_classification,
+            "prorrata_sector_id": self.prorrata_sector_id,
             "purchase_invoice_evidence_id": self.purchase_invoice_evidence_id,
             "attachment_ids": self.attachment_ids,
         }

@@ -1010,6 +1010,7 @@ def _transaction_from_command(
         "prorrata_reference": command.prorrata_reference,
         "art_104_tres_exclusion": command.art_104_tres_exclusion,
         "input_classification": command.input_classification,
+        "prorrata_sector_id": command.prorrata_sector_id,
         "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
         "attachment_ids": command.attachment_ids,
         "created_by": created_by or command.actor,
@@ -1127,6 +1128,7 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
         "prorrata_reference": command.prorrata_reference or "",
         "art_104_tres_exclusion": command.art_104_tres_exclusion.value if command.art_104_tres_exclusion else "",
         "input_classification": command.input_classification.value if command.input_classification else "",
+        "prorrata_sector_id": command.prorrata_sector_id or "",
         "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id or "",
         "attachment_ids": ",".join(command.attachment_ids),
     }
