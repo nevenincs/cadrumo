@@ -361,6 +361,27 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
         target.flush()
 
 
+def active_profile_label_for_error() -> str | None:
+    """Return the active-profile label for the error-document spine, best-effort.
+
+    The error boundary is the one place that must never be disrupted by
+    identity resolution: a failure resolving the active-profile label must
+    not mask the original error being reported. Delegates to the CLI
+    transport's :func:`_common._active_profile_label` (the same plaintext
+    manifest-label read the success path uses, never the redacted UUID)
+    and collapses any failure to ``None`` so the error still emits with a
+    null identity anchor. The import is function-local to avoid a module
+    cycle with :mod:`_common`, which imports this module.
+    """
+    try:
+        from ._common import _active_profile_label
+
+        return _active_profile_label()
+    except Exception:  # identity resolution must never break error emit
+        _log.debug("cli error boundary: active-profile label resolution failed", exc_info=True)
+        return None
+
+
 def _emit_error_and_exit(error: AeatError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
@@ -368,10 +389,16 @@ def _emit_error_and_exit(error: AeatError) -> Never:
     callback opted into JSON output via
     :func:`json_output_requested`, writes the payload
     through :func:`write_stderr`, and raises
-    :class:`~typer.Exit` with the category-mapped exit code.
+    :class:`~typer.Exit` with the category-mapped exit code. In JSON mode
+    the shared-spine ``active_profile`` identity anchor is resolved
+    best-effort and injected into the error document.
     """
     code = get_registered_error_code(error)
-    payload = render_error_json(error) if json_output_requested() else render_error_text(error)
+    payload = (
+        render_error_json(error, active_profile=active_profile_label_for_error())
+        if json_output_requested()
+        else render_error_text(error)
+    )
     write_stderr(payload)
     raise typer.Exit(code=get_error_exit_code(code.category)) from error
 

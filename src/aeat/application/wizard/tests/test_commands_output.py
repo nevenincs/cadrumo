@@ -80,7 +80,11 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
 
         document = json.loads(capsys.readouterr().out)
 
-        assert set(document) == {"schema_version", "command", "status", "result", "notices"}
+        assert set(document) == {"schema_version", "command", "active_profile", "status", "result", "notices"}
+        # The shared spine carries the active_profile identity anchor; the wizard
+        # emit path does not yet inject the label (tracked follow-up), so it is
+        # present-but-null here rather than absent.
+        assert document["active_profile"] is None
         assert document["command"] == command_path
         assert document["status"] == "success"
 
