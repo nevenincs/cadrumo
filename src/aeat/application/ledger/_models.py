@@ -22,6 +22,7 @@ from ...core.external_constants import (
 from ...core.identity import BucketId, TransactionId
 from ...domain.iva import (
     EUMemberState,
+    InputClassification,
     IvaCategory,
 )
 from ...domain.modelos import (
@@ -102,6 +103,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
+    input_classification: InputClassification | None = None
     actor: str = Field(default="operator", min_length=1)
     source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
@@ -207,6 +209,7 @@ class ManualLedgerTransactionCommand(BaseModel):
             "usage_ratio_id": self.usage_ratio_id,
             "prorrata_reference": self.prorrata_reference,
             "art_104_tres_exclusion": self.art_104_tres_exclusion,
+            "input_classification": self.input_classification,
             "purchase_invoice_evidence_id": self.purchase_invoice_evidence_id,
             "attachment_ids": self.attachment_ids,
         }

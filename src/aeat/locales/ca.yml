@@ -3578,6 +3578,7 @@ cli:
         <ratio>'. No és text lliure.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
       art_104_tres_exclusion_help: 'Exclusio del denominador de prorrata declarada per l''operador (LIVA art. 104.Tres: establiment permanent a l''estranger o operacio immobiliaria o financera no habitual); exclou l''operacio dels dos termes de la prorrata.'
+      input_classification_help: 'Classificacio d''us per input declarada per l''operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccio integra; exclusively_non_deductible sense deduccio; common al percentatge general de prorrata); nomes rellevant per a operacions suportades en un bucket amb prorrata especial.'
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1 per a files MIXED/proporcionals;

@@ -625,6 +625,7 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.usage_ratio_id,
         transaction.prorrata_reference,
         transaction.art_104_tres_exclusion,
+        transaction.input_classification,
         transaction.purchase_invoice_evidence_id,
         transaction.attachment_ids,
         transaction.notes,

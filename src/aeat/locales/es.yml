@@ -3619,6 +3619,7 @@ cli:
         set <category-id> <ratio>'. No es texto libre.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
       art_104_tres_exclusion_help: 'Exclusion del denominador de prorrata declarada por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero u operacion inmobiliaria o financiera no habitual); excluye la operacion de ambos terminos de la prorrata.'
+      input_classification_help: 'Clasificacion de uso por input declarada por el operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccion integra; exclusively_non_deductible sin deduccion; common al porcentaje general de prorrata); solo relevante para operaciones soportadas en un bucket con prorrata especial.'
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
