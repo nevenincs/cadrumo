@@ -26,10 +26,10 @@ related:
 
 Replace the bare unbounded subprocess call with a supervised runner: tiered timeouts keyed off the command classification, progress-notification heartbeats when the client supplies a progress token, cooperative cancellation with Windows process-tree termination, and localized instructive timeout refusals (ADR H1).
 
-- [ ] `P01.S01` - Add the supervised subprocess runner: per-tier timeout table keyed off the command classification, cooperative cancellation, and Windows process-tree termination; `src/aeat/entrypoints/mcp/_call_runtime.py`.
-- [ ] `P01.S02` - Route the direct and meta call paths through the supervised runner and emit notifications/progress heartbeats (elapsed plus coarse stage) when the client supplied a progress token; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P01.S03` - Author the localized timeout and cancellation refusal strings through the locales CLI across all four catalogues; `src/aeat/locales`.
-- [ ] `P01.S04` - Add real-behaviour runtime tests: a deliberately slow subprocess hits its tier timeout, cancellation terminates the full process tree on Windows, and the refusal names the tier and retry guidance; `src/aeat/entrypoints/mcp/tests/test_call_runtime.py`.
+- [x] `P01.S01` - Add the supervised subprocess runner: per-tier timeout table keyed off the command classification, cooperative cancellation, and Windows process-tree termination; `src/aeat/entrypoints/mcp/_call_runtime.py`.
+- [x] `P01.S02` - Route the direct and meta call paths through the supervised runner and emit notifications/progress heartbeats (elapsed plus coarse stage) when the client supplied a progress token; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P01.S03` - Author the localized timeout and cancellation refusal strings through the locales CLI across all four catalogues; `src/aeat/locales`.
+- [x] `P01.S04` - Add real-behaviour runtime tests: a deliberately slow subprocess hits its tier timeout, cancellation terminates the full process tree on Windows, and the refusal names the tier and retry guidance; `src/aeat/entrypoints/mcp/tests/test_call_runtime.py`.
 
 ### Phase `P02` - Input-schema fidelity
 

@@ -5844,7 +5844,7 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: mcp.call.timeout
+    timeout: 'A(z) ''{command}'' tullepte a(z) {tier} szint idokorlatjat ({seconds}s), es megszakadt. Probald ujra, vagy futtasd a megfelelo aeat parancsot a terminalban.'
   elicitation:
     confirm:
       consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet

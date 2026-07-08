@@ -5958,7 +5958,7 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: mcp.call.timeout
+    timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s) i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en un terminal.'
   elicitation:
     confirm:
       consequence_handoff: Això genera el document de presentació que el contribuent
