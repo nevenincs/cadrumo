@@ -25,7 +25,7 @@ from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "casilla-id-test-profile"
+_PROFILE_ID = "ca511a00-ca51-4ca5-8ca5-11a00ca511a0"
 
 
 @pytest.fixture
@@ -63,7 +63,10 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Test Operator"),
+            UserProfileFact(path="identity.surnames", value="Test Operator"),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
         ),
     )
     lifecycle = UserProfileLifecycleRepository(
