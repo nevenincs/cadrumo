@@ -51,6 +51,31 @@ def test_search_ranks_a_named_verb_above_a_mention() -> None:
     assert search_commands("", descriptors=descriptors) == ()
 
 
+def test_search_results_carry_the_input_schema_so_they_are_actionable() -> None:
+    # ADR P2: a search hit is self-sufficient - it carries the per-verb input
+    # schema, so a model can call ``execute`` in one further round-trip without a
+    # separate schema lookup.
+    descriptors = build_tool_descriptors()
+    results = search_commands("calculate modelo work", descriptors=descriptors, limit=5)
+    assert results
+    top = results[0]
+    assert top.command_key == "modelo.work.calculate"
+    by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    assert top.input_schema == by_key[top.command_key].input_schema
+    assert top.input_schema.get("type") == "object"
+
+
+def test_search_folds_plurals_and_diacritics_over_the_real_surface() -> None:
+    # The index-backed search folds morphology over the real command corpus: a
+    # query token in a different number/accent form than the command's own tokens
+    # still ranks it (the deterministic cross-vocabulary proof over a controlled
+    # corpus lives in the command_search unit tests).
+    descriptors = build_tool_descriptors()
+    results = search_commands("list the modelos", descriptors=descriptors, limit=8)
+    keys = {result.command_key for result in results}
+    assert "modelo.list" in keys
+
+
 def test_gate_refusal_matches_the_direct_path_for_every_scoped_refusal() -> None:
     descriptors = build_tool_descriptors()
     persona = AgentPersona.RECONCILER
