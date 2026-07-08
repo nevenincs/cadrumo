@@ -52,6 +52,7 @@ from ...core import (
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
@@ -70,6 +71,7 @@ from ...domain.iva import (
     RegularizacionProrrataResult,
     compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
+    is_especial_mandatory,
 )
 from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
@@ -1075,6 +1077,64 @@ def build_prorrata_regularizacion_advisory(
     return result, diagnostic
 
 
+#: The binding provision of the +10% mandatory-especial obligation (LIVA art.
+#: 103.Dos.2, "cuando el montante total de las cuotas deducibles ... exceda en un
+#: 10 por ciento o más ... por aplicación de la regla de prorrata especial"),
+#: authored into ``legal/iva.toml`` by W02.P03.S10.
+_ESPECIAL_MANDATORY_LEGAL_REF: Final = "ley-37-1992:art-103"
+
+
+def build_prorrata_especial_mandatory_advisory(
+    *,
+    deduction_under_general: Decimal,
+    deduction_under_especial: Decimal,
+    ejercicio: int,
+) -> Notice | None:
+    """Build the LIVA art. 103.Dos.2 +10% mandatory-especial settlement advisory.
+
+    At settlement (4T / 0A), once the ejercicio's deducción computed under the
+    general regime and under the especial regime are both known, art. 103.Dos.2
+    makes prorrata especial OBLIGATORY when the general-regime deduction exceeds
+    the especial-regime deduction by ten percent or more
+    (:func:`~domain.iva.is_especial_mandatory`). This surfaces that obligation as
+    a NON-BLOCKING warning :class:`~core.json_contract.Notice` so the operator
+    elects and records especial before filing; it NEVER refuses the in-progress
+    filing (the especial election is a filed taxpayer decision and the
+    classification data may still be incomplete). Both compared totals ride on
+    ``Notice.context`` alongside the ejercicio and the binding legal reference.
+
+    Returns ``None`` when especial is not obligatory (no noise); the two amounts
+    must be non-negative (:func:`is_especial_mandatory` refuses negatives).
+
+    Args:
+        deduction_under_general: The ejercicio's total deducible IVA under the
+            prorrata general regime (single whole-entity percentage).
+        deduction_under_especial: The ejercicio's total deducible IVA under the
+            prorrata especial regime (per-input art. 106 routing).
+        ejercicio: The filing year being settled (for the message and context).
+    """
+    if not is_especial_mandatory(deduction_under_general, deduction_under_especial):
+        return None
+    message = (
+        f"Prorrata especial obligatoria para {ejercicio} (LIVA art. 103.Dos.2): la deducción por "
+        f"prorrata general ({deduction_under_general}) supera en un 10% o más la deducción por prorrata "
+        f"especial ({deduction_under_especial}). Aplique y registre la prorrata especial del ejercicio; "
+        "este aviso no bloquea la presentación."
+    )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.work.calculate.prorrata_especial_obligatoria",
+        message=message,
+        context={
+            "ejercicio": str(ejercicio),
+            "regime": ProrrataRegisterRegime.ESPECIAL.value,
+            "deduction_under_general": str(deduction_under_general),
+            "deduction_under_especial": str(deduction_under_especial),
+            "legal_refs": _ESPECIAL_MANDATORY_LEGAL_REF,
+        },
+    )
+
+
 __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "ProrrataApplicabilityProjection",
@@ -1084,6 +1144,7 @@ __all__ = [
     "ProrrataRegularizacionSourceResolver",
     "build_interrumpida_tres_ultimos_seed",
     "build_prorrata_declared_volume_divergence_advisory",
+    "build_prorrata_especial_mandatory_advisory",
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
     "derive_prorrata_applicability",
