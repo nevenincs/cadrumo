@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._inventory import SRC_AEAT, aeat_relative, ast_for_path, production_ast_items
+from ...tests import SRC_AEAT, aeat_relative, ast_for_path, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

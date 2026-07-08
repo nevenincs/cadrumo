@@ -26,8 +26,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...tests import ast_for_path, package_ast_items, repo_path, repo_relative
-from ...tests._inventory import discover_test_control_modules
+from ...tests import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
 from ...tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LITERAL_SCAN_TOKENS,

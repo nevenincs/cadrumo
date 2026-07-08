@@ -47,6 +47,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.env_scope import scoped_env_var
 from .._loader import (
     _collect_registry_tree_fingerprints,
     _load_registry_tree_cached,
@@ -182,7 +183,6 @@ def _bundled_registry_disk_cache_files(cache_dir: Path | None = None) -> set[Pat
 
 def test_bundled_root_disk_cache_is_shared_across_processes(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Under pytest, the bundled root's disk pickle is written once and shared.
 
@@ -217,60 +217,61 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
     """
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
-    monkeypatch.setenv(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir))
-    _load_registry_tree_cached.cache_clear()
-    clear_fingerprint_cache()
+    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+        _load_registry_tree_cached.cache_clear()
+        clear_fingerprint_cache()
 
-    bundled_root = bundled_path("registry", "aeat").resolve()
-    modelos, _catalogues = load_registry_tree(bundled_root)
-    assert modelos, "sanity: the bundled tree must compile at least one modelo"
+        bundled_root = bundled_path("registry", "aeat").resolve()
+        modelos, _catalogues = load_registry_tree(bundled_root)
+        assert modelos, "sanity: the bundled tree must compile at least one modelo"
 
-    written = _bundled_registry_disk_cache_files(isolated_cache_dir)
-    assert len(written) == 1, f"expected exactly one bundled-root disk pickle after the first compile, got {written}"
-    cache_path = next(iter(written))
-    stat_before = cache_path.stat()
+        written = _bundled_registry_disk_cache_files(isolated_cache_dir)
+        assert len(written) == 1, (
+            f"expected exactly one bundled-root disk pickle after the first compile, got {written}"
+        )
+        cache_path = next(iter(written))
+        stat_before = cache_path.stat()
 
-    completed = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            (
-                "from aeat.domain.calculations.registry._loader import load_registry_tree\n"
-                "from aeat.core.resources import bundled_path\n"
-                "root = bundled_path('registry', 'aeat').resolve()\n"
-                "modelos, _ = load_registry_tree(root)\n"
-                "print(len(modelos))\n"
-            ),
-        ],
-        check=True,
-        capture_output=True,
-        env={
-            **os.environ,
-            "PYTEST_CURRENT_TEST": "simulated_worker::test_shares_bundled_disk_cache",
-            REGISTRY_DISK_CACHE_DIR_ENV_VAR: str(isolated_cache_dir),
-        },
-        text=True,
-        timeout=60,
-    )
-    child_modelo_count = int(completed.stdout.strip())
-    assert child_modelo_count == len(modelos), (
-        "the child process must compile the identical modelo set from the shared pickle"
-    )
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                (
+                    "from aeat.domain.calculations.registry._loader import load_registry_tree\n"
+                    "from aeat.core.resources import bundled_path\n"
+                    "root = bundled_path('registry', 'aeat').resolve()\n"
+                    "modelos, _ = load_registry_tree(root)\n"
+                    "print(len(modelos))\n"
+                ),
+            ],
+            check=True,
+            capture_output=True,
+            env={
+                **os.environ,
+                "PYTEST_CURRENT_TEST": "simulated_worker::test_shares_bundled_disk_cache",
+                REGISTRY_DISK_CACHE_DIR_ENV_VAR: str(isolated_cache_dir),
+            },
+            text=True,
+            timeout=60,
+        )
+        child_modelo_count = int(completed.stdout.strip())
+        assert child_modelo_count == len(modelos), (
+            "the child process must compile the identical modelo set from the shared pickle"
+        )
 
-    after_child = _bundled_registry_disk_cache_files(isolated_cache_dir)
-    assert after_child == written, "the child process must not have written a second disk pickle"
-    stat_after = cache_path.stat()
-    assert stat_after.st_mtime_ns == stat_before.st_mtime_ns, (
-        "the child process rewrote the shared pickle instead of reading it"
-    )
-    assert stat_after.st_size == stat_before.st_size, (
-        "the child process rewrote the shared pickle instead of reading it"
-    )
+        after_child = _bundled_registry_disk_cache_files(isolated_cache_dir)
+        assert after_child == written, "the child process must not have written a second disk pickle"
+        stat_after = cache_path.stat()
+        assert stat_after.st_mtime_ns == stat_before.st_mtime_ns, (
+            "the child process rewrote the shared pickle instead of reading it"
+        )
+        assert stat_after.st_size == stat_before.st_size, (
+            "the child process rewrote the shared pickle instead of reading it"
+        )
 
 
 def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The per-session cache-isolation fixture must not purge the bundled disk pickle.
 
@@ -307,7 +308,6 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     """
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
-    monkeypatch.setenv(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir))
 
     scratch_module_name = f"test_zzz_purge_isolation_proof_{os.getpid()}.py"
     scratch_module_path = Path(__file__).resolve().parent / scratch_module_name
@@ -353,36 +353,37 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
             timeout=_SUBPROCESS_TIMEOUT_SECONDS,
         )
 
-    for stale in _bundled_registry_disk_cache_files(isolated_cache_dir):
-        stale.unlink(missing_ok=True)
+    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+        for stale in _bundled_registry_disk_cache_files(isolated_cache_dir):
+            stale.unlink(missing_ok=True)
 
-    try:
-        scratch_module_path.write_text(scratch_source, encoding="utf-8")
+        try:
+            scratch_module_path.write_text(scratch_source, encoding="utf-8")
 
-        first = _run_real_pytest_session()
-        assert first.returncode == 0, f"first real pytest session failed:\n{first.stdout}\n{first.stderr}"
-        written = _bundled_registry_disk_cache_files(isolated_cache_dir)
-        assert len(written) == 1, f"expected exactly one bundled-root disk pickle after session 1, got {written}"
-        cache_path = next(iter(written))
-        stat_after_first = cache_path.stat()
+            first = _run_real_pytest_session()
+            assert first.returncode == 0, f"first real pytest session failed:\n{first.stdout}\n{first.stderr}"
+            written = _bundled_registry_disk_cache_files(isolated_cache_dir)
+            assert len(written) == 1, f"expected exactly one bundled-root disk pickle after session 1, got {written}"
+            cache_path = next(iter(written))
+            stat_after_first = cache_path.stat()
 
-        second = _run_real_pytest_session()
-        assert second.returncode == 0, f"second real pytest session failed:\n{second.stdout}\n{second.stderr}"
-        stat_after_second = cache_path.stat()
+            second = _run_real_pytest_session()
+            assert second.returncode == 0, f"second real pytest session failed:\n{second.stdout}\n{second.stderr}"
+            stat_after_second = cache_path.stat()
 
-        assert _bundled_registry_disk_cache_files(isolated_cache_dir) == written, (
-            "a second real pytest session must not write a second disk pickle"
-        )
-        assert stat_after_second.st_mtime_ns == stat_after_first.st_mtime_ns, (
-            "the second real pytest session's own autouse session-start fixture purged and "
-            "recompiled the shared bundled-root pickle instead of reading it -- the #148 "
-            "cross-worker sharing regression this test guards against"
-        )
-        assert stat_after_second.st_size == stat_after_first.st_size, (
-            "the second real pytest session rewrote the shared pickle instead of reading it"
-        )
-    finally:
-        scratch_module_path.unlink(missing_ok=True)
+            assert _bundled_registry_disk_cache_files(isolated_cache_dir) == written, (
+                "a second real pytest session must not write a second disk pickle"
+            )
+            assert stat_after_second.st_mtime_ns == stat_after_first.st_mtime_ns, (
+                "the second real pytest session's own autouse session-start fixture purged and "
+                "recompiled the shared bundled-root pickle instead of reading it -- the #148 "
+                "cross-worker sharing regression this test guards against"
+            )
+            assert stat_after_second.st_size == stat_after_first.st_size, (
+                "the second real pytest session rewrote the shared pickle instead of reading it"
+            )
+        finally:
+            scratch_module_path.unlink(missing_ok=True)
 
 
 def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path: Path) -> None:

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests._inventory import ast_for_path
+from .....tests import ast_for_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

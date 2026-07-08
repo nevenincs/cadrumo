@@ -43,7 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests._inventory import aeat_relative, production_ast_items
+from ...tests import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

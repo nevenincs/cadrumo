@@ -104,6 +104,12 @@ if TYPE_CHECKING:
         deserialize_profile_bundle,
         serialize_profile_bundle,
     )
+    from ._bundle_encryption import (
+        EncryptedProfileBundleError,
+        EncryptedProfileBundleExport,
+        decrypt_profile_bundle_with_passphrase,
+        encrypt_profile_bundle_for_passphrase,
+    )
     from ._capabilities import (
         CapabilityDecision,
         CapabilitySource,
@@ -317,6 +323,15 @@ def __getattr__(name: str):
 
         return getattr(_bundle, name)
     if name in (
+        "EncryptedProfileBundleError",
+        "EncryptedProfileBundleExport",
+        "decrypt_profile_bundle_with_passphrase",
+        "encrypt_profile_bundle_for_passphrase",
+    ):
+        from . import _bundle_encryption
+
+        return getattr(_bundle_encryption, name)
+    if name in (
         "CustodyRecoverResult",
         "CustodyRecoveryEnrollment",
         "CustodyRecoveryStatus",
@@ -441,6 +456,8 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
+    "EncryptedProfileBundleError",
+    "EncryptedProfileBundleExport",
     "ProfileAlreadyRegisteredError",
     "ProfileId",
     "ProfileImportResult",
@@ -472,8 +489,10 @@ __all__ = [
     "UserProfileStatus",
     "build_lifecycle_service",
     "carried_namespace_definitions",
+    "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
+    "encrypt_profile_bundle_for_passphrase",
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
