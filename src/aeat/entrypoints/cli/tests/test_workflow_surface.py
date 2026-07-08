@@ -108,7 +108,7 @@ def encrypted_user_cli(isolated_user_cli: Path) -> Path:
 
 
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
-    db_path = tmp_path / "storage" / "buckets" / "default" / "db" / "aeat.db"
+    db_path = tmp_path / "storage" / "buckets" / "00000000-0000-4000-8000-000000000000" / "db" / "aeat.db"
     assert db_path.exists()
     on_disk = db_path.read_bytes()
     assert b"secure_objects" in on_disk
@@ -651,7 +651,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
-        catalogue = TransactionCatalogueRepository(bucket_id="default").load()
+        catalogue = TransactionCatalogueRepository(bucket_id="00000000-0000-4000-8000-000000000000").load()
         [stored] = list(catalogue.transactions.values())
         assert stored.raw.counterparty == canary
         assert stored.raw.provider_transaction_id == transaction_ref
@@ -659,7 +659,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
             BucketEventHistoryRepository()
             .load()
             .for_bucket(
-                "default",
+                "00000000-0000-4000-8000-000000000000",
                 event_types=(BucketEventType.LEDGER_TRANSACTION_IMPORTED,),
             )
         )
