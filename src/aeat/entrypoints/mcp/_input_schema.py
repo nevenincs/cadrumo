@@ -212,6 +212,18 @@ def _parameter_from_click(parameter: ClickParameter) -> VerbParameter | None:
     is_argument = getattr(parameter, "param_type_name", "") == "argument"
     is_flag = bool(getattr(parameter, "is_flag", False))
     raw_choices = getattr(parameter.type, "choices", None)
+    if raw_choices is None:
+        # A ``click_type=click.Choice(...)`` passed to ``typer.Option`` is wrapped
+        # in Typer's ``FuncParamType`` whose own ``.choices`` is ``None``; the
+        # original ``click.Choice`` (and its closed value set) survives on
+        # ``.func``. Without this unwrap the enum axis renders as a bare string in
+        # the MCP input schema (``aeat-architecture-boundaries``: a closed value
+        # set must surface its accepted values). Typing the option as an enum is
+        # the preferred form, but for options whose enum values differ in case
+        # from the CLI tokens (e.g. ``config reset --scope``) the ``click_type``
+        # Choice is the only way to keep the lowercase tokens, so the schema must
+        # read through the wrapper.
+        raw_choices = getattr(getattr(parameter.type, "func", None), "choices", None)
     choices = tuple(str(choice) for choice in raw_choices) if raw_choices else ()
     return VerbParameter(
         name=name,
