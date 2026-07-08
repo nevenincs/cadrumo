@@ -238,12 +238,13 @@ ignore_imports =
     # coupling remains individually pinned below (the application -> adapters
     # ADR sec. 538 allowance, the per-repository ports-inversion edges, and
     # the core/resources/_repos deferred loaders) so a NEW non-deferred
-    # production edge still fails loudly. The prorrata-owned production
-    # violations below (application._revision_persistence,
-    # application.calculations._prorrata_regularizacion,
-    # application.aggregation._iva_ledger -> adapters.persistence.profile.
-    # prorrata_register / adapters.persistence.storage) are left unexempted
-    # for the prorrata campaign to resolve. See
+    # production edge still fails loudly. The prorrata-owned production edges
+    # (application._revision_persistence, application.calculations.
+    # _prorrata_regularizacion, application.aggregation._iva_ledger ->
+    # adapters.persistence.profile.prorrata_register / adapters.persistence.
+    # storage) were inverted behind ProrrataRegisterRepositoryProtocol and now
+    # ride the sanctioned construction-edge pins below (see the prorrata-register
+    # ports-inversion block), superseding the deferral recorded in
     # `2026-07-08-importlinter-test-carveout-adr`.
     aeat.domain.tests.** -> aeat.adapters.**
     aeat.domain.**.tests.** -> aeat.adapters.**
@@ -530,3 +531,14 @@ ignore_imports =
     aeat.application.modelo._m349_ledger_guard -> aeat.adapters.persistence.profile.transactions
     aeat.application.modelo._verification_actions -> aeat.adapters.persistence.profile.transactions
     aeat.application.review._adapters -> aeat.adapters.persistence.profile.transactions
+    # ── prorrata-register repository ports-inversion (gate-drift-reconciliation
+    #    P01): the concrete ProrrataRegisterRepository stays in the persistence
+    #    adapter behind ProrrataRegisterRepositoryProtocol; these application
+    #    modules retain only the sanctioned default-construction edge (ADR
+    #    sec. 538). The storage edge is _prorrata_regularizacion's direct import
+    #    of the ClassificationError/DecryptionError/EnvelopeVersionError boundary
+    #    exception classes (plain exceptions, no port to invert). ──
+    aeat.application.aggregation._iva_ledger -> aeat.adapters.persistence.profile.prorrata_register
+    aeat.application.calculations._prorrata_regularizacion -> aeat.adapters.persistence.profile.prorrata_register
+    aeat.application.calculations._prorrata_regularizacion -> aeat.adapters.persistence.storage
+    aeat.application.modelo._revision_persistence -> aeat.adapters.persistence.profile.prorrata_register

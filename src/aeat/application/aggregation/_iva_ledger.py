@@ -76,7 +76,7 @@ from ...domain.iva import (
     lookup_rate,
     validate_prorrata_reference,
 )
-from ...domain.prorrata_register import ProrrataRegister
+from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
 from ...domain.transactions import (
     BusinessClassification,
     OutOfWindowTransactionSummary,
@@ -369,7 +369,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    prorrata_register_repository: ProrrataRegisterRepository | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations.
 
@@ -809,7 +809,7 @@ def _active_prorrata_apportionment(
     *,
     bucket_id: str,
     ejercicio: int,
-    prorrata_register_repository: ProrrataRegisterRepository | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None,
 ) -> IvaLedgerProrrataApportionment | None:
     """Resolve the regime-aware prorrata apportionment for the ejercicio.
 
@@ -927,7 +927,7 @@ def compute_annual_deducible_totals_by_regime(
     ejercicio: int,
     revision: ModeloRevision,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    prorrata_register_repository: ProrrataRegisterRepository | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
 ) -> AnnualDeducibleTotalsByRegime | None:
     """Compute the ejercicio's deducible IVA cuota under both prorrata regimes.
 

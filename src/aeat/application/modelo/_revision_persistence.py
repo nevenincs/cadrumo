@@ -82,7 +82,11 @@ from ...domain.modelos import (
     upsert_transaction_participation,
     upsert_work_unit,
 )
-from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ...domain.prorrata_register import (
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    ProrrataRegisterRepositoryProtocol,
+)
 from ..calculations import CalculationObservationRepository
 from ._filed_revision_observation import persist_filed_revision_observation
 
@@ -351,10 +355,10 @@ def _participation_index_repository(
 
 
 def _prorrata_register_repository(
-    repository: ProrrataRegisterRepository | None,
+    repository: ProrrataRegisterRepositoryProtocol | None,
     *,
     bucket_id: str,
-) -> ProrrataRegisterRepository:
+) -> ProrrataRegisterRepositoryProtocol:
     return repository or ProrrataRegisterRepository(bucket_id=bucket_id)
 
 
@@ -362,7 +366,7 @@ def _build_prorrata_settlement_write(
     *,
     filed_target: CalculationRevision,
     work_unit: WorkUnit,
-    prorrata_register_repository: ProrrataRegisterRepository,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
 ) -> SecureObjectWrite | None:
     """Build the settlement prorrata-register write for an M303 year close."""
     values = _prorrata_settlement_values(filed_target=filed_target, work_unit=work_unit)
@@ -491,7 +495,7 @@ def persist_filed_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository | None = None,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
-    prorrata_register_repository: ProrrataRegisterRepository | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
     refunded: bool = False,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:

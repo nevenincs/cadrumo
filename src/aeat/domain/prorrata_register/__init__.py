@@ -52,6 +52,7 @@ from ...core import (
     SectorDiferenciadoLetra,
 )
 from ...core.errors import AeatError as _AeatError
+from ._protocols import ProrrataRegisterRepositoryProtocol
 
 
 class ProrrataRegisterError(_AeatError):
@@ -502,6 +503,7 @@ __all__ = [
     "ProrrataRegister",
     "ProrrataRegisterEntry",
     "ProrrataRegisterError",
+    "ProrrataRegisterRepositoryProtocol",
     "ProrrataRegisterValidationError",
     "SectorDefinition",
     "ThreeActiveYearsAggregate",
