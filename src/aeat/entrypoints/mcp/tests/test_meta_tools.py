@@ -16,7 +16,14 @@ import pytest
 from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from .._annotations import McpAnnotations
 from .._input_schema import VerbInputSchema
-from .._meta_tools import gate_refusal, meta_execute, search_commands
+from .._meta_tools import (
+    MetaDescribeResult,
+    describe_command,
+    gate_refusal,
+    meta_execute,
+    search_commands,
+    search_commands_response,
+)
 from .._persona_scope import AgentPersona
 from .._server import (
     _run_subprocess_tool,
@@ -184,12 +191,66 @@ def test_meta_execute_dispatches_a_read_only_command_end_to_end() -> None:
     assert outcome.is_error is False
 
 
-def test_build_meta_sdk_tools_exposes_search_execute_and_toolsets() -> None:
+def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> None:
     tools = build_meta_sdk_tools()
     names = {tool.name for tool in tools}
-    assert names == {"search", "execute", "toolsets"}
+    assert names == {"search", "execute", "toolsets", "describe"}
     for tool in tools:
         assert tool.inputSchema["type"] == "object"
+
+
+def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:
+    descriptors = build_tool_descriptors()
+    described = describe_command("modelo.export", descriptors=descriptors)
+    assert isinstance(described, MetaDescribeResult)
+    assert described.command_key == "modelo.export"
+    # modelo.export is a filing handoff: it carries the handoff risk, sits in the
+    # modelo-lifecycle toolset, and confirms rather than auto-approves.
+    assert described.owning_toolset == "modelo-lifecycle"
+    assert described.confirmation_tier == "confirm"
+    assert described.risk_handoff is True
+    assert described.risk_live_write is False
+    # The schema rides along so the caller can build the argument form in one hop.
+    by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    assert described.input_schema == by_key["modelo.export"].input_schema
+    # The verifier owns the handoff; the preparer and reconciler are structurally
+    # denied it, so they are absent from the reachable set while the verifier is in.
+    assert "verifier" in described.reachable_personas
+    assert "modelo-preparer" not in described.reachable_personas
+    assert "reconciler" not in described.reachable_personas
+
+
+def test_describe_command_returns_none_for_an_unknown_key() -> None:
+    descriptors = build_tool_descriptors()
+    assert describe_command("not.a.command", descriptors=descriptors) is None
+
+
+def test_search_commands_response_flags_a_truncated_broad_query() -> None:
+    descriptors = build_tool_descriptors()
+    broad = search_commands_response("modelo", descriptors=descriptors, limit=5)
+    assert broad.truncated is True
+    assert broad.total_matches >= len(broad.results)
+    assert broad.total_matches > len(broad.results)
+    assert broad.hint
+    assert "describe" in broad.hint
+
+
+def test_search_commands_response_does_not_flag_a_specific_query() -> None:
+    descriptors = build_tool_descriptors()
+    specific = search_commands_response("iva wallet balance", descriptors=descriptors, limit=20)
+    assert specific.results
+    assert specific.truncated is False
+    assert specific.hint == ""
+    assert specific.total_matches == len(specific.results)
+
+
+def test_search_commands_response_returns_the_empty_response_for_a_blank_query() -> None:
+    descriptors = build_tool_descriptors()
+    empty = search_commands_response("   ", descriptors=descriptors)
+    assert empty.results == ()
+    assert empty.total_matches == 0
+    assert empty.truncated is False
+    assert empty.hint == ""
 
 
 def test_build_server_advertises_tools_prompts_and_resources() -> None:
