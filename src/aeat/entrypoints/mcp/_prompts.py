@@ -34,6 +34,30 @@ class PromptNotFoundError(LookupError):
     """Raised when a prompt name does not resolve to a shipped guided workflow."""
 
 
+class PromptArgumentSpec(BaseModel):
+    """One declared argument a guided-workflow prompt accepts (ADR P5).
+
+    SDK-independent; ``_server`` adapts it to the MCP ``PromptArgument`` type.
+    All workflow arguments are optional - a workflow can start without a period
+    and resolve it conversationally - so ``required`` defaults False.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    required: bool = False
+
+
+#: The scoping arguments every guided workflow accepts. A workflow orchestrates a
+#: filing over a period, so filing year and period parameterise it (the modelo is
+#: implied by the workflow's own skill). Completions serve the accepted values.
+_WORKFLOW_ARGUMENTS: tuple[PromptArgumentSpec, ...] = (
+    PromptArgumentSpec(name="filing_year", description="The filing year, e.g. 2026."),
+    PromptArgumentSpec(name="period", description="The period: 1T, 2T, 3T, 4T, or ANUAL."),
+)
+
+
 class GuidedPrompt(BaseModel):
     """One entry in the prompt catalogue (the ``prompts/list`` row)."""
 
@@ -43,6 +67,7 @@ class GuidedPrompt(BaseModel):
     title: str = Field(min_length=1)
     description: str = Field(min_length=1)
     skill_name: str = ""
+    arguments: tuple[PromptArgumentSpec, ...] = ()
 
 
 class EmbeddedDocument(BaseModel):
@@ -151,13 +176,30 @@ def build_prompt_catalogue() -> tuple[GuidedPrompt, ...]:
                 title=_title_from(metadata.name),
                 description=metadata.description.strip(),
                 skill_name=name,
+                arguments=_WORKFLOW_ARGUMENTS,
             ),
         )
     return tuple(rows)
 
 
-def prompt_document(name: str) -> PromptDocument:
+def _argument_scope_line(arguments: dict[str, str] | None) -> str:
+    """Render the client-supplied prompt arguments as a scoping line for the brief."""
+    if not arguments:
+        return ""
+    year = arguments.get("filing_year", "").strip()
+    period = arguments.get("period", "").strip()
+    parts = [part for part in (f"filing year {year}" if year else "", f"period {period}" if period else "") if part]
+    if not parts:
+        return ""
+    return "\n\nScope for this run: " + ", ".join(parts) + "."
+
+
+def prompt_document(name: str, arguments: dict[str, str] | None = None) -> PromptDocument:
     """Materialise one guided workflow's ``prompts/get`` payload.
+
+    ``arguments`` are the client-supplied prompt arguments (filing year, period);
+    when present they are appended to the operating brief as an explicit scope so
+    the model enters the workflow already knowing the period it targets.
 
     Raises:
         PromptNotFoundError: When ``name`` is neither the orientation prompt
@@ -185,10 +227,11 @@ def prompt_document(name: str) -> PromptDocument:
         title=_title_from(metadata.name),
         description=metadata.description.strip(),
         skill_name=name,
+        arguments=_WORKFLOW_ARGUMENTS,
     )
     return PromptDocument(
         prompt=prompt,
-        brief_text=_workflow_brief(metadata.name, metadata.description),
+        brief_text=_workflow_brief(metadata.name, metadata.description) + _argument_scope_line(arguments),
         embedded=(EmbeddedDocument(uri=f"{_SKILL_URI_PREFIX}{name}", text=text),),
     )
 
@@ -197,6 +240,7 @@ __all__ = [
     "ORIENTATION_PROMPT_NAME",
     "EmbeddedDocument",
     "GuidedPrompt",
+    "PromptArgumentSpec",
     "PromptDocument",
     "PromptNotFoundError",
     "build_prompt_catalogue",

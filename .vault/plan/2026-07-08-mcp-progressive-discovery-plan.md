@@ -64,9 +64,9 @@ De-duplicate the client-side namespace prefix and enforce a prefixed tool-name l
 
 Give the guided-workflow prompts typed arguments and serve completion/complete suggestions from the typed sources (ADR P5).
 
-- [ ] `P05.S19` - Add typed arguments (modelo, filing year, period where the skill itinerary needs them) to the guided-workflow prompt declarations and substitute them in the prompt get handler; `src/aeat/entrypoints/mcp/_prompts.py`.
-- [ ] `P05.S20` - Implement the completion/complete handler serving ranked suggestions from the typed sources (core Modelo enum, period tokens, plausible filing years) and register the capability; `src/aeat/entrypoints/mcp/_completions.py`.
-- [ ] `P05.S21` - Extend the prompt tests for argument declaration and substitution and add completions handler tests; `src/aeat/entrypoints/mcp/tests/test_prompts.py`.
+- [x] `P05.S19` - Add typed arguments (modelo, filing year, period where the skill itinerary needs them) to the guided-workflow prompt declarations and substitute them in the prompt get handler; `src/aeat/entrypoints/mcp/_prompts.py`.
+- [x] `P05.S20` - Implement the completion/complete handler serving ranked suggestions from the typed sources (core Modelo enum, period tokens, plausible filing years) and register the capability; `src/aeat/entrypoints/mcp/_completions.py`.
+- [x] `P05.S21` - Extend the prompt tests for argument declaration and substitution and add completions handler tests; `src/aeat/entrypoints/mcp/tests/test_prompts.py`.
 
 ### Phase `P06` - Live measurement and packaging alignment
 
