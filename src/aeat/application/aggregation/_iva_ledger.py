@@ -76,6 +76,7 @@ from ...domain.iva import (
     lookup_rate,
     validate_prorrata_reference,
 )
+from ...domain.prorrata_register import ProrrataRegister
 from ...domain.transactions import (
     BusinessClassification,
     OutOfWindowTransactionSummary,
@@ -154,6 +155,28 @@ class ProrrataLedgerReference(BaseModel):
     input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
 
 
+class IvaLedgerSectorApportionment(BaseModel):
+    """Per-sector prorrata apportionment for a sectores-diferenciados bucket.
+
+    Under LIVA arts. 9.1.c / 101 a taxpayer with differentiated sectors applies
+    the deduction regime separately per sector. Each declared sector carries its
+    own provisional ``percentage`` and its own ``regime`` (a sector may run
+    general while another runs especial); the sector-aware binding resolver
+    applies THIS sector's apportionment to every deducible cuota whose
+    observation carries the matching ``sector_id``.
+
+    See Also:
+        :class:`~domain.prorrata_register.SectorDefinition`
+            Operator-declared sector this apportionment resolves for.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=_HUNDRED)
+    regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
+
+
 class IvaLedgerProrrataApportionment(BaseModel):
     """Prorrata percentage applied to deducible ledger IVA cuotas.
 
@@ -163,6 +186,13 @@ class IvaLedgerProrrataApportionment(BaseModel):
     to the COMMON-use inputs; exclusively-deductible inputs deduct in full and
     exclusively-non-deductible inputs deduct nothing, routed per the
     observation's ``input_classification``.
+
+    When ``sector_apportionments`` is non-empty (LIVA arts. 9.1.c / 101), the
+    bucket is sectorized: the top-level ``percentage`` / ``regime`` describe the
+    COMMON-use apportionment (art. 104.Dos common percentage, for inputs with no
+    ``prorrata_sector_id``), and each :class:`IvaLedgerSectorApportionment`
+    describes one declared sector. Empty ``sector_apportionments`` is the
+    whole-entity register (byte-identical to the pre-sectores behaviour).
 
     See Also:
         :class:`~core.ProrrataProvisionalProvenance`
@@ -179,6 +209,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
     regime: ProrrataRegisterRegime = ProrrataRegisterRegime.GENERAL
     source_observation_ref: str | None = Field(default=None, min_length=1)
     authorisation_reference: str | None = Field(default=None, min_length=1)
+    sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
 
 
 class IvaLedgerInputKind(StrEnum):
@@ -569,6 +600,15 @@ def resolve_iva_ledger_binding_values(
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     if prorrata_apportionment is None:
         return binding_values
+    if prorrata_apportionment.sector_apportionments:
+        # Sectores diferenciados (LIVA arts. 9.1.c / 101): route each input to
+        # its sector's percentage; common-use (no sector) at art. 104.Dos.
+        return _apply_sector_apportionment(
+            revision,
+            observations,
+            binding_values,
+            prorrata_apportionment,
+        )
     if prorrata_apportionment.regime is ProrrataRegisterRegime.ESPECIAL:
         return _apply_especial_apportionment(
             revision,
@@ -639,6 +679,102 @@ def _apply_especial_apportionment(
     }
 
 
+def _apportioned_deducible_cuota(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    *,
+    percentage: Decimal,
+    regime: ProrrataRegisterRegime,
+    deducible_binding_ids: frozenset[BindingId],
+) -> dict[BindingId, Decimal]:
+    """Return only the deducible-cuota binding contributions for one observation set.
+
+    Applies the observation set's regime at ``percentage``: ``GENERAL`` multiplies
+    every deducible cuota by ``percentage`` (LIVA art. 104); ``ESPECIAL`` routes
+    each deducible cuota per the observation's ``input_classification`` (LIVA
+    art. 106.Uno reglas 100%/0%/general), with ``percentage`` as the common
+    (regla 3.ª) percentage. Both branches resolve through the SAME canonical
+    registry resolver, so one aggregation path drives every regime. This is the
+    per-partition primitive the sectores-diferenciados routing composes over each
+    sector.
+    """
+    result: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
+    if regime is ProrrataRegisterRegime.ESPECIAL:
+        partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
+            classification: [] for classification in InputClassification
+        }
+        for observation in observations:
+            classification = observation.input_classification or InputClassification.COMMON
+            partitions[classification].append(observation)
+        for classification, partition_observations in partitions.items():
+            if not partition_observations:
+                continue
+            multiplier = deductible_percentage_for(classification, percentage) / _HUNDRED
+            if multiplier == 0:
+                continue
+            partition_values = resolve_ledger_iva_aggregation_binding_values(revision, partition_observations)
+            for binding_id in deducible_binding_ids:
+                result[binding_id] += partition_values.get(binding_id, Decimal("0")) * multiplier
+        return result
+    # GENERAL regime: a single multiplier over the whole observation set.
+    multiplier = percentage / _HUNDRED
+    partition_values = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    for binding_id in deducible_binding_ids:
+        result[binding_id] = partition_values.get(binding_id, Decimal("0")) * multiplier
+    return result
+
+
+def _apply_sector_apportionment(
+    revision: ModeloRevision,
+    observations: Sequence[IvaLedgerObservation],
+    binding_values: dict[BindingId, Decimal],
+    apportionment: IvaLedgerProrrataApportionment,
+) -> dict[BindingId, Decimal]:
+    """Route deducible cuota bindings per sector (LIVA arts. 9.1.c / 101).
+
+    Partitions ``observations`` by ``prorrata_sector_id`` and recomputes each
+    deducible cuota binding as the sum, over the partitions, of that sector's
+    :func:`_apportioned_deducible_cuota` contribution (each sector applies its
+    own percentage and regime). An input with no sector — or one referencing a
+    sector not present in ``sector_apportionments`` — falls to the COMMON-use
+    apportionment: the top-level ``apportionment.percentage`` / ``regime`` (the
+    art. 104.Dos common percentage). Non-deducible bindings keep their
+    unapportioned aggregate. Resolution runs through the SAME canonical registry
+    resolver, so the sectored path is one more consumer of the single
+    aggregation path.
+    """
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    if not deducible_binding_ids:
+        return binding_values
+    by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
+    partitions: dict[str | None, list[IvaLedgerObservation]] = {}
+    for observation in observations:
+        sector_key = observation.prorrata_sector_id if observation.prorrata_sector_id in by_sector else None
+        partitions.setdefault(sector_key, []).append(observation)
+    apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
+    for sector_key, partition_observations in partitions.items():
+        if sector_key is None:
+            percentage = apportionment.percentage
+            regime = apportionment.regime
+        else:
+            sector = by_sector[sector_key]
+            percentage = sector.percentage
+            regime = sector.regime
+        partition_deducible = _apportioned_deducible_cuota(
+            revision,
+            partition_observations,
+            percentage=percentage,
+            regime=regime,
+            deducible_binding_ids=deducible_binding_ids,
+        )
+        for binding_id in deducible_binding_ids:
+            apportioned[binding_id] += partition_deducible[binding_id]
+    return {
+        binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
+        for binding_id, value in binding_values.items()
+    }
+
+
 def _active_prorrata_apportionment(
     *,
     bucket_id: str,
@@ -653,16 +789,55 @@ def _active_prorrata_apportionment(
     ``ESPECIAL`` entry carries the same provisional percentage as the general
     percentage applied to common-use inputs (LIVA art. 106.Uno regla 3.ª),
     with the regime stamped so the binding resolver routes per-input.
+
+    When the register declares a differentiated-sector partition
+    (LIVA arts. 9.1.c / 101), the whole-entity (``sector_id = None``) entry is
+    the COMMON-use apportionment (art. 104.Dos common percentage) and each
+    declared sector's ``(ejercicio, sector_id)`` entry contributes a
+    :class:`IvaLedgerSectorApportionment`; a sectorized register therefore also
+    requires its common ``sector_id = None`` entry to apportion common-use
+    inputs (absent it, no apportionment applies, exactly as for any register
+    with no whole-entity entry).
     """
     repository = prorrata_register_repository or ProrrataRegisterRepository(bucket_id=bucket_id)
     register = repository.load()
-    entry = register.entry_for(ejercicio)
+    base = _sector_scoped_apportionment(register, ejercicio, sector_id=None)
+    if base is None:
+        return None
+    if not register.is_sectorized:
+        return base
+    sector_apportionments = tuple(
+        IvaLedgerSectorApportionment(
+            sector_id=sector_id,
+            percentage=sector.percentage,
+            regime=sector.regime,
+        )
+        for sector_id in register.sector_ids()
+        if (sector := _sector_scoped_apportionment(register, ejercicio, sector_id=sector_id)) is not None
+    )
+    if not sector_apportionments:
+        return base
+    return base.model_copy(update={"sector_apportionments": sector_apportionments})
+
+
+def _sector_scoped_apportionment(
+    register: ProrrataRegister,
+    ejercicio: int,
+    *,
+    sector_id: str | None,
+) -> IvaLedgerProrrataApportionment | None:
+    """Resolve the apportionment for one ``(ejercicio, sector_id)`` register key.
+
+    Returns ``None`` when the key has no apportioning entry (``NINGUNA`` /
+    interrupted / absent) or no provisional percentage is resolvable.
+    """
+    entry = register.entry_for(ejercicio, sector_id=sector_id)
     if entry is None or entry.regime not in (
         ProrrataRegisterRegime.GENERAL,
         ProrrataRegisterRegime.ESPECIAL,
     ):
         return None
-    resolution = register.resolve_provisional(ejercicio)
+    resolution = register.resolve_provisional(ejercicio, sector_id=sector_id)
     if resolution.percentage is None or resolution.provenance is None:
         return None
     return IvaLedgerProrrataApportionment(
@@ -935,6 +1110,7 @@ def _classify_iva_transaction(
         recargo_amount=recargo_amount,
         prorrata_reference_id=linked_prorrata_id,
         input_classification=transaction.input_classification,
+        prorrata_sector_id=transaction.prorrata_sector_id,
     )
     return _IvaTransactionOutcome(
         observations=(observation,),
@@ -957,6 +1133,7 @@ def _iva_observation(
     prorrata_reference_id: str | None = None,
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
     input_classification: InputClassification | None = None,
+    prorrata_sector_id: str | None = None,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -971,6 +1148,7 @@ def _iva_observation(
         prorrata_reference_id=prorrata_reference_id,
         cash_accounting_treatment=cash_accounting_treatment,
         input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector_id,
     )
 
 
@@ -1004,6 +1182,7 @@ def _cash_accounting_observations(
                 recargo_amount=recargo_amount * proportionality,
                 prorrata_reference_id=linked_prorrata_id,
                 input_classification=transaction.input_classification,
+                prorrata_sector_id=transaction.prorrata_sector_id,
             ),
         )
     if resolved_period.contains(operation_date):
@@ -1019,6 +1198,7 @@ def _cash_accounting_observations(
                 iva_amount=full_iva_amount,
                 cash_accounting_treatment=transaction.cash_accounting_treatment,
                 input_classification=transaction.input_classification,
+                prorrata_sector_id=transaction.prorrata_sector_id,
             ),
         )
     return tuple(observations)
@@ -1267,6 +1447,7 @@ __all__ = [
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",
     "IvaLedgerProrrataApportionment",
+    "IvaLedgerSectorApportionment",
     "ProrrataLedgerReference",
     "aggregate_iva_ledger_candidate_bindings",
     "aggregate_iva_ledger_candidates",
