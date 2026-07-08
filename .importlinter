@@ -760,9 +760,6 @@ ignore_imports =
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
     # path for every application/domain test that routes fixtures through it.
     aeat.tests.secure_sql -> aeat.adapters.**
-    # Application-layer tests centralise real adapter constructors and storage
-    # layout helpers here instead of each owning direct adapter pins.
-    aeat.tests.application_adapter_exports -> aeat.adapters.**
     # The manual-ledger action support centralises its concrete adapter
     # constructors here so split application tests keep one test-support edge.
     aeat.tests.ledger_action_adapters -> aeat.adapters.**
@@ -961,29 +958,6 @@ ignore_imports =
     aeat.application.modelo.tests.test_review_package_recipient_registry -> aeat.tests.review_package_adapters
     aeat.application.modelo.tests.test_review_package_recipient_replay_guard -> aeat.tests.review_package_adapters
     aeat.application.modelo.tests.test_review_package_signing -> aeat.tests.review_package_adapters
-    aeat.application.aggregation.tests.test_impatriado_income_ledger -> aeat.tests.application_adapter_exports
-    aeat.application.aggregation.tests.test_renta_income_source_jurisdiction_m100 -> aeat.tests.application_adapter_exports
-    aeat.application.bucket_maintenance.tests.test_sandbox -> aeat.tests.application_adapter_exports
-    aeat.application.bucket_maintenance.tests.test_service_archive_restore -> aeat.tests.application_adapter_exports
-    aeat.application.bucket_maintenance.tests.test_service_disk_usage -> aeat.tests.application_adapter_exports
-    aeat.application.calculations.tests.test_modelo_100_base_negativa_general_compensation -> aeat.tests.application_adapter_exports
-    aeat.application.calculations.tests.test_modelo_130_multiyear_renta_enrollment -> aeat.tests.application_adapter_exports
-    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.tests.application_adapter_exports
-    aeat.application.filing.tests.test_source_mesh_review -> aeat.tests.application_adapter_exports
-    aeat.application.invoices.tests.test_bulk_import -> aeat.tests.application_adapter_exports
-    aeat.application.ledger.tests.test_evidence_draft -> aeat.tests.application_adapter_exports
-    aeat.application.ledger.tests.test_llm_classify_run_telemetry -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_amend_kind_resolution -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_bienes_inversion_advisory -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_m145_communication_create -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_m145_communication_events -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_memoized_transaction_catalogue_repository -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_modelo_202_2025_pago_fraccionado_manual_worked_example -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_review_package_collab_audit -> aeat.tests.application_adapter_exports
-    aeat.application.modelo.tests.test_review_package_feedback -> aeat.tests.application_adapter_exports
-    aeat.application.tests.test_diagnostics_telemetry -> aeat.tests.application_adapter_exports
     # ── participation-index derived encrypted cache: domain module wraps secure storage
     #    like the sibling per-domain repositories (ledger-participation-index-is-derived-rebuildable) ──
     # ── sanctioned cross-layer test/fixture edges (roundtrip discipline; secure_sql harness) ──
