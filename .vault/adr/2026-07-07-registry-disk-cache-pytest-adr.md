@@ -308,8 +308,17 @@ all three (zero rewrites), and the failure count returned to exactly the 6
 pre-existing, unrelated prorrata-campaign failures on runs 1 and 2 (0 new).
 Run 3, under heavier load, surfaced ONE additional failure
 (`test_public_api_boundaries.py::test_source_tree_does_not_use_absolute_registry_private_imports`,
-a source-tree AST scan wholly unrelated to the registry disk cache) that
-passed cleanly in isolation -- the general "registry-suite failures under
-parallel pytest are more often a loader-cache race than a real regression"
-pattern this codebase's own local-execution discipline already documents,
-not a regression from this hardening.
+a source-tree AST scan) that passed cleanly in isolation. This was
+**not** an instance of the general "loader-cache race" pattern this
+codebase's own local-execution discipline documents; a later honesty
+review traced it to a distinct, real defect in
+`test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions`
+itself, which materialised its throwaway scratch module directly inside
+the real, AST-walked `src/aeat/domain/calculations/registry/tests/`
+directory -- under heavier concurrent load its write/run/unlink window
+raced a sibling worker's AST scan of that same directory (exactly the
+directory `test_public_api_boundaries` also scans), surfacing as a
+transient `FileNotFoundError`. That defect is fixed by relocating the
+scratch module and its own minimal `conftest.py` (re-exporting the real
+`_isolate_registry_caches` autouse fixture by absolute import) under the
+test's own `tmp_path`, never under the tracked, walked tree.
