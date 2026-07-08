@@ -30,6 +30,7 @@ from ._persona_scope import (
     live_family_mutability,
     scope_for_persona,
 )
+from ._server import build_server
 from ._tools import McpToolDescriptor, build_tool_descriptors
 
 __all__ = [
@@ -42,6 +43,7 @@ __all__ = [
     "McpToolDescriptor",
     "PersonaToolScope",
     "annotations_for_command",
+    "build_server",
     "build_tool_descriptors",
     "command_key_for_tool",
     "confirmation_for_tool",
