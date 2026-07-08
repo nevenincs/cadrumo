@@ -34,6 +34,7 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
             "config", "profile", "create", profile_name,
             "--quiet", "--accept-defaults",
             "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
             "--tax-id", "12345678Z",
             "--name", "Lucia",
             "--surnames", "Navarro",

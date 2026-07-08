@@ -275,6 +275,19 @@ def test_manual_ledger_export_help_keeps_serialization_format_named_as_export_fo
 def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path: Path) -> None:
     """The root ``--format`` flag must remain the rendering switch used by ``_emit``."""
 
+    created = invoke_cached_cli(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Operator",
+            "--activity", "design",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+
     statement = tmp_path / "statement.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
