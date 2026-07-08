@@ -40,6 +40,10 @@ from ...domain.prorrata_register import (
     ProrrataRegisterEntry,
     resolve_provisional_percentage,
 )
+from ._sector_lifecycle import (
+    seed_sector_carried_definitive_from_register,
+    settle_sector_definitive,
+)
 from ._seed import (
     ProrrataPriorDefinitivaSeed,
     ProrrataPriorDefinitivaSeedEvaluation,
@@ -196,4 +200,6 @@ __all__ = [
     "cross_check_prorrata_entry_against_prior_observation",
     "evaluate_carried_prior_definitiva_seed",
     "seed_carried_prior_definitiva_entry",
+    "seed_sector_carried_definitive_from_register",
+    "settle_sector_definitive",
 ]
