@@ -21,6 +21,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S13]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S14]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S15]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S21]]'
   - '[[2026-07-07-iva-prorrata-complexity-W03-P04-S16]]'
   - '[[2026-07-07-iva-prorrata-complexity-W03-P04-S17]]'
   - '[[2026-07-07-iva-prorrata-complexity-W03-P04-S18]]'
@@ -35,6 +36,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W04-P05-S28]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
+  - '[[2026-07-08-iva-prorrata-complexity-adr]]'
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
 ---
 
@@ -47,6 +49,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 ### adr
 
 - `2026-07-07-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
+- `2026-07-08-iva-prorrata-complexity-adr` - `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `proposed`)
 
 ### audit
 
@@ -69,6 +72,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S13` - Emit the settlement art-103.Dos.2 +10% mandatory-especial advisory Notice via is_especial_mandatory, non-blocking, both totals on Notice.context
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S14` - Surface the per-input classification declaration at the CLI and the M303 especial classification metadata
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S15` - Verify all three art-106 reglas (100/0/common) and the +10% comparison against an AEAT Manual practico worked example with no substrate-derived expected values
+- `2026-07-07-iva-prorrata-complexity-W02-P03-S21` - Emit the art-103.Dos.2 +10% mandatory-especial advisory on the live M303 settlement diagnostics so the mandatory-especial breach surfaces to the operator (requires settlement-time dual-regime annual deducible-total computation)
 - `2026-07-07-iva-prorrata-complexity-W03-P04-S16` - Author the ley-37-1992 art-101 legal entry corpus-grounded, noting the art-101.Dos common-deduction regime is deferred
 - `2026-07-07-iva-prorrata-complexity-W03-P04-S17` - Add operator-declared sector identification (CNAE/IAE) on the contribuyente profile and the sector reference on the ledger transaction
 - `2026-07-07-iva-prorrata-complexity-W03-P04-S18` - Orchestrate per-(ejercicio,sector) register entries and per-sector routing in the regime-aware aggregation

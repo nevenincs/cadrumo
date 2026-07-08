@@ -107,6 +107,7 @@ from ._foreign_assets import (
     declarable_class,
 )
 from ._iva_ledger import (
+    AnnualDeducibleTotalsByRegime,
     IvaLedgerAggregation,
     IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
@@ -117,6 +118,7 @@ from ._iva_ledger import (
     aggregate_iva_ledger_candidates,
     aggregate_iva_ledger_observations,
     aggregate_iva_ledger_observations_from_repositories,
+    compute_annual_deducible_totals_by_regime,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
     validate_iva_ledger_observation,
@@ -233,6 +235,7 @@ __all__ = [
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
+    "AnnualDeducibleTotalsByRegime",
     "AtribucionMemberSourceResolver",
     "BindingSourceDisposition",
     "BorradorSourceProvenance",
@@ -316,6 +319,7 @@ __all__ = [
     "build_binding_source_dispositions",
     "business_proportion",
     "collect_unhandled_source_diagnostics",
+    "compute_annual_deducible_totals_by_regime",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
     "compute_retenciones_totals_parity",

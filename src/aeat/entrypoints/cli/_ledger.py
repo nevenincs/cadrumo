@@ -230,8 +230,10 @@ def _prorrata_especial_inert_notice(
         ejercicio=ejercicio,
         default=(
             f"--input-classification is inert for ejercicio {ejercicio}: no prorrata especial "
-            f"election applies, so the input deducts under the general percentage. Run "
-            f"'app ledger prorrata elect-especial --ejercicio {ejercicio}' to route it by LIVA art. 106."
+            f"election applies, so the input deducts under the general percentage. Classifying every "
+            f"input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial "
+            f"check on a general bucket. Run 'app ledger prorrata elect-especial --ejercicio {ejercicio}' "
+            f"to route it by LIVA art. 106."
         ),
     )
     return Notice(

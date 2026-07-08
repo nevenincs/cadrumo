@@ -3642,10 +3642,7 @@ cli:
         integra; exclusively_non_deductible sin deduccion; common al porcentaje general
         de prorrata); solo relevante para operaciones soportadas en un bucket con
         prorrata especial.'
-      input_classification_inert: '--input-classification es inerte para el ejercicio
-        {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que
-        el input se deduce al porcentaje general. Ejecuta ''app ledger prorrata elect-especial
-        --ejercicio {ejercicio}'' para enrutarlo segun LIVA art. 106.'
+      input_classification_inert: '--input-classification es inerte para el ejercicio {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que el input se deduce al porcentaje general. Clasificar todos los inputs del ejercicio tambien habilita la comprobacion de prorrata especial obligatoria (LIVA art. 103.Dos.2) en la liquidacion para un regimen general. Ejecuta ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo segun LIVA art. 106.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
