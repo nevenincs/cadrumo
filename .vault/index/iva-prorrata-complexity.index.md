@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-prorrata-complexity'
-date: '2026-07-07'
-modified: '2026-07-07'
+date: '2026-07-08'
+modified: '2026-07-08'
 related:
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S01]]'
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S02]]'
@@ -17,6 +17,8 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-W01-P02-S09]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S10]]'
   - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S11]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S12]]'
+  - '[[2026-07-07-iva-prorrata-complexity-W02-P03-S13]]'
   - '[[2026-07-07-iva-prorrata-complexity-adr]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
 ---
@@ -44,6 +46,8 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 - `2026-07-07-iva-prorrata-complexity-W01-P02-S09` - Verify the interruption seed against a worked example with a genuine gap and no averaged percentages
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S10` - Author the ley-37-1992 art-103 and art-106 legal entries with corpus_ref + required_text, grounded in the bundled consolidated LIVA
 - `2026-07-07-iva-prorrata-complexity-W02-P03-S11` - Add the typed input_classification axis (core InputClassification) to the ledger transaction, operator-declared for especial buckets, with roundtrip + anti-tautology proof
+- `2026-07-07-iva-prorrata-complexity-W02-P03-S12` - Make the shared ledger IVA apportionment regime-aware so especial routes each deducible cuota via _deductible_percentage_for (100/0/general), the general path stays byte-identical, and provenance carries the applied classification and percentage
+- `2026-07-07-iva-prorrata-complexity-W02-P03-S13` - Emit the settlement art-103.Dos.2 +10% mandatory-especial advisory Notice via is_especial_mandatory, non-blocking, both totals on Notice.context
 
 ### plan
 
