@@ -3546,10 +3546,7 @@ cli:
         levonas; exclusively_non_deductible: nincs levonas; common: az altalanos prorrata
         szazalekaval); csak prorrata especial ala tartozo bucket bemeneti soraira
         ertelmes.'
-      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio}
-        ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet
-        az altalanos szazalekkal vonhato le. Futtasd az ''app ledger prorrata elect-especial
-        --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint iranyitsd.'
+      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio} ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet az altalanos szazalekkal vonhato le. Az ejercicio minden bemenetenek osztalyozasa a liquidacioban a LIVA art. 103.Dos.2 kotelezo prorrata especial ellenorzest is engedelyezi altalanos szabalyu keret eseten. Futtasd az ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint iranyitsd.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.

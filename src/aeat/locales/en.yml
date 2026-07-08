@@ -3354,10 +3354,7 @@ cli:
         per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible:
         no deduction; common: deducted at the general prorrata percentage); meaningful
         only for input rows in a bucket under prorrata especial.'
-      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}:
-        no prorrata especial election applies, so the input deducts under the general
-        percentage. Run ''app ledger prorrata elect-especial --ejercicio {ejercicio}''
-        to route it by LIVA art. 106.'
+      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}: no prorrata especial election applies, so the input deducts under the general percentage. Classifying every input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run ''app ledger prorrata elect-especial --ejercicio {ejercicio}'' to route it by LIVA art. 106.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
