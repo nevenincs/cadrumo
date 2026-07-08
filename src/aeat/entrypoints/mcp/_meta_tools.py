@@ -74,21 +74,44 @@ class MetaExecuteResult(BaseModel):
     is_error: bool = False
 
 
-def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
-    """Build the searchable document for one command.
+#: Curated outcome-vocabulary aliases folded into a command's search document
+#: (ADR ``mcp-progressive-discovery`` P2/S08). This is INDEX text only, never the
+#: model-facing tool description (H5 English-boundary): it lets an outcome-phrased
+#: query ("file my quarterly VAT", "do my taxes") reach the composite ``quickfile``
+#: chain that literal-verb tokens miss. English plus the Spanish outcome nouns the
+#: CLI help uses (``presentar``, ``declaración``, ``trimestral``, ``autoliquidación``).
+_COMMAND_ALIASES: dict[str, str] = {
+    "quickfile": (
+        "file my taxes do my taxes file my return file quarterly taxes "
+        "submit quarterly VAT IVA tax return declaration "
+        "presentar la declaración trimestral autoliquidación de impuestos "
+        "one command full filing chain"
+    ),
+}
 
-    The doc text unions the command key (its dotted tokens carry the verb-level
-    vocabulary - ``calculate``, ``export``, ``iva_wallet``), the tool name, the
-    English description, AND the command's own per-verb CLI help (ADR
-    ``mcp-progressive-discovery`` P2/S05). The help is the CLI's Spanish
-    domain vocabulary, so folding it into the index - NOT into the English
-    model-facing description (H5) - lets a Spanish concept query recall the right
-    verb where the English description alone would miss it.
+
+def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
+    """Build the weighted searchable document for one command.
+
+    The document splits into BM25-weighted tiers (ADR ``mcp-progressive-discovery``
+    P2/S07): ``key_and_name`` (the command key's dotted tokens - ``calculate``,
+    ``export``, ``iva_wallet`` - plus the tool name) ranks highest, curated outcome
+    ``aliases`` next, then the English ``description``, then the command's own
+    per-verb CLI ``help``. The help is the CLI's Spanish domain vocabulary, so
+    folding it into the index - NOT into the English model-facing description (H5) -
+    lets a Spanish concept query recall the right verb; the aliases surface the
+    composite verbs on outcome-phrased queries without touching the model surface.
     """
     key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
-    verb_help = descriptor.verb_schema.help
-    text = f"{descriptor.command_key} {key_tokens} {descriptor.name} {descriptor.description} {verb_help}"
-    return CommandDoc(command_key=descriptor.command_key, tool_name=descriptor.name, text=text)
+    key_and_name = f"{descriptor.command_key} {key_tokens} {descriptor.name}"
+    return CommandDoc(
+        command_key=descriptor.command_key,
+        tool_name=descriptor.name,
+        key_and_name=key_and_name,
+        description=descriptor.description,
+        aliases=_COMMAND_ALIASES.get(descriptor.command_key, ""),
+        help=descriptor.verb_schema.help,
+    )
 
 
 def build_command_search_index(descriptors: tuple[McpToolDescriptor, ...]) -> CommandIndex:
