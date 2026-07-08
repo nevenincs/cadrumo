@@ -741,6 +741,7 @@ ignore_imports =
     aeat.application.storage.calc_sheets._parity_harness -> aeat.adapters.**
     aeat.application.user_profile._aggregate -> aeat.adapters.**
     aeat.application.user_profile._bundle -> aeat.adapters.**
+    aeat.application.user_profile._bundle_encryption -> aeat.adapters.**
     aeat.application.user_profile._capabilities -> aeat.adapters.**
     aeat.application.user_profile._censo_sync -> aeat.adapters.**
     aeat.application.user_profile._custody -> aeat.adapters.**
