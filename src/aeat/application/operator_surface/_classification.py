@@ -32,6 +32,8 @@ from functools import lru_cache
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.json_contract import ENVELOPE_SCHEMA_VERSION
+from ._manifest import build_operator_surface_manifest
 from ._models import OperatorMutability
 from ._risk_table import CommandRiskDeclaration, declared_risk
 
@@ -104,9 +106,6 @@ def classify_command(command_key: str, *, mutability: OperatorMutability) -> Com
 @lru_cache(maxsize=1)
 def _family_mutability_map() -> dict[str, OperatorMutability]:
     """Map each normalized command-family child token to its manifest mutability (cached)."""
-    from ...core.json_contract import ENVELOPE_SCHEMA_VERSION
-    from ._manifest import build_operator_surface_manifest
-
     contract = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
         command_schemas=(),
