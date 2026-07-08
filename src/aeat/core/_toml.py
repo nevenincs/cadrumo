@@ -71,7 +71,7 @@ def parse_toml_text(text: str, *, error_factory: Callable[[str], Exception]) -> 
         text: TOML payload to decode.
         error_factory: Callable that builds the domain-specific
             exception from a message; invoked on
-            :class:`rtoml.TomlParsingError`.
+            ``rtoml.TomlParsingError``.
 
     Returns:
         The parsed top-level TOML mapping.
