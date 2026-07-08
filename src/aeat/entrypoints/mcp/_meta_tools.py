@@ -77,11 +77,16 @@ def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     """Build the searchable document for one command.
 
     The doc text unions the command key (its dotted tokens carry the verb-level
-    vocabulary - ``calculate``, ``export``, ``iva_wallet``), the tool name, and
-    the human description, so a concept query matches whichever field carries it.
+    vocabulary - ``calculate``, ``export``, ``iva_wallet``), the tool name, the
+    English description, AND the command's own per-verb CLI help (ADR
+    ``mcp-progressive-discovery`` P2/S05). The help is the CLI's Spanish
+    domain vocabulary, so folding it into the index - NOT into the English
+    model-facing description (H5) - lets a Spanish concept query recall the right
+    verb where the English description alone would miss it.
     """
     key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
-    text = f"{descriptor.command_key} {key_tokens} {descriptor.name} {descriptor.description}"
+    verb_help = descriptor.verb_schema.help
+    text = f"{descriptor.command_key} {key_tokens} {descriptor.name} {descriptor.description} {verb_help}"
     return CommandDoc(command_key=descriptor.command_key, tool_name=descriptor.name, text=text)
 
 

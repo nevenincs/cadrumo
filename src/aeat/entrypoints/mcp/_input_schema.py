@@ -120,6 +120,10 @@ class VerbInputSchema(BaseModel):
     command_key: str = Field(min_length=1)
     cli_path: tuple[str, ...] = Field(min_length=1)
     parameters: tuple[VerbParameter, ...] = ()
+    #: The command's own one-line help (its click ``short_help`` / first help
+    #: line), so the MCP tool description can be verb-specific rather than the
+    #: shared family intent (ADR mcp-progressive-discovery P2/S05).
+    help: str = ""
 
     def json_schema(self) -> dict[str, Any]:
         """Project the parameters into a JSON Schema object for the tool.
@@ -324,7 +328,21 @@ def _schema_from_resolution(
         projected for parameter in command.params if (projected := _parameter_from_click(parameter)) is not None
     )
     cli_path = resolved or _naive_cli_path(command_key)
-    return VerbInputSchema(command_key=command_key, cli_path=cli_path, parameters=parameters)
+    return VerbInputSchema(
+        command_key=command_key,
+        cli_path=cli_path,
+        parameters=parameters,
+        help=_command_help(command),
+    )
+
+
+def _command_help(command: ClickCommand) -> str:
+    """Return the command's one-line help (its ``short_help`` or first help line)."""
+    short = str(getattr(command, "short_help", "") or "").strip()
+    if short:
+        return short
+    full = str(getattr(command, "help", "") or "").strip()
+    return full.splitlines()[0].strip() if full else ""
 
 
 def build_verb_input_schema(root: ClickCommand, command_key: str) -> VerbInputSchema:
