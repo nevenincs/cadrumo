@@ -9,6 +9,7 @@ fix through the real encrypted repository under an in-process bucket session.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
@@ -263,3 +264,74 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
         assert reloaded.entries == (entry,)
         assert reloaded.is_sectorized
         assert reloaded.sector_ids() == ("comercio",)
+
+
+def _add_row(*, key: str, sector: str | None = None, input_classification: str | None = None):
+    args = [
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-05-03",
+        "--amount",
+        "121.00",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "supplier invoice",
+        "--idempotency-key",
+        key,
+    ]
+    if sector is not None:
+        args += ["--sector", sector]
+    if input_classification is not None:
+        args += ["--input-classification", input_classification]
+    return _invoke(args)
+
+
+def _envelope_notice_codes(result) -> set[str]:
+    payload = json.loads(result.output)
+    return {notice["code"] for notice in payload.get("notices", [])}
+
+
+def test_sector_tag_is_part_of_the_idempotency_identity() -> None:
+    first = _add_row(key="tx-sector-id", sector="alquiler")
+    assert first.exit_code == 0, first.output
+
+    # Same key, same sector: guarded idempotent no-op (proves the tag persisted).
+    replay = _add_row(key="tx-sector-id", sector="alquiler")
+    assert replay.exit_code == 0, replay.output
+    assert _json(replay)["bucket_event_ids"] == []
+
+    # Same key, different sector: content differs, so the add is refused — proving
+    # prorrata_sector_id participates in the persisted identity, not silently dropped.
+    conflict = _add_row(key="tx-sector-id", sector="comercio")
+    assert conflict.exit_code != 0
+
+
+def test_input_classification_without_especial_election_warns() -> None:
+    result = _add_row(key="tx-inert", input_classification="exclusively_deductible")
+    assert result.exit_code == 0, result.output
+    assert "ledger.add.input_classification_inert" in _envelope_notice_codes(result)
+
+
+def test_input_classification_with_especial_election_is_not_inert() -> None:
+    elected = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2026",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert elected.exit_code == 0, elected.output
+
+    result = _add_row(key="tx-especial", input_classification="exclusively_deductible")
+    assert result.exit_code == 0, result.output
+    assert "ledger.add.input_classification_inert" not in _envelope_notice_codes(result)
