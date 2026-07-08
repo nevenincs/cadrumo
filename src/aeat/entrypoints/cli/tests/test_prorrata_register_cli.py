@@ -190,3 +190,76 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
         reloaded = repository.load()
         assert reloaded.sector_definitions == (definition,)
         assert {entry.ejercicio for entry in reloaded.entries} == {2024, 2025}
+
+
+def test_declare_sector_persists_partition_and_sectorizes_register() -> None:
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "declare-sector",
+            "--sector-id",
+            "arrendamiento",
+            "--letra",
+            SectorDiferenciadoLetra.A.value,
+            "--activity-code",
+            "6820",
+            "--activity-code",
+            "6810",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json(result)
+    assert payload["sector"]["sector_id"] == "arrendamiento"
+    assert payload["sector"]["letra"] == SectorDiferenciadoLetra.A.value
+    assert payload["sector"]["member_activity_codes"] == ["6820", "6810"]
+
+    listing = _invoke(["--format", "json", "app", "ledger", "prorrata", "list"])
+    assert listing.exit_code == 0, listing.output
+    sectors = _json(listing)["sectors"]
+    assert isinstance(sectors, list) and len(sectors) == 1
+    assert sectors[0]["sector_id"] == "arrendamiento"
+
+
+def test_declare_sector_requires_at_least_one_activity_code() -> None:
+    result = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "declare-sector",
+            "--sector-id",
+            "arrendamiento",
+            "--letra",
+            SectorDiferenciadoLetra.A.value,
+        ],
+    )
+    assert result.exit_code != 0
+
+
+def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-preserve-entries"):
+        repository = ProrrataRegisterRepository()
+        entry = ProrrataRegisterEntry(
+            ejercicio=2025,
+            regime=ProrrataRegisterRegime.ESPECIAL,
+            provisional_percentage=Decimal("60"),
+            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        )
+        repository.save(ProrrataRegister(entries=(entry,)))
+
+        repository.upsert_sector_definition(
+            SectorDefinition(
+                sector_id="comercio",
+                letra=SectorDiferenciadoLetra.A,
+                member_activity_codes=("4711",),
+            )
+        )
+
+        reloaded = repository.load()
+        assert reloaded.entries == (entry,)
+        assert reloaded.is_sectorized
+        assert reloaded.sector_ids() == ("comercio",)

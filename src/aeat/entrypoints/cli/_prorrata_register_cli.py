@@ -25,7 +25,7 @@ from __future__ import annotations
 import typer
 
 from ...application.prorrata_register import ProrrataRegisterService
-from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, SectorDiferenciadoLetra
 from ...core.i18n import tr
 from ...domain.prorrata_register import (
     ProrrataRegister,
@@ -36,6 +36,7 @@ from ...domain.prorrata_register import (
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
 from ._prorrata_register_payloads import (
+    ProrrataDeclareSectorResult,
     ProrrataElectEspecialResult,
     ProrrataElectGeneralResult,
     ProrrataElectResult,
@@ -310,6 +311,73 @@ def prorrata_elect_general(
         sector_id=sector,
         result_class=ProrrataElectGeneralResult,
         command="ledger.prorrata.elect_general",
+    )
+
+
+@prorrata_app.command(
+    "declare-sector",
+    help=tr(
+        "cli.app.ledger.prorrata.declare_sector_help",
+        default=(
+            "Declare one differentiated sector (LIVA arts. 9.1.c / 101): the operator's "
+            "art. 9.1.c partition, never inferred from the ledger."
+        ),
+    ),
+)
+def prorrata_declare_sector(
+    ctx: typer.Context,
+    sector_id: str = typer.Option(
+        ...,
+        "--sector-id",
+        help=tr(
+            "cli.app.ledger.prorrata.sector_id_help",
+            default="Stable sector id the register entries and ledger rows reference.",
+        ),
+    ),
+    letra: SectorDiferenciadoLetra = typer.Option(
+        ...,
+        "--letra",
+        help=tr(
+            "cli.app.ledger.prorrata.letra_help",
+            default="LIVA art. 9.1.c letra (a/b/c/d) that makes this sector differentiated.",
+        ),
+    ),
+    activity_code: list[str] = typer.Option(
+        [],
+        "--activity-code",
+        help=tr(
+            "cli.app.ledger.prorrata.activity_code_help",
+            default="CNAE / IAE activity code grouped into this sector (repeatable, at least one).",
+        ),
+    ),
+) -> None:
+    """Persist one :class:`SectorDefinition` onto the register partition."""
+    bucket_id = _register_bucket_id()
+    try:
+        definition = SectorDefinition(
+            sector_id=sector_id,
+            letra=letra,
+            member_activity_codes=tuple(activity_code),
+        )
+    except ProrrataRegisterValidationError as exc:
+        raise _bad(str(exc)) from exc
+    register = ProrrataRegisterService().declare_sector(definition)
+    payload = ProrrataDeclareSectorResult(
+        bucket_id=bucket_id,
+        sector=_sector_payload(definition),
+        count=len(register.sector_definitions),
+    )
+    _emit_envelope(
+        ctx,
+        command="ledger.prorrata.declare_sector",
+        result=payload,
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"sector_id\t{definition.sector_id}",
+            f"letra\t{definition.letra.value}",
+            f"member_activity_codes\t{','.join(definition.member_activity_codes)}",
+            f"count\t{len(register.sector_definitions)}",
+        ),
     )
 
 

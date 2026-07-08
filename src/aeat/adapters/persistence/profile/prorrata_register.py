@@ -31,6 +31,7 @@ from ....domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
+    SectorDefinition,
 )
 from ..storage import (
     PROFILE_PRORRATA_REGISTER_NAMESPACE,
@@ -215,6 +216,33 @@ class ProrrataRegisterRepository:
         updated = ProrrataRegister(
             entries=(*retained, entry),
             sector_definitions=current.sector_definitions,
+        )
+        self._save_unlocked(updated)
+        return updated
+
+    def upsert_sector_definition(self, definition: SectorDefinition) -> ProrrataRegister:
+        """Atomically add or replace a differentiated-sector definition by its ``sector_id``.
+
+        The register carries one :class:`SectorDefinition` per ``sector_id``
+        (LIVA arts. 9.1.c / 101); declaring a sector whose id already exists
+        replaces it rather than raising. Existing per-ejercicio entries are
+        preserved, so the operator can declare the partition and the per-sector
+        entries in either order.
+
+        Args:
+            definition: The differentiated-sector partition entry to insert or
+                update.
+
+        Returns:
+            The updated :class:`ProrrataRegister` including the definition.
+        """
+        current = self.load()
+        retained = tuple(
+            existing for existing in current.sector_definitions if existing.sector_id != definition.sector_id
+        )
+        updated = ProrrataRegister(
+            entries=current.entries,
+            sector_definitions=(*retained, definition),
         )
         self._save_unlocked(updated)
         return updated
