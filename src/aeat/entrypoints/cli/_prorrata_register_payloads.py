@@ -66,6 +66,15 @@ class ProrrataElectGeneralResult(ProrrataElectResult):
     """JSON envelope for ``aeat app ledger prorrata elect-general``."""
 
 
+@register_schema("ledger.prorrata.declare_sector")
+class ProrrataDeclareSectorResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger prorrata declare-sector``."""
+
+    bucket_id: str
+    sector: SectorDefinitionPayload
+    count: int
+
+
 @register_schema("ledger.prorrata.list")
 class ProrrataListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata list``."""
@@ -77,6 +86,7 @@ class ProrrataListResult(OutputSchema):
 
 
 __all__ = [
+    "ProrrataDeclareSectorResult",
     "ProrrataElectEspecialResult",
     "ProrrataElectGeneralResult",
     "ProrrataElectResult",
