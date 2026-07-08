@@ -7,13 +7,14 @@ keyed mapping of typed :class:`Invoice` records) through
 
 The sibling adapter-level test
 (``adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py``)
-already exercises the plain domestic-invoice shape. This test fills the
-remaining coverage gap: every optional :class:`Invoice` field the domestic
-fixture leaves at its default (``bucket_id``, ``iva_category``,
-``operation_type``, ``oss_ioss_regime``, ``oss_transaction_kind``,
-``retention_rate``, ``retention_amount``, ``payment_id``, ``notes``,
-``linked_transaction_ids``) is populated with a non-default value here,
-split across a domestic professional invoice (retention-bearing) and a
+already exercises the plain domestic-invoice shape, including a populated
+``notes`` and ``linked_transaction_ids``. This test fills the remaining
+coverage gap: every optional :class:`Invoice` (and :class:`InvoiceLine`)
+field that fixture still leaves at its default (``bucket_id``,
+``iva_category``, ``operation_type``, ``oss_ioss_regime``,
+``oss_transaction_kind``, ``oss_rate_kind``, ``retention_rate``,
+``retention_amount``, ``payment_id``) is populated with a non-default value
+here, split across a domestic professional invoice (retention-bearing) and a
 cross-border OSS consumer invoice (the union-scheme axis). A save-drops-field
 regression on any of these optional fields is invisible unless a roundtrip
 fixture actually populates them.
