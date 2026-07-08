@@ -74,7 +74,13 @@ from ._hitl import (
     requires_user_interaction,
 )
 from ._input_schema import cli_argv_for
-from ._meta_tools import build_command_search_index, manage_toolsets, meta_execute, search_commands
+from ._meta_tools import (
+    build_command_search_index,
+    describe_command,
+    manage_toolsets,
+    meta_execute,
+    search_commands_response,
+)
 from ._persona_scope import (
     AgentPersona,
     active_persona,
@@ -127,6 +133,11 @@ _META_EXECUTE_TOOL = "execute"
 # a domain toolset adds its per-verb tools to the advertised surface (within the
 # active persona's scope) and emits tools/list_changed for clients that honour it.
 _META_TOOLSETS_TOOL = "toolsets"
+# The per-command descriptor meta-tool (ADR mcp-progressive-discovery P2/S10):
+# returns one command's full shape by key - schema, annotations, confirmation
+# tier, declared risk, owning toolset, and reachable personas - so a model can
+# inspect a verb fully before spending an ``execute`` round-trip on it.
+_META_DESCRIBE_TOOL = "describe"
 
 
 def emit_missing_sdk_refusal() -> None:
@@ -297,14 +308,15 @@ def _run_subprocess_tool(
 
 
 def build_meta_sdk_tools() -> list[Tool]:
-    """Build the SDK ``Tool`` objects for the ``search`` and ``execute`` meta-tools.
+    """Build the SDK ``Tool`` objects for the core-surface meta-tools.
 
     Lazily imports the SDK ``Tool`` type so the module still imports when the
     ``aeat-cli[agent]`` extra is absent. Exposed at module level so the meta-tool
     surface is unit-tested against the real SDK types when they are installed.
 
     Returns:
-        The ``search`` and ``execute`` :class:`mcp.types.Tool` objects.
+        The ``search``, ``execute``, ``toolsets``, and ``describe``
+        :class:`mcp.types.Tool` objects.
     """
     from mcp.types import Tool
 
@@ -360,6 +372,24 @@ def build_meta_sdk_tools() -> list[Tool]:
                     },
                 },
                 "required": ["action"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name=_META_DESCRIBE_TOOL,
+            description=(
+                "Return one aeat command's full descriptor by key: schema, annotations, confirmation "
+                "tier, risk, owning toolset, and which personas may call it."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "command_key": {
+                        "type": "string",
+                        "description": "The registry command key to describe, e.g. modelo.export.",
+                    }
+                },
+                "required": ["command_key"],
                 "additionalProperties": False,
             },
         ),
@@ -664,15 +694,29 @@ def build_server(
                 isError=False,
             )
         if name == _META_SEARCH_TOOL:
-            results = search_commands(
+            response = search_commands_response(
                 str(arguments.get("query", "") or ""),
                 descriptors=descriptors,
                 index=command_index,
             )
-            payload: dict[str, object] = {"results": [result.model_dump() for result in results]}
+            search_payload = response.model_dump(mode="json")
             return CallToolResult(
-                content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
-                structuredContent=payload,
+                content=[TextContent(type="text", text=json.dumps(search_payload, indent=2))],
+                structuredContent=search_payload,
+                isError=False,
+            )
+        if name == _META_DESCRIBE_TOOL:
+            describe_key = str(arguments.get("command_key", "") or "")
+            described = describe_command(describe_key, descriptors=descriptors)
+            if described is None:
+                return CallToolResult(
+                    content=[TextContent(type="text", text=f"unknown command: {describe_key}")],
+                    isError=True,
+                )
+            describe_payload = described.model_dump(mode="json")
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(describe_payload, indent=2))],
+                structuredContent=describe_payload,
                 isError=False,
             )
         if name == _META_TOOLSETS_TOOL:

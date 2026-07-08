@@ -24,10 +24,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.command_search import CommandDoc, CommandIndex, build_command_index
+from ...application.operator_surface import declared_risk
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
-from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
+from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_toolsets, toolset_for_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -141,6 +142,142 @@ def search_commands(
             )
         )
     return tuple(results)
+
+
+class MetaSearchResponse(BaseModel):
+    """The ``search`` meta-tool result with its overflow signal.
+
+    Wraps the capped :class:`MetaSearchResult` page with how much the corpus
+    actually matched (ADR ``mcp-progressive-discovery`` P2/S11): ``total_matches``
+    is the full count over the whole verb surface, ``truncated`` is true when the
+    page dropped some of them, and ``hint`` names the next moves - ``describe`` for
+    one command's full schema, ``toolsets`` to widen the advertised surface - so a
+    model that overflowed the page knows it did and how to recover.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    results: tuple[MetaSearchResult, ...] = ()
+    total_matches: int = Field(ge=0)
+    truncated: bool
+    hint: str = ""
+
+
+def search_commands_response(
+    query: str,
+    *,
+    descriptors: tuple[McpToolDescriptor, ...],
+    index: CommandIndex | None = None,
+    limit: int = 20,
+) -> MetaSearchResponse:
+    """Rank the command surface and report how much of it overflowed the page.
+
+    Returns the same capped page as :func:`search_commands` alongside the full
+    match count over the whole verb corpus, so the client sees whether the page
+    truncated the result set. ``total_matches`` counts every command key the index
+    matches (capped internally at the corpus size, never a semantic backend - that
+    is a later step); ``truncated`` and the recovery ``hint`` follow from it. A
+    blank query returns the empty response.
+
+    Returns:
+        The :class:`MetaSearchResponse` for ``query``.
+    """
+    if not query.strip():
+        return MetaSearchResponse(results=(), total_matches=0, truncated=False, hint="")
+    search_index = index if index is not None else build_command_search_index(descriptors)
+    results = search_commands(query, descriptors=descriptors, index=search_index, limit=limit)
+    known_keys = {descriptor.command_key for descriptor in descriptors}
+    all_hits = search_index.search(query, limit=len(descriptors))
+    total_matches = sum(1 for hit in all_hits if hit.command_key in known_keys)
+    truncated = total_matches > len(results)
+    hint = (
+        "More commands matched than were returned; narrow the query, call `describe` with a "
+        "command_key for one command's full schema, or activate a domain toolset through `toolsets` "
+        "to widen the advertised surface."
+        if truncated
+        else ""
+    )
+    return MetaSearchResponse(results=results, total_matches=total_matches, truncated=truncated, hint=hint)
+
+
+class MetaDescribeResult(BaseModel):
+    """One command's full descriptor for the ``describe`` meta-tool.
+
+    The self-sufficient counterpart to a :class:`MetaSearchResult` hit (ADR
+    ``mcp-progressive-discovery`` P2/S10): where ``search`` returns a ranked page
+    of decision hints, ``describe`` returns ONE command's whole shape by key - its
+    per-verb ``input_schema``, its mutability annotations, its confirmation tier,
+    its declared risk posture, its owning curated toolset, and exactly which
+    personas may call it - so a model can inspect a verb fully before spending an
+    ``execute`` round-trip on it.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    command_key: str = Field(min_length=1)
+    tool_name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    input_schema: dict[str, Any] = Field(default_factory=dict)
+    read_only: bool
+    destructive: bool
+    idempotent: bool
+    open_world: bool
+    confirmation_tier: str = Field(min_length=1)
+    risk_destructive: bool
+    risk_handoff: bool
+    risk_live_write: bool
+    owning_toolset: str | None = None
+    reachable_personas: tuple[str, ...] = ()
+
+
+def describe_command(
+    command_key: str,
+    *,
+    descriptors: tuple[McpToolDescriptor, ...],
+) -> MetaDescribeResult | None:
+    """Return one command's full descriptor by key, or ``None`` when unexposed.
+
+    Resolves everything from the live descriptor set and the real classifiers -
+    the annotation hints from the descriptor, the confirmation tier from
+    :func:`~entrypoints.mcp._hitl.confirmation_for_tool`, the declared risk from
+    :func:`~application.operator_surface.declared_risk` (all-false for a read-only
+    command with no row), the owning toolset from
+    :func:`~entrypoints.mcp._toolsets.toolset_for_command`, and the reachable
+    personas from the same scope + handoff-deny gates the call path enforces. A
+    key that names no exposed descriptor returns ``None``.
+
+    Returns:
+        The :class:`MetaDescribeResult` for ``command_key``, or ``None``.
+    """
+    descriptor = next((candidate for candidate in descriptors if candidate.command_key == command_key), None)
+    if descriptor is None:
+        return None
+    risk = declared_risk(command_key)
+    toolset = toolset_for_command(command_key, family_map=_family_domain_map())
+    reachable = tuple(
+        sorted(
+            persona.value
+            for persona in AgentPersona
+            if is_tool_in_persona_scope(persona=persona, command_key=command_key)
+            and not is_handoff_denied(persona=persona, command_key=command_key)
+        )
+    )
+    return MetaDescribeResult(
+        command_key=descriptor.command_key,
+        tool_name=descriptor.name,
+        description=descriptor.description,
+        input_schema=descriptor.input_schema,
+        read_only=descriptor.annotations.read_only_hint,
+        destructive=descriptor.annotations.destructive_hint,
+        idempotent=descriptor.annotations.idempotent_hint,
+        open_world=descriptor.annotations.open_world_hint,
+        confirmation_tier=confirmation_for_tool(command_key=command_key).value,
+        risk_destructive=risk.destructive if risk is not None else False,
+        risk_handoff=risk.handoff if risk is not None else False,
+        risk_live_write=risk.live_write if risk is not None else False,
+        owning_toolset=toolset.value if toolset is not None else None,
+        reachable_personas=reachable,
+    )
 
 
 def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor) -> str | None:
