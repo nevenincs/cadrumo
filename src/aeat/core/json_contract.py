@@ -213,6 +213,14 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
         schema_version: Envelope version; bumped only on
             backwards-incompatible changes to the shared spine.
         command: Stable command path string (e.g. ``"workflow list"``).
+        active_profile: Human-readable label of the active taxpayer
+            profile (the operator-chosen display name), or ``None`` before
+            any profile exists and for non-profile-bound commands. The
+            identity anchor a caller reconciles against; it is the label,
+            never the redacted profile/bucket UUID. Resolved and injected
+            at the CLI transport boundary (the ``core`` layer never scans
+            profile manifests), so it stays ``None`` for any emitter that
+            does not supply it.
         status: Outcome discriminator (``success`` or ``warning`` here).
         result: The strict-validated command result.
         notices: Typed non-blocking diagnostics (warnings, advisories,
@@ -224,6 +232,14 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
 
     schema_version: str = Field(default=ENVELOPE_SCHEMA_VERSION, min_length=1)
     command: str = Field(min_length=1)
+    active_profile: str | None = Field(
+        default=None,
+        description=(
+            "Human label of the active taxpayer profile, or null before a "
+            "profile exists / for non-profile-bound commands; never the "
+            "redacted profile or bucket UUID."
+        ),
+    )
     status: EnvelopeStatus
     result: ResultT
     notices: list[Notice] = Field(default_factory=list)
@@ -317,6 +333,7 @@ def emit_json_success(
     result: object,
     *,
     notices: Sequence[Notice] | None = None,
+    active_profile: str | None = None,
     indent: int | None = 2,
     sort_keys: bool = False,
     stream: IO[str] | None = None,
@@ -343,6 +360,13 @@ def emit_json_success(
             ``envelope.result``.
         notices: Optional typed :class:`Notice` diagnostics (warnings,
             advisories, next-step hints); defaults to an empty list.
+        active_profile: Optional human label of the active taxpayer
+            profile placed on the shared spine (the identity anchor).
+            The ``core`` layer never scans profile manifests, so the CLI
+            transport resolves the label and passes it here; ``None`` for
+            non-profile-bound emitters. It rides through the same
+            redaction pass as the rest of the envelope, but it is the
+            non-secret display name, not the redacted profile/bucket UUID.
         indent: Indent width forwarded to :func:`emit_json_document`.
         sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
         stream: Target text stream; defaults to :data:`sys.stdout`.
@@ -354,6 +378,7 @@ def emit_json_success(
         {
             "schema_version": ENVELOPE_SCHEMA_VERSION,
             "command": command,
+            "active_profile": active_profile,
             "status": derive_status(resolved_notices).value,
             "result": _jsonable_payload(result),
             "notices": [_jsonable_payload(notice) for notice in resolved_notices],
