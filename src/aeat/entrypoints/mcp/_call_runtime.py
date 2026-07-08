@@ -21,6 +21,7 @@ deferred until the v2 SDK is stable.
 from __future__ import annotations
 
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -100,11 +101,13 @@ def _terminate_tree(process: subprocess.Popen[str]) -> None:
     if process.poll() is not None:
         return
     if sys.platform == "win32":
-        subprocess.run(  # noqa: S603, S607 - Windows system taskkill, fixed argv, our own child's PID
-            ["taskkill", "/F", "/T", "/PID", str(process.pid)],
-            capture_output=True,
-            check=False,
-        )
+        taskkill = shutil.which("taskkill")
+        if taskkill is not None:
+            subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
+                [taskkill, "/F", "/T", "/PID", str(process.pid)],
+                capture_output=True,
+                check=False,
+            )
         return
     try:
         os.killpg(os.getpgid(process.pid), signal.SIGKILL)

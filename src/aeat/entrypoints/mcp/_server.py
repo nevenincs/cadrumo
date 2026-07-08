@@ -621,7 +621,7 @@ def build_server(
 
         holder: dict[str, tuple[dict[str, object], bool]] = {}
 
-        async def _work(task_status: object = None) -> None:
+        async def _work() -> None:
             holder["result"] = await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
             task_group.cancel_scope.cancel()
 
