@@ -55,10 +55,10 @@ Wire the existing manifest-derived toolsets to runtime activation with tools/lis
 
 De-duplicate the client-side namespace prefix and enforce a prefixed tool-name length budget with a conformance gate (ADR P4).
 
-- [ ] `P04.S15` - De-duplicate the client prefix pair by renaming the server or plugin identity after verifying live prefix composition and slash-command impact against official client docs; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P04.S16` - Add the prefixed tool-name length budget with declared short forms for the over-budget verbs; `src/aeat/entrypoints/mcp/_dispatch.py`.
-- [ ] `P04.S17` - Sweep the generated plugin and marketplace trees for the renamed identifiers so generator output and marketplace cannot drift; `src/aeat/agent/_workspace.py`.
-- [ ] `P04.S18` - Add the naming-budget conformance gate failing any prefixed name over budget; `src/aeat/entrypoints/mcp/tests/test_tool_naming_budget.py`.
+- [x] `P04.S15` - De-duplicate the client prefix pair by renaming the server or plugin identity after verifying live prefix composition and slash-command impact against official client docs; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P04.S16` - Add the prefixed tool-name length budget with declared short forms for the over-budget verbs; `src/aeat/entrypoints/mcp/_dispatch.py`.
+- [x] `P04.S17` - Sweep the generated plugin and marketplace trees for the renamed identifiers so generator output and marketplace cannot drift; `src/aeat/agent/_workspace.py`.
+- [x] `P04.S18` - Add the naming-budget conformance gate failing any prefixed name over budget; `src/aeat/entrypoints/mcp/tests/test_tool_naming_budget.py`.
 
 ### Phase `P05` - Prompt arguments and completions
 
