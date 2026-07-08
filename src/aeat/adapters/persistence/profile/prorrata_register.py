@@ -212,7 +212,10 @@ class ProrrataRegisterRepository:
             for existing in current.entries
             if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
         )
-        updated = ProrrataRegister(entries=(*retained, entry))
+        updated = ProrrataRegister(
+            entries=(*retained, entry),
+            sector_definitions=current.sector_definitions,
+        )
         self._save_unlocked(updated)
         return updated
 

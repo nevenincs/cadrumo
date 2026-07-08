@@ -53,6 +53,7 @@ from ...domain.transactions import (
     is_classified,
 )
 from ._bienes_inversion_cli import register_bienes_inversion_commands
+from ._prorrata_register_cli import register_prorrata_register_commands
 from ._common import (
     _bad,
     _emit_envelope,
@@ -954,6 +955,9 @@ register_inventory_commands(app)
 
 
 register_bienes_inversion_commands(app)
+
+
+register_prorrata_register_commands(app)
 
 
 register_evidence_commands(app)
