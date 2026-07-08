@@ -64,6 +64,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
+from ._observation_window import replace_observation_window
 
 
 class _PercepcionObservationEnvelopePayload(BaseModel):
@@ -207,25 +208,17 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         window (the operator declared none); the P03 resolver surfaces a
         no-silent advisory when it then reads empty.
         """
-        safe_repository_id(modelo, context="modelo")
-        when = captured_at if captured_at is not None else now()
-        for payload in tuple(self.iter_records()):
-            if (
-                payload.modelo == modelo
-                and payload.filing_year == filing_year
-                and payload.period.registry_token == period.registry_token
-            ):
-                self.delete(self.extract_identifier(payload))
-        for observation in observations:
-            self.save_observation(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                observation=observation,
-                source_kind=source_kind,
-                captured_at=when,
-                source_metadata=source_metadata,
-            )
+        replace_observation_window(
+            self,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observations=observations,
+            source_kind=source_kind,
+            save_observation=self.save_observation,
+            captured_at=captured_at,
+            source_metadata=source_metadata,
+        )
 
     def load_observations(
         self,
