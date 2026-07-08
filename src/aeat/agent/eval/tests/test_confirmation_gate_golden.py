@@ -58,10 +58,10 @@ from ....entrypoints.mcp import (
     McpAnnotations,
     McpToolDescriptor,
     annotations_for_command,
+    build_server,
     build_tool_descriptors,
     confirmation_for_tool,
 )
-from ....entrypoints.mcp._server import build_server
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
