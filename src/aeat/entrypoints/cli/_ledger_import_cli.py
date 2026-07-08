@@ -8,6 +8,7 @@ from typing import Any
 import typer
 
 from ...application.ledger import (
+    LedgerProviderID,
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
@@ -21,8 +22,6 @@ from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _
 
 def _known_import_providers() -> tuple[str, ...]:
     """Return the tuple of recognised provider ids from the canonical enum."""
-    from ...application.ledger import LedgerProviderID
-
     return tuple(p.value for p in LedgerProviderID)
 
 
@@ -32,7 +31,15 @@ def _provider_catalogue_text() -> str:
 
 
 def _validate_import_provider(provider: str) -> str:
-    """Reject an unrecognised import provider with a discoverable message."""
+    """Normalise a recognised import provider to its canonical id string.
+
+    The ``--provider`` option is typed as the :class:`LedgerProviderID` enum, so
+    Typer renders ``Choice([auto, csv, ...])`` and refuses an unrecognised value
+    at parse time with the accepted set (the CLI-boundary rule), and the built MCP
+    input schema surfaces the closed set as a JSON ``enum``. This normaliser keeps
+    the strip + lowercase pass and stays a defence-in-depth membership backstop for
+    any non-``Choice`` caller.
+    """
     normalised = provider.strip().lower()
     if normalised not in _known_import_providers():
         raise _bad(
@@ -52,7 +59,7 @@ def register_import_commands(app: typer.Typer) -> None:
     def ledger_import(
         ctx: typer.Context,
         path: Path = typer.Argument(..., help=tr("cli.ledger.import.path_help")),
-        provider: str = typer.Option(
+        provider: LedgerProviderID = typer.Option(
             ...,
             "--provider",
             help=tr("cli.ledger.import.provider_help", providers=_provider_catalogue_text()),

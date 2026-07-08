@@ -20,11 +20,29 @@ import pytest
 
 from .._meta_tools import manage_toolsets
 from .._tools import build_tool_descriptors
-from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset
+from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
+
+
+def test_every_toolset_resolves_to_nonempty_command_keys() -> None:
+    """A renamed carve-out token must empty a group loudly, not silently.
+
+    Every ``Toolset`` group derives its members from the live command surface
+    (``build_toolsets`` over the real ``command_schema_refs``). A domain-matching
+    token drift in ``toolset_for_command`` - the ``m036`` / ``censo`` /
+    ``iva_wallet`` segment carve-outs, the ``app.live.borrador.100`` renta prefix,
+    or a manifest ``MountedCommandDomain`` rename - would silently empty a group
+    while the console kept serving. Assert every declared toolset resolves to at
+    least one live command key so that drift fails here instead of shipping an
+    empty toolset.
+    """
+    groups = build_toolsets()
+    assert {group.toolset for group in groups} == set(Toolset)
+    empty = [group.toolset.value for group in groups if not group.command_keys]
+    assert not empty, f"toolset(s) resolved to zero live command keys: {empty}"
 
 
 def test_list_reports_every_group_inactive_by_default() -> None:

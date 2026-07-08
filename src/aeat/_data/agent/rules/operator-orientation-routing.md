@@ -76,3 +76,27 @@ authority this table paraphrases, and it grows as command families are added.
 - "Set up or inspect the taxpayer profile" → `aeat config profile create` and
   `aeat config profile show`.
 - "Configure AEAT read access" → `aeat config auth`.
+
+## Long-tail discovery — finding a verb this table does not name
+
+This table and the domain toolsets cover the common path. Reach every other verb
+through the MCP console's four meta-tools. Use them in order: `search`, then
+`describe`, then `execute`.
+
+- `search` — describe the outcome in a few words; it returns the matching command
+  keys with a mutability hint. Start here when you do not know the verb.
+- `describe` — pass one command key from a search hit; it returns that command's
+  full input schema, annotations, risk classification, confirmation tier, owning
+  toolset, and which personas may call it. Inspect a hit before you run it.
+- `execute` — run one command key with its named arguments, through the same
+  safety gates the direct tools use. Run it only after `describe` shows the schema.
+
+Widen the surface with `toolsets` when you will do repeated work in one domain
+(renta, iva, ledger, censo, modelo-lifecycle). Activating a toolset advertises its
+per-verb tools directly, so you stop reaching them through `search` and `execute`.
+
+Translate a shell verb to a command key by dropping `aeat` and the `app` root and
+joining the rest with dots. `aeat app ledger import` is the command key
+`ledger.import`; `aeat app modelo work calculate` is `modelo.work.calculate`. A
+`config` verb keeps its root: `aeat config profile status` is
+`config.profile.status`.
