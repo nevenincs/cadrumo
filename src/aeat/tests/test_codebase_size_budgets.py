@@ -48,7 +48,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/overview/_calendar.py": 1667,  # SPLIT-CANDIDATE
     "src/aeat/application/overview/tests/test_calendar.py": 1396,
     "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
-    "src/aeat/adapters/persistence/storage/sql/secure_objects.py": 1295,  # SPLIT-CANDIDATE (active storage refactor)
+    # secure_objects.py: extracted the raw-row decode/fault-isolation codec
+    # (_list_item_from_raw_row) to the sibling _secure_object_row_codec.py
+    # module alongside the existing secure_object_record_from_row extraction;
+    # back under the default budget, override removed.
     # M143/M156/M185/M186/M490/M604/M763/M848 applicability-rule enrollment
     # (data-shaped dict literal growth); SPLIT-CANDIDATE: extract the rule
     # table into per-family submodules during the next applicability pass.
@@ -109,9 +112,6 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/aeat/entrypoints/cli/_ledger.py", "ledger_classify"): 234,  # SPLIT-CANDIDATE
     # Extracted LLM ledger CLI verb (active LLM-ledger campaign); SPLIT-CANDIDATE.
     ("src/aeat/entrypoints/cli/_ledger_llm_cli.py", "ledger_saturate_llm"): 187,
-    # Peer-introduced callable growth discovered by the size-budget gate;
-    # pinned at present size pending an owner split pass.
-    ("src/aeat/adapters/persistence/storage/sql/secure_objects.py", "iter_records_with_failures"): 182,
     ("src/aeat/application/modelo/_quickfile.py", "run_modelo_quickfile"): 216,  # SPLIT-CANDIDATE
     ("src/aeat/application/modelo/_verification_actions.py", "verify_modelo_revision"): 221,  # SPLIT-CANDIDATE
     ("src/aeat/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
