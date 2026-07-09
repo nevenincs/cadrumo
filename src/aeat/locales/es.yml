@@ -1230,6 +1230,10 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+      attribution_received_unfolded: 'los hechos attribution_received declaran una base atribuida para este ejercicio (modelo=100 year=%{filing_year} total=%{total_base} EUR) pero la casilla %{casilla_id} del régimen de atribución del M100 resulta vacía: la participación recibida se registró en el perfil pero no se incorporó a la declaración.'
+      attribution_received_unfolded_next_action: 'Incorpore la base atribuida a la casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para que la renta del régimen de atribución quede declarada.'
+      attribution_received_uncaptured: 'la casilla %{casilla_id} del régimen de atribución del M100 declara una base atribuida (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) pero ningún hecho attribution_received la respalda para este ejercicio: la renta declarada no tiene procedencia registrada.'
+      attribution_received_uncaptured_next_action: 'Registre los hechos attribution_received (NIF de la entidad, nombre, porcentaje de participación, base atribuida, ejercicio) en el perfil del contribuyente para que la renta declarada del régimen de atribución tenga la procedencia de su Modelo 184.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -2771,6 +2775,7 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif} (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla como hechos attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) y después incorporar la base a la casilla %{casilla} del régimen de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye

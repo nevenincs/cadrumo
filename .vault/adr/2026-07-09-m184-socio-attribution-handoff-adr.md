@@ -105,16 +105,21 @@ no guard against forgetting it entirely. The step left the design open between
 - **No cross-bucket read anywhere in this slice.** The resolver side is the
   UNCHANGED profile-binding resolver over the active bucket.
 - **Locale discipline.** Operator-facing prose routes through `tr()` and the
-  locale CLI across en/es/ca/hu. DEFERRED (disclosed): the S413 M184-side
-  handoff Notice message and the S414 M100 omission-advisory message /
-  next_action shipped as hardcoded English literals (matching the sibling
-  `_objective_estimation_advisory` precedent), NOT yet localised. Their
-  four-locale localisation is folded into the cross-cutting
-  attribution-locale follow-up (the same follow-up that owns the S411 schema
-  capture prompts) rather than done piecemeal here, so all attribution
-  operator strings are localised together under one owner. This mirrors S411's
-  honest schema-prompt/locale deferral; it is a disclosed gap, not a silent
-  one.
+  locale CLI across en/es/ca/hu. RESOLVED under the cross-cutting
+  attribution-locale follow-up (task #204): the S413 M184-side handoff Notice
+  message and the S414 M100 omission-advisory message / next_action (both
+  triggers) now route through `tr()` keys authored across en/es/ca/hu via the
+  locale CLI (`cli.app.modelo.work.m184_socio_handoff_message`,
+  `application.modelo.findings.attribution_received_unfolded[_next_action]`,
+  `application.modelo.findings.attribution_received_uncaptured[_next_action]`),
+  matching the `_dt12_advisory` / `_art20_advisory` tr()-routed precedent. The
+  handoff Notice `suggestion` stays a code-built machine command so the exact
+  `--binding 1577=<importe>` fold-in token is stable across every output
+  language. The S411 schema-capture half needs no locale keys: the
+  `attribution_received` fact group is captured through the generic
+  schema-driven profile edit path via its inline schema `description` prose,
+  exactly as its sibling `attribution_entity_socios` group is (neither carries
+  wizard prompts nor locale keys), so no redundant capture prompts were added.
 
 ## Implementation
 
@@ -321,4 +326,9 @@ bounded gap (S413 Notice is its loud channel; Option A / relation-symmetry the
 closure); the Locale-discipline constraint records the S413/S414 message
 localisation as deferred to the cross-cutting attribution-locale follow-up; and
 the S411/S413/S414 plan-step texts were corrected to match the shipped scope
-and coverage.
+and coverage. Finding F2 (operator-surfaces-not-localized) is now closed by
+task #204: the handoff Notice message and both omission-advisory message /
+next_action strings route through `tr()` keys across en/es/ca/hu, and the
+S411 schema-capture half was confirmed already covered by the generic
+schema-driven profile edit path (no locale keys needed, consistent with the
+sibling `attribution_entity_socios` group).

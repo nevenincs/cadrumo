@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING
 
 from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
+from ...core.i18n import tr
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -118,16 +119,16 @@ def _attribution_received_omission_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=(
-                    "attribution_received facts declare an attributed base for this filing year "
-                    f"(modelo=100 year={work_unit.filing_year} total={total_base} EUR) but the M100 "
-                    f"regimen-de-atribucion casilla {casilla_id} resolves empty: the received share was "
-                    "captured on the profile but not folded into the declaration."
+                message=tr(
+                    "application.modelo.findings.attribution_received_unfolded",
+                    filing_year=work_unit.filing_year,
+                    total_base=total_base,
+                    casilla_id=casilla_id,
                 ),
-                next_action=(
-                    f"Fold the attributed base into casilla {casilla_id} on the M100 calculation, e.g. via "
-                    f"`aeat app modelo work calculate ... --binding {casilla_id}={total_base}`, so the "
-                    "regimen-de-atribucion income is declared."
+                next_action=tr(
+                    "application.modelo.findings.attribution_received_unfolded_next_action",
+                    casilla_id=casilla_id,
+                    total_base=total_base,
                 ),
                 legal_refs=_ATRIBUCION_LEGAL_REFS,
                 source_refs=(),
@@ -139,16 +140,14 @@ def _attribution_received_omission_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=(
-                    f"the M100 regimen-de-atribucion casilla {casilla_id} declares an attributed base "
-                    f"(modelo=100 year={work_unit.filing_year} value={casilla_value} EUR) but no "
-                    "attribution_received facts back it for this filing year: the declared income carries "
-                    "no captured provenance."
+                message=tr(
+                    "application.modelo.findings.attribution_received_uncaptured",
+                    casilla_id=casilla_id,
+                    filing_year=work_unit.filing_year,
+                    casilla_value=casilla_value,
                 ),
-                next_action=(
-                    "Capture the attribution_received facts (entity NIF, name, share percentage, attributed "
-                    "base, filing year) on the taxpayer profile so the declared regimen-de-atribucion income "
-                    "carries its Modelo 184 provenance."
+                next_action=tr(
+                    "application.modelo.findings.attribution_received_uncaptured_next_action",
                 ),
                 legal_refs=_ATRIBUCION_LEGAL_REFS,
                 source_refs=(),
