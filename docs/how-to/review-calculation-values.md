@@ -175,6 +175,22 @@ If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
 real prior figure only when you have one prepared outside `aeat`.
 
+### Régimen de atribución de rentas (socios)
+
+If you are a socio, comunero, or partícipe of an entity in the régimen de
+atribución de rentas — a sociedad civil, comunidad de bienes, or herencia
+yacente — the entity files its own Modelo 184 in its own `aeat` workspace. Your
+personal Modelo 100 does not read across workspaces, so enter the attributed base
+by hand.
+
+Record the received share on your profile as `attribution_received` facts (entity
+NIF, entity name, share percentage, attributed base, and filing year), then fold
+the attributed base into your Modelo 100 régimen-de-atribución box with `--binding
+<box>=<attributed-base>` when you run `aeat app modelo work calculate`. `aeat`
+warns you at verify time when the two halves disagree — facts recorded but the box
+left empty, or a box value with no facts behind it — so a forgotten transcription
+never files silently.
+
 ## Handle offsets and carry-forwards
 
 Some modelos need prior-period values, credits, or compensation amounts. Do not
