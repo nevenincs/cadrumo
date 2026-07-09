@@ -1841,6 +1841,13 @@ cli:
         invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
         modelo_help: Filter by modelo code (e.g. 303, 130, 100)
+        observe_local_file_help: Path to a local CSV or XLSX spreadsheet of casilla_code,value
+          rows (a cert-free reconstruction of a past filing). Combines with --set;
+          a --set value for the same casilla overrides the spreadsheet row
+        observe_local_help: Record an operator-supplied local observation for calculation
+          prefill
+        observe_local_set_help: Canonical casilla.id and Decimal value to record,
+          e.g. --set 1391=0
         view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -2509,6 +2516,8 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+    quickfile:
+      app_help: 'Run the full local modelo filing chain in one command: readiness -> create -> calculate -> verify -> export. Build and export only; never submits to AEAT'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -5629,7 +5638,11 @@ mcp:
       you proceed.'
   identity_gate:
     elicitation_echo: 'Acting as the taxpayer profile: %{label}.'
-    first_mutation_refused: 'Refused: confirm the active taxpayer before the first change of this session. A filing or edit must never run under the wrong identity. Call whoami (or ''config profile status'' / ''overview status'') to see which taxpayer is active, then retry - one identity read clears this for the session until you switch profiles.'
+    first_mutation_refused: 'Refused: confirm the active taxpayer before the first
+      change of this session. A filing or edit must never run under the wrong identity.
+      Call whoami (or ''config profile status'' / ''overview status'') to see which
+      taxpayer is active, then retry - one identity read clears this for the session
+      until you switch profiles.'
   persona:
     handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
