@@ -1,4 +1,4 @@
-"""CLI command for ``aeat app agent materialise``.
+"""CLI command for ``aeat app agent``.
 
 Materialises the shipped operator harness into an operator-chosen directory in
 the Claude-native layout (ADR R4): ``.claude/skills/<name>/SKILL.md``,

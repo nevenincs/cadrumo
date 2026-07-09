@@ -198,7 +198,7 @@ def _modelo_health_row(
             state=ModeloReadinessState.FILED,
             warning_finding_count=warning,
             summary=f"Modelo {modelo}: filed.",
-            next_command=f"aeat app modelo work filing-record {work_unit.work_unit_id}",
+            next_command=f"aeat app modelo filing-record list --modelo {modelo}",
         )
 
     if revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
