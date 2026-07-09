@@ -115,6 +115,30 @@ def resolve_prorrata_regularizacion_sources(
         registry_snapshot: The target revision's :class:`RegistrySnapshot`,
             consulted to check whether the revision declares a
             ``prorrata_regularizacion``-sourced binding at all.
+        work_unit: The :class:`WorkUnit` addressing the target filing,
+            threaded to the staged registry engine run.
+        context: The :class:`CalculationSourceContext` the staged prorrata
+            and bienes-inversion resolvers resolve against.
+        source_resolution: The upstream :class:`CalculationSourceResolution`
+            mesh envelope the staged resolutions are merged into.
+        casilla_inputs: Operator- and backend-supplied casilla values that
+            seed the staged registry run.
+        text_casilla_inputs: Text-typed casilla inputs seeding the staged run.
+        binding_values: Caller-supplied Decimal binding values overlaid on the
+            source resolution's own binding values.
+        enum_binding_values: Caller-supplied enum (string) binding values
+            overlaid on the source resolution's enum binding values.
+        date_binding_values: Caller-supplied date binding values overlaid on
+            the source resolution's date binding values.
+        relation_values: Caller-supplied relation values overlaid on the
+            source resolution's relation values.
+        filing_period_date: The filing period date used for period-sensitive
+            resolution.
+
+    Returns:
+        The source resolution unchanged when the revision declares no
+        ``prorrata_regularizacion`` binding, otherwise the source resolution
+        merged with the staged prorrata and bienes-inversion resolutions.
     """
     snapshot_revision = registry_snapshot.revision
     if not any(binding.source is BindingSourceKind.PRORRATA_REGULARIZACION for binding in snapshot_revision.bindings):
@@ -179,6 +203,28 @@ def materialise_prorrata_regularizacion_current_year_values(
         registry_snapshot: The target revision's :class:`RegistrySnapshot`,
             used to resolve the current-year casilla ids through the
             registry engine.
+        work_unit: The :class:`WorkUnit` addressing the target filing,
+            threaded to the staged registry engine run.
+        casilla_inputs: Operator- and backend-supplied casilla values that
+            seed the staged registry run.
+        backend_casilla_inputs: Casilla values already bound by the backend
+            source resolution, seeded into the staged run.
+        binding_values: Decimal binding values overlaid on the staged run.
+        enum_binding_values: Enum (string) binding values for the staged run.
+        date_binding_values: Date binding values for the staged run.
+        text_casilla_inputs: Text-typed casilla inputs for the staged run.
+        relation_values: Relation values for the staged run.
+        unresolved_relation_ids: Relation ids still unresolved after the
+            backend pass, propagated so the engine does not treat them as zero.
+        unresolved_binding_ids: Binding ids still unresolved after the backend
+            pass, propagated so the engine does not treat them as zero.
+        filing_period_date: The filing period date used for period-sensitive
+            resolution.
+
+    Returns:
+        The narrowed :class:`SourceResolutionRegistryValues` for the four
+        prorrata current-year casillas, or an empty materialisation when the
+        revision does not declare all of them.
     """
     revision = registry_snapshot.revision
     revision_casillas = casillas_by_id(revision)
