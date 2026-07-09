@@ -1155,6 +1155,10 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      attribution_received_unfolded: 'az attribution_received tények hozzárendelt adóalapot jelentenek be erre az adóévre (modelo=100 year=%{filing_year} total=%{total_base} EUR), de az M100 hozzárendelési rendszerének %{casilla_id} rovata üres marad: a kapott részesedést rögzítették a profilban, de nem építették be a bevallásba.'
+      attribution_received_unfolded_next_action: 'Építse be a hozzárendelt adóalapot az M100 számításának %{casilla_id} rovatába, például a(z) `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}` paranccsal, hogy a hozzárendelési rendszer jövedelme bevallásra kerüljön.'
+      attribution_received_uncaptured: 'az M100 hozzárendelési rendszerének %{casilla_id} rovata hozzárendelt adóalapot vall be (modelo=100 year=%{filing_year} value=%{casilla_value} EUR), de egyetlen attribution_received tény sem támasztja alá erre az adóévre: a bevallott jövedelemnek nincs rögzített eredete.'
+      attribution_received_uncaptured_next_action: 'Rögzítse az attribution_received tényeket (az entitás NIF-je, neve, részesedési százalék, hozzárendelt adóalap, adóév) az adózó profiljában, hogy a hozzárendelési rendszer bevallott jövedelme a Modelo 184 szerinti eredetét hordozza.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -2683,6 +2687,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén attribution_received tényekként kell rögzítenie (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year), majd az adóalapot be kell építenie a saját Modelo 100 hozzárendelési rendszer (gazdasági tevékenység) %{casilla} rovatába (LIRPF 86-89. cikk).'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít

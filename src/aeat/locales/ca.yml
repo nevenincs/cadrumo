@@ -1212,6 +1212,10 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      attribution_received_unfolded: 'els fets attribution_received declaren una base atribuïda per a aquest exercici (modelo=100 year=%{filing_year} total=%{total_base} EUR) però la casella %{casilla_id} del règim d''atribució del M100 queda buida: la participació rebuda es va registrar al perfil però no es va incorporar a la declaració.'
+      attribution_received_unfolded_next_action: 'Incorporeu la base atribuïda a la casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè la renda del règim d''atribució quedi declarada.'
+      attribution_received_uncaptured: 'la casella %{casilla_id} del règim d''atribució del M100 declara una base atribuïda (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) però cap fet attribution_received no la fonamenta per a aquest exercici: la renda declarada no té procedència registrada.'
+      attribution_received_uncaptured_next_action: 'Registreu els fets attribution_received (NIF de l''entitat, nom, percentatge de participació, base atribuïda, exercici) al perfil del contribuent perquè la renda declarada del règim d''atribució tingui la procedència del seu Model 184.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -2739,6 +2743,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif} (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%). En el seu propi espai de treball, el soci l''ha de registrar com a fets attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) i després incorporar la base a la casella %{casilla} del règim d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix

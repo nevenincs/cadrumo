@@ -76,14 +76,18 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
             Notice(
                 severity=NoticeSeverity.INFO,
                 code=_M184_SOCIO_HANDOFF_CODE,
-                message=(
-                    f"Régimen de atribución de rentas: socio {row.nif} ({row.nombre}) receives an "
-                    f"attributed base of {row.importe} EUR ({row.porcentaje}% share). On the socio's own "
-                    f"workspace, record it as attribution_received facts (entity_nif, entity_name, "
-                    f"share_pct, base_imponible_attributed, filing_year), then fold the base into their "
-                    f"Modelo 100 régimen-de-atribución (actividad económica) casilla "
-                    f"{_M184_ATRIBUCION_ACT_ECO_CASILLA} (LIRPF arts. 86-89)."
+                message=tr(
+                    "cli.app.modelo.work.m184_socio_handoff_message",
+                    nif=row.nif,
+                    nombre=row.nombre,
+                    importe=row.importe,
+                    porcentaje=row.porcentaje,
+                    casilla=_M184_ATRIBUCION_ACT_ECO_CASILLA,
                 ),
+                # The suggestion is a pure machine command: the exact `--binding
+                # 1577=<importe>` fold-in token stays stable across every output
+                # language per the machine-identifier convention, so it is built
+                # in code rather than routed through tr().
                 suggestion=(
                     f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
                 ),

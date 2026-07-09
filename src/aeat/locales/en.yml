@@ -1121,6 +1121,10 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+      attribution_received_unfolded: 'attribution_received facts declare an attributed base for this filing year (modelo=100 year=%{filing_year} total=%{total_base} EUR) but the M100 regimen-de-atribucion casilla %{casilla_id} resolves empty: the received share was captured on the profile but not folded into the declaration.'
+      attribution_received_unfolded_next_action: 'Fold the attributed base into casilla %{casilla_id} on the M100 calculation, e.g. via `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, so the regimen-de-atribucion income is declared.'
+      attribution_received_uncaptured: 'the M100 regimen-de-atribucion casilla %{casilla_id} declares an attributed base (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) but no attribution_received facts back it for this filing year: the declared income carries no captured provenance.'
+      attribution_received_uncaptured_next_action: 'Capture the attribution_received facts (entity NIF, name, share percentage, attributed base, filing year) on the taxpayer profile so the declared regimen-de-atribucion income carries its Modelo 184 provenance.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -2562,6 +2566,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif} (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}% share). On the socio''s own workspace, record it as attribution_received facts (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year), then fold the base into their Modelo 100 régimen-de-atribución (actividad económica) casilla %{casilla} (LIRPF arts. 86-89).'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
