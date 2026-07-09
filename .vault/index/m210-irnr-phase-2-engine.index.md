@@ -14,6 +14,7 @@ related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P02-S06]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P03-S07]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P03-S08]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P04-S09]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-plan]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P02-S06` - author the grouping-validity verification predicates (same code, same pagador save codigo 35, same tipo de gravamen, same bien, no offsetting between grouped rentas) grounded in the bundled Articulo cuarto text
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P03-S07` - FETCH-GATED (fetch: AEAT Sede "Disenos de registro - modelo 210" or the official M210 Sede form specimen) - fetch and bundle the official complete M210 field enumeration as a `layout_authority` corpus source
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P03-S08` - author the complete M210 casilla set on the 2025 revision with completeness manifest, extraction-profile targets, and export parity, with casilla count and numbering taken from the fetched layout authority
+- `2026-05-27-m210-irnr-phase-2-engine-W01-P04-S09` - FETCH-GATED (fetch: per-treaty BOE consolidated convenio texts for FR/PT/US/NL/BE) - author tranche-1 Convenio corpus, `legal/irnr.toml` entries, and `treaties/es-XX.toml` rows keyed by `TipoRentaIrnr` with typed `ConvenioOverrideKind`, pinned by continuity parity tests
 
 ### plan
 

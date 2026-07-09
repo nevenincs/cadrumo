@@ -57,7 +57,7 @@ FETCH-GATED on NEEDS-FETCH 1 (the official complete M210 field enumeration): the
 
 FETCH-GATED on NEEDS-FETCH 2 (per-treaty BOE consolidated convenio text). Demand-driven per-treaty enrolment (ADR O6): tranche 1 proposes FR, PT, US, NL, BE by non-resident filer volume; each treaty names its exact BOE ids at fetch time and ships corpus + legal entries + one `treaties/es-XX.toml` + a continuity parity test. Subsequent tranches enrol without framework change.
 
-- [ ] `W01.P04.S09` - FETCH-GATED (fetch: per-treaty BOE consolidated convenio texts for FR/PT/US/NL/BE) - author tranche-1 Convenio corpus, `legal/irnr.toml` entries, and `treaties/es-XX.toml` rows keyed by `TipoRentaIrnr` with typed `ConvenioOverrideKind`, pinned by continuity parity tests; `src/aeat/_data/registry/aeat/treaties`.
+- [x] `W01.P04.S09` - FETCH-GATED (fetch: per-treaty BOE consolidated convenio texts for FR/PT/US/NL/BE) - author tranche-1 Convenio corpus, `legal/irnr.toml` entries, and `treaties/es-XX.toml` rows keyed by `TipoRentaIrnr` with typed `ConvenioOverrideKind`, pinned by continuity parity tests; `src/aeat/_data/registry/aeat/treaties`.
 
 ## Wave `W02` - source_jurisdiction per-row aggregation gating
 
