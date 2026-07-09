@@ -1993,6 +1993,9 @@ cli:
           {kind}.
         list_help: Listar los filing records registrados
         modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
+        observe_local_file_help: 'Ruta a una hoja de cálculo local CSV o XLSX de filas casilla_code,value (una reconstrucción sin certificado de una presentación pasada). Se combina con --set; un valor de --set para la misma casilla sobrescribe la fila de la hoja de cálculo'
+        observe_local_help: 'Registrar una observación local aportada por el operador para el prellenado del cálculo'
+        observe_local_set_help: 'Id de casilla canónico y valor Decimal a registrar, p. ej. --set 1391=0'
         view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -2712,6 +2715,8 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+    quickfile:
+      app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye y exporta; nunca presenta ante la AEAT'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -6062,7 +6067,12 @@ mcp:
       o profesional), confirme que esto es aceptable antes de continuar.'
   identity_gate:
     elicitation_echo: 'Actuando como el perfil del contribuyente: %{label}.'
-    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del primer cambio de esta sesion. Una presentacion o edicion nunca debe ejecutarse bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' / ''overview status'') para ver que contribuyente esta activo y vuelve a intentarlo; una sola lectura de identidad lo desbloquea durante la sesion hasta que cambies de perfil.'
+    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
+      primer cambio de esta sesion. Una presentacion o edicion nunca debe ejecutarse
+      bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' /
+      ''overview status'') para ver que contribuyente esta activo y vuelve a intentarlo;
+      una sola lectura de identidad lo desbloquea durante la sesion hasta que cambies
+      de perfil.'
   persona:
     handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
       propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada

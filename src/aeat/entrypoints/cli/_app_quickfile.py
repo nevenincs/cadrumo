@@ -39,10 +39,7 @@ from ._modelo_rendering import advisory_notice, verification_report_notices
 
 app = typer.Typer(
     name="quickfile",
-    help=(
-        "Run the full local modelo filing chain in one command: readiness -> create -> "
-        "calculate -> verify -> export. Build and export only; never submits to AEAT."
-    ),
+    help=tr("cli.app.quickfile.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
 )
