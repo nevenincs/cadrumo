@@ -2636,6 +2636,11 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        history_next_action: 'Tekintse át ennek a munkaegységnek a jelenlegi állapotát az `aeat app modelo work status` paranccsal.'
+        list_next_action: 'Egy munkaegység teljes állapotát az `aeat app modelo work status` paranccsal tekintheti meg, majd az `aeat app modelo work calculate` paranccsal készíthet vagy számolhat újra vázlatot.'
+        status_next_action: 'Készítse el vagy számolja újra ezt az egységet az `aeat app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot az `aeat app modelo work verify` paranccsal.'
+        verify_next_action_granted: 'Az ellenőrzés sikeres. Exportálja a benyújtási dokumentumot az `aeat app modelo export` paranccsal.'
+        verify_next_action_incomplete: 'Az ellenőrzés blokkoló tételeket talált (lásd a fenti értesítéseket). Oldja meg őket, számolja újra az `aeat app modelo work calculate` paranccsal, majd futtassa újra az `aeat app modelo work verify` parancsot.'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít

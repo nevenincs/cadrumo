@@ -2725,6 +2725,11 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        history_next_action: 'Revisa el estado actual de esta unidad de trabajo con `aeat app modelo work status`.'
+        list_next_action: 'Inspecciona el estado completo de una unidad de trabajo con `aeat app modelo work status` y luego crea o recalcula el borrador con `aeat app modelo work calculate`.'
+        status_next_action: 'Crea o recalcula esta unidad con `aeat app modelo work calculate` y luego verifica el borrador con `aeat app modelo work verify`.'
+        verify_next_action_granted: 'La verificación se superó. Exporta el artefacto de presentación con `aeat app modelo export`.'
+        verify_next_action_incomplete: 'La verificación encontró elementos bloqueantes (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo work calculate` y vuelve a ejecutar `aeat app modelo work verify`.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
