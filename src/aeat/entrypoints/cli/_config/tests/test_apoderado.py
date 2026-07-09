@@ -9,7 +9,9 @@ from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+# serial: shares the process-global master-key-provider / active-profile state
+# that flakes under `-n auto` worker interleaving; runs in the serial (-n0) pass.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 
 @pytest.fixture

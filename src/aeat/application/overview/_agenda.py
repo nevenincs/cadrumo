@@ -127,7 +127,10 @@ def build_overview_agenda(
     Returns an :class:`OverviewAgenda`.
     """
     if horizon_days <= 0:
-        raise OverviewAgendaError(f"horizon_days must be positive; got {horizon_days}")
+        raise OverviewAgendaError(
+            translated_message="application.overview.errors.horizon_days_not_positive",
+            context={"horizon_days": horizon_days},
+        )
 
     window = OverviewCalendarRange(
         from_date=as_of - timedelta(days=_OVERDUE_LOOKBACK_DAYS),

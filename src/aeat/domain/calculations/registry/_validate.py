@@ -41,6 +41,7 @@ from ._validate_helpers import _missing_refs
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_informative_class_invariant,
+    validate_m210_tipo_renta_code_projection_parity,
     validate_revision_windows,
 )
 from ._validate_revision_sections import validate_revision_definition
@@ -189,6 +190,7 @@ class RegistryValidator:
         failures.extend(self._validate_user_profile_contract((modelo,)))
         failures.extend(validate_revision_windows(modelo))
         failures.extend(validate_informative_class_invariant(modelo))
+        failures.extend(validate_m210_tipo_renta_code_projection_parity(modelo))
         return failures
 
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:

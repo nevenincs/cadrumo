@@ -141,3 +141,59 @@ def test_resolve_filing_closes_on_annual_period() -> None:
     # M100 2024 anual plazo: AEAT opens April, closes June 30 2025.
     assert closes_on.year == 2025
     assert closes_on.month == 6
+
+
+# ---------------------------------------------------------------------------
+# Modelo 210 IRNR trimestral a-ingresar windows (Orden EHA/3316/2010 art 5,
+# consolidated in vigor 24/06/2026; Orden HAC/56/2024 + HAC/623/2026). Art 5.c.1º
+# resto de rentas con resultado a ingresar (general): "los veinte primeros días
+# naturales de los meses de abril, julio, octubre y enero ... del trimestre natural
+# anterior." Each period token is the devengo quarter; the window closes on the 20th
+# natural day of the month after the quarter, so 4T closes the following January.
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_filing_closes_on_m210_2025_q1_a_ingresar() -> None:
+    """M210 1T 2025 general a-ingresar closes on 2025-04-20 (Orden EHA/3316/2010 art 5)."""
+    closes_on = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "1T"))
+    assert closes_on == date(2025, 4, 20)
+
+
+def test_resolve_filing_closes_on_m210_2025_q3_a_ingresar() -> None:
+    """M210 3T 2025 general a-ingresar closes on 2025-10-20 (Orden EHA/3316/2010 art 5)."""
+    closes_on = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "3T"))
+    assert closes_on == date(2025, 10, 20)
+
+
+def test_resolve_filing_closes_on_m210_2025_q4_closes_following_january() -> None:
+    """M210 4T 2025 general a-ingresar closes on 2026-01-20 (20 primeros días de enero del año siguiente)."""
+    closes_on = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "4T"))
+    assert closes_on == date(2026, 1, 20)
+
+
+def test_resolve_filing_closes_on_m210_quarters_are_continuous_and_non_overlapping() -> None:
+    """Adjacent M210 quarterly windows are gap-free and non-overlapping.
+
+    Each window closes on the 20th of the month after its devengo quarter, and the
+    next window opens on the 1st of that same month — the 20-natural-day plazo is a
+    closed interval that never overlaps the following quarter's plazo.
+    """
+    q1 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "1T"))
+    q2 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "2T"))
+    q3 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "3T"))
+    q4 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "4T"))
+    assert q1 is not None and q2 is not None and q3 is not None and q4 is not None
+    # Strictly increasing close dates, each three months after the prior.
+    assert q1 < q2 < q3 < q4
+    assert (q1, q2, q3, q4) == (date(2025, 4, 20), date(2025, 7, 20), date(2025, 10, 20), date(2026, 1, 20))
+
+
+def test_resolve_filing_closes_on_m210_annual_0a_deferred_returns_none() -> None:
+    """M210 annual '0A' has no authored window yet — the resultado/tipo-dependent annual
+    plazos (arrendamiento a-ingresar abril, cuota cero 1-20 enero, a devolver desde 1 feb,
+    imputadas 1 abril-31 diciembre) are not expressible as a single period token and are
+    deferred to a resultado/tipo-keyed deadline-modelling decision. The resolver must
+    return None rather than silently reusing a wrong window.
+    """
+    result = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "0A"))
+    assert result is None

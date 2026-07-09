@@ -113,3 +113,14 @@ legal_refs = [
     "ley-35-2006:art-85",
 ]
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+# Deadline consumer for the trimestral a-ingresar plazo windows grounded in
+# Orden EHA/3316/2010 art 5 (as amended by HAC/56/2024 + HAC/623/2026). Required
+# by the registry validator whenever a revision declares deadline windows.
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3316-2010:art-5"]
+source_refs = ["aeat-modelo-210-procedure"]

@@ -70,11 +70,17 @@ def test_resolve_unique_prefix_resolves() -> None:
 def test_resolve_ambiguous_prefix_refuses_with_collisions_listed() -> None:
     with pytest.raises(TransactionIdPrefixError) as exc_info:
         resolve_transaction_id("a", [_ID_A, _ID_AA, _ID_AB])
-    message = str(exc_info.value)
-    assert _ID_A in message
-    assert _ID_AA in message
-    assert _ID_AB in message
-    assert "matches 3 transactions" in message
+    # The refusal now carries a typed translated_message key + context (not a raw
+    # args[0] string); assert the locale-independent identity and interpolation data.
+    err = exc_info.value
+    assert err.translated_message == "application.ledger.errors.transaction_id_prefix_ambiguous"
+    assert err.context is not None
+    assert err.context["count"] == 3
+    matches_text = err.context["matches"]
+    assert isinstance(matches_text, str)
+    assert _ID_A in matches_text
+    assert _ID_AA in matches_text
+    assert _ID_AB in matches_text
 
 
 def test_resolve_no_match_refuses() -> None:

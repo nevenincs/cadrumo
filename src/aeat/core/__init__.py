@@ -71,7 +71,15 @@ from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
-from ._irnr import ConvenioOverrideKind, TipoRentaIrnr
+from ._irnr import (
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    OFFICIAL_M210_TIPO_RENTA_CODES,
+    ConvenioOverrideKind,
+    OfficialTipoRentaCode,
+    TipoRentaGroundingTier,
+    TipoRentaIrnr,
+    project_m210_tipo_renta_code,
+)
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
@@ -121,6 +129,13 @@ from ._result_disposition import (
 )
 from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
+from .compatibility_lifecycle import (
+    COMPATIBILITY_REGIME,
+    RELEASED_FORMAT_FLOORS,
+    CompatibilityRegime,
+    expected_floor,
+    lineage_obligations,
+)
 from .secure_object_write import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 
 if TYPE_CHECKING:
@@ -155,16 +170,20 @@ __all__: list[str] = [
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",
+    "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
     "GOOGLE_EXTRA",
     "IBAN_SHAPE_RE",
+    "M210_TIPO_RENTA_CODE_PROJECTION",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
     "NON_REGISTRY_MODELOS",
+    "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
+    "RELEASED_FORMAT_FLOORS",
     "STRICT_FROZEN_CONFIG",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
@@ -173,6 +192,7 @@ __all__: list[str] = [
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
+    "CompatibilityRegime",
     "ConvenioOverrideKind",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",
@@ -182,6 +202,7 @@ __all__: list[str] = [
     "LedgerSortOrder",
     "MissingOptionalExtraError",
     "Modelo",
+    "OfficialTipoRentaCode",
     "OptionalExtra",
     "Period",
     "PeriodError",
@@ -198,18 +219,21 @@ __all__: list[str] = [
     "ServiceCapability",
     "StandardPeriodCode",
     "TaxDomain",
+    "TipoRentaGroundingTier",
     "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "derive_result_disposition",
+    "expected_floor",
     "foreign_asset_class_declaration_threshold",
     "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
     "iban_mod_97",
+    "lineage_obligations",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "optional_extra_available",
@@ -217,6 +241,7 @@ __all__: list[str] = [
     "permitted_amendment_kind_values",
     "pointer_path",
     "post_filing_event_is_actionable",
+    "project_m210_tipo_renta_code",
     "read_pointer",
     "read_toml",
     "require_active_bucket_id",

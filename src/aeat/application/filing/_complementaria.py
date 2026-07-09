@@ -141,7 +141,10 @@ def _load_original_draft(draft_id: str) -> ModeloDraft:
     repository = ModeloDraftRepository()
     draft = repository.load(draft_id)
     if draft is None:
-        raise ModeloBuilderError(f"original draft {draft_id!r} is not persisted")
+        raise ModeloBuilderError(
+            translated_message="application.filing.errors.original_draft_not_persisted",
+            context={"draft_id": repr(draft_id)},
+        )
     return draft
 
 
@@ -217,7 +220,10 @@ def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiv
         raise ModeloAmendmentError(str(exc)) from exc
     loaded = repository.load(amendment_id)
     if loaded is None:
-        raise ModeloAmendmentError(f"no persisted amendment with id {amendment_id!r}")
+        raise ModeloAmendmentError(
+            translated_message="application.filing.errors.amendment_not_persisted",
+            context={"amendment_id": repr(amendment_id)},
+        )
     _logger.debug("loaded amendment amendment_id=%s", amendment_id)
     return loaded
 

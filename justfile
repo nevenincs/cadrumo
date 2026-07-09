@@ -325,9 +325,18 @@ test-unit:
 test-unit-serial:
     @uv run --no-sync pytest -q -rs -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
-# Run the integration test suite. Quiet progress; failures shown.
+# Run the integration test suite in two lanes: the bulk in parallel (xdist,
+# excluding serial-marked tests), then the isolation-sensitive `serial`-marked
+# tests alone with no workers (-n0). The serial lane exists because a handful of
+# tests mutate process-global state (the master-key-provider singleton) and
+# flake under `-n auto` interleaving while passing cleanly in isolation.
 test-integration:
-    @uv run --no-sync pytest -q -m integration
+    @uv run --no-sync pytest -q -m "integration and not serial"
+    @uv run --no-sync pytest -q -m "integration and serial" -n0
+
+# Run only the serial (isolation-sensitive) integration lane, no xdist workers.
+test-integration-serial:
+    @uv run --no-sync pytest -q -m "integration and serial" -n0
 
 # Run the live test suite. Quiet progress; failures shown.
 test-live:
@@ -379,7 +388,8 @@ audit-rag QUERY:
     @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
 # Run all advisory audits with section headers; tolerant of individual findings.
-audit-debt-dashboard:
+# Advisory-audit sibling of `check-all` (the fast static gates).
+audit-all:
     @echo "=== complexity ==="
     -@just audit-complexity
     @echo "=== dead code ==="
@@ -410,9 +420,11 @@ docs:
 docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
-# Serve documentation on localhost with live reload on docs/ and src/aeat/ edits.
-docs-serve PORT="8000":
-    uv run --no-sync python -m dev.docs.serve --port {{PORT}} --open-browser
+# Serve documentation with live reload on docs/ and src/aeat/ edits. Binds every
+# interface on a non-default port; auto-picks a free port when PORT is omitted,
+# and attaches to (instead of colliding with) an already-running server.
+docs-serve PORT="":
+    uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 
 # Build documentation changed since a base commit.
 docs-changed BASE="HEAD":

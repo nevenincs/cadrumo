@@ -7,6 +7,7 @@ end-to-end against local justificante fixture PDFs under
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -16,6 +17,8 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....core import Period
+from ....core.config import override_settings
+from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
@@ -91,13 +94,19 @@ def test_normalise_period_rejects_unsupported_typed_period(
     raw_period: Period,
     match: str,
 ) -> None:
-    with pytest.raises(ModeloImportError, match=match):
+    with pytest.raises(ModeloImportError) as exc_info:
         _normalise_period(
             modelo=modelo,
             ejercicio=ejercicio,
             raw_period=raw_period,
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
+    # The year-mismatch case now renders via a translated_message key; force the
+    # English locale so the assertion matches the byte-identical English text
+    # (the registry-period-missing case still carries a raw args[0] string).
+    with override_settings(aeat_output_language="en"):
+        rendered = resolve_error_message(exc_info.value)
+    assert re.search(match, rendered), rendered
 
 
 def test_submission_record_preserves_typed_draft_period(
@@ -152,13 +161,18 @@ class TestImportFromJustificante:
         schema_provider: RegistrySchemaAccessor,
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):
+        with pytest.raises(ModeloImportError) as excinfo:
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
+        # The import error carries a translated_message locale key (not a raw
+        # args[0] string); assert the operator-facing rendered text, which
+        # interpolates the underlying builder detail via resolve_error_message.
+        assert "previous_year_economic_activity_net_income" in resolve_error_message(excinfo.value)
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaAccessor) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
-        with pytest.raises(ModeloImportError, match="modelo '100'"):
+        with pytest.raises(ModeloImportError) as excinfo:
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
+        assert "modelo '100'" in resolve_error_message(excinfo.value)
 
     def test_year_only_justificante_period_is_rejected_at_registry_boundary(
         self,
