@@ -117,11 +117,7 @@ def _render_reconciliation_report(
     folded into the same text lines so JSON and text cannot drift.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ._payloads_modelo_reconcile import (
-        ModeloReconcileResult,
-        ModeloReconciliationAdvisoryPayload,
-        ModeloReconciliationDiffPayload,
-    )
+    from ._payloads_modelo_reconcile import ModeloReconcileResult, ModeloReconciliationDiffPayload
 
     result = ModeloReconcileResult(
         work_unit_id=report.work_unit_id,
@@ -140,14 +136,6 @@ def _render_reconciliation_report(
                 source_refs=diff.source_refs,
             )
             for diff in report.diffs
-        ),
-        advisories=tuple(
-            ModeloReconciliationAdvisoryPayload(
-                code=advisory.code,
-                message=advisory.message,
-                context=dict(advisory.context),
-            )
-            for advisory in report.advisories
         ),
         reconciled_at=report.reconciled_at.isoformat(),
         narrative=report.narrative,
