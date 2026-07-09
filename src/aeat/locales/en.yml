@@ -793,6 +793,10 @@ application:
         casilla.id safely.
       calculate_semantic_role_missing: The modelo revision has no casilla with semantic
         role %{semantic_role}.
+      calculate_text_casilla_numeric_value: The --casilla value for %{key} (%{label})
+        is a non-numeric data_type=%{data_type} declarante selector naming the contribuyente
+        who obtains the income, not an amount; got %{value}. Enter the income figure
+        in its own numeric casilla and reserve this casilla for the member selector.
       calculate_text_input_empty: The --casilla value targets a text casilla and must
         be a non-empty string.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -2662,9 +2666,10 @@ cli:
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
       status_help: Show configured authentication state
-      status_summary_configured: 'Authentication is configured but no live session is available yet.'
-      status_summary_ready: 'Authentication is configured and a live session is available.'
-      status_summary_unconfigured: 'Authentication is not configured yet.'
+      status_summary_configured: Authentication is configured but no live session
+        is available yet.
+      status_summary_ready: Authentication is configured and a live session is available.
+      status_summary_unconfigured: Authentication is not configured yet.
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
@@ -3122,8 +3127,8 @@ cli:
         archive (the portable profile bundle).
       show:
         summary_invalid: 'Profile record is invalid: %{count} blocking issue(s).'
-        summary_tombstoned: 'Profile record is tombstoned.'
-        summary_valid: 'Profile record is valid.'
+        summary_tombstoned: Profile record is tombstoned.
+        summary_valid: Profile record is valid.
       show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
@@ -3387,6 +3392,13 @@ cli:
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
         %{formulas} formulas, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registry unavailable (%{error}).'
+  help:
+    panel:
+      arguments: Arguments
+      commands: Commands
+      error: 'Error'
+      options: Options
+    try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
   ledger:
     add:
       actor_help: Operator name recorded on the bucket event
