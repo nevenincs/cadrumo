@@ -360,6 +360,25 @@ applies_from = 2027-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
 review_status = "reviewed"
 
+# Modelo 210 diseño de registro (record layout authority). The official AEAT
+# Sede "Diseño de registro - Modelo 210" specimen (record identifier T21001),
+# version 1.1, 15/02/2012. Page 2 enumerates the numbered liquidación casillas
+# [4]-[31] (Determinación de la base imponible 210 I/R/H/G + Liquidación), which
+# ground the complete casilla schema authored on the 2025 revision. Bundled as
+# a PDF corpus artefact under corpus/aeat_official/disenos_registro/modelo_210/.
+[sources."boe-modelo-210-diseno-registro-2011"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_210/dr210_2011.pdf"
+sha256 = "41875d015c809fc303a399581d6a437255f3235f8727515fe7e47606772a45e3"
+bytes = 48190
+retrieved_at = 2026-07-10
+published_at = 2012-02-15
+applies_from = 2011-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/dr210_2011.pdf"
+review_status = "reviewed"
+
 # Modelo 216 sources — the governing Orden HAC/56/2024 (BOE-A-2024-1772) is the
 # same bundled corpus the Modelo 210 sources cite; it approves and governs the
 # Modelo 216/296 IRNR retención forms (arts. 1 y ss.). Reuses the reviewed corpus
