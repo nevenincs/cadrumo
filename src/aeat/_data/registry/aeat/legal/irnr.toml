@@ -263,6 +263,36 @@ reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1995-
 notes = "Spain-Portugal double-taxation treaty (CDI firmado 26-10-1993, en vigor 28-06-1995) art 11.2 intereses: the source-state tax may not exceed 15 percent of the gross interest. Row-level authority for the PT/interest M210 treaty override (kind=ceiling, rate 0.15)."
 required_text = ["Intereses", "no podrá exceder del 15 por 100", "importe bruto de los intereses"]
 
+[legal."convenio-es-be-1995:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-be-1995-art-10.html#art-10"
+document_id = "BOE-A-2003-13375"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+effective_from = 2003-06-25
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 10 from BOE consolidated BOE-A-2003-13375; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Belgium double-taxation treaty (CDI hecho en Bruselas el 14-06-1995, en vigor 25-06-2003) art 10.2.a dividendos: the source-state tax may not exceed 15 percent of the gross dividends. Row-level authority for the BE/dividend M210 treaty override (kind=ceiling, rate 0.15). The art 10.2.b exemption (participation >= 25%) is not modelled."
+required_text = ["Dividendos", "no podrá exceder del 15 por 100", "importe bruto de los dividendos"]
+
+[legal."convenio-es-be-1995:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-be-1995-art-11.html#art-11"
+document_id = "BOE-A-2003-13375"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+effective_from = 2003-06-25
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-2003-13375; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Belgium double-taxation treaty (CDI hecho en Bruselas el 14-06-1995, en vigor 25-06-2003) art 11.2 intereses: the source-state tax may not exceed 10 percent of the gross interest. Row-level authority for the BE/interest M210 treaty override (kind=ceiling, rate 0.10). The art 11.3 exemptions (commercial credits, etc.) are not modelled."
+required_text = ["Intereses", "no podrá exceder del 10 por 100", "importe bruto de los intereses"]
+
 [legal."orden-eha-3316-2010:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
