@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#m210-irnr-phase-2-engine'
 date: '2026-05-27'
-modified: '2026-07-09'
+modified: '2026-07-10'
 tier: L3
 related:
   - '[[2026-05-27-m210-irnr-full-engine-adr]]'
@@ -50,8 +50,8 @@ Model agrupacion anual as period/deadline/predicate machinery, not a new aggrega
 
 FETCH-GATED on NEEDS-FETCH 1 (the official complete M210 field enumeration): the AEAT Sede "Disenos de registro - modelo 210" document for the current campaign and/or the official M210 form specimen PDF from the Sede M210 procedure page. The "~80 casillas" figure is unverified and MUST be re-derived from the fetched document; no casilla beyond the instructions-groundable subset may be authored until the layout authority is bundled.
 
-- [ ] `W01.P03.S07` - FETCH-GATED (fetch: AEAT Sede "Disenos de registro - modelo 210" or the official M210 Sede form specimen) - fetch and bundle the official complete M210 field enumeration as a `layout_authority` corpus source; `src/aeat/_data/corpus/normatives/html`.
-- [ ] `W01.P03.S08` - author the complete M210 casilla set on the 2025 revision with completeness manifest, extraction-profile targets, and export parity, with casilla count and numbering taken from the fetched layout authority; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/casillas`.
+- [x] `W01.P03.S07` - FETCH-GATED (fetch: AEAT Sede "Disenos de registro - modelo 210" or the official M210 Sede form specimen) - fetch and bundle the official complete M210 field enumeration as a `layout_authority` corpus source; `src/aeat/_data/corpus/normatives/html`.
+- [x] `W01.P03.S08` - author the complete M210 casilla set on the 2025 revision with completeness manifest, extraction-profile targets, and export parity, with casilla count and numbering taken from the fetched layout authority; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/casillas`.
 
 ### Phase `W01.P04` - Slice D: Convenios roster tranche 1 (fetch-gated)
 
