@@ -191,7 +191,7 @@ def test_resolve_filing_closes_on_m210_quarters_are_continuous_and_non_overlappi
 def test_resolve_filing_closes_on_m210_annual_0a_deferred_returns_none() -> None:
     """M210 annual '0A' has no authored window yet — the resultado/tipo-dependent annual
     plazos (arrendamiento a-ingresar abril, cuota cero 1-20 enero, a devolver desde 1 feb,
-    imputadas 1 abril-31 diciembre) are not expressible as a single period token and are
+    imputadas 1 enero-31 diciembre) are not expressible as a single period token and are
     deferred to a resultado/tipo-keyed deadline-modelling decision. The resolver must
     return None rather than silently reusing a wrong window.
     """
