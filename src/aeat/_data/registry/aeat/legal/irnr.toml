@@ -169,6 +169,22 @@ reviewed_by = "codex"
 notes = "Spain-Argentina double-taxation treaty art 19: public-function pensions paid by one contracting state for services rendered to that state may be taxed only in that state, unless the recipient is resident and national of the other state. Row-level allocation authority for the AR/pension M210 convenio seed; DOMESTIC_TARIFF delegates the Spain-side amount to the TRLIRNR art 25.1.b pension bracket table."
 required_text = ["Las pensiones pagadas por un Estado Contratante", "solo pueden someterse a imposicion en este Estado", "residente y nacional de este Estado"]
 
+[legal."convenio-es-de-2011:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-de-2011-art-10.html#art-10"
+document_id = "BOE-A-2012-10212"
+article = "10"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2012-10212"
+published_at = 2012-07-30
+effective_from = 2012-10-18
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 10 from BOE consolidated BOE-A-2012-10212; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Germany double-taxation treaty (CDI firmado 03-02-2011, en vigor 18-10-2012) art 10.2.b dividendos: the source-state tax may not exceed 15 percent of the gross dividends in all other cases. Row-level authority for the DE/dividend M210 treaty override (kind=ceiling, rate 0.15). The 5 percent rate of art 10.2.a (qualified participation >= 10%) is not modelled."
+required_text = ["Dividendos", "15 por ciento del importe bruto de los dividendos", "en todos los demás casos"]
+
 [legal."convenio-es-de-2011:art-11"]
 evidence_tier = "legal_authority"
 authority = "boe"
