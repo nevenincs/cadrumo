@@ -185,6 +185,38 @@ reviewed_by = "claude"
 notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 11: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/interest M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate notice)."
 required_text = ["Los intereses procedentes de un Estado contratante", "solo pueden someterse a imposicion en ese otro Estado"]
 
+[legal."convenio-es-fr-1995:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-fr-1995-art-10.html#art-10"
+document_id = "BOE-A-1997-12729"
+article = "10"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+published_at = 1997-06-12
+effective_from = 1997-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 10 from BOE consolidated BOE-A-1997-12729; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 10.2.a dividendos: the source-state tax may not exceed 15 percent of the gross dividends. Row-level authority for the FR/dividend M210 treaty override (kind=ceiling, rate 0.15). The art 10.2.b qualified-participation exemption is not modelled."
+required_text = ["Dividendos", "no podrá exceder del 15 por 100", "importe bruto de los dividendos"]
+
+[legal."convenio-es-fr-1995:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-fr-1995-art-11.html#art-11"
+document_id = "BOE-A-1997-12729"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+published_at = 1997-06-12
+effective_from = 1997-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1997-12729; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 11.2 intereses: the source-state tax may not exceed 10 percent of the gross interest. Row-level authority for the FR/interest M210 treaty override (kind=ceiling, rate 0.10)."
+required_text = ["Intereses", "no puede exceder del 10 por 100", "importe bruto de los intereses"]
+
 [legal."orden-eha-3316-2010:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
