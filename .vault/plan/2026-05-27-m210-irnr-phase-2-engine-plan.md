@@ -34,9 +34,9 @@ Land the M210 Phase 2 engine as the four independently-landable slices decided b
 
 Author the official M210 tipo-de-renta numeric code list as declared registry data on the 2025 revision, with a registry-authored code-to-`TipoRentaIrnr` projection and a build-time parity gate, and surface the code as a typed CLI Choice. One layout, code-keyed branches (ADR O2/O4); the conceptual `TipoRentaIrnr` enum stays the rate key.
 
-- [ ] `W01.P01.S01` - author the official M210 tipo-de-renta code list (01, 02, 27, 28, 29, 33, 35, ...) as declared registry data on the 2025 revision, each code row citing its bundled Orden EHA/3316/2010 and AEAT M210 instructions grounding; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/parameters`.
-- [ ] `W01.P01.S02` - author the code-to-`TipoRentaIrnr` projection plus a registry-build parity gate that refuses at build any declared code with no mapping and any unmapped code; `src/aeat/core/_irnr.py`.
-- [ ] `W01.P01.S03` - declare the official tipo-de-renta code as a typed Typer Choice at the M210 CLI boundary and add its locale keys across en/es/ca/hu through the locale CLI; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P01.S01` - author the official M210 tipo-de-renta code list (01, 02, 27, 28, 29, 33, 35, ...) as declared registry data on the 2025 revision, each code row citing its bundled Orden EHA/3316/2010 and AEAT M210 instructions grounding; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/parameters`.
+- [x] `W01.P01.S02` - author the code-to-`TipoRentaIrnr` projection plus a registry-build parity gate that refuses at build any declared code with no mapping and any unmapped code; `src/aeat/core/_irnr.py`.
+- [x] `W01.P01.S03` - declare the official tipo-de-renta code as a typed Typer Choice at the M210 CLI boundary and add its locale keys across en/es/ca/hu through the locale CLI; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W01.P02` - Slice B: agrupacion anual (bundled-groundable now)
 
