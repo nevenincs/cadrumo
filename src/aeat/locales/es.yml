@@ -622,7 +622,8 @@ application:
       modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
         de cálculo
       original_draft_not_persisted: el borrador original %{draft_id} no está persistido
-      period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo %{period} para el ejercicio %{ejercicio}'
+      period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo
+        %{period} para el ejercicio %{ejercicio}'
       unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};
         se requiere un año de cuatro dígitos'
     review:
@@ -729,10 +730,14 @@ application:
         movimiento diferente, u omita la clave para añadir un duplicado deliberado.
       purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
         elimine o reemplace a través del flujo de adjuntos.
-      transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix} coincide con %{count} transacciones: %{matches}'
-      transaction_id_prefix_no_match: 'ninguna transacción coincide con el prefijo de id %{prefix}'
-      transaction_id_prefix_non_hex: 'el prefijo de id de transacción %{prefix} contiene caracteres no hexadecimales'
-      transaction_id_prefix_too_long: 'el prefijo de id de transacción %{prefix} tiene más de %{max_length} caracteres'
+      transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix}
+        coincide con %{count} transacciones: %{matches}'
+      transaction_id_prefix_no_match: ninguna transacción coincide con el prefijo
+        de id %{prefix}
+      transaction_id_prefix_non_hex: el prefijo de id de transacción %{prefix} contiene
+        caracteres no hexadecimales
+      transaction_id_prefix_too_long: el prefijo de id de transacción %{prefix} tiene
+        más de %{max_length} caracteres
       transaction_not_found: 'transacción no encontrada: %{transaction_id}'
   live:
     expedientes:
@@ -852,6 +857,8 @@ application:
       calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.
+      calculate_m210_tipo_renta_fetch_gated: 'El código de tipo de renta %{value} del Modelo 210 está pendiente de fundamentación: su tipo de gravamen aún no está fundamentado en el corpus incluido, por lo que todavía no puede presentarse. Códigos aceptados: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no es un código de tipo de renta válido del Modelo 210. Códigos aceptados: %{accepted}. Códigos pendientes de fundamentación (aún no presentables): %{fetch_gated}.'
       calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
         %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
         art. 31.1.
@@ -1239,7 +1246,7 @@ application:
           resolvio a booleano; los booleanos no son claves validas de despacho enum.
   overview:
     errors:
-      horizon_days_not_positive: 'horizon_days debe ser positivo; se recibió %{horizon_days}'
+      horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
