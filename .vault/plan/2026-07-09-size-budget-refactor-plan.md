@@ -8,6 +8,7 @@ tier: L2
 related:
   - '[[2026-07-09-size-budget-refactor-adr]]'
 ---
+
 # `size-budget-refactor` plan
 
 ## Description
@@ -62,26 +63,26 @@ Split the module and its over-budget build_overview_calendar callable into cohes
 
 Split the over-budget mapping-to-profile constructor into cohesive helper functions, preserving behavior exactly.
 
-- [ ] `P03.S07` - Read taxpayer_profile_from_mapping in full and identify a cohesive extraction boundary (e.g. per-axis mapping helpers) that shrinks it under its override; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `P03.S08` - Extract the identified cohesive chunk into private helper functions in the same module, preserving the public API and behavior exactly; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `P03.S09` - Run the deadlines test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the callable is under budget with zero behavior drift; `src/aeat/domain/deadlines/tests/`.
+- [x] `P03.S07` - Read taxpayer_profile_from_mapping in full and identify a cohesive extraction boundary (e.g. per-axis mapping helpers) that shrinks it under its override; `src/aeat/domain/deadlines/_profiles.py`.
+- [x] `P03.S08` - Extract the identified cohesive chunk into private helper functions in the same module, preserving the public API and behavior exactly; `src/aeat/domain/deadlines/_profiles.py`.
+- [x] `P03.S09` - Run the deadlines test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the callable is under budget with zero behavior drift; `src/aeat/domain/deadlines/tests/`.
 
 ### Phase `P04` - Extract adapters/persistence/storage/sql/secure_objects.py under budget
 
 Split the module into cohesive pieces once the secure-persistence campaign confirms the file is quiet, preserving the public API and behavior exactly.
 
-- [ ] `P04.S10` - Confirm via git log that secure_objects.py has no uncommitted or actively landing peer WIP from the secure-persistence campaign before starting; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P04.S11` - Read secure_objects.py in full and identify a cohesive extraction boundary that shrinks it under its override, preserving the public API and behavior exactly; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P04.S12` - Extract the identified cohesive chunk into a sibling module and re-wire callers, preserving the public API and behavior exactly; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P04.S13` - Run the storage roundtrip test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the module is under budget with zero behavior drift; `src/aeat/adapters/persistence/storage/sql/tests/`.
+- [x] `P04.S10` - Confirm via git log that secure_objects.py has no uncommitted or actively landing peer WIP from the secure-persistence campaign before starting; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P04.S11` - Read secure_objects.py in full and identify a cohesive extraction boundary that shrinks it under its override, preserving the public API and behavior exactly; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P04.S12` - Extract the identified cohesive chunk into a sibling module and re-wire callers, preserving the public API and behavior exactly; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P04.S13` - Run the storage roundtrip test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the module is under budget with zero behavior drift; `src/aeat/adapters/persistence/storage/sql/tests/`.
 
 ### Phase `P05` - Track deferred peer-owned offenders
 
 Record the 6 peer-churning offenders deferred to the prorrata and mcp campaigns, so the gate's green-except-peer state is documented rather than silently accepted.
 
-- [ ] `P05.S14` - Record _iva_ledger.py, _classify_iva_transaction, _ledger_bindings.py, _models.py, and ledger_add as deferred to the prorrata campaign (peer-hot files under active churn) with no code changes made; `src/aeat/application/aggregation/_iva_ledger.py; src/aeat/domain/calculations/registry/_ledger_bindings.py; src/aeat/domain/transactions/_models.py; src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `P05.S15` - Record _commands.py, build_server, and _call_tool as deferred to the mcp campaign (peer-hot files under active churn) with no code changes made; `src/aeat/application/wizard/_commands.py; src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P05.S16` - Confirm test_codebase_size_budgets fails only on the 6 deferred peer-owned offenders after the owner-surface Phases land, and record this green-except-peer state; `src/aeat/tests/test_codebase_size_budgets.py`.
+- [x] `P05.S14` - Record _iva_ledger.py, _classify_iva_transaction, _ledger_bindings.py, _models.py, and ledger_add as deferred to the prorrata campaign (peer-hot files under active churn) with no code changes made; `src/aeat/application/aggregation/_iva_ledger.py; src/aeat/domain/calculations/registry/_ledger_bindings.py; src/aeat/domain/transactions/_models.py; src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `P05.S15` - Record _commands.py, build_server, and _call_tool as deferred to the mcp campaign (peer-hot files under active churn) with no code changes made; `src/aeat/application/wizard/_commands.py; src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P05.S16` - Confirm test_codebase_size_budgets fails only on the 6 deferred peer-owned offenders after the owner-surface Phases land, and record this green-except-peer state; `src/aeat/tests/test_codebase_size_budgets.py`.
 
 ## Parallelization
 
