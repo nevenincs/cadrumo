@@ -197,7 +197,10 @@ def _auth_error_remediation(provider: str, result: str) -> str:
         if result == "unreadable":
             return "set the correct PKCS#12 passphrase (AEAT_CERTIFICATE_PASSWORD)"
         return "re-export a valid .p12 bundle and reconfigure `aeat config auth certificate`"
-    return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth clave-movil`"
+    return (
+        "set a valid DNI/NIE for Cl@ve Móvil via "
+        "`aeat config auth configure --provider clave_movil`"
+    )
 
 
 # ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────
