@@ -83,9 +83,12 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S307]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S309]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S311]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S338]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S347]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S348]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S380]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S392]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S393]]'
@@ -118,6 +121,8 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S295]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S303]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S312]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S317]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S319]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S328]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S330]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S331]]'
@@ -125,6 +130,8 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S356]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S358]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P47-S170]]'
+  - '[[2026-05-26-cross-domain-continuity-W11-P59-S335]]'
+  - '[[2026-05-26-cross-domain-continuity-W11-P59-S336]]'
   - '[[2026-05-26-cross-domain-continuity-W12-P61-S277]]'
   - '[[2026-05-26-cross-domain-continuity-adr]]'
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -471,6 +478,13 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
 - `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
 - `2026-07-07-cross-domain-continuity-W09-P41-S308` - R8-NURIA-MODERATE encrypted profile-bundle transfer path
+- `2026-05-26-cross-domain-continuity-W09-P41-S311` - ambient-index commit discipline violation: peer agent's commit 38d82ce95 absorbed coder1's S296 working tree via git add -A or equivalent
+- `2026-05-26-cross-domain-continuity-W09-P41-S338` - CRITICAL incident log  -  S278 commit c25b14a54 + c94ed9a38 used HEAD-based reconstruction + restore pattern to isolate from peer WIP per coder1 step record
+- `2026-05-26-cross-domain-continuity-W09-P41-S348` - R9-ANDREA-LOW period token notation inconsistency between ledger preflight (uses 2024Q1) and modelo work create (uses 1T)
+- `2026-05-26-cross-domain-continuity-W09-P45-S317` - add NEXT_ACTION guidance hints to work_verify work_list work_status work_history success/failure outputs per discovery3 #121
+- `2026-05-26-cross-domain-continuity-W09-P45-S319` - standardise explicit --json flag across CLI verbs
+- `2026-05-26-cross-domain-continuity-W11-P59-S335` - durable maintenance gate one  -  vault check all CI-equivalent runs on every commit to chore branch
+- `2026-05-26-cross-domain-continuity-W11-P59-S336` - durable maintenance gate two  -  ledger and storage roundtrip test suite remains in CI
 
 ### plan
 
