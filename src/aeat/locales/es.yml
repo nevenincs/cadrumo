@@ -617,11 +617,14 @@ application:
           la semilla sobrescribiría el historial almacenado.
   filing:
     errors:
-      amendment_not_persisted: 'no hay ninguna rectificación persistida con id %{amendment_id}'
+      amendment_not_persisted: no hay ninguna rectificación persistida con id %{amendment_id}
       import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
-      modelo_not_in_registry: 'el modelo %{modelo} no está presente en el registro de cálculo'
-      original_draft_not_persisted: 'el borrador original %{draft_id} no está persistido'
-      unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio}; se requiere un año de cuatro dígitos'
+      modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
+        de cálculo
+      original_draft_not_persisted: el borrador original %{draft_id} no está persistido
+      period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo %{period} para el ejercicio %{ejercicio}'
+      unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};
+        se requiere un año de cuatro dígitos'
     review:
       errors:
         approved_by_blank: El identificador del aprobador no puede estar vacio.
@@ -726,6 +729,11 @@ application:
         movimiento diferente, u omita la clave para añadir un duplicado deliberado.
       purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
         elimine o reemplace a través del flujo de adjuntos.
+      transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix} coincide con %{count} transacciones: %{matches}'
+      transaction_id_prefix_no_match: 'ninguna transacción coincide con el prefijo de id %{prefix}'
+      transaction_id_prefix_non_hex: 'el prefijo de id de transacción %{prefix} contiene caracteres no hexadecimales'
+      transaction_id_prefix_too_long: 'el prefijo de id de transacción %{prefix} tiene más de %{max_length} caracteres'
+      transaction_not_found: 'transacción no encontrada: %{transaction_id}'
   live:
     expedientes:
       errors:
@@ -1230,6 +1238,8 @@ application:
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
           resolvio a booleano; los booleanos no son claves validas de despacho enum.
   overview:
+    errors:
+      horizon_days_not_positive: 'horizon_days debe ser positivo; se recibió %{horizon_days}'
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.

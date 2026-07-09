@@ -553,11 +553,13 @@ application:
           would overwrite stored history.
   filing:
     errors:
-      amendment_not_persisted: 'no persisted amendment with id %{amendment_id}'
+      amendment_not_persisted: no persisted amendment with id %{amendment_id}
       import_failed: 'cannot import modelo %{modelo}: %{detail}'
-      modelo_not_in_registry: 'modelo %{modelo} is not present in the calculation registry'
-      original_draft_not_persisted: 'original draft %{draft_id} is not persisted'
-      unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio}; want four-digit year'
+      modelo_not_in_registry: modelo %{modelo} is not present in the calculation registry
+      original_draft_not_persisted: original draft %{draft_id} is not persisted
+      period_ejercicio_mismatch: 'modelo %{modelo}: cannot canonicalise period %{period} for ejercicio %{ejercicio}'
+      unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio};
+        want four-digit year'
     review:
       errors:
         approved_by_blank: The approver identifier must not be blank.
@@ -656,6 +658,11 @@ application:
         or omit the key to append a deliberate duplicate.
       purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
         remove or replace through the attachments workflow.
+      transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count} transactions: %{matches}'
+      transaction_id_prefix_no_match: 'no transaction matches id prefix %{prefix}'
+      transaction_id_prefix_non_hex: 'transaction id prefix %{prefix} contains non-hex characters'
+      transaction_id_prefix_too_long: 'transaction id prefix %{prefix} is longer than %{max_length} characters'
+      transaction_not_found: 'transaction not found: %{transaction_id}'
   live:
     expedientes:
       errors:
@@ -1125,6 +1132,8 @@ application:
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
   overview:
+    errors:
+      horizon_days_not_positive: 'horizon_days must be positive; got %{horizon_days}'
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.

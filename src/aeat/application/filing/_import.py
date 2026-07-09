@@ -213,7 +213,8 @@ def _normalise_period(
         )
     if ejercicio is not None and raw_period.filing_year != int(ejercicio):
         raise ModeloImportError(
-            f"modelo {modelo}: cannot canonicalise period {raw_period!s} for ejercicio {ejercicio!r}",
+            translated_message="application.filing.errors.period_ejercicio_mismatch",
+            context={"modelo": modelo, "period": str(raw_period), "ejercicio": repr(ejercicio)},
         )
 
     return _require_supported_period_token(

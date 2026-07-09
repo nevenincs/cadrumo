@@ -568,11 +568,13 @@ application:
           kezdőérték felülírná a tárolt előzményeket.
   filing:
     errors:
-      amendment_not_persisted: 'nincs mentett módosítás %{amendment_id} azonosítóval'
+      amendment_not_persisted: nincs mentett módosítás %{amendment_id} azonosítóval
       import_failed: 'a(z) %{modelo} modell nem importálható: %{detail}'
-      modelo_not_in_registry: 'a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban'
-      original_draft_not_persisted: 'a(z) %{draft_id} eredeti vázlat nincs mentve'
-      unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű év szükséges'
+      modelo_not_in_registry: a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban
+      original_draft_not_persisted: a(z) %{draft_id} eredeti vázlat nincs mentve
+      period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható a(z) %{ejercicio} évhez'
+      unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű
+        év szükséges'
     review:
       errors:
         approved_by_blank: A jovahagyo azonositoja nem lehet ures.
@@ -669,6 +671,11 @@ application:
         vagy hagyja el a kulcsot szándékos duplikátum hozzáadásához.
       purchase_evidence_already_set: A főkönyvi tranzakciónak már van purchase_invoice_evidence_id-je;
         távolítsa el vagy cserélje ki a csatolmányok munkafolyamatán keresztül.
+      transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag %{count} tranzakcióra illeszkedik: %{matches}'
+      transaction_id_prefix_no_match: 'egyetlen tranzakció sem egyezik a(z) %{prefix} azonosító-előtaggal'
+      transaction_id_prefix_non_hex: 'a(z) %{prefix} tranzakcióazonosító-előtag nem hexadecimális karaktereket tartalmaz'
+      transaction_id_prefix_too_long: 'a(z) %{prefix} tranzakcióazonosító-előtag hosszabb mint %{max_length} karakter'
+      transaction_not_found: 'tranzakció nem található: %{transaction_id}'
   live:
     expedientes:
       errors:
@@ -1158,6 +1165,8 @@ application:
         enum_boolean_invalid: A(z) %{binding_id} enumcsatornas kotes profiladata boolean
           ertekre oldodott fel; a boolean adatok nem ervenyes enum dispatch kulcsok.
   overview:
+    errors:
+      horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie; a kapott érték: %{horizon_days}'
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
