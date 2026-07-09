@@ -572,7 +572,8 @@ application:
       import_failed: 'a(z) %{modelo} modell nem importálható: %{detail}'
       modelo_not_in_registry: a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban
       original_draft_not_persisted: a(z) %{draft_id} eredeti vázlat nincs mentve
-      period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható a(z) %{ejercicio} évhez'
+      period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható
+        a(z) %{ejercicio} évhez'
       unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű
         év szükséges'
     review:
@@ -671,10 +672,14 @@ application:
         vagy hagyja el a kulcsot szándékos duplikátum hozzáadásához.
       purchase_evidence_already_set: A főkönyvi tranzakciónak már van purchase_invoice_evidence_id-je;
         távolítsa el vagy cserélje ki a csatolmányok munkafolyamatán keresztül.
-      transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag %{count} tranzakcióra illeszkedik: %{matches}'
-      transaction_id_prefix_no_match: 'egyetlen tranzakció sem egyezik a(z) %{prefix} azonosító-előtaggal'
-      transaction_id_prefix_non_hex: 'a(z) %{prefix} tranzakcióazonosító-előtag nem hexadecimális karaktereket tartalmaz'
-      transaction_id_prefix_too_long: 'a(z) %{prefix} tranzakcióazonosító-előtag hosszabb mint %{max_length} karakter'
+      transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag
+        %{count} tranzakcióra illeszkedik: %{matches}'
+      transaction_id_prefix_no_match: egyetlen tranzakció sem egyezik a(z) %{prefix}
+        azonosító-előtaggal
+      transaction_id_prefix_non_hex: a(z) %{prefix} tranzakcióazonosító-előtag nem
+        hexadecimális karaktereket tartalmaz
+      transaction_id_prefix_too_long: a(z) %{prefix} tranzakcióazonosító-előtag hosszabb
+        mint %{max_length} karakter
       transaction_not_found: 'tranzakció nem található: %{transaction_id}'
   live:
     expedientes:
@@ -784,6 +789,8 @@ application:
         parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
         szazalekai pontosan 100%-ot kell adjanak; kapott ertek: %{total}, sorok: %{count}.'
+      calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} Modelo 210 jövedelemtípus-kód még megalapozásra vár: az adómértéke még nincs megalapozva a csomagolt korpuszban, ezért még nem nyújtható be. Elfogadott kódok: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: 'A(z) %{value} nem érvényes Modelo 210 jövedelemtípus-kód. Elfogadott kódok: %{accepted}. Megalapozásra váró (még be nem nyújtható) kódok: %{fetch_gated}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere osszesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR kuszobot.
       calculate_pension_inputs_incomplete: A nyugdijterv kivaltasi adatait egyutt
@@ -1166,7 +1173,8 @@ application:
           ertekre oldodott fel; a boolean adatok nem ervenyes enum dispatch kulcsok.
   overview:
     errors:
-      horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie; a kapott érték: %{horizon_days}'
+      horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
+        a kapott érték: %{horizon_days}'
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.

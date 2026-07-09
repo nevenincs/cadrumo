@@ -614,7 +614,8 @@ application:
       import_failed: 'no es pot importar el model %{modelo}: %{detail}'
       modelo_not_in_registry: el model %{modelo} no és present al registre de càlcul
       original_draft_not_persisted: l'esborrany original %{draft_id} no està persistit
-      period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període %{period} per a l''exercici %{ejercicio}'
+      period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període
+        %{period} per a l''exercici %{ejercicio}'
       unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal
         un any de quatre dígits'
     review:
@@ -722,10 +723,14 @@ application:
         un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
-      transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix amb %{count} transaccions: %{matches}'
-      transaction_id_prefix_no_match: 'cap transacció coincideix amb el prefix d''id %{prefix}'
-      transaction_id_prefix_non_hex: 'el prefix d''id de transacció %{prefix} conté caràcters no hexadecimals'
-      transaction_id_prefix_too_long: 'el prefix d''id de transacció %{prefix} té més de %{max_length} caràcters'
+      transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
+        amb %{count} transaccions: %{matches}'
+      transaction_id_prefix_no_match: cap transacció coincideix amb el prefix d'id
+        %{prefix}
+      transaction_id_prefix_non_hex: el prefix d'id de transacció %{prefix} conté
+        caràcters no hexadecimals
+      transaction_id_prefix_too_long: el prefix d'id de transacció %{prefix} té més
+        de %{max_length} caràcters
       transaction_not_found: 'transacció no trobada: %{transaction_id}'
   live:
     expedientes:
@@ -842,6 +847,8 @@ application:
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
+      calculate_m210_tipo_renta_fetch_gated: 'El codi de tipus de renda %{value} del Model 210 està pendent de fonamentació: el seu tipus de gravamen encara no està fonamentat en el corpus inclòs, per la qual cosa encara no es pot presentar. Codis acceptats: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no és un codi de tipus de renda vàlid del Model 210. Codis acceptats: %{accepted}. Codis pendents de fonamentació (encara no presentables): %{fetch_gated}.'
       calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
         que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
         31.1.
@@ -1221,7 +1228,7 @@ application:
           ha resolt a boolea; els booleans no son claus valides de dispatch enum.
   overview:
     errors:
-      horizon_days_not_positive: 'horizon_days ha de ser positiu; s''ha rebut %{horizon_days}'
+      horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.

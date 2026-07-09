@@ -72,6 +72,7 @@ from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_m
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import (
+    FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
     OFFICIAL_M210_TIPO_RENTA_CODES,
     ConvenioOverrideKind,
@@ -172,6 +173,7 @@ __all__: list[str] = [
     "BROWSER_EXTRA",
     "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",
+    "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
     "GOOGLE_EXTRA",

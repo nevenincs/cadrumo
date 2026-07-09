@@ -315,3 +315,18 @@ def project_m210_tipo_renta_code(code: str) -> TipoRentaIrnr:
             here rather than resolving to a fabricated rate.
     """
     return M210_TIPO_RENTA_CODE_PROJECTION[code]
+
+
+# Official HOJA INFORMATIVA 210 codes that are REAL AEAT tipo-de-renta codes but
+# whose rate is NOT yet grounded against the bundled corpus (the Phase-1 TRLIRNR
+# extract carries only Art. 25 letters a/b/f): cánones 08/09/10/11/12/32,
+# asistencia técnica 13 (cánones-adjacent in the HOJA INFORMATIVA), reaseguros 19
+# (Art. 25.1.e), navegación 20 (Art. 25.1.d), imposición complementaria 27
+# (Art. 19.2), and premios de loterías 31 (D.A. 5ª gravamen especial). They are
+# NOT in the declared projection — mapping them would fabricate a rate — but they
+# are distinguished here from a genuinely-invalid code so the CLI boundary can
+# tell an operator "fetch-gated, not yet grounded" rather than "invalid". They
+# enrol code-by-code as the full consolidated Art. 25 is fetched.
+FETCH_GATED_M210_TIPO_RENTA_CODES: frozenset[str] = frozenset(
+    {"08", "09", "10", "11", "12", "13", "19", "20", "27", "31", "32"}
+)
