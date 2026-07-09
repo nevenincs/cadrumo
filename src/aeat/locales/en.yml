@@ -737,8 +737,12 @@ application:
         boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
         encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
         each binding''s decimal encoding.'
-      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply the exact canonical casilla.id'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} is a printed casilla number or form number or export reference, not a canonical casilla.id. Use the canonical casilla.id instead: %{accepted}'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical
+        casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply
+        the exact canonical casilla.id'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} is a printed casilla
+        number or form number or export reference, not a canonical casilla.id. Use
+        the canonical casilla.id instead: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
         this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
         values.
@@ -2042,6 +2046,7 @@ cli:
       review_package:
         actor_help: Operator label recorded into the package descriptor and the underlying
           export event.
+        bucket_id_help: 'Bucket id the review package operates on (defaults to the active profile).'
         build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
           draft, revision provenance, and bundled ledger evidence) for accountant
           handoff. Local-only; never contacts AEAT.

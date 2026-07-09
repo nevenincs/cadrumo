@@ -303,9 +303,9 @@ def _prompt_corrections(
     corrected decimal value of each selected casilla in turn, showing its
     current (baseline) value for context.
     """
-    from ...application.modelo import get_calculation_revision
+    from ._modelo_cli_support import load_calculation_revision
 
-    baseline_revision: CalculationRevision = get_calculation_revision(baseline.calculation_revision_id)
+    baseline_revision: CalculationRevision = load_calculation_revision(baseline.calculation_revision_id)
     lang = output_language()
     rows_by_id = {row.casilla_id: row for row in casilla_rows}
     rows_by_number = {row.number: row for row in casilla_rows}
