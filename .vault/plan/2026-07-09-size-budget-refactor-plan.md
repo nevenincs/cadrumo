@@ -5,50 +5,10 @@ tags:
 date: '2026-07-09'
 modified: '2026-07-09'
 tier: L2
+related:
+  - '[[2026-07-09-size-budget-refactor-adr]]'
 ---
-
 # `size-budget-refactor` plan
-
-### Phase `P01` - Inventory and ownership split
-
-Record the 12 size-budget-gate offenders (6 modules, 6 callables) and split them into owner-surface-stable targets to refactor now versus peer-churning targets to defer to their owning campaigns.
-
-- [ ] `P01.S01` - Record the 6 over-budget module offenders and their owning campaign (secure_objects.py owner-surface, _iva_ledger.py prorrata, _calendar.py owner-surface, _commands.py mcp, _ledger_bindings.py prorrata, _models.py prorrata); `src/aeat/tests/test_codebase_size_budgets.py`.
-- [ ] `P01.S02` - Record the 6 over-budget callable offenders and their owning campaign (_classify_iva_transaction prorrata, build_overview_calendar owner-surface, taxpayer_profile_from_mapping owner-surface, ledger_add prorrata, build_server mcp, _call_tool mcp); `src/aeat/tests/test_codebase_size_budgets.py`.
-- [ ] `P01.S03` - Confirm via git log and git diff that each owner-surface target has no uncommitted peer WIP before refactoring; `src/aeat/application/overview/_calendar.py; src/aeat/domain/deadlines/_profiles.py; src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-
-### Phase `P02` - Extract application/overview/_calendar.py under budget
-
-Split the module and its over-budget build_overview_calendar callable into cohesive pieces, preserving the public API and behavior exactly.
-
-- [ ] `P02.S04` - RAG-ground the calendar module concept, read _calendar.py in full, and identify a cohesive extraction boundary (e.g. per-modelo or per-section calendar builders) that shrinks both the module and build_overview_calendar under their overrides; `src/aeat/application/overview/_calendar.py`.
-- [ ] `P02.S05` - Extract the identified cohesive chunk into a new sibling module and re-wire build_overview_calendar to call it, preserving the public API and behavior exactly; `src/aeat/application/overview/_calendar.py; src/aeat/application/overview/_calendar_sections.py`.
-- [ ] `P02.S06` - Run the overview test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the module and callable are under budget with zero behavior drift; `src/aeat/application/overview/tests/`.
-
-### Phase `P03` - Extract domain/deadlines/_profiles.py:taxpayer_profile_from_mapping under budget
-
-Split the over-budget mapping-to-profile constructor into cohesive helper functions, preserving behavior exactly.
-
-- [ ] `P03.S07` - Read taxpayer_profile_from_mapping in full and identify a cohesive extraction boundary (e.g. per-axis mapping helpers) that shrinks it under its override; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `P03.S08` - Extract the identified cohesive chunk into private helper functions in the same module, preserving the public API and behavior exactly; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `P03.S09` - Run the deadlines test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the callable is under budget with zero behavior drift; `src/aeat/domain/deadlines/tests/`.
-
-### Phase `P04` - Extract adapters/persistence/storage/sql/secure_objects.py under budget
-
-Split the module into cohesive pieces once the secure-persistence campaign confirms the file is quiet, preserving the public API and behavior exactly.
-
-- [ ] `P04.S10` - Confirm via git log that secure_objects.py has no uncommitted or actively landing peer WIP from the secure-persistence campaign before starting; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P04.S11` - Read secure_objects.py in full and identify a cohesive extraction boundary that shrinks it under its override, preserving the public API and behavior exactly; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P04.S12` - Extract the identified cohesive chunk into a sibling module and re-wire callers, preserving the public API and behavior exactly; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `P04.S13` - Run the storage roundtrip test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the module is under budget with zero behavior drift; `src/aeat/adapters/persistence/storage/sql/tests/`.
-
-### Phase `P05` - Track deferred peer-owned offenders
-
-Record the 6 peer-churning offenders deferred to the prorrata and mcp campaigns, so the gate's green-except-peer state is documented rather than silently accepted.
-
-- [ ] `P05.S14` - Record _iva_ledger.py, _classify_iva_transaction, _ledger_bindings.py, _models.py, and ledger_add as deferred to the prorrata campaign (peer-hot files under active churn) with no code changes made; `src/aeat/application/aggregation/_iva_ledger.py; src/aeat/domain/calculations/registry/_ledger_bindings.py; src/aeat/domain/transactions/_models.py; src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `P05.S15` - Record _commands.py, build_server, and _call_tool as deferred to the mcp campaign (peer-hot files under active churn) with no code changes made; `src/aeat/application/wizard/_commands.py; src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P05.S16` - Confirm test_codebase_size_budgets fails only on the 6 deferred peer-owned offenders after the owner-surface Phases land, and record this green-except-peer state; `src/aeat/tests/test_codebase_size_budgets.py`.
 
 ## Description
 
@@ -86,17 +46,17 @@ semantics change as a result of this plan.
 
 Record the 12 size-budget-gate offenders (6 modules, 6 callables) and split them into owner-surface-stable targets to refactor now versus peer-churning targets to defer to their owning campaigns.
 
-- [ ] `P01.S01` - Record the 6 over-budget module offenders and their owning campaign (secure_objects.py owner-surface, _iva_ledger.py prorrata, _calendar.py owner-surface, _commands.py mcp, _ledger_bindings.py prorrata, _models.py prorrata); `src/aeat/tests/test_codebase_size_budgets.py`.
-- [ ] `P01.S02` - Record the 6 over-budget callable offenders and their owning campaign (_classify_iva_transaction prorrata, build_overview_calendar owner-surface, taxpayer_profile_from_mapping owner-surface, ledger_add prorrata, build_server mcp, _call_tool mcp); `src/aeat/tests/test_codebase_size_budgets.py`.
-- [ ] `P01.S03` - Confirm via git log and git diff that each owner-surface target has no uncommitted peer WIP before refactoring; `src/aeat/application/overview/_calendar.py; src/aeat/domain/deadlines/_profiles.py; src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `P01.S01` - Record the 6 over-budget module offenders and their owning campaign (secure_objects.py owner-surface, _iva_ledger.py prorrata, _calendar.py owner-surface, _commands.py mcp, _ledger_bindings.py prorrata, _models.py prorrata); `src/aeat/tests/test_codebase_size_budgets.py`.
+- [x] `P01.S02` - Record the 6 over-budget callable offenders and their owning campaign (_classify_iva_transaction prorrata, build_overview_calendar owner-surface, taxpayer_profile_from_mapping owner-surface, ledger_add prorrata, build_server mcp, _call_tool mcp); `src/aeat/tests/test_codebase_size_budgets.py`.
+- [x] `P01.S03` - Confirm via git log and git diff that each owner-surface target has no uncommitted peer WIP before refactoring; `src/aeat/application/overview/_calendar.py; src/aeat/domain/deadlines/_profiles.py; src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 
 ### Phase `P02` - Extract application/overview/_calendar.py under budget
 
 Split the module and its over-budget build_overview_calendar callable into cohesive pieces, preserving the public API and behavior exactly.
 
-- [ ] `P02.S04` - RAG-ground the calendar module concept, read _calendar.py in full, and identify a cohesive extraction boundary (e.g. per-modelo or per-section calendar builders) that shrinks both the module and build_overview_calendar under their overrides; `src/aeat/application/overview/_calendar.py`.
-- [ ] `P02.S05` - Extract the identified cohesive chunk into a new sibling module and re-wire build_overview_calendar to call it, preserving the public API and behavior exactly; `src/aeat/application/overview/_calendar.py; src/aeat/application/overview/_calendar_sections.py`.
-- [ ] `P02.S06` - Run the overview test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the module and callable are under budget with zero behavior drift; `src/aeat/application/overview/tests/`.
+- [x] `P02.S04` - RAG-ground the calendar module concept, read _calendar.py in full, and identify a cohesive extraction boundary (e.g. per-modelo or per-section calendar builders) that shrinks both the module and build_overview_calendar under their overrides; `src/aeat/application/overview/_calendar.py`.
+- [x] `P02.S05` - Extract the identified cohesive chunk into a new sibling module and re-wire build_overview_calendar to call it, preserving the public API and behavior exactly; `src/aeat/application/overview/_calendar.py; src/aeat/application/overview/_calendar_sections.py`.
+- [x] `P02.S06` - Run the overview test suite, ruff, pytest --collect-only, and test_codebase_size_budgets to confirm the module and callable are under budget with zero behavior drift; `src/aeat/application/overview/tests/`.
 
 ### Phase `P03` - Extract domain/deadlines/_profiles.py:taxpayer_profile_from_mapping under budget
 
