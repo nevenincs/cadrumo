@@ -150,7 +150,10 @@ def import_filing_from_justificante(
             schema_provider=schema_provider,
         )
     except ModeloBuilderError as exc:
-        raise ModeloImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
+        raise ModeloImportError(
+            translated_message="application.filing.errors.import_failed",
+            context={"modelo": repr(justificante.modelo), "detail": str(exc)},
+        ) from exc
 
     submission = _build_submission_record(justificante=justificante, draft=draft)
     warnings: tuple[str, ...] = (_EMPTY_CASILLA_WARNING,)
@@ -197,11 +200,17 @@ def _normalise_period(
     try:
         subview = schema_provider.get_subview(modelo)
     except ModeloBuilderError as exc:
-        raise ModeloImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+        raise ModeloImportError(
+            translated_message="application.filing.errors.modelo_not_in_registry",
+            context={"modelo": repr(modelo)},
+        ) from exc
     supported_periods = set(subview.period_selector_periods)
 
     if ejercicio is not None and (len(ejercicio) != 4 or not ejercicio.isdigit()):
-        raise ModeloImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
+        raise ModeloImportError(
+            translated_message="application.filing.errors.unexpected_ejercicio",
+            context={"modelo": modelo, "ejercicio": repr(ejercicio)},
+        )
     if ejercicio is not None and raw_period.filing_year != int(ejercicio):
         raise ModeloImportError(
             f"modelo {modelo}: cannot canonicalise period {raw_period!s} for ejercicio {ejercicio!r}",

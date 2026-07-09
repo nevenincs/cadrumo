@@ -616,6 +616,12 @@ application:
         seed_conflict: Ya existe un estado de compensación de IVA para este periodo;
           la semilla sobrescribiría el historial almacenado.
   filing:
+    errors:
+      amendment_not_persisted: 'no hay ninguna rectificación persistida con id %{amendment_id}'
+      import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
+      modelo_not_in_registry: 'el modelo %{modelo} no está presente en el registro de cálculo'
+      original_draft_not_persisted: 'el borrador original %{draft_id} no está persistido'
+      unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio}; se requiere un año de cuatro dígitos'
     review:
       errors:
         approved_by_blank: El identificador del aprobador no puede estar vacio.
@@ -2210,7 +2216,8 @@ cli:
       review_package:
         actor_help: Etiqueta del operador registrada en el descriptor del paquete
           y en el evento de exportación subyacente.
-        bucket_id_help: 'Id del bucket sobre el que opera el paquete de revisión (por defecto el perfil activo).'
+        bucket_id_help: Id del bucket sobre el que opera el paquete de revisión (por
+          defecto el perfil activo).
         build_help: Ensambla un paquete de revisión compartible y verificable por
           checksum (borrador fichero-BOE, procedencia de la revisión y evidencia contable
           incluida) para entregar al asesor. Solo local; nunca contacta con la AEAT.
@@ -2484,6 +2491,8 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
+        history_next_action: Revisa el estado actual de esta unidad de trabajo con
+          `aeat app modelo work status`.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
@@ -2512,6 +2521,9 @@ cli:
           signo igual y el valor a la derecha. Se recibio {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
+        list_next_action: Inspecciona el estado completo de una unidad de trabajo
+          con `aeat app modelo work status` y luego crea o recalcula el borrador con
+          `aeat app modelo work calculate`.
         meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
           de 3 años estaba en la unidad familiar (Art. 81 LIRPF deducción maternidad).
           Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
@@ -2703,7 +2715,14 @@ cli:
         state_label_presentado_supersedido: Presentacion sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
+        status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
+          calculate` y luego verifica el borrador con `aeat app modelo work verify`.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
+        verify_next_action_granted: La verificación se superó. Exporta el artefacto
+          de presentación con `aeat app modelo export`.
+        verify_next_action_incomplete: La verificación encontró elementos bloqueantes
+          (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
+          work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
         verify_selector_help: Selector de revision borrador (current, latest-draft
           o explicit).
         wizard_help: Guia paso a paso por las casillas manuales pendientes de la unidad
@@ -2725,11 +2744,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        history_next_action: 'Revisa el estado actual de esta unidad de trabajo con `aeat app modelo work status`.'
-        list_next_action: 'Inspecciona el estado completo de una unidad de trabajo con `aeat app modelo work status` y luego crea o recalcula el borrador con `aeat app modelo work calculate`.'
-        status_next_action: 'Crea o recalcula esta unidad con `aeat app modelo work calculate` y luego verifica el borrador con `aeat app modelo work verify`.'
-        verify_next_action_granted: 'La verificación se superó. Exporta el artefacto de presentación con `aeat app modelo export`.'
-        verify_next_action_incomplete: 'La verificación encontró elementos bloqueantes (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo work calculate` y vuelve a ejecutar `aeat app modelo work verify`.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
