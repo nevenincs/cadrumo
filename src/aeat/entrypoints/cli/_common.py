@@ -170,35 +170,42 @@ def _active_sandbox_notice() -> Notice | None:
 
     Resolves the active bucket id through the same core precedence chain
     every command uses (:func:`~aeat.core.resolve_active_bucket_id`), then
-    reads its plaintext manifest label
-    (:func:`~aeat.application.workflow.read_profile_bucket_by_id`) — never
-    opening the encrypted per-bucket database — and checks it against the
-    reserved sandbox label prefix
-    (:func:`~aeat.application.bucket_maintenance.is_sandbox_label`). Returns
+    reads its plaintext manifest label directly through the light
+    ``adapters.persistence.storage.bucket`` primitives — the same tolerant
+    read :func:`~aeat.application.workflow.read_profile_bucket_by_id`
+    performs, but reached without importing the heavy ``workflow`` /
+    ``bucket_maintenance`` facades (which pull the registry) — and checks it
+    against the reserved sandbox label prefix
+    (:data:`~aeat.core.external_constants.SANDBOX_LABEL_PREFIX`). This keeps
+    the state-free CLI surface (``aeat`` / ``--help`` / ``--version``, which
+    reach this helper via :func:`_emit_envelope`) off the registry-loading
+    import path, honouring this module's lazy-import contract. Returns
     ``None`` when no profile is active, the active bucket's manifest is
     absent, unreadable, or fails strict validation, or the active profile
     is not a sandbox, so a real profile's output is never annotated and a
     corrupt/torn manifest degrades this purely-advisory indicator rather
-    than breaking every command's output (mirrors the tolerant scan
-    ``application.workflow.list_profile_buckets`` already applies). The
-    manifest is deliberately re-read on every call (no caching) so a
-    mid-process ``switch``/``sandbox use`` is reflected on the very next
-    command.
+    than breaking every command's output. The manifest is deliberately
+    re-read on every call (no caching) so a mid-process
+    ``switch``/``sandbox use`` is reflected on the very next command.
     """
     from ...adapters.persistence.storage import StorageValidationError
-    from ...application.bucket_maintenance import is_sandbox_label
-    from ...application.workflow import read_profile_bucket_by_id
+    from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
     from ...core import resolve_active_bucket_id
+    from ...core.config import load_settings
+    from ...core.external_constants import SANDBOX_LABEL_PREFIX
     from ...core.json_contract import Notice, NoticeSeverity
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return None
     try:
-        pointer = read_profile_bucket_by_id(bucket_id)
-    except StorageValidationError:
+        paths = bucket_paths(load_settings().aeat_local_storage_root, bucket_id)
+        if not manifest_path(paths).is_file():
+            return None
+        label = read_manifest(paths).label
+    except (StorageValidationError, ValueError):
         return None
-    if pointer is None or not is_sandbox_label(pointer.label):
+    if not label.startswith(SANDBOX_LABEL_PREFIX):
         return None
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -209,7 +216,7 @@ def _active_sandbox_notice() -> Notice | None:
                 "You are operating inside the sandbox %{label}, not a real profile; "
                 "every command runs against this isolated, discardable bucket."
             ),
-            label=pointer.label,
+            label=label,
         ),
         suggestion="aeat config profile sandbox discard",
     )
