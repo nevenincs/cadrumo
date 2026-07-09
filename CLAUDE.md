@@ -36,6 +36,7 @@ You MUST respect these rules at all times:
 @.claude/rules/casilla-grounding-corrects-actividades-default-by-section.md
 @.claude/rules/cli-notices-are-the-only-diagnostic-channel.md
 @.claude/rules/cli-single-subject-id-is-positional.md
+@.claude/rules/compatibility-lifecycle-checkpoint.md
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md
 @.claude/rules/cross-period-suppression-grounded-in-registry-classification.md
