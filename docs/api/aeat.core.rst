@@ -67,6 +67,7 @@ Submodules
    aeat.core.aggregation
    aeat.core.auth_session_keys
    aeat.core.click_context
+   aeat.core.compatibility_lifecycle
    aeat.core.config
    aeat.core.env_io
    aeat.core.external_constants

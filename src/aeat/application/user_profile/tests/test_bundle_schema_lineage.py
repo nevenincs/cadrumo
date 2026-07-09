@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core import COMPATIBILITY_REGIME, RELEASED_FORMAT_FLOORS, expected_floor
 from ....domain.user_profile import (
     UserProfileFact,
     UserProfilePortableExport,
@@ -60,6 +61,24 @@ def test_bundle_upgrade_chain_is_complete_from_floor_to_current() -> None:
         "land them in BUNDLE_PAYLOAD_UPGRADERS in the same change "
         "(2026-07-08-released-data-durability-adr)"
     )
+
+
+def test_floor_matches_the_regime_expected_floor() -> None:
+    """The bundle floor tracks the regime-switched compatibility policy.
+
+    While ``PRE_RELEASE`` (today) the expected floor IS the current version,
+    so this asserts the pre-release floors-chase-current posture: no released
+    bundles exist below the current version, so the floor sits at it. Post-
+    flip the expected floor becomes the frozen released value and this same
+    assertion demands the floor stay pinned there
+    (``2026-07-09-compatibility-lifecycle-adr``).
+    """
+    assert expected_floor(
+        COMPATIBILITY_REGIME,
+        "bundle",
+        BUNDLE_SCHEMA_VERSION,
+        RELEASED_FORMAT_FLOORS,
+    ) == BUNDLE_DURABILITY_FLOOR
 
 
 def test_supported_versions_is_the_floor_to_current_range() -> None:
