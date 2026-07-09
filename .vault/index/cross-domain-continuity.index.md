@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity'
-date: '2026-07-07'
-modified: '2026-07-07'
+date: '2026-07-09'
+modified: '2026-07-09'
 related:
   - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
   - '[[2026-05-26-cross-domain-continuity-P01-S06]]'
@@ -231,6 +231,7 @@ related:
   - '[[2026-07-07-cross-domain-continuity-W09-P41-S300]]'
   - '[[2026-07-07-cross-domain-continuity-W09-P41-S308]]'
   - '[[2026-07-07-cross-domain-continuity-adr]]'
+  - '[[2026-07-09-cross-domain-continuity-audit]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -256,6 +257,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-06-03-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `Peer-WIP collision protocol audit (lint-zero session)`
 - `2026-07-01-cross-domain-continuity-audit` - `cross-domain-continuity` audit: rolling code review
 - `2026-07-02-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `W09.P45 operator-surface review`
+- `2026-07-09-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `W11.P60.S196 rolling-checkpoint at-rest declaration`
 
 ### exec
 
