@@ -752,8 +752,8 @@ application:
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
         %{value}. Elfogadott kódolás: %{mapping}. Futtassa az ''aeat app modelo bindings
         list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
-      calculate_casilla_noncanonical_refused: 'A --casilla %{key} nem kanonikus casilla.id
-        vagy ketertelmu. Hasznalja a pontos kanonikus casilla.id erteket: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja meg a pontos kanonikus casilla.id-t'
+      calculate_casilla_noncanonical_refused: 'A --casilla %{key} egy nyomtatott mezőszám, nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja helyette a kanonikus casilla.id-t: %{accepted}'
       calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
         a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
         <MODELO>`.'
@@ -1909,9 +1909,14 @@ cli:
           kapott: {kind}.'
         list_help: Regisztrált benyújtási rekordok listázása.
         modelo_help: Szűrés nyomtatványkód szerint (pl. 303, 130, 100).
-        observe_local_file_help: 'Helyi CSV vagy XLSX táblázat elérési útja casilla_code,value sorokkal (egy korábbi bevallás tanúsítvány nélküli rekonstrukciója). Kombinálható a --set kapcsolóval; ugyanazon casillához tartozó --set érték felülírja a táblázat sorát'
-        observe_local_help: 'Rögzítsen egy kezelő által megadott helyi megfigyelést a számítás előtöltéséhez'
-        observe_local_set_help: 'Kanonikus casilla.id és Decimal érték a rögzítéshez, pl. --set 1391=0'
+        observe_local_file_help: Helyi CSV vagy XLSX táblázat elérési útja casilla_code,value
+          sorokkal (egy korábbi bevallás tanúsítvány nélküli rekonstrukciója). Kombinálható
+          a --set kapcsolóval; ugyanazon casillához tartozó --set érték felülírja
+          a táblázat sorát
+        observe_local_help: Rögzítsen egy kezelő által megadott helyi megfigyelést
+          a számítás előtöltéséhez
+        observe_local_set_help: Kanonikus casilla.id és Decimal érték a rögzítéshez,
+          pl. --set 1391=0
         view_help: Egy benyújtási rekord megjelenítése azonosító alapján.
       formulas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
@@ -2627,7 +2632,9 @@ cli:
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
     quickfile:
-      app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal: készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít és exportál; soha nem nyújt be az AEAT-hoz'
+      app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
+        készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
+        és exportál; soha nem nyújt be az AEAT-hoz'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található

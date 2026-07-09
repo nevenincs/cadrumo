@@ -737,8 +737,8 @@ application:
         boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
         encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
         each binding''s decimal encoding.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical
-        casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply the exact canonical casilla.id'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} is a printed casilla number or form number or export reference, not a canonical casilla.id. Use the canonical casilla.id instead: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
         this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
         values.
@@ -2517,7 +2517,9 @@ cli:
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
     quickfile:
-      app_help: 'Run the full local modelo filing chain in one command: readiness -> create -> calculate -> verify -> export. Build and export only; never submits to AEAT'
+      app_help: 'Run the full local modelo filing chain in one command: readiness
+        -> create -> calculate -> verify -> export. Build and export only; never submits
+        to AEAT'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
