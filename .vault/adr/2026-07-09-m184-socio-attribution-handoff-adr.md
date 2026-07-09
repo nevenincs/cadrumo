@@ -104,8 +104,17 @@ no guard against forgetting it entirely. The step left the design open between
   `attribution_entity_socios` shape; no inline Python schema literals.
 - **No cross-bucket read anywhere in this slice.** The resolver side is the
   UNCHANGED profile-binding resolver over the active bucket.
-- **Locale discipline.** All new prompts/advisories route through `tr()` and
-  the locale CLI across en/es/ca/hu.
+- **Locale discipline.** Operator-facing prose routes through `tr()` and the
+  locale CLI across en/es/ca/hu. DEFERRED (disclosed): the S413 M184-side
+  handoff Notice message and the S414 M100 omission-advisory message /
+  next_action shipped as hardcoded English literals (matching the sibling
+  `_objective_estimation_advisory` precedent), NOT yet localised. Their
+  four-locale localisation is folded into the cross-cutting
+  attribution-locale follow-up (the same follow-up that owns the S411 schema
+  capture prompts) rather than done piecemeal here, so all attribution
+  operator strings are localised together under one owner. This mirrors S411's
+  honest schema-prompt/locale deferral; it is a disclosed gap, not a silent
+  one.
 
 ## Implementation
 
@@ -130,8 +139,10 @@ Four small surfaces, each an established pattern:
 ## Rationale
 
 B-typed is the only option that is simultaneously executable now (every
-mechanism exists), honest (the forgotten-share case surfaces loudly), and
-non-expanding on the security model (no cross-bucket reads). Option A's genuine
+mechanism exists), honest about its own limits (the captured-but-unfolded case
+surfaces loudly via the S414 advisory; the fully-forgotten socio-bucket case is
+a bounded, disclosed gap - see Consequences), and non-expanding on the security
+model (no cross-bucket reads). Option A's genuine
 advantage - eliminating one manual transcription per year - does not justify
 opening the first cross-bucket data flow without a dedicated security ADR; and
 because B-typed lands the typed home and the advisory, A later reduces to a
@@ -141,8 +152,22 @@ transport upgrade rather than a redesign.
 
 - **Gain:** the socio's M100 gains a typed, provenance-carrying home for the
   attributed base; re-entry drops from per-calculation to once per filing
-  year; the forgotten-share silent under-declaration becomes a visible
-  advisory.
+  year; the CAPTURED-but-unfolded case (the socio recorded the
+  `attribution_received` facts but did not fold the value into their M100)
+  becomes a visible S414 advisory instead of a silent zero.
+- **Uncovered (bounded, disclosed):** the FULLY-forgotten case - a socio who
+  never captures the `attribution_received` facts AND never enters the
+  atribucion casilla - still verifies with zero findings on their own bucket.
+  The S414 advisory fires only when facts are PRESENT and the casilla resolves
+  empty; with no facts on the socio bucket there is nothing to compare against,
+  and (per the Considerations) no production path reads across buckets to
+  discover the omission. The loud channel for this case is the S413 M184-side
+  handoff Notice (emitted on the ENTITY operator's verify/file, instructing them
+  to relay each socio's attributed value); full socio-bucket coverage of the
+  fully-forgotten case awaits cross-bucket auto-flow (Option A) or a 2024
+  relation-symmetry follow-up. This is the exact hazard the Considerations name,
+  accepted here as bounded because Option A is deferred behind its own security
+  ADR.
 - **Cost (accepted):** the attributed value exists twice in the workspace and
   is transcribed by the operator; a typo is caught only if the operator reads
   the handoff Notice values.
@@ -269,3 +294,31 @@ y pagos a cuenta") and present in the legal catalogue. No regulated value is
 fabricated. Companion rules: `calculation-source-canonical-mechanism`,
 `relation-slot-bindings-declare-relation-source`,
 `composition-service-no-parallel-write-path`, `no-silent-under-declaration`.
+
+**Persistent grounding of the folded value (why arts 86-89 ride the Notice,
+not the observation).** When the socio folds the attributed base into M100
+casilla 1577 via the manual `--binding`, the persisted observation carries
+1577's OWN registry `legal_refs` — the actividades-económicas chapter (LIRPF
+arts. 27-32) — because 1577 is genuinely an actividad-económica income box
+("Rendimiento neto de actividad económica atribuido por entidades en régimen
+de atribución de rentas"), and art. 88 ("Calificación de la renta atribuida")
+says the attributed income KEEPS its original actividad-económica
+qualification. So the actividades grounding is the CORRECT persistent home for
+the folded value (per `casilla-grounding-corrects-actividades-default-by-section`:
+where the box genuinely IS actividades, the actividades chapter is correct and
+preserved). Arts. 86-89 are the attribution MECHANISM, surfaced as context on
+the transient S413 handoff Notice; they are intentionally not duplicated onto
+the folded observation. This is an accepted design, not a dropped-provenance
+defect.
+
+### Review follow-ups (2026-07-09 honesty review)
+
+The campaign-close honesty review
+(`2026-07-09-m184-socio-attribution-handoff-audit`) returned PASS and surfaced
+bounded follow-ups, actioned as honest disclosures rather than new code: the
+Consequences now state the fully-forgotten socio-bucket case is an uncovered,
+bounded gap (S413 Notice is its loud channel; Option A / relation-symmetry the
+closure); the Locale-discipline constraint records the S413/S414 message
+localisation as deferred to the cross-cutting attribution-locale follow-up; and
+the S411/S413/S414 plan-step texts were corrected to match the shipped scope
+and coverage.
