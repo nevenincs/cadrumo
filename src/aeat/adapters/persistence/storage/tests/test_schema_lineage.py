@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import COMPATIBILITY_REGIME, RELEASED_FORMAT_FLOORS, expected_floor
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._schema_lineage import (
     SECURE_OBJECT_DURABILITY_FLOOR,
@@ -27,6 +28,29 @@ from ..errors import EnvelopeVersionError, StorageValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NAMESPACE = "aeat-test.lineage.policy"
+
+
+def test_floor_matches_the_regime_expected_floor() -> None:
+    """The secure-object floor tracks the regime-switched compatibility policy.
+
+    The current secure-object version is the highest declared namespace
+    ``schema_version``. While ``PRE_RELEASE`` (today) the expected floor IS
+    that current version — the floors-chase-current pre-release posture — so
+    every stored row sits at or above the floor with no pre-current shape to
+    tolerate. Post-flip the expected floor becomes the frozen released value
+    and this assertion demands the floor stay pinned there
+    (``2026-07-09-compatibility-lifecycle-adr``).
+    """
+    current = max(
+        (definition.schema_version for definition in STORAGE_NAMESPACE_REGISTRY.namespaces),
+        default=SECURE_OBJECT_DURABILITY_FLOOR,
+    )
+    assert expected_floor(
+        COMPATIBILITY_REGIME,
+        "secure_object",
+        current,
+        RELEASED_FORMAT_FLOORS,
+    ) == SECURE_OBJECT_DURABILITY_FLOOR
 
 
 def test_every_registered_namespace_upgrade_chain_is_complete() -> None:
