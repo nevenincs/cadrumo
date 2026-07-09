@@ -98,6 +98,22 @@ def test_released_floors_are_populated_exactly_when_the_regime_is_released() -> 
     assert (RELEASED_FORMAT_FLOORS is not None) == (COMPATIBILITY_REGIME is CompatibilityRegime.RELEASED)
 
 
+def test_every_flip_time_constant_moves_together() -> None:
+    """Coherence for the THIRD flip-time constant: current-versions track the floors.
+
+    The flip commit must populate ``_RELEASED_FORMAT_CURRENT_VERSIONS`` (the range
+    source for the coverage harness) in lock-step with ``RELEASED_FORMAT_FLOORS``.
+    Binding their key sets here catches a flip that freezes floors but forgets the
+    current-versions with an instructive failure, rather than the bare ``KeyError``
+    the coverage loop would otherwise raise at the checkpoint. Vacuously green today
+    (both empty), so it changes no behaviour pre-release.
+    """
+    assert set(_RELEASED_FORMAT_CURRENT_VERSIONS) == set(RELEASED_FORMAT_FLOORS or {}), (
+        "the release-checkpoint flip must populate _RELEASED_FORMAT_CURRENT_VERSIONS "
+        "with the same format keys as RELEASED_FORMAT_FLOORS, in the same commit"
+    )
+
+
 def test_every_released_floor_key_names_a_live_format_tier() -> None:
     """Enrollment: a populated floor mapping may only name real tiers.
 
