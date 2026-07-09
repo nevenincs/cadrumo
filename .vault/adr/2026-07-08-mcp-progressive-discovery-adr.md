@@ -11,8 +11,6 @@ related:
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
 ---
 
-
-
 # `mcp-progressive-discovery` adr: `the console advertises an orientation core; the verb universe is discovered, not listed` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -108,6 +106,21 @@ the same pass.
   cheaper shape). Descriptions gain a verb-specific first line derived from
   the CLI's own per-verb help (the black-box authority), with the family
   `operator_question` demoted to a suffix.
+- **Accepted limitation (honesty-review 2026-07-09) — the semantic side
+  RE-RANKS the lexical candidate set; it does not admit pure-semantic
+  candidates.** `CommandIndex.search` builds the candidate universe lexically
+  (per-column BM25 over the diacritic-folded / Spanish-stemmed columns plus the
+  curated outcome aliases), then RRF-fuses a model2vec semantic rank OVER THAT
+  SET. A query with zero lexical token overlap with any command — no shared token
+  in key/name/description/help and no matching alias — is not surfaced whatever
+  its embedding similarity; the semantic rank re-orders and breaks homonym ties,
+  it does not rescue a no-overlap concept query, and `total_matches` / `truncated`
+  count the lexical set only. This is an accepted bound, not the full dense
+  retrieval the phrase "hybrid retrieval" might imply: the command corpus is
+  small and closed, the curated aliases cover the outcome-phrased gaps, and the
+  pinned golden set proves the target cross-vocabulary cases. Admitting the
+  semantic top-k into the candidate universe is a deferred enhancement if a
+  future recall gap needs it.
 
 ### P3 — Dynamic toolsets
 
