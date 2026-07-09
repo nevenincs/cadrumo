@@ -552,6 +552,12 @@ application:
         seed_conflict: An IVA compensation state already exists for this period; seeding
           would overwrite stored history.
   filing:
+    errors:
+      amendment_not_persisted: 'no persisted amendment with id %{amendment_id}'
+      import_failed: 'cannot import modelo %{modelo}: %{detail}'
+      modelo_not_in_registry: 'modelo %{modelo} is not present in the calculation registry'
+      original_draft_not_persisted: 'original draft %{draft_id} is not persisted'
+      unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio}; want four-digit year'
     review:
       errors:
         approved_by_blank: The approver identifier must not be blank.
@@ -2046,7 +2052,8 @@ cli:
       review_package:
         actor_help: Operator label recorded into the package descriptor and the underlying
           export event.
-        bucket_id_help: 'Bucket id the review package operates on (defaults to the active profile).'
+        bucket_id_help: Bucket id the review package operates on (defaults to the
+          active profile).
         build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
           draft, revision provenance, and bundled ledger evidence) for accountant
           handoff. Local-only; never contacts AEAT.
@@ -2294,6 +2301,8 @@ cli:
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
+        history_next_action: Review this work unit's current state with `aeat app
+          modelo work status`.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
           verify/file need a calculation-revision-id. For the common path, run 'aeat
@@ -2320,6 +2329,8 @@ cli:
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
+        list_next_action: Inspect one work unit's full state with `aeat app modelo
+          work status`, then draft or recalculate it with `aeat app modelo work calculate`.
         meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
           3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
           Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
@@ -2502,8 +2513,15 @@ cli:
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
         status_help: Show the metadata of one work unit
+        status_next_action: Draft or recalculate this unit with `aeat app modelo work
+          calculate`, then verify the draft with `aeat app modelo work verify`.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
+        verify_next_action_granted: Verification passed. Export the filing artefact
+          with `aeat app modelo export`.
+        verify_next_action_incomplete: Verification found blocking items (see the
+          notices above). Resolve them, recalculate with `aeat app modelo work calculate`,
+          then re-run `aeat app modelo work verify`.
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
         wizard_help: Walk the work unit's outstanding manual inputs one at a time,
           in plain language, then calculate
@@ -2521,11 +2539,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        history_next_action: 'Review this work unit''s current state with `aeat app modelo work status`.'
-        list_next_action: 'Inspect one work unit''s full state with `aeat app modelo work status`, then draft or recalculate it with `aeat app modelo work calculate`.'
-        status_next_action: 'Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.'
-        verify_next_action_granted: 'Verification passed. Export the filing artefact with `aeat app modelo export`.'
-        verify_next_action_incomplete: 'Verification found blocking items (see the notices above). Resolve them, recalculate with `aeat app modelo work calculate`, then re-run `aeat app modelo work verify`.'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits

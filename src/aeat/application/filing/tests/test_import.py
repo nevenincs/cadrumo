@@ -16,6 +16,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....core import Period
+from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
@@ -152,13 +153,18 @@ class TestImportFromJustificante:
         schema_provider: RegistrySchemaAccessor,
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):
+        with pytest.raises(ModeloImportError) as excinfo:
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
+        # The import error carries a translated_message locale key (not a raw
+        # args[0] string); assert the operator-facing rendered text, which
+        # interpolates the underlying builder detail via resolve_error_message.
+        assert "previous_year_economic_activity_net_income" in resolve_error_message(excinfo.value)
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaAccessor) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
-        with pytest.raises(ModeloImportError, match="modelo '100'"):
+        with pytest.raises(ModeloImportError) as excinfo:
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
+        assert "modelo '100'" in resolve_error_message(excinfo.value)
 
     def test_year_only_justificante_period_is_rejected_at_registry_boundary(
         self,

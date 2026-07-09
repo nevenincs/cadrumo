@@ -567,6 +567,12 @@ application:
         seed_conflict: Ehhez az időszakhoz már létezik IVA-kompenzációs állapot; a
           kezdőérték felülírná a tárolt előzményeket.
   filing:
+    errors:
+      amendment_not_persisted: 'nincs mentett módosítás %{amendment_id} azonosítóval'
+      import_failed: 'a(z) %{modelo} modell nem importálható: %{detail}'
+      modelo_not_in_registry: 'a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban'
+      original_draft_not_persisted: 'a(z) %{draft_id} eredeti vázlat nincs mentve'
+      unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű év szükséges'
     review:
       errors:
         approved_by_blank: A jovahagyo azonositoja nem lehet ures.
@@ -2120,7 +2126,8 @@ cli:
       review_package:
         actor_help: A csomag leírójába és a mögöttes exportálási eseménybe rögzített
           operátorcímke.
-        bucket_id_help: 'A tároló azonosítója, amelyen a felülvizsgálati csomag működik (alapértelmezés szerint az aktív profil).'
+        bucket_id_help: A tároló azonosítója, amelyen a felülvizsgálati csomag működik
+          (alapértelmezés szerint az aktív profil).
         build_help: Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE
           tervezet, a revízió eredete és a csatolt könyvelési bizonyíték) összeállítása
           a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
@@ -2390,6 +2397,8 @@ cli:
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
+        history_next_action: Tekintse át ennek a munkaegységnek a jelenlegi állapotát
+          az `aeat app modelo work status` paranccsal.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
         id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító,
@@ -2421,6 +2430,9 @@ cli:
           ertek: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
+        list_next_action: Egy munkaegység teljes állapotát az `aeat app modelo work
+          status` paranccsal tekintheti meg, majd az `aeat app modelo work calculate`
+          paranccsal készíthet vagy számolhat újra vázlatot.
         meses_trabajo_con_hijo_menor_3_help: 'A 3 évesnél fiatalabb gyermekkel végzett
           munkahónapok száma a családi egységben (LIRPF 81. cikk anyasági levonás).
           Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként ismételhető. A GYERMEK_AZONOSÍTÓ
@@ -2615,8 +2627,17 @@ cli:
         state_label_presentado_supersedido: Felulirt beadas
         state_label_verificado_completo: Teljesen ellenorizve
         status_help: Egy munkaegység metaadatainak megjelenítése.
+        status_next_action: Készítse el vagy számolja újra ezt az egységet az `aeat
+          app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot az `aeat
+          app modelo work verify` paranccsal.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
+        verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási
+          dokumentumot az `aeat app modelo export` paranccsal.
+        verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
+          a fenti értesítéseket). Oldja meg őket, számolja újra az `aeat app modelo
+          work calculate` paranccsal, majd futtassa újra az `aeat app modelo work
+          verify` parancsot.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
         wizard_help: Vegigvezet a munkaegyseg hianyzo kezi mezoin, majd kiszamitja
@@ -2636,11 +2657,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        history_next_action: 'Tekintse át ennek a munkaegységnek a jelenlegi állapotát az `aeat app modelo work status` paranccsal.'
-        list_next_action: 'Egy munkaegység teljes állapotát az `aeat app modelo work status` paranccsal tekintheti meg, majd az `aeat app modelo work calculate` paranccsal készíthet vagy számolhat újra vázlatot.'
-        status_next_action: 'Készítse el vagy számolja újra ezt az egységet az `aeat app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot az `aeat app modelo work verify` paranccsal.'
-        verify_next_action_granted: 'Az ellenőrzés sikeres. Exportálja a benyújtási dokumentumot az `aeat app modelo export` paranccsal.'
-        verify_next_action_incomplete: 'Az ellenőrzés blokkoló tételeket talált (lásd a fenti értesítéseket). Oldja meg őket, számolja újra az `aeat app modelo work calculate` paranccsal, majd futtassa újra az `aeat app modelo work verify` parancsot.'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít

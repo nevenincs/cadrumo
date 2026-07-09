@@ -609,6 +609,12 @@ application:
         seed_conflict: Ja existeix un estat de compensació d'IVA per a aquest període;
           la llavor sobreescriuria l'historial emmagatzemat.
   filing:
+    errors:
+      amendment_not_persisted: 'no hi ha cap rectificació persistida amb id %{amendment_id}'
+      import_failed: 'no es pot importar el model %{modelo}: %{detail}'
+      modelo_not_in_registry: 'el model %{modelo} no és present al registre de càlcul'
+      original_draft_not_persisted: 'l''esborrany original %{draft_id} no està persistit'
+      unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal un any de quatre dígits'
     review:
       errors:
         approved_by_blank: L'identificador de l'aprovador no pot estar buit.
@@ -2179,7 +2185,8 @@ cli:
       review_package:
         actor_help: Etiqueta de l'operador registrada al descriptor del paquet i a
           l'esdeveniment d'exportació subjacent.
-        bucket_id_help: 'Id del bucket sobre el qual opera el paquet de revisió (per defecte el perfil actiu).'
+        bucket_id_help: Id del bucket sobre el qual opera el paquet de revisió (per
+          defecte el perfil actiu).
         build_help: Assembla un paquet de revisió compartible i verificable per checksum
           (esborrany fichero-BOE, procedència de la revisió i evidència comptable
           inclosa) per lliurar a l'assessor. Només local; mai contacta amb l'AEAT.
@@ -2453,6 +2460,8 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
+        history_next_action: Revisa l'estat actual d'aquesta unitat de treball amb
+          `aeat app modelo work status`.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_is_work_unit_not_calc_revision_natural: Aquest id és un id d'unitat de
@@ -2482,6 +2491,9 @@ cli:
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
+        list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
+          `aeat app modelo work status` i després crea o recalcula l'esborrany amb
+          `aeat app modelo work calculate`.
         meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill menor
           de 3 anys era a la unitat familiar (Art. 81 LIRPF deducció maternitat).
           Format: FILL_ID=MESOS. Repetible per cada fill. FILL_ID és un identificador
@@ -2673,7 +2685,14 @@ cli:
         state_label_presentado_supersedido: Presentacio substituida
         state_label_verificado_completo: Verificat complet
         status_help: Mostrar les metadades d'una unitat de treball
+        status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
+          calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
+        verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
+          de presentació amb `aeat app modelo export`.
+        verify_next_action_incomplete: La verificació ha trobat elements bloquejadors
+          (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo
+          work calculate` i torna a executar `aeat app modelo work verify`.
         verify_selector_help: Selector de revisio esborrany (current, latest-draft
           o explicit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -2694,11 +2713,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        history_next_action: 'Revisa l''estat actual d''aquesta unitat de treball amb `aeat app modelo work status`.'
-        list_next_action: 'Inspecciona l''estat complet d''una unitat de treball amb `aeat app modelo work status` i després crea o recalcula l''esborrany amb `aeat app modelo work calculate`.'
-        status_next_action: 'Crea o recalcula aquesta unitat amb `aeat app modelo work calculate` i després verifica l''esborrany amb `aeat app modelo work verify`.'
-        verify_next_action_granted: 'La verificació s''ha superat. Exporta l''artefacte de presentació amb `aeat app modelo export`.'
-        verify_next_action_incomplete: 'La verificació ha trobat elements bloquejadors (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo work calculate` i torna a executar `aeat app modelo work verify`.'
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
