@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-domain-continuity'
 date: '2026-05-26'
-modified: '2026-07-07'
+modified: '2026-07-09'
 tier: L4
 related:
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -753,7 +753,7 @@ At every Wave terminus coordinator dispatches code-reviewer fresh persona fleet 
 
 Campaign terminates only when full persona-fleet pass returns zero BLOCKER zero MAJOR AND full Haiku drift sweep returns zero in-scope drift AND vault check all returns clean of new campaign-introduced findings.
 
-- [ ] `W11.P60.S196` - rolling checkpoint declared when ALL five conditions hold: C1 all BLOCKER findings from most-recent persona round closed or have accepted remediation Step; `C2 no new BLOCKER without accepted Step; C3 in-progress coder tasks committed and architect-reviewed; C4 vault plan check green; C5 vault check all reports no new structural drift; checkpoint is NOT termination  -  cadence pause only; loop resumes on next BLOCKER or scheduled persona round; `.vault/audit/`.
+- [x] `W11.P60.S196` - rolling checkpoint declared when ALL five conditions hold: C1 all BLOCKER findings from most-recent persona round closed or have accepted remediation Step; `C2 no new BLOCKER without accepted Step; C3 in-progress coder tasks committed and architect-reviewed; C4 vault plan check green; C5 vault check all reports no new structural drift; checkpoint is NOT termination  -  cadence pause only; loop resumes on next BLOCKER or scheduled persona round; `.vault/audit/`.
 - [ ] `W11.P60.S197` - until a valid checkpoint declaration is on record any claim of campaign complete or done is premature; `after a checkpoint at-rest is valid but finished is not; checkpoint declaration itself is a vault audit document authored by architecture-specialist after verifying C1-C5 in sequence; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W12` - structural debt cleanup
