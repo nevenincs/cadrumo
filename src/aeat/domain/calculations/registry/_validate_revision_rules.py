@@ -13,10 +13,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date, timedelta
 
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION
 from ._schema import DatedValue, InputKind, ModeloDefinition, ModeloRevision, ParameterDefinition
 from ._validate_relation_sources import period_selectors_overlap
 
 _FAR_FUTURE = date(9999, 12, 31)
+
+_M210_TIPO_RENTA_CODE_PARAMETER_PREFIX = "m210-tipo-renta-code-"
 
 
 def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
@@ -60,6 +63,47 @@ def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
                     f"{prefix}: informative modelo casilla {casilla.id!r} "
                     f"has input_kind={casilla.input_kind!r}; "
                     "only 'informational' and 'manual' are permitted",
+                )
+    return failures
+
+
+def validate_m210_tipo_renta_code_projection_parity(modelo: ModeloDefinition) -> list[str]:
+    """Enforce bidirectional parity between the registry code set and the core projection.
+
+    The official Modelo 210 tipo-de-renta code axis is declared in two places
+    that MUST agree: the registry parameter ``m210-tipo-renta-code-<year>``
+    (which codes the revision accepts, carrying the registry legal-grounding)
+    and the core :data:`~aeat.core.M210_TIPO_RENTA_CODE_PROJECTION` (each code's
+    :class:`~aeat.core.TipoRentaIrnr` rate concept). This gate fails the
+    registry build in BOTH directions: a code declared in the registry with no
+    core projection, and a code the core projects that the registry does not
+    declare. It keeps the two axes from drifting so no declared code resolves to
+    a fabricated rate and no projected code silently lacks a grounded home.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` to check. Only revisions carrying
+            an ``m210-tipo-renta-code-`` parameter are inspected; every other
+            modelo is a no-op.
+    """
+    failures: list[str] = []
+    projected = set(M210_TIPO_RENTA_CODE_PROJECTION)
+    for revision in modelo.revisions.values():
+        for parameter in revision.parameters:
+            if not parameter.id.startswith(_M210_TIPO_RENTA_CODE_PARAMETER_PREFIX):
+                continue
+            declared = {row.key for row in parameter.keyed_brackets}
+            prefix = f"modelo {modelo.id} revision {revision.id} parameter {parameter.id!r}"
+            for code in sorted(declared - projected):
+                failures.append(
+                    f"{prefix}: declared tipo-de-renta code {code!r} has no core "
+                    "TipoRentaIrnr projection (add it to OFFICIAL_M210_TIPO_RENTA_CODES "
+                    "or remove the declaration)",
+                )
+            for code in sorted(projected - declared):
+                failures.append(
+                    f"{prefix}: core-projected tipo-de-renta code {code!r} is not "
+                    "declared in the registry code set (declare it here or remove it "
+                    "from OFFICIAL_M210_TIPO_RENTA_CODES)",
                 )
     return failures
 
