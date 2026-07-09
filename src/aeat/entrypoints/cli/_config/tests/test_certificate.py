@@ -32,7 +32,11 @@ from ... import app as root_app
 from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app as config_app
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+# serial: these tests activate the process-global master-key-provider singleton
+# (activate_master_key_provider / get_master_key_provider); under `-n auto` a
+# concurrently-running file on the same worker can leave that global in a state
+# they observe, so they must run in the serial (-n0) pass. Green standalone.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _CERT_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
 
