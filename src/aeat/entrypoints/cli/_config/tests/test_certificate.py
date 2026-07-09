@@ -29,8 +29,6 @@ from .....core.config import override_settings
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
-from ..._errors import CliRefusedBoundaryError
-from ..__init__ import app as config_app
 
 # serial: these tests activate the process-global master-key-provider singleton
 # (activate_master_key_provider / get_master_key_provider); under `-n auto` a
@@ -68,21 +66,21 @@ def _create_profile() -> None:
 
 
 def test_certificate_register_requires_active_profile(tmp_path: Path) -> None:
-    # Invoked directly on the `config` sub-app (like the sibling apoderado
-    # tests) so the root app's error boundary — which rewrites the
-    # exception into a plain SystemExit — is absent and the typed
-    # CliRefusedBoundaryError leaks as `result.exception` for pinning.
+    # Invoke through the ROOT app (the production path). Invoking the config
+    # sub-app directly is not production-faithful and breaks under test
+    # ordering once the full app has lazily materialised the config subtree
+    # (see #211). The root app's error boundary RENDERS the refusal, so assert
+    # the rendered refusal (a clean refusal, not a crash).
     with isolated_profile_storage_root(tmp_path=tmp_path):
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
         result = invoke_typer_app(
-            config_app,
-            ["auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            root_app,
+            ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
         )
-        assert result.exit_code != 0
-        assert isinstance(result.exception, CliRefusedBoundaryError), (
-            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-        )
+        assert result.exit_code != 0, result.output
+        assert "Traceback" not in result.output, result.output
+        assert "Refused" in result.output, result.output
 
 
 def test_certificate_register_list_select_remove_happy_path(tmp_path: Path) -> None:
@@ -167,16 +165,16 @@ def test_certificate_select_unregistered_name_refuses(tmp_path: Path) -> None:
         _create_profile()
 
         with activate_master_key_provider(get_master_key_provider()):
-            # Invoked on the `config` sub-app directly; see the analogous
-            # note on `test_certificate_register_requires_active_profile`.
+            # Invoke through the ROOT app (production path); see the analogous
+            # note on `test_certificate_register_requires_active_profile` and
+            # #211.
             result = invoke_typer_app(
-                config_app,
-                ["auth", "certificate", "select", "--name", "does-not-exist"],
+                root_app,
+                ["config", "auth", "certificate", "select", "--name", "does-not-exist"],
             )
-        assert result.exit_code != 0
-        assert isinstance(result.exception, CliRefusedBoundaryError), (
-            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-        )
+        assert result.exit_code != 0, result.output
+        assert "Traceback" not in result.output, result.output
+        assert "Refused" in result.output, result.output
 
 
 def test_certificate_remove_unregistered_name_is_a_no_op(tmp_path: Path) -> None:
@@ -347,15 +345,15 @@ def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _is
         _create_profile()
 
         with activate_master_key_provider(get_master_key_provider()):
+            # Invoke through the ROOT app (production path); see #211.
             result = invoke_typer_app(
-                config_app,
-                ["auth", "certificate", "secret", "set", "--name", "ghost", "--secret", _CERT_SECRET],
+                root_app,
+                ["config", "auth", "certificate", "secret", "set", "--name", "ghost", "--secret", _CERT_SECRET],
             )
 
-        assert result.exit_code != 0
-        assert isinstance(result.exception, CliRefusedBoundaryError), (
-            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-        )
+        assert result.exit_code != 0, result.output
+        assert "Traceback" not in result.output, result.output
+        assert "Refused" in result.output, result.output
 
 
 def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_secret_store) -> None:
@@ -423,9 +421,11 @@ def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolate
                 root_app,
                 ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
             )
+            # Invoke through the ROOT app (production path); see #211.
             result = invoke_typer_app(
-                config_app,
+                root_app,
                 [
+                    "config",
                     "auth",
                     "certificate",
                     "secret",
@@ -439,7 +439,6 @@ def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolate
                 ],
             )
 
-        assert result.exit_code != 0
-        assert isinstance(result.exception, CliRefusedBoundaryError), (
-            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-        )
+        assert result.exit_code != 0, result.output
+        assert "Traceback" not in result.output, result.output
+        assert "Refused" in result.output, result.output
