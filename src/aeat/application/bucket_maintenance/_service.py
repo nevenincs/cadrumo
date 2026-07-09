@@ -117,10 +117,16 @@ def ensure_archive_schema_readable(archive_schema_version: int) -> None:
     version above ``_ARCHIVE_SCHEMA_VERSION`` was exported by a newer
     application and is refused as such, and a version below
     ``_ARCHIVE_DURABILITY_FLOOR`` predates the durability guarantee.
-    Every version between the floor and the ceiling must stay importable;
-    the schema-lineage gate holds this function to that contract so a
-    future archive-version bump cannot silently orphan a taxpayer's
-    existing backups.
+
+    Unlike the secure-object and bundle tiers, the archive tier carries
+    NO upgrade dispatch: this is a range gate only, and nothing here
+    transforms an older archive layout on restore. The lineage gate
+    therefore pins ``_ARCHIVE_DURABILITY_FLOOR == _ARCHIVE_SCHEMA_VERSION``:
+    raising the current version forces an explicit decision in the same
+    change — raise the floor too (dropping older archives, the pre-release
+    posture) or land a version-aware reader/restore transform and widen
+    the gate then. A floor held below current without that machinery
+    would pass this gate green while restore misreads the old layout.
 
     Raises:
         BucketImportError: When the version is above the ceiling or below

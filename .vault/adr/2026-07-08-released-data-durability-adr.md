@@ -8,8 +8,6 @@ related:
   - "[[2026-07-08-released-data-durability-research]]"
 ---
 
-
-
 # `released-data-durability` adr: `version gates become ceilings with an upgrade dispatch` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -94,11 +92,25 @@ single validate function that chain-upgrades the raw JSON payload before strict
 model validation; the encrypted-bundle transport envelope and the sealed-archive
 import gate split their refusals into future-version versus below-floor, through
 a pure version-policy function shared with tests. A new lineage gate test
-asserts, for every registered secure-object namespace and for the bundle and
-archive formats, that every version from the durability floor to current has a
-complete upgrade chain — vacuously green today, red the moment a version bump
-lands without its upgrader. New refusal messages ride the locale catalogues via
-the locale CLI.
+asserts, for every registered secure-object namespace and for the bundle format,
+that every version from the durability floor to current has a complete upgrade
+chain — vacuously green today, red the moment a version bump lands without its
+upgrader. New refusal messages ride the locale catalogues via the locale CLI.
+
+The archive tier is deliberately weaker than the other two: it carries the
+floor/ceiling range gate and the future-versus-below-floor refusal split, but
+NO upgrade dispatch — archive version differences are container-structural
+(member layout, header shape), so the mechanism a widened range would need is
+a version-aware reader, not a payload transform. Until such a reader exists,
+the archive lineage gate pins the durability floor EQUAL to the current
+version: raising the archive version forces an explicit same-change decision —
+raise the floor with it (dropping older archives, the pre-release posture) or
+land the version-aware reader plus a real old-archive restorability test and
+widen the pin then. A floor held below current without that machinery would
+pass the range gate green while restore misreads the old layout; the pin makes
+that state unrepresentable. (Amended 2026-07-09 after an independent honesty
+review found the original text over-claimed an upgrade dispatch "for the
+archive format".)
 
 ## Rationale
 
