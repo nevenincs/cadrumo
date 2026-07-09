@@ -536,6 +536,65 @@ model_selectors = ["attribution_entity_socios.role"]
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]
 
 [[sections]]
+key = "attribution_received"
+title = "Attribution received from entities"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "entity_nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF/CIF of the attribution entity (sociedad civil, comunidad de bienes, herencia yacente) whose income this socio, comunero, or participe receives under the regimen de atribucion de rentas. Socio-side counterpart of attribution_entity_socios: the entity files Modelo 184 in its own workspace and the member records the received share here so the member's own Modelo 100 has a typed, provenance-carrying home for it."
+model_selectors = ["attribution_received.entity_nif"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "entity_name"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Display or legal name of the attribution entity that attributed income to this member."
+model_selectors = ["attribution_received.entity_name"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "share_pct"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Participation percentage attributed to this member by the entity, expressed in the closed interval 0..100."
+minimum = "0"
+maximum = "100"
+model_selectors = ["attribution_received.share_pct"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "base_imponible_attributed"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit base imponible amount attributed to this member for the filing year, taken from the entity's Modelo 184 output. It is required because the member's Modelo 100 reports the received amount and the value must not be fabricated from share_pct without an independently declared entity total."
+model_selectors = ["attribution_received.base_imponible_attributed"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "filing_year"
+type = "integer"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Ejercicio (filing year) the attributed base is imputed to, so the member's Modelo 100 for that year folds in the matching share and a later year's attribution stays distinct."
+model_selectors = ["attribution_received.filing_year"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-89"]
+
+[[sections]]
 key = "vivienda_office"
 title = "Vivienda habitual office afectacion"
 sensitivity = "financial"
