@@ -448,6 +448,15 @@ CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", 
 #: Provenance source identifier for facts entered interactively via the CLI.
 PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
 
+#: Reserved operator-visible bucket-label prefix identifying a sandbox profile.
+#: A profile whose plaintext manifest label starts with this token is a sandbox:
+#: an isolated, discardable bucket. Declared in the light core layer so the
+#: state-free CLI surface (``aeat`` / ``--help`` / ``--version``) can check the
+#: active bucket's sandbox status without importing the heavy
+#: ``bucket_maintenance`` / ``workflow`` facades. ``bucket_maintenance._sandbox``
+#: re-exports it as the canonical application-facing name.
+SANDBOX_LABEL_PREFIX: Final[str] = "sandbox:"
+
 #: Environment variable name used to override the CLI output language at runtime.
 OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
 
