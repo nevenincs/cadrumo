@@ -57,11 +57,13 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S202]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S205]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S208]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S209]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S250]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S251]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S252]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S253]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S254]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S255]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S256]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S257]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S267]]'
@@ -87,6 +89,7 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S338]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S341]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S347]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S348]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S380]]'
@@ -96,6 +99,9 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S395]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S396]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S410]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S411]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S413]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S414]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P42-S165]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S168]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S204]]'
@@ -124,8 +130,10 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S317]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S319]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S328]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S329]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S330]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S331]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S332]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S333]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S356]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S358]]'
@@ -478,11 +486,19 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
 - `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
 - `2026-07-07-cross-domain-continuity-W09-P41-S308` - R8-NURIA-MODERATE encrypted profile-bundle transfer path
+- `2026-05-26-cross-domain-continuity-W09-P41-S209` - migrate 20 CLI test files from monkeypatch unsecured-backend pattern to isolated_runtime_profile fixture established in test_errors_boundary.py and test_modelo_casilla_normalisation.py
+- `2026-05-26-cross-domain-continuity-W09-P41-S255` - follow-on to W08.P35.S140 sweep: convert 120 hardcoded f-string error raises across 43 application files identified by the Haiku discovery sweep
 - `2026-05-26-cross-domain-continuity-W09-P41-S311` - ambient-index commit discipline violation: peer agent's commit 38d82ce95 absorbed coder1's S296 working tree via git add -A or equivalent
 - `2026-05-26-cross-domain-continuity-W09-P41-S338` - CRITICAL incident log  -  S278 commit c25b14a54 + c94ed9a38 used HEAD-based reconstruction + restore pattern to isolate from peer WIP per coder1 step record
+- `2026-05-26-cross-domain-continuity-W09-P41-S341` - reproduce the M303 verification_source failure in a fresh tmp_path with cleared registry caches and capture the traceback, then triage H1 stale loader or snapshot cache (check whether the 688ed6713 dir-fingerprint hardening already closed it) versus the H2-H3 programmatic-construction site, and fix at the identified layer with a regression test
 - `2026-05-26-cross-domain-continuity-W09-P41-S348` - R9-ANDREA-LOW period token notation inconsistency between ledger preflight (uses 2024Q1) and modelo work create (uses 1T)
+- `2026-05-26-cross-domain-continuity-W09-P41-S411` - add the socio-profile repeatable attribution_received.N.* fact group (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) to the central profile schema with wizard/edit capture prompts and en/es/ca/hu locale keys through the locale CLI
+- `2026-05-26-cross-domain-continuity-W09-P41-S413` - emit per-socio M184 verify/file handoff info Notices carrying the attributed Modelo184MemberRow values and the exact socio-side profile-capture command
+- `2026-05-26-cross-domain-continuity-W09-P41-S414` - add the non-blocking M100 omission advisory that fires when attribution_received facts exist for the filing year but the atribucion casillas resolve empty (and prompts capture when an SC-membership signal exists with no facts), with an anti-tautology test
 - `2026-05-26-cross-domain-continuity-W09-P45-S317` - add NEXT_ACTION guidance hints to work_verify work_list work_status work_history success/failure outputs per discovery3 #121
 - `2026-05-26-cross-domain-continuity-W09-P45-S319` - standardise explicit --json flag across CLI verbs
+- `2026-05-26-cross-domain-continuity-W09-P45-S329` - R9-ZSOFIA-B identify and localise commands where --language flag is accepted but has no effect on output
+- `2026-05-26-cross-domain-continuity-W09-P45-S332` - R9-ZSOFIA-E broad --help text globally not hu-localised
 - `2026-05-26-cross-domain-continuity-W11-P59-S335` - durable maintenance gate one  -  vault check all CI-equivalent runs on every commit to chore branch
 - `2026-05-26-cross-domain-continuity-W11-P59-S336` - durable maintenance gate two  -  ledger and storage roundtrip test suite remains in CI
 
