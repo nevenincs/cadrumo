@@ -54,7 +54,8 @@ class TipoRentaIrnr(StrEnum):
 
         GANANCIA_PATRIMONIAL: Art. 25.1.f.3º capital gains (19%).
 
-        INMOBILIARIA: Art. 13.1.h imputed urban real-estate income (24% base).
+        INMOBILIARIA: Art. 13.1.h imputed urban real-estate income (the source
+            article), taxed at the Art. 25.1.a general 24% rate.
     """
 
     GENERAL = "general"
@@ -182,7 +183,7 @@ OFFICIAL_M210_TIPO_RENTA_CODES: tuple[OfficialTipoRentaCode, ...] = (
         "01", TipoRentaIrnr.GENERAL, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
     ),
     OfficialTipoRentaCode(
-        "02", TipoRentaIrnr.INMOBILIARIA, "trlirnr-rdleg-5-2004:art-13.1.h", TipoRentaGroundingTier.RATE_VERIFIED
+        "02", TipoRentaIrnr.INMOBILIARIA, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RATE_VERIFIED
     ),
     OfficialTipoRentaCode(
         "03", TipoRentaIrnr.GENERAL, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL

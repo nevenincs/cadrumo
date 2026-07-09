@@ -215,7 +215,8 @@ required_text = [
 # period-keyable and grounds the M210 trimestral a-ingresar deadline windows. The
 # arrendamiento-a-ingresar (abril del año siguiente), cuota-cero (1-20 enero),
 # a-devolver (desde 1 febrero, 4 años), transmisiones (art 14.4 Reglamento) and
-# rentas-imputadas (1 abril-31 diciembre) plazos are RESULTADO/TIPO-dependent, not
+# rentas-imputadas (presentación todo el año natural siguiente, 1 enero-31 diciembre;
+# la domiciliación es 1 abril-23 diciembre) plazos are RESULTADO/TIPO-dependent, not
 # expressible as a single annual period token, and are deferred to a resultado/tipo
 # keyed deadline-modelling decision.
 [legal."orden-eha-3316-2010:art-5"]
@@ -232,7 +233,7 @@ consolidated_as_of = 2026-06-23
 review_status = "reviewed"
 reviewed_at = 2026-07-09
 reviewed_by = "claude (read verbatim consolidated art 5 from bundled BOE-A-2010-19707, in vigor 24/06/2026, as amended by Orden HAC/56/2024 art 4.2 / BOE-A-2024-1772 and Orden HAC/623/2026 art 1.2 / BOE-A-2026-13573; agent-prepared, corpus-grounded, pending operator re-stamp)"
-notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. The resultado/tipo-dependent annual plazos (arrendamiento a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; imputadas 1 abril-31 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."
+notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. The resultado/tipo-dependent annual plazos (arrendamiento a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; imputadas presentación todo el año natural siguiente, 1 enero-31 diciembre — la domiciliación es 1 abril-23 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."
 required_text = [
     "Plazo de presentación de las autoliquidaciones del Impuesto por las rentas obtenidas en España sin mediación de establecimiento permanente",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior",

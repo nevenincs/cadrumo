@@ -13,7 +13,8 @@
 # window. The resultado/tipo-dependent annual plazos of art 5 — arrendamiento
 # a-ingresar (20 primeros días de ABRIL del año siguiente), cuota cero (1-20 enero),
 # a devolver (desde el 1 de febrero, cuatro años), transmisiones de inmuebles
-# (art 14.4 Reglamento) and rentas imputadas tipo 02 (1 abril-31 diciembre) — depend
+# (art 14.4 Reglamento) and rentas imputadas tipo 02 (presentación todo el año
+# natural siguiente, 1 enero-31 diciembre; la domiciliación es 1 abril-23 diciembre) — depend
 # on a computed RESULTADO and on the TIPO de renta, which a single period token
 # cannot express; they are deferred to a resultado/tipo-keyed deadline-modelling
 # decision (Slice C / ADR addendum). These windows are calendar-declared registry
