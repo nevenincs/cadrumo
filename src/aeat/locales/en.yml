@@ -2521,6 +2521,11 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        history_next_action: 'Review this work unit''s current state with `aeat app modelo work status`.'
+        list_next_action: 'Inspect one work unit''s full state with `aeat app modelo work status`, then draft or recalculate it with `aeat app modelo work calculate`.'
+        status_next_action: 'Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.'
+        verify_next_action_granted: 'Verification passed. Export the filing artefact with `aeat app modelo export`.'
+        verify_next_action_incomplete: 'Verification found blocking items (see the notices above). Resolve them, recalculate with `aeat app modelo work calculate`, then re-run `aeat app modelo work verify`.'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits

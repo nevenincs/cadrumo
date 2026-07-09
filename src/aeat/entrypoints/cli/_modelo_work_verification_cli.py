@@ -62,6 +62,7 @@ from ._modelo_payloads import (
 from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
+    next_action_notice,
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
@@ -198,6 +199,32 @@ def _register_work_verify_command(
         result = WorkVerifyResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.verify", *verification_report_lines(report)]
         notices = verification_report_notices(report)
+        if report.granted_verificado_completo:
+            notices.append(
+                next_action_notice(
+                    "modelo.work.verify.next_action_granted",
+                    tr(
+                        "cli.app.modelo.work.verify_next_action_granted",
+                        default=("Verification passed. Export the filing artefact with `aeat app modelo export`."),
+                    ),
+                    suggestion="aeat app modelo export",
+                ),
+            )
+        else:
+            notices.append(
+                next_action_notice(
+                    "modelo.work.verify.next_action_incomplete",
+                    tr(
+                        "cli.app.modelo.work.verify_next_action_incomplete",
+                        default=(
+                            "Verification found blocking items (see the notices above). "
+                            "Resolve them, recalculate with `aeat app modelo work calculate`, "
+                            "then re-run `aeat app modelo work verify`."
+                        ),
+                    ),
+                    suggestion=f"aeat app modelo work calculate {selected_revision.work_unit_id}",
+                ),
+            )
         _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
 
         if not report.granted_verificado_completo:

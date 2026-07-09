@@ -137,10 +137,12 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
     assert _payload(verified.output)["granted_verificado_completo"] is True
-    # A granted (clean) verify stays on the success spine with no notices, in
-    # lock-step with its exit-0.
+    # A granted (clean) verify stays on the success spine (its single info
+    # next-action notice keeps status at success), in lock-step with its exit-0.
     assert _envelope_status(verified.output) == "success", verified.output
-    assert _notices(verified.output) == [], verified.output
+    granted_notices = _notices(verified.output)
+    assert [n["code"] for n in granted_notices] == ["modelo.work.verify.next_action_granted"], verified.output
+    assert granted_notices[0]["severity"] == "info", verified.output
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(

@@ -42,7 +42,13 @@ from ._modelo_payloads import (
     WorkRenameResult,
     WorkStatusResult,
 )
-from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
+from ._modelo_rendering import (
+    advisory_notice,
+    next_action_notice,
+    work_unit_lines,
+    work_unit_list_lines,
+    work_unit_payload,
+)
 
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099
@@ -461,7 +467,17 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             },
         )
         lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
-        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines)
+        next_action = next_action_notice(
+            "modelo.work.list.next_action",
+            tr(
+                "cli.app.modelo.work.list_next_action",
+                default=(
+                    "Inspect one work unit's full state with `aeat app modelo work status`, "
+                    "then draft or recalculate it with `aeat app modelo work calculate`."
+                ),
+            ),
+        )
+        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[next_action])
 
 
 def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
@@ -497,7 +513,18 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         )
         result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.status", *work_unit_lines(unit)]
-        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines)
+        next_action = next_action_notice(
+            "modelo.work.status.next_action",
+            tr(
+                "cli.app.modelo.work.status_next_action",
+                default=(
+                    "Draft or recalculate this unit with `aeat app modelo work calculate`, "
+                    "then verify the draft with `aeat app modelo work verify`."
+                ),
+            ),
+            suggestion=f"aeat app modelo work calculate {unit.work_unit_id}",
+        )
+        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_action])
 
 
 def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
