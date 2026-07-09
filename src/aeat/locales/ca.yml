@@ -809,8 +809,12 @@ application:
         un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
         S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
         modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
-      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id canònic exacte'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} és un número de casella imprès o de formulari, o una referència d''exportació, no un casilla.id canònic. Usa el casilla.id canònic en el seu lloc: %{accepted}'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
+        canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
+        canònic exacte'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} és un número de casella
+        imprès o de formulari, o una referència d''exportació, no un casilla.id canònic.
+        Usa el casilla.id canònic en el seu lloc: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
         revisio. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
         valids.
@@ -2175,6 +2179,7 @@ cli:
       review_package:
         actor_help: Etiqueta de l'operador registrada al descriptor del paquet i a
           l'esdeveniment d'exportació subjacent.
+        bucket_id_help: 'Id del bucket sobre el qual opera el paquet de revisió (per defecte el perfil actiu).'
         build_help: Assembla un paquet de revisió compartible i verificable per checksum
           (esborrany fichero-BOE, procedència de la revisió i evidència comptable
           inclosa) per lliurar a l'assessor. Només local; mai contacta amb l'AEAT.

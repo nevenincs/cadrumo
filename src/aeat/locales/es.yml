@@ -818,8 +818,12 @@ application:
         un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
         Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
         modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
-      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica el casilla.id canónico exacto'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} es un número de casilla impreso o de formulario, o una referencia de exportación, no un casilla.id canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id
+        canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica
+        el casilla.id canónico exacto'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} es un número de casilla
+        impreso o de formulario, o una referencia de exportación, no un casilla.id
+        canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
         esta revision. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
         validos.
@@ -2206,6 +2210,7 @@ cli:
       review_package:
         actor_help: Etiqueta del operador registrada en el descriptor del paquete
           y en el evento de exportación subyacente.
+        bucket_id_help: 'Id del bucket sobre el que opera el paquete de revisión (por defecto el perfil activo).'
         build_help: Ensambla un paquete de revisión compartible y verificable por
           checksum (borrador fichero-BOE, procedencia de la revisión y evidencia contable
           incluida) para entregar al asesor. Solo local; nunca contacta con la AEAT.

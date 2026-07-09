@@ -37,7 +37,6 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     derive_taxpayer_files_economic_activity,
     file_modelo_revision,
-    get_work_unit,
     require_profile_ready_for_work_unit,
     verify_modelo_revision,
 )
@@ -50,6 +49,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _profile_to_taxpayer
+from ._modelo_cli_support import load_work_unit
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -178,7 +178,7 @@ def _register_work_verify_command(
                 selector=select.to_calculation_revision_selector().value,
                 default_for="verify",
             )
-            require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
+            require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
             report = verify_modelo_revision(
                 selected_revision.calculation_revision_id,
@@ -477,7 +477,7 @@ def _register_work_file_command(
                 selector=select,
                 default_for="file",
             )
-            require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
+            require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
             # A revision already in PRESENTADO is the current filed answer, so the
             # file call is a guarded-idempotent no-op that returns the existing

@@ -752,8 +752,12 @@ application:
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
         %{value}. Elfogadott kódolás: %{mapping}. Futtassa az ''aeat app modelo bindings
         list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
-      calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja meg a pontos kanonikus casilla.id-t'
-      calculate_casilla_noncanonical_refused: 'A --casilla %{key} egy nyomtatott mezőszám, nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja helyette a kanonikus casilla.id-t: %{accepted}'
+      calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
+        casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja
+        meg a pontos kanonikus casilla.id-t'
+      calculate_casilla_noncanonical_refused: 'A --casilla %{key} egy nyomtatott mezőszám,
+        nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja
+        helyette a kanonikus casilla.id-t: %{accepted}'
       calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
         a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
         <MODELO>`.'
@@ -2116,6 +2120,7 @@ cli:
       review_package:
         actor_help: A csomag leírójába és a mögöttes exportálási eseménybe rögzített
           operátorcímke.
+        bucket_id_help: 'A tároló azonosítója, amelyen a felülvizsgálati csomag működik (alapértelmezés szerint az aktív profil).'
         build_help: Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE
           tervezet, a revízió eredete és a csatolt könyvelési bizonyíték) összeállítása
           a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
