@@ -610,11 +610,13 @@ application:
           la llavor sobreescriuria l'historial emmagatzemat.
   filing:
     errors:
-      amendment_not_persisted: 'no hi ha cap rectificació persistida amb id %{amendment_id}'
+      amendment_not_persisted: no hi ha cap rectificació persistida amb id %{amendment_id}
       import_failed: 'no es pot importar el model %{modelo}: %{detail}'
-      modelo_not_in_registry: 'el model %{modelo} no és present al registre de càlcul'
-      original_draft_not_persisted: 'l''esborrany original %{draft_id} no està persistit'
-      unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal un any de quatre dígits'
+      modelo_not_in_registry: el model %{modelo} no és present al registre de càlcul
+      original_draft_not_persisted: l'esborrany original %{draft_id} no està persistit
+      period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període %{period} per a l''exercici %{ejercicio}'
+      unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal
+        un any de quatre dígits'
     review:
       errors:
         approved_by_blank: L'identificador de l'aprovador no pot estar buit.
@@ -720,6 +722,11 @@ application:
         un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
+      transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix amb %{count} transaccions: %{matches}'
+      transaction_id_prefix_no_match: 'cap transacció coincideix amb el prefix d''id %{prefix}'
+      transaction_id_prefix_non_hex: 'el prefix d''id de transacció %{prefix} conté caràcters no hexadecimals'
+      transaction_id_prefix_too_long: 'el prefix d''id de transacció %{prefix} té més de %{max_length} caràcters'
+      transaction_not_found: 'transacció no trobada: %{transaction_id}'
   live:
     expedientes:
       errors:
@@ -1213,6 +1220,8 @@ application:
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
           ha resolt a boolea; els booleans no son claus valides de dispatch enum.
   overview:
+    errors:
+      horizon_days_not_positive: 'horizon_days ha de ser positiu; s''ha rebut %{horizon_days}'
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.

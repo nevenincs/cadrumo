@@ -7,6 +7,7 @@ end-to-end against local justificante fixture PDFs under
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -16,6 +17,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....core import Period
+from ....core.config import override_settings
 from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloImportError
@@ -92,13 +94,19 @@ def test_normalise_period_rejects_unsupported_typed_period(
     raw_period: Period,
     match: str,
 ) -> None:
-    with pytest.raises(ModeloImportError, match=match):
+    with pytest.raises(ModeloImportError) as exc_info:
         _normalise_period(
             modelo=modelo,
             ejercicio=ejercicio,
             raw_period=raw_period,
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
+    # The year-mismatch case now renders via a translated_message key; force the
+    # English locale so the assertion matches the byte-identical English text
+    # (the registry-period-missing case still carries a raw args[0] string).
+    with override_settings(aeat_output_language="en"):
+        rendered = resolve_error_message(exc_info.value)
+    assert re.search(match, rendered), rendered
 
 
 def test_submission_record_preserves_typed_draft_period(

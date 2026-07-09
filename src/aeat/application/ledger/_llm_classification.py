@@ -471,7 +471,10 @@ def suggest_llm_classification(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     resolved_settings = settings if settings is not None else load_settings()
     resolved_classifier = (
         classifier
@@ -588,7 +591,10 @@ def apply_llm_classification(
     catalogue = repository.load()
     current = catalogue.get(suggestion.transaction_id)
     if current is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can be classified; archived, stashed, and split-parent rows are immutable",
@@ -741,7 +747,10 @@ def saturate_llm_classification(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     resolved_settings = settings if settings is not None else load_settings()
     resolved_classifier = (
         classifier
@@ -952,7 +961,10 @@ def derive_operator_iva_substrate(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     if transaction.business_classification not in {
         BusinessClassification.BUSINESS,
         BusinessClassification.MIXED,
@@ -1094,7 +1106,10 @@ def suggest_evidence_split(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     resolved_settings = settings if settings is not None else load_settings()
     resolved_proposer = (
         proposer
@@ -1223,7 +1238,10 @@ def apply_evidence_split(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
 
     commands = tuple(
         SplitChildCommand(amount=child.amount, description=child.description) for child in suggestion.children
@@ -1342,7 +1360,10 @@ def apply_evidence_classification(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     child = suggestion.children[0]
     patch_fields: dict[str, object] = {"business_classification": BusinessClassification.BUSINESS}
     if parent.purchase_invoice_evidence_id is not None:
@@ -1427,7 +1448,10 @@ def reject_llm_suggestion(
     catalogue = repository.load()
     transaction = catalogue.get(suggestion.transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can carry an LLM rejection record",

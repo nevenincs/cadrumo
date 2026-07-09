@@ -67,8 +67,21 @@ Batch 1 (de-risked slice). The Step's "120 f-string raises" over-scopes the true
 
 Five operator-facing filing errors now localise to the operator's active language while preserving byte-identical English text. Verified: a probe confirms `resolve_error_message` renders each converted error identically to its former f-string under `AEAT_OUTPUT_LANGUAGE=en` and in Spanish/Catalan/Hungarian; ruff, ruff format, and ty are clean; `python -m aeat.locales scaffold --check` and `audit` are clean; and `test_parity` + `test_locale_translation_honesty` + `test_self_referential_string_conformance` + the full `application/filing/tests` suite pass (275 passed, 0 failed, sequential). The Step remains open pending the remaining operator-facing subset (the filing tail plus ledger and overview), to be driven as a consolidated follow-on batch; box-flip deferred to the coordinated plan-reconciliation pass.
 
+## Batch 2 (consolidated remainder)
+
+Applies the batch-1 pattern to the remaining operator-actionable raises across filing, ledger, and overview — 14 sites, 7 locale keys — closing the operator-facing surface of this Step.
+
+- `_import.py`: the period/ejercicio canonicalisation-mismatch raise → `application.filing.errors.period_ejercicio_mismatch`.
+- `_id_resolution.py`: the four transaction-id-prefix refusals (non-hex, too-long, no-match, ambiguous) → four `application.ledger.errors.transaction_id_prefix_*` keys; the operator supplies the id prefix on every single-subject ledger verb.
+- `_llm_classification.py`: eight identical "transaction not found" raises → one `application.ledger.errors.transaction_not_found` key.
+- `_agenda.py`: the non-positive-horizon refusal → `application.overview.errors.horizon_days_not_positive`.
+- Production control-flow fix: `resolve_lineage_transaction_id` discriminated the no-match case by string-matching `str(exc)`, which the conversion emptied; it now discriminates on the typed `translated_message` key (more robust than the rendered, now-localised text). Test assertions that read `str(exc)` / `match=` shifted to the locale-independent `translated_message` + `context` identity (ledger/overview) or an English-forced `resolve_error_message` (the parametrised import test).
+- Left raw (per S140 + confirmed non-actionable): the ledger `_actions_common` command-integrity guards, the `_models` `INTERNAL_TRANSFER` model validator (also a `ValueError`), the overview module `__getattr__` `AttributeError`, and every export-layout/registry invariant.
+
+Batch-2 gates green under sequential pytest: ruff + format + ty clean, locale scaffold --check + audit clean, and `application/ledger/tests` + `application/overview/tests` + `application/filing/tests` + `domain/transactions/tests` + `test_parity` + `test_locale_translation_honesty` + `test_self_referential_string_conformance` = 988 passed, 0 failed. Combined batch 1 + batch 2 = 19 operator-facing filing/ledger/overview raises localised; S255's operator-facing surface is complete. Box-flip deferred to the coordinated plan-reconciliation pass.
+
 ## Notes
 
-The true convertible count is far below the plan's 120: most raises are internal invariant guards left raw by design. Batch 1 establishes and proves the typed `translated_message` + `context` pattern end-to-end (including the `str(exc)`-to-`resolve_error_message` test-assertion shift), so the remaining operator-facing raises can follow the same shape.
+The true convertible count is far below the plan's 120: most raises are internal invariant guards left raw by design. The typed `translated_message` + `context` pattern (including the `str(exc)`-to-identity test-assertion shift and the one production control-flow discriminator that inspected `str(exc)`) held across all three domains. Any residual application-layer f-string raises are internal `ValueError`/`TypeError` and registry/layout invariants that are never rendered to the operator and correctly stay raw.
 
 <!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
