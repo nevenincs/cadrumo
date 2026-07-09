@@ -12,6 +12,8 @@ related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P02-S04]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P02-S05]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P02-S06]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P03-S07]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P03-S08]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-plan]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
@@ -26,7 +28,7 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 
 ### adr
 
-- `2026-06-04-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `warning closeout authority alignment` | (**status:** `accepted`)  ## Problem Statement  The vault lifecycle checks reported this feature as having execution records or a plan without an explicit same-feature ADR authority record. That weakens semantic discovery because developer briefings can find work evidence without a local decision anchor.  ## Considerations  This ADR is a curation alignment record, not a new implementation mandate. It preserves historical execution context while giving the feature a stable decision node for vault health and semantic search.  ## Constraints  The pass is vault-only. No application code, tests, registry data, or runtime behavior is changed. Body wiki-links are avoided; frontmatter related fields carry the required navigation edges.  ## Implementation  Treat the linked research record as the evidence bridge for this warning closeout. Existing plans and execution records remain historical sources; this ADR exists so the feature has an explicit authority node.  ## Rationale  A same-feature ADR avoids warning-level ambiguity in the vault graph and reduces the risk that future agents brief from orphaned execution records without an authority source.  ## Consequences  Feature lifecycle checks can resolve a local ADR for this feature. Later feature-specific decisions may supersede this curation ADR if they update frontmatter links on plans, research, and indexes.  ## Codification candidates  No project rule is promoted from this warning closeout record.
+- `2026-06-04-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 - `2026-07-09-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `proposed`)
 
 ### exec
@@ -37,6 +39,8 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P02-S04` - add the M210 period token `0A` (agrupacion anual) to the canonical period grammar scoped to M210, resolved through the single `Period.contains` boundary authority
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P02-S05` - declare the M210 plazo windows as REGISTRY deadline_windows TOML (grounded in the bundled CONSOLIDATED Orden EHA/3316/2010 art 5, in vigor 24/06/2026 - amended by HAC/56/2024 art 4.2 + HAC/623/2026 art 1.2), NOT hand-coded in the read-only _plazo.py resolver. CURRENT LAW (supersedes the stale HAC/56/2024 January wording the earlier spec carried): a-ingresar general = 20 primeros dias de abril/julio/octubre/enero por el trimestre natural anterior (period 1T-4T)
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P02-S06` - author the grouping-validity verification predicates (same code, same pagador save codigo 35, same tipo de gravamen, same bien, no offsetting between grouped rentas) grounded in the bundled Articulo cuarto text
+- `2026-05-27-m210-irnr-phase-2-engine-W01-P03-S07` - FETCH-GATED (fetch: AEAT Sede "Disenos de registro - modelo 210" or the official M210 Sede form specimen) - fetch and bundle the official complete M210 field enumeration as a `layout_authority` corpus source
+- `2026-05-27-m210-irnr-phase-2-engine-W01-P03-S08` - author the complete M210 casilla set on the 2025 revision with completeness manifest, extraction-profile targets, and export parity, with casilla count and numbering taken from the fetched layout authority
 
 ### plan
 
