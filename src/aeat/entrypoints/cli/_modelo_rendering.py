@@ -26,7 +26,7 @@ from ...application.modelo import (
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import BooleanBindingEncodedValue
-from ...domain.modelos import CalculationRevisionState
+from ...domain.modelos import CalculationRevision, CalculationRevisionState, Modelo184MemberRow
 from ._modelo_payloads import (
     BindingEncodedOptionPayload,
     CalculationRevisionPayload,
@@ -44,6 +44,60 @@ from ._modelo_revision_payload_parts import DetailRowPayload
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
+_M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
+# The canonical M100 régimen-de-atribución (actividad económica) income casilla
+# the attributed base folds into, per the 2026-07-09-m184-socio-attribution-handoff-adr
+# addendum, decision (a): 1577 stays relation-canonical and the cross-bucket value
+# enters the socio's own M100 via a documented manual --binding override on 1577.
+_M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
+_M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
+
+
+def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
+    """Return per-socio Modelo 184 régimen-de-atribución handoff info Notices.
+
+    When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
+    rows, the entity operator who files the M184 is handed, per socio, the exact
+    attributed base plus the ``attribution_received`` fact keys the socio records
+    on their OWN profile, and the exact ``aeat app modelo work calculate
+    --binding`` command that folds the base into the socio's Modelo 100 (per the
+    ``2026-07-09-m184-socio-attribution-handoff-adr`` addendum, decision (a): the
+    cross-bucket value is carried by hand onto the relation-canonical casilla
+    1577, not auto-flowed across profiles). Grounded in LIRPF arts. 86-89.
+    Returns an empty list for any revision without member rows (non-M184, or an
+    M184 with no socios), so the handoff stays silent unless there is a real
+    per-socio value to relay.
+    """
+    notices: list[Notice] = []
+    for row in revision.detail_rows:
+        if not isinstance(row, Modelo184MemberRow):
+            continue
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=_M184_SOCIO_HANDOFF_CODE,
+                message=(
+                    f"Régimen de atribución de rentas: socio {row.nif} ({row.nombre}) receives an "
+                    f"attributed base of {row.importe} EUR ({row.porcentaje}% share). On the socio's own "
+                    f"workspace, record it as attribution_received facts (entity_nif, entity_name, "
+                    f"share_pct, base_imponible_attributed, filing_year), then fold the base into their "
+                    f"Modelo 100 régimen-de-atribución (actividad económica) casilla "
+                    f"{_M184_ATRIBUCION_ACT_ECO_CASILLA} (LIRPF arts. 86-89)."
+                ),
+                suggestion=(
+                    f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
+                ),
+                context={
+                    "nif": row.nif,
+                    "nombre": row.nombre,
+                    "porcentaje": str(row.porcentaje),
+                    "base_imponible_attributed": str(row.importe),
+                    "target_casilla": _M184_ATRIBUCION_ACT_ECO_CASILLA,
+                    "legal_refs": _M184_ATRIBUCION_LEGAL_REFS,
+                },
+            ),
+        )
+    return notices
 
 
 def binding_encoded_option_payloads(
