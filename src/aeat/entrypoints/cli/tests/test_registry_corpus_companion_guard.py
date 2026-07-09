@@ -36,7 +36,7 @@ def test_guard_refuses_instructively_when_a_companion_binary_is_absent() -> None
             missing_advisories=("corpus/aeat_official/disenos_registro/modelo_100/files/dr.xlsx",),
         )
 
-    # Translation is deferred to the CLI render layer, so the refusal carries the
+    # Translation happens at the CLI render layer, so the refusal carries the
     # locale key plus the interpolation context rather than a pre-rendered string.
     error = excinfo.value
     assert error.translated_message == "cli.registry.errors.corpus_companion_absent"

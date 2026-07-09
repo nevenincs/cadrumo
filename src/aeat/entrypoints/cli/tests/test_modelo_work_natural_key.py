@@ -13,6 +13,7 @@ from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
+from ._modelo_work_ux_support import _seed_m111_retencion_observation
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
@@ -113,6 +114,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
+    _seed_m111_retencion_observation()
 
     calculated = _invoke(
         [
@@ -135,10 +137,12 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
     assert _payload(verified.output)["granted_verificado_completo"] is True
-    # A granted (clean) verify stays on the success spine with no notices, in
-    # lock-step with its exit-0.
+    # A granted (clean) verify stays on the success spine (its single info
+    # next-action notice keeps status at success), in lock-step with its exit-0.
     assert _envelope_status(verified.output) == "success", verified.output
-    assert _notices(verified.output) == [], verified.output
+    granted_notices = _notices(verified.output)
+    assert [n["code"] for n in granted_notices] == ["modelo.work.verify.next_action_granted"], verified.output
+    assert granted_notices[0]["severity"] == "info", verified.output
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(
@@ -386,6 +390,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
+    _seed_m111_retencion_observation()
 
     renamed = _invoke(
         [

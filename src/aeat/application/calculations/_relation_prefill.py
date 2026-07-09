@@ -860,19 +860,31 @@ class RelationPrefillSourceResolver:
         )
 
 
-def _modelo_202_first_period_previous_payment_defaults(
+def relation_prefill_period_zero_default_binding_ids(
     revision: ModeloRevision,
     *,
     modelo: str,
     period: str,
-) -> dict[BindingId, Decimal]:
-    """Resolve M202 same-model previous-payment carries to zero before their first target period."""
+) -> frozenset[BindingId]:
+    """Return the relation-prefill binding ids calculate resolves to zero for ``period``.
+
+    A Modelo 202 same-model previous-payment carry (``previous_period`` relation
+    sourcing the same modelo) has no upstream filing before its first target
+    period, so the resolver materialises its ``target_binding`` slot as zero
+    rather than leaving it absent. This is the single authority for "which
+    relation-prefill bindings are pre-satisfied with a zero default in this
+    period"; both the calculate resolver
+    (:func:`_modelo_202_first_period_previous_payment_defaults`) and the
+    readiness missing-bindings projection consume it, so readiness and calculate
+    agree on the missing set by construction
+    (``one-aggregation-path-pull-equals-calculate``).
+    """
     if modelo != Modelo.M202.value:
-        return {}
+        return frozenset()
     relations_by_target: dict[BindingId, list[RelationDefinition]] = {}
     for relation in revision.relations:
         relations_by_target.setdefault(relation.target_binding, []).append(relation)
-    values: dict[BindingId, Decimal] = {}
+    zero_defaulted: set[BindingId] = set()
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.RELATION_PREFILL:
             continue
@@ -882,8 +894,29 @@ def _modelo_202_first_period_previous_payment_defaults(
         if any(not relation.target_periods or period in relation.target_periods for relation in relations):
             continue
         if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
-            values[binding.id] = Decimal("0")
-    return values
+            zero_defaulted.add(binding.id)
+    return frozenset(zero_defaulted)
 
 
-__all__ = ["RelationPrefillSourceResolver", "resolve_relations_from_local_store"]
+def _modelo_202_first_period_previous_payment_defaults(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    period: str,
+) -> dict[BindingId, Decimal]:
+    """Resolve M202 same-model previous-payment carries to zero before their first target period."""
+    return {
+        binding_id: Decimal("0")
+        for binding_id in relation_prefill_period_zero_default_binding_ids(
+            revision,
+            modelo=modelo,
+            period=period,
+        )
+    }
+
+
+__all__ = [
+    "RelationPrefillSourceResolver",
+    "relation_prefill_period_zero_default_binding_ids",
+    "resolve_relations_from_local_store",
+]

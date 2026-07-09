@@ -39,6 +39,11 @@ _ALLOWED_DIRECT_OUTPUTS = {
     ("entrypoints/cli/_terminal_errors.py", "write"),
     ("entrypoints/cli/_exit_codes.py", "typer.echo"),
     ("application/wizard/_commands.py", "typer.echo"),
+    # Group help fallback: renders the click-generated help text verbatim,
+    # not operator data subject to redaction.
+    ("entrypoints/cli/_app_diagnostics.py", "typer.echo"),
+    # Operator-facing wizard help line, not a debug print.
+    ("entrypoints/cli/_modelo_work_wizard_cli.py", "print"),
 }
 
 

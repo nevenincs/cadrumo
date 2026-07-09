@@ -647,7 +647,7 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                     ),
                     missing=missing,
                 ),
-                suggestion="aeat config profile ratios",
+                suggestion="aeat app ledger ratios set",
                 context={"modelo": str(checklist.modelo), "missing_bindings": missing},
             ),
         )

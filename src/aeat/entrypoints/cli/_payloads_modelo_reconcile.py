@@ -43,21 +43,6 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     source_refs: tuple[str, ...] = ()
 
 
-class ModeloReconciliationAdvisoryPayload(OutputSchema):
-    """One non-blocking reconciliation advisory carried alongside the diffs.
-
-    Mirrors :class:`ModeloReconciliationAdvisory`. The
-    CLI also folds each advisory into a typed
-    :class:`Notice` on the envelope ``notices`` channel;
-    this payload preserves the structured ``code`` / ``context`` in the result
-    for machine consumers per ``cli-notices-are-the-only-diagnostic-channel``.
-    """
-
-    code: str
-    message: str
-    context: dict[str, str] = {}
-
-
 @register_schema("modelo.reconcile.pull")
 @register_schema("modelo.reconcile.file")
 class ModeloReconcileResult(OutputSchema):
@@ -69,7 +54,10 @@ class ModeloReconcileResult(OutputSchema):
     :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
     :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
     :class:`ModeloReconciliationDiffPayload` list, reconciliation timestamp,
-    and optional narrative.
+    and optional narrative. Non-blocking reconciliation advisories ride the
+    shared envelope ``notices`` channel exclusively
+    (``cli-notices-are-the-only-diagnostic-channel``); this result carries no
+    bespoke advisory field.
     """
 
     work_unit_id: WorkUnitId
@@ -78,7 +66,6 @@ class ModeloReconcileResult(OutputSchema):
     source_path: str
     verdict: str
     diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
-    advisories: tuple[ModeloReconciliationAdvisoryPayload, ...] = ()
     reconciled_at: str
     narrative: str = ""
 

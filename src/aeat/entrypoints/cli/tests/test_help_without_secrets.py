@@ -24,6 +24,7 @@ stdin is genuinely non-interactive — the exact operator condition).
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -33,6 +34,14 @@ import pytest
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PLACEHOLDER_ACTIVE_PROFILE = "0123456789abcdef0123456789abcdef"
+
+#: Matches an actual passphrase VALUE materialization (an env-style
+#: assignment, e.g. leaked from ``os.environ`` or a diagnostic dump), never
+#: a bare instructional mention of the variable's NAME. Operator-facing help
+#: prose is allowed to name ``AEAT_SECRET_PASSPHRASE`` when explaining where
+#: it must be set for an isolated run (``application/operator_surface/_help.py``);
+#: only an actual ``KEY=value`` leak is a genuine secret disclosure.
+_PASSPHRASE_VALUE_LEAK_PATTERN = re.compile(r"AEAT_SECRET_PASSPHRASE\s*=\s*\S")
 
 
 def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
@@ -78,12 +87,18 @@ def test_subgroup_help_renders_without_passphrase(
     args: list[str],
     expected_row: str,
 ) -> None:
-    """Every subgroup help renders exit 0 with real content, no master key."""
+    """Every subgroup help renders exit 0 with real content, no master key.
+
+    Help prose may legitimately NAME ``AEAT_SECRET_PASSPHRASE`` (e.g. the
+    isolated-run instructions on ``aeat config --help``); only an actual
+    value assignment is a genuine leak, so the gate checks for that
+    narrower pattern rather than a blanket substring match.
+    """
     result = _run(args, tmp_path)
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined
     assert expected_row in result.stdout, combined
-    assert "AEAT_SECRET_PASSPHRASE" not in combined
+    assert not _PASSPHRASE_VALUE_LEAK_PATTERN.search(combined), combined
     assert "Traceback" not in combined
 
 

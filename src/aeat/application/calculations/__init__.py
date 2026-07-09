@@ -150,7 +150,11 @@ from ._prorrata_regularizacion import (
     derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
-from ._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
+from ._relation_prefill import (
+    RelationPrefillSourceResolver,
+    relation_prefill_period_zero_default_binding_ids,
+    resolve_relations_from_local_store,
+)
 from ._row_set_assembly import (
     AssembledObservations,
     assemble_atribucion_observations,
@@ -239,6 +243,7 @@ __all__ = [
     "query_iva_wallet_balance",
     "reconcile_iva_compensation_wallet",
     "reconcile_modelo_303_iva_compensation",
+    "relation_prefill_period_zero_default_binding_ids",
     "resolve_bindings_from_local_store",
     "resolve_iva_compensation_annual_partition_binding_values",
     "resolve_maritime_exemption",

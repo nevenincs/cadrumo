@@ -89,6 +89,8 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "readiness",
             "--modelo",
             "202",
+            "--revision-id",
+            "2025-y-siguientes",
             "--year",
             "2025",
             "--period",
@@ -140,7 +142,12 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     error_payload = json.loads(calculated.output)
     error = error_payload["error"]
     assert error["code"] == "REFUSED_MODELO_REQUIRED_BINDINGS_MISSING"
-    assert set(error["context"]["missing_bindings"]) == _MISSING_M202_BINDINGS
+    # The error-envelope context funnel renders collection values as a
+    # comma-joined string (dict[str, str] contract), so the missing-binding
+    # ids arrive as one string and are split back to compare the set.
+    assert {
+        binding_id.strip() for binding_id in error["context"]["missing_bindings"].split(",")
+    } == _MISSING_M202_BINDINGS
     assert "saved" not in calculated.output
     assert "Traceback" not in calculated.output
 

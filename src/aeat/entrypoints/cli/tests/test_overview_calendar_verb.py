@@ -262,16 +262,27 @@ def _store_corrupt_local_filing_evidence() -> None:
 
 
 _CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS = (
-    pytest.param((), False, id="single-profile"),
-    pytest.param(("--all-profiles",), True, id="all-profiles"),
+    pytest.param((), True, id="single-profile"),
+    pytest.param(("--all-profiles",), False, id="all-profiles"),
 )
 
 
-@pytest.mark.parametrize(("extra_args", "assert_no_profile_skipped"), _CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS)
-def test_calendar_refuses_when_local_filing_evidence_store_is_unreadable(
+@pytest.mark.parametrize(("extra_args", "assert_degraded_notice"), _CORRUPT_LOCAL_EVIDENCE_CALENDAR_ARGS)
+def test_calendar_degrades_when_local_filing_evidence_store_is_unreadable(
     extra_args: tuple[str, ...],
-    assert_no_profile_skipped: bool,
+    assert_degraded_notice: bool,
 ) -> None:
+    """An unreadable local filing-evidence store degrades the calendar to a
+    schedule-only view rather than refusing it (commit 4adf391107): a
+    never-filed taxpayer must still be able to see what they owe.
+
+    The single-profile view surfaces the ``overview.calendar_filing_evidence_degraded``
+    WARNING notice; the ``--all-profiles`` view deliberately drops per-loader
+    degradation notices (see ``_overview_calendar_all_profiles``) since it
+    already degrades per profile and renders many calendars in one payload.
+    Either way the profile itself is never skipped — only an unreadable
+    *bucket* is skipped, not unreadable evidence within a readable one.
+    """
     _store_corrupt_local_filing_evidence()
 
     result = _invoke(
@@ -288,10 +299,10 @@ def test_calendar_refuses_when_local_filing_evidence_store_is_unreadable(
         ],
     )
 
-    assert result.exit_code != 0, result.output
-    assert "local filing evidence is unavailable" in result.output
-    if assert_no_profile_skipped:
-        assert "profile_skipped" not in result.output
+    assert result.exit_code == 0, result.output
+    assert "profile_skipped" not in result.output
+    if assert_degraded_notice:
+        assert "overview.calendar_filing_evidence_degraded" in result.output
 
 
 def test_calendar_help_advertises_local_only() -> None:
@@ -344,7 +355,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="88874275K",
+            authenticated_identity="57964777Q",
         ),
     )
     NotificationsService().capture(
@@ -355,9 +366,9 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     certificado_id="2596230606502",
                     tipo="notificacion",
                     concepto="Requerimiento censal",
-                    titular_nif="88874275K",
+                    titular_nif="57964777Q",
                     titular_nombre="Test S.L.",
-                    destinatario_nif="88874275K",
+                    destinatario_nif="57964777Q",
                     destinatario_nombre="Test S.L.",
                     fecha_emision=date(2025, 4, 14),
                     fecha_notificacion=None,
@@ -428,7 +439,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="88874275K",
+            authenticated_identity="57964777Q",
         ),
     )
 
@@ -494,7 +505,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="88874275K",
+            authenticated_identity="57964777Q",
         ),
     )
 
@@ -582,7 +593,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
             ),
             captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
             source_url="declarations:modelo=303:ejercicio=2025",
-            authenticated_identity="88874275K",
+            authenticated_identity="57964777Q",
         ),
     )
 
@@ -684,7 +695,7 @@ def test_calendar_text_output_names_verified_aeat_evidence() -> None:
     with profile_storage_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
-        JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="88874275K"))
+        JustificanteRepository().save(_justificante_metadata(csv=csv, tax_id="57964777Q"))
 
     result = _invoke(
         [

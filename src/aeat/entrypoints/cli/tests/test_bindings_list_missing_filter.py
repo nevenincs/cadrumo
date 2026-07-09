@@ -59,6 +59,8 @@ _RESOLVED_BINDING_IDS = frozenset(
         "renta-2025-profile-anualidades-sin-minimo-descendientes",
         "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
         "renta-2025-profile-unidad-familiar-otros-miembros-base",
+        "renta-2025-profile-minimo-descendientes-estatal",
+        "renta-2025-profile-minimo-descendientes-autonomico",
     },
 )
 

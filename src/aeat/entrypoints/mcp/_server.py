@@ -63,15 +63,25 @@ from ._elicitation import (
 from ._faithfulness import SessionGroundingWindow, advisory_line, arguments_faithfulness
 from ._harness_tools import (
     HARNESS_LOAD_TOOL,
+    WHOAMI_TOOL,
     build_harness_floor_payload,
     build_harness_floor_tool,
+    build_whoami_identity,
+    build_whoami_tool,
     render_harness_floor_text,
+    render_whoami_identity_text,
 )
 from ._hitl import (
     REQUIRES_USER_INTERACTION_META_KEY,
     confirmation_for_tool,
     is_handoff_command,
     requires_user_interaction,
+)
+from ._identity_gate import (
+    IDENTITY_READ_CONSOLE_TOOLS,
+    SessionIdentityState,
+    identity_elicitation_echo,
+    identity_gate_refusal,
 )
 from ._input_schema import cli_argv_for
 from ._meta_tools import (
@@ -545,6 +555,11 @@ def build_server(
         )
         return build_sdk_tools((*advertised, *activated))
     floor_tool = build_harness_floor_tool()
+    # Identity tool (ADR I1): the always-on read-only ``whoami`` that reports the
+    # active taxpayer. Like the floor and grounding tools it is a console tool,
+    # advertised on every session and never persona-scoped away, so an agent can
+    # always confirm WHO is active before a mutating command.
+    whoami_tool = build_whoami_tool()
     # Grounding tools (ADR R3): read-only search over the bundled legal corpus
     # and the taxpayer-facing terminology handbook. Always advertised (never
     # persona-scoped away) — every persona benefits from grounding its narration
@@ -556,6 +571,10 @@ def build_server(
     # only; the telemetry writer (injected by the stdio runner; None in unit
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
+    # Per-session identity-read state (ADR I2): armed until an identity read has
+    # occurred, re-armed on a profile switch. Shared by the direct and execute
+    # paths below so the block-first-mutation gate is byte-identical on both.
+    identity_state = SessionIdentityState()
 
     def _gated_subprocess_run(
         descriptor: McpToolDescriptor,
@@ -570,6 +589,12 @@ def build_server(
         direct path.
         """
         key = descriptor.command_key
+        identity_refusal = identity_gate_refusal(key, state=identity_state)
+        if identity_refusal is not None:
+            _record_telemetry(
+                telemetry, tool_name=descriptor.name, command_key=key, route="identity_block", is_error=True
+            )
+            return ({"status": "error", "refusal": identity_refusal}, True)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
@@ -655,19 +680,37 @@ def build_server(
     async def _list_tools() -> list[Tool]:
         # The harness.load floor tool is advertised first and is never persona-scoped
         # away: per ADR R4 it is the universal operating-layer channel that must reach
-        # any client, including a minimal tools-only one. The grounding tools follow
-        # for the same always-available reason (ADR R3). The per-verb surface is the
-        # orientation core plus any active toolset (rebuilt per call so a toolset
-        # activation is reflected — ADR mcp-progressive-discovery P1/P3).
-        return [floor_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
+        # any client, including a minimal tools-only one. The whoami identity tool and
+        # the grounding tools follow for the same always-available reason (ADR I1, R3):
+        # an agent must always be able to confirm the active taxpayer and ground its
+        # narration, whatever the persona. The per-verb surface is the orientation core
+        # plus any active toolset (rebuilt per call so a toolset activation is reflected
+        # — ADR mcp-progressive-discovery P1/P3).
+        return [floor_tool, whoami_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
+        # A console identity read (whoami / harness.load) clears the gate (ADR I2):
+        # both surface the active-identity block, so either proves the agent has
+        # seen who is active. These carry no registry command key, so record here
+        # rather than in identity_gate_refusal (which keys off command keys).
+        if name in IDENTITY_READ_CONSOLE_TOOLS:
+            identity_state.record_identity_read()
         if name == HARNESS_LOAD_TOOL:
-            floor_payload = build_harness_floor_payload(persona=persona)
+            # Resolve the active-taxpayer identity at the server boundary (it reads
+            # storage) and inject it into the otherwise-pure floor payload, so the
+            # floor response carries WHO is active alongside the operating rules.
+            floor_payload = build_harness_floor_payload(persona=persona, identity=build_whoami_identity())
             return CallToolResult(
                 content=[TextContent(type="text", text=render_harness_floor_text(floor_payload))],
                 structuredContent=floor_payload.model_dump(mode="json"),
+                isError=False,
+            )
+        if name == WHOAMI_TOOL:
+            identity = build_whoami_identity()
+            return CallToolResult(
+                content=[TextContent(type="text", text=render_whoami_identity_text(identity))],
+                structuredContent=identity.model_dump(mode="json"),
                 isError=False,
             )
         if name == CORPUS_SEARCH_TOOL:
@@ -778,6 +821,10 @@ def build_server(
                 content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
                 isError=True,
             )
+        identity_refusal = identity_gate_refusal(key, state=identity_state)
+        if identity_refusal is not None:
+            _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
+            return CallToolResult(content=[TextContent(type="text", text=identity_refusal)], isError=True)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(
             policy=policy,
@@ -793,8 +840,12 @@ def build_server(
         route_label = route.value
         if route is ConfirmRoute.ELICIT:
             request = confirmation_request(command_key=key)
+            # Name the active-taxpayer LABEL in the human-facing prompt (ADR I4)
+            # so the person approving a destructive/handoff verb sees whose data
+            # it touches and can catch an Erik/Erika mismatch at the gate.
+            echo = identity_elicitation_echo(active_profile_label=build_whoami_identity().active_profile)
             result = await server.request_context.session.elicit(
-                message=request.message,
+                message=f"{echo}\n\n{request.message}",
                 requestedSchema=request.requested_schema,
             )
             decision = decision_from_elicitation(

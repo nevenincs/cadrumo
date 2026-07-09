@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Constants
 # ---------------------------------------------------------------------------
 
-_PROFILE_ID = "modelo-compare-test-profile"
+_PROFILE_ID = "c0117a5e-c011-4c01-8c01-17a5ec0117a5"
 
 # Two materially different source-owned ingresos for 2025 vs 2026.
 # Oracle: rendimiento neto = ingresos - gastos; pago fraccionado = 20%.
@@ -131,6 +131,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Compare Test Autónomo"),
+            UserProfileFact(path="identity.surnames", value="Compare Test Autónomo"),
             UserProfileFact(path="identity.tax_id", value="11223344B"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(
@@ -139,6 +140,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             ),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="provenance.source", value="manual_cli"),

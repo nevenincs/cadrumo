@@ -48,6 +48,26 @@ _CALCULATION_REVISION_ID = "b" * 64
 PRIMARY_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
+#: Calendar strict-mode completeness gating reads these profile-fact paths
+#: (``_gating_fields`` in ``application.overview._calendar_warnings``) off
+#: every registered modelo applicability rule and deadline window. A minimal
+#: profile that leaves them unset makes every calendar fixture refuse with
+#: "comprobaciones de perfil sin resolver" before the scenario under test is
+#: even reached. Resolve them here to an explicit "false" so the calendar
+#: fixtures exercise their own scenario-specific warnings, not this generic
+#: completeness gate. ``iva.regime`` and ``irpf.estimation_regime`` are the
+#: two other gating keys; ``register_minimal_profile`` already sets both.
+_CALENDAR_GATING_FACT_OVERRIDES: dict[str, str] = {
+    "withholding.has_employees": "false",
+    "withholding.pays_professionals_with_retencion": "false",
+    "irpf.art109_activity_income_withholding_ge_70pct": "false",
+    "withholding.pays_rent_with_retencion": "false",
+    "withholding.pays_capital_income_with_retencion": "false",
+    "iva.does_intracomunitario": "false",
+    "obligations.third_party_transactions_above_347_threshold": "false",
+}
+
+
 @contextmanager
 def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
     with (
@@ -59,6 +79,7 @@ def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
                 state,
                 profile_id=PRIMARY_PROFILE_ID,
                 display_name="operator",
+                overrides=_CALENDAR_GATING_FACT_OVERRIDES,
             ),
         )
         yield

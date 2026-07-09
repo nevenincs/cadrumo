@@ -541,7 +541,8 @@ application:
       archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
       archive_not_confirmed: Az archiválás visszafordítható állapotátmenet, de kifejezett
         megerősítést igényel.
-      archive_schema_version_from_future: 'Az archívum sémaverziója ({archive_schema_version}) újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).'
+      archive_schema_version_from_future: Az archívum sémaverziója ({archive_schema_version})
+        újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -751,8 +752,12 @@ application:
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
         %{value}. Elfogadott kódolás: %{mapping}. Futtassa az ''aeat app modelo bindings
         list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
-      calculate_casilla_noncanonical_refused: 'A --casilla %{key} nem kanonikus casilla.id
-        vagy ketertelmu. Hasznalja a pontos kanonikus casilla.id erteket: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
+        casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja
+        meg a pontos kanonikus casilla.id-t'
+      calculate_casilla_noncanonical_refused: 'A --casilla %{key} egy nyomtatott mezőszám,
+        nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja
+        helyette a kanonikus casilla.id-t: %{accepted}'
       calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
         a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
         <MODELO>`.'
@@ -1908,6 +1913,14 @@ cli:
           kapott: {kind}.'
         list_help: Regisztrált benyújtási rekordok listázása.
         modelo_help: Szűrés nyomtatványkód szerint (pl. 303, 130, 100).
+        observe_local_file_help: Helyi CSV vagy XLSX táblázat elérési útja casilla_code,value
+          sorokkal (egy korábbi bevallás tanúsítvány nélküli rekonstrukciója). Kombinálható
+          a --set kapcsolóval; ugyanazon casillához tartozó --set érték felülírja
+          a táblázat sorát
+        observe_local_help: Rögzítsen egy kezelő által megadott helyi megfigyelést
+          a számítás előtöltéséhez
+        observe_local_set_help: Kanonikus casilla.id és Decimal érték a rögzítéshez,
+          pl. --set 1391=0
         view_help: Egy benyújtási rekord megjelenítése azonosító alapján.
       formulas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
@@ -2107,6 +2120,7 @@ cli:
       review_package:
         actor_help: A csomag leírójába és a mögöttes exportálási eseménybe rögzített
           operátorcímke.
+        bucket_id_help: 'A tároló azonosítója, amelyen a felülvizsgálati csomag működik (alapértelmezés szerint az aktív profil).'
         build_help: Megosztható, checksummal ellenőrizhető áttekintő csomag (fichero-BOE
           tervezet, a revízió eredete és a csatolt könyvelési bizonyíték) összeállítása
           a könyvelőnek való átadáshoz. Csak helyi; soha nem kapcsolódik az AEAT-hoz.
@@ -2622,6 +2636,15 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        history_next_action: 'Tekintse át ennek a munkaegységnek a jelenlegi állapotát az `aeat app modelo work status` paranccsal.'
+        list_next_action: 'Egy munkaegység teljes állapotát az `aeat app modelo work status` paranccsal tekintheti meg, majd az `aeat app modelo work calculate` paranccsal készíthet vagy számolhat újra vázlatot.'
+        status_next_action: 'Készítse el vagy számolja újra ezt az egységet az `aeat app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot az `aeat app modelo work verify` paranccsal.'
+        verify_next_action_granted: 'Az ellenőrzés sikeres. Exportálja a benyújtási dokumentumot az `aeat app modelo export` paranccsal.'
+        verify_next_action_incomplete: 'Az ellenőrzés blokkoló tételeket talált (lásd a fenti értesítéseket). Oldja meg őket, számolja újra az `aeat app modelo work calculate` paranccsal, majd futtassa újra az `aeat app modelo work verify` parancsot.'
+    quickfile:
+      app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
+        készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
+        és exportál; soha nem nyújt be az AEAT-hoz'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -5769,9 +5792,13 @@ errors:
         használt.
       schema_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z) %{expected}
         sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
-      schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace} névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z) {expected} felé.'
-      schema_upgrader_already_registered: 'A(z) {namespace} névtérhez már regisztrálva van sémafrissítő a(z) {from_version} verziótól.'
-      schema_version_from_future: 'A(z) {namespace} névtér tárolt sémaverziója ({schema_version}) újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.'
+      schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace}
+        névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z)
+        {expected} felé.'
+      schema_upgrader_already_registered: A(z) {namespace} névtérhez már regisztrálva
+        van sémafrissítő a(z) {from_version} verziótól.
+      schema_version_from_future: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
+        újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.
       unknown_classification: 'A(z) %{namespace} biztonságos objektum névtér ismeretlen
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva
@@ -5884,6 +5911,13 @@ mcp:
       bizonyítékbájt — SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak,
       és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember)
       nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
+  identity_gate:
+    elicitation_echo: 'Az adoalany-profil neveben eljarva: %{label}.'
+    first_mutation_refused: 'Elutasitva: erositsd meg az aktiv adoalanyt a munkamenet
+      elso modositasa elott. Bevallas vagy szerkesztes soha nem futhat rossz identitas
+      alatt. Futtasd a whoami parancsot (vagy a ''config profile status'' / ''overview
+      status'' parancsot), hogy lasd, melyik adoalany aktiv, majd probald ujra; egyetlen
+      identitasolvasas feloldja ezt a munkamenetre, amig profilt nem valtasz.'
   persona:
     handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
       amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg

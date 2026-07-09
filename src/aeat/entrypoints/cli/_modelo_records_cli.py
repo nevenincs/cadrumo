@@ -317,7 +317,7 @@ def filing_record_import(
 
 @filing_record_app.command(
     "observe-local",
-    help="Record an operator-supplied local observation for calculation prefill.",
+    help=tr("cli.app.modelo.filing_record.observe_local_help"),
 )
 def filing_record_observe_local(
     ctx: typer.Context,
@@ -341,18 +341,14 @@ def filing_record_observe_local(
         list[str] | None,
         typer.Option(
             "--set",
-            help="Canonical casilla.id and Decimal value to record, e.g. --set 1391=0.",
+            help=tr("cli.app.modelo.filing_record.observe_local_set_help"),
         ),
     ] = None,
     file: Annotated[
         Path | None,
         typer.Option(
             "--file",
-            help=(
-                "Path to a local CSV or XLSX spreadsheet of casilla_code,value rows "
-                "(a cert-free reconstruction of a past filing). Combines with --set; "
-                "a --set value for the same casilla overrides the spreadsheet row."
-            ),
+            help=tr("cli.app.modelo.filing_record.observe_local_file_help"),
         ),
     ] = None,
 ) -> None:

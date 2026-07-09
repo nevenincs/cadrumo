@@ -67,6 +67,8 @@ def _create_profile() -> None:
             "Operator",
             "--activity",
             "design",
+            "--irpf-income-categories",
+            "actividad_economica",
         ],
     )
     assert result.exit_code == 0, result.output

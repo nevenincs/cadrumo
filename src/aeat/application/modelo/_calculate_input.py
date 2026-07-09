@@ -612,7 +612,7 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
                 f"Candidate casilla.id values: {accepted}. "
                 "Supply the exact canonical casilla.id.",
                 context={"key": key, "accepted": accepted},
-                translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
+                translated_message="application.modelo.errors.calculate_casilla_noncanonical_ambiguous",
             )
         raise ModeloCalculateCasillaInputError(
             f"--casilla {key!r} is a printed casilla number or form number or export reference, "

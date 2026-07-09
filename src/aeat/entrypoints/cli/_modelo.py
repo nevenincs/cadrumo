@@ -907,7 +907,17 @@ def work_history(
         )
         for event in history.events
     )
-    _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines)
+    from ._modelo_rendering import next_action_notice
+
+    next_action = next_action_notice(
+        "modelo.work.history.next_action",
+        tr(
+            "cli.app.modelo.work.history_next_action",
+            default="Review this work unit's current state with `aeat app modelo work status`.",
+        ),
+        suggestion=f"aeat app modelo work status {history.work_unit_id}",
+    )
+    _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_action])
 
 
 def _calculation_revision_not_found_bad_parameter_wide(

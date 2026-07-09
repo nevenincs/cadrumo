@@ -71,7 +71,9 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
 #: in :mod:`aeat.entrypoints.cli.test_json_schema_conformance`.
-_APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset({"ledger", "modelo", "overview", "registry", "review"})
+_APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset(
+    {"diagnostics", "ledger", "modelo", "overview", "registry", "review"}
+)
 _APP_NAMESPACE_PASSTHROUGH: frozenset[str] = frozenset({"live"})
 _PATH_KEY_OVERRIDES: dict[str, str] = {
     "config.profile.history": "config.bucket.history",

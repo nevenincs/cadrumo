@@ -91,12 +91,12 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
     if _json_requested_for(exc):
-        from ._errors import CliRefusedBoundaryError, write_stderr
+        from ._errors import CliRefusedBoundaryError, active_profile_label_for_error, write_stderr
 
         format_message = getattr(exc, "format_message", None)
         message = str(format_message()) if callable(format_message) else str(exc)
         boundary = CliRefusedBoundaryError(message)
-        write_stderr(render_error_json(boundary))
+        write_stderr(render_error_json(boundary, active_profile=active_profile_label_for_error()))
     else:
         _render_click_exception_text(exc)
     sys.exit(exit_code)
@@ -104,11 +104,15 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
 
 def _emit_crash(exc: Exception) -> NoReturn:
     """Emit an unexpected failure as the structured crash boundary."""
-    from ._errors import CliUnexpectedBoundaryError, write_stderr
+    from ._errors import CliUnexpectedBoundaryError, active_profile_label_for_error, write_stderr
 
     boundary = CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
-    payload = render_error_json(boundary) if _json_requested_for(exc) else render_error_text(boundary)
+    payload = (
+        render_error_json(boundary, active_profile=active_profile_label_for_error())
+        if _json_requested_for(exc)
+        else render_error_text(boundary)
+    )
     write_stderr(payload)
     sys.exit(get_error_exit_code(code.category))
 

@@ -23,7 +23,6 @@ from ...workflow import (
 )
 from .._orchestration import (
     profile_create_storage_span,
-    read_active_profile,
     register_active_profile,
     remove_active_profile,
     select_profile,
@@ -155,7 +154,7 @@ def test_read_active_profile_returns_record(schema: ProfileSchemaDefinition) -> 
             schema=schema,
             routing_profile_id=routing_profile_id,
         )
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
         assert record is not None
         assert record.profile_id == _DEFAULT_PROFILE_ID
         assert record.status is UserProfileStatus.ACTIVE
@@ -168,12 +167,12 @@ def test_read_active_profile_logs_missing_selected_record(
     """A torn active pointer degrades to no record with debug evidence."""
 
     with profile_create_storage_span(_MISSING_PROFILE_ID):
-        caplog.set_level(logging.DEBUG, logger="aeat.application.user_profile._orchestration")
+        caplog.set_level(logging.DEBUG, logger="aeat.application.workflow._models")
 
-        record = read_active_profile(WorkflowState(), schema=schema)
+        record = WorkflowState().active_profile_record(schema=schema)
 
     assert record is None
-    assert "active profile selection resolved to a missing profile record" in caplog.text
+    assert "active profile record resolution returned no profile record" in caplog.text
 
 
 def test_remove_active_profile_tombstones_and_clears_pointer(schema: ProfileSchemaDefinition) -> None:

@@ -527,7 +527,8 @@ application:
         profile first.
       archive_not_confirmed: Archiving is a reversible state transition, but it still
         requires explicit confirmation.
-      archive_schema_version_from_future: 'The archive schema version {archive_schema_version} is newer than this application supports (up to {max_supported}).'
+      archive_schema_version_from_future: The archive schema version {archive_schema_version}
+        is newer than this application supports (up to {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -736,8 +737,12 @@ application:
         boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
         encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
         each binding''s decimal encoding.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical
-        casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical
+        casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply
+        the exact canonical casilla.id'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} is a printed casilla
+        number or form number or export reference, not a canonical casilla.id. Use
+        the canonical casilla.id instead: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
         this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
         values.
@@ -1840,6 +1845,13 @@ cli:
         invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
         modelo_help: Filter by modelo code (e.g. 303, 130, 100)
+        observe_local_file_help: Path to a local CSV or XLSX spreadsheet of casilla_code,value
+          rows (a cert-free reconstruction of a past filing). Combines with --set;
+          a --set value for the same casilla overrides the spreadsheet row
+        observe_local_help: Record an operator-supplied local observation for calculation
+          prefill
+        observe_local_set_help: Canonical casilla.id and Decimal value to record,
+          e.g. --set 1391=0
         view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -2034,6 +2046,7 @@ cli:
       review_package:
         actor_help: Operator label recorded into the package descriptor and the underlying
           export event.
+        bucket_id_help: 'Bucket id the review package operates on (defaults to the active profile).'
         build_help: Assemble a shareable, checksum-verifiable review package (fichero-BOE
           draft, revision provenance, and bundled ledger evidence) for accountant
           handoff. Local-only; never contacts AEAT.
@@ -2508,6 +2521,15 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        history_next_action: 'Review this work unit''s current state with `aeat app modelo work status`.'
+        list_next_action: 'Inspect one work unit''s full state with `aeat app modelo work status`, then draft or recalculate it with `aeat app modelo work calculate`.'
+        status_next_action: 'Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.'
+        verify_next_action_granted: 'Verification passed. Export the filing artefact with `aeat app modelo export`.'
+        verify_next_action_incomplete: 'Verification found blocking items (see the notices above). Resolve them, recalculate with `aeat app modelo work calculate`, then re-run `aeat app modelo work verify`.'
+    quickfile:
+      app_help: 'Run the full local modelo filing chain in one command: readiness
+        -> create -> calculate -> verify -> export. Build and export only; never submits
+        to AEAT'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -5511,9 +5533,13 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
-      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}: an upgrader from version {missing_from_version} toward {expected} is missing.'
-      schema_upgrader_already_registered: 'A schema upgrader is already registered for namespace {namespace} from version {from_version}.'
-      schema_version_from_future: 'Stored schema version {schema_version} for namespace {namespace} is newer than this application supports (up to {expected}); it cannot be read.'
+      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
+        an upgrader from version {missing_from_version} toward {expected} is missing.'
+      schema_upgrader_already_registered: A schema upgrader is already registered
+        for namespace {namespace} from version {from_version}.
+      schema_version_from_future: Stored schema version {schema_version} for namespace
+        {namespace} is newer than this application supports (up to {expected}); it
+        cannot be read.
       unknown_classification: Secure-object namespace %{namespace} contains unknown
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
@@ -5622,6 +5648,13 @@ mcp:
       in encrypted local storage and are never transmitted. If you are acting for
       a third party (a gestor or professional), confirm this is acceptable before
       you proceed.'
+  identity_gate:
+    elicitation_echo: 'Acting as the taxpayer profile: %{label}.'
+    first_mutation_refused: 'Refused: confirm the active taxpayer before the first
+      change of this session. A filing or edit must never run under the wrong identity.
+      Call whoami (or ''config profile status'' / ''overview status'') to see which
+      taxpayer is active, then retry - one identity read clears this for the session
+      until you switch profiles.'
   persona:
     handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied

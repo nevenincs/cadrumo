@@ -80,6 +80,7 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ...core.external_constants import SANDBOX_LABEL_PREFIX as _SANDBOX_LABEL_PREFIX
 from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.buckets import (
@@ -110,15 +111,17 @@ from ..workflow import (
 from ._contracts import ArchiveBucketCommand, BrowseBucketCommand, DeleteBucketCommand, RestoreBucketCommand
 from ._service import BucketMaintenanceService
 
-SANDBOX_LABEL_PREFIX = "sandbox:"
-"""Reserved operator-visible label prefix identifying a sandbox bucket.
-
-A profile whose label starts with this prefix is a sandbox: created through
-:func:`create_sandbox`, safe to discard without the non-sandbox confirmation
-escalation. :func:`create_sandbox` is the only path this module exposes for
-minting one, and :func:`discard_sandbox` (via :func:`is_sandbox_label`)
-decides whether a bucket may be discarded without the extra confirmation.
-"""
+#: Reserved operator-visible label prefix identifying a sandbox bucket.
+#:
+#: A profile whose label starts with this prefix is a sandbox: created through
+#: :func:`create_sandbox`, safe to discard without the non-sandbox confirmation
+#: escalation. :func:`create_sandbox` is the only path this module exposes for
+#: minting one, and :func:`discard_sandbox` (via :func:`is_sandbox_label`)
+#: decides whether a bucket may be discarded without the extra confirmation.
+#: The token itself is declared in the light :mod:`aeat.core.external_constants`
+#: layer so the state-free CLI surface can read it without importing this heavy
+#: module; it is re-exported here as the canonical application-facing name.
+SANDBOX_LABEL_PREFIX = _SANDBOX_LABEL_PREFIX
 
 
 def is_sandbox_label(label: str) -> bool:

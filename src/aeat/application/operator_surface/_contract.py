@@ -220,7 +220,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="google",
         operator_question="configure Google account auth, Drive folder, and worksheet export mirror",
         service_owner="aeat.application.storage",
-        commands=("folder", "login", "logout", "register", "status", "sync"),
+        commands=("folder", "login", "logout", "register", "status", "sync", "credential-source"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -293,6 +293,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "rule",
             "bienes-inversion",
             "pull-folder",
+            "prorrata",
         ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -336,12 +337,14 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "history",
             "iva-wallet",
             "m036",
+            "m145",
             "project",
             "readiness",
             "reconcile",
             "verification-report",
             "requires",
             "review-package",
+            "support-matrix",
         ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -406,10 +409,13 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.APP,
         child="diagnostics",
-        operator_question="report recent local LLM run health, latency, errors, and usage over the active bucket",
+        operator_question=(
+            "report recent local LLM run health, latency, errors, and usage over the active "
+            "bucket; inspect and control the opt-in remote telemetry consent level"
+        ),
         service_owner="aeat.application.diagnostics_run_health",
-        commands=("run-health", "runs", "latency", "errors", "llm-usage"),
-        mutability=OperatorMutability.READ_ONLY,
+        commands=("run-health", "runs", "latency", "errors", "llm-usage", "telemetry"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )
 

@@ -19,26 +19,22 @@ class PdfModeloImportError(AeatError):
     """Domain-level root for PDF filing import failures."""
 
 
-class JustificanteError(PdfModeloImportError):
-    """Base class for every justificante-related failure."""
+class PdfExtractionCoverageMixin:
+    """Shared structured-attribute ``__init__`` for PDF extraction coverage failures.
 
-
-class JustificanteParseError(JustificanteError):
-    """Raised when a PDF cannot be parsed into a :class:`Justificante`.
-
-    Mirrors :class:`adapters.inbound.declaracion.DeclaracionParseError`'s
-    structured-attribute shape so callers can assert on typed attributes rather than
-    parsing the message string.
-
-    When the error originates from a field-extraction failure the following
-    structured attributes are populated:
+    Both the justificante and declaración PDF parsers raise a coverage error
+    that carries the same four structured attributes describing which target
+    fields (field names for justificante, casilla IDs for declaración) could
+    not be extracted cleanly. Mixing this in once keeps the attribute shape
+    and constructor signature identical across both parser error hierarchies
+    instead of each declaring its own copy.
 
     Attributes:
-        missing: Tuple of field names that produced no match in the PDF text.
-        malformed: Tuple of field names whose captured value could not be coerced
-            to the target type (e.g. an invalid decimal literal).
-        ambiguous: Tuple of field names that matched more than one region.
-        coverage: Fraction of required fields successfully extracted
+        missing: Tuple of target identifiers that produced no match in the PDF text.
+        malformed: Tuple of target identifiers whose captured value could not be
+            coerced to the target type (e.g. an invalid decimal literal).
+        ambiguous: Tuple of target identifiers that matched more than one region.
+        coverage: Fraction of required targets successfully extracted
             (``Decimal``).  ``None`` when the error is not a coverage failure.
     """
 
@@ -54,7 +50,7 @@ class JustificanteParseError(JustificanteError):
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
     ) -> None:
-        """Initialise the error with optional structured field-extraction context.
+        """Initialise the error with optional structured extraction-coverage context.
 
         Args:
             message: Human-readable error message.
@@ -64,10 +60,10 @@ class JustificanteParseError(JustificanteError):
                 :class:`core.errors.AeatError`.
             translated_message: Optional locale key rendered at the CLI
                 boundary.
-            missing: Field names that produced no match in the PDF text.
-            malformed: Field names whose captured value could not be coerced.
-            ambiguous: Field names that matched more than one region.
-            coverage: Fraction of required fields successfully extracted,
+            missing: Target identifiers that produced no match in the PDF text.
+            malformed: Target identifiers whose captured value could not be coerced.
+            ambiguous: Target identifiers that matched more than one region.
+            coverage: Fraction of required targets successfully extracted,
                 or ``None`` when the error is not a coverage failure.
         """
         super().__init__(
@@ -80,6 +76,20 @@ class JustificanteParseError(JustificanteError):
         self.malformed: tuple[str, ...] = malformed
         self.ambiguous: tuple[str, ...] = ambiguous
         self.coverage: Decimal | None = coverage
+
+
+class JustificanteError(PdfModeloImportError):
+    """Base class for every justificante-related failure."""
+
+
+class JustificanteParseError(PdfExtractionCoverageMixin, JustificanteError):
+    """Raised when a PDF cannot be parsed into a :class:`Justificante`.
+
+    Mirrors :class:`adapters.inbound.declaracion.DeclaracionParseError`'s
+    structured-attribute shape (via the shared :class:`PdfExtractionCoverageMixin`)
+    so callers can assert on typed attributes rather than parsing the message
+    string.
+    """
 
 
 class JustificanteCsvNotFoundError(JustificanteParseError):

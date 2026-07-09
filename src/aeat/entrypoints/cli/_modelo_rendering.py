@@ -107,6 +107,35 @@ def advisory_notice(
     )
 
 
+def next_action_notice(
+    code: str,
+    message: str,
+    *,
+    suggestion: str | None = None,
+    context: dict[str, str] | None = None,
+) -> Notice:
+    """Project a post-action next-step hint onto the envelope notices channel.
+
+    The :attr:`NoticeSeverity.INFO` sibling of :func:`advisory_notice`: it turns
+    the "what should the operator run next" guidance emitted after a work-unit
+    read or a verification into an info-severity
+    :class:`~aeat.core.json_contract.Notice` whose ``suggestion`` is the
+    follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
+    ``work status`` / ``work history``) and ``work verify`` call this instead of
+    a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
+    rides the one uniform notices surface per the
+    ``cli-notices-are-the-only-diagnostic-channel`` rule. Being ``info`` severity
+    it never flips the envelope ``status`` away from ``success``.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=code,
+        message=message,
+        suggestion=suggestion,
+        context=context,
+    )
+
+
 def short_id(value: str | None) -> str | None:
     """Return the display suffix for a content-addressed id."""
     return value[-12:] if value else None

@@ -56,6 +56,10 @@ def _seed_workflow_state() -> None:
             "--accept-defaults",
             "--entity-type",
             "natural_person",
+            "--name",
+            "Test",
+            "--surnames",
+            "Operator",
             "--irpf-income-categories",
             "actividad_economica",
             "--tax-id",
@@ -98,7 +102,8 @@ def test_reset_progress_help_uses_operator_progress_wording() -> None:
 def test_reset_progress_text_output_uses_operator_labels_not_storage_labels() -> None:
     _seed_workflow_state()
 
-    result = invoke_cached_cli(["config", "repair", "reset-progress", "--dry-run"])
+    with activate_master_key_provider(get_master_key_provider()):
+        result = invoke_cached_cli(["config", "repair", "reset-progress", "--dry-run"])
 
     assert result.exit_code == 0, result.output
     assert "progress_schema_version\t1" in result.output
@@ -110,7 +115,8 @@ def test_reset_progress_text_output_uses_operator_labels_not_storage_labels() ->
 def test_reset_progress_dry_run_returns_fingerprint_without_deleting_row() -> None:
     _seed_workflow_state()
 
-    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--dry-run"])
+    with activate_master_key_provider(get_master_key_provider()):
+        result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--dry-run"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
@@ -141,7 +147,8 @@ def test_reset_progress_with_yes_deletes_row_emits_event_and_reload_is_empty() -
     with activate_master_key_provider(get_master_key_provider()):
         history_before = len(BucketEventHistoryRepository().load().events)
 
-    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--yes"])
+    with activate_master_key_provider(get_master_key_provider()):
+        result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--yes"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)

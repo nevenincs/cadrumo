@@ -38,7 +38,7 @@ from .._modelo_payloads import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-_BUCKET_ID = "default"
+_BUCKET_ID = "70707070-7070-4507-8507-070707070707"
 
 
 @pytest.fixture

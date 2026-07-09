@@ -57,6 +57,7 @@ Submodules
    aeat.core._optional_extras
    aeat.core._period
    aeat.core._post_filing_event
+   aeat.core._prorrata_exclusions
    aeat.core._prorrata_register
    aeat.core._refund_election
    aeat.core._rescate_type

@@ -106,7 +106,6 @@ from ...application.modelo import (
     ensure_recipient_encryption_keypair,
     ensure_review_package_signing_keypair,
     export_modelo_revision,
-    get_work_unit,
     import_feedback_package,
     resolve_modelo_revision_for_operator_target,
     review_package_signing_public_key,
@@ -121,6 +120,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ._common import _emit_envelope, _profile_to_taxpayer, active_bucket_id_or_refuse
 from ._modelo_cli_support import (
+    load_work_unit,
     parse_revision_selector,
     resolve_default_actor,
     validate_calculation_revision_id,
@@ -139,8 +139,6 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
-
-_BUCKET_ID_HELP = tr("cli.app.modelo.work.bucket_id_help")
 
 
 def _resolve_signing_bucket_id(bucket_id: str | None) -> str:
@@ -305,7 +303,7 @@ def review_package_build(
     target_revision_id = selected_revision.calculation_revision_id
 
     resolved_actor = actor or resolve_default_actor()
-    work_unit = get_work_unit(selected_revision.work_unit_id)
+    work_unit = load_work_unit(selected_revision.work_unit_id)
 
     with tempfile.TemporaryDirectory(prefix="aeat-review-package-draft-") as staging_name:
         draft_path = Path(staging_name) / "draft.fichero-boe"
@@ -439,7 +437,7 @@ def review_package_sign(
     ],
     bucket_id: Annotated[
         str | None,
-        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.review_package.bucket_id_help")),
     ] = None,
 ) -> None:
     """Sign a review package's manifest digest and write the signature envelope."""
@@ -604,7 +602,7 @@ def review_package_counter_sign(
     ] = "",
     bucket_id: Annotated[
         str | None,
-        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.review_package.bucket_id_help")),
     ] = None,
 ) -> None:
     """Counter-sign an operator's signature envelope and write the receipt."""
@@ -807,7 +805,7 @@ def review_package_encrypt_for_recipient(
     ] = None,
     bucket_id: Annotated[
         str | None,
-        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.review_package.bucket_id_help")),
     ] = None,
 ) -> None:
     """Seal a review package for one registered recipient's public key."""
@@ -896,7 +894,7 @@ def review_package_decrypt(
     ],
     bucket_id: Annotated[
         str | None,
-        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.review_package.bucket_id_help")),
     ] = None,
 ) -> None:
     """Decrypt a recipient-encrypted review package with this bucket's own keypair."""
@@ -1034,7 +1032,7 @@ def review_package_encrypt_feedback(
     ] = None,
     bucket_id: Annotated[
         str | None,
-        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.review_package.bucket_id_help")),
     ] = None,
 ) -> None:
     """Seal review feedback back to the originator's registered public key."""
@@ -1155,7 +1153,7 @@ def review_package_import_feedback(
     ] = None,
     bucket_id: Annotated[
         str | None,
-        typer.Option("--bucket-id", help=_BUCKET_ID_HELP),
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.review_package.bucket_id_help")),
     ] = None,
 ) -> None:
     """Import, verify, and journal a recipient's feedback package."""

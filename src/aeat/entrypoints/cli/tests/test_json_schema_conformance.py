@@ -16,6 +16,7 @@ must be fixed before the suite goes green.
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any, Protocol, TypeGuard, cast
 
 import click
@@ -344,8 +345,13 @@ _BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(path for path, _rationale
 
 #: The success envelope's outer spine. Shared (minus ``result`` vs
 #: ``error``) with the stderr error document so one shape describes
-#: success, warning, and error outcomes.
-_EXPECTED_SUCCESS_SPINE_KEYS = frozenset({"schema_version", "command", "status", "result", "notices"})
+#: success, warning, and error outcomes. ``active_profile`` is the
+#: identity anchor (the active taxpayer profile's human label, or null),
+#: resolved at the CLI transport boundary and injected into the core
+#: emitters.
+_EXPECTED_SUCCESS_SPINE_KEYS = frozenset(
+    {"schema_version", "command", "active_profile", "status", "result", "notices"},
+)
 
 #: Top-level result-schema field names that must never reappear: warnings,
 #: advisories, and next-step hints belong on the envelope ``notices``
@@ -407,10 +413,78 @@ def test_error_document_shares_the_success_spine() -> None:
     from ....core.locks_errors import LockAcquisitionError
 
     document = _json.loads(render_error_json(LockAcquisitionError()))
-    assert set(document) >= {"schema_version", "command", "status", "error", "notices"}
+    assert set(document) >= {"schema_version", "command", "active_profile", "status", "error", "notices"}
     assert document["status"] == "error"
     assert document["command"] is None
+    # The identity anchor is present on the error spine; null when the
+    # boundary resolves no active profile (as here, with no injected label).
+    assert document["active_profile"] is None
     assert isinstance(document["notices"], list)
+
+
+def test_profile_bound_command_populates_active_profile_label(tmp_path: Path) -> None:
+    """A real profile-bound command stamps the active profile's LABEL on the spine.
+
+    Drives the real ``config profile create`` flow to mint a profile with a
+    known display label, then runs a profile-bound non-wizard command
+    (``app ledger list``, which funnels through ``_emit_envelope`` — never
+    the wizard emit path) under ``--format json`` with that profile active.
+    The outer envelope's ``active_profile`` must carry the human LABEL — the
+    identity anchor an operator reconciles — resolved at the CLI transport
+    boundary and injected into the core emitter. It must equal the stored
+    manifest label and never surface the redacted profile/bucket UUID.
+
+    Self-contained storage isolation (rather than an autouse module fixture)
+    so the registry-walk conformance tests above are undisturbed.
+    """
+    import json as _json
+
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.workflow import read_profile_bucket
+    from ....core.config import override_settings
+    from ....tests.cli_runner import invoke_cached_cli
+    from ....tests.secure_sql import isolated_profile_storage_root
+
+    label = "Erika"
+    dispose_engine()
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        try:
+            created = invoke_cached_cli(
+                [
+                    "config",
+                    "profile",
+                    "create",
+                    label,
+                    "--quiet",
+                    "--accept-defaults",
+                    "--tax-id",
+                    "12345678Z",
+                    "--entity-type",
+                    "natural_person",
+                    "--name",
+                    "Erika",
+                    "--surnames",
+                    "Identity",
+                    "--activity",
+                    "design",
+                ],
+            )
+            assert created.exit_code == 0, created.output
+            pointer = read_profile_bucket(label)
+            assert pointer is not None, "the created profile must resolve by its label"
+            uuid = pointer.bucket_id
+            assert uuid != label, "the bucket id must be a minted UUID, not the label"
+
+            with override_settings(aeat_active_profile=uuid):
+                listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
+
+            assert listed.exit_code == 0, listed.output
+            document = _json.loads(listed.output)
+            assert document["active_profile"] == pointer.label, document
+            # UUID redaction is unchanged: the spine carries the label, not the UUID.
+            assert document["active_profile"] != uuid, document
+        finally:
+            dispose_engine()
 
 
 def test_zero_bare_emit_sites_outside_exemption_set() -> None:

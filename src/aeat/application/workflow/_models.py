@@ -82,7 +82,7 @@ from ._utils import utc_now
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...adapters.persistence.storage import SecureObjectRepository
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
 
 _log = get_logger(__name__)
 
@@ -242,13 +242,23 @@ class WorkflowState(BaseModel):
     bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
-    def active_profile_record(self) -> UserProfileRecord | None:
+    def active_profile_record(
+        self,
+        *,
+        secure_objects: SecureObjectRepository | None = None,
+        schema: ProfileSchemaDefinition | None = None,
+    ) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active bucket id resolves via the precedence chain in
         :func:`aeat.core.resolve_active_bucket_id` (env var > pointer file
         fallback). The bucket id and profile name are 1:1 by orchestration
         convention, so the resolved id is the lifecycle-service read key.
+
+        ``secure_objects`` (a :class:`SecureObjectRepository` override) and
+        ``schema`` are optional overrides forwarded to
+        :func:`~aeat.application.user_profile.build_lifecycle_service`; a
+        per-bucket store and the bundled schema are resolved when ``None``.
         """
         bucket_id = _resolve_active_bucket_id()
         if bucket_id is None:
@@ -256,7 +266,7 @@ class WorkflowState(BaseModel):
         from ...domain.user_profile import ProfileNotFoundError
         from ..user_profile import build_lifecycle_service
 
-        service = build_lifecycle_service(bucket_id=bucket_id)
+        service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
         try:
             return service.read(bucket_id)
         except ProfileNotFoundError as exc:

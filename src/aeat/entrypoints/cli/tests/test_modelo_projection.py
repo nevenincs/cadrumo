@@ -566,6 +566,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"renta-{_FILING_YEAR}-profile-marriage-month-start": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-marriage-month-end": Decimal("0"),
             f"renta-{_FILING_YEAR}-base-liquidable-negativa-general-anterior": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-minimo-descendientes-estatal": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={
             f"renta-{_FILING_YEAR}-profile-tax-residence-ccaa": _CCAA,

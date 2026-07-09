@@ -251,7 +251,7 @@ def test_import_computes_eur_equivalent_for_foreign_rows() -> None:
     _import_revolut()
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
-    repo = TransactionCatalogueRepository(bucket_id="default")
+    repo = TransactionCatalogueRepository(bucket_id="00000000-0000-4000-8000-000000000000")
     catalogue = repo.load()
     foreign = [tx for tx in catalogue.values() if tx.raw.currency in {"GBP", "USD"}]
     eur = [tx for tx in catalogue.values() if tx.raw.currency == "EUR"]

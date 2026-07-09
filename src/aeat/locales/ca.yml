@@ -581,7 +581,8 @@ application:
         altre perfil.
       archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
         confirmació explícita.
-      archive_schema_version_from_future: 'La versió d''esquema de l''arxiu {archive_schema_version} és més recent del que admet aquesta aplicació (fins a {max_supported}).'
+      archive_schema_version_from_future: La versió d'esquema de l'arxiu {archive_schema_version}
+        és més recent del que admet aquesta aplicació (fins a {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -808,8 +809,12 @@ application:
         un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
         S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
         modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
-        canonic o es ambigu. Usa el casilla.id canonic exacte: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
+        canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
+        canònic exacte'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} és un número de casella
+        imprès o de formulari, o una referència d''exportació, no un casilla.id canònic.
+        Usa el casilla.id canònic en el seu lloc: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
         revisio. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
         valids.
@@ -1961,6 +1966,14 @@ cli:
           {kind}.
         list_help: Llistar els filing records registrats
         modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
+        observe_local_file_help: Camí a un full de càlcul local CSV o XLSX de files
+          casilla_code,value (una reconstrucció sense certificat d'una presentació
+          passada). Es combina amb --set; un valor de --set per a la mateixa casella
+          sobreescriu la fila del full de càlcul
+        observe_local_help: Registra una observació local aportada per l'operador
+          per al preomplert del càlcul
+        observe_local_set_help: Id de casella canònic i valor Decimal a registrar,
+          p. ex. --set 1391=0
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -2166,6 +2179,7 @@ cli:
       review_package:
         actor_help: Etiqueta de l'operador registrada al descriptor del paquet i a
           l'esdeveniment d'exportació subjacent.
+        bucket_id_help: 'Id del bucket sobre el qual opera el paquet de revisió (per defecte el perfil actiu).'
         build_help: Assembla un paquet de revisió compartible i verificable per checksum
           (esborrany fichero-BOE, procedència de la revisió i evidència comptable
           inclosa) per lliurar a l'assessor. Només local; mai contacta amb l'AEAT.
@@ -2680,6 +2694,15 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        history_next_action: 'Revisa l''estat actual d''aquesta unitat de treball amb `aeat app modelo work status`.'
+        list_next_action: 'Inspecciona l''estat complet d''una unitat de treball amb `aeat app modelo work status` i després crea o recalcula l''esborrany amb `aeat app modelo work calculate`.'
+        status_next_action: 'Crea o recalcula aquesta unitat amb `aeat app modelo work calculate` i després verifica l''esborrany amb `aeat app modelo work verify`.'
+        verify_next_action_granted: 'La verificació s''ha superat. Exporta l''artefacte de presentació amb `aeat app modelo export`.'
+        verify_next_action_incomplete: 'La verificació ha trobat elements bloquejadors (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo work calculate` i torna a executar `aeat app modelo work verify`.'
+    quickfile:
+      app_help: 'Executa tota la cadena local de presentació d''un model en una sola
+        ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
+        i exporta; mai presenta a l''AEAT'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -5881,9 +5904,14 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
-      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version} cap a {expected}.'
-      schema_upgrader_already_registered: 'Ja hi ha un actualitzador d''esquema registrat per a l''espai de noms {namespace} des de la versió {from_version}.'
-      schema_version_from_future: 'La versió d''esquema emmagatzemada {schema_version} de l''espai de noms {namespace} és més recent del que admet aquesta aplicació (fins a {expected}); no es pot llegir.'
+      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per
+        a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version}
+        cap a {expected}.'
+      schema_upgrader_already_registered: Ja hi ha un actualitzador d'esquema registrat
+        per a l'espai de noms {namespace} des de la versió {from_version}.
+      schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
+        de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
+        (fins a {expected}); no es pot llegir.
       unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
@@ -5998,6 +6026,13 @@ mcp:
       d''evidència — MAI no surten del vostre equip: romanen en emmagatzematge local
       xifrat i mai no es transmeten. Si actueu per compte d''un tercer (un gestor
       o professional), confirmeu que això és acceptable abans de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuant com el perfil del contribuent: %{label}.'
+    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer
+      canvi d''aquesta sessio. Una presentacio o edicio mai no s''ha d''executar sota
+      la identitat equivocada. Executa whoami (o ''config profile status'' / ''overview
+      status'') per veure quin contribuent esta actiu i torna-ho a provar; una sola
+      lectura d''identitat ho desbloqueja durant la sessio fins que canviis de perfil.'
   persona:
     handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la
       presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la

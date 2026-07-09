@@ -12,22 +12,19 @@ from sqlalchemy.orm import Session
 
 from .....core import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 from .....core.classification import SensitivityClass
-from .....core.errors import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
-from .._schema_lineage import ensure_schema_version_readable, upgrade_secure_object_payload
+from .._schema_lineage import ensure_schema_version_readable
 from ..crypto import (
-    decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_key_digest,
     secure_object_payload_aad,
 )
 from ..errors import (
     ClassificationError,
-    DecryptionError,
     EnvelopeVersionError,
     RepositoryError,
     SecureObjectRevisionConflictError,
@@ -35,7 +32,6 @@ from ..errors import (
     StorageValidationError,
 )
 from . import _orm
-from ._secure_object_crypto import verify_revision_self_consistency
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
@@ -54,9 +50,10 @@ from ._secure_object_records import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRawRow,
     SecureObjectRecord,
-    SecureObjectUnreadable,
+    SecureObjectUnreadable,  # noqa: F401  # deliberate re-export: consumers import it from this module
 )
 from ._secure_object_row_codec import (
+    secure_object_list_item_from_raw_row,
     secure_object_record_from_row,
     write_revision_metadata,
 )
@@ -681,129 +678,13 @@ class SecureObjectRepository:
         max_supported_version: int,
         namespace_definition: SecureObjectNamespaceDefinition | None,
     ) -> SecureObjectBatchLoadItem:
-        row_id = int(raw.id)
-        # ``object_key`` is a HashedLookup digest. Keep the bytes surface
-        # stable for diagnostics and raw mirror consumers.
-        _raw_ok = raw.object_key
-        object_key = _raw_ok.encode(UTF_8_ENCODING) if isinstance(_raw_ok, str) else bytes(_raw_ok)
-        classification_str = str(raw.classification)
-        schema_version = int(raw.schema_version)
-        written_at = raw.written_at
-        payload_wire = bytes(raw.payload)
-        try:
-            classification = SensitivityClass(classification_str)
-        except ValueError:
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason=f"unknown classification {classification_str!r}",
-            )
-        if classification is not expected_class:
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason=f"classification {classification.value!r} does not match expected {expected_class.value!r}",
-            )
-        try:
-            ensure_schema_version_readable(
-                namespace=namespace,
-                schema_version=schema_version,
-                current_version=max_supported_version,
-            )
-        except EnvelopeVersionError as exc:
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason=resolve_error_message(exc),
-            )
-        try:
-            self._enforce_registered_row_schema(
-                namespace=namespace,
-                schema_version=schema_version,
-                definition=namespace_definition,
-            )
-        except EnvelopeVersionError as exc:
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason=resolve_error_message(exc),
-            )
-        try:
-            payload_plain = decrypt_secure_object_payload(
-                payload_wire,
-                associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
-            )
-        except DecryptionError as exc:
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason=str(exc),
-            )
-        if not verify_revision_self_consistency(
+        return secure_object_list_item_from_raw_row(
+            raw,
             namespace=namespace,
-            object_key=object_key,
-            schema_version=schema_version,
-            written_at=written_at,
-            revision_id=raw.revision_id,
-            previous_revision_id=raw.previous_revision_id,
-            payload_hash=raw.payload_hash,
-            ciphertext_hash=raw.ciphertext_hash,
-            previous_payload_hash=raw.previous_payload_hash,
-        ):
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason="revision lineage self-consistency check failed",
-            )
-        if schema_version < max_supported_version:
-            try:
-                payload_plain = upgrade_secure_object_payload(
-                    payload_plain,
-                    namespace=namespace,
-                    from_version=schema_version,
-                    to_version=max_supported_version,
-                )
-            except Exception as exc:
-                return SecureObjectUnreadable(
-                    namespace=namespace,
-                    row_id=row_id,
-                    object_key=object_key,
-                    classification=classification_str,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    reason=resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc),
-                )
-        return SecureObjectRecord(
-            namespace=namespace,
-            object_key=object_key,
-            classification=classification,
-            schema_version=max_supported_version,
-            written_at=written_at,
-            payload=payload_plain,
+            expected_class=expected_class,
+            max_supported_version=max_supported_version,
+            namespace_definition=namespace_definition,
+            enforce_registered_row_schema=self._enforce_registered_row_schema,
         )
 
     def load(

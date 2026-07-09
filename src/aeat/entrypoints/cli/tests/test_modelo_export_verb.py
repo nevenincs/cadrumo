@@ -683,12 +683,12 @@ def test_export_modelo_111_refuses_when_profile_name_missing(
     assert not out.exists()
 
 
-def test_export_modelo_390_refuses_missing_boe_layout_as_unsupported(tmp_path: Path) -> None:
-    """Modelo 390 calculations may exist, but export refuses without an authored layout."""
+def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: Path) -> None:
+    """Modelo 121 calculations may exist, but export refuses without an authored layout."""
 
     _set_export_profile_name()
-    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="390", filing_year=2025, period="0A")
-    out = tmp_path / "modelo-390.txt"
+    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="121", filing_year=2025, period="0A")
+    out = tmp_path / "modelo-121.txt"
 
     result = _invoke(
         [
@@ -708,9 +708,9 @@ def test_export_modelo_390_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
     assert payload["error"]["category"] == "REFUSED"
-    assert payload["error"]["context"]["modelo"] == "390"
+    assert payload["error"]["context"]["modelo"] == "121"
     assert "export_layouts" in payload["error"]["message"]
-    assert payload["error"]["suggestion"] == "aeat app modelo describe 390"
+    assert payload["error"]["suggestion"] == "aeat app modelo describe 121"
     assert not out.exists()
     assert "Traceback" not in result.output
 

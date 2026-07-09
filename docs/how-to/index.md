@@ -211,6 +211,13 @@ Prepare, verify, and export a quarterly IVA return.
 Prepare the annual IVA summary.
 :::
 
+:::{grid-item-card} IVA Prorrata Deductions
+:link: prorrata
+:link-type: doc
+
+Deduct input IVA under general or especial prorrata and declare differentiated sectors.
+:::
+
 :::{grid-item-card} LLM Classification
 :link: classify-with-llm
 :link-type: doc
@@ -286,6 +293,7 @@ review-with-google-sheets
 filing-spine
 modelo-303
 modelo-390
+prorrata
 verification-reports
 filing-readiness
 file-at-aeat

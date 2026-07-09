@@ -15,6 +15,10 @@ rollup fed to
 :func:`~domain.iva.compute_prorrata_definitiva_anual`; deriving it from a
 single quarter is a correctness defect (the silent-zero-base ADR).
 
+The resolver reads the target :class:`ModeloRevision`'s bindings to locate the
+casillas that carry the provisional/definitive percentages, and consumes a
+:class:`RegistrySnapshot` to resolve those bindings' legal and source refs.
+
 See Also:
     :func:`~domain.iva.compute_regularizacion_prorrata_anual`
         Pure LIVA art. 105.Cuatro computation consumed by this projection.

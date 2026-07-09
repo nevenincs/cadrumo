@@ -40,7 +40,6 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
-    read_active_profile,
     register_active_profile,
 )
 from .._projections import projection_for_taxpayer
@@ -115,7 +114,7 @@ def test_impatriado_regime_and_start_date_survive_encrypted_sql_roundtrip(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "99999999-9999-4999-8999-999999999999"
 
@@ -156,7 +155,7 @@ def test_record_without_special_regime_projects_to_none(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     # Neither fact was stored.
     persisted_paths = {fact.path for fact in record.facts}
@@ -213,7 +212,7 @@ def test_anti_tautology_mutating_regime_changes_projection(
                 # contract under test here — the projection inequality is.
                 enforce_unique_tax_id=False,
             )
-            record = read_active_profile(state, schema=schema)
+            record = state.active_profile_record(schema=schema)
             assert record is not None, "active profile must resolve immediately after registration"
             return record
 
