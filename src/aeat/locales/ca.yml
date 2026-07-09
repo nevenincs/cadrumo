@@ -809,8 +809,8 @@ application:
         un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
         S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
         modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
-        canonic o es ambigu. Usa el casilla.id canonic exacte: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id canònic exacte'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} és un número de casella imprès o de formulari, o una referència d''exportació, no un casilla.id canònic. Usa el casilla.id canònic en el seu lloc: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
         revisio. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
         valids.
@@ -1962,9 +1962,14 @@ cli:
           {kind}.
         list_help: Llistar els filing records registrats
         modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
-        observe_local_file_help: 'Camí a un full de càlcul local CSV o XLSX de files casilla_code,value (una reconstrucció sense certificat d''una presentació passada). Es combina amb --set; un valor de --set per a la mateixa casella sobreescriu la fila del full de càlcul'
-        observe_local_help: 'Registra una observació local aportada per l''operador per al preomplert del càlcul'
-        observe_local_set_help: 'Id de casella canònic i valor Decimal a registrar, p. ex. --set 1391=0'
+        observe_local_file_help: Camí a un full de càlcul local CSV o XLSX de files
+          casilla_code,value (una reconstrucció sense certificat d'una presentació
+          passada). Es combina amb --set; un valor de --set per a la mateixa casella
+          sobreescriu la fila del full de càlcul
+        observe_local_help: Registra una observació local aportada per l'operador
+          per al preomplert del càlcul
+        observe_local_set_help: Id de casella canònic i valor Decimal a registrar,
+          p. ex. --set 1391=0
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -2685,7 +2690,9 @@ cli:
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
     quickfile:
-      app_help: 'Executa tota la cadena local de presentació d''un model en una sola ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix i exporta; mai presenta a l''AEAT'
+      app_help: 'Executa tota la cadena local de presentació d''un model en una sola
+        ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
+        i exporta; mai presenta a l''AEAT'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat

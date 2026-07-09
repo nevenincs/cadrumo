@@ -818,8 +818,8 @@ application:
         un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
         Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
         modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
-        canonico o es ambiguo. Usa el casilla.id canonico exacto: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica el casilla.id canónico exacto'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} es un número de casilla impreso o de formulario, o una referencia de exportación, no un casilla.id canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
         esta revision. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
         validos.
@@ -1993,9 +1993,14 @@ cli:
           {kind}.
         list_help: Listar los filing records registrados
         modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
-        observe_local_file_help: 'Ruta a una hoja de cálculo local CSV o XLSX de filas casilla_code,value (una reconstrucción sin certificado de una presentación pasada). Se combina con --set; un valor de --set para la misma casilla sobrescribe la fila de la hoja de cálculo'
-        observe_local_help: 'Registrar una observación local aportada por el operador para el prellenado del cálculo'
-        observe_local_set_help: 'Id de casilla canónico y valor Decimal a registrar, p. ej. --set 1391=0'
+        observe_local_file_help: Ruta a una hoja de cálculo local CSV o XLSX de filas
+          casilla_code,value (una reconstrucción sin certificado de una presentación
+          pasada). Se combina con --set; un valor de --set para la misma casilla sobrescribe
+          la fila de la hoja de cálculo
+        observe_local_help: Registrar una observación local aportada por el operador
+          para el prellenado del cálculo
+        observe_local_set_help: Id de casilla canónico y valor Decimal a registrar,
+          p. ej. --set 1391=0
         view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -2716,7 +2721,9 @@ cli:
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
     quickfile:
-      app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye y exporta; nunca presenta ante la AEAT'
+      app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
+        comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
+        y exporta; nunca presenta ante la AEAT'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
