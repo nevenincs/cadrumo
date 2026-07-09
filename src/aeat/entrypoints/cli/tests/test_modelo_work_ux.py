@@ -802,22 +802,18 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
     """Supplying a numeric value for a text-type casilla via --casilla must
     be refused before reaching the engine.
 
-    M100 2024 casilla ``0001`` has ``data_type = "text"`` (it names the
-    declarante, not a numeric income amount).  Passing ``--casilla "0001=38000"``
-    silently stored Decimal(38000) in the text slot, which the formula chain
-    ignores, producing a negative base imponible when combined with a
-    subtraction-convention casilla like ``0006``.  The guard must fire early
-    with a diagnostic naming the casilla, its label, its data_type, and the
-    correct input channel.
-
-    tracked: #53 — this test currently fails at ``_create_profile()`` with
-    REFUSED_PROFILE_NOT_FOUND: the held ``profile_create_storage_span`` and the
-    in-process CLI ``profile create`` disagree on the bucket-manifest
-    registration for the ``operator`` profile (the UUID-vs-display-name /
-    manifest-registration in-process resolution class split into task #53,
-    distinct from the #52 bucket-session bootstrap this module's other tests
-    needed). Left failing loudly per the #52 brief until #53's
-    profile-resolution fix lands.
+    M100 2024 casilla ``0001`` has ``data_type = "text"`` with
+    ``semantic_role = "irpf_toma_datos_declarante_selector"``: it names the
+    contribuyente who obtains the income (declarante / cónyuge / dependant),
+    not a numeric amount. Passing ``--casilla "0001=38000"`` would otherwise
+    route the number onto the parallel text channel, store it silently in the
+    text slot, and be ignored by the formula chain — surfacing as a wrong base
+    imponible. The input-validation guard
+    (``_validated_declarante_selector`` in
+    ``aeat.application.modelo._calculate_input``) fires early with a typed
+    ``ModeloCalculateTextInputError`` naming the casilla, its label, its
+    ``data_type``, and the numeric casilla channel the amount belongs on, so
+    the engine is never reached.
     """
 
     _create_profile()

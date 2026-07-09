@@ -808,6 +808,11 @@ application:
         választhat biztonságosan kanonikus casilla.id értéket.'
       calculate_semantic_role_missing: 'A modell revíziója nem tartalmaz casillát
         ezzel a szemantikus szereppel: %{semantic_role}.'
+      calculate_text_casilla_numeric_value: A(z) %{key} (%{label}) --casilla értéke
+        egy nem numerikus, data_type=%{data_type} típusú bevallói választó, amely
+        a jövedelmet szerző adóalanyt nevezi meg, nem összeget; a kapott érték %{value}.
+        Add meg az összeget a saját numerikus rovatában, és tartsd fenn ezt a rovatot
+        a tag kiválasztásához.
       calculate_text_input_empty: A --casilla érték egy szöveges casillához tartozik,
         és nem lehet üres.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -2789,9 +2794,10 @@ cli:
       reserved_provider: 'A hitelesítési szolgáltató fenntartott, de nem elérhető:
         %{provider}.'
       status_help: Beállított hitelesítési állapot megjelenítése.
-      status_summary_configured: 'A hitelesítés be van állítva, de még nincs elérhető aktív munkamenet.'
-      status_summary_ready: 'A hitelesítés be van állítva, és van elérhető aktív munkamenet.'
-      status_summary_unconfigured: 'A hitelesítés még nincs beállítva.'
+      status_summary_configured: A hitelesítés be van állítva, de még nincs elérhető
+        aktív munkamenet.
+      status_summary_ready: A hitelesítés be van állítva, és van elérhető aktív munkamenet.
+      status_summary_unconfigured: A hitelesítés még nincs beállítva.
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
@@ -3291,8 +3297,8 @@ cli:
         archívumként (a hordozható profilcsomag).
       show:
         summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
-        summary_tombstoned: 'A profil rekordja törlésre van jelölve.'
-        summary_valid: 'A profil rekordja érvényes.'
+        summary_tombstoned: A profil rekordja törlésre van jelölve.
+        summary_valid: A profil rekordja érvényes.
       show_help: 'Egy profil élő értékeinek megjelenítése (alapértelmezés: az aktív
         profil).'
       show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív
@@ -3585,6 +3591,13 @@ cli:
         mező, %{formulas} képlet, %{revisions} revízió.'
       registry_unavailable: '%{package} %{version}: a nyilvántartás nem érhető el
         (%{error}).'
+  help:
+    panel:
+      arguments: Argumentumok
+      commands: Parancsok
+      error: 'Hiba'
+      options: Kapcsolók
+    try_for_help: 'Súgóért futtassa: [blue]''{command_path} {help_option}''[/].'
   ledger:
     add:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.

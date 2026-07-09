@@ -878,6 +878,11 @@ application:
         casilla.id canonico de forma segura.
       calculate_semantic_role_missing: La revision del modelo no contiene ninguna
         casilla con el rol semantico %{semantic_role}.
+      calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
+        corresponde a un selector de declarante de data_type=%{data_type} no numérico
+        que identifica al contribuyente que obtiene los rendimientos, no un importe;
+        se recibió %{value}. Introduce el importe en su propia casilla numérica y
+        reserva esta casilla para el selector de miembro.
       calculate_text_input_empty: El valor de --casilla corresponde a una casilla
         de texto y no puede estar vacío.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -2877,9 +2882,11 @@ cli:
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
         %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
-      status_summary_configured: 'La autenticación está configurada pero aún no hay una sesión activa disponible.'
-      status_summary_ready: 'La autenticación está configurada y hay una sesión activa disponible.'
-      status_summary_unconfigured: 'La autenticación aún no está configurada.'
+      status_summary_configured: La autenticación está configurada pero aún no hay
+        una sesión activa disponible.
+      status_summary_ready: La autenticación está configurada y hay una sesión activa
+        disponible.
+      status_summary_unconfigured: La autenticación aún no está configurada.
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
@@ -3375,9 +3382,10 @@ cli:
       sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
         del interesado (RGPD): el paquete portátil del perfil.'
       show:
-        summary_invalid: 'El registro del perfil no es válido: %{count} problema(s) bloqueante(s).'
-        summary_tombstoned: 'El registro del perfil está marcado como eliminado.'
-        summary_valid: 'El registro del perfil es válido.'
+        summary_invalid: 'El registro del perfil no es válido: %{count} problema(s)
+          bloqueante(s).'
+        summary_tombstoned: El registro del perfil está marcado como eliminado.
+        summary_valid: El registro del perfil es válido.
       show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
@@ -3678,6 +3686,13 @@ cli:
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
         %{formulas} fórmulas, %{revisions} revisiones.'
       registry_unavailable: '%{package} %{version}: registro no disponible (%{error}).'
+  help:
+    panel:
+      arguments: Argumentos
+      commands: Comandos
+      error: 'Error'
+      options: Opciones
+    try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
