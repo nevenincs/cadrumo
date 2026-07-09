@@ -323,6 +323,36 @@ reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1990-
 notes = "Spain-United States double-taxation treaty (CDI 22-02-1990, redacción vigente tras el Protocolo de 2013 en vigor 27-11-2019) art 11.1 intereses: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the US/interest M210 treaty override (kind=exempt). The art 11.2 exceptions (contingent interest limited to 10%, REMIC) are not modelled."
 required_text = ["Intereses", "sólo pueden someterse a imposición en ese otro Estado", "beneficiario efectivo"]
 
+[legal."convenio-es-nl-1971:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-nl-1971-art-10.html#art-10"
+document_id = "BOE-A-1972-1469"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1972-1469"
+effective_from = 1972-09-20
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 10 from BOE consolidated BOE-A-1972-1469; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 10.2 dividendos: the source-state tax may not exceed 15 percent of the gross dividends. Row-level authority for the NL/dividend M210 treaty override (kind=ceiling, rate 0.15). The reduced rates of art 10.3 (qualified participation) are not modelled."
+required_text = ["Dividendos", "no puede exceder del 15 por 100", "importe bruto de los dividendos"]
+
+[legal."convenio-es-nl-1971:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-nl-1971-art-11.html#art-11"
+document_id = "BOE-A-1972-1469"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1972-1469"
+effective_from = 1972-09-20
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1972-1469; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 11.2 intereses: the source-state tax may not exceed 10 percent of the interest. Row-level authority for the NL/interest M210 treaty override (kind=ceiling, rate 0.10)."
+required_text = ["Intereses", "no puede exceder del 10 por 100", "importe de los intereses"]
+
 [legal."orden-eha-3316-2010:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
