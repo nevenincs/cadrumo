@@ -10,20 +10,11 @@ related:
   - '[[2026-07-08-gate-drift-reconciliation-plan]]'
 ---
 
-
-
-
-
-
-
-
 # `integration-fixture-drift` plan
 
 ### Phase `P01` - migrate non-UUID profile and bucket id constants
 
 The uuid-profile-identities sweep left test constants like _BUCKET_ID and profile_id as human-readable strings; migrate them to UUIDs (the single largest cluster, ~18 failures).
-
-
 
 - [x] `P01.S01` - Migrate the round5 bucket-id and profile-id string constants to UUIDs; `src/aeat/entrypoints/cli/_config/tests/test_auth_round5_surface.py`.
 - [x] `P01.S02` - Sweep remaining non-UUID profile-id and bucket-id literals across the CLI and config test suite to UUIDs; `src/aeat/entrypoints/cli/tests/`.
@@ -49,17 +40,8 @@ Classify the remaining ~48 integration failures as fixture-drift (fix) or produc
 
 ## Description
 
-
 ## Steps
-
-
-
-
-
-
 
 ## Parallelization
 
-
 ## Verification
-
