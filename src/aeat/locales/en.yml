@@ -773,8 +773,12 @@ application:
         perceptor count/base/retenciones source.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
-      calculate_m210_tipo_renta_fetch_gated: 'Modelo 210 tipo de renta code %{value} is fetch-gated: its rate is not yet grounded in the bundled corpus, so it cannot be filed yet. Accepted codes: %{accepted}.'
-      calculate_m210_tipo_renta_unknown: '%{value} is not a valid Modelo 210 tipo de renta code. Accepted codes: %{accepted}. Codes pending grounding (not yet fileable): %{fetch_gated}.'
+      calculate_m210_tipo_renta_fetch_gated: 'Modelo 210 tipo de renta code %{value}
+        is fetch-gated: its rate is not yet grounded in the bundled corpus, so it
+        cannot be filed yet. Accepted codes: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} is not a valid Modelo 210 tipo
+        de renta code. Accepted codes: %{accepted}. Codes pending grounding (not yet
+        fileable): %{fetch_gated}.'
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
         does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
         31.1.
@@ -2658,6 +2662,9 @@ cli:
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
       status_help: Show configured authentication state
+      status_summary_configured: 'Authentication is configured but no live session is available yet.'
+      status_summary_ready: 'Authentication is configured and a live session is available.'
+      status_summary_unconfigured: 'Authentication is not configured yet.'
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
@@ -3113,6 +3120,10 @@ cli:
         include them.'
       sar_help: Export all personal data held for a profile as a GDPR right-of-access
         archive (the portable profile bundle).
+      show:
+        summary_invalid: 'Profile record is invalid: %{count} blocking issue(s).'
+        summary_tombstoned: 'Profile record is tombstoned.'
+        summary_valid: 'Profile record is valid.'
       show_help: Show the live values of a profile (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''

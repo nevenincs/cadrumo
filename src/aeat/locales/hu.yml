@@ -789,8 +789,12 @@ application:
         parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
         szazalekai pontosan 100%-ot kell adjanak; kapott ertek: %{total}, sorok: %{count}.'
-      calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} Modelo 210 jövedelemtípus-kód még megalapozásra vár: az adómértéke még nincs megalapozva a csomagolt korpuszban, ezért még nem nyújtható be. Elfogadott kódok: %{accepted}.'
-      calculate_m210_tipo_renta_unknown: 'A(z) %{value} nem érvényes Modelo 210 jövedelemtípus-kód. Elfogadott kódok: %{accepted}. Megalapozásra váró (még be nem nyújtható) kódok: %{fetch_gated}.'
+      calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} Modelo 210 jövedelemtípus-kód
+        még megalapozásra vár: az adómértéke még nincs megalapozva a csomagolt korpuszban,
+        ezért még nem nyújtható be. Elfogadott kódok: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: 'A(z) %{value} nem érvényes Modelo 210 jövedelemtípus-kód.
+        Elfogadott kódok: %{accepted}. Megalapozásra váró (még be nem nyújtható) kódok:
+        %{fetch_gated}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere osszesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR kuszobot.
       calculate_pension_inputs_incomplete: A nyugdijterv kivaltasi adatait egyutt
@@ -2785,6 +2789,9 @@ cli:
       reserved_provider: 'A hitelesítési szolgáltató fenntartott, de nem elérhető:
         %{provider}.'
       status_help: Beállított hitelesítési állapot megjelenítése.
+      status_summary_configured: 'A hitelesítés be van állítva, de még nincs elérhető aktív munkamenet.'
+      status_summary_ready: 'A hitelesítés be van állítva, és van elérhető aktív munkamenet.'
+      status_summary_unconfigured: 'A hitelesítés még nincs beállítva.'
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
@@ -3282,6 +3289,10 @@ cli:
         a titkosított helyreállítási archívumot.'
       sar_help: A profilhoz tárolt összes személyes adat exportálása GDPR hozzáférési
         archívumként (a hordozható profilcsomag).
+      show:
+        summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
+        summary_tombstoned: 'A profil rekordja törlésre van jelölve.'
+        summary_valid: 'A profil rekordja érvényes.'
       show_help: 'Egy profil élő értékeinek megjelenítése (alapértelmezés: az aktív
         profil).'
       show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív

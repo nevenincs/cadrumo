@@ -847,8 +847,13 @@ application:
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
-      calculate_m210_tipo_renta_fetch_gated: 'El codi de tipus de renda %{value} del Model 210 està pendent de fonamentació: el seu tipus de gravamen encara no està fonamentat en el corpus inclòs, per la qual cosa encara no es pot presentar. Codis acceptats: %{accepted}.'
-      calculate_m210_tipo_renta_unknown: '%{value} no és un codi de tipus de renda vàlid del Model 210. Codis acceptats: %{accepted}. Codis pendents de fonamentació (encara no presentables): %{fetch_gated}.'
+      calculate_m210_tipo_renta_fetch_gated: 'El codi de tipus de renda %{value} del
+        Model 210 està pendent de fonamentació: el seu tipus de gravamen encara no
+        està fonamentat en el corpus inclòs, per la qual cosa encara no es pot presentar.
+        Codis acceptats: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no és un codi de tipus de renda
+        vàlid del Model 210. Codis acceptats: %{accepted}. Codis pendents de fonamentació
+        (encara no presentables): %{fetch_gated}.'
       calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
         que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
         31.1.
@@ -2838,6 +2843,9 @@ cli:
       reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
         %{provider}.'
       status_help: Mostrar l'estat d'autenticació configurat
+      status_summary_configured: 'L''autenticació està configurada però encara no hi ha cap sessió activa disponible.'
+      status_summary_ready: 'L''autenticació està configurada i hi ha una sessió activa disponible.'
+      status_summary_unconfigured: 'L''autenticació encara no està configurada.'
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
@@ -3324,6 +3332,10 @@ cli:
         l''arxiu de recuperació xifrat per incloure''ls.'
       sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
         de l''interessat (RGPD): el paquet portàtil del perfil.'
+      show:
+        summary_invalid: 'El registre del perfil no és vàlid: %{count} problema/es bloquejant/s.'
+        summary_tombstoned: 'El registre del perfil està marcat com a eliminat.'
+        summary_valid: 'El registre del perfil és vàlid.'
       show_help: Mostra les dades d'un perfil
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile

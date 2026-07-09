@@ -857,8 +857,13 @@ application:
       calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.
-      calculate_m210_tipo_renta_fetch_gated: 'El código de tipo de renta %{value} del Modelo 210 está pendiente de fundamentación: su tipo de gravamen aún no está fundamentado en el corpus incluido, por lo que todavía no puede presentarse. Códigos aceptados: %{accepted}.'
-      calculate_m210_tipo_renta_unknown: '%{value} no es un código de tipo de renta válido del Modelo 210. Códigos aceptados: %{accepted}. Códigos pendientes de fundamentación (aún no presentables): %{fetch_gated}.'
+      calculate_m210_tipo_renta_fetch_gated: 'El código de tipo de renta %{value}
+        del Modelo 210 está pendiente de fundamentación: su tipo de gravamen aún no
+        está fundamentado en el corpus incluido, por lo que todavía no puede presentarse.
+        Códigos aceptados: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no es un código de tipo de renta
+        válido del Modelo 210. Códigos aceptados: %{accepted}. Códigos pendientes
+        de fundamentación (aún no presentables): %{fetch_gated}.'
       calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
         %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
         art. 31.1.
@@ -2872,6 +2877,9 @@ cli:
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
         %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
+      status_summary_configured: 'La autenticación está configurada pero aún no hay una sesión activa disponible.'
+      status_summary_ready: 'La autenticación está configurada y hay una sesión activa disponible.'
+      status_summary_unconfigured: 'La autenticación aún no está configurada.'
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
@@ -3366,6 +3374,10 @@ cli:
         cifrado; utilice el archivo de recuperación cifrado para incluirlos.'
       sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
         del interesado (RGPD): el paquete portátil del perfil.'
+      show:
+        summary_invalid: 'El registro del perfil no es válido: %{count} problema(s) bloqueante(s).'
+        summary_tombstoned: 'El registro del perfil está marcado como eliminado.'
+        summary_valid: 'El registro del perfil es válido.'
       show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
