@@ -472,7 +472,7 @@ def test_host_suffix_still_refuses_non_aeat_host() -> None:
             RemoteOperation(
                 kind="http",
                 method="GET",
-                url=AnyUrl("https://attacker.example/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                url=AnyUrl("https://attacker.example/read/path"),
             ),
         )
 
