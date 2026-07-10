@@ -233,6 +233,22 @@ reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1997-
 notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 11.2 intereses: the source-state tax may not exceed 10 percent of the gross interest. Row-level authority for the FR/interest M210 treaty override (kind=ceiling, rate 0.10)."
 required_text = ["Intereses", "no puede exceder del 10 por 100", "importe bruto de los intereses"]
 
+[legal."convenio-es-fr-1995:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-fr-1995-art-12.html#art-12"
+document_id = "BOE-A-1997-12729"
+article = "12"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+published_at = 1997-06-12
+effective_from = 1997-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 12 from BOE consolidated BOE-A-1997-12729; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 12.2.a cánones: if the beneficial owner is a resident of the other state, the source-state tax may not exceed 5 percent of the gross royalties. Row-level authority for the FR/cánones M210 treaty override (kind=ceiling, rate 0.05). The art 12.2.b copyright (obra literaria/artística) residence-only exemption tier is not modelled."
+required_text = ["Cánones", "no puede exceder del 5 por 100", "importe bruto de los cánones"]
+
 [legal."convenio-es-pt-1993:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"
