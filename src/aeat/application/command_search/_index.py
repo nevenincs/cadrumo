@@ -116,6 +116,7 @@ def _spanish_stemmer() -> _SpanishStemmer | None:
         import snowballstemmer
     except ModuleNotFoundError:
         return None
+    # CAST-RATIONALE-SNOWBALL-STEMMER: optional dependency exposes the protocol at runtime without stubs.
     return cast(_SpanishStemmer, snowballstemmer.stemmer("spanish"))
 
 
