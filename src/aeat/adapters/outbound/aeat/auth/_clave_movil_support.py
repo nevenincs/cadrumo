@@ -46,6 +46,11 @@ def auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
             urlsplit(external.aeat.domains.www6).netloc,
             urlsplit(external.aeat.domains.www12).netloc,
         ),
+        # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
+        # dispatch (auth choreography landing on a sibling host beyond the
+        # enumerated www6/www12) is tolerated, not refused; the closed
+        # action-pattern set stays the sole action gate.
+        allowed_host_suffixes=(external.aeat.domains.host_suffix,),
         allowed_browser_action_patterns=external.aeat.live_safety.auth_browser_action_patterns,
         synthetic_data_allowed=False,
         requires_authentication=True,

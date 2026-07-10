@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
+from pydantic import AnyUrl, SecretStr
 
 from ......application.user_profile import profile_create_storage_span, register_minimal_profile
 from ......application.workflow import workflow_state_repository
@@ -93,6 +93,32 @@ def test_auth_browser_action_policy_rejects_unclassified_representation_action(t
         assert_remote_operation_allowed(
             policy,
             RemoteOperation(kind="browser_action", action="representation-gate-represented-taxpayer-continue"),
+        )
+
+
+def test_auth_browser_action_policy_admits_sibling_load_balancer_host(tmp_path: Path) -> None:
+    """An auth navigation dispatched to a www{n} sibling beyond the enumerated hosts is allowed."""
+    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    policy = _auth_browser_action_policy(settings)
+    drifted = _aeat_url(_DOMAINS.www2, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
+
+    result = assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
+    )
+
+    assert result.decision == "allowed"
+
+
+def test_auth_browser_action_policy_refuses_non_aeat_host(tmp_path: Path) -> None:
+    """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
+    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    policy = _auth_browser_action_policy(settings)
+
+    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
+        assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
 
 
