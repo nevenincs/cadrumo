@@ -32,7 +32,8 @@ catalogues remain the source of truth.
 Informational-declaration row models also live here:
 :class:`Modelo184MemberRow`, :class:`Modelo232VinculadaRow`,
 :class:`Modelo347ContraparteRow`, :class:`Modelo349OperadorRow`,
-:class:`Modelo349RectificacionRow`, and :obj:`ModeloDetailRow`, plus the
+:class:`Modelo349RectificacionRow`, :class:`Modelo210AgrupacionRentaRow`, and
+:obj:`ModeloDetailRow`, plus the
 Modelo 349 NIF and country-prefix validators exposed by this root facade.
 Regulatory constants such as the Modelo 347 declarability threshold remain in
 :mod:`core.external_constants`.
@@ -139,6 +140,8 @@ from ._repository import WorkUnitPersistenceError, upsert_work_unit
 from ._row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
+    Modelo210AgrupacionRentaRow,
+    Modelo210AgrupacionRentaRowsError,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
@@ -148,6 +151,7 @@ from ._row_models import (
     ModeloDetailRow,
     m349_nif_number_for_export,
     validate_m184_member_share_sum,
+    validate_m210_agrupacion_renta_rows,
     validate_m347_threshold,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
@@ -188,6 +192,8 @@ __all__ = (
     "ManualFactBasisEntry",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
+    "Modelo210AgrupacionRentaRow",
+    "Modelo210AgrupacionRentaRowsError",
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
     "Modelo347ThresholdError",
@@ -246,6 +252,7 @@ __all__ = (
     "upsert_verification_report",
     "upsert_work_unit",
     "validate_m184_member_share_sum",
+    "validate_m210_agrupacion_renta_rows",
     "validate_m347_threshold",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",

@@ -483,6 +483,37 @@ required_text = [
     "rentas en España sin mediación de establecimiento permanente",
 ]
 
+# Orden HAC/56/2024 art 4.1 substituted the current Art 2 grouping text.
+# The consolidated Art 2 applies annual grouped lease/sublease rentas from
+# devengos 2024, requires compatible code/payer/rate/property-right facts,
+# reserves code 35 for the multiple-payer rental exception, and prohibits
+# offsets between grouped components.
+[legal."orden-eha-3316-2010:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3316-2010.html#a2"
+document_id = "BOE-A-2010-19707"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a2"
+published_at = 2010-12-23
+effective_from = 2024-02-01
+consolidated_as_of = 2026-06-23
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "codex (read bundled consolidated BOE-A-2010-19707 art 2 and bundled Orden HAC/56/2024 entry-into-force text on 2026-07-10)"
+notes = "Orden EHA/3316/2010 art 2, consolidated as of 2026-06-23. Orden HAC/56/2024 art 4.1 supplies the current grouping rule, in force from 2024-02-01 and applicable to annual rental/subrental grouping for devengos 2024. Grouped rentas share one official type code, payer, tax rate and, where applicable, property/right; code 35 is the explicit multiple-payer exception for non-withheld rental/subrental income; grouped rentas never offset each other."
+required_text = [
+    "Artículo 2. Contenido del modelo 210.",
+    "mismo código de tipo de renta",
+    "mismo pagador",
+    "mismo tipo de gravamen",
+    "mismo bien o derecho",
+    "código específico de tipo de renta, el 35",
+    "En ningún caso las rentas agrupadas pueden compensarse entre sí.",
+    "El período de agrupación será anual en el caso de rentas derivadas del arrendamiento o subarrendamiento de inmuebles.",
+]
+
 # Orden EHA/3316/2010 art 5: plazo de presentación del modelo 210, consolidated
 # in vigor 24/06/2026 (modified by Orden HAC/56/2024 art 4.2 / BOE-A-2024-1772 and
 # Orden HAC/623/2026 art 1.2 / BOE-A-2026-13573). Binding deadline provision. Only

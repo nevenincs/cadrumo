@@ -47,6 +47,7 @@ _ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
         BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,

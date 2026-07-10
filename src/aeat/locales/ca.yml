@@ -312,6 +312,10 @@ adapters:
         sol·licitat.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
         executeu primer `aeat config auth status`.
+      notifications_bad_landing: La pàgina de notificacions de l'AEAT no s'ha carregat
+        correctament; la vostra sessió pot haver caducat o l'AEAT està en manteniment.
+        Executeu 'aeat config auth status' i torneu-ho a provar. No ho interpreteu
+        com una safata buida.
       parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
         de la pàgina pot haver canviat.
       playwright_alert_modal_failed: Error en continuar el modal d'alerta de l'AEAT.
@@ -323,12 +327,25 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
-      notifications_bad_landing: 'La pàgina de notificacions de l''AEAT no s''ha carregat correctament; la vostra sessió pot haver caducat o l''AEAT està en manteniment. Executeu ''aeat config auth status'' i torneu-ho a provar. No ho interpreteu com una safata buida.'
 aggregation:
   grouping:
     errors:
       unsupported_modelo: No hi ha cap contracte d'agregació registrat per al model
         sol·licitat.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} és de
+        font estrangera; l'art. 13 del TRLIRNR l'exclou de la projecció de rendiments
+        íntegres de font espanyola del Model 210.
+      incomplete_m210_classification: L'operació entrant de font espanyola no té una
+        classificació explícita de renda del Model 210; la projecció de l'IRNR mai
+        no infereix un codi oficial de tipus de renda a partir de irpf_category.
+      source_jurisdiction_unresolved: source_jurisdiction no està resolta (None) en
+        una candidata entrant del Model 210; l'art. 13 del TRLIRNR només admet rendes
+        de font espanyola en aquesta projecció de l'IRNR.
+      tipo_renta_code_not_declared: El codi oficial de tipus de renda %{tipo_renta_code}
+        del Model 210 no està declarat per a la revisió i el període de presentació
+        %{period} seleccionats.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
@@ -963,6 +980,14 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      m210_ledger_manual_agrupacion_rows: El mode de font de llibre major del Model
+        210 deriva les files anuals d'agrupació de rendes de les classificacions del
+        llibre; no proporcioneu files manuals d'agrupació de rendes.
+      m210_ledger_source_requires_modelo_210: El mode de font de llibre major del
+        Model 210 només es pot utilitzar en unitats de treball del Model 210.
+      m210_ledger_source_selection_required: El mode de font de llibre major del Model
+        210 requereix una selecció de codi oficial de tipus de renda sense projectar.
+      m210_official_tipo_renta_selection_mismatch: 'El codi oficial de tipus de renda %{official_tipo_renta_code} del Model 210 requereix el valor de fórmula %{expected_tipo_renta}; s''ha rebut %{tipo_renta}.'
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la revisió %{revision_id}: el registre declara un origen de vinculació que
         cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
@@ -1060,6 +1085,23 @@ application:
         empresarial. Confirmeu que la reduccio esta recolzada per una contribucio
         vinculada a l''ocupador que doni dret a l''increment de 8500 EUR; en cas contrari,
         el limit aplicable es %{sublimit}.'
+      attribution_received_uncaptured: 'la casella %{casilla_id} del règim d''atribució
+        del M100 declara una base atribuïda (modelo=100 year=%{filing_year} value=%{casilla_value}
+        EUR) però cap fet attribution_received no la fonamenta per a aquest exercici:
+        la renda declarada no té procedència registrada.'
+      attribution_received_uncaptured_next_action: Registreu els fets attribution_received
+        (NIF de l'entitat, nom, percentatge de participació, base atribuïda, exercici)
+        al perfil del contribuent perquè la renda declarada del règim d'atribució
+        tingui la procedència del seu Model 184.
+      attribution_received_unfolded: 'els fets attribution_received declaren una base
+        atribuïda per a aquest exercici (modelo=100 year=%{filing_year} total=%{total_base}
+        EUR) però la casella %{casilla_id} del règim d''atribució del M100 queda buida:
+        la participació rebuda es va registrar al perfil però no es va incorporar
+        a la declaració.'
+      attribution_received_unfolded_next_action: Incorporeu la base atribuïda a la
+        casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat
+        app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè
+        la renda del règim d'atribució quedi declarada.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1213,10 +1255,6 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
-      attribution_received_unfolded: 'els fets attribution_received declaren una base atribuïda per a aquest exercici (modelo=100 year=%{filing_year} total=%{total_base} EUR) però la casella %{casilla_id} del règim d''atribució del M100 queda buida: la participació rebuda es va registrar al perfil però no es va incorporar a la declaració.'
-      attribution_received_unfolded_next_action: 'Incorporeu la base atribuïda a la casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè la renda del règim d''atribució quedi declarada.'
-      attribution_received_uncaptured: 'la casella %{casilla_id} del règim d''atribució del M100 declara una base atribuïda (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) però cap fet attribution_received no la fonamenta per a aquest exercici: la renda declarada no té procedència registrada.'
-      attribution_received_uncaptured_next_action: 'Registreu els fets attribution_received (NIF de l''entitat, nom, percentatge de participació, base atribuïda, exercici) al perfil del contribuent perquè la renda declarada del règim d''atribució tingui la procedència del seu Model 184.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -2525,6 +2563,14 @@ cli:
         list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
           `aeat app modelo work status` i després crea o recalcula l'esborrany amb
           `aeat app modelo work calculate`.
+        m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
+          (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
+          En el seu propi espai de treball, el soci l''ha de registrar com a fets
+          attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed,
+          filing_year) i després incorporar la base a la casella %{casilla} del règim
+          d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
+        m210_gross_income_source_help: 'Autoritat de la [5] del Model 210: manual
+          (predeterminada) o agregació de llibre major de font espanyola.'
         meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill menor
           de 3 anys era a la unitat familiar (Art. 81 LIRPF deducció maternitat).
           Format: FILL_ID=MESOS. Repetible per cada fill. FILL_ID és un identificador
@@ -2744,7 +2790,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif} (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%). En el seu propi espai de treball, el soci l''ha de registrar com a fets attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) i després incorporar la base a la casella %{casilla} del règim d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
@@ -2790,19 +2835,19 @@ cli:
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
       certificate:
-        check_help: cli.config.auth.certificate.check_help
-        help: Gestionar orígens de certificat amb nom per al proveïdor d'autenticació
-          per certificat
-        list_help: Llistar tots els orígens de certificat registrats
+        check_help: Check expiry and rotation health for every registered certificate
+          source
+        help: Manage named certificate sources for the certificate auth provider
+        list_help: List every registered certificate source
         register:
-          file_help: Camí al paquet PKCS#12 (.p12/.pfx)
-          friendly_name_help: Etiqueta llegible opcional diferent de --name
-          name_help: Identificador per a aquest origen de certificat (per exemple,
-            'personal', 'apoderat-acme')
-        register_help: Registrar (o redirigir) un origen de certificat amb nom
+          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
+          friendly_name_help: Optional human-readable label distinct from --name
+          name_help: Identifier for this certificate source (for example, personal
+            or apoderado-acme)
+        register_help: Register or re-point a named certificate source
         remove:
-          name_help: Origen de certificat registrat que s'eliminarà
-        remove_help: Eliminar un origen de certificat registrat
+          name_help: Registered certificate source to remove
+        remove_help: Remove a registered certificate source
         secret:
           help: Gestiona la contrasenya vinculada a una font de certificat amb nom
           remove:
@@ -2816,8 +2861,8 @@ cli:
             secret_help: La contrasenya del PKCS#12 (es demana, oculta, mai es mostra)
           set_help: Estableix (o rota) la contrasenya d'una font de certificat registrada
         select:
-          name_help: Origen de certificat registrat que s'activarà
-        select_help: Seleccionar l'origen de certificat actiu
+          name_help: Registered certificate source to activate
+        select_help: Select the active certificate source
       clear_all_help: Netejar tots els proveïdors d'autenticació configurats
       clear_help: Netejar metadades locals d'autenticació
       clear_locks_help: Netejar bloquejos d'adquisició d'autenticació
@@ -3136,13 +3181,17 @@ cli:
       censo:
         apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
+        dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la
+          teva darrera instantania: {dropped_fields}. Si no has canviat ni donat de
+          baixa aquestes dades, pot tractar-se d''una descarrega parcial: torna a
+          executar la descarrega del cens o reintrodueix els valors; la proporcio
+          d''afectacio de l''habitatge podria deixar de resoldre''s.'
         help: Sincronitza el cens 036 d'AEAT amb aquest perfil
         pull_help: Descarrega el teu cens mes recent d'AEAT al magatzem d'instantanies
           d'aquest perfil.
         refresh_help: Descarrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
-        dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la teva darrera instantania: {dropped_fields}. Si no has canviat ni donat de baixa aquestes dades, pot tractar-se d''una descarrega parcial: torna a executar la descarrega del cens o reintrodueix els valors; la proporcio d''afectacio de l''habitatge podria deixar de resoldre''s.'
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
@@ -3653,7 +3702,7 @@ cli:
     panel:
       arguments: Arguments
       commands: Ordres
-      error: 'Error'
+      error: Error
       options: Opcions
     try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
   ledger:
@@ -3858,6 +3907,26 @@ cli:
         per acceptar-lo, amb --classification per anul-lar-lo manualment, o no facis
         res per rebutjar-lo.
       llm_suggestion_label: suggeriment-llm
+      m210_applicable_rate_help: Tipus aplicable del Model 210 com a fracció decimal;
+        per exemple, 0.24.
+      m210_asset_or_right_id_help: Identitat estable de l'immoble o dret per a la
+        renda del Model 210.
+      m210_explicit_direct_only: La classificació del Model 210 és una decisió explícita
+        de l'operador; no combineu les seves opcions amb classificació automàtica,
+        assistida per evidència o massiva.
+      m210_gross_income_amount_help: Rendiment íntegre explícit per a la projecció
+        de font del Model 210.
+      m210_incoming_only: La classificació de renda del Model 210 només és vàlida
+        per a operacions entrants del llibre major.
+      m210_payer_id_help: Identitat estable del pagador per a un component del Model
+        210 d'un sol pagador.
+      m210_payer_mode_help: Un pagador o l'excepció explícita de diversos pagadors
+        del codi 35.
+      m210_required_options: La classificació del Model 210 requereix conjuntament
+        --m210-tipo-renta-code, --m210-gross-income-amount, --m210-applicable-rate
+        i --m210-payer-mode.
+      m210_tipo_renta_code_help: Codi oficial de tipus de renda de dos dígits del
+        Model 210.
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
@@ -4590,11 +4659,12 @@ cli:
       compara amb la base
     errors:
       capability:
-        manuals_verify: cli.registry.errors.capability.manuals_verify
-        parity: cli.registry.errors.capability.parity
-        registry_verify: cli.registry.errors.capability.registry_verify
-        workbooks_verify: cli.registry.errors.capability.workbooks_verify
-      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
+        manuals_verify: manual corpus verification
+        parity: registry parity verification
+        registry_verify: registry verification
+        workbooks_verify: workbook verification
+      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
+        Install {install} and retry.
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
     manuals:

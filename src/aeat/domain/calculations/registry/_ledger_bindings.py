@@ -31,15 +31,15 @@ from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
 from ._schema import DataBindingDefinition, ModeloRevision
 
-# Ledger-aggregation binding source kinds (all six). Re-exported from
+# Ledger-aggregation binding source kinds. Re-exported from
 # :data:`aeat.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
 # set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
 # taxonomy). Every binding whose ``source`` is a member reads its values from
 # the bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
 # first-slice income/expense aggregation, the M130 gasto cumulative aggregation,
-# or the M151 impatriado Spanish-source base aggregation). Cross-domain consumers
-# route through this name so the registry stays the single source of truth for
-# ledger readiness.
+# the M151 impatriado Spanish-source base aggregation, or the M210 explicit
+# IRNR income projection). Cross-domain consumers route through this name so the
+# registry stays the single source of truth for ledger readiness.
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "ImpatriadoIncomeObservationProtocol",

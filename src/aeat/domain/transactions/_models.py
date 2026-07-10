@@ -1,8 +1,4 @@
-"""Strict immutable transaction-catalogue boundary models.
-
-Defines :class:`Transaction`, :class:`ClassificationHistoryEntry`, and :class:`TransactionCatalogue`.
-Every model is strict + frozen + ``extra="forbid"``; no dataclasses or bare ``dict[str, Any]`` at the boundary.
-"""
+"""Strict immutable transaction-catalogue boundary models."""
 
 from __future__ import annotations
 
@@ -47,6 +43,7 @@ from ._irpf_categories import (
     has_non_work_irpf_category,
     has_rent_irpf_category,
 )
+from ._m210_income_classification import M210IncomeClassification
 from ._model_validation import (
     _coerce_raw_transaction,
     _normalize_identifier_tuple,
@@ -761,6 +758,7 @@ class Transaction(BaseModel):
     rate_source: str | None = None
     rate_date: str | None = None
     source_jurisdiction: str | None
+    m210_income_classification: M210IncomeClassification | None = None
     # Operator-assigned free-text grouping label (e.g. "Proyecto Acme",
     # "Q1 viajes"). Orthogonal to category_id (the regulatory spending
     # category): it is a personal organisational axis for working at scale

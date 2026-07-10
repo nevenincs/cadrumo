@@ -270,6 +270,10 @@ class BindingSourceKind(StrEnum):
     # impatriado.base-liquidable-general (ADR
     # 2026-07-01-modelo-151-beckham-source-scope).
     LEDGER_IMPATRIADO_INCOME_AGGREGATION = "ledger_impatriado_income_aggregation"
+    # Modelo 210 IRNR explicit-income projection. It owns the gross-income
+    # casilla only after a transaction supplies a persisted M210 classification
+    # and the calculation selects the matching official tipo-renta code.
+    LEDGER_IRNR_INCOME_AGGREGATION = "ledger_irnr_income_aggregation"
     # Per-perceptor retención aggregation: the calc-mesh source that reads the
     # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
     # operator-supplied — NOT the bucket ledger, so deliberately NOT in
@@ -417,22 +421,20 @@ def counterpart_source_kind(value: object) -> CounterpartSourceKind:
 
 
 LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
-    {
-        BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
-        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-    },
+    source
+    for source in BindingSourceKind
+    if source.value.startswith("ledger_") and source is not BindingSourceKind.LEDGER_TRANSACTION
 )
-"""Ledger-aggregation binding source kinds (all six), derived from the enum.
+"""Ledger-aggregation binding source kinds (all seven), derived from the enum.
 
 Every binding whose ``source`` is a member reads its values from the
 bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
 first-slice income/expense aggregation, the M130 pago-fraccionado gasto
 cumulative aggregation, or the M151 impatriado Spanish-source base
-aggregation). Cross-domain consumers route through this frozenset
+aggregation, M151 impatriado income, or M210 explicit IRNR income). The
+``ledger_`` namespace derives the set directly from the canonical enum;
+``ledger_transaction`` remains a counterpart source rather than a ledger
+aggregation. Cross-domain consumers route through this frozenset
 so the registry stays the single source of truth for ledger readiness.
 """
 
