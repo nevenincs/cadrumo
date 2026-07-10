@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from enum import StrEnum
-from importlib.resources.abc import Traversable
+from importlib.resources.abc import Traversable  # nosem
 
 from pydantic import BaseModel, ConfigDict, Field
 

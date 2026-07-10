@@ -245,7 +245,7 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
     anyio.run(_drive)
 
 
-# --- whoami identity tool (ADR I1) --------------------------------------------
+# --- whoami identity tool -----------------------------------------------------
 
 
 def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:

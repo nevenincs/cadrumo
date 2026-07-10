@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from importlib import metadata as _metadata
-from importlib.resources.abc import Traversable
+from importlib.resources.abc import Traversable  # nosem
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field

@@ -167,7 +167,7 @@ def test_server_get_prompt_unknown_name_is_a_protocol_error() -> None:
 
 
 def test_workflow_prompts_declare_typed_arguments_orientation_does_not() -> None:
-    # ADR P5: guided workflows accept filing_year + period; orientation takes none.
+    # Guided workflows accept filing_year + period; orientation takes none.
     catalogue = {entry.name: entry for entry in build_prompt_catalogue()}
     orientation = catalogue[ORIENTATION_PROMPT_NAME]
     assert orientation.arguments == ()
@@ -178,9 +178,7 @@ def test_workflow_prompts_declare_typed_arguments_orientation_does_not() -> None
 
 
 def test_prompt_get_substitutes_the_supplied_scope_into_the_brief() -> None:
-    workflow_name = next(
-        entry.name for entry in build_prompt_catalogue() if entry.name != ORIENTATION_PROMPT_NAME
-    )
+    workflow_name = next(entry.name for entry in build_prompt_catalogue() if entry.name != ORIENTATION_PROMPT_NAME)
     document = prompt_document(workflow_name, {"filing_year": "2026", "period": "3T"})
     assert "filing year 2026" in document.brief_text
     assert "period 3T" in document.brief_text
