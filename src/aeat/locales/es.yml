@@ -327,6 +327,7 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      notifications_bad_landing: 'La página de notificaciones de la AEAT no se cargó correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento. Ejecute ''aeat config auth status'' y vuelva a intentarlo. No lo interprete como una bandeja vacía.'
 aggregation:
   grouping:
     errors:
