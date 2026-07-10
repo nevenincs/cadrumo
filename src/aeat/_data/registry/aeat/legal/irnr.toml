@@ -295,6 +295,21 @@ reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1995-
 notes = "Spain-Portugal double-taxation treaty (CDI firmado 26-10-1993, en vigor 28-06-1995) art 11.2 intereses: the source-state tax may not exceed 15 percent of the gross interest. Row-level authority for the PT/interest M210 treaty override (kind=ceiling, rate 0.15)."
 required_text = ["Intereses", "no podrá exceder del 15 por 100", "importe bruto de los intereses"]
 
+[legal."convenio-es-pt-1993:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-pt-1993-art-12.html#art-12"
+document_id = "BOE-A-1995-24001"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+effective_from = 1995-06-28
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 12 from BOE consolidated BOE-A-1995-24001; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Portugal double-taxation treaty (CDI firmado 26-10-1993, en vigor 28-06-1995) art 12.2 cánones: the source-state tax may not exceed 5 percent of the gross royalties. Row-level authority for the PT/cánones M210 treaty override (kind=ceiling, rate 0.05)."
+required_text = ["Cánones", "no podrá exceder del 5 por 100", "importe bruto de los cánones"]
+
 [legal."convenio-es-be-1995:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"
