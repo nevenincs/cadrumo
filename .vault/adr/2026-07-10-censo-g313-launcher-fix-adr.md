@@ -103,3 +103,33 @@ the outbound sede adapter and its constants.
 - Risk to weigh: if the representation-drive or ZK extraction proves
   disproportionately fragile, option 4 (a product-direction change for censal
   facts) may deserve its own ADR rather than hardening a brittle scrape.
+
+## Update 2026-07-10 — P02.S04 capture raises the option-4 question to a live decision
+
+The P02.S04 authenticated capture (`2026-07-10-censo-g313-launcher-fix-P02-S04`)
+drove the representation confirm and reached the ZK app `BU36-ASIS/M036/index.zul`
+("Censos WEB"). It is a multi-step ZKoss tool whose landing is a MENU (Baja /
+Modificación de datos / errores), not censal data — and the actual census fields
+sit behind the prefilled **036 modification form** (further in-tool ZK steps).
+None of the `_G313_LABELS` appear at any level reached. So reading census data
+means operating AEAT's census **modification** tool through several fragile ZK
+interactions, one accidental submit away from mutating AEAT census state — which
+`aeat-safety-legal-gates` forbids. This materially raises the cost and risk of
+option 1 and elevates the previously-reserved options to a real fork the operator
+must decide before P02 code is written:
+
+- **Option 1 (drive the modification tool to read):** reach the prefilled 036 via
+  Censos WEB and extract fields read-only. Highest fidelity, but fragile and
+  brushes the mutation surface; needs strict never-submit guards.
+- **Option 3-variant (find a true read-only censal endpoint):** search AEAT for a
+  consulta-only "datos censales" service (e.g. a different procedure/portal) that
+  renders data without the modification tool. Not found in the empresarios censal
+  hub during P01; needs a wider live search.
+- **Option 4 (reconsider live censo read):** treat live censo enrolment as
+  operator-manual (the taxpayer supplies censal facts) rather than scraped, and
+  keep the calendar's `censo.enrolment_unverified` posture. Cheapest, safest, no
+  modification-tool driving; loses the automated censo pull. Would need its own
+  small ADR.
+
+Decision deferred to the operator; P02 code is NOT started until this fork is
+resolved.
