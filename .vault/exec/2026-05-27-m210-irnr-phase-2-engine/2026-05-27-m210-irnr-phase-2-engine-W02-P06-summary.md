@@ -8,9 +8,6 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
-
 # `m210-irnr-phase-2-engine` `W02.P06` summary
 
 The three Modelo 151 source-scope Steps are reconciled to the later dedicated implementation.

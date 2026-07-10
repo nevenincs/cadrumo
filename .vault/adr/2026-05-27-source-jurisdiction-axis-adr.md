@@ -23,9 +23,10 @@ three regulatory regimes simultaneously:
   resident IRPF base must aggregate worldwide income; foreign-source
   rows had no provenance for audit even though they were entering the
   base.
-- TRLIRNR Art. 2 / Art. 10 / Art. 25 for non-residents: the IRNR base
-  only admits Spanish-source income; the engine had no per-row signal
-  to enforce that scope at all.
+- TRLIRNR Art. 13.1 / Art. 24 / Art. 25 for non-residents: Art. 13.1
+  determines whether income is Spanish-source, Art. 24 supplies the
+  M210 base, and Art. 25 supplies the applicable rate. The engine had
+  no per-row signal to enforce that territorial scope at all.
 - LIRPF Art. 93.5 for impatriados (Beckham regime): Spanish-source and
   foreign-source income are treated distinctly under the Art. 93
   régimen especial; with no per-row jurisdiction signal, a Beckham
@@ -148,10 +149,13 @@ command is constructed:
 
 The aggregation surface (M130 / M100 income side) propagates the
 field from the originating transaction to the observation; it does
-not gate. Downstream engines (M210 IRNR, M151 Beckham) will layer
-their per-row gating when those engines are authored; the deferred
-work is tracked as a follow-up task in the cross-domain-continuity
-plan.
+not gate. The M210 IRNR ledger projection now reads the field directly
+and admits only Spanish-source income under Art. 13.1, with Art. 24 as
+the base authority and Art. 25 as the rate authority. Its persisted
+classification, selected source mode, ledger evidence, and typed
+exclusion reasons retain this decision at the filing boundary. The
+M151 Beckham engine remains a separately deferred cross-domain-
+continuity task.
 
 ## Rationale
 
@@ -206,14 +210,15 @@ profiles. The refusal text routes the operator to declare the
 jurisdiction explicitly and anchors the requirement in regulatory
 text via the `tr()` key.
 
-Per-row gating at the IRNR M210 and Beckham M151 aggregation
-surfaces is deferred. The M210 engine is itself a TIER 1
-architecture that has not yet been authored; the M151 engine is
-currently a Path-B refusal stub. Once those engines exist, a
-follow-up Step layers the per-row jurisdiction filter onto them as
-defence-in-depth. The CLI create-boundary refusal already prevents
-the most common error path (a Beckham filer or non-resident
-silently adopting the ES default), so per-modelo gating is not P0.
+Per-row gating at the IRNR M210 aggregation surface is complete for
+the deferred S385b / cross-domain-continuity task #62: the selected
+ledger source rejects foreign and unresolved jurisdictions with typed
+diagnostics and persists the admitted source evidence. The M151
+Beckham engine remains a Path-B refusal stub and a separately deferred
+follow-up; its future gating must not be inferred from this M210
+closure. The CLI create-boundary refusal continues to prevent the
+common error path of a Beckham filer or non-resident silently adopting
+the ES default.
 
 Test-fixture discipline for non-resident profiles is now non-
 trivial. The S384 truth-table tests revealed a three-bug smoke
@@ -232,10 +237,11 @@ it as a `profile set`-able key. The S384 fixture uses a UE country
 to dodge the representante coupling; the schema-gap is filed as a
 separate follow-up task and is independently resolved.
 
-The Transaction model and its persistence boundary now carry an
-ISO-coded axis that downstream calculation paths can rely on
-without re-validating the field shape. The IRNR engine that lands
-under #256 will read the field directly from the typed observation;
-the Beckham engine will do the same. Neither will need to retrofit
-the read-side because the provenance threading already in place
-delivers the jurisdiction to the aggregation surface.
+The Transaction model and its persistence boundary carry an ISO-coded
+axis that downstream calculation paths can rely on without
+re-validating the field shape. The M210 IRNR engine delivered by
+`8f5f690ed0` reads the field from the typed observation and records it
+in the ledger filing evidence; its implementation and locale
+verification close the M210 portion of task #62 only. The Beckham
+engine will use the same axis when its separate follow-up is delivered,
+without retrofitting the read-side provenance path.
