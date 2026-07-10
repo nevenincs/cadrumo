@@ -54,7 +54,11 @@ def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteSta
 
     Mirrors the Cl@ve Móvil policy shape but scopes the allowed action
     patterns to the Permanente login form (username fill, password fill,
-    submit) since there is no QR/push/representation-gate surface to allow.
+    authenticate) since there is no QR/push/representation-gate surface to allow.
+    The final action is labelled ``authenticate`` rather than ``submit``: it is
+    the Cl@ve IdP login-form submit (``#enviar_login``), an authentication step,
+    not an AEAT tax filing, so the write-token block (which the label ``submit``
+    lexically tripped) does not apply to it.
 
     Unlike Móvil — which stays on AEAT sede hosts throughout — the Permanente
     password form is submitted on Spain's Cl@ve national identity-provider page
@@ -81,7 +85,7 @@ def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteSta
         allowed_browser_action_patterns=(
             "clave-permanente-fill-username",
             "clave-permanente-fill-password",
-            "clave-permanente-submit",
+            "clave-permanente-authenticate",
         ),
         synthetic_data_allowed=False,
         requires_authentication=True,
