@@ -49,12 +49,20 @@ if TYPE_CHECKING:
 DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_permanente.diagnostics"
 
 
-def clave_permanente_auth_browser_action_policy(settings: Settings):
+def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
     """Build the remote-state guard policy for Cl@ve Permanente browser actions.
 
     Mirrors the Cl@ve Móvil policy shape but scopes the allowed action
     patterns to the Permanente login form (username fill, password fill,
     submit) since there is no QR/push/representation-gate surface to allow.
+
+    Unlike Móvil — which stays on AEAT sede hosts throughout — the Permanente
+    password form is submitted on Spain's Cl@ve national identity-provider page
+    (``clave.gob.es``; the observed login host is ``se-pasarela.clave.gob.es``).
+    The Cl@ve apex is therefore declared as a host SUFFIX under the explicit
+    ``allows_gov_idp_hosts`` opt-in (a narrow, sanctioned government-IdP
+    allowance, distinct from the AEAT-host predicate), alongside the AEAT apex
+    suffix so a ``www{n}`` load-balancer sibling is tolerated like Móvil.
     """
     external = settings.external_constants()
     return RemoteStateGuardPolicy(
@@ -64,8 +72,12 @@ def clave_permanente_auth_browser_action_policy(settings: Settings):
         allowed_hosts=(
             urlsplit(external.aeat.domains.sede).netloc,
             urlsplit(external.aeat.domains.www6).netloc,
+        ),
+        allowed_host_suffixes=(
+            external.aeat.domains.host_suffix,
             urlsplit(external.aeat.domains.clave).netloc,
         ),
+        allows_gov_idp_hosts=True,
         allowed_browser_action_patterns=(
             "clave-permanente-fill-username",
             "clave-permanente-fill-password",
