@@ -3,47 +3,11 @@ tags:
   - '#exec'
   - '#cross-domain-continuity'
 date: '2026-07-09'
-modified: '2026-07-09'
+modified: '2026-07-10'
 step_id: 'S255'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cross-domain-continuity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S255 and 2026-05-26-cross-domain-continuity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The follow-on to W08.P35.S140 sweep: convert 120 hardcoded f-string error raises across 43 application files identified by the Haiku discovery sweep and ## Scope
-
-- `full file list and operator-facing subset filed in S140 Step Record`
-- `batch by surface (modelo registry storage etc) per locale CLI rule scaffold-then-fill`
-- `mechanical work`
-- `src/aeat/application/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # follow-on to W08.P35.S140 sweep: convert 120 hardcoded f-string error raises across 43 application files identified by the Haiku discovery sweep
 
@@ -83,5 +47,3 @@ Batch-2 gates green under sequential pytest: ruff + format + ty clean, locale sc
 ## Notes
 
 The true convertible count is far below the plan's 120: most raises are internal invariant guards left raw by design. The typed `translated_message` + `context` pattern (including the `str(exc)`-to-identity test-assertion shift and the one production control-flow discriminator that inspected `str(exc)`) held across all three domains. Any residual application-layer f-string raises are internal `ValueError`/`TypeError` and registry/layout invariants that are never rendered to the operator and correctly stay raw.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

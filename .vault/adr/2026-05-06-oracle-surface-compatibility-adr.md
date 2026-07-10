@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-06-30'
+modified: '2026-07-03'
 related:
   - '[[2026-05-06-oracle-environment-consistency-adr]]'
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'

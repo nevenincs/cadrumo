@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-28'
-modified: '2026-06-30'
+modified: '2026-07-03'
 related:
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-plan]]'
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
