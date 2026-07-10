@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#descendant-axis'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-28'
 related:
   - '[[2026-05-27-descendant-axis-S01]]'
   - '[[2026-06-04-descendant-axis-adr]]'

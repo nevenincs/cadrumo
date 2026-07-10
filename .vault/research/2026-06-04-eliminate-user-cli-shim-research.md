@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#eliminate-user-cli-shim'
 date: '2026-06-04'
-modified: '2026-06-30'
+modified: '2026-07-03'
 related:
   - "[[2026-05-10-eliminate-user-cli-shim-adr]]"
 ---

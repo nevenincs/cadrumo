@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#hu-translation'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-28'
 related:
   - '[[2026-05-28-hu-translation-audit]]'
 ---

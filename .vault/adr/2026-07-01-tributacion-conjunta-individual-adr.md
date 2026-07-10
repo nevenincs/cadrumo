@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#tributacion-conjunta-individual'
 date: '2026-07-01'
-modified: '2026-07-01'
+modified: '2026-07-03'
 related:
   - "[[2026-06-30-tributacion-conjunta-individual-research]]"
 ---

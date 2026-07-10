@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#secure-backend-passkey-safety'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-07-10'
 related:
   - '[[2026-05-14-secure-backend-passkey-bucket-p01-s01-exec]]'
   - '[[2026-05-14-secure-backend-passkey-bucket-p01-s02-exec]]'
@@ -22,7 +22,6 @@ related:
   - '[[2026-05-14-secure-backend-passkey-bucket-p03-s03-exec]]'
   - '[[2026-05-14-secure-backend-passkey-bucket-p03-s04-exec]]'
   - '[[2026-05-14-secure-backend-passkey-bucket-p03-s05-exec]]'
-  - '[[2026-05-14-secure-backend-passkey-bucket-plan]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'
 ---

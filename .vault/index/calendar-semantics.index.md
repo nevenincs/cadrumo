@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#calendar-semantics'
 date: '2026-06-15'
-modified: '2026-06-15'
+modified: '2026-06-28'
 related:
   - '[[2026-06-12-calendar-semantics-code-review-audit]]'
 ---

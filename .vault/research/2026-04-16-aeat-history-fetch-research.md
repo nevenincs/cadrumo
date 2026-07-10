@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#aeat-history-fetch"
 date: 2026-04-16
-modified: '2026-07-08'
+modified: '2026-07-10'
 title: AEAT filing-history read surface research (#168)
 related:
   - "[[2026-04-12-status-reader-adr]]"
