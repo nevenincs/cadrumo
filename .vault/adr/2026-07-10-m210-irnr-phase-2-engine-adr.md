@@ -95,13 +95,14 @@ such as `01` and `03` may share that rate concept but are not legally
 interchangeable for aggregation or grouping.
 
 When the operator elects M210 agrupacion/`0A`, the application boundary accepts
-only this M210 row set and passes it explicitly to one registry-authorable
-row-set verification operator. That operator verifies a non-empty set, a single
-tipo code and rate, a single bien/derecho when that fact applies, a single payer
-unless every applicable component uses the explicit code-35 exception, and no
-offsetting amount. It produces ordinary typed verification findings. The rows
-prove declaration legality and provenance only: the established registry
-formula remains the single arithmetic path for manual M210 casillas.
+only the annual lease/sublease codes `01` or `35` in this M210 row set and
+passes it explicitly to one registry-authorable row-set verification operator.
+That operator verifies a non-empty set, a single tipo code and rate, one
+identified bien/derecho, a single payer unless every component uses the
+explicit code-35 exception, and no offsetting amount. It produces ordinary
+typed verification findings. The rows prove declaration legality and
+provenance only: the established registry formula remains the single arithmetic
+path for manual M210 casillas.
 
 ### Ledger source-ingestion contract
 
