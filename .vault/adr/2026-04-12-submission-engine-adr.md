@@ -8,6 +8,7 @@ title: Filing Submission Engine — ADR
 related:
   - "[[2026-04-12-submission-engine-research]]"
   - "[[2026-04-12-deadline-engine-adr]]"
+  - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'
 issue: wgergely/aeat#42
 ---
 
@@ -108,3 +109,13 @@ integration in v1 — that hooks into #10 storage later.
 - **Single gate on live submission.** Rejected. The belt-and-braces
   double gate is cheap and the failure mode of a wrong live filing is
   too expensive to single-gate.
+
+## status amendment — live-submission half retired (2026-07-10)
+
+Ruling by the ADR decision-authority pass, reconciling this accepted ADR against HEAD and the standing safety posture (`aeat-safety-legal-gates`, `[[2026-04-17-export-first-adr]]`):
+
+- **Still in force:** D3 (any ERROR-severity finding blocks — the `Preflight` gate in `src/aeat/domain/submission/_preflight.py`), D5/D6 (protocol-injected narrow dependencies — the engine's current constructor shape), and the preflight + historical-record read surface (`SubmissionEngine` in `src/aeat/domain/submission/_engine.py`).
+- **Retired — live submission.** D1's live mode and `submit_draft`, D2's double gate (`--i-understand-this-is-real`, `settings.aeat_submission_require_human_confirmation`), and D4's `Submitter` transport coroutines no longer exist in code. Live AEAT submission is permanently forbidden per `[[2026-04-27-live-submit-permanently-forbidden-adr]]` (accepted) and the `aeat-safety-legal-gates` rule; the engine intentionally exposes no transport method. This is a permanent prohibition, not a dormant gate: no live-write path may be reintroduced except by a future accepted ADR that explicitly replaces the safety rule.
+- **Retired — flat-JSON persistence (D7).** Submission records persist through the injected `SubmissionRepositoryProtocol` over the encrypted secure-object backend, per `sensitive-financial-data-secure-storage-only`.
+
+The ADR stays `accepted` for its surviving decisions; the retired halves are recorded here rather than superseding the whole document, because no single successor replaces the preflight decision content that still governs live code.
