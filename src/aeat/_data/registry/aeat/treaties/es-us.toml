@@ -12,7 +12,7 @@
 [treaty]
 country_code = "US"
 document_id = "BOE-A-1990-30940"
-notes = "Convenio España-Estados Unidos, redacción vigente tras el Protocolo de 2013 (en vigor 27-11-2019). Art 10.2.b dividendos: el impuesto en fuente no podrá exceder del 15 por ciento en los demás casos. Art 11.1 intereses: sólo pueden someterse a imposición en el Estado de residencia (exención en la fuente). Los tramos reducidos de dividendos y las excepciones de intereses (11.2) no se modelan."
+notes = "Convenio España-EEUU, redacción vigente tras el Protocolo de 2013 (en vigor 27-11-2019). Art 10.2.b dividendos: fuente máx 15%. Art 11.1 intereses: sólo en residencia (exención en fuente). Art 12 cánones: el Protocolo (Art VI, BOE-A-2019-15166) sustituyó el art 12 escalonado 5/8/10% — sólo en residencia (exención en fuente, 0%). Tramos reducidos de dividendos y excepciones de intereses (11.2) no modelados."
 
 [[treaty.overrides]]
 tipo_renta = "dividend"
@@ -29,4 +29,12 @@ kind = "exempt"
 legal_ref_anchor = "convenio-es-us-1990:art-11"
 legal_refs = ["convenio-es-us-1990:art-11"]
 notes = "Art 11.1 (redacción vigente, Protocolo 2019): los intereses cuyo beneficiario efectivo sea un residente del otro Estado sólo pueden someterse a imposición en ese otro Estado — exención de tributación en la fuente (España). Frente al 19% doméstico TRLIRNR art 25.1.f, el CDI reduce el tipo en fuente a 0%. Las excepciones del art 11.2 (intereses contingentes limitados al 10%, REMIC) no se modelan."
+valid_from = 2019-11-27
+
+[[treaty.overrides]]
+tipo_renta = "canones"
+kind = "exempt"
+legal_ref_anchor = "convenio-es-us-1990:art-12"
+legal_refs = ["convenio-es-us-1990:art-12"]
+notes = "Art 12 (redacción vigente, Protocolo 2019): el Artículo VI del Protocolo de 2013 (BOE-A-2019-15166, en vigor 27-11-2019) sustituyó por completo el art 12 original de tipos escalonados 5/8/10% — los cánones cuyo beneficiario efectivo sea un residente del otro Estado sólo pueden someterse a imposición en ese otro Estado. Exención en la fuente (España). Frente al 24% doméstico general (TRLIRNR art 25.1.a; cánones sin letra específica), el CDI reduce el tipo en fuente a 0%."
 valid_from = 2019-11-27
