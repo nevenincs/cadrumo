@@ -201,6 +201,22 @@ reviewed_by = "claude"
 notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 11: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/interest M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate notice)."
 required_text = ["Los intereses procedentes de un Estado contratante", "solo pueden someterse a imposicion en ese otro Estado"]
 
+[legal."convenio-es-de-2011:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-de-2011-art-12.html#art-12"
+document_id = "BOE-A-2012-10212"
+article = "12"
+permalink = "https://www.boe.es/eli/es/ai/2011/02/03/(1)/con"
+published_at = 2012-07-30
+effective_from = 2012-10-18
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 12 from BOE consolidated BOE-A-2012-10212; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 12 cánones: royalties whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/cánones M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp."
+required_text = ["Cánones", "sólo pueden someterse a imposición en ese otro Estado"]
+
 [legal."convenio-es-fr-1995:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"
