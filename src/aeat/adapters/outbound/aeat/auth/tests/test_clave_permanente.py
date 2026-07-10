@@ -97,20 +97,29 @@ class TestBrowserActionPolicy:
             )
             assert result.decision == "allowed"
 
-    def test_policy_submit_action_is_write_token_blocked(self, tmp_path: Path) -> None:
-        # Separate pre-existing defect surfaced by this build coverage (NOT the
-        # host fix): the production action name ``clave-permanente-submit``
-        # contains the universal write-forbidden token ``submit``, so the guard
-        # blocks it before the allow-list is consulted. Documented here as the
-        # honest current behaviour; a rename to a non-write-verb action label is
-        # a separate follow-up (the guard's write-token block is load-bearing
-        # and must not be weakened).
+    def test_policy_allows_the_renamed_authenticate_action(self, tmp_path: Path) -> None:
+        # The Cl@ve IdP login-form submit is labelled ``authenticate`` (not
+        # ``submit``): it is an authentication step, not an AEAT tax filing, so
+        # the write-token block does not apply. ``authenticate`` carries no
+        # forbidden verb token, so it reaches — and matches — the allow-list.
         settings = _settings_for(tmp_path)
         policy = clave_permanente_auth_browser_action_policy(settings)
-        with pytest.raises(RegistryValidationError, match="token 'submit' is forbidden"):
+        result = assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(kind="browser_action", action="clave-permanente-authenticate"),
+        )
+        assert result.decision == "allowed"
+
+    def test_write_token_filter_still_blocks_a_write_verb_action(self, tmp_path: Path) -> None:
+        # Safety net: the rename is ONLY the login label. A genuine write-verb
+        # browser action under the SAME permanente policy is STILL refused by the
+        # unchanged write-token filter — proof the block was not weakened.
+        settings = _settings_for(tmp_path)
+        policy = clave_permanente_auth_browser_action_policy(settings)
+        with pytest.raises(RegistryValidationError, match="token 'presentar' is forbidden"):
             assert_remote_operation_allowed(
                 policy,
-                RemoteOperation(kind="browser_action", action="clave-permanente-submit"),
+                RemoteOperation(kind="browser_action", action="clave-permanente-presentar"),
             )
 
     def test_policy_admits_sibling_aeat_host_and_clave_idp_host(self, tmp_path: Path) -> None:
