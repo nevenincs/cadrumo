@@ -73,7 +73,7 @@ Run the full profile-bound live CLI sequence after the encrypted secret store is
 
 - [x] `W04.P04.S09` - Unlock profile-bound live storage with a non-interactive secret-store passphrase or keychain session; `env/.env`.
 - [x] `W04.P04.S10` - Rerun live Modelo 036 censo pull, compare, apply, expedientes, notifications, filed history, and justificante pulls; `src/aeat/entrypoints/cli/_config/_profile_censo.py`.
-- [ ] `W04.P04.S11` - Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence; `src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W04.P04.S11` - Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W04.P04.S12` - Fail fast when profile-bound live CLI cannot prompt for secret-store passphrase; `src/aeat/adapters/persistence/storage/master_key/_master_key_io.py, src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py`.
 - [x] `W04.P04.S30` - Verify fresh password-backed profile creation path and record current active-profile live unlock blocker; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
 
