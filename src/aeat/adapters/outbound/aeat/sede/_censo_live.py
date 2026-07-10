@@ -60,13 +60,15 @@ log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
-# ``Mis Datos Censales`` (G313) is served by the BUGC-JDIT sede application —
-# the same app family as the pre303 ``VentanaCensalIva`` entry point, which
-# AEAT publishes under the ``www1`` load-balancer host. The launcher redirects
-# (server- and client-side) into the authenticated ``es13`` censal SPA, so the
-# final landing host is not assumed: the read guard admits any subdomain under
-# the AEAT apex suffix and the driver captures ``page.url`` after the redirect.
-G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.censo_g313_launcher}"
+# ``Mis Datos Censales`` is served by the BUGC-JDIT sede application (the same
+# app family as the pre303 ``VentanaCensalIva`` entry point) and redirects —
+# server- and client-side — into the authenticated ``es13`` censal SPA. The
+# launcher is composed from the shared ``censo_g313_launcher`` path and the
+# ``sede`` host, matching the ``PORTAL_MIS_DATOS_CENSALES`` registry entry; the
+# final landing host is NOT assumed, so the read guard admits any subdomain
+# under the AEAT apex suffix and the driver re-asserts ``page.url`` after the
+# redirect chain resolves (tolerating ``www{n}`` load-balancer dispatch).
+G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.censo_g313_launcher}"
 """AEAT-published entry point for *Mis Datos Censales* (the read-only
 operator-facing projection of the operator's 036 censo record)."""
 _RESUMEN_URL = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
@@ -77,7 +79,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-censo-g313-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
-    allowed_hosts=(urlsplit(_EXTERNAL.aeat.domains.www1).netloc,),
+    allowed_hosts=(urlsplit(_EXTERNAL.aeat.domains.sede).netloc,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
     synthetic_data_allowed=False,
     requires_authentication=True,

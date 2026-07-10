@@ -95,7 +95,7 @@ def _storage_state() -> Mapping[str, object]:
             {
                 "name": "AEAT_SESSION",
                 "value": "recorded-session",
-                "domain": _AEAT.domains.www1.removeprefix("https://"),
+                "domain": _AEAT.domains.sede.removeprefix("https://"),
                 "path": "/",
             },
         ),
@@ -106,10 +106,12 @@ def _storage_state() -> Mapping[str, object]:
 def test_g313_live_driver_is_exported_from_public_sede_surface() -> None:
     assert callable(fetch_g313_censo)
     assert callable(censo_fact_set_to_mapping)
-    # The launcher is now the BUGC-JDIT ``MdcAcceso`` data entry point on the
-    # ``www1`` host, not the retired ``G313.shtml`` procedure page.
-    assert f"{_AEAT.domains.www1}{_AEAT.sede_paths.censo_g313_launcher}" == G313_LAUNCHER_URL
-    assert G313_LAUNCHER_URL.endswith("/wlpl/BUGC-JDIT/MdcAcceso")
+    # The launcher is now the BUGC-JDIT ``MdcAcceso`` data entry point, composed
+    # from the shared ``censo_g313_launcher`` path (no longer the retired
+    # ``G313.shtml`` procedure page) and the ``sede`` host, matching the
+    # ``PORTAL_MIS_DATOS_CENSALES`` registry entry.
+    assert f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}" == G313_LAUNCHER_URL
+    assert G313_LAUNCHER_URL.endswith(_AEAT.sede_paths.censo_g313_launcher)
 
 
 @pytest.mark.asyncio
