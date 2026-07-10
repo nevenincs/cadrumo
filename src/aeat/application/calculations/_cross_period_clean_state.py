@@ -748,6 +748,7 @@ def _resolve_cross_period_source(
         if expected_member_set is None:
             blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER)
             blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
+            # CAST-RATIONALE-CROSS-PERIOD-MEMBER-PAYLOAD: iter_modelo records are typed envelopes at runtime.
             value_member_payloads = tuple(cast(_ObservationPayload, item) for item in member_payloads)
         else:
             expected_member_nifs = tuple(sorted(set(expected_member_set.member_nifs)))
@@ -759,6 +760,7 @@ def _resolve_cross_period_source(
                 blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
             if unexpected_member_nifs:
                 blockers.append(CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE)
+            # CAST-RATIONALE-CROSS-PERIOD-FILTERED-PAYLOAD: roster filtering retains the typed repository envelope.
             value_member_payloads = tuple(
                 cast(_ObservationPayload, item)
                 for item in member_payloads
@@ -775,6 +777,7 @@ def _resolve_cross_period_source(
             )
             blockers.extend(extra_blockers)
     else:
+        # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
         payload = cast(
             _ObservationPayload | None,
             observation_repository.load_observation(

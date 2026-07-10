@@ -227,6 +227,7 @@ def secure_object_list_item_from_raw_row(
     reason instead of raising, so a caller iterating many rows can attribute a
     failure to its own row and keep inspecting the rest.
     """
+    # CAST-RATIONALE-SECURE-OBJECT-RAW-ROW: SQL row tuples are structurally validated by this codec.
     row = cast(_SecureObjectListRawRow, raw)
     row_id = int(row.id)
     # ``object_key`` is a HashedLookup digest. Keep the bytes surface

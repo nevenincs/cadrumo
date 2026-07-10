@@ -215,6 +215,7 @@ class M145CommunicationCreateCommand(BaseModel):
     @classmethod
     def _validate_field_value_keys(cls, value: object) -> object:
         if isinstance(value, Mapping):
+            # CAST-RATIONALE-M145-FIELD-MAPPING: validator immediately checks every key and value shape.
             return validated_casilla_id_map(
                 cast(Mapping[object, object], value),
                 surface="m145 communication field_values",
