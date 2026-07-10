@@ -13,7 +13,6 @@ optional-dependency boundary rather than skipping, matching the sibling tests.
 
 from __future__ import annotations
 
-import importlib.util
 from typing import Any, cast
 
 import anyio
@@ -30,8 +29,6 @@ from .._surface import (
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 
 # A concrete orientation command and a concrete long-tail command, used to prove
 # the split is real against the live descriptor set rather than a tautology.
@@ -79,7 +76,6 @@ def test_advertised_descriptors_core_is_a_strict_orientation_subset_of_full() ->
     assert _LONG_TAIL_KEY in {descriptor.command_key for descriptor in full}
 
 
-@pytest.mark.skipif(not _SDK_PRESENT, reason="asserted-absent branch covered elsewhere")
 def test_built_server_advertises_core_by_default_and_full_on_opt_out() -> None:
     from mcp.types import ListToolsRequest
 
@@ -111,7 +107,6 @@ def test_built_server_advertises_core_by_default_and_full_on_opt_out() -> None:
     anyio.run(_drive)
 
 
-@pytest.mark.skipif(not _SDK_PRESENT, reason="asserted-absent branch covered elsewhere")
 def test_long_tail_verb_stays_callable_by_name_under_the_core_surface() -> None:
     # Gate invariance: a verb the CORE surface does not ADVERTISE is still known
     # to the call-tool dispatch (``by_name`` spans every descriptor), so it is
