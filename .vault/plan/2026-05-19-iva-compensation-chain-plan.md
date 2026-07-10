@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#iva-compensation-chain'
 date: '2026-05-19'
-modified: '2026-06-30'
+modified: '2026-07-10'
 tier: L2
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
@@ -15,6 +15,16 @@ related:
   - '[[2026-05-19-modelo-130-relation-regression-adr]]'
   - '[[2026-05-19-modelo-130-relation-regression-plan]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `iva-compensation-chain` `remediation` plan
 
@@ -49,7 +59,7 @@ This Phase adds regression tests and executes targeted validation for the change
 
 This Phase records the required production authority extensions discovered by the IVA remediation but governed by separate research, ADR, and plan documents.
 
-- [ ] `P03.S01` - execute the linked live AEAT IVA compensation wallet plan before treating local recurrence as final authority; `.vault/plan/2026-05-19-live-iva-compensation-wallet-plan.md`.
+- [x] `P03.S01` - execute the linked live AEAT IVA compensation wallet plan before treating local recurrence as final authority; `.vault/plan/2026-05-19-live-iva-compensation-wallet-plan.md`.
 - [x] `P03.S02` - execute the linked Modelo 130 relation-regression wave for the IRPF same-year negative-result carry-forward; `.vault/plan/2026-05-19-modelo-130-relation-regression-plan.md`.
 
 ## Parallelization
