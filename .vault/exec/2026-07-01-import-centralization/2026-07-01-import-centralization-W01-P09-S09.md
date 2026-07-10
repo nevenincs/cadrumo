@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S09'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `BrowserAdapterTypeError`, `GroiSedeDriver`, `NifIvaCheckSedeDriver`, `filed_declaracion_observation_object_key`, `iva_compensation_wallet_observation_object_key` to `aeat.adapters.outbound.aeat.sede.__all__` with eager re-exports so the 5 existing cross-package consumer site(s) can import from the facade
 

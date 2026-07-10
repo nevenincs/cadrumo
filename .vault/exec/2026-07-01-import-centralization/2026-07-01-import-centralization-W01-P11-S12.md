@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S12'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `M111_NO_RETENCIONES_PROFILE_PATH`, `MaritimeExemptionResult`, `m111_no_retenciones_periods_for_bucket` to `aeat.application.calculations.__all__` with eager re-exports so the 4 existing cross-package consumer site(s) can import from the facade
 

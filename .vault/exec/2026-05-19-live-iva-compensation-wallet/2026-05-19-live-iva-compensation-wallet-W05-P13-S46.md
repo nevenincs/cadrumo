@@ -3,53 +3,11 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S46'
 related:
   - "[[2026-05-19-live-iva-compensation-wallet-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace live-iva-compensation-wallet with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S46 and 2026-05-19-live-iva-compensation-wallet-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Classify and log the selected Cl@ve route as push, QR, non-QR fallback, certificate, or unknown without swallowing browser errors. Partial 2026-05-26: application diagnostics now classify captured AEAT auth URLs against centralized `external_constants.toml` Cl@ve/Sede routes and ## Scope
-
-- `driver-side start logging already records selected `auth_mode`
-- `richer outcome taxonomy remains open. Completed 2026-05-27: Cl@ve fresh-login attempt context now records `auth_route`
-- `encrypted diagnostics surface that route`
-- `and the provider start log records mode`
-- `route`
-- `identity kind`
-- `identity alignment`
-- `profile-tax-id presence`
-- `and headless state without raw identifiers`
-- `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/application/auth` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Classify and log the selected Cl@ve route as push, QR, non-QR fallback, certificate, or unknown without swallowing browser errors. Partial 2026-05-26: application diagnostics now classify captured AEAT auth URLs against centralized `external_constants.toml` Cl@ve/Sede routes
 

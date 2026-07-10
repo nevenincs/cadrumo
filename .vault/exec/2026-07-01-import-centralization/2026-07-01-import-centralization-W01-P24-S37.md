@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S37'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `canonical_decimal_string` to `aeat.domain.__all__` with eager re-exports so the 6 existing cross-package consumer site(s) can import from the facade
 

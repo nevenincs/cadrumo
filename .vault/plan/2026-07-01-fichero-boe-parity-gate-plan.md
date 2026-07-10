@@ -3,22 +3,12 @@ tags:
   - '#plan'
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-adr]]'
   - '[[2026-07-01-fichero-boe-parity-gate-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `fichero-boe-parity-gate` plan
 

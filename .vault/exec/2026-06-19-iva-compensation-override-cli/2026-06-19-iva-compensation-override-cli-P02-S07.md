@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-compensation-override-cli'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S07'
 related:
   - "[[2026-06-19-iva-compensation-override-cli-plan]]"
 ---
-
-
-
 
 # Add a CLI conformance test exercising the override verb end to end and run the documented-command conformance gate
 

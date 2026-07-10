@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-lazy-import-policy'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-adr]]'
+  - '[[2026-07-06-arch-remediation-lazy-import-policy-research]]'
 ---
-
 # `arch-remediation-lazy-import-policy` plan
 
 ### Phase `P01` - allowlist declaration and classifier gate

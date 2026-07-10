@@ -12,8 +12,6 @@ related:
   - '[[2026-07-08-mcp-protocol-hardening-research]]'
 ---
 
-
-
 # `mcp-progressive-discovery` research: `MCP console tool-surface discovery architecture`
 
 An operator directive of 2026-07-08 asked for a fresh review of the aeat MCP

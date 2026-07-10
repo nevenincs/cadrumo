@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-registry-format'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
+  - '[[2026-07-06-arch-remediation-registry-format-research]]'
 ---
-
 # `arch-remediation-registry-format` plan
 
 ### Phase `P01` - mechanical majority migration

@@ -4,7 +4,7 @@ description: Process analysis of commit-bot WIP-sweep race condition in shared p
 metadata:
   type: audit
   date: 2026-05-28
-  modified: '2026-06-13'
+  modified: '2026-07-08'
   tags:
     - "#audit"
     - "#restructure-execution"

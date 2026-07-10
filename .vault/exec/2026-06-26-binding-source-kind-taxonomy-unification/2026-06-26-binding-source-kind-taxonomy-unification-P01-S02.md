@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S02'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
-
-
-
 
 # Extend the source-kind parity gate with an enum-to-mesh half and decide the purchase_invoice_evidence and ledger_transaction disposition
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 step_id: 'S02'
 related:
   - "[[2026-07-07-iva-prorrata-complexity-plan]]"
 ---
-
-
-
 
 # Add the Art104TresExclusion core enum and the operator-declared exclusion tag on the ledger transaction, with save/load roundtrip + anti-tautology proof
 

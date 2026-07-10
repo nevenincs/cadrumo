@@ -3,13 +3,15 @@ tags:
   - '#adr'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-02-registry-bindings-boundary-audit]]'
   - '[[2026-06-24-retenciones-perceptor-count-adr]]'
+  - '[[2026-06-26-binding-source-kind-taxonomy-unification-reference]]'
+  - '[[2026-06-26-bindings-architecture-unification-research]]'
 ---
 
 # `binding-source-kind-taxonomy-unification` adr: `source-kind taxonomy unification: one canonical core BindingSourceKind owning the registry+mesh union` | (**status:** `accepted`)

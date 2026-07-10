@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-05'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
@@ -11,16 +11,6 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 

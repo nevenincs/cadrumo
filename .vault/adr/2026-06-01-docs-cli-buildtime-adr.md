@@ -1,13 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#docs-cli-buildtime'
+  - "#adr"
+  - "#docs-cli-buildtime"
 date: '2026-06-01'
-modified: '2026-06-30'
 related:
   - "[[2026-06-01-docs-cli-buildtime-research]]"
+supersedes:
+  - '2026-05-30-docs-cli-conformance-adr'
+modified: '2026-07-10'
 ---
-
 # `docs-cli-buildtime` adr: build-time CLI reference extraction | (**status:** `accepted`)
 
 This decision supersedes decisions 1 and 2 of the CLI-documentation-conformance

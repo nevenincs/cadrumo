@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 step_id: 'S11'
 related:
   - "[[2026-07-07-iva-prorrata-complexity-plan]]"
 ---
-
-
-
 
 # Add the typed input_classification axis (core InputClassification) to the ledger transaction, operator-declared for especial buckets, with roundtrip + anti-tautology proof
 

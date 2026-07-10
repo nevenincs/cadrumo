@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S02'
 related:
   - "[[2026-07-01-modelo-151-beckham-source-scope-plan]]"
 ---
-
-
-
 
 # Ingest the art. 93.2.e.2 savings-band corpus and add the source-scoped base del ahorro and its escala
 

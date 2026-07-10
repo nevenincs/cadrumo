@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 related:
   - '[[2026-07-07-prorrata-especial-adr]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
@@ -13,32 +13,6 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace iva-prorrata-complexity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
 

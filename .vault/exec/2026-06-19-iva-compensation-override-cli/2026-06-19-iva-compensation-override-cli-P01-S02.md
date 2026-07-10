@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-compensation-override-cli'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S02'
 related:
   - "[[2026-06-19-iva-compensation-override-cli-plan]]"
 ---
-
-
-
 
 # Emit a MODELO_IVA_WALLET override audit event carrying reason and evidence_locator provenance through the single BucketEventHistoryRepository
 

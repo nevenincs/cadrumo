@@ -1,13 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#aeat-restructure'
+  - "#adr"
+  - "#aeat-restructure"
 date: '2026-04-30'
-modified: '2026-07-10'
 related:
-  - '[[2026-04-30-aeat-restructure-research]]'
+  - "[[2026-04-30-aeat-restructure-research]]"
+supersedes:
+  - '2026-04-25-operator-workflows-expansion-adr'
+modified: '2026-07-10'
 ---
-
 # `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted`)
 
 > **APPROVAL-READY — 2026-04-30.** This ADR has converged through

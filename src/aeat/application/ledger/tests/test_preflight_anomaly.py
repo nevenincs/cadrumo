@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -34,7 +35,7 @@ def _tx(
     *,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     currency: str = "EUR",
-    iva_category: str | None = "domestic_general_21",
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
@@ -99,7 +100,7 @@ def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
     cases: tuple[tuple[str, Transaction, R, tuple[str, ...], tuple[str, ...]], ...] = (
         (
             "outgoing-recargo",
-            _tx(iva_category="recargo_equivalencia", iva_amount=None, iva_rate=None),
+            _tx(iva_category=IvaCategory.RECARGO_EQUIVALENCIA, iva_amount=None, iva_rate=None),
             R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
             ("non-deductible acquisition cost",),
             (),
@@ -108,7 +109,7 @@ def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
             "incoming-recargo",
             _tx(
                 direction=TransactionDirection.INCOMING,
-                iva_category="recargo_equivalencia",
+                iva_category=IvaCategory.RECARGO_EQUIVALENCIA,
                 iva_amount=None,
                 iva_rate=None,
             ),
@@ -118,14 +119,14 @@ def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
         ),
         (
             "unknown",
-            _tx(iva_category="unknown", iva_amount=None, iva_rate=None, taxable_base=None),
+            _tx(iva_category=IvaCategory.UNKNOWN, iva_amount=None, iva_rate=None, taxable_base=None),
             R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
             (),
             (),
         ),
         (
             "erroneous-invoice",
-            _tx(iva_category="erroneous_invoice", iva_amount=None, iva_rate=None, taxable_base=None),
+            _tx(iva_category=IvaCategory.ERRONEOUS_INVOICE, iva_amount=None, iva_rate=None, taxable_base=None),
             R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
             (),
             (),

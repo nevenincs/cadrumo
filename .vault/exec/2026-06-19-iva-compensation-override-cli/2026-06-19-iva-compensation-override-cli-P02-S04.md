@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-compensation-override-cli'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S04'
 related:
   - "[[2026-06-19-iva-compensation-override-cli-plan]]"
 ---
-
-
-
 
 # Register the iva-wallet override Typer verb with --filing-year --period --amount --reason --evidence-locator and mandatory default-off --confirm, refusing to overrule a fresh AEAT wallet decision
 

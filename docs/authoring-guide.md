@@ -23,11 +23,11 @@ To rebuild the generated surfaces and verify them, run:
 ```bash
 python -m dev.docs.apidocs scaffold  # writes the API stub pages
 just docs                        # builds the full documentation site
-just docs-serve                  # serves the site on localhost with live reload
+just docs-serve                  # serves the site with live reload (auto-picks a free port)
 just docs-check                  # validates cross-references, stubs, and CLI output
 ```
 
-`just docs-serve` opens a local preview that rebuilds and refreshes the browser whenever a page under `docs/` or a docstring under `src/aeat/` changes. Adding or removing a module still needs `python -m dev.docs.apidocs scaffold` to refresh the stub set.
+`just docs-serve` opens a preview that rebuilds and refreshes the browser whenever a page under `docs/` or a docstring under `src/aeat/` changes. It binds every interface on a non-default port (so a container, VM, or LAN peer can reach it) and auto-picks a free port; pass `just docs-serve 9000` to pin one. Running it a second time attaches to the already-running preview instead of colliding with it. Adding or removing a module still needs `python -m dev.docs.apidocs scaffold` to refresh the stub set.
 
 `just docs-check` fails on a broken cross-reference, a missing stub, or a command reference that no longer matches the commands.
 

@@ -3,23 +3,13 @@ tags:
   - '#plan'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
+  - '[[2026-07-05-binding-vocabulary-cli-cohesion-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `binding-vocabulary-cli-cohesion` plan
 
 Phase-2.4 (final) of the bindings-architecture-unification sweep: a behaviour-preserving rename / re-home pass that makes the bindings vocabulary load-bearing (F6 homonyms + false-friends), reconciles the forked source-pull CLI verb surface (F7), and carves the selector discriminated-union typing (F8) to a tracked deferred follow-up.

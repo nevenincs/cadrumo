@@ -3,21 +3,11 @@ tags:
   - '#plan'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-01-modelo-151-beckham-source-scope-adr]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `modelo-151-beckham-source-scope` plan
 

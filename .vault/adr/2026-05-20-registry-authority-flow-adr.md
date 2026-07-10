@@ -1,13 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#registry-authority-flow'
+  - "#adr"
+  - "#registry-authority-flow"
 date: '2026-05-20'
-modified: '2026-06-30'
 related:
   - "[[2026-05-20-registry-authority-flow-research]]"
+supersedes:
+  - '2026-04-22-ruleset-architecture-adr'
+  - '2026-04-27-modelo-115-calc-verify-adr'
+modified: '2026-07-10'
 ---
-
 # `registry-authority-flow` adr: validated authority as the registry orchestration boundary | (**status:** `accepted`)
 
 ## Problem Statement

@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#released-data-durability'
 date: '2026-07-08'
-modified: '2026-07-08'
+modified: '2026-07-09'
 related: []
 ---
-
-
 
 # `released-data-durability` research: `long-term readability of persisted taxpayer data`
 

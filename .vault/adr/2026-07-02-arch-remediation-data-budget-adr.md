@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#arch-remediation-data-budget'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-05-15-corpus-registry-packaging-adr]]"
+  - '[[2026-07-06-arch-remediation-data-budget-research]]'
 ---
-
 # `arch-remediation-data-budget` adr: `bundled data budget and wheel content boundary` | (**status:** `accepted`)
 
 ## Problem Statement

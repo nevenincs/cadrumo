@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#m202-first-period-attestation'
 date: '2026-06-19'
-modified: '2026-06-21'
+modified: '2026-07-08'
 related:
   - '[[2026-06-13-first-filer-attestation-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
+  - '[[2026-07-06-m202-first-period-attestation-research]]'
 ---
-
 # `m202-first-period-attestation` adr: `scope out first-year modalidad-cuota Modelo 202 obligation via grounded attestation` | (**status:** `accepted`)
 
 ## Problem Statement

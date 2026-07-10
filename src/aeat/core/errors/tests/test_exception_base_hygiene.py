@@ -38,6 +38,12 @@ _ALLOWLIST = {
         "agent-harness live-eval scaffolding runtime error; intentionally a plain RuntimeError "
         "(a harness-boundary execution signal), not an operator-facing registry-bound filing error"
     ),
+    "aeat.entrypoints.mcp._input_schema.SchemaResolutionError": (
+        "MCP input-schema build-coverage error; intentionally a plain RuntimeError (a loud "
+        "build-time signal that a command's CLI subtree failed to materialise, which would "
+        "otherwise ship a silent argument-free schema), not an operator-facing registry-bound "
+        "filing error"
+    ),
     "aeat.application.auth._certificate_secret_backend.CertificateSecretBackendUnavailableError": (
         "certificate-secret backend boundary error; translated by the auth command/service layer, not raised as a "
         "registry-bound calculation or filing error"

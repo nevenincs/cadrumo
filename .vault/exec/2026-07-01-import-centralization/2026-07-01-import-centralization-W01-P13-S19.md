@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S19'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `evaluate_idle`, `get_active_master_key`, `has_active_bucket_session` to `aeat.adapters.persistence.storage.master_key.__all__` with eager re-exports so the 8 existing cross-package consumer site(s) can import from the facade
 
