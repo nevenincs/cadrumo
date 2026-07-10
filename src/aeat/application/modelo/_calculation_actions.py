@@ -51,6 +51,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode, Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
@@ -71,6 +72,7 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     CalculationSourceRef,
+    Modelo210AgrupacionRentaRow,
     ModeloDetailRow,
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
@@ -136,6 +138,7 @@ from ._calculation_source_staging import (
 from ._calculation_source_staging import (
     resolve_prorrata_regularizacion_sources as _resolve_prorrata_regularizacion_sources,
 )
+from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -190,6 +193,8 @@ def calculate_modelo_revision(
     unresolved_relation_ids: tuple[RelationId, ...] = (),
     unresolved_binding_ids: tuple[BindingId, ...] = (),
     source_transaction_ids: tuple[str, ...] = (),
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -265,6 +270,7 @@ def calculate_modelo_revision(
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
+    _validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
     resolved_relations = dict(relation_values or {})
     backend_casilla_inputs = {
         **_m131_objective_estimation_data_base_inputs(
@@ -332,6 +338,8 @@ def calculate_modelo_revision(
         relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=_m210_gross_source_mode(work_unit, m210_gross_income_source_mode),
         borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
         bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
         observations=typed_observations,
@@ -353,6 +361,8 @@ def calculate_modelo_revision_from_bucket_aggregation(
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
@@ -401,6 +411,8 @@ def calculate_modelo_revision_from_bucket_aggregation(
         actor=actor,
         casilla_inputs=casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         iva_compensation_decision=iva_compensation_decision,
@@ -526,6 +538,8 @@ def _resolve_bucket_source_mesh(
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     date_binding_values: Mapping[BindingId, date] | None = None,
@@ -553,9 +567,10 @@ def _resolve_bucket_source_mesh(
     from ..aggregation import (
         AtribucionMemberSourceResolver,
         CalculationSourceContext,
-        ForeignAssetsAggregationSourceResolver,
-        LedgerImpatriadoIncomeAggregationSourceResolver,
-        LedgerIvaAggregationSourceResolver,
+            ForeignAssetsAggregationSourceResolver,
+            LedgerImpatriadoIncomeAggregationSourceResolver,
+            LedgerIrnrIncomeAggregationSourceResolver,
+            LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
         LedgerRentaGastoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
@@ -577,6 +592,8 @@ def _resolve_bucket_source_mesh(
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         revision=snapshot.revision,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
     )
     source_resolution = merge_source_resolutions(
         (
@@ -603,6 +620,11 @@ def _resolve_bucket_source_mesh(
             # segregates every foreign / jurisdiction-unresolved row as a typed
             # BECKHAM_FOREIGN_SOURCE_SEGREGATED source diagnostic (art. 93.2 LIRPF).
             LedgerImpatriadoIncomeAggregationSourceResolver(
+                transaction_repository=memoized_transaction_repository,
+            ).resolve(context),
+            # M210 explicit IRNR income: the registry-bound gross-income source
+            # admits only ES transactions carrying the selected official code.
+            LedgerIrnrIncomeAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
             ).resolve(context),
             # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects
@@ -713,6 +735,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
@@ -764,6 +788,23 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # bucket-merge checks compare them against registry casilla ids.
     if casilla_inputs is not None:
         casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
+    resolved_m210_gross_income_source_mode = _m210_gross_source_mode(
+        work_unit,
+        m210_gross_income_source_mode,
+    )
+    _reject_manual_m210_gross_income_override_in_ledger_mode(
+        mode=resolved_m210_gross_income_source_mode,
+        casilla_inputs=casilla_inputs or {},
+    )
+    _validate_m210_official_tipo_renta_selection(
+        mode=resolved_m210_gross_income_source_mode,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        text_casilla_inputs=text_casilla_inputs or {},
+    )
+    _reject_manual_m210_agrupacion_rows_in_ledger_mode(
+        mode=resolved_m210_gross_income_source_mode,
+        detail_rows=detail_rows,
+    )
 
     # Use the LOCK set (deterministic ledger resolvers only) for the pre-merge
     # caller-override guard.  Optional-return resolvers (previous_filing, profile,
@@ -783,6 +824,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         foreign_asset_observations=foreign_asset_observations,
         casilla_inputs=casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=resolved_m210_gross_income_source_mode,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
@@ -882,6 +925,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         actor=actor,
         casilla_inputs=casilla_inputs or {},
         text_casilla_inputs=text_casilla_inputs,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=resolved_m210_gross_income_source_mode,
         binding_values=binding_values or {},
         backend_binding_values=backend_binding_values,
         row_binding_values=source_resolution.row_binding_values,
@@ -927,6 +972,87 @@ def _merge_detail_row_binding_values(
     for binding_id, value in detail_row_binding_values.items():
         merged[binding_id] = merged.get(binding_id, Decimal("0")) + value
     return merged
+
+
+def _m210_gross_source_mode(
+    work_unit: WorkUnit,
+    mode: M210GrossIncomeSourceMode | None,
+) -> M210GrossIncomeSourceMode | None:
+    """Resolve the persisted M210 [5] authority without affecting other modelos."""
+    if str(work_unit.modelo) == Modelo.M210.value:
+        return mode or M210GrossIncomeSourceMode.MANUAL
+    if mode is M210GrossIncomeSourceMode.LEDGER:
+        raise ModeloAggregationBindingError(
+            translated_message="application.modelo.errors.m210_ledger_source_requires_modelo_210",
+        )
+    return None
+
+
+def _validate_m210_agrupacion_renta_detail_rows(
+    work_unit: WorkUnit,
+    detail_rows: tuple[ModeloDetailRow, ...],
+    m210_official_tipo_renta_code: str | None,
+) -> None:
+    """Run M210 annual legal-evidence validation before formula evaluation."""
+    validate_m210_agrupacion_renta_rows_for_calculation(
+        work_unit=work_unit,
+        detail_rows=detail_rows,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+    )
+
+
+def _reject_manual_m210_gross_income_override_in_ledger_mode(
+    *,
+    mode: M210GrossIncomeSourceMode | None,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+) -> None:
+    """Keep explicit ledger and manual M210 [5] authority mutually exclusive."""
+    if mode is not M210GrossIncomeSourceMode.LEDGER:
+        return
+    if "rendimientos_integros" in casilla_inputs:
+        raise ModeloAggregationBindingError(
+            translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
+            context={"casillas": ["rendimientos_integros"]},
+        )
+
+
+def _validate_m210_official_tipo_renta_selection(
+    *,
+    mode: M210GrossIncomeSourceMode | None,
+    m210_official_tipo_renta_code: str | None,
+    text_casilla_inputs: Mapping[CasillaId, str],
+) -> None:
+    """Keep raw M210 code and conceptual formula token coherent at the application boundary."""
+    if m210_official_tipo_renta_code is None:
+        if mode is M210GrossIncomeSourceMode.LEDGER:
+            raise ModeloAggregationBindingError(
+                translated_message="application.modelo.errors.m210_ledger_source_selection_required",
+            )
+        return
+    expected_tipo_renta = M210_TIPO_RENTA_CODE_PROJECTION.get(m210_official_tipo_renta_code)
+    if expected_tipo_renta is None or text_casilla_inputs.get("tipo_renta") != expected_tipo_renta.value:
+        raise ModeloAggregationBindingError(
+            translated_message="application.modelo.errors.m210_official_tipo_renta_selection_mismatch",
+            context={
+                "official_tipo_renta_code": m210_official_tipo_renta_code,
+                "expected_tipo_renta": expected_tipo_renta.value if expected_tipo_renta is not None else None,
+                "tipo_renta": text_casilla_inputs.get("tipo_renta"),
+            },
+        )
+
+
+def _reject_manual_m210_agrupacion_rows_in_ledger_mode(
+    *,
+    mode: M210GrossIncomeSourceMode | None,
+    detail_rows: tuple[ModeloDetailRow, ...],
+) -> None:
+    """Keep annual M210 ledger evidence on the same classified-row authority."""
+    if mode is M210GrossIncomeSourceMode.LEDGER and any(
+        isinstance(row, Modelo210AgrupacionRentaRow) for row in detail_rows
+    ):
+        raise ModeloAggregationBindingError(
+            translated_message="application.modelo.errors.m210_ledger_manual_agrupacion_rows",
+        )
 
 
 def _merge_bucket_bound_inputs(

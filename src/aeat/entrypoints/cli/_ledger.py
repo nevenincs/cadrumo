@@ -65,7 +65,7 @@ from ._ledger_business_invoice_cli import (
     invoice_app,
     register_business_invoice_commands,
 )
-from ._ledger_classify_cli import ledger_classify_bulk_csv
+from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_evidence_cli import register_evidence_commands
 from ._ledger_import_cli import register_import_commands
 from ._ledger_inventory_cli import inventory_app, register_inventory_commands
@@ -86,6 +86,15 @@ from ._ledger_llm_cli import (
     ledger_classify_llm,
     ledger_operator_iva_derive,
     ledger_saturate_llm,
+)
+from ._ledger_m210_classify_cli import (
+    M210ApplicableRateOpt,
+    M210AssetOrRightIdOpt,
+    M210GrossIncomeAmountOpt,
+    M210LedgerClassifyOptions,
+    M210PayerIdOpt,
+    M210PayerModeOpt,
+    M210TipoRentaCodeOpt,
 )
 from ._ledger_ratios_cli import ratios_app, register_ratios_commands
 from ._ledger_read_cli import register_read_commands
@@ -616,7 +625,6 @@ _FromCsvOpt = Annotated[
     ),
 ]
 
-
 @app.command("classify", help=tr("cli.ledger.classify.help"))
 def ledger_classify(
     ctx: typer.Context,
@@ -641,6 +649,12 @@ def ledger_classify(
         "--irpf-category",
         help=tr("cli.ledger.classify.irpf_category_help"),
     ),
+    m210_tipo_renta_code: M210TipoRentaCodeOpt = None,
+    m210_gross_income_amount: M210GrossIncomeAmountOpt = None,
+    m210_applicable_rate: M210ApplicableRateOpt = None,
+    m210_payer_mode: M210PayerModeOpt = None,
+    m210_payer_id: M210PayerIdOpt = None,
+    m210_asset_or_right_id: M210AssetOrRightIdOpt = None,
     iva_category: IvaCategory | None = typer.Option(
         None,
         "--iva-category",
@@ -676,6 +690,21 @@ def ledger_classify(
     reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
+    m210_options = M210LedgerClassifyOptions(
+        tipo_renta_code=m210_tipo_renta_code,
+        gross_income_amount=m210_gross_income_amount,
+        applicable_rate=m210_applicable_rate,
+        payer_mode=m210_payer_mode,
+        payer_id=m210_payer_id,
+        asset_or_right_id=m210_asset_or_right_id,
+    )
+    m210_options.refuse_non_direct_routes(
+        llm_requested=llm is not None,
+        read_evidence=read_evidence,
+        saturate=saturate,
+        from_csv=from_csv,
+        auto_split=auto_split,
+    )
     if auto_split:
         dispatch_autosplit(
             ctx,
@@ -737,51 +766,17 @@ def ledger_classify(
         )
         return
 
-    # Single-transaction mode: the positional id and --classification are required
-    if transaction_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
-            ),
-        )
-    if classification is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.classification_required",
-                default="--classification is required when --from-csv is not provided.",
-            ),
-        )
-    if not is_classified(classification):
-        # NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE /
-        # FAILED_VALIDATION are pipeline-managed states; an operator classifies a
-        # row only as BUSINESS, PERSONAL, or MIXED. Refuse the system states
-        # instructively rather than letting the enum Choice apply one by hand.
-        raise _bad(
-            tr(
-                "cli.ledger.classify.system_state_not_assignable",
-                value=classification.value,
-                default=(
-                    f"Classification '{classification.value}' is set automatically by aeat and "
-                    "cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED."
-                ),
-            ),
-        )
-    if reason is not None and not reason.strip():
-        # A manual classification may record WHY via --reason, persisted to the
-        # transaction notes. An explicitly empty/whitespace reason carries no
-        # rationale; refuse it instructively rather than silently dropping it.
-        raise _bad(
-            tr(
-                "cli.ledger.classify.reason_empty",
-                default=(
-                    "Refused. --reason must record why you are classifying this "
-                    "transaction. Pass a non-empty rationale, or omit --reason."
-                ),
-            ),
-        )
+    transaction_id, classification = require_single_ledger_classification_request(
+        transaction_id=transaction_id,
+        classification=classification,
+        reason=reason,
+    )
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
+    m210_income_classification = m210_options.to_income_classification(
+        transaction_repository=transaction_repository,
+        transaction_id=resolved_id,
+    )
     if classification is BusinessClassification.MIXED and business_pct is None:
         # MIXED demands a proportion; surface the `--business-pct` flag
         # directly rather than letting the patch validator's generic
@@ -807,6 +802,7 @@ def ledger_classify(
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
+            m210_income_classification=m210_income_classification,
             iva_category=iva_category,
             counterparty_eu_member_state=counterparty_eu_member_state,
             notes=reason,

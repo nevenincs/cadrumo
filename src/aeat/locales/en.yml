@@ -281,6 +281,9 @@ adapters:
         modelo.
       no_auth_session: AEAT auth session is missing or not persisted; run `aeat config
         auth status` first.
+      notifications_bad_landing: The AEAT notifications page did not load correctly;
+        your session may have expired or AEAT is under maintenance. Run 'aeat config
+        auth status' and retry. Do not treat this as an empty inbox.
       parse_failed: Failed to parse the AEAT declarations response; the page structure
         may have changed.
       playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
@@ -291,12 +294,24 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
-      notifications_bad_landing: 'The AEAT notifications page did not load correctly; your session may have expired or AEAT is under maintenance. Run ''aeat config auth status'' and retry. Do not treat this as an empty inbox.'
 aggregation:
   grouping:
     errors:
       unsupported_modelo: No aggregation contract is registered for the requested
         modelo.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is foreign-source;
+        TRLIRNR Art. 13 excludes it from the Modelo 210 Spanish-source gross-income
+        projection.
+      incomplete_m210_classification: Spanish-source incoming transaction has no explicit
+        Modelo 210 income classification; the IRNR projection never infers an official
+        tipo-renta code from irpf_category.
+      source_jurisdiction_unresolved: source_jurisdiction is unresolved (None) on
+        an incoming Modelo 210 candidate; TRLIRNR Art. 13 admits only Spanish-source
+        income to this IRNR projection.
+      tipo_renta_code_not_declared: Modelo 210 official tipo-renta code %{tipo_renta_code}
+        is not declared for the selected revision and filing period %{period}.
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -887,6 +902,14 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      m210_ledger_manual_agrupacion_rows: Modelo 210 ledger source mode derives annual
+        grouped-renta rows from ledger classifications; do not provide manual agrupacion-renta
+        rows.
+      m210_ledger_source_requires_modelo_210: Modelo 210 ledger source mode can be
+        used only for Modelo 210 work units.
+      m210_ledger_source_selection_required: Modelo 210 ledger source mode requires
+        a raw official tipo-renta code selection.
+      m210_official_tipo_renta_selection_mismatch: 'Modelo 210 official tipo-renta code %{official_tipo_renta_code} requires formula token %{expected_tipo_renta}; received %{tipo_renta}.'
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on revision %{revision_id}: the registry declares a binding source no enrolled
         calculation resolver handles. Enroll a resolver or register it as deferred
@@ -975,6 +998,22 @@ application:
         worker contribution or contribucion empresarial is declared. Confirm this
         reduccion is backed by an employer-linked contribution eligible for the EUR
         8500 increment; otherwise it is capped at %{sublimit}.'
+      attribution_received_uncaptured: 'the M100 regimen-de-atribucion casilla %{casilla_id}
+        declares an attributed base (modelo=100 year=%{filing_year} value=%{casilla_value}
+        EUR) but no attribution_received facts back it for this filing year: the declared
+        income carries no captured provenance.'
+      attribution_received_uncaptured_next_action: Capture the attribution_received
+        facts (entity NIF, name, share percentage, attributed base, filing year) on
+        the taxpayer profile so the declared regimen-de-atribucion income carries
+        its Modelo 184 provenance.
+      attribution_received_unfolded: 'attribution_received facts declare an attributed
+        base for this filing year (modelo=100 year=%{filing_year} total=%{total_base}
+        EUR) but the M100 regimen-de-atribucion casilla %{casilla_id} resolves empty:
+        the received share was captured on the profile but not folded into the declaration.'
+      attribution_received_unfolded_next_action: Fold the attributed base into casilla
+        %{casilla_id} on the M100 calculation, e.g. via `aeat app modelo work calculate
+        ... --binding %{casilla_id}=%{total_base}`, so the regimen-de-atribucion income
+        is declared.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1122,10 +1161,6 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      attribution_received_unfolded: 'attribution_received facts declare an attributed base for this filing year (modelo=100 year=%{filing_year} total=%{total_base} EUR) but the M100 regimen-de-atribucion casilla %{casilla_id} resolves empty: the received share was captured on the profile but not folded into the declaration.'
-      attribution_received_unfolded_next_action: 'Fold the attributed base into casilla %{casilla_id} on the M100 calculation, e.g. via `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, so the regimen-de-atribucion income is declared.'
-      attribution_received_uncaptured: 'the M100 regimen-de-atribucion casilla %{casilla_id} declares an attributed base (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) but no attribution_received facts back it for this filing year: the declared income carries no captured provenance.'
-      attribution_received_uncaptured_next_action: 'Capture the attribution_received facts (entity NIF, name, share percentage, attributed base, filing year) on the taxpayer profile so the declared regimen-de-atribucion income carries its Modelo 184 provenance.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -2359,6 +2394,14 @@ cli:
         list_help: List registered work units, optionally filtered by profile
         list_next_action: Inspect one work unit's full state with `aeat app modelo
           work status`, then draft or recalculate it with `aeat app modelo work calculate`.
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
+          (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
+          share). On the socio''s own workspace, record it as attribution_received
+          facts (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year),
+          then fold the base into their Modelo 100 régimen-de-atribución (actividad
+          económica) casilla %{casilla} (LIRPF arts. 86-89).'
+        m210_gross_income_source_help: 'Modelo 210 [5] authority: manual (default)
+          or Spanish-source ledger aggregation.'
         meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
           3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
           Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
@@ -2567,7 +2610,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif} (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}% share). On the socio''s own workspace, record it as attribution_received facts (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year), then fold the base into their Modelo 100 régimen-de-atribución (actividad económica) casilla %{casilla} (LIRPF arts. 86-89).'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
@@ -2614,17 +2656,19 @@ cli:
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
       certificate:
-        check_help: cli.config.auth.certificate.check_help
-        help: cli.config.auth.certificate.help
-        list_help: cli.config.auth.certificate.list_help
+        check_help: Check expiry and rotation health for every registered certificate
+          source
+        help: Manage named certificate sources for the certificate auth provider
+        list_help: List every registered certificate source
         register:
-          file_help: cli.config.auth.certificate.register.file_help
-          friendly_name_help: cli.config.auth.certificate.register.friendly_name_help
-          name_help: cli.config.auth.certificate.register.name_help
-        register_help: cli.config.auth.certificate.register_help
+          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
+          friendly_name_help: Optional human-readable label distinct from --name
+          name_help: Identifier for this certificate source (for example, personal
+            or apoderado-acme)
+        register_help: Register or re-point a named certificate source
         remove:
-          name_help: cli.config.auth.certificate.remove.name_help
-        remove_help: cli.config.auth.certificate.remove_help
+          name_help: Registered certificate source to remove
+        remove_help: Remove a registered certificate source
         secret:
           help: Manage the passphrase bound to a named certificate source
           remove:
@@ -2637,8 +2681,8 @@ cli:
             secret_help: The PKCS#12 passphrase (prompted, hidden, never echoed)
           set_help: Set (or rotate) the passphrase for a registered certificate source
         select:
-          name_help: cli.config.auth.certificate.select.name_help
-        select_help: cli.config.auth.certificate.select_help
+          name_help: Registered certificate source to activate
+        select_help: Select the active certificate source
       clear_all_help: Clear all configured auth providers
       clear_help: Clear local authentication metadata
       clear_locks_help: Clear auth acquisition locks
@@ -2927,12 +2971,15 @@ cli:
       censo:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
+        dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot
+          carried: {dropped_fields}. If you did not change or close these registrations,
+          this may be a partial pull — re-run the censo pull or re-enter the values;
+          the home-office deduction ratio may stop resolving.'
         help: Sync AEAT 036 censo data with this profile
         pull_help: Pull your latest censo from AEAT into this profile's snapshot store.
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
-        dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot carried: {dropped_fields}. If you did not change or close these registrations, this may be a partial pull — re-run the censo pull or re-enter the values; the home-office deduction ratio may stop resolving.'
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile.
@@ -3403,7 +3450,7 @@ cli:
     panel:
       arguments: Arguments
       commands: Commands
-      error: 'Error'
+      error: Error
       options: Options
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
   ledger:
@@ -3600,6 +3647,23 @@ cli:
       llm_review_hint: Review the suggestion above. Re-run with --apply to accept
         it, with --classification to override manually, or do nothing to reject it.
       llm_suggestion_label: llm-suggestion
+      m210_applicable_rate_help: Applicable Modelo 210 rate as a decimal fraction,
+        for example 0.24.
+      m210_asset_or_right_id_help: Stable property or right identity for the Modelo
+        210 renta.
+      m210_explicit_direct_only: Modelo 210 classification is an explicit operator
+        decision; do not combine its flags with automatic, evidence-assisted, or bulk
+        classification.
+      m210_gross_income_amount_help: Explicit gross income for the Modelo 210 source
+        projection.
+      m210_incoming_only: Modelo 210 income classification is valid only for incoming
+        ledger transactions.
+      m210_payer_id_help: Stable payer identity for a single-payer Modelo 210 component.
+      m210_payer_mode_help: One payer or the explicit code-35 multiple-payer exception.
+      m210_required_options: Modelo 210 classification requires --m210-tipo-renta-code,
+        --m210-gross-income-amount, --m210-applicable-rate, and --m210-payer-mode
+        together.
+      m210_tipo_renta_code_help: Official two-digit Modelo 210 tipo-de-renta code.
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
@@ -4300,11 +4364,12 @@ cli:
       against the baseline
     errors:
       capability:
-        manuals_verify: cli.registry.errors.capability.manuals_verify
-        parity: cli.registry.errors.capability.parity
-        registry_verify: cli.registry.errors.capability.registry_verify
-        workbooks_verify: cli.registry.errors.capability.workbooks_verify
-      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
+        manuals_verify: manual corpus verification
+        parity: registry parity verification
+        registry_verify: registry verification
+        workbooks_verify: workbook verification
+      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
+        Install {install} and retry.
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:

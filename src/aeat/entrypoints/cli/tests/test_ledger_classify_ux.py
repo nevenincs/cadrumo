@@ -196,6 +196,25 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> No
     assert "MIXED" in result.output
 
 
+def test_classify_refuses_m210_evidence_flags_on_auto_split(tmp_path: Path) -> None:
+    """M210 evidence cannot be silently ignored by the automatic split route."""
+    transaction_id = _imported_transaction_id(tmp_path)
+    result = _invoke(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--auto-split",
+            "--m210-tipo-renta-code",
+            "01",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "explicit operator decision" in result.output
+
+
 def test_classify_reason_persists_to_transaction_notes(tmp_path: Path) -> None:
     """`classify --reason` records WHY into the transaction notes (issue #223)."""
     txn = _imported_transaction_id(tmp_path)

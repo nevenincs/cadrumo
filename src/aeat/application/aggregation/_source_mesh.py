@@ -29,7 +29,7 @@ from typing import Literal, NamedTuple, Protocol, Self, runtime_checkable
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, Period
+from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Period
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
@@ -268,6 +268,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
                 BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
                 BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
@@ -374,6 +375,8 @@ class CalculationSourceContext(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     revision: ModeloRevision
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
 
 

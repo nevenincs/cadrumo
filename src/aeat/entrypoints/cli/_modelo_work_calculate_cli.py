@@ -33,7 +33,7 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     calculate_modelo_work_revision,
 )
-from ...core import RescateType
+from ...core import M210GrossIncomeSourceMode, RescateType
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -95,6 +95,13 @@ _BorradorSnapshotOpt = Annotated[
                 "bindings marked aeat_prefilled; caller --binding overrides always take precedence."
             ),
         ),
+    ),
+]
+_M210GrossIncomeSourceOpt = Annotated[
+    M210GrossIncomeSourceMode,
+    typer.Option(
+        "--m210-gross-income-source",
+        help=tr("cli.app.modelo.work.m210_gross_income_source_help"),
     ),
 ]
 _ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
@@ -330,6 +337,7 @@ def register_work_calculate_commands(
         casilla: _CasillaOpt = None,
         binding: _BindingOpt = None,
         borrador_snapshot_id: _BorradorSnapshotOpt = None,
+        m210_gross_income_source: _M210GrossIncomeSourceOpt = M210GrossIncomeSourceMode.MANUAL,
         actor: _ActorOpt = None,
         relation: _RelationOpt = None,
         row: _RowOpt = None,
@@ -360,6 +368,7 @@ def register_work_calculate_commands(
             casilla=casilla,
             binding=binding,
             borrador_snapshot_id=borrador_snapshot_id,
+            m210_gross_income_source=m210_gross_income_source,
             actor=actor,
             relation=relation,
             row=row,
@@ -392,6 +401,7 @@ def _run_work_calculate(
     casilla: list[str] | None,
     binding: list[str] | None,
     borrador_snapshot_id: str | None,
+    m210_gross_income_source: M210GrossIncomeSourceMode,
     actor: str | None,
     relation: list[str] | None,
     row: list[str] | None,
@@ -427,6 +437,7 @@ def _run_work_calculate(
         relation=relation,
         row=row,
         borrador_snapshot_id=borrador_snapshot_id,
+        m210_gross_income_source_mode=m210_gross_income_source,
         prestacion_inss_exenta=prestacion_inss_exenta,
         meses_trabajo_con_hijo_menor_3=meses_trabajo_con_hijo_menor_3,
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,

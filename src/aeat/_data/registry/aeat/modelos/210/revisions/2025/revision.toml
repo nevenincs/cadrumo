@@ -6,10 +6,11 @@ label = "Ejercicio 2025 y siguientes"
 # pension tariff) has no annual coefficient table. A separate revision is
 # authored only when a genuine statutory or form-structure change takes effect.
 valid_from = 2025-01-01
-period_selector = { year_from = 2025, periods = ["EVENT-N"] }
+period_selector = { year_from = 2025, periods = ["EVENT-N", "0A"] }
 orden_aplicabilidad = ["orden-eha-3316-2010:art-1"]
 legal_refs = [
     "orden-eha-3316-2010:art-1",
+    "orden-eha-3316-2010:art-2",
     "trlirnr-rdleg-5-2004:art-13.1.h",
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",

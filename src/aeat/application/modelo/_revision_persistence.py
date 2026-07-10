@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core import Modelo, ProrrataRegisterRegime
+from ...core import M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -192,6 +192,8 @@ def persist_calculation_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
 ) -> CalculationRevision:
     """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
@@ -224,6 +226,8 @@ def persist_calculation_revision(
         relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         detail_rows=detail_rows,
@@ -257,6 +261,8 @@ def persist_calculation_revision(
         row_binding_values=row_binding_values,
         relation_overrides=relation_overrides,
         source_transaction_ids=source_transaction_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         casilla_values=casilla_values,

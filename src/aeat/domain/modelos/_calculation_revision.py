@@ -47,7 +47,7 @@ from typing import Annotated, cast, override
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210GrossIncomeSourceMode
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
@@ -153,10 +153,10 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
                 d[field_name] = str(field_value)
         return dict(sorted(d.items()))
 
-    def _nif_key(row: ModeloDetailRow) -> str:
-        return getattr(row, "nif", None) or getattr(row, "nif_comunitario", "")
+    def _row_identity_key(row: ModeloDetailRow) -> str:
+        return getattr(row, "source_id", None) or getattr(row, "nif", None) or getattr(row, "nif_comunitario", "")
 
-    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _nif_key(r)))]
+    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _row_identity_key(r)))]
 
 
 def _validated_row_binding_index(value: object, *, surface: str) -> str:
@@ -208,6 +208,8 @@ def derive_calculation_revision_id(
     casilla_values: Mapping[CasillaId, Decimal],
     relation_overrides: Mapping[RelationId, str] | None = None,
     source_transaction_ids: Sequence[str] = (),
+    m210_official_tipo_renta_code: str | None = None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     borrador_snapshot_id: str | None = None,
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
@@ -252,6 +254,15 @@ def derive_calculation_revision_id(
                 for k, v in relation_overrides.items()
             ),
         )
+    if m210_official_tipo_renta_code is not None:
+        code = m210_official_tipo_renta_code.strip()
+        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
+            raise ModeloValidationError(
+                f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
+            )
+        payload["m210_official_tipo_renta_code"] = code
+    if m210_gross_income_source_mode is not None:
+        payload["m210_gross_income_source_mode"] = m210_gross_income_source_mode.value
     # CAST-RATIONALE-ROW-BINDING-HASH: canonicalizer validates untyped boundary values before hashing.
     canonical_row_bindings = _canonical_row_binding_values(
         # CAST-RATIONALE-ROW-BINDING-HASH-VALUE: canonicalizer validates untyped boundary values before hashing.
@@ -386,6 +397,11 @@ class CalculationRevision(BaseModel):
             contributed to this revision through bucket-local
             aggregation. Empty for calculations that did not consume
             ledger transactions.
+        m210_official_tipo_renta_code: The raw, official two-digit M210
+            tipo-de-renta code selected for this revision's ledger projection.
+            It remains distinct from the conceptual ``tipo_renta`` token used
+            by the formula rate path, so an audit can distinguish official
+            codes that share one rate concept.
         casilla_values: Mapping of computed casilla values (decimal
             output). The values that would be exported to AEAT if
             this revision were filed.
@@ -422,6 +438,8 @@ class CalculationRevision(BaseModel):
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
@@ -499,6 +517,8 @@ class CalculationRevision(BaseModel):
             relation_overrides=self.relation_overrides,
             casilla_values=self.casilla_values,
             source_transaction_ids=self.source_transaction_ids,
+            m210_official_tipo_renta_code=self.m210_official_tipo_renta_code,
+            m210_gross_income_source_mode=self.m210_gross_income_source_mode,
             borrador_snapshot_id=self.borrador_snapshot_id,
             bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
             detail_rows=self.detail_rows,
@@ -616,6 +636,18 @@ class CalculationRevision(BaseModel):
         if len(set(normalized)) != len(normalized):
             raise ModeloValidationError("source_transaction_ids must not contain duplicates")
         return normalized
+
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    def _validate_m210_official_tipo_renta_code(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        code = value.strip()
+        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
+            raise ModeloValidationError(
+                f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
+            )
+        return code
 
     @field_validator("row_binding_values", mode="before")
     @classmethod

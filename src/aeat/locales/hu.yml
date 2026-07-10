@@ -297,6 +297,10 @@ adapters:
       modelo_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
         futtassa először az `aeat config auth status` parancsot.
+      notifications_bad_landing: Az AEAT értesítési oldala nem töltődött be megfelelően;
+        a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtassa az
+        'aeat config auth status' parancsot, és próbálja újra. Ne tekintse ezt üres
+        postafióknak.
       parse_failed: Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája
         megváltozhatott.
       playwright_alert_modal_failed: Hiba az AEAT riasztási modal folytatásakor.
@@ -307,11 +311,24 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa az 'aeat config auth test' parancsot
         és próbálja újra.
-      notifications_bad_landing: 'Az AEAT értesítési oldala nem töltődött be megfelelően; a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtassa az ''aeat config auth status'' parancsot, és próbálja újra. Ne tekintse ezt üres postafióknak.'
 aggregation:
   grouping:
     errors:
       unsupported_modelo: Nincs regisztrált összesítési szerződés a kért modellhez.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: A source_jurisdiction %{source_jurisdiction} külföldi
+        forrást jelöl; a TRLIRNR 13. cikke kizárja az M210-es modell spanyol forrású
+        bruttó jövedelem-projekciójából.
+      incomplete_m210_classification: A spanyol forrású bejövő tranzakcióhoz nincs
+        kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
+        hivatalos tipo-renta kódra az irpf_category mezőből.
+      source_jurisdiction_unresolved: Az M210-es jelölt bejövő tétel source_jurisdiction
+        értéke nincs feloldva (None); a TRLIRNR 13. cikke csak a spanyol forrású jövedelmet
+        engedi ebbe az IRNR-projekcióba.
+      tipo_renta_code_not_declared: Az M210-es modell %{tipo_renta_code} hivatalos
+        tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
+        és benyújtási időszakhoz.
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
@@ -903,6 +920,14 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      m210_ledger_manual_agrupacion_rows: Az M210-es modell főkönyvi forrásmódja a
+        főkönyvi besorolásokból származtatja az éves csoportosított jövedelemsorokat;
+        ne adjon meg kézi agrupacion-renta sorokat.
+      m210_ledger_source_requires_modelo_210: Az M210-es modell főkönyvi forrásmódja
+        csak M210-es modell munkegységein használható.
+      m210_ledger_source_selection_required: Az M210-es modell főkönyvi forrásmódjához
+        nyers hivatalos tipo-renta kód kiválasztása szükséges.
+      m210_official_tipo_renta_selection_mismatch: 'Az M210-es modell %{official_tipo_renta_code} hivatalos tipo-renta kódjához a %{expected_tipo_renta} képletérték szükséges; kapott érték: %{tipo_renta}.'
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} revízióban: a regiszter olyan kötési forrást deklarál,
         amelyet egyetlen számítási feloldó sem kezel. Regisztráljon egy feloldót,
@@ -1002,6 +1027,22 @@ application:
         sem munkaltatoi hozzajarulas. Erositse meg, hogy a csokkentest munkaltatohoz
         kotott hozzajarulas fedezi, amely jogosult a 8500 EUR-s novelesre; kulonben
         a hatar %{sublimit}.'
+      attribution_received_uncaptured: 'az M100 hozzárendelési rendszerének %{casilla_id}
+        rovata hozzárendelt adóalapot vall be (modelo=100 year=%{filing_year} value=%{casilla_value}
+        EUR), de egyetlen attribution_received tény sem támasztja alá erre az adóévre:
+        a bevallott jövedelemnek nincs rögzített eredete.'
+      attribution_received_uncaptured_next_action: Rögzítse az attribution_received
+        tényeket (az entitás NIF-je, neve, részesedési százalék, hozzárendelt adóalap,
+        adóév) az adózó profiljában, hogy a hozzárendelési rendszer bevallott jövedelme
+        a Modelo 184 szerinti eredetét hordozza.
+      attribution_received_unfolded: 'az attribution_received tények hozzárendelt
+        adóalapot jelentenek be erre az adóévre (modelo=100 year=%{filing_year} total=%{total_base}
+        EUR), de az M100 hozzárendelési rendszerének %{casilla_id} rovata üres marad:
+        a kapott részesedést rögzítették a profilban, de nem építették be a bevallásba.'
+      attribution_received_unfolded_next_action: Építse be a hozzárendelt adóalapot
+        az M100 számításának %{casilla_id} rovatába, például a(z) `aeat app modelo
+        work calculate ... --binding %{casilla_id}=%{total_base}` paranccsal, hogy
+        a hozzárendelési rendszer jövedelme bevallásra kerüljön.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1156,10 +1197,6 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
-      attribution_received_unfolded: 'az attribution_received tények hozzárendelt adóalapot jelentenek be erre az adóévre (modelo=100 year=%{filing_year} total=%{total_base} EUR), de az M100 hozzárendelési rendszerének %{casilla_id} rovata üres marad: a kapott részesedést rögzítették a profilban, de nem építették be a bevallásba.'
-      attribution_received_unfolded_next_action: 'Építse be a hozzárendelt adóalapot az M100 számításának %{casilla_id} rovatába, például a(z) `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}` paranccsal, hogy a hozzárendelési rendszer jövedelme bevallásra kerüljön.'
-      attribution_received_uncaptured: 'az M100 hozzárendelési rendszerének %{casilla_id} rovata hozzárendelt adóalapot vall be (modelo=100 year=%{filing_year} value=%{casilla_value} EUR), de egyetlen attribution_received tény sem támasztja alá erre az adóévre: a bevallott jövedelemnek nincs rögzített eredete.'
-      attribution_received_uncaptured_next_action: 'Rögzítse az attribution_received tényeket (az entitás NIF-je, neve, részesedési százalék, hozzárendelt adóalap, adóév) az adózó profiljában, hogy a hozzárendelési rendszer bevallott jövedelme a Modelo 184 szerinti eredetét hordozza.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -2464,6 +2501,15 @@ cli:
         list_next_action: Egy munkaegység teljes állapotát az `aeat app modelo work
           status` paranccsal tekintheti meg, majd az `aeat app modelo work calculate`
           paranccsal készíthet vagy számolhat újra vázlatot.
+        m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
+          atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt
+          adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
+          attribution_received tényekként kell rögzítenie (entity_nif, entity_name,
+          share_pct, base_imponible_attributed, filing_year), majd az adóalapot be
+          kell építenie a saját Modelo 100 hozzárendelési rendszer (gazdasági tevékenység)
+          %{casilla} rovatába (LIRPF 86-89. cikk).'
+        m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
+          (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
         meses_trabajo_con_hijo_menor_3_help: 'A 3 évesnél fiatalabb gyermekkel végzett
           munkahónapok száma a családi egységben (LIRPF 81. cikk anyasági levonás).
           Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként ismételhető. A GYERMEK_AZONOSÍTÓ
@@ -2688,7 +2734,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén attribution_received tényekként kell rögzítenie (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year), majd az adóalapot be kell építenie a saját Modelo 100 hozzárendelési rendszer (gazdasági tevékenység) %{casilla} rovatába (LIRPF 86-89. cikk).'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
@@ -2736,19 +2781,19 @@ cli:
           list_help: Elfogadott apoderado hatókörök listázása.
         status_help: Aktív apoderado-konfiguráció megjelenítése.
       certificate:
-        check_help: cli.config.auth.certificate.check_help
-        help: Névvel ellátott tanúsítványforrások kezelése a tanúsítványalapú hitelesítési
-          szolgáltatóhoz
-        list_help: Az összes regisztrált tanúsítványforrás felsorolása
+        check_help: Check expiry and rotation health for every registered certificate
+          source
+        help: Manage named certificate sources for the certificate auth provider
+        list_help: List every registered certificate source
         register:
-          file_help: A PKCS#12 (.p12/.pfx) csomag elérési útja
-          friendly_name_help: Opcionális, ember által olvasható címke a --name-től
-            eltérően
-          name_help: Azonosító ehhez a tanúsítványforráshoz (pl. 'personal', 'apoderado-acme')
-        register_help: Névvel ellátott tanúsítványforrás regisztrálása (vagy áthelyezése)
+          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
+          friendly_name_help: Optional human-readable label distinct from --name
+          name_help: Identifier for this certificate source (for example, personal
+            or apoderado-acme)
+        register_help: Register or re-point a named certificate source
         remove:
-          name_help: Az eltávolítandó regisztrált tanúsítványforrás
-        remove_help: Egy regisztrált tanúsítványforrás eltávolítása
+          name_help: Registered certificate source to remove
+        remove_help: Remove a registered certificate source
         secret:
           help: A nevesitett tanusitvanyforrashoz kotott jelszo kezelese
           remove:
@@ -2763,8 +2808,8 @@ cli:
               meg)
           set_help: Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat
         select:
-          name_help: Az aktiválandó regisztrált tanúsítványforrás
-        select_help: Az aktív tanúsítványforrás kiválasztása
+          name_help: Registered certificate source to activate
+        select_help: Select the active certificate source
       clear_all_help: Minden konfigurált hitelesítési szolgáltató törlése.
       clear_help: Helyi hitelesítési metaadatok törlése.
       clear_locks_help: Hitelesítésszerzési zárolások törlése.
@@ -3083,6 +3128,11 @@ cli:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
+        dropped_fields_notice: 'Az AEAT censo mar nem tartalmaz olyan mezoket, amelyek
+          a legutobbi pillanatfelvetelben szerepeltek: {dropped_fields}. Ha nem valtoztattad
+          meg es nem szuntetted meg ezeket a bejegyzeseket, elofordulhat, hogy reszleges
+          letoltes tortent: futtasd ujra a censo letoltest, vagy add meg ismet az
+          ertekeket; az otthoni iroda levonasi aranya nem biztos, hogy feloldodik.'
         help: Az AEAT 036-os nyilvántartási adatok szinkronizálása ezzel a profillal.
         pull_help: Letolti a legfrissebb censo-t az AEAT-tol e profil pillanatkep-tarolojaba.
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
@@ -3090,7 +3140,6 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
-        dropped_fields_notice: 'Az AEAT censo mar nem tartalmaz olyan mezoket, amelyek a legutobbi pillanatfelvetelben szerepeltek: {dropped_fields}. Ha nem valtoztattad meg es nem szuntetted meg ezeket a bejegyzeseket, elofordulhat, hogy reszleges letoltes tortent: futtasd ujra a censo letoltest, vagy add meg ismet az ertekeket; az otthoni iroda levonasi aranya nem biztos, hogy feloldodik.'
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
@@ -3602,7 +3651,7 @@ cli:
     panel:
       arguments: Argumentumok
       commands: Parancsok
-      error: 'Hiba'
+      error: Hiba
       options: Kapcsolók
     try_for_help: 'Súgóért futtassa: [blue]''{command_path} {help_option}''[/].'
   ledger:
@@ -3811,6 +3860,22 @@ cli:
         az elfogadashoz, --classification kapcsoloval a kezi felulbiralashoz, vagy
         ne tegy semmit az elutasitashoz.
       llm_suggestion_label: llm-javaslat
+      m210_applicable_rate_help: Az M210-es modell alkalmazandó kulcsa tizedes törtben,
+        például 0.24.
+      m210_asset_or_right_id_help: Az M210-es modell jövedelméhez tartozó ingatlan
+        vagy jog stabil azonosítója.
+      m210_explicit_direct_only: Az M210-es modell besorolása kifejezett kezelői döntés;
+        ne kombinálja a jelzőit automatikus, bizonyítéksegített vagy tömeges besorolással.
+      m210_gross_income_amount_help: Kifejezett bruttó jövedelem az M210-es modell
+        forrásprojekciójához.
+      m210_incoming_only: Az M210-es modell jövedelmi besorolása csak bejövő főkönyvi
+        tranzakcióknál érvényes.
+      m210_payer_id_help: Egykifizetős M210-es modellkomponens stabil kifizetőazonosítója.
+      m210_payer_mode_help: Egy kifizető vagy a 35-ös kód kifejezett több-kifizetős
+        kivétele.
+      m210_required_options: Az M210-es modell besorolásához együtt szükséges a --m210-tipo-renta-code,
+        --m210-gross-income-amount, --m210-applicable-rate és --m210-payer-mode.
+      m210_tipo_renta_code_help: Az M210-es modell hivatalos kétjegyű tipo-renta kódja.
       mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
         arány szükséges. Adjon meg --business-pct értéket 0 és 1 között, vagy sorolja
         be a sort BUSINESS vagy PERSONAL kategóriába.
@@ -4552,11 +4617,12 @@ cli:
       hasonlítjuk
     errors:
       capability:
-        manuals_verify: cli.registry.errors.capability.manuals_verify
-        parity: cli.registry.errors.capability.parity
-        registry_verify: cli.registry.errors.capability.registry_verify
-        workbooks_verify: cli.registry.errors.capability.workbooks_verify
-      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
+        manuals_verify: manual corpus verification
+        parity: registry parity verification
+        registry_verify: registry verification
+        workbooks_verify: workbook verification
+      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
+        Install {install} and retry.
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:

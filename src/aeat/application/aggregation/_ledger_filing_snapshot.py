@@ -14,7 +14,8 @@ and evaluating drift between a filed snapshot and the current ledger state.
 The fingerprint covers exactly the transaction facts that can move a casilla --
 dates, amount magnitude, currency, direction, business classification and
 proportionality, the IVA base/rate/amount/category, the spending and IRPF
-categories, the EU member state, the FX conversion, and the lifecycle state.
+categories, the M210 source-jurisdiction/classification facts, the EU member
+state, the FX conversion, and the lifecycle state.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -72,6 +73,13 @@ _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
     ("iva_category", "iva_category"),
     ("category_id", "category_id"),
     ("irpf_category", "irpf_category"),
+    ("source_jurisdiction", "source_jurisdiction"),
+    ("m210_official_tipo_renta_code", "m210_income_classification.official_tipo_renta_code"),
+    ("m210_gross_income_amount", "m210_income_classification.gross_income_amount"),
+    ("m210_applicable_rate", "m210_income_classification.applicable_rate"),
+    ("m210_payer_mode", "m210_income_classification.payer_mode"),
+    ("m210_payer_id", "m210_income_classification.payer_id"),
+    ("m210_asset_or_right_id", "m210_income_classification.asset_or_right_id"),
     ("counterparty_eu_member_state", "counterparty_eu_member_state"),
     ("fx_rate", "fx_rate"),
     ("value_in_eur", "value_in_eur"),
@@ -95,6 +103,8 @@ def _normalise(value: object) -> str:
 def _resolve(transaction: Transaction, path: str) -> object:
     target: object = transaction
     for attr in path.split("."):
+        if target is None:
+            return None
         target = getattr(target, attr)
     return target
 
@@ -192,6 +202,7 @@ def _evidence_row(
     ISO-8601 strings.
     """
     raw = transaction.raw
+    m210_classification = transaction.m210_income_classification
     return LedgerEvidenceRow(
         transaction_id=transaction.transaction_id,
         fingerprint=row_fingerprint(transaction),
@@ -208,6 +219,19 @@ def _evidence_row(
         iva_category=_enum_value(transaction.iva_category),
         category_id=transaction.category_id,
         irpf_category=transaction.irpf_category,
+        source_jurisdiction=transaction.source_jurisdiction,
+        m210_official_tipo_renta_code=(
+            m210_classification.official_tipo_renta_code if m210_classification is not None else None
+        ),
+        m210_gross_income_amount=(
+            m210_classification.gross_income_amount if m210_classification is not None else None
+        ),
+        m210_applicable_rate=(m210_classification.applicable_rate if m210_classification is not None else None),
+        m210_payer_mode=(
+            _enum_value(m210_classification.payer_mode) if m210_classification is not None else None
+        ),
+        m210_payer_id=m210_classification.payer_id if m210_classification is not None else None,
+        m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_eu_member_state=_enum_value(transaction.counterparty_eu_member_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,

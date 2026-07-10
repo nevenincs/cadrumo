@@ -74,6 +74,27 @@ class TipoRentaIrnr(StrEnum):
     CANONES = "canones"
 
 
+class M210PayerMode(StrEnum):
+    """Closed payer-identity modes for one Modelo 210 renta component.
+
+    Modelo 210 agrupación normally requires a single identified payer. The
+    statutory code-35 exception represents several payers for grouped rental
+    income; it is an explicit mode, never a missing payer identifier. The same
+    legal vocabulary is shared by persisted M210 ledger classifications and
+    M210 declaration-detail rows.
+    """
+
+    SINGLE_PAYER = "single_payer"
+    MULTIPLE_PAYERS_CODE_35 = "multiple_payers_code_35"
+
+
+class M210GrossIncomeSourceMode(StrEnum):
+    """Authority selected for Modelo 210 ``rendimientos_integros`` on one revision."""
+
+    MANUAL = "manual"
+    LEDGER = "ledger"
+
+
 class ConvenioOverrideKind(StrEnum):
     """How a double-taxation treaty override acts on the domestic IRNR rate.
 

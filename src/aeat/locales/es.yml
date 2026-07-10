@@ -316,6 +316,10 @@ adapters:
         solicitado.
       no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
         ejecute primero `aeat config auth status`.
+      notifications_bad_landing: La página de notificaciones de la AEAT no se cargó
+        correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento.
+        Ejecute 'aeat config auth status' y vuelva a intentarlo. No lo interprete
+        como una bandeja vacía.
       parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
         estructura de la página puede haber cambiado.
       playwright_alert_modal_failed: Error al continuar el modal de alerta de AEAT.
@@ -327,12 +331,25 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      notifications_bad_landing: 'La página de notificaciones de la AEAT no se cargó correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento. Ejecute ''aeat config auth status'' y vuelva a intentarlo. No lo interprete como una bandeja vacía.'
 aggregation:
   grouping:
     errors:
       unsupported_modelo: No hay contrato de agregación registrado para el modelo
         solicitado.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} es de
+        fuente extranjera; el art. 13 del TRLIRNR la excluye de la proyección de rendimientos
+        íntegros de fuente española del Modelo 210.
+      incomplete_m210_classification: La operación entrante de fuente española no
+        tiene una clasificación expresa de renta del Modelo 210; la proyección del
+        IRNR nunca infiere un código oficial de tipo de renta desde irpf_category.
+      source_jurisdiction_unresolved: source_jurisdiction no está resuelta (None)
+        en una candidata entrante al Modelo 210; el art. 13 del TRLIRNR solo admite
+        rentas de fuente española en esta proyección del IRNR.
+      tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}
+        del Modelo 210 no está declarado para la revisión y el período de presentación
+        %{period} seleccionados.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -975,6 +992,14 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo
+        210 deriva las filas anuales de agrupación de rentas de las clasificaciones
+        del libro; no proporcione filas manuales de agrupación de rentas.
+      m210_ledger_source_requires_modelo_210: El modo de fuente de libro mayor del
+        Modelo 210 solo puede usarse en unidades de trabajo del Modelo 210.
+      m210_ledger_source_selection_required: El modo de fuente de libro mayor del
+        Modelo 210 requiere una selección de código oficial de tipo de renta sin proyectar.
+      m210_official_tipo_renta_selection_mismatch: 'El código oficial de tipo de renta %{official_tipo_renta_code} del Modelo 210 requiere el valor de fórmula %{expected_tipo_renta}; se recibió %{tipo_renta}.'
       novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
         en la revisión %{revision_id}: el registro declara un origen de vinculación
         que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
@@ -1075,6 +1100,23 @@ application:
         empresarial. Confirme que la reduccion esta respaldada por una contribucion
         vinculada al empleador que dé derecho al incremento de 8500 EUR; en caso contrario,
         el limite aplicable es %{sublimit}.'
+      attribution_received_uncaptured: 'la casilla %{casilla_id} del régimen de atribución
+        del M100 declara una base atribuida (modelo=100 year=%{filing_year} value=%{casilla_value}
+        EUR) pero ningún hecho attribution_received la respalda para este ejercicio:
+        la renta declarada no tiene procedencia registrada.'
+      attribution_received_uncaptured_next_action: Registre los hechos attribution_received
+        (NIF de la entidad, nombre, porcentaje de participación, base atribuida, ejercicio)
+        en el perfil del contribuyente para que la renta declarada del régimen de
+        atribución tenga la procedencia de su Modelo 184.
+      attribution_received_unfolded: 'los hechos attribution_received declaran una
+        base atribuida para este ejercicio (modelo=100 year=%{filing_year} total=%{total_base}
+        EUR) pero la casilla %{casilla_id} del régimen de atribución del M100 resulta
+        vacía: la participación recibida se registró en el perfil pero no se incorporó
+        a la declaración.'
+      attribution_received_unfolded_next_action: Incorpore la base atribuida a la
+        casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `aeat app
+        modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para que
+        la renta del régimen de atribución quede declarada.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1231,10 +1273,6 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
-      attribution_received_unfolded: 'los hechos attribution_received declaran una base atribuida para este ejercicio (modelo=100 year=%{filing_year} total=%{total_base} EUR) pero la casilla %{casilla_id} del régimen de atribución del M100 resulta vacía: la participación recibida se registró en el perfil pero no se incorporó a la declaración.'
-      attribution_received_unfolded_next_action: 'Incorpore la base atribuida a la casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para que la renta del régimen de atribución quede declarada.'
-      attribution_received_uncaptured: 'la casilla %{casilla_id} del régimen de atribución del M100 declara una base atribuida (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) pero ningún hecho attribution_received la respalda para este ejercicio: la renta declarada no tiene procedencia registrada.'
-      attribution_received_uncaptured_next_action: 'Registre los hechos attribution_received (NIF de la entidad, nombre, porcentaje de participación, base atribuida, ejercicio) en el perfil del contribuyente para que la renta declarada del régimen de atribución tenga la procedencia de su Modelo 184.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -2556,6 +2594,14 @@ cli:
         list_next_action: Inspecciona el estado completo de una unidad de trabajo
           con `aeat app modelo work status` y luego crea o recalcula el borrador con
           `aeat app modelo work calculate`.
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
+          (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
+          %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
+          como hechos attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed,
+          filing_year) y después incorporar la base a la casilla %{casilla} del régimen
+          de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
+        m210_gross_income_source_help: 'Autoridad de la [5] del Modelo 210: manual
+          (predeterminada) o agregación de libro mayor de fuente española.'
         meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
           de 3 años estaba en la unidad familiar (Art. 81 LIRPF deducción maternidad).
           Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
@@ -2776,7 +2822,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif} (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla como hechos attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) y después incorporar la base a la casilla %{casilla} del régimen de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
@@ -2822,19 +2867,19 @@ cli:
           list_help: Listar los ámbitos de apoderado aceptados
         status_help: Mostrar la configuración de apoderado activa
       certificate:
-        check_help: cli.config.auth.certificate.check_help
-        help: Gestionar orígenes de certificado con nombre para el proveedor de autenticación
-          por certificado
-        list_help: Listar todos los orígenes de certificado registrados
+        check_help: Check expiry and rotation health for every registered certificate
+          source
+        help: Manage named certificate sources for the certificate auth provider
+        list_help: List every registered certificate source
         register:
-          file_help: Ruta al paquete PKCS#12 (.p12/.pfx)
-          friendly_name_help: Etiqueta legible opcional distinta de --name
-          name_help: Identificador para este origen de certificado (por ejemplo, 'personal',
-            'apoderado-acme')
-        register_help: Registrar (o redirigir) un origen de certificado con nombre
+          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
+          friendly_name_help: Optional human-readable label distinct from --name
+          name_help: Identifier for this certificate source (for example, personal
+            or apoderado-acme)
+        register_help: Register or re-point a named certificate source
         remove:
-          name_help: Origen de certificado registrado que se eliminará
-        remove_help: Eliminar un origen de certificado registrado
+          name_help: Registered certificate source to remove
+        remove_help: Remove a registered certificate source
         secret:
           help: Gestiona la contrasena vinculada a una fuente de certificado con nombre
           remove:
@@ -2850,8 +2895,8 @@ cli:
           set_help: Establece (o rota) la contrasena de una fuente de certificado
             registrada
         select:
-          name_help: Origen de certificado registrado que se activará
-        select_help: Seleccionar el origen de certificado activo
+          name_help: Registered certificate source to activate
+        select_help: Select the active certificate source
       clear_all_help: Limpiar todos los proveedores de autenticación configurados
       clear_help: Limpiar metadatos locales de autenticación
       clear_locks_help: Limpiar bloqueos de adquisición de autenticación
@@ -3173,13 +3218,17 @@ cli:
         apply_help: Sobrescribe el perfil con los valores censales comunicados por
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
+        dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia
+          tu ultima instantanea: {dropped_fields}. Si no has cambiado ni dado de baja
+          estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
+          descarga del censo o reintroduce los valores; la proporcion de afectacion
+          de la vivienda podria dejar de resolverse.'
         help: Sincroniza el censo 036 de AEAT con este perfil
         pull_help: Descarga tu censo mas reciente de AEAT al almacen de instantaneas
           de este perfil.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
-        dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia tu ultima instantanea: {dropped_fields}. Si no has cambiado ni dado de baja estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la descarga del censo o reintroduce los valores; la proporcion de afectacion de la vivienda podria dejar de resolverse.'
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
@@ -3697,7 +3746,7 @@ cli:
     panel:
       arguments: Argumentos
       commands: Comandos
-      error: 'Error'
+      error: Error
       options: Opciones
     try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
   ledger:
@@ -3905,6 +3954,26 @@ cli:
         para aceptarla, con --classification para anularla manualmente, o no hagas
         nada para rechazarla.
       llm_suggestion_label: sugerencia-llm
+      m210_applicable_rate_help: Tipo aplicable del Modelo 210 como fracción decimal;
+        por ejemplo, 0.24.
+      m210_asset_or_right_id_help: Identidad estable del inmueble o derecho para la
+        renta del Modelo 210.
+      m210_explicit_direct_only: La clasificación del Modelo 210 es una decisión explícita
+        del operador; no combine sus opciones con clasificación automática, asistida
+        por evidencia o masiva.
+      m210_gross_income_amount_help: Rendimiento íntegro explícito para la proyección
+        de fuente del Modelo 210.
+      m210_incoming_only: La clasificación de renta del Modelo 210 solo es válida
+        para operaciones entrantes del libro mayor.
+      m210_payer_id_help: Identidad estable del pagador para un componente del Modelo
+        210 de un solo pagador.
+      m210_payer_mode_help: Un pagador o la excepción explícita de varios pagadores
+        del código 35.
+      m210_required_options: La clasificación del Modelo 210 requiere conjuntamente
+        --m210-tipo-renta-code, --m210-gross-income-amount, --m210-applicable-rate
+        y --m210-payer-mode.
+      m210_tipo_renta_code_help: Código oficial de tipo de renta de dos dígitos del
+        Modelo 210.
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
@@ -4641,11 +4710,12 @@ cli:
       se compara con la base
     errors:
       capability:
-        manuals_verify: cli.registry.errors.capability.manuals_verify
-        parity: cli.registry.errors.capability.parity
-        registry_verify: cli.registry.errors.capability.registry_verify
-        workbooks_verify: cli.registry.errors.capability.workbooks_verify
-      corpus_companion_absent: cli.registry.errors.corpus_companion_absent
+        manuals_verify: manual corpus verification
+        parity: registry parity verification
+        registry_verify: registry verification
+        workbooks_verify: workbook verification
+      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
+        Install {install} and retry.
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
