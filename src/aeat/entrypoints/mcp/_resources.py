@@ -41,13 +41,29 @@ class HarnessResourceKind(StrEnum):
 
     ``SKILL`` / ``RULE`` / ``PERSONA`` enumerate the shipped agent tree;
     ``CORPUS`` is a template-only category resolving a citation id or
-    ``corpus_ref`` to its verbatim bundled legal text (ADR R3).
+    ``corpus_ref`` to its verbatim bundled legal text (ADR R3). ``OBSERVATIONS``
+    and ``EVIDENCE`` are the bulk-payload thinning targets (ADR H4): template-only,
+    per-record, and resolved from the ENCRYPTED persisted state, so - unlike the
+    bundled categories above - they are resolved by re-running the owning read
+    verb as a subprocess (which carries the active bucket session), never in the
+    session-less server process.
     """
 
     SKILL = "skill"
     RULE = "rule"
     PERSONA = "persona"
     CORPUS = "corpus"
+    OBSERVATIONS = "observations"
+    EVIDENCE = "evidence"
+
+
+#: The bucket-scoped, encrypted-state resource kinds (ADR H4 result thinning).
+#: These are NOT resolved by :func:`read_harness_resource` (which resolves only
+#: the session-free bundled documents); the server routes them to a supervised
+#: subprocess so resolution carries the active bucket session.
+BUCKET_SCOPED_RESOURCE_KINDS: frozenset[HarnessResourceKind] = frozenset(
+    {HarnessResourceKind.OBSERVATIONS, HarnessResourceKind.EVIDENCE},
+)
 
 
 class HarnessResourceRef(BaseModel):
@@ -121,6 +137,8 @@ _DESCRIPTIONS: dict[HarnessResourceKind, str] = {
     HarnessResourceKind.RULE: "aeat operator rule",
     HarnessResourceKind.PERSONA: "aeat operator persona",
     HarnessResourceKind.CORPUS: "aeat legal corpus reference",
+    HarnessResourceKind.OBSERVATIONS: "aeat calculation observations",
+    HarnessResourceKind.EVIDENCE: "aeat evidence records",
 }
 
 _TEMPLATE_DESCRIPTIONS: dict[HarnessResourceKind, str] = {
@@ -129,6 +147,12 @@ _TEMPLATE_DESCRIPTIONS: dict[HarnessResourceKind, str] = {
     HarnessResourceKind.PERSONA: "Tax-advisor persona documents, addressed by persona name.",
     HarnessResourceKind.CORPUS: (
         "Verbatim BOE/AEAT legal text, addressed by citation id or corpus_ref (e.g. ley-58-2003:art-27.2)."
+    ),
+    HarnessResourceKind.OBSERVATIONS: (
+        "Full calculation observation provenance, addressed by calculation revision id (ADR H4 result thinning)."
+    ),
+    HarnessResourceKind.EVIDENCE: (
+        "Full evidence-record rows for the active bucket, addressed by bucket id (ADR H4 result thinning)."
     ),
 }
 
@@ -199,17 +223,43 @@ def _parse_uri(uri: str) -> tuple[HarnessResourceKind, str]:
     return kind, name
 
 
+def parse_resource_uri(uri: str) -> tuple[HarnessResourceKind, str]:
+    """Parse an ``aeat://<kind>/<name>`` URI into its kind and name.
+
+    The public parse the server uses to route a ``resources/read``: bundled kinds
+    resolve in-process via :func:`read_harness_resource`; the bucket-scoped kinds
+    (:data:`BUCKET_SCOPED_RESOURCE_KINDS`) are routed to a supervised subprocess.
+
+    Raises:
+        HarnessResourceNotFoundError: The URI is not a well-formed
+            ``aeat://<kind>/<name>`` reference.
+
+    Returns:
+        The parsed ``(kind, name)`` pair.
+    """
+    return _parse_uri(uri)
+
+
 def read_harness_resource(uri: str) -> HarnessResourceContent:
     """Resolve an ``aeat://<kind>/<name>`` URI to its shipped document text.
 
+    Resolves the session-free bundled kinds only (skill / rule / persona / corpus).
+    The bucket-scoped kinds (:data:`BUCKET_SCOPED_RESOURCE_KINDS`) read ENCRYPTED
+    persisted state and are resolved by the server via a supervised subprocess, so
+    they are refused here rather than read in the session-less server process.
+
     Raises:
-        HarnessResourceNotFoundError: The URI is malformed or names a document
-            that is not in the shipped tree.
+        HarnessResourceNotFoundError: The URI is malformed, names a bucket-scoped
+            kind, or names a bundled document that is not in the shipped tree.
 
     Returns:
         A :class:`HarnessResourceContent`.
     """
     kind, name = _parse_uri(uri)
+    if kind in BUCKET_SCOPED_RESOURCE_KINDS:
+        raise HarnessResourceNotFoundError(
+            f"{kind.value} is a bucket-scoped resource resolved via the owning read verb, not in-process ({uri})",
+        )
     if kind is HarnessResourceKind.CORPUS:
         return _read_corpus_resource(name, uri)
     for entry_kind, entry_name, document in _iter_entries():
@@ -237,6 +287,7 @@ def _read_corpus_resource(ref: str, uri: str) -> HarnessResourceContent:
 
 
 __all__ = [
+    "BUCKET_SCOPED_RESOURCE_KINDS",
     "HarnessResourceContent",
     "HarnessResourceKind",
     "HarnessResourceNotFoundError",
@@ -244,6 +295,7 @@ __all__ = [
     "HarnessResourceTemplate",
     "list_harness_resource_templates",
     "list_harness_resources",
+    "parse_resource_uri",
     "read_harness_resource",
     "resource_uri",
 ]
