@@ -6,7 +6,7 @@ tags:
   - "#adr"
   - "#schema-extraction"
 date: 2026-04-17
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-17-schema-extraction-research]]"
   - "[[2026-04-12-casilla-db-adr]]"
@@ -16,7 +16,7 @@ related:
   - "[[2026-04-12-justificante-parser-adr]]"
 ---
 
-# Architecture Decision Record: AEAT modelo schema extraction (#9)
+# Architecture Decision Record: AEAT modelo schema extraction (#9) | (**status:** `accepted`)
 
 ## Status
 

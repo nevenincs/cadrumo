@@ -3,11 +3,11 @@ tags:
   - '#adr'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-19'
-modified: '2026-06-19'
+modified: '2026-07-10'
 related:
   - '[[2026-06-19-crossperiod-filing-deadlock-research]]'
 ---
-# `crossperiod-filing-deadlock` adr: `Cross-period filing deadlock: late local work file and local-chain export` | (**status:** `accepted` — Decision A implemented; Decision B implemented in a refined same-year scope)
+# `crossperiod-filing-deadlock` adr: `Cross-period filing deadlock: late local work file and local-chain export` | (**status:** `accepted`)
 
 ## Problem Statement
 

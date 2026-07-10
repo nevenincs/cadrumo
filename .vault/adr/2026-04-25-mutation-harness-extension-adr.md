@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#mutation-harness-extension'
 date: '2026-04-25'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-25-mutation-harness-extension-research]]"
 ---
 
-# `mutation-harness-extension` adr: percent + brackets + scalar mutators (**status:** `accepted`)
+# `mutation-harness-extension` adr: percent + brackets + scalar mutators | (**status:** `accepted`)
 
 ## Problem Statement
 

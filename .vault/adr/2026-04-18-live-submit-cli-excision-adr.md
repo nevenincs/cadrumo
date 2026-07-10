@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#live-submit-excision"
 date: 2026-04-18
-modified: '2026-06-13'
+modified: '2026-07-10'
 title: ADR — excise the live-submit CLI surface (charter #197)
 status: accepted
 issue: wgergely/aeat#116
@@ -15,7 +15,7 @@ related:
   - "[[2026-04-27-live-submit-excision-research]]"
 ---
 
-# adr — excise the live-submit CLI surface
+# adr — excise the live-submit CLI surface | (**status:** `accepted`)
 
 ## CLI Backend Boundary
 

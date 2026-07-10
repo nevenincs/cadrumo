@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#live-cert-auth"
 date: 2026-04-16
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-16-live-cert-auth-research]]"
   - "[[2026-04-12-cert-auth-adr]]"
@@ -22,7 +22,7 @@ related:
 > WHY this approach was abandoned but does not reproduce the original
 > design in full. Do NOT implement against this ADR.
 
-# `live-cert-auth` adr: `issue-141 live certificate auth stabilization and verification` | (**status:** `superseded` *(originally `accepted`; superseded 2026-04-21 by AuthProvider abstraction)*)
+# `live-cert-auth` adr: `issue-141 live certificate auth stabilization and verification` | (**status:** `superseded`)
 
 ## Problem Statement
 

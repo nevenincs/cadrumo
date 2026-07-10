@@ -3,11 +3,11 @@ tags:
   - "#adr"
   - "#ci-github-actions"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-ci-github-actions-research]]"
 ---
-# ADR: GitHub Actions CI Workflow
+# ADR: GitHub Actions CI Workflow | (**status:** `accepted`)
 
 ## Status
 

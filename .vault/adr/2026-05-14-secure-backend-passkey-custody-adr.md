@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'
   - '[[2026-04-12-data-storage-adr]]'
   - '[[2026-05-08-secure-storage-legacy-path-audit-reference]]'
 ---
 
-# secure-backend-passkey-safety adr: master passkey custody + enrollment ux | (**status:** `accepted — execution-ready`)
+# secure-backend-passkey-safety adr: master passkey custody + enrollment ux | (**status:** `accepted`)
 
 ## Problem Statement
 

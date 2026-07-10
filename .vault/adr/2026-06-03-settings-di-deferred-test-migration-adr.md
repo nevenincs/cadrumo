@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#settings-di-deferred'
 date: '2026-06-03'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-06-03-plan-triage-approach-adr]]'
   - '[[2026-06-04-settings-di-deferred-research]]'
 ---
 
-# `settings-di-deferred` deferred test-migration scope archive ADR
+# `settings-di-deferred` deferred test-migration scope archive ADR | (**status:** `accepted`)
 
 ## Context
 

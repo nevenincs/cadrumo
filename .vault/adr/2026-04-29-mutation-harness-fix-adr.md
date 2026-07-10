@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#mutation-harness-fix'
 date: '2026-04-29'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-04-29-mutation-harness-fix-research]]'
   - '[[2026-04-25-mutation-harness-extension-adr]]'
   - '[[2026-04-25-mutation-harness-extension-research]]'
 ---
 
-# ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage
+# ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage | (**status:** `accepted`)
 
 ## Status
 

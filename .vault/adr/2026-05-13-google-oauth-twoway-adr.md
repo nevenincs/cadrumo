@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#google-oauth'
 date: '2026-05-13'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-05-13-google-oauth-calc-sheets-adr]]"
   - "[[2026-05-13-google-oauth-taxonomy-adr]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-05-06-google-oauth-research]]"
 ---
 
-# `google-oauth` adr: `Two-way Sheets sync feasibility verdict` | (**status:** `accepted — deferred`)
+# `google-oauth` adr: `Two-way Sheets sync feasibility verdict` | (**status:** `accepted`)
 
 ## Problem Statement
 

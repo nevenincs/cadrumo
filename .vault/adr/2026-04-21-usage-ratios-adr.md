@@ -3,14 +3,14 @@ tags:
   - "#adr"
   - "#usage-ratios"
 date: "2026-04-21"
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-21-usage-ratios-research]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"
   - "[[2026-04-17-export-first-adr]]"
 ---
 
-# `usage-ratios` adr: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `implemented`)
+# `usage-ratios` adr: `persist-kent-usage-ratios-as-category-keyed-profile` | (**status:** `accepted`)
 
 > **Post-approval amendments** — the sections below were edited in-place after the initial `accepted` milestone to keep the record aligned with shipped code. See the `## Post-approval amendments` log at the bottom of this document for what changed and why.
 
