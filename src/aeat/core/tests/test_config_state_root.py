@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.env_scope import isolated_aeat_env
+from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from .._config_state_root import (
     RunMode,
     StateRootInputs,
@@ -72,7 +72,7 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
     assert resolution.run_mode is RunMode.INSTALLED
 
     with isolated_aeat_env():
-        settings = Settings(aeat_local_storage_root=resolution.storage_root)
+        settings = settings_without_env_file(aeat_local_storage_root=resolution.storage_root)
 
     root = settings.aeat_local_storage_root
     assert settings.aeat_token_dir == root / "tokens"
@@ -110,7 +110,7 @@ def test_explicit_substrate_override_still_wins_over_installed_base(tmp_path: Pa
     explicit_secret_dir = tmp_path / "operator-secrets"
 
     with isolated_aeat_env():
-        settings = Settings(
+        settings = settings_without_env_file(
             aeat_local_storage_root=resolution.storage_root,
             aeat_secret_store_dir=explicit_secret_dir,
         )
@@ -227,7 +227,7 @@ def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Pa
     resolution = resolve_state_root(_installed_inputs_under(tmp_path))
 
     with isolated_aeat_env():
-        settings = Settings(aeat_local_storage_root=resolution.storage_root)
+        settings = settings_without_env_file(aeat_local_storage_root=resolution.storage_root)
 
     state_tree = (
         settings.aeat_local_storage_root,
