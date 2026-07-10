@@ -430,6 +430,21 @@ reviewed_by = "claude (fetched verbatim art 11 from BOE consolidated BOE-A-1972-
 notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 11.2 intereses: the source-state tax may not exceed 10 percent of the interest. Row-level authority for the NL/interest M210 treaty override (kind=ceiling, rate 0.10)."
 required_text = ["Intereses", "no puede exceder del 10 por 100", "importe de los intereses"]
 
+[legal."convenio-es-nl-1971:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-nl-1971-art-12.html#art-12"
+document_id = "BOE-A-1972-1469"
+article = "12"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1972-1469"
+effective_from = 1972-09-20
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "claude (fetched verbatim art 12 permanent ceiling from BOE consolidated BOE-A-1972-1469; agent-prepared, corpus-grounded, pending operator re-stamp)"
+notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 12.2 cánones: the PERMANENT source-state ceiling is 6 percent of the gross royalties. Protocol clause XIV's 5 percent was a transitional rate for royalty contracts formalized within five years of entry into force (1972-1977) and has long expired; it is not encoded. Row-level authority for the NL/cánones M210 treaty override (kind=ceiling, rate 0.06)."
+required_text = ["Cánones", "no puede exceder del 6 por 100", "importe bruto de los cánones"]
+
 [legal."orden-eha-3316-2010:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
