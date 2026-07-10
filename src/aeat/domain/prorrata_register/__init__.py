@@ -501,13 +501,16 @@ class ProrrataRegister(BaseModel):
 
 __all__ = [
     "PRORRATA_REGISTER_SCHEMA_VERSION",
+    "ProrrataProvisionalProvenance",
     "ProrrataProvisionalResolution",
     "ProrrataRegister",
     "ProrrataRegisterEntry",
     "ProrrataRegisterError",
+    "ProrrataRegisterRegime",
     "ProrrataRegisterRepositoryProtocol",
     "ProrrataRegisterValidationError",
     "SectorDefinition",
+    "SectorDiferenciadoLetra",
     "ThreeActiveYearsAggregate",
     "resolve_provisional_percentage",
 ]
