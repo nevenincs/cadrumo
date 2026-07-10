@@ -254,6 +254,7 @@ def derive_calculation_revision_id(
         )
     # CAST-RATIONALE-ROW-BINDING-HASH: canonicalizer validates untyped boundary values before hashing.
     canonical_row_bindings = _canonical_row_binding_values(
+        # CAST-RATIONALE-ROW-BINDING-HASH-VALUE: canonicalizer validates untyped boundary values before hashing.
         cast(Mapping[object, object], row_binding_values or {}),
         surface="row_binding_values",
     )
@@ -625,6 +626,7 @@ class CalculationRevision(BaseModel):
             raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
         # CAST-RATIONALE-ROW-BINDING-VALIDATOR: canonicalizer validates untyped Pydantic input at this boundary.
         return _canonical_row_binding_values(
+            # CAST-RATIONALE-ROW-BINDING-VALIDATOR-VALUE: Pydantic boundary input.
             cast(Mapping[object, object], value),
             surface="row_binding_values",
         )
