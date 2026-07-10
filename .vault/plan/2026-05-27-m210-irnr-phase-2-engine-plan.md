@@ -83,7 +83,7 @@ Apply the LIRPF Art 93.5 segregation rule at the M151 aggregation surface: the B
 
 The cross-domain-continuity decomposition lands the S378 `implies_nonzero` operator as the closest existing predicate shape for per-row regulatory gating. The W02.P01 and W02.P02 filters above are CLASSIFIER-level filters (typed issues + base-sum exclusion), not registry-predicate-level verifiers. A predicate-level surface is the alternative shape: a registry-authored predicate such as `source_jurisdiction_must_equal_es_for_modelo(["m210"])` evaluated at the verification phase, surfacing a finding rather than gating the aggregation. The architect-2 call is whether the W02 wave is classifier-based (preferred by this draft) or predicate-based (operator-author-driven, more flexible but adds a new predicate name to `KNOWN_VERIFICATION_PREDICATE_OPERATORS` and a new regex/branch to `_evaluate_predicate_expression`).
 
-- [ ] `W02.P07.S16` - architect-2 selects classifier-based vs predicate-based shape, determining the S10/S11 and S13/S14 sites (if predicate-based, author a new operator following the S376/S377/S378 pattern, otherwise close as a no-op affirming the classifier-based Steps); `src/aeat/application/modelo/_verification_predicates.py`.
+- [x] `W02.P07.S16` - architect-2 selects classifier-based vs predicate-based shape, determining the S10/S11 and S13/S14 sites (if predicate-based, author a new operator following the S376/S377/S378 pattern, otherwise close as a no-op affirming the classifier-based Steps); `src/aeat/application/modelo/_verification_predicates.py`.
 
 ### Phase `W02.P08` - locale strings for the new issue kinds
 
