@@ -53,7 +53,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 class _CatalogueRepository(Protocol):
-    def save(self, catalogue: object) -> None: ...
+    @property
+    def save(self) -> Callable[..., None]: ...
 
 
 _REPOSITORY_CASES: tuple[
@@ -117,7 +118,9 @@ def test_repository_persists_catalogue_under_financial_secure_object_metadata(
         repository = repository_factory(profile.repository)
 
         repository.save(catalogue_type())
-        metadata = profile.repository.peek_metadata(namespace.namespace, namespace.default_object_key)
+        object_key = namespace.default_object_key
+        assert object_key is not None, f"{repository_name} namespace has no default object key"
+        metadata = profile.repository.peek_metadata(namespace.namespace, object_key)
 
     assert metadata is not None, f"{repository_name} did not persist its catalogue"
     assert metadata.classification == SensitivityClass.FINANCIAL.value
