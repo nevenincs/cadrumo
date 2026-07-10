@@ -100,11 +100,14 @@ from ._persona_scope import (
 )
 from ._prompts import PromptNotFoundError, build_prompt_catalogue, prompt_document
 from ._resources import (
+    BUCKET_SCOPED_RESOURCE_KINDS,
     HarnessResourceNotFoundError,
     list_harness_resource_templates,
     list_harness_resources,
+    parse_resource_uri,
     read_harness_resource,
 )
+from ._result_thinning import BULK_RESOLUTION, ResourceLinkRef, thin_envelope
 from ._surface import (
     SURFACE_ENV_VAR,
     SurfaceMode,
@@ -517,11 +520,25 @@ def build_server(
         PromptArgument,
         PromptMessage,
         Resource,
+        ResourceLink,
         ResourceTemplate,
         TextContent,
         TextResourceContents,
     )
     from pydantic import AnyUrl
+
+    def _resource_links(refs: tuple[ResourceLinkRef, ...]) -> list[ResourceLink]:
+        """Adapt the thinning ``ResourceLinkRef`` set onto SDK ``resource_link`` items."""
+        return [
+            ResourceLink(
+                type="resource_link",
+                uri=AnyUrl(ref.uri),
+                name=ref.name,
+                description=ref.description,
+                mimeType=ref.mime_type,
+            )
+            for ref in refs
+        ]
 
     scoped_descriptors = tuple(
         descriptor
@@ -529,6 +546,11 @@ def build_server(
         if persona is None or not is_handoff_denied(persona=persona, command_key=descriptor.command_key)
     )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
+    # command-key -> descriptor: the resource read handler resolves a bulk
+    # resource (ADR H4) by re-running its owning read verb's descriptor as a
+    # supervised subprocess (which carries the active bucket session the server
+    # process lacks), then returns that verb's bulk field.
+    by_command_key = {descriptor.command_key: descriptor for descriptor in descriptors}
     # The advertised per-verb surface (ADR mcp-progressive-discovery P1): CORE
     # (default) advertises only the persona-scoped orientation slice up front;
     # FULL advertises the whole persona-scoped set (the pre-ADR flat surface).
@@ -805,9 +827,12 @@ def build_server(
             if outcome.refused is not None:
                 return CallToolResult(content=[TextContent(type="text", text=outcome.refused)], isError=True)
             envelope = outcome.envelope or {}
+            # ADR H4: thin the executed verb's bulk arrays here too, so the meta
+            # `execute` path and the direct-call path emit one identical shape.
+            thinned_envelope, links = thin_envelope(str(arguments.get("command_key", "") or ""), envelope)
             return CallToolResult(
-                content=[TextContent(type="text", text=json.dumps(envelope, indent=2))],
-                structuredContent=envelope,
+                content=[TextContent(type="text", text=json.dumps(envelope, indent=2)), *_resource_links(links)],
+                structuredContent=thinned_envelope,
                 isError=outcome.is_error,
             )
         descriptor = by_name.get(name)
@@ -896,11 +921,16 @@ def build_server(
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
+        # ADR H4: move the verb's declared bulk arrays out of structuredContent to
+        # resource_link URIs a resources-capable client fetches on demand; the text
+        # content still carries the full envelope for a client without resources.
+        thinned_envelope, links = thin_envelope(key, envelope)
         content: list[ContentBlock] = []
         if not faith.faithful:
             content.append(TextContent(type="text", text=advisory_line(faith)))
         content.append(TextContent(type="text", text=json.dumps(envelope, indent=2)))
-        return CallToolResult(content=content, structuredContent=envelope, isError=is_error)
+        content.extend(_resource_links(links))
+        return CallToolResult(content=content, structuredContent=thinned_envelope, isError=is_error)
 
     # Guided-workflow prompt channel (ADR R4): the slash-command surface a client
     # renders for the USER. The catalogue and each prompt's embedded skill (plus
@@ -975,8 +1005,46 @@ def build_server(
             for template in list_harness_resource_templates()
         ]
 
+    async def _resolve_bulk_resource(kind: object, identity: str, uri: str) -> str:
+        """Resolve a bucket-scoped resource by re-running its owning read verb (ADR H4).
+
+        The bulk arrays a verb thins (calculation observations, evidence rows) live
+        in ENCRYPTED bucket state the session-less server process cannot read, so
+        resolution re-runs the declared resolver verb as a supervised subprocess -
+        the same path a tool call uses - and returns its bulk field as a JSON array.
+        For an active-bucket resolver (no id argument) the URI's identity is
+        cross-checked against the resolved ``result`` so a link cannot silently
+        resolve a different bucket's rows.
+        """
+        from anyio.to_thread import run_sync
+
+        resolution = BULK_RESOLUTION[kind]
+        descriptor = by_command_key.get(resolution.resolver_command_key)
+        if descriptor is None:
+            raise ValueError(f"no resolver verb for resource {uri}")
+        resolver_args: dict[str, object] = {}
+        if resolution.id_arg is not None:
+            resolver_args[resolution.id_arg] = identity
+        envelope, is_error = await run_sync(_run_subprocess_tool, descriptor, resolver_args)
+        result = envelope.get("result")
+        if is_error or not isinstance(result, dict):
+            raise ValueError(f"could not resolve resource {uri}")
+        if resolution.id_arg is None and result.get("bucket_id") != identity:
+            raise ValueError(f"resource {uri} does not match the active bucket")
+        rows = result.get(resolution.result_field)
+        if not isinstance(rows, list):
+            raise ValueError(f"resource {uri} resolved no {resolution.result_field} rows")
+        return json.dumps(rows, ensure_ascii=False, indent=2)
+
     @server.read_resource()
     async def _read_resource(uri: AnyUrl) -> list[ReadResourceContents]:
+        try:
+            kind, name = parse_resource_uri(str(uri))
+        except HarnessResourceNotFoundError as exc:
+            raise ValueError(str(exc)) from exc
+        if kind in BUCKET_SCOPED_RESOURCE_KINDS:
+            text = await _resolve_bulk_resource(kind, name, str(uri))
+            return [ReadResourceContents(content=text, mime_type="application/json")]
         try:
             content = read_harness_resource(str(uri))
         except HarnessResourceNotFoundError as exc:

@@ -28,6 +28,7 @@ Submodules
    aeat.entrypoints.mcp._persona_scope
    aeat.entrypoints.mcp._prompts
    aeat.entrypoints.mcp._resources
+   aeat.entrypoints.mcp._result_thinning
    aeat.entrypoints.mcp._server
    aeat.entrypoints.mcp._surface
    aeat.entrypoints.mcp._telemetry
