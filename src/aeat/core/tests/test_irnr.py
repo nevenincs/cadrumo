@@ -36,6 +36,7 @@ _TIPO_RENTA_IRNR_CASES = (
     pytest.param("interest", TipoRentaIrnr.INTEREST, id="interest"),
     pytest.param("ganancia_patrimonial", TipoRentaIrnr.GANANCIA_PATRIMONIAL, id="ganancia-patrimonial"),
     pytest.param("inmobiliaria", TipoRentaIrnr.INMOBILIARIA, id="inmobiliaria"),
+    pytest.param("canones", TipoRentaIrnr.CANONES, id="canones"),
 )
 _TIPO_RENTA_IRNR_TOKENS = frozenset(
     {
@@ -46,6 +47,7 @@ _TIPO_RENTA_IRNR_TOKENS = frozenset(
         "interest",
         "ganancia_patrimonial",
         "inmobiliaria",
+        "canones",
     },
 )
 

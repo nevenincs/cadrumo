@@ -56,6 +56,12 @@ class TipoRentaIrnr(StrEnum):
 
         INMOBILIARIA: Art. 13.1.h imputed urban real-estate income (the source
             article), taxed at the Art. 25.1.a general 24% rate.
+
+        CANONES: Art. 25.1.a cánones (royalties). The consolidated Art. 25.1
+            carries no cánones-specific letter, so royalties are taxed at the
+            general rendimiento rate (24%, or the Art. 25.1.a reduced 19% for
+            EU/EEA residents). Bilateral treaties routinely cap or exempt the
+            source-state cánones rate via their Art. 12.
     """
 
     GENERAL = "general"
@@ -65,6 +71,7 @@ class TipoRentaIrnr(StrEnum):
     INTEREST = "interest"
     GANANCIA_PATRIMONIAL = "ganancia_patrimonial"
     INMOBILIARIA = "inmobiliaria"
+    CANONES = "canones"
 
 
 class ConvenioOverrideKind(StrEnum):
@@ -170,14 +177,16 @@ class OfficialTipoRentaCode:
 
 # The official tipo-de-renta codes whose rate concept is grounded against the
 # bundled corpus (Orden EHA/3316/2010 HOJA INFORMATIVA 210 for the code list;
-# TRLIRNR Art. 25.1.a/b/f + Art. 13.1.h for the rate concept). The fetch-gated
-# codes — cánones 08/09/10/11/12/32 and asistencia técnica 13 (cánones-adjacent
-# in the HOJA INFORMATIVA, so possibly a non-bundled special letter), reaseguros
-# 19 (Art. 25.1.e), navegación 20 (Art. 25.1.d), imposición complementaria 27
-# (Art. 19.2), and premios de loterías 31 (D.A. 5ª gravamen especial) — are NOT
-# declared here: their rate is not bundle-verifiable, and force-mapping any to
-# ``general`` would fabricate a rate. They enrol code-by-code once the full
-# consolidated Art. 25 is fetched (m210-irnr-phase-2-engine Slice A).
+# TRLIRNR Art. 25.1.a/b/f + Art. 13.1.h for the rate concept). The cánones codes
+# 08/09/10/11/12/32 are declared here on the Art. 25.1.a residual clause: the
+# consolidated Art. 25.1 carries no cánones-specific letter, so cánones is the
+# general rendimiento rate. The remaining fetch-gated codes — asistencia técnica
+# 13 (cánones-ADJACENT in the HOJA INFORMATIVA, a possible non-bundled special
+# letter, NOT cánones proper), reaseguros 19 (Art. 25.1.e), navegación 20
+# (Art. 25.1.d), imposición complementaria 27 (Art. 19.2), and premios de
+# loterías 31 (D.A. 5ª gravamen especial) — are NOT declared here: their rate is
+# not bundle-verifiable, and force-mapping any to a rate would fabricate it. They
+# enrol code-by-code once the full consolidated Art. 25 is fetched.
 OFFICIAL_M210_TIPO_RENTA_CODES: tuple[OfficialTipoRentaCode, ...] = (
     OfficialTipoRentaCode(
         "01", TipoRentaIrnr.GENERAL, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
@@ -199,6 +208,21 @@ OFFICIAL_M210_TIPO_RENTA_CODES: tuple[OfficialTipoRentaCode, ...] = (
     ),
     OfficialTipoRentaCode(
         "07", TipoRentaIrnr.INTEREST, "trlirnr-rdleg-5-2004:art-25.1.f", TipoRentaGroundingTier.RATE_VERIFIED
+    ),
+    OfficialTipoRentaCode(
+        "08", TipoRentaIrnr.CANONES, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
+    ),
+    OfficialTipoRentaCode(
+        "09", TipoRentaIrnr.CANONES, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
+    ),
+    OfficialTipoRentaCode(
+        "10", TipoRentaIrnr.CANONES, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
+    ),
+    OfficialTipoRentaCode(
+        "11", TipoRentaIrnr.CANONES, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
+    ),
+    OfficialTipoRentaCode(
+        "12", TipoRentaIrnr.CANONES, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
     ),
     OfficialTipoRentaCode(
         "14", TipoRentaIrnr.GENERAL, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
@@ -250,6 +274,9 @@ OFFICIAL_M210_TIPO_RENTA_CODES: tuple[OfficialTipoRentaCode, ...] = (
     ),
     OfficialTipoRentaCode(
         "30", TipoRentaIrnr.DIVIDEND, "trlirnr-rdleg-5-2004:art-25.1.f", TipoRentaGroundingTier.RATE_VERIFIED
+    ),
+    OfficialTipoRentaCode(
+        "32", TipoRentaIrnr.CANONES, "trlirnr-rdleg-5-2004:art-25.1.a", TipoRentaGroundingTier.RESIDUAL
     ),
     OfficialTipoRentaCode(
         "33",
@@ -319,14 +346,16 @@ def project_m210_tipo_renta_code(code: str) -> TipoRentaIrnr:
 
 # Official HOJA INFORMATIVA 210 codes that are REAL AEAT tipo-de-renta codes but
 # whose rate is NOT yet grounded against the bundled corpus (the Phase-1 TRLIRNR
-# extract carries only Art. 25 letters a/b/f): cánones 08/09/10/11/12/32,
-# asistencia técnica 13 (cánones-adjacent in the HOJA INFORMATIVA), reaseguros 19
-# (Art. 25.1.e), navegación 20 (Art. 25.1.d), imposición complementaria 27
-# (Art. 19.2), and premios de loterías 31 (D.A. 5ª gravamen especial). They are
-# NOT in the declared projection — mapping them would fabricate a rate — but they
-# are distinguished here from a genuinely-invalid code so the CLI boundary can
-# tell an operator "fetch-gated, not yet grounded" rather than "invalid". They
-# enrol code-by-code as the full consolidated Art. 25 is fetched.
-FETCH_GATED_M210_TIPO_RENTA_CODES: frozenset[str] = frozenset(
-    {"08", "09", "10", "11", "12", "13", "19", "20", "27", "31", "32"}
-)
+# extract carries only Art. 25 letters a/b/f): asistencia técnica 13
+# (cánones-ADJACENT in the HOJA INFORMATIVA — a possible non-bundled special
+# letter, NOT cánones proper, so deliberately NOT promoted with the cánones
+# codes), reaseguros 19 (Art. 25.1.e), navegación 20 (Art. 25.1.d), imposición
+# complementaria 27 (Art. 19.2), and premios de loterías 31 (D.A. 5ª gravamen
+# especial). They are NOT in the declared projection — mapping them would
+# fabricate a rate — but they are distinguished here from a genuinely-invalid
+# code so the CLI boundary can tell an operator "fetch-gated, not yet grounded"
+# rather than "invalid". The cánones codes 08/09/10/11/12/32 were promoted into
+# OFFICIAL_M210_TIPO_RENTA_CODES: cánones is the general rendimiento rate under
+# the Art. 25.1.a residual clause (the consolidated Art. 25.1 carries no
+# cánones-specific letter), so their rate concept is bundle-grounded.
+FETCH_GATED_M210_TIPO_RENTA_CODES: frozenset[str] = frozenset({"13", "19", "20", "27", "31"})
