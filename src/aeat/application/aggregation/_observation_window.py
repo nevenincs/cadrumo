@@ -61,6 +61,7 @@ def replace_observation_window[ObservationT, PayloadT: BaseModel](
     safe_repository_id(modelo, context="modelo")
     when = captured_at if captured_at is not None else now()
     for payload in tuple(repository.iter_records()):
+        # CAST-RATIONALE-OBSERVATION-WINDOW-PAYLOAD: repository records share the required window-key fields.
         window_payload = cast(_WindowKeyedPayload, payload)
         if (
             window_payload.modelo == modelo
