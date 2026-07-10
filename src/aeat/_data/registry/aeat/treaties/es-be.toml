@@ -9,7 +9,7 @@
 [treaty]
 country_code = "BE"
 document_id = "BOE-A-2003-13375"
-notes = "Convenio España-Bélgica. Art 10.2.a dividendos: el impuesto en fuente no podrá exceder del 15 por 100 del importe bruto de los dividendos (la exención del art 10.2.b por participación >= 25% no se modela). Art 11.2 intereses: el impuesto en fuente no podrá exceder del 10 por 100 del importe bruto de los intereses (las exenciones del art 11.3 no se modelan)."
+notes = "Convenio España-Bélgica. Art 10.2.a dividendos: el impuesto en fuente no podrá exceder del 15 por 100 del importe bruto de los dividendos (la exención del art 10.2.b por participación >= 25% no se modela). Art 11.2 intereses: el impuesto en fuente no podrá exceder del 10 por 100 del importe bruto de los intereses (las exenciones del art 11.3 no se modelan). Art 12.2 cánones: el impuesto en fuente no podrá exceder del 5 por 100 del importe bruto de los cánones."
 
 [[treaty.overrides]]
 tipo_renta = "dividend"
@@ -28,3 +28,12 @@ legal_ref_anchor = "convenio-es-be-1995:art-11"
 legal_refs = ["convenio-es-be-1995:art-11"]
 notes = "Art 11.2: el impuesto exigido en el Estado de la fuente no podrá exceder del 10 por 100 del importe bruto de los intereses. Ceiling frente al 19% doméstico (TRLIRNR art 25.1.f); min(0.19, 0.10) = 0.10. Las exenciones del art 11.3 (créditos comerciales, etc.) no se modelan."
 valid_from = 2003-06-25
+
+[[treaty.overrides]]
+tipo_renta = "canones"
+kind = "ceiling"
+rate = "0.05"
+legal_ref_anchor = "convenio-es-be-1995:art-12"
+legal_refs = ["convenio-es-be-1995:art-12"]
+notes = "Art 12.2: el impuesto exigido en el Estado de la fuente no podrá exceder del 5 por 100 del importe bruto de los cánones. Ceiling frente al 24% doméstico general (TRLIRNR art 25.1.a; cánones sin letra específica); min(0.24, 0.05) = 0.05."
+valid_from = 2025-01-01
