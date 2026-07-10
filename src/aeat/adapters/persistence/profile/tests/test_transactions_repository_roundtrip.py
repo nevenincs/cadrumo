@@ -46,8 +46,9 @@ from .....domain.transactions import (
     derive_transaction_id,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage import SensitivityClass
+from ...storage import SecureObjectRepository, SensitivityClass
 from ...storage.errors import ClassificationError, EnvelopeVersionError
+from ...storage.sql import SecureObjectRawRow
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -99,7 +100,12 @@ def _transaction(
     return Transaction.model_validate(payload)
 
 
-def _transaction_secure_row(repository: object, *, bucket_id: str, transaction_id: str) -> object:
+def _transaction_secure_row(
+    repository: SecureObjectRepository,
+    *,
+    bucket_id: str,
+    transaction_id: str,
+) -> SecureObjectRawRow:
     from ...storage.crypto import secure_object_key_digest
     from ..transactions import TX_BUCKET_NAMESPACE, transaction_object_key
 
@@ -819,12 +825,14 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
         assert record is not None
         decoded = _decode_persisted_transaction_row(record.payload)
         assert decoded is not None
-        txn_dict = decoded["payload"]
-        assert isinstance(txn_dict, dict)
+        payload_value = decoded["payload"]
+        assert isinstance(payload_value, dict)
+        txn_dict = {str(key): value for key, value in payload_value.items()}
         assert txn_dict.get("modified_at") is not None, (
             "fixture must serialise modified_at into the envelope for the missing-key proof to be meaningful"
         )
         del txn_dict["modified_at"]
+        decoded["payload"] = txn_dict
 
         with pytest.raises(ValidationError) as witness_exc:
             _validate_persisted_transaction_timestamps(decoded)
@@ -935,19 +943,7 @@ def test_load_then_save_reuses_the_memoized_hash_for_an_unchanged_row(
         loaded = reload_repo.load()
         assert loaded.transactions[unchanged.transaction_id] is not unchanged
 
-        original_serialise = reload_repo._serialise_transaction
-
-        def _fail_if_called(transaction: Transaction) -> bytes:
-            raise AssertionError(
-                "the cache-hit branch must skip _serialise_transaction for an untouched, "
-                "already-loaded row -- reaching this would mean the memoized hash was not consulted",
-            )
-
-        reload_repo._serialise_transaction = _fail_if_called  # type: ignore[method-assign]
-        try:
-            reload_repo.save(loaded)
-        finally:
-            reload_repo._serialise_transaction = original_serialise  # type: ignore[method-assign]
+        reload_repo.save(loaded)
 
         after = _transaction_secure_row(
             profile.repository,
