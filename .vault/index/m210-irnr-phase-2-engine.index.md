@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m210-irnr-phase-2-engine'
-date: '2026-07-09'
-modified: '2026-07-09'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P01-S01]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P01-S02]]'
@@ -15,10 +15,15 @@ related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P03-S07]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P03-S08]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P04-S09]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-S13]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-S14]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-S15]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P07-S16]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-plan]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
   - '[[2026-07-09-m210-irnr-phase-2-engine-adr]]'
+  - '[[2026-07-10-m210-irnr-phase-2-engine-audit]]'
 ---
 
 # `m210-irnr-phase-2-engine` feature index
@@ -32,6 +37,10 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 - `2026-06-04-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 - `2026-07-09-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `proposed`)
 
+### audit
+
+- `2026-07-10-m210-irnr-phase-2-engine-audit` - `m210-irnr-phase-2-engine` audit: `plan reconciliation`
+
 ### exec
 
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P01-S01` - author the official M210 tipo-de-renta code list (01, 02, 27, 28, 29, 33, 35, ...) as declared registry data on the 2025 revision, each code row citing its bundled Orden EHA/3316/2010 and AEAT M210 instructions grounding
@@ -43,6 +52,10 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P03-S07` - FETCH-GATED (fetch: AEAT Sede "Disenos de registro - modelo 210" or the official M210 Sede form specimen) - fetch and bundle the official complete M210 field enumeration as a `layout_authority` corpus source
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P03-S08` - author the complete M210 casilla set on the 2025 revision with completeness manifest, extraction-profile targets, and export parity, with casilla count and numbering taken from the fetched layout authority
 - `2026-05-27-m210-irnr-phase-2-engine-W01-P04-S09` - FETCH-GATED (fetch: per-treaty BOE consolidated convenio texts for FR/PT/US/NL/BE) - author tranche-1 Convenio corpus, `legal/irnr.toml` entries, and `treaties/es-XX.toml` rows keyed by `TipoRentaIrnr` with typed `ConvenioOverrideKind`, pinned by continuity parity tests
+- `2026-05-27-m210-irnr-phase-2-engine-W02-P06-S13` - add the `source_jurisdiction` provenance pass-through on the M151 observation model
+- `2026-05-27-m210-irnr-phase-2-engine-W02-P06-S14` - add the per-row segregation gate in the M151 classifier so a row with `source_jurisdiction != "ES"` produces a `BECKHAM_FOREIGN_SOURCE_SEGREGATED` issue rather than a base observation, anchored on LIRPF Art 93.5
+- `2026-05-27-m210-irnr-phase-2-engine-W02-P06-S15` - add the anti-tautology test proving the Beckham IRPF base sums only the ES row, the DE row is emitted as a segregated issue with its jurisdiction preserved, and a gate-bypass mutant inflates the IRPF base by the DE row
+- `2026-05-27-m210-irnr-phase-2-engine-W02-P07-S16` - architect-2 selects classifier-based vs predicate-based shape, determining the S10/S11 and S13/S14 sites (if predicate-based, author a new operator following the S376/S377/S378 pattern, otherwise close as a no-op affirming the classifier-based Steps)
 
 ### plan
 
