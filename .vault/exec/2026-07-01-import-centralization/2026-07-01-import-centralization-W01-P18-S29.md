@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S29'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND`, `compute_ledger_filing_evidence`, `compute_ledger_filing_snapshot` to `aeat.application.aggregation.__all__` with eager re-exports so the 3 existing cross-package consumer site(s) can import from the facade
 

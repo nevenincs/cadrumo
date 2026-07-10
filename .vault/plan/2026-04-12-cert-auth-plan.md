@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#cert-auth"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-08'
 title: "Implementation Plan: PKCS#12 Certificate Authentication"
 related:
   - "[[2026-04-12-cert-auth-adr]]"

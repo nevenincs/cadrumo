@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S47'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `portal_host_name` to `aeat.domain.portals.__all__` with eager re-exports so the 1 existing cross-package consumer site(s) can import from the facade
 

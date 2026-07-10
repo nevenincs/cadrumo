@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-06-01-domain-boundary-audit-adr]]"
   - "[[2026-05-31-core-authority-adr]]"
   - "[[2026-04-30-secure-persistence-foundation-adr]]"
+  - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
 ---
-
 # `arch-remediation-ports-inversion` adr: `domain persistence ports inversion: fincas template as standard` | (**status:** `accepted`)
 
 ## Problem Statement

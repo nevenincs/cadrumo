@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#fichero-boe-parity-gate'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S10'
 related:
   - "[[2026-07-01-fichero-boe-parity-gate-plan]]"
 ---
-
-
-
 
 # Add a pre-write record and section-order assertion that the rendered record order follows the registry declaration order
 

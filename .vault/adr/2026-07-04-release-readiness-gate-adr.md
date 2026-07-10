@@ -3,11 +3,11 @@ tags:
   - '#adr'
   - '#release-readiness-gate'
 date: '2026-07-04'
-modified: '2026-07-04'
-related: []
+modified: '2026-07-08'
+related:
+  - '[[2026-07-06-release-readiness-gate-research]]'
 status: accepted
 ---
-
 # `release-readiness-gate` adr: `release readiness gate: audit-state gate, RC soak, rollback` | (**status:** `accepted`)
 
 ## Problem Statement

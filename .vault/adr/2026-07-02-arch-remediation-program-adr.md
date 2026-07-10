@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#arch-remediation-program'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-modelo-surface-adr]]"
@@ -11,8 +11,8 @@ related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-adr]]"
   - "[[2026-06-01-domain-boundary-audit-adr]]"
   - "[[2026-05-31-core-authority-adr]]"
+  - '[[2026-07-06-arch-remediation-program-research]]'
 ---
-
 # `arch-remediation-program` adr: `architecture remediation program: wave ordering, ratchets, plan topology` | (**status:** `accepted`)
 
 ## Problem Statement

@@ -3,22 +3,12 @@ tags:
   - '#plan'
   - '#aeat-user-docs-hardening'
 date: '2026-06-16'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L1
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `aeat-user-docs-hardening` plan
 

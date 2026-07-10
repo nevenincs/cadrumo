@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 step_id: 'S07'
 related:
   - "[[2026-07-07-iva-prorrata-complexity-plan]]"
 ---
-
-
-
 
 # Add the interrupted-ejercicio marker/provenance to the register enums and the active/inactive history on ProrrataRegisterEntry
 

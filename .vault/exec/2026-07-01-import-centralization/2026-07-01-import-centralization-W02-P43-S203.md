@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S203'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Rewire 11 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.domain.iva_compensation`
 

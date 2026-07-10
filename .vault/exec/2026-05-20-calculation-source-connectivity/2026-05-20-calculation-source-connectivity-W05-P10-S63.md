@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S63'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
-
-
-
 
 # Follow-up: fingerprint the profile-activity relation-scoping inputs (activity_start_date, m111_no_retenciones_periods, not_applicable_source_modelos from ProfileRepository) in the approval basis, so a relation-scoping profile change invalidates an approval even when the observation store is unchanged
 

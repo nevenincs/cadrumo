@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#arch-remediation-modelo-surface'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-06-30-convenio-doble-imposicion-adr]]"
+  - '[[2026-07-06-arch-remediation-modelo-surface-research]]'
 ---
-
 # `arch-remediation-modelo-surface` adr: `per-modelo extension surface for the calculation engine and orchestrators` | (**status:** `accepted`)
 
 ## Problem Statement

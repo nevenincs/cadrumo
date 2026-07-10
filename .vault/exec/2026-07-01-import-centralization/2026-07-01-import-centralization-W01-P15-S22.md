@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S22'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `WizardStatusError`, `WizardStatusReport`, `build_wizard_status`, `load_active_taxpayer_profile` to `aeat.application.wizard.__all__` with eager re-exports so the 4 existing cross-package consumer site(s) can import from the facade
 

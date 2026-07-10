@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-compensation-override-cli'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S01'
 related:
   - "[[2026-06-19-iva-compensation-override-cli-plan]]"
 ---
-
-
-
 
 # Add record_iva_compensation_override_for_bucket: resolve NIF, build IvaCompensationOverride(amount, reason, evidence_locator, recorded_at), drive reconcile_modelo_303_iva_compensation with override and persist the taxpayer_override decision
 

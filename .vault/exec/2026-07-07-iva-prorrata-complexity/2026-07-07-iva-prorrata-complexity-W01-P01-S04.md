@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 step_id: 'S04'
 related:
   - "[[2026-07-07-iva-prorrata-complexity-plan]]"
 ---
-
-
-
 
 # Surface the operator exclusion declaration at the CLI and the M303 exclusion metadata in the registry
 

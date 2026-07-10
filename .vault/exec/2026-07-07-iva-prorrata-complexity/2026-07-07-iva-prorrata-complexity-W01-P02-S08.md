@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 step_id: 'S08'
 related:
   - "[[2026-07-07-iva-prorrata-complexity-plan]]"
 ---
-
-
-
 
 # Implement the last-three-active-years global seed walk (summed volumes via compute_prorrata_definitiva_anual, skipping the gap) and the insufficient-history advisory
 

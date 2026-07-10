@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#arch-remediation-lazy-import-policy'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-06-03-user-profile-lazy-import-adr]]"
   - "[[2026-07-02-arch-remediation-ports-inversion-adr]]"
+  - '[[2026-07-06-arch-remediation-lazy-import-policy-research]]'
 ---
-
 # `arch-remediation-lazy-import-policy` adr: `function-local import policy: sanctioned classes, allowlist, ratchet` | (**status:** `accepted`)
 
 ## Problem Statement

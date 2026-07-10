@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S91'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Rewire 58 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.application.aggregation`, `aeat.application.calculations`, `aeat.application.workflow`, `aeat.core`, `aeat.domain.buckets`, `aeat.domain.calculations.registry`, `aeat.domain.iva_compensation`, `aeat.domain.modelos`, `aeat.domain.transactions`
 
