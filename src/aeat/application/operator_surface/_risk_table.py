@@ -170,6 +170,17 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.show_recovery": CommandRiskDeclaration(),
     "config.switch": CommandRiskDeclaration(),
     "config.verify_recovery": CommandRiskDeclaration(),
+    # Diagnostics reads run-health, latency, error, and LLM-usage telemetry and
+    # flush/inspect the local telemetry store: a mutating family, none destructive
+    # (a flush prunes bounded local telemetry, not taxpayer state) and no handoff
+    # or live-write - one bare row each, per the no-silent-default contract.
+    "diagnostics.errors": CommandRiskDeclaration(),
+    "diagnostics.latency": CommandRiskDeclaration(),
+    "diagnostics.llm_usage": CommandRiskDeclaration(),
+    "diagnostics.run_health": CommandRiskDeclaration(),
+    "diagnostics.runs": CommandRiskDeclaration(),
+    "diagnostics.telemetry.flush": CommandRiskDeclaration(),
+    "diagnostics.telemetry.status": CommandRiskDeclaration(),
     "ledger.add": CommandRiskDeclaration(),
     "ledger.allocate": CommandRiskDeclaration(),
     "ledger.archive": CommandRiskDeclaration(),
