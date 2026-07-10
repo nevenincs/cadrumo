@@ -323,6 +323,7 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
+      notifications_bad_landing: 'La pàgina de notificacions de l''AEAT no s''ha carregat correctament; la vostra sessió pot haver caducat o l''AEAT està en manteniment. Executeu ''aeat config auth status'' i torneu-ho a provar. No ho interpreteu com una safata buida.'
 aggregation:
   grouping:
     errors:
