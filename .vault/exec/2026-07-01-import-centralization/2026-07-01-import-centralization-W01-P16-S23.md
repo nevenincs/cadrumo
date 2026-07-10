@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S23'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `list_profile_key_records`, `validate_profile_values` to `aeat.application.user_profile.__all__` with eager re-exports so the 5 existing cross-package consumer site(s) can import from the facade
 

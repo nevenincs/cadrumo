@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
-modified: '2026-06-13'
+modified: '2026-07-08'
 related: []
 ---
 

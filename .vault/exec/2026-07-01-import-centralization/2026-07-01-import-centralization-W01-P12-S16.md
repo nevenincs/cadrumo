@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S16'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Decide and apply the public-surface disposition for `_build_modelo_definition_from_data` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.calculations.registry._loader` and consumed cross-package from `src/aeat/locales/_modelo_manager.py`
 

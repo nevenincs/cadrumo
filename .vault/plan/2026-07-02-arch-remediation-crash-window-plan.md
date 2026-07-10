@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-crash-window'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-crash-window-reference]]'
+  - '[[2026-07-06-arch-remediation-crash-window-research]]'
 ---
-
 # `arch-remediation-crash-window` plan
 
 ### Phase `P01` - VERIFY-cell resolution

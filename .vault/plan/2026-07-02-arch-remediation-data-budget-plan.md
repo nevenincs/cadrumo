@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-data-budget'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 tier: L1
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
+  - '[[2026-07-06-arch-remediation-data-budget-research]]'
 ---
-
 # `arch-remediation-data-budget` plan
 
 - [x] `S01` - Add hatchling wheel excludes for src/aeat/**/tests/** and src/aeat/tests/** so no test module or fixture ships in the installed wheel; `pyproject.toml`.

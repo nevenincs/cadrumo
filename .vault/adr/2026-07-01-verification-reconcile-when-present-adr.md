@@ -3,11 +3,11 @@ tags:
   - '#adr'
   - '#verification-reconcile-when-present'
 date: '2026-07-01'
-modified: '2026-07-01'
+modified: '2026-07-08'
 related:
   - '[[2026-07-01-verification-contract-coverage-audit]]'
+  - '[[2026-07-06-verification-reconcile-when-present-research]]'
 ---
-
 # `verification-reconcile-when-present` adr: `reconcile-when-present verification class` | (**status:** `accepted`)
 
 ## Problem Statement

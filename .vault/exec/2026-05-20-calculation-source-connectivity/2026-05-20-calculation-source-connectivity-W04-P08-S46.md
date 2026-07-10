@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S46'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
-
-
-
 
 # Expose missing source diagnostics in modelo calculation errors
 

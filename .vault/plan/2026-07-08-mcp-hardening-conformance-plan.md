@@ -3,23 +3,13 @@ tags:
   - '#plan'
   - '#mcp-hardening-conformance'
 date: '2026-07-08'
-modified: '2026-07-08'
+modified: '2026-07-09'
 tier: L2
 related:
   - '[[2026-07-08-mcp-console-review-audit]]'
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `mcp-hardening-conformance` plan
 

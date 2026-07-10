@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-period-prorrata'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
@@ -12,8 +12,8 @@ related:
   - "[[2026-07-05-silent-zero-base-aggregation-audit]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
+  - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
-
 # `cross-period-prorrata` adr: `Cross-period prorrata model: provisional carry, in-year apportionment, settlement regularisation` | (**status:** `accepted`)
 
 ## Problem Statement

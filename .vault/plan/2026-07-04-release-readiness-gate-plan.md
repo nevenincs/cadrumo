@@ -3,19 +3,12 @@ tags:
   - '#plan'
   - '#release-readiness-gate'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L1
 related:
   - '[[2026-07-04-release-readiness-gate-adr]]'
+  - '[[2026-07-06-release-readiness-gate-research]]'
 ---
-
-
-
-
-
-
-
-
 # `release-readiness-gate` plan
 
 ## Description
@@ -36,11 +29,6 @@ release-rollback` prints that procedure without ever executing it.
 ## Steps
 
 - [x] `S01` - Implement the release audit-state gate, RC-soak procedure, and rollback procedure per GH issue #415; `dev/release/readiness.py, dev/release/tests/test_readiness.py, docs/_release_checklist.yaml, docs/_release_notes_template.md, justfile, RELEASING.md, src/aeat/tests/test_release_config.py`.
-
-
-
-
-
 
 ## Parallelization
 

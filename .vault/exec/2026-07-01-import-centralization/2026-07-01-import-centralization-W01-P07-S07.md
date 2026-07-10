@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S07'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `TEXT_VALUE_GROUP`, `extract_pages_text_concatenated`, `extract_pages_text_from_bytes`, `extract_pages_text_from_path`, `extract_pages_text_with_fast_path`, `sha256_file`, `source_pdf_reference_path` to `aeat.adapters.inbound.pdf.__all__` with eager re-exports so the 14 existing cross-package consumer site(s) can import from the facade
 

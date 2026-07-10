@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S13'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Decide and apply the public-surface disposition for `_IvaWalletDecisionEnvelopePayload` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.application.calculations._observations_repository` and consumed cross-package from `src/aeat/application/user_profile/_custody_carry.py`
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S20'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Decide and apply the public-surface disposition for `_active_session` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.persistence.storage.master_key._active_session` and consumed cross-package from `src/aeat/adapters/persistence/storage/runtime.py, src/aeat/adapters/persistence/storage/sql/secure_objects.py`
 

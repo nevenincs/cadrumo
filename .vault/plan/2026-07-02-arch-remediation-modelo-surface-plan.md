@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-modelo-surface'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-modelo-surface-adr]]'
+  - '[[2026-07-06-arch-remediation-modelo-surface-research]]'
 ---
-
 # `arch-remediation-modelo-surface` plan
 
 ## Wave `W01` - typed unresolved-outcome channel

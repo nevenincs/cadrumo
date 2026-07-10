@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-08'
+modified: '2026-07-09'
 tier: L3
 related:
   - '[[2026-07-07-prorrata-especial-adr]]'
@@ -13,16 +13,6 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: W05 -->
 

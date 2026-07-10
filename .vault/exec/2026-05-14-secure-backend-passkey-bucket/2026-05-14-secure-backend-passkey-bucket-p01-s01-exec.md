@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
-modified: '2026-06-13'
+modified: '2026-07-08'
 step_id: 'P01.S01'
 related:
   - '[[2026-05-14-secure-backend-passkey-bucket-plan]]'

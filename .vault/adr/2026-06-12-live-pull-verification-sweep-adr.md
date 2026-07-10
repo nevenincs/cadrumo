@@ -1,13 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#live-pull-verification-sweep'
+  - "#adr"
+  - "#live-pull-verification-sweep"
 date: '2026-06-12'
-modified: '2026-06-15'
 related:
-  - '[[2026-06-12-live-pull-verification-sweep-research]]'
+  - "[[2026-06-12-live-pull-verification-sweep-research]]"
+supersedes:
+  - '2026-04-12-self-healing-sync-adr'
+  - '2026-04-12-notifications-inbox-adr'
+modified: '2026-07-10'
 ---
-
 # `live-pull-verification-sweep` adr: `Authenticated pull-only live verification sweep: per-surface acceptance` | (**status:** `accepted`)
 
 ## Problem Statement

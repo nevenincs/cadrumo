@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#m210-categorical-conditional-predicate'
 date: '2026-06-30'
-modified: '2026-06-30'
+modified: '2026-07-08'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-research]]"
+  - '[[2026-07-06-m210-categorical-conditional-predicate-research]]'
 ---
-
 # `m210-categorical-conditional-predicate` adr: `Categorical-conditional verification predicate for the M210 inmobiliaria branch` | (**status:** `accepted`)
 
 ## Problem Statement

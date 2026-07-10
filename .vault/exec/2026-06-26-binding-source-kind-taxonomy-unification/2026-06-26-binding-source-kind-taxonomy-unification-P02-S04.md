@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S04'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
-
-
-
 
 # Re-type DEFERRED_SOURCE_KINDS and _BUCKET_AGGREGATION_OWNED_SOURCES to frozenset of BindingSourceKind
 
