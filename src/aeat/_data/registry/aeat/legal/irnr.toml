@@ -1,7 +1,7 @@
 # TRLIRNR (Impuesto sobre la Renta de no Residentes) legal-catalogue
 # entries supporting the current M210 IRNR engine.
 #
-# Authoring scope: TRLIRNR Arts 2, 10, 13.1.h, 24, 25.1.a, 25.1.b, 25.1.f under
+# Authoring scope: TRLIRNR Arts 2, 10, 13.1, 13.1.h, 24, 25.1.a, 25.1.b, 25.1.f under
 # the consolidated text approved by Real Decreto Legislativo
 # 5/2004 (BOE-A-2004-4527). Required_text patterns are populated
 # from the bundled corpus so the M210 base, rate, treaty, and tariff rows
@@ -40,6 +40,22 @@ reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
 notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
+
+[legal."trlirnr-rdleg-5-2004:art-13.1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a13"
+document_id = "BOE-A-2004-4527"
+article = "13.1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a13"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "codex"
+notes = "TRLIRNR art 13.1: the statutory source-scope gateway. It defines the enumerated rentas obtained in Spanish territory, which the M210 ledger classifier uses before admitting an explicitly classified income observation to the IRNR gross-income target. Article 25 only determines the rate after this territorial classification."
+required_text = ["Se consideran rentas obtenidas en territorio espanol las siguientes"]
 
 [legal."trlirnr-rdleg-5-2004:art-13.1.h"]
 evidence_tier = "legal_authority"
