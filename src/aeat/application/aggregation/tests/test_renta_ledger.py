@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
@@ -15,9 +14,15 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.i18n import Translatable as tr
-from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.calculations.registry import (
+    CasillaId,
+    DataBindingDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    validated_casilla_id,
+)
 from ....domain.categories import (
     CategoryCitation,
     CategoryCitationSource,
@@ -42,12 +47,14 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.usage_ratios import UsageRatioProfile
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
     LedgerRentaExpenseAggregationSourceResolver,
     RentaLedgerAggregationIssueReason,
+    RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
@@ -60,9 +67,36 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-@cache
-def _m100_2025_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=binding_id,
+        source=BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        selector={
+            "modelo": "100",
+            "period": "0A",
+            "target_casilla_id": casilla_id,
+            "fact": "deductible_amount_sum",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
+        source_refs=("aeat-renta-2025-manual-parte1",),
+    )
+
+
+def _m100_2025_renta_expense_revision() -> ModeloRevision:
+    return ModeloRevision(
+        id="2025",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
+        legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
+        source_refs=("aeat-renta-2025-manual-parte1",),
+        bindings=(
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0186-deductible", "0186"),
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0192-deductible", "0192"),
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0199-deductible", "0199"),
+            _m100_renta_expense_binding("renta-2025-ledger-expense-0203-deductible", "0203"),
+        ),
+    )
 
 
 _ANNUAL_2025 = _period(2025, "0A")
@@ -263,7 +297,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = _m100_2025_snapshot()
+    revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -273,7 +307,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
+            revision=revision,
         ),
     )
     binding_values = resolution.binding_values
@@ -310,7 +344,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
     invoice_repo.save(InvoiceCatalogue())
 
-    snapshot = _m100_2025_snapshot()
+    revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -320,7 +354,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
+            revision=revision,
         ),
     )
 
@@ -347,7 +381,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
         objects=secure_objects,
     )
 
-    snapshot = _m100_2025_snapshot()
+    revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
@@ -357,7 +391,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
-            revision=snapshot.revision,
+            revision=revision,
         ),
     )
 
@@ -667,6 +701,97 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     assert result.issues[0].transaction_id == linked.transaction_id
 
 
+def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_is_in_window_but_own_date_is_not(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Regression test (issue #599): a transaction whose OWN filing date falls outside the
+    requested annual window but whose LINKED INVOICE's issue date falls inside it must not
+    be silently dropped before the classifier ever runs.
+
+    ``aggregate_renta_ledger_expenses_from_repositories`` used to pre-filter the loaded
+    catalogue via ``TransactionCatalogueRepository.load_for_date_range``, keyed ONLY on the
+    transaction's own ``value_date``/``booked_date`` (the same field the plaintext date
+    index stores). But the aggregation's own ``OUTSIDE_PERIOD`` classification uses
+    ``RentaDeductibleExpenseFact.filing_date``, which PREFERS the linked invoice's
+    ``issue_date`` over the transaction's own date (see
+    ``domain.renta.RentaDeductibleExpenseFact.filing_date``). When a transaction's own date
+    fell OUTSIDE the requested window but its invoice's issue date fell INSIDE it, the
+    pre-filter excluded the row from the loaded catalogue before the aggregation ever ran --
+    so instead of correctly admitting the expense (by invoice date), it silently disappeared
+    with NO observation and NO issue at all. Reverting the pre-filter to a full
+    ``repository.load()`` (mirroring ``_iva_ledger`` / ``_renta_income_ledger`` /
+    ``_renta_gasto_ledger`` / ``_impatriado_income_ledger``) closes the gap: the classifier
+    now sees every row and correctly admits this one by its invoice-issue-date filing_date.
+    """
+    # Transaction's own date (2024-12-15) is OUTSIDE the 2025 annual window; a
+    # pre-filtering repository read would have excluded it before the
+    # aggregation ever ran. Its linked invoice's issue date (2025-01-10) is
+    # INSIDE the window -- by the aggregation's own filing_date rule this
+    # expense must be admitted as a real observation, not silently dropped.
+    own_date_outside_invoice_date_inside = _transaction(
+        "row-own-date-outside",
+        booked_date=date(2024, 12, 15),
+        value_date=date(2024, 12, 15),
+    )
+    invoice = _invoice(
+        own_date_outside_invoice_date_inside.transaction_id,
+        issued_at=date(2025, 1, 10),
+    )
+    linked = _transaction(
+        "row-own-date-outside",
+        booked_date=date(2024, 12, 15),
+        value_date=date(2024, 12, 15),
+        purchase_invoice_evidence_id=invoice.invoice_id,
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    assert len(result.observations) == 1
+    assert result.observations[0].transaction_id == linked.transaction_id
+    assert result.issues == ()
+
+
+def test_repository_backed_aggregation_reports_out_of_period_catalogue_transactions_across_years(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A catalogue transaction from a different year must surface as an OUTSIDE_PERIOD issue.
+
+    Regression test (issue #599): the repository-backed entry point must NOT pre-filter the
+    loaded catalogue by date range for a multi-year catalogue. ``OUTSIDE_PERIOD`` is a genuine
+    no-silent-under-declaration-class diagnostic -- an operator running a 10-year ledger history
+    against the 2025 annual window needs to see that a 2023-dated catalogue transaction exists
+    and was excluded, not have it silently vanish before the classifier ever runs (mirroring
+    ``test_iva_ledger.py::test_repository_backed_projection_reports_out_of_period_catalogue_transactions``).
+    """
+    in_year = _transaction("row-in-2025", booked_date=date(2025, 4, 5), value_date=date(2025, 4, 5))
+    out_of_year = _transaction("row-in-2023", booked_date=date(2023, 6, 10), value_date=date(2023, 6, 10))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((in_year, out_of_year)))
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    assert {o.transaction_id for o in result.observations} == {in_year.transaction_id}
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues[0].transaction_id == out_of_year.transaction_id
+
+
 def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
     first = _transaction("row-partial-a")
     second = _transaction("row-partial-b", amount=Decimal("60.50"))
@@ -864,7 +989,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
 
 
 def test_non_regional_category_profile_preserves_result_across_region() -> None:
-    """S37: with the (empty) override layer, the residence CCAA is inert.
+    """With the empty override layer, the residence CCAA is inert.
 
     A category with no territorial-regime override produces byte-identical
     observations whether the residence comunidad is declared or not.
@@ -890,7 +1015,7 @@ def test_non_regional_category_profile_preserves_result_across_region() -> None:
 
 
 def test_region_override_selected_when_residence_matches() -> None:
-    """S38: a declared residence with a territorial override selects the override.
+    """A declared residence with a territorial override selects the override.
 
     The synthetic 50% override for the residence comunidad halves the deductible
     versus the full-deductible state profile, proving selection by CCAA.
@@ -916,7 +1041,7 @@ def test_region_override_selected_when_residence_matches() -> None:
 
 
 def test_region_override_undeclared_residence_fails_closed() -> None:
-    """S38/D4: a category carrying an override with no declared residence fails closed."""
+    """A category carrying an override with no declared residence fails closed."""
     row = _transaction("row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory.GASTOS_BANCARIOS)
     overrides = {
         CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)}
@@ -934,3 +1059,101 @@ def test_region_override_undeclared_residence_fails_closed() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE
+
+
+# ---------------------------------------------------------------------------
+# Residence CCAA derived from the active profile at the repository boundary.
+# ---------------------------------------------------------------------------
+
+
+def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
+    """A user profile carrying an optional ``tax_residence.ccaa`` fact."""
+    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    if ccaa_value is not None:
+        facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
+    return UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Region Tester",
+        facts=facts,
+    )
+
+
+def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empty(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Deriving residence CCAA from the profile changes nothing without overrides.
+
+    With the registry override layer empty, aggregating through the repository
+    wrapper with a profile declaring ``tax_residence.ccaa = madrid`` produces
+    casilla totals and observations byte-identical to the no-residence case.
+    """
+    invoice = _invoice(_transaction("row-region-wrapper-inert").transaction_id)
+    linked = _transaction("row-region-wrapper-inert", purchase_invoice_evidence_id=invoice.invoice_id)
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((linked,)),
+    )
+    InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        InvoiceCatalogue.from_invoices((invoice,)),
+    )
+
+    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
+        return aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id="test",
+            period=_ANNUAL_2025,
+            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            profile_year=2025,
+            profile_record=profile_record,
+        )
+
+    with_madrid = _run(_profile_with_ccaa("madrid"))
+    without_region = _run(_profile_with_ccaa(None))
+
+    assert with_madrid.casilla_values == without_region.casilla_values
+    assert with_madrid.observations == without_region.observations
+    assert with_madrid.issues == without_region.issues == ()
+
+
+def test_repository_wrapper_threads_profile_residence_into_region_override_selection(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The residence CCAA derived from the profile reaches override selection.
+
+    A GASTOS_BANCARIOS row with a synthetic Canarias override: a profile declaring
+    ``tax_residence.ccaa = canarias`` selects the override THROUGH the repository
+    wrapper (deductible halved), proving the residence derived from the profile
+    flows end-to-end; a Madrid profile falls through to state law, proving the
+    derived residence is the actual selector and is not silently dropped.
+    """
+    row = _transaction(
+        "row-region-wrapper-hit",
+        amount=Decimal("100.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    overrides = {
+        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)},
+    }
+
+    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
+        return aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id="test",
+            period=_ANNUAL_2025,
+            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            profile_year=2025,
+            profile_record=profile_record,
+            region_category_overrides=overrides,
+        )
+
+    matched = _run(_profile_with_ccaa("canarias"))
+    assert matched.issues == ()
+    assert matched.observations[0].proportionality_kind is ProportionalityKind.FIXED_PERCENTAGE
+    assert matched.observations[0].deductible_amount == Decimal("50.0000")
+
+    other_region = _run(_profile_with_ccaa("madrid"))
+    assert other_region.issues == ()
+    assert other_region.observations[0].proportionality_kind is not ProportionalityKind.FIXED_PERCENTAGE
+    assert other_region.observations[0].deductible_amount == Decimal("100.00")

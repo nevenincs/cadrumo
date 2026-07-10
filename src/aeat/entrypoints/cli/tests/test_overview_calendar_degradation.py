@@ -33,14 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _RANGE = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
 
 
-def _boom(*_args: object, **_kwargs: object) -> object:
-    raise RuntimeError("evidence store unavailable")
-
-
-def test_live_events_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    from ....application import live as live
-
-    monkeypatch.setattr(live, "ExpedientesService", _boom)
+def test_live_events_loader_degrades_to_notice() -> None:
     events, notice = _local_live_calendar_events("bogus-bucket", _RANGE)
     assert events == ()
     assert notice is not None
@@ -48,10 +41,7 @@ def test_live_events_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) 
     assert notice.code == "overview.calendar_live_events_degraded"
 
 
-def test_modelo_record_events_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    from ....domain import modelos as modelos
-
-    monkeypatch.setattr(modelos, "ModeloRecordCatalogueRepository", _boom, raising=False)
+def test_modelo_record_events_loader_degrades_to_notice() -> None:
     events, notice = _local_modelo_record_calendar_events("bogus-bucket", _RANGE)
     assert events == ()
     assert notice is not None
@@ -59,10 +49,7 @@ def test_modelo_record_events_loader_degrades_to_notice(monkeypatch: pytest.Monk
     assert notice.code == "overview.calendar_modelo_events_degraded"
 
 
-def test_filing_evidence_loader_degrades_to_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    from ....domain import modelos as modelos
-
-    monkeypatch.setattr(modelos, "ModeloRecordCatalogueRepository", _boom, raising=False)
+def test_filing_evidence_loader_degrades_to_notice() -> None:
     evidence, notice = _local_calendar_filing_evidence("bogus-bucket", ())
     assert evidence == ()
     assert notice is not None

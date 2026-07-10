@@ -1,4 +1,18 @@
-"""Shared Modelo 303 parser boundary corpus expectations."""
+"""Shared Modelo 303 parser boundary corpus expectations.
+
+See Also:
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303`
+        Single-fixture parser boundary check for the current Modelo 303
+        declaration profile.
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_2023_2024`
+        Current-template corpus sweep that consumes the 2023-2024 parameters
+        and expected profile casilla set.
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_historical`
+        Historical-template corpus sweep that consumes the 2021-2022
+        parameters and expected values.
+    :class:`~domain.calculations.registry.CasillaId`
+        Typed casilla key used for historical expected extracted values.
+"""
 
 from __future__ import annotations
 

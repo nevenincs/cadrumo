@@ -1,13 +1,14 @@
 """Real-behavior tests for casilla-level declaración reconcile enrollment (#438).
 
 Extends the coverage :mod:`test_reconcile_declaracion_casillas` established for
-Modelo 130 to the four modelos enrolled in
+Modelo 130 to the five modelos enrolled in
 :data:`aeat.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
-in the same slice: Modelo 303 (IVA autoliquidación, compound ``iva.*``
-primitive/result casilla ids), Modelo 390 (IVA resumen anual, compound
-``iva.anual.*`` ids), Modelo 111 (retenciones e ingresos a cuenta trimestral,
-printed AEAT box numbers ``"01"``..``"30"``), and Modelo 190 (resumen anual de
-retenciones, compound ``decl.*`` summary ids).
+in the same slice: Modelo 100 (IRPF annual, printed Renta casilla ids), Modelo
+303 (IVA autoliquidación, compound ``iva.*`` primitive/result casilla ids),
+Modelo 390 (IVA resumen anual, compound ``iva.anual.*`` ids), Modelo 111
+(retenciones e ingresos a cuenta trimestral, printed AEAT box numbers
+``"01"``..``"30"``), and Modelo 190 (resumen anual de retenciones, compound
+``decl.*`` summary ids).
 
 Each modelo's ``declaracion_pdf`` extraction profile has been confirmed (by
 reading the registry TOML alongside
@@ -221,6 +222,38 @@ def _reconcile(work_unit: WorkUnit, declaracion: InboundDeclaracionObservation):
         actor="operator",
         declaracion=declaracion,
     )
+
+
+# --- Modelo 100 (IRPF annual): printed Renta casilla ids --------------------
+
+
+def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff() -> None:
+    """M100 0604 must reconcile against the annual pagos-fraccionados credit.
+
+    The persisted revision represents the annual declaration after the four
+    Modelo 130 quarters have folded into casilla 0604. A filed declaración that
+    prints a different 0604 must surface a typed casilla mismatch rather than
+    an identity-only reconcile success.
+    """
+    work_unit = _seed_work_unit(modelo="100", filing_year=2024, period="0A")
+    _persist_filed_revision(work_unit, casilla_values={"0604": Decimal("1520.00")})
+
+    report = _reconcile(
+        work_unit,
+        # One M130 quarter short against the already-folded annual credit.
+        _synthetic_declaracion(work_unit, values={"0604": Decimal("1140.00")}),
+    )
+
+    assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
+    casilla_diffs = [d for d in report.diffs if d.diff_kind is ModeloReconciliationDiffKind.CASILLA]
+    assert len(casilla_diffs) == 1
+    diff = casilla_diffs[0]
+    assert diff.field_name == "0604"
+    assert diff.kind == "casilla_value_mismatch"
+    assert diff.work_unit_value == "1520.00"
+    assert diff.evidence_value == "1140.00"
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(diff.legal_refs)
+    assert "aeat-dr-100-2024-dictionary" in diff.source_refs
 
 
 # --- Modelo 303 (IVA autoliquidación): compound iva.* casilla ids -----------

@@ -13,6 +13,7 @@ from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
+from ._modelo_work_ux_support import _seed_m111_retencion_observation
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
@@ -79,14 +80,14 @@ def _create_first_year_activity_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_marta_2024_activity_profile() -> None:
+def _create_autonoma_2024_activity_profile() -> None:
     result = _invoke(
         [
-            "config", "profile", "create", "marta",
+            "config", "profile", "create", "autonoma",
             "--quiet", "--accept-defaults",
             "--entity-type", "natural_person",
             "--tax-id", "12345678Z",
-            "--name", "Marta",
+            "--name", "Ana",
             "--surnames", "Persona",
             "--activity", "consultoria",
             "--activity-start-date", "2024-01-01",
@@ -113,6 +114,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
+    _seed_m111_retencion_observation()
 
     calculated = _invoke(
         [
@@ -135,10 +137,12 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
     assert _payload(verified.output)["granted_verificado_completo"] is True
-    # A granted (clean) verify stays on the success spine with no notices, in
-    # lock-step with its exit-0.
+    # A granted (clean) verify stays on the success spine (its single info
+    # next-action notice keeps status at success), in lock-step with its exit-0.
     assert _envelope_status(verified.output) == "success", verified.output
-    assert _notices(verified.output) == [], verified.output
+    granted_notices = _notices(verified.output)
+    assert [n["code"] for n in granted_notices] == ["modelo.work.verify.next_action_granted"], verified.output
+    assert granted_notices[0]["severity"] == "info", verified.output
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(
@@ -236,25 +240,25 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert blocking["suggestion"] == payload["findings"][0]["next_action"]
 
 
-def test_marta_m130_2024_1t_calculate_by_natural_key_from_blank_ledger_state() -> None:
-    """Marta's reported first-quarter blank-state ledger flow stays on the public CLI path.
+def test_autonoma_m130_2024_1t_calculate_by_natural_key_from_blank_ledger_state() -> None:
+    """The reported first-quarter blank-state ledger flow stays on the public CLI path.
 
-    The expected casillas come from the Marta acceptance evidence, not from
+    The expected casillas come from the acceptance evidence, not from
     reimplementing the Modelo 130 formulas in the test: ledger income 3000,
     deductible expense 600, and first-year activity blank prior state produce
     the accepted 1T draft values 01=3000, 02=600, 03=2400, 19=380.
     """
 
-    _create_marta_2024_activity_profile()
+    _create_autonoma_2024_activity_profile()
     seed_m130_income_transaction(
         amount=Decimal("3000.00"),
         filing_year=2024,
-        source_key="marta-blank-1t",
+        source_key="autonoma-blank-1t",
     )
     seed_m130_expense_transaction(
         amount=Decimal("600.00"),
         filing_year=2024,
-        source_key="marta-blank-1t",
+        source_key="autonoma-blank-1t",
     )
     created = _invoke(
         [
@@ -270,7 +274,7 @@ def test_marta_m130_2024_1t_calculate_by_natural_key_from_blank_ledger_state() -
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "130", "--year", "2024", "--period", "1T",
-            "--by", "Marta",
+            "--by", "Ana",
         ],
     )  # fmt: skip
 
@@ -386,6 +390,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
+    _seed_m111_retencion_observation()
 
     renamed = _invoke(
         [

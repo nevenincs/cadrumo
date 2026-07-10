@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import BindingSourceKind
 from ....tests import REPO_ROOT
 from ...aggregation import (
     DEFERRED_SOURCE_KIND_TARGETS,
@@ -116,3 +117,9 @@ def test_dependency_triggers_reference_a_real_deferred_or_enrolled_kind() -> Non
             f"{kind.value} declares promotion_depends_on '{dependency.value}', which is not a deferred kind — "
             f"the fired-trigger check would be vacuous. Point it at a real deferred dependency."
         )
+
+
+def test_bienes_inversion_regularizacion_is_not_deferred_after_live_m303_promotion() -> None:
+    """The casilla-43 source must not remain deferred after live M303 enrollment."""
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION not in DEFERRED_SOURCE_KIND_TARGETS
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION not in DEFERRED_SOURCE_KINDS

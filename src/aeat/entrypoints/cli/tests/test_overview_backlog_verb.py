@@ -7,8 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage import SensitivityClass, secure_object_repository_for_bucket
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
+from ....core.time import now
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -79,21 +81,30 @@ def test_backlog_help_advertises_local_only() -> None:
 
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+_WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
+_WORK_UNIT_OBJECT_KEY = "catalogue"
 
 
-def test_work_unit_load_failure_degrades_to_notice_not_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
+def _persist_invalid_work_unit_catalogue_payload(bucket_id: str) -> None:
+    secure_object_repository_for_bucket(bucket_id).save(
+        namespace=_WORK_UNIT_NAMESPACE,
+        object_key=_WORK_UNIT_OBJECT_KEY,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=now(),
+        payload=b'{"status":"invalid work-unit catalogue envelope"',
+    )
+
+
+def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
     # Work units are an optional enrichment; when their load fails the overview
     # must degrade to a schedule-only answer with a WARNING notice, NOT refuse
     # the whole surface — refusing left a behind-but-fresh taxpayer (the
     # regularizar-atrasos persona) unable to answer "what have I missed".
-    from ....application import modelo as modelo_app
     from ....core.json_contract import NoticeSeverity
     from .._overview import _local_modelo_work_units
 
-    def _boom(**_kwargs: object) -> object:
-        raise RuntimeError("work-unit catalogue store is corrupt")
-
-    monkeypatch.setattr(modelo_app, "list_work_units", _boom)
+    _persist_invalid_work_unit_catalogue_payload(_BUCKET_ID)
 
     units, notice = _local_modelo_work_units(_BUCKET_ID)
     assert units == ()
@@ -102,16 +113,11 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal(monkeypatch: pyte
     assert notice.severity is NoticeSeverity.WARNING
 
 
-def test_backlog_renders_despite_work_unit_load_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_backlog_renders_despite_work_unit_load_failure() -> None:
     # End-to-end: with the work-unit load forced to fail, the backlog still
     # renders (exit 0) from the deadline schedule and surfaces the degradation
     # line, rather than exiting non-zero with a "persisted work state" refusal.
-    from ....application import modelo as modelo_app
-
-    def _boom(**_kwargs: object) -> object:
-        raise RuntimeError("work-unit catalogue store is corrupt")
-
-    monkeypatch.setattr(modelo_app, "list_work_units", _boom)
+    _persist_invalid_work_unit_catalogue_payload(_BUCKET_ID)
 
     result = invoke_cached_cli(
         ["app", "overview", "backlog", "--from", "2026-01-01", "--to", "2026-12-31", "--allow-incomplete"],

@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#docs-cli-conformance'
+  - "#adr"
+  - "#docs-cli-conformance"
 date: '2026-05-30'
-modified: '2026-06-30'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-05-30-docs-architecture-adr]]"
   - "[[2026-05-30-docs-sphinx-build-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
-  - '[[2026-06-04-docs-cli-conformance-research]]'
+  - "[[2026-06-04-docs-cli-conformance-research]]"
+superseded_by: '2026-06-01-docs-cli-buildtime-adr'
+modified: '2026-07-10'
 ---
-
-# `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `partially superseded`)
+# `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `superseded`)
 
 > **Decisions 1 and 2 are superseded** by the build-time CLI reference
 > extraction ADR (`2026-06-01-docs-cli-buildtime-adr`). The choice of a bespoke

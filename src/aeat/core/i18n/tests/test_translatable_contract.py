@@ -1,27 +1,36 @@
-"""Repository-wide guard for the ``Translatable`` declaration contract."""
+"""Repository-wide guard for the ``Translatable`` declaration contract.
+
+See Also:
+    :class:`~core.i18n.Translatable`
+        Translation-key value object whose declaration and import alias are
+        guarded by this module.
+    :func:`~core.i18n.tr`
+        Reserved runtime translation function whose ``tr`` binding must not be
+        shadowed outside the i18n renderer.
+    :func:`~tests._inventory.package_ast_items`
+        Shared AST inventory used to scan declarations across the repository.
+"""
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 from typing import override
 
 import pytest
 
+from ....tests import SRC_AEAT, package_ast_items, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SOURCE_ROOT = Path("src/aeat")
-_TRANSLATABLE_EXPORT = Path("src/aeat/core/i18n/__init__.py")
-_TRANSLATION_RENDERER = Path("src/aeat/core/i18n/_render.py")
+_TRANSLATABLE_EXPORT = SRC_AEAT / "core" / "i18n" / "__init__.py"
+_TRANSLATION_RENDERER = SRC_AEAT / "core" / "i18n" / "_render.py"
 
 
 def _location(path: Path, node: ast.AST, message: str) -> str:
     lineno = getattr(node, "lineno", 1)
-    return f"{path.as_posix()}:{lineno}: {message}"
-
-
-def _iter_python_sources() -> list[Path]:
-    return sorted(_SOURCE_ROOT.rglob("*.py"))
+    return f"{repo_relative(path)}:{lineno}: {message}"
 
 
 def _target_names(target: ast.AST) -> list[str]:
@@ -174,12 +183,11 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
             self.violations.append(_location(self.path, node, "shadows reserved i18n name 'tr'"))
 
 
-def test_translatable_instances_use_only_tr_alias_without_shadowing() -> None:
+def test_translatable_instances_use_only_tr_alias_without_shadowing(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """``Translatable`` values must be declared as ``tr(...)`` with no local shadowing."""
 
     violations: list[str] = []
-    for path in _iter_python_sources():
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for path, tree in package_ast_items(source_tree_ast, include_data=True):
         visitor = _TranslatableContractVisitor(path)
         visitor.visit(tree)
         violations.extend(visitor.violations)

@@ -8,6 +8,13 @@ options, use the [command-line reference](../cli/index.rst).
 ::::{grid} 1 2 2 3
 :gutter: 3
 
+:::{grid-item-card} Get Started
+:link: onboarding
+:link-type: doc
+
+Map the whole journey from bank records to a filed modelo, stage by stage.
+:::
+
 :::{grid-item-card} Quickstart
 :link: quickstart
 :link-type: doc
@@ -204,6 +211,13 @@ Prepare, verify, and export a quarterly IVA return.
 Prepare the annual IVA summary.
 :::
 
+:::{grid-item-card} IVA Prorrata Deductions
+:link: prorrata
+:link-type: doc
+
+Deduct input IVA under general or especial prorrata and declare differentiated sectors.
+:::
+
 :::{grid-item-card} LLM Classification
 :link: classify-with-llm
 :link-type: doc
@@ -255,6 +269,7 @@ records.
 ```{toctree}
 :hidden:
 
+onboarding
 quickstart
 profile-setup
 censo-update
@@ -278,6 +293,7 @@ review-with-google-sheets
 filing-spine
 modelo-303
 modelo-390
+prorrata
 verification-reports
 filing-readiness
 file-at-aeat

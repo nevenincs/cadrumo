@@ -36,48 +36,44 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("expression", "values", "expected"),
-    (
+def test_nonzero_collection_predicates() -> None:
+    """all_nonzero and any_nonzero evaluate present, zero, and absent casillas explicitly."""
+    cases = (
         (
+            "all-present-nonzero",
             'all_nonzero(["01", "02"])',
             _casilla_values((_CASILLA_01, "1000"), (_CASILLA_02, "500")),
             True,
         ),
         (
+            "all-one-zero",
             'all_nonzero(["01", "02"])',
             _casilla_values((_CASILLA_01, "1000"), (_CASILLA_02, "0")),
             False,
         ),
         (
+            "all-one-absent",
             'all_nonzero(["01", "02"])',
             _casilla_values((_CASILLA_01, "1000")),
             False,
         ),
         (
+            "any-one-nonzero",
             'any_nonzero(["01", "02"])',
             _casilla_values((_CASILLA_01, "0"), (_CASILLA_02, "500")),
             True,
         ),
         (
+            "any-all-zero",
             'any_nonzero(["01", "02"])',
             _casilla_values((_CASILLA_01, "0"), (_CASILLA_02, "0")),
             False,
         ),
-        ('any_nonzero(["01", "02"])', {}, False),
-    ),
-    ids=(
-        "all-present-nonzero",
-        "all-one-zero",
-        "all-one-absent",
-        "any-one-nonzero",
-        "any-all-zero",
-        "any-all-absent",
-    ),
-)
-def test_nonzero_collection_predicates(expression: str, values: dict[CasillaId, Decimal], expected: bool) -> None:
-    """all_nonzero and any_nonzero evaluate present, zero, and absent casillas explicitly."""
-    assert evaluate_predicate_expression(expression, values, _workflow_profile()) is expected
+        ("any-all-absent", 'any_nonzero(["01", "02"])', {}, False),
+    )
+
+    for case_id, expression, values, expected in cases:
+        assert evaluate_predicate_expression(expression, values, _workflow_profile()) is expected, case_id
 
 
 def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
@@ -206,10 +202,11 @@ def test_at_most_one_positive_emits_blocking_rule_finding() -> None:
 _BIN_ROLL_FORWARD = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'
 
 
-@pytest.mark.parametrize(
-    ("values", "predicate_holds", "advisory_fires"),
-    (
+def test_roll_forward_balances_core_cases() -> None:
+    """The BIN roll-forward predicate distinguishes continuous filings from dropped stock."""
+    cases = (
         (
+            "reconciles",
             _casilla_values(
                 (_M200_BIN_OPEN_CASILLA, "10000"),
                 (_M200_BIN_APPLIED_CASILLA, "3000"),
@@ -220,6 +217,7 @@ _BIN_ROLL_FORWARD = 'roll_forward_balances(["00671", "00670", "DP200014:00547", 
             False,
         ),
         (
+            "dropped-closing",
             _casilla_values(
                 (_M200_BIN_OPEN_CASILLA, "10000"),
                 (_M200_BIN_APPLIED_CASILLA, "3000"),
@@ -230,6 +228,7 @@ _BIN_ROLL_FORWARD = 'roll_forward_balances(["00671", "00670", "DP200014:00547", 
             True,
         ),
         (
+            "legitimate-zero-closing",
             _casilla_values(
                 (_M200_BIN_OPEN_CASILLA, "3000"),
                 (_M200_BIN_APPLIED_CASILLA, "3000"),
@@ -240,6 +239,7 @@ _BIN_ROLL_FORWARD = 'roll_forward_balances(["00671", "00670", "DP200014:00547", 
             False,
         ),
         (
+            "generated-loss-added",
             _casilla_values(
                 (_M200_BIN_OPEN_CASILLA, "5000"),
                 (_M200_BIN_APPLIED_CASILLA, "2000"),
@@ -249,17 +249,11 @@ _BIN_ROLL_FORWARD = 'roll_forward_balances(["00671", "00670", "DP200014:00547", 
             True,
             False,
         ),
-    ),
-    ids=("reconciles", "dropped-closing", "legitimate-zero-closing", "generated-loss-added"),
-)
-def test_roll_forward_balances_core_cases(
-    values: dict[CasillaId, Decimal],
-    predicate_holds: bool,
-    advisory_fires: bool,
-) -> None:
-    """The BIN roll-forward predicate distinguishes continuous filings from dropped stock."""
-    assert evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is predicate_holds
-    assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is advisory_fires
+    )
+
+    for case_id, values, predicate_holds, advisory_fires in cases:
+        assert evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is predicate_holds, case_id
+        assert evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is advisory_fires, case_id
 
 
 def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
@@ -339,26 +333,18 @@ def test_unknown_expression_does_not_block() -> None:
 _IMPLIES_NONZERO_C01_C07 = 'implies_nonzero(["01", "07"])'
 
 
-@pytest.mark.parametrize(
-    ("values", "expected"),
-    (
-        (_casilla_values((_CASILLA_01, "0"), (_CASILLA_07, "0")), True),
-        (_casilla_values((_CASILLA_01, "-100"), (_CASILLA_07, "0")), True),
-        (_casilla_values((_CASILLA_01, "500"), (_CASILLA_07, "200")), True),
-        (_casilla_values((_CASILLA_01, "500"), (_CASILLA_07, "0")), False),
-        (_casilla_values((_CASILLA_01, "500")), False),
-    ),
-    ids=(
-        "antecedent-zero",
-        "antecedent-negative",
-        "both-positive",
-        "positive-antecedent-zero-consequent",
-        "positive-antecedent-absent-consequent",
-    ),
-)
-def test_predicate_implies_nonzero_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
+def test_predicate_implies_nonzero_cases() -> None:
     """implies_nonzero engages only for strictly-positive antecedents and treats absent consequents as zero."""
-    assert evaluate_predicate_expression(_IMPLIES_NONZERO_C01_C07, values, _workflow_profile()) is expected
+    cases = (
+        ("antecedent-zero", _casilla_values((_CASILLA_01, "0"), (_CASILLA_07, "0")), True),
+        ("antecedent-negative", _casilla_values((_CASILLA_01, "-100"), (_CASILLA_07, "0")), True),
+        ("both-positive", _casilla_values((_CASILLA_01, "500"), (_CASILLA_07, "200")), True),
+        ("positive-antecedent-zero-consequent", _casilla_values((_CASILLA_01, "500"), (_CASILLA_07, "0")), False),
+        ("positive-antecedent-absent-consequent", _casilla_values((_CASILLA_01, "500")), False),
+    )
+
+    for case_id, values, expected in cases:
+        assert evaluate_predicate_expression(_IMPLIES_NONZERO_C01_C07, values, _workflow_profile()) is expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -375,44 +361,39 @@ def test_predicate_implies_nonzero_cases(values: dict[CasillaId, Decimal], expec
 _CASILLA_EQUALS_IMPLIES_NONZERO = 'casilla_equals_implies_nonzero(["01", "literal-value", "07"])'
 
 
-@pytest.mark.parametrize(
-    ("casilla_values", "text_values", "expected"),
-    (
+def test_casilla_equals_implies_nonzero_fires_cases() -> None:
+    """The advisory fires only when the antecedent text value equals the literal AND the consequent is zero."""
+    cases = (
         (
+            "antecedent-matches-consequent-zero-fires",
             _casilla_values((_CASILLA_07, "0")),
             {_CASILLA_01: "literal-value"},
             True,
         ),
         (
+            "antecedent-matches-consequent-nonzero-holds",
             _casilla_values((_CASILLA_07, "500")),
             {_CASILLA_01: "literal-value"},
             False,
         ),
         (
+            "antecedent-differs-holds",
             _casilla_values((_CASILLA_07, "0")),
             {_CASILLA_01: "other-value"},
             False,
         ),
         (
+            "antecedent-absent-holds",
             _casilla_values((_CASILLA_07, "0")),
             {},
             False,
         ),
-    ),
-    ids=(
-        "antecedent-matches-consequent-zero-fires",
-        "antecedent-matches-consequent-nonzero-holds",
-        "antecedent-differs-holds",
-        "antecedent-absent-holds",
-    ),
-)
-def test_casilla_equals_implies_nonzero_fires_cases(
-    casilla_values: dict[CasillaId, Decimal],
-    text_values: dict[CasillaId, str],
-    expected: bool,
-) -> None:
-    """The advisory fires only when the antecedent text value equals the literal AND the consequent is zero."""
-    assert evaluate_advisory_predicate_fires(_CASILLA_EQUALS_IMPLIES_NONZERO, casilla_values, text_values) is expected
+    )
+
+    for case_id, casilla_values, text_values, expected in cases:
+        assert (
+            evaluate_advisory_predicate_fires(_CASILLA_EQUALS_IMPLIES_NONZERO, casilla_values, text_values) is expected
+        ), case_id
 
 
 def test_casilla_equals_implies_nonzero_defaults_text_values_to_empty() -> None:

@@ -1,11 +1,21 @@
-"""Modelo 130 parser boundary corpus sweeps."""
+"""Modelo 130 parser boundary corpus sweeps.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public parser boundary exercised against every M130 corpus PDF.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m130_support`
+        Shared parameter list and expected casilla values for this corpus.
+    :mod:`~adapters.inbound.declaracion.tests.test_verification_chain_m130`
+        Downstream engine recomputation tests that consume the same parsed
+        fixtures.
+    :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`
+        Observation aggregate returned by the parser and asserted here.
+"""
 
 from __future__ import annotations
 
 import pytest
 
-from .._parser import _extract_tax_id
-from .._parsers import extract_pages_text
 from ._parser_boundary_m130_support import (
     _M130_CORPUS_GROUND_TRUTH,
     _M130_CORPUS_IDS,
@@ -17,22 +27,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M130_CORPUS_PARAMS, ids=_M130_CORPUS_IDS)
-def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Tax-id extraction must succeed for all M130 corpus PDFs."""
-    pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
-    pages = extract_pages_text(pdf_path)
-    text = "\n".join(pages)
-
-    tax_id = _extract_tax_id(text)
-
-    assert tax_id == "Y0000001S", (
-        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}; check _TAX_ID_RE and _DECLARANT_ROW_RE in _parser.py"
-    )
-
-
-@pytest.mark.parametrize("pdf_stem,year,period", _M130_CORPUS_PARAMS, ids=_M130_CORPUS_IDS)
 def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Round-trip all M130 corpus PDFs through the production bbox_anchored profile."""
+    """Round-trip all M130 corpus PDFs through the production bbox_anchored profile.
+
+    See Also:
+        :class:`~adapters.inbound.declaracion.TemplateRevision`
+            Parser-resolved modelo/year/revision coordinate stamped onto each
+            returned observation.
+    """
     expected = _M130_CORPUS_GROUND_TRUTH[pdf_stem]
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
 

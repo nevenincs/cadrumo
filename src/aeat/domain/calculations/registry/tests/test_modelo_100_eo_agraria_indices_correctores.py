@@ -19,6 +19,17 @@ reach that target, not asserted as manual-sourced themselves. The índice
 corrector value (0,90) and both the minorado and módulos figures ARE
 independently AEAT-manual-sourced — the multiplication the Fase 3ª formula
 performs is the mechanism under test.
+
+See Also:
+    :func:`~domain.calculations.registry._formula_runtime._evaluate_m100_resolve_eo_agraria_indices_correctores`
+        Registry runtime evaluator for the sequential Fase 3ª índice cascade.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Public calculation entry point exercised by the worked-example cases.
+    :mod:`~domain.calculations.registry.tests.test_modelo_100_eo_agraria_reducciones_fase_4a`
+        Fase 4ª/5ª reduction suite that continues from this test's casilla
+        1548 result.
+    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
+        Registry-authored Fase 1ª-3ª formula chain under test.
 """
 
 from __future__ import annotations

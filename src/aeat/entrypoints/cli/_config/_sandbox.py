@@ -6,8 +6,8 @@ records, and discard the experiment cleanly afterwards — or, when the
 experiment is worth keeping around for later, move it into reversible
 dormancy instead of erasing it outright. A sandbox is an ordinary profile
 bucket labelled with the reserved
-:data:`~aeat.application.bucket_maintenance.SANDBOX_LABEL_PREFIX`; every verb
-here delegates to :mod:`aeat.application.bucket_maintenance`
+:data:`~application.bucket_maintenance.SANDBOX_LABEL_PREFIX`; every verb
+here delegates to :mod:`~application.bucket_maintenance`
 (``create_sandbox`` / ``discard_sandbox`` / ``archive_sandbox`` /
 ``restore_sandbox`` / ``BucketMaintenanceService``), which in turn delegates
 to the same atomic profile-create span and destructive-erase / soft-tombstone
@@ -21,6 +21,24 @@ SQLite database + one secure-object namespace root per bucket id). A sandbox
 is simply a bucket an operator can create, work in, and discard on a fast,
 low-ceremony lifecycle without the "is this a real client?" hesitation a bare
 ``config profile create`` / ``delete`` pair carries.
+
+See Also:
+    :mod:`~application.bucket_maintenance`
+        Application facade that owns the sandbox lifecycle command models and
+        services.
+    :func:`~application.bucket_maintenance.create_sandbox`
+        Service entry point behind ``sandbox create``.
+    :func:`~application.bucket_maintenance.preview_discard_sandbox`
+        Read-only preview path used by destructive dry runs.
+    :func:`~application.bucket_maintenance.discard_sandbox`
+        Guarded destructive erase path used by ``sandbox discard`` and
+        ``sandbox prune``.
+    :func:`~application.bucket_maintenance.archive_sandbox`
+        Reversible dormancy path used by ``sandbox archive``.
+    :func:`~application.bucket_maintenance.restore_sandbox`
+        Reversible dormancy inverse used by ``sandbox restore``.
+    :class:`~application.bucket_maintenance.SandboxMergeScope`
+        Closed set of sandbox merge scopes accepted by the merge command.
 """
 
 from __future__ import annotations

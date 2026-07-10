@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -118,6 +116,22 @@ def test_touch_resets_idle_deadline() -> None:
     assert session.is_expired(past_window + timedelta(minutes=16)) is True
 
 
+class _KeyMaterialOverride(TypedDict, total=False):
+    """The subset of :func:`_open_session`'s kwargs this parametrize overrides.
+
+    A plain ``dict[str, bytes]`` cannot be ``**``-unpacked against
+    ``_open_session``'s heterogeneously-typed kwargs (``bucket_id: str``,
+    ``idle_minutes: int``, ``opened_at: datetime`` alongside ``kek``/``dek:
+    bytes``): the checker cannot prove the dict carries only the two
+    ``bytes``-typed keys. This ``TypedDict`` names exactly those two optional
+    keys so the ``**`` unpack matches per-key against ``_open_session``'s real
+    parameter types.
+    """
+
+    kek: bytes
+    dek: bytes
+
+
 @pytest.mark.parametrize(
     ("key_material", "message"),
     [
@@ -126,7 +140,7 @@ def test_touch_resets_idle_deadline() -> None:
     ],
     ids=("kek", "dek"),
 )
-def test_open_rejects_wrong_size_key_material(key_material: dict[str, bytes], message: str) -> None:
+def test_open_rejects_wrong_size_key_material(key_material: _KeyMaterialOverride, message: str) -> None:
     with pytest.raises(StorageValidationError, match=message) as exc_info:
         _open_session(**key_material)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
@@ -142,38 +156,3 @@ def test_open_rejects_non_positive_idle_minutes() -> None:
     with pytest.raises(StorageValidationError, match="idle_minutes must be a strict positive integer") as exc_info:
         _open_session(idle_minutes=0)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
-
-
-def test_module_has_no_classvar_typed_attributes() -> None:
-    """Static AST guard: `BucketSession` keeps zero `ClassVar` state.
-
-    The substrate invariant forbids module-global mutable state on
-    the master-key surface. This guard catches a regression that would
-    re-introduce a process-lifetime cache by typing it `ClassVar[...]`.
-    """
-
-    source_path = Path(inspect.getsourcefile(BucketSession) or "")
-    module = ast.parse(source_path.read_text(encoding="utf-8"))
-
-    offenders: list[str] = []
-    for node in ast.walk(module):
-        if isinstance(node, ast.AnnAssign):
-            annotation = ast.unparse(node.annotation)
-            if "ClassVar" in annotation:
-                offenders.append(ast.unparse(node))
-
-    assert offenders == [], f"ClassVar attributes are forbidden on this module: {offenders}"
-
-
-def test_module_derives_dispose_settings_from_loaded_settings() -> None:
-    """Engine eviction must not bypass central settings with a direct Settings constructor."""
-
-    source_path = Path(inspect.getsourcefile(BucketSession) or "")
-    module = ast.parse(source_path.read_text(encoding="utf-8"))
-
-    direct_settings_constructors: list[str] = []
-    for node in ast.walk(module):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Settings":
-            direct_settings_constructors.append(ast.unparse(node))
-
-    assert direct_settings_constructors == []

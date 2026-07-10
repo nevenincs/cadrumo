@@ -30,6 +30,7 @@ Subpackages
    aeat.application.operator_surface
    aeat.application.overview
    aeat.application.portals
+   aeat.application.prorrata_register
    aeat.application.registry
    aeat.application.review
    aeat.application.setup
@@ -51,6 +52,7 @@ Submodules
    aeat.application.config_reset
    aeat.application.diagnostics
    aeat.application.diagnostics_run_health
+   aeat.application.diagnostics_telemetry
    aeat.application.preflight
    aeat.application.provisioning
    aeat.application.repair_integrity

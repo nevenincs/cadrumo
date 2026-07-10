@@ -9,6 +9,17 @@ verbatim for the target casilla (see
 No real ejercicio-2024/2025 declaración PDF specimen is bundled; this is the
 ``synthetic_from_aeat_published_text`` grounding path documented on the
 registry extraction profile.
+
+See Also:
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m100_current_year`
+        Current-year round-trip tests consuming this expected casilla set.
+    :func:`~domain.calculations.registry.validated_casilla_id`
+        Core casilla-id validator used to keep fixture expectations typed.
+    ``tests/fixtures/justificantes/_generate_modelo_100_current.py``
+        Fixture generator that stamps the corresponding printed values.
+    ``2026-07-05-modelo-130-100-continuity-audit`` and
+    ``2026-05-21-declaracion-extraction-architecture-adr``
+        Current-year M100 declaration coverage and registry parser context.
 """
 
 from __future__ import annotations
@@ -30,6 +41,7 @@ M100_CURRENT_YEAR_EXPECTED_CASILLAS: frozenset[CasillaId] = frozenset(
         "0586",
         "0587",
         "0595",
+        "0604",
         "0610",
         "0670",
         "0180",

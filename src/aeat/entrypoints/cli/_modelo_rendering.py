@@ -26,7 +26,7 @@ from ...application.modelo import (
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import BooleanBindingEncodedValue
-from ...domain.modelos import CalculationRevisionState
+from ...domain.modelos import CalculationRevision, CalculationRevisionState, Modelo184MemberRow
 from ._modelo_payloads import (
     BindingEncodedOptionPayload,
     CalculationRevisionPayload,
@@ -44,6 +44,64 @@ from ._modelo_revision_payload_parts import DetailRowPayload
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
+_M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
+# The canonical M100 régimen-de-atribución (actividad económica) income casilla
+# the attributed base folds into, per the 2026-07-09-m184-socio-attribution-handoff-adr
+# addendum, decision (a): 1577 stays relation-canonical and the cross-bucket value
+# enters the socio's own M100 via a documented manual --binding override on 1577.
+_M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
+_M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
+
+
+def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
+    """Return per-socio Modelo 184 régimen-de-atribución handoff info Notices.
+
+    When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
+    rows, the entity operator who files the M184 is handed, per socio, the exact
+    attributed base plus the ``attribution_received`` fact keys the socio records
+    on their OWN profile, and the exact ``aeat app modelo work calculate
+    --binding`` command that folds the base into the socio's Modelo 100 (per the
+    ``2026-07-09-m184-socio-attribution-handoff-adr`` addendum, decision (a): the
+    cross-bucket value is carried by hand onto the relation-canonical casilla
+    1577, not auto-flowed across profiles). Grounded in LIRPF arts. 86-89.
+    Returns an empty list for any revision without member rows (non-M184, or an
+    M184 with no socios), so the handoff stays silent unless there is a real
+    per-socio value to relay.
+    """
+    notices: list[Notice] = []
+    for row in revision.detail_rows:
+        if not isinstance(row, Modelo184MemberRow):
+            continue
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=_M184_SOCIO_HANDOFF_CODE,
+                message=tr(
+                    "cli.app.modelo.work.m184_socio_handoff_message",
+                    nif=row.nif,
+                    nombre=row.nombre,
+                    importe=row.importe,
+                    porcentaje=row.porcentaje,
+                    casilla=_M184_ATRIBUCION_ACT_ECO_CASILLA,
+                ),
+                # The suggestion is a pure machine command: the exact `--binding
+                # 1577=<importe>` fold-in token stays stable across every output
+                # language per the machine-identifier convention, so it is built
+                # in code rather than routed through tr().
+                suggestion=(
+                    f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
+                ),
+                context={
+                    "nif": row.nif,
+                    "nombre": row.nombre,
+                    "porcentaje": str(row.porcentaje),
+                    "base_imponible_attributed": str(row.importe),
+                    "target_casilla": _M184_ATRIBUCION_ACT_ECO_CASILLA,
+                    "legal_refs": _M184_ATRIBUCION_LEGAL_REFS,
+                },
+            ),
+        )
+    return notices
 
 
 def binding_encoded_option_payloads(
@@ -100,6 +158,35 @@ def advisory_notice(
     """
     return Notice(
         severity=NoticeSeverity.WARNING,
+        code=code,
+        message=message,
+        suggestion=suggestion,
+        context=context,
+    )
+
+
+def next_action_notice(
+    code: str,
+    message: str,
+    *,
+    suggestion: str | None = None,
+    context: dict[str, str] | None = None,
+) -> Notice:
+    """Project a post-action next-step hint onto the envelope notices channel.
+
+    The :attr:`NoticeSeverity.INFO` sibling of :func:`advisory_notice`: it turns
+    the "what should the operator run next" guidance emitted after a work-unit
+    read or a verification into an info-severity
+    :class:`~aeat.core.json_contract.Notice` whose ``suggestion`` is the
+    follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
+    ``work status`` / ``work history``) and ``work verify`` call this instead of
+    a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
+    rides the one uniform notices surface per the
+    ``cli-notices-are-the-only-diagnostic-channel`` rule. Being ``info`` severity
+    it never flips the envelope ``status`` away from ``success``.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
         code=code,
         message=message,
         suggestion=suggestion,

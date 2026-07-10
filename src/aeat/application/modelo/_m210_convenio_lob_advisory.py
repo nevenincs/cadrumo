@@ -15,20 +15,20 @@ module surfaces a non-blocking :class:`ModeloVerificationFinding` telling the
 operator to confirm LOB eligibility against the specific treaty text — never
 silently trusting the residence declaration (``no-silent-under-declaration``).
 
-The advisory is derived from the :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
-carrying the cross-cutting :class:`~aeat.domain.calculations.registry.ConvenioAuthority`
-projection and the filer's :class:`~aeat.domain.deadlines.TaxpayerProfile`
+The advisory is derived from the :class:`~domain.calculations.registry.RegistrySnapshot`
+carrying the cross-cutting :class:`~domain.calculations.registry.ConvenioAuthority`
+projection and the filer's :class:`~domain.deadlines.TaxpayerProfile`
 ``country_of_fiscal_residence``.
 
 See Also:
-    :func:`aeat.application.modelo._m210_rate.resolve_m210_rate`
+    :func:`~application.modelo._m210_rate.resolve_m210_rate`
         Application-layer replay of the same tipo-de-gravamen resolution path;
-        this advisory reads the same :class:`~aeat.domain.calculations.registry.ConvenioAuthority`
+        this advisory reads the same :class:`~domain.calculations.registry.ConvenioAuthority`
         projection to detect whether an override actually matched.
-    :func:`aeat.application.modelo._verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 advisories using the same non-blocking mechanism.
-    :class:`aeat.domain.calculations.registry.ConvenioAuthority`
+    :class:`~domain.calculations.registry.ConvenioAuthority`
         Cross-cutting treaty-override authority whose ``resolve`` lookup this
         advisory consults to detect a matched treaty row.
 """
@@ -63,7 +63,7 @@ def _m210_convenio_lob_advisory_finding(
     """Warn to confirm treaty LOB eligibility when a Convenio override applies.
 
     Fires only when the profile declares a ``country_of_fiscal_residence`` AND
-    the cross-cutting :class:`~aeat.domain.calculations.registry.ConvenioAuthority`
+    the cross-cutting :class:`~domain.calculations.registry.ConvenioAuthority`
     actually resolves a treaty override row for ``(country, tipo_renta)`` — i.e.
     only when treaty-based relief is genuinely being claimed, never for a filer
     on the plain TRLIRNR domestic baseline. The finding is ADVISORY because

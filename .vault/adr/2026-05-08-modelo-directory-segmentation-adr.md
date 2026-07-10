@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-08'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-05-08-modelo-100-bulk-segmentation-audit]]"
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
   - "[[2026-05-04-calculation-authority-evidence-tiering-research]]"
 ---
-# modelo-directory-segmentation-adr
+# modelo-directory-segmentation-adr | (**status:** `accepted`)
 
 ## Context
 

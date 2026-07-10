@@ -35,14 +35,12 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     amends_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id="d" * 64,
-        filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
         filed_by="aeat-import",
     )
     record = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
-            filed_at=filed_at,
             filed_by="operator-A",
         ),
         work_unit_id=work_unit_id,
@@ -110,7 +108,6 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
-            filed_at=filed_at,
             filed_by="operator-A",
         ),
         work_unit_id=work_unit_id,
@@ -163,14 +160,12 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
     amends_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id="d" * 64,
-        filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
         filed_by="aeat-import",
     )
     record = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
-            filed_at=filed_at,
             filed_by="operator-A",
         ),
         work_unit_id=work_unit_id,

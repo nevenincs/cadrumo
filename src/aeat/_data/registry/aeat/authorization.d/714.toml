@@ -1,18 +1,15 @@
-# Modelo 714 (Impuesto sobre el Patrimonio). Enrollment is still the prior-year
-# wealth-base data-fidelity test: two distinct renta ejercicios (2023, 2024) of
-# patrimonio-neto / base-liquidable / cuota observations are persisted through
-# the real encrypted-SQLite CalculationObservationRepository and reloaded with
-# strict pydantic equality, with per-ejercicio isolation and the €2.000.000
-# filing-obligation threshold (Orden HAC/1023/2021) asserted.
-# The current registry computes the Ley 19/1991 art. 30 cuota íntegra scale
-# (casilla 29) and the art. 31 80%-floor reference (casilla 39). The
-# evidence_class remains data_fidelity because this enrollment proof is the
-# two-year persistence/fidelity evidence, not a full art. 31 same-year M100
-# joint-limit calculation. The remaining M714 downstream chain
-# (límite-conjunto / total-cuota / cuota-minorada / cuota-a-ingresar) stays
-# manual until the M100 cross-model evidence and art. 31 exclusions are grounded.
+# Modelo 714 (Impuesto sobre el Patrimonio). Enrollment is calculation-backed:
+# the enrolling test persists same-year Modelo 100 observations for 2023 and
+# 2024, resolves the M714 Ley 19/1991 art.31 relation_prefill values through the
+# real local relation resolver, and calculates the M714 art.30/art.31 chain
+# through casilla 40. The registry revision is bounded to 2021-2025 because the
+# checked-in M100 source revisions currently cover those modeled years.
+#
+# Residual manual surface: art.31 exclusion slices that M100 does not expose at
+# filing-grade granularity are explicit M714 inputs (casillas 31, 32, 35, 36),
+# and the later deduction/bonification result chain (45/55) remains manual.
 [modelo]
 modelo = "714"
 renta_years = [2023, 2024]
-evidence_class = "data_fidelity"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_714_patrimonio_baseline_fidelity.py"
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_714_patrimonio_joint_limit_calculation.py"

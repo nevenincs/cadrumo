@@ -1,0 +1,63 @@
+[legal."orden-hac-590-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-590-2021.html#a1"
+document_id = "BOE-A-2021-9721"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721#a1"
+published_at = 2021-06-08
+effective_from = 2021-06-09
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-9721 art 1; pending operator re-stamp)"
+notes = "Orden HAC/590/2021 art 1: aprueba el modelo 490, autoliquidación del Impuesto sobre Determinados Servicios Digitales. Orden habilitante del modelo 490."
+required_text = [
+    "Se aprueba el modelo 490",
+    "Impuesto sobre Determinados Servicios Digitales",
+]
+
+[legal."orden-hac-590-2021:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-590-2021.html#a3"
+document_id = "BOE-A-2021-9721"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721#a3"
+published_at = 2021-06-08
+effective_from = 2021-06-09
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2021-9721 art 3; pending operator re-stamp)"
+notes = "Orden HAC/590/2021 art 3: plazo de presentación del modelo 490. Se presenta e ingresa durante el mes siguiente al correspondiente periodo trimestral natural."
+required_text = [
+    "deberá presentarse e ingresarse durante el mes siguiente",
+    "periodo trimestral natural",
+]
+
+[sources."enrolled-modelo-490-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-590-2021.html"
+sha256 = "04f7991d3eafbf9d5596d3b1f0884b2d50dbfec7bea9b03a141d1d31cc6a1ea7"
+bytes = 961
+retrieved_at = 2026-07-04
+published_at = 2021-06-08
+applies_from = 2021-06-09
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-490-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-590-2021.html"
+sha256 = "04f7991d3eafbf9d5596d3b1f0884b2d50dbfec7bea9b03a141d1d31cc6a1ea7"
+bytes = 961
+retrieved_at = 2026-07-04
+published_at = 2021-06-08
+applies_from = 2021-06-09
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
+review_status = "reviewed"

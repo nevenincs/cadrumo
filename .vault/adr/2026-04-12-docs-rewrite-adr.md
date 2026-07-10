@@ -6,7 +6,7 @@ tags:
   - "#adr"
   - "#docs-rewrite"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-docs-rewrite-research]]"
   - "[[2026-04-12-docs-rewrite-plan]]"
@@ -15,7 +15,7 @@ issue: wgergely/aeat#67
 status: superseded
 ---
 
-# adr: docs-rewrite
+# adr: docs-rewrite | (**status:** `superseded`)
 
 > **Superseded (2026-05-30) by the `docs-architecture` documentation
 > surface taxonomy and conventions ADR.** This ADR's markdown-only scope

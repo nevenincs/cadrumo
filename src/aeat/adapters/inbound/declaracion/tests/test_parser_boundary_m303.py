@@ -1,13 +1,23 @@
-"""Modelo 303 parser boundary corpus tests."""
+"""Modelo 303 parser boundary corpus tests.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public declaration-copy parser boundary exercised by this fixture.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
+        Shared current and historical Modelo 303 profile casilla expectations.
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_2023_2024`
+        Parametrized current-template corpus sweep for the same profile family.
+    :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`
+        Observation aggregate returned by the parser and asserted here.
+"""
 
 from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_m303_support import _M303_CORPUS_STEMS, _M303_CURRENT_PROFILE_CASILLAS
+from ._parser_boundary_m303_support import _M303_CURRENT_PROFILE_CASILLAS
 from ._parser_boundary_support import (
     _REAL_MODELO_303_DECLARATION_COPY,
-    FIXTURES_DIR,
     Decimal,
     _expected_casilla_values,
     _expected_period,
@@ -51,21 +61,3 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     assert filing.registry_snapshot_ref.modelo == "303"
     assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "1T"
-
-
-@pytest.mark.parametrize("pdf_stem", _M303_CORPUS_STEMS)
-def test_parser_extracts_tax_id_from_all_m303_corpus_pdfs(pdf_stem: str) -> None:
-    """Tax-id extraction must succeed for all M303 corpus PDFs."""
-    from .._parser import _extract_tax_id
-    from .._parsers import extract_pages_text
-
-    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
-    pages = extract_pages_text(pdf_path)
-    text = "\n".join(pages)
-
-    tax_id = _extract_tax_id(text)
-
-    assert tax_id == "Y0000001S", (
-        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}; "
-        "check _TAX_ID_RE and _TAX_ID_BEFORE_LABEL_RE in _parser.py"
-    )

@@ -46,7 +46,7 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import CasillaId
+from ...domain.calculations.registry import CasillaId, CasillaObservation
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -252,23 +252,15 @@ def amend_modelo_revision[CasillaKey](
         snapshot=_resolve_registry_snapshot_for_work_unit(work_unit),
     )
 
-    amendment_draft = CalculationRevision(
-        calculation_revision_id=new_revision_id,
-        work_unit_id=baseline.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id=baseline_revision.input_values_by_casilla_id,
-        binding_overrides=baseline_revision.binding_overrides,
-        relation_overrides=baseline_revision.relation_overrides,
-        source_transaction_ids=baseline_revision.source_transaction_ids,
-        borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
-        bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
-        casilla_values=corrected_values,
-        observations=amendment_observations,
-        created_at=now,
-        updated_at=now,
+    amendment_draft = _build_amendment_draft_revision(
+        new_revision_id=new_revision_id,
+        baseline=baseline,
+        baseline_revision=baseline_revision,
+        corrected_values=corrected_values,
+        amendment_observations=amendment_observations,
         amendment_kind=amendment_kind,
-        amends_filing_record_id=baseline.filing_record_id,
-        amendment_reason=reason.strip(),
+        reason=reason,
+        now=now,
     )
     revisions = upsert_calculation_revision(revisions, amendment_draft)
 
@@ -287,29 +279,13 @@ def amend_modelo_revision[CasillaKey](
     verified_amendment = _verified_amendment_revision(amendment_draft, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, verified_amendment)
 
-    new_filing_id = derive_filing_record_id(
-        work_unit_id=baseline.work_unit_id,
-        calculation_revision_id=new_revision_id,
-        filed_by=actor.strip(),
-    )
-
-    new_filing = _build_amendment_filing_record(
-        filing_record_id=new_filing_id,
+    new_filing_id, new_filing, updated_filing_catalogue = _build_amendment_filing_updates(
         baseline=baseline,
-        calculation_revision_id=new_revision_id,
-        filed_at=now,
-        filed_by=actor.strip(),
+        filing_catalogue=filing_catalogue,
+        new_revision_id=new_revision_id,
+        actor=actor,
+        now=now,
     )
-
-    superseded_baseline = baseline.model_copy(
-        update={
-            "status": ModeloRecordStatus.SUPERSEDIDO,
-            "superseded_at": now,
-            "superseded_by_filing_record_id": new_filing_id,
-        },
-    )
-    updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_baseline)
-    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
 
     filed_amendment = _filed_amendment_revision(verified_amendment, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_amendment)
@@ -333,6 +309,69 @@ def amend_modelo_revision[CasillaKey](
     )
 
     return new_filing
+
+
+def _build_amendment_draft_revision(
+    *,
+    new_revision_id: str,
+    baseline: ModeloRecord,
+    baseline_revision: CalculationRevision,
+    corrected_values: dict[CasillaId, Decimal],
+    amendment_observations: tuple[CasillaObservation, ...],
+    amendment_kind: CalculationRevisionAmendmentKind,
+    reason: str,
+    now: datetime,
+) -> CalculationRevision:
+    return CalculationRevision(
+        calculation_revision_id=new_revision_id,
+        work_unit_id=baseline.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=baseline_revision.input_values_by_casilla_id,
+        binding_overrides=baseline_revision.binding_overrides,
+        relation_overrides=baseline_revision.relation_overrides,
+        source_transaction_ids=baseline_revision.source_transaction_ids,
+        borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
+        casilla_values=corrected_values,
+        observations=amendment_observations,
+        created_at=now,
+        updated_at=now,
+        amendment_kind=amendment_kind,
+        amends_filing_record_id=baseline.filing_record_id,
+        amendment_reason=reason.strip(),
+    )
+
+
+def _build_amendment_filing_updates(
+    *,
+    baseline: ModeloRecord,
+    filing_catalogue: ModeloRecordCatalogue,
+    new_revision_id: str,
+    actor: str,
+    now: datetime,
+) -> tuple[str, ModeloRecord, ModeloRecordCatalogue]:
+    new_filing_id = derive_filing_record_id(
+        work_unit_id=baseline.work_unit_id,
+        calculation_revision_id=new_revision_id,
+        filed_by=actor.strip(),
+    )
+    new_filing = _build_amendment_filing_record(
+        filing_record_id=new_filing_id,
+        baseline=baseline,
+        calculation_revision_id=new_revision_id,
+        filed_at=now,
+        filed_by=actor.strip(),
+    )
+    superseded_baseline = baseline.model_copy(
+        update={
+            "status": ModeloRecordStatus.SUPERSEDIDO,
+            "superseded_at": now,
+            "superseded_by_filing_record_id": new_filing_id,
+        },
+    )
+    updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_baseline)
+    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
+    return new_filing_id, new_filing, updated_filing_catalogue
 
 
 def _verified_amendment_revision(

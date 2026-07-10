@@ -48,25 +48,25 @@ def test_committed_modelo_840_validates_against_catalogues() -> None:
     assert set(modelo.revisions) == {"2003-y-siguientes"}
 
 
-@pytest.mark.parametrize(
-    "filing_year",
-    [2003, 2010, 2018, 2024, 2026],
-)
-def test_committed_modelo_840_resolves_revision_by_filing_year(filing_year: int) -> None:
+def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
     modelo, catalogues = _load_modelo_840()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=filing_year,
-        period="0A",
-    )
-    assert snapshot.revision.id == "2003-y-siguientes"
-    assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)
+    for filing_year in (2003, 2010, 2018, 2024, 2026):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period="0A",
+        )
+        assert snapshot.revision.id == "2003-y-siguientes", filing_year
+        assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)
 
 
 def test_committed_modelo_840_is_informative_only() -> None:
     modelo, _ = _load_modelo_840()
+    assert modelo.calculation_class == "informative", (
+        "Modelo 840 must be declared calculation_class='informative' in its manifest"
+    )
     for revision in modelo.revisions.values():
         assert revision.formulas == (), revision.id
         assert revision.relations == (), revision.id

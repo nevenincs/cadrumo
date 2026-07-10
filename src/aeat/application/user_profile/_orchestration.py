@@ -32,6 +32,7 @@ import secrets
 from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
+from typing import TYPE_CHECKING
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME
 from ...adapters.persistence.storage.bucket import bucket_paths, keystore_path
@@ -50,11 +51,6 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from ..workflow import (
-    WorkflowEvent,
-    WorkflowState,
-    utc_now,
-)
 from . import (
     EditProfileFieldCommand,
     ProfileValidationService,
@@ -62,6 +58,9 @@ from . import (
 )
 from ._lifecycle import ProfileLifecycleService
 from ._profile_repository import ProfileRepository
+
+if TYPE_CHECKING:
+    from ..workflow import WorkflowState
 
 _log = get_logger(__name__)
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
@@ -116,6 +115,8 @@ def build_lifecycle_service(
 
 
 def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str, object_id: str) -> WorkflowState:
+    from ..workflow import WorkflowEvent, utc_now
+
     event = WorkflowEvent(action=action, bucket_id=bucket_id, object_id=object_id)
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event), "updated_at": utc_now()})
 
@@ -337,6 +338,8 @@ def register_active_profile(
         enforce_unique_tax_id=enforce_unique_tax_id,
         routing_profile_id=routing_profile_id,
     )
+    from ..workflow import utc_now
+
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
     updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
@@ -616,6 +619,8 @@ def select_profile(
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.select(profile_id)  # raises ProfileNotFoundError if missing
+    from ..workflow import utc_now
+
     updated = state.model_copy(update={"updated_at": utc_now()})
     return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 
@@ -705,41 +710,10 @@ def remove_active_profile(
     profile_id = _require_active(state)
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.delete(profile_id)
+    from ..workflow import utc_now
+
     updated = state.model_copy(update={"updated_at": utc_now()})
     return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
-
-
-def read_active_profile(
-    state: WorkflowState,
-    *,
-    secure_objects: SecureObjectRepository | None = None,
-    schema: ProfileSchemaDefinition | None = None,
-) -> UserProfileRecord | None:
-    """Return the active profile record, or ``None`` when none is selected.
-
-    The active bucket id resolves through
-    :func:`~aeat.core.resolve_active_bucket_id`, then the record is read
-    through :func:`~aeat.application.user_profile.build_lifecycle_service`.
-
-    ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-    override.
-
-    Returns:
-        The active :class:`~aeat.domain.user_profile.UserProfileRecord`,
-        or :data:`None` when no active pointer or readable record exists.
-    """
-    from ...core import resolve_active_bucket_id
-
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return None
-    service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
-    try:
-        return service.read(bucket_id)
-    except ProfileNotFoundError:
-        _log.debug("active profile selection resolved to a missing profile record; returning no active profile")
-        return None
 
 
 def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
@@ -830,7 +804,6 @@ __all__ = [
     "profile_create_storage_span",
     "profile_storage_session",
     "reactivate_profile_with_lifecycle_span",
-    "read_active_profile",
     "register_active_profile",
     "remove_active_profile",
     "rename_profile",

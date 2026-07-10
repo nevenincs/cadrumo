@@ -29,24 +29,27 @@ current working tree. The CLI help-surface test verifies end-to-end wiring.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
 
 from .....core.config import SecretStoreBackend
 from .....tests.secure_sql import dev_test_database_password
+from .. import FormulaDefinition
 from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@lru_cache
 def _m100_revision(filing_year: int):
     modelo, _ = _committed_modelo("100")
     return select_revision(modelo, filing_year=filing_year, period="0A")
 
 
-def _negated_casillas(formula) -> set[str]:
+def _negated_casillas(formula: FormulaDefinition) -> set[str]:
     expr = formula.expression.model_dump(exclude_none=True)
     assert expr.get("op") == "sum", "top-level op must be sum"
     args = expr.get("args", [])
@@ -63,21 +66,17 @@ def _negated_casillas(formula) -> set[str]:
 class TestInssExentaCasillaRegistered:
     """The INSS exempt casilla is declared in the registry with correct provenance."""
 
-    @pytest.mark.parametrize(
-        ("filing_year", "casilla_id"),
-        (
-            pytest.param(2024, "0058", id="2024"),
-            pytest.param(2025, "0059", id="2025"),
-        ),
-    )
-    def test_casilla_registered_in_revision(self, filing_year: int, casilla_id: str) -> None:
+    def test_casilla_registered_in_revision(self) -> None:
         """M100 revisions must declare the Art. 7.h exempt-INSS semantic role."""
-        rev = _m100_revision(filing_year)
-        casillas_by_id = {c.id: c for c in rev.casillas}
-        casilla = casillas_by_id.get(casilla_id)
-        assert casilla is not None, f"casilla {casilla_id} must be declared in M100 {filing_year} revision"
-        assert casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
-        assert "ley-35-2006:art-7-h" in casilla.legal_refs
+        for filing_year, casilla_id in ((2024, "0058"), (2025, "0059")):
+            rev = _m100_revision(filing_year)
+            casillas_by_id = {c.id: c for c in rev.casillas}
+            casilla = casillas_by_id.get(casilla_id)
+            assert casilla is not None, f"casilla {casilla_id} must be declared in M100 {filing_year} revision"
+            assert casilla.semantic_role == "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta", (
+                filing_year
+            )
+            assert "ley-35-2006:art-7-h" in casilla.legal_refs, filing_year
 
 
 class TestFormulaStructure:
@@ -89,44 +88,38 @@ class TestFormulaStructure:
         formula_id = f"renta-{filing_year}-trabajo-total-ingresos-integros-computables"
         return formulas_by_id.get(formula_id)
 
-    @pytest.mark.parametrize(
-        ("filing_year", "casilla_id"),
-        (
-            pytest.param(2024, "0058", id="2024"),
-            pytest.param(2025, "0059", id="2025"),
-        ),
-    )
-    def test_formula_negates_exempt_inss_casilla(self, filing_year: int, casilla_id: str) -> None:
-        formula = self._get_total_ingresos_formula(filing_year)
-        formula_id = f"renta-{filing_year}-trabajo-total-ingresos-integros-computables"
-        assert formula is not None, f"{formula_id} must be declared"
-        negated_casillas = _negated_casillas(formula)
-        assert casilla_id in negated_casillas, (
-            f"{formula_id} must negate casilla {casilla_id}; negated casillas found: {negated_casillas}"
-        )
+    def test_formula_negates_exempt_inss_casilla(self) -> None:
+        for filing_year, casilla_id in ((2024, "0058"), (2025, "0059")):
+            formula = self._get_total_ingresos_formula(filing_year)
+            formula_id = f"renta-{filing_year}-trabajo-total-ingresos-integros-computables"
+            assert formula is not None, f"{formula_id} must be declared"
+            negated_casillas = _negated_casillas(formula)
+            assert casilla_id in negated_casillas, (
+                f"{formula_id} must negate casilla {casilla_id}; negated casillas found: {negated_casillas}"
+            )
 
-    @pytest.mark.parametrize("filing_year", (2024, 2025))
-    def test_formula_still_includes_casilla_0003(self, filing_year: int) -> None:
+    def test_formula_still_includes_casilla_0003(self) -> None:
         """Adding the INSS exempt casilla must not disturb the 0003 input slot."""
-        formula = self._get_total_ingresos_formula(filing_year)
-        assert formula is not None
-        expr = formula.expression.model_dump(exclude_none=True)
-        args = expr.get("args", [])
-        direct_casillas = {arg.get("casilla_id") for arg in args if arg.get("casilla_id")}
-        assert "0003" in direct_casillas, f"0003 must remain in the {filing_year} formula"
+        for filing_year in (2024, 2025):
+            formula = self._get_total_ingresos_formula(filing_year)
+            assert formula is not None, filing_year
+            expr = formula.expression.model_dump(exclude_none=True)
+            args = expr.get("args", [])
+            direct_casillas = {arg.get("casilla_id") for arg in args if arg.get("casilla_id")}
+            assert "0003" in direct_casillas, f"0003 must remain in the {filing_year} formula"
 
 
 class TestLegalRefs:
     """Art. 7.h is registered in the legal catalogue and in the 0012 formula legal_refs."""
 
-    @pytest.mark.parametrize("filing_year", (2024, 2025))
-    def test_art_7h_legal_ref_in_formula(self, filing_year: int) -> None:
+    def test_art_7h_legal_ref_in_formula(self) -> None:
         """The total-ingresos formula must carry the Art. 7.h legal ref."""
-        rev = _m100_revision(filing_year)
-        formulas_by_id = {f.id: f for f in rev.formulas}
-        formula = formulas_by_id.get(f"renta-{filing_year}-trabajo-total-ingresos-integros-computables")
-        assert formula is not None
-        assert "ley-35-2006:art-7-h" in formula.legal_refs
+        for filing_year in (2024, 2025):
+            rev = _m100_revision(filing_year)
+            formulas_by_id = {f.id: f for f in rev.formulas}
+            formula = formulas_by_id.get(f"renta-{filing_year}-trabajo-total-ingresos-integros-computables")
+            assert formula is not None, filing_year
+            assert "ley-35-2006:art-7-h" in formula.legal_refs, filing_year
 
 
 class TestCliFlag:

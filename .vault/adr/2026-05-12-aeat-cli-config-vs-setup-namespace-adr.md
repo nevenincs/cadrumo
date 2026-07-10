@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#aeat-cli-config-vs-setup-namespace'
 date: '2026-05-12'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-05-08-aeat-cli-gap-closure-plan]]"
   - "[[2026-05-12-cli-design-research]]"
   - '[[2026-06-04-aeat-cli-config-vs-setup-namespace-research]]'
 ---
 
-# `aeat-cli-config-vs-setup-namespace` adr: `aeat config vs setup namespace boundary` (**status:** `accepted`)
+# `aeat-cli-config-vs-setup-namespace` adr: `aeat config vs setup namespace boundary` | (**status:** `accepted`)
 
 ## CLI Backend Boundary
 

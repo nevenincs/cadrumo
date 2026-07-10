@@ -1,27 +1,27 @@
-"""Filing-amendment boundaries for :mod:`aeat.application.filing`.
+"""Filing-amendment boundaries for :mod:`application.filing`.
 
 This module builds local complementaria records from a submitted-filing
-shape such as :class:`aeat.domain.submission.ModeloPresentado`. It loads
-the original :class:`aeat.domain.filing.ModeloDraft` through the governed
+shape such as :class:`domain.submission.ModeloPresentado`. It loads
+the original :class:`domain.filing.ModeloDraft` through the governed
 draft repository, verifies that the draft still matches the active registry
 snapshot, rebuilds an amended draft with
-:func:`aeat.application.filing.build_draft`, computes the
-:class:`aeat.domain.filing.CasillaChange` delta, and persists the resulting
-:class:`aeat.domain.filing.ModeloComplementaria`.
+:func:`application.filing.build_draft`, computes the
+:class:`domain.filing.CasillaChange` delta, and persists the resulting
+:class:`domain.filing.ModeloComplementaria`.
 
 The read helpers expose the same governed amendment repository and may
-return either :class:`aeat.domain.filing.ModeloComplementaria` or
-:class:`aeat.domain.filing.ModeloSustitutiva` because the encrypted
+return either :class:`domain.filing.ModeloComplementaria` or
+:class:`domain.filing.ModeloSustitutiva` because the encrypted
 repository stores both amendment variants.
 
 See Also:
-    :mod:`aeat.domain.filing`
+    :mod:`domain.filing`
         Canonical amendment records, draft records, and governed
         repository ports used by this application boundary.
-    :class:`aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
+    :class:`adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
         AUDIT-classified encrypted persistence for complementaria and
         sustitutiva records.
-    :mod:`aeat.application.modelo._amendment_actions`
+    :mod:`application.modelo._amendment_actions`
         Separate work-unit amendment flow for externally evidenced modelo
         filing records.
 """
@@ -141,7 +141,10 @@ def _load_original_draft(draft_id: str) -> ModeloDraft:
     repository = ModeloDraftRepository()
     draft = repository.load(draft_id)
     if draft is None:
-        raise ModeloBuilderError(f"original draft {draft_id!r} is not persisted")
+        raise ModeloBuilderError(
+            translated_message="application.filing.errors.original_draft_not_persisted",
+            context={"draft_id": repr(draft_id)},
+        )
     return draft
 
 
@@ -217,7 +220,10 @@ def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiv
         raise ModeloAmendmentError(str(exc)) from exc
     loaded = repository.load(amendment_id)
     if loaded is None:
-        raise ModeloAmendmentError(f"no persisted amendment with id {amendment_id!r}")
+        raise ModeloAmendmentError(
+            translated_message="application.filing.errors.amendment_not_persisted",
+            context={"amendment_id": repr(amendment_id)},
+        )
     _logger.debug("loaded amendment amendment_id=%s", amendment_id)
     return loaded
 

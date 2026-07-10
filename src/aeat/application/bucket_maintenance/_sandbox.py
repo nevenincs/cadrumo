@@ -3,35 +3,35 @@
 A sandbox is an ordinary profile bucket distinguished only by a reserved
 operator-visible label prefix (:data:`SANDBOX_LABEL_PREFIX`). It rides the
 exact same encrypted per-bucket storage substrate every profile uses
-(:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` via the
+(:class:`~adapters.persistence.storage.SecureObjectRepository` via the
 bucket-scoped runtime wrapper): there is no plaintext scratch directory and no
 parallel storage backend. Isolation is the pre-existing per-bucket engine
 guarantee (see
-:mod:`~aeat.application.workflow.tests.test_per_bucket_engine_isolation`);
+:mod:`~application.workflow.tests.test_per_bucket_engine_isolation`);
 this module adds nothing to that guarantee, it only composes the existing
 single-writer primitives behind an experiment-lifecycle vocabulary.
 
 The service delegates every write to an existing primitive
 (``composition-service-no-parallel-write-path``):
 
-- :func:`~aeat.application.user_profile.register_active_profile` (via the
+- :func:`~application.user_profile.register_active_profile` (via the
   ``config profile create`` / ``duplicate`` atomic-create span) provisions
   the sandbox bucket, optionally seeded from a source profile's live facts —
   exactly the same fork ``config profile duplicate`` already performs. The
   source bucket is opened read-only (a lifecycle-service ``read``) and is
   never written to, so seeding cannot mutate main state.
-- :func:`~aeat.application.user_profile.select_profile_with_lifecycle_span`
+- :func:`~application.user_profile.select_profile_with_lifecycle_span`
   activates a named sandbox as the current session (``config switch``'s
   primitive).
-- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
+- :class:`~application.bucket_maintenance.BucketMaintenanceService`.delete
   composes the existing soft-tombstone-then-hard-erase primitives to discard
   the sandbox bucket entirely.
-- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+- :class:`~application.bucket_maintenance.BucketMaintenanceService`.archive
   composes the soft-tombstone-only primitive to move a sandbox into reversible
   dormancy (the bucket directory, manifest, and encrypted record survive
-  intact); :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.restore
+  intact); :meth:`~application.bucket_maintenance.BucketMaintenanceService`.restore
   is its symmetric inverse.
-- :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+- :class:`~application.bucket_maintenance.BucketMaintenanceService`.browse
   (via a read-only lifecycle session, not the active bucket) backs
   :func:`preview_discard_sandbox`, so an operator can see what a discard would
   remove before confirming it.
@@ -42,13 +42,30 @@ bulk verb composes the same single-bucket primitives per row rather than
 re-implementing bucket erasure.
 
 The destructive-action protocol mirrors
-:class:`~aeat.application.bucket_maintenance.DeleteBucketCommand`: a discard
+:class:`~application.bucket_maintenance.DeleteBucketCommand`: a discard
 requires ``confirmed=True``, refuses the active bucket (the operator switches
 away first — the existing ``BucketMaintenanceService.delete`` contract), and
 additionally refuses to discard any bucket whose label is not sandbox-tagged
 unless the caller explicitly acknowledges bypassing that guard — so an
 operator (or an LLM agent driving the CLI) cannot accidentally erase a real
 profile through the sandbox verb.
+
+See Also:
+    :mod:`~application.bucket_maintenance`
+        Public facade that exports the sandbox lifecycle commands and results.
+    :class:`~application.bucket_maintenance.BucketMaintenanceService`
+        Existing bucket-maintenance service composed for discard, archive,
+        restore, browse, and disk-usage operations.
+    :func:`~application.user_profile.register_active_profile`
+        Profile-create primitive used when a sandbox bucket is provisioned.
+    :func:`~application.user_profile.select_profile_with_lifecycle_span`
+        Profile-switch primitive used when a sandbox becomes active.
+    :mod:`~entrypoints.cli._config._sandbox`
+        CLI command surface that translates operator input into these command
+        models.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Ledger catalogue promoted by sandbox merges when ``ledger`` scope is
+        selected.
 """
 
 from __future__ import annotations
@@ -58,21 +75,53 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ...core.external_constants import SANDBOX_LABEL_PREFIX as _SANDBOX_LABEL_PREFIX
 from ...core.identity import BucketId
-from ..workflow import read_profile_bucket_by_id
-from ._contracts import ArchiveBucketCommand, DeleteBucketCommand, RestoreBucketCommand
+from ...core.time import now
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+    BucketRestoreRefusedError,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
+from ...domain.modelos import upsert_calculation_revision, upsert_filing_record, upsert_work_unit
+from ...domain.transactions import Transaction, TransactionCatalogue
+from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileStatus, new_profile_id
+from ..user_profile import (
+    ProfileAlreadyRegisteredError,
+    build_lifecycle_service,
+    profile_create_storage_span,
+    profile_storage_session,
+    register_active_profile,
+)
+from ..workflow import (
+    ProfileLabelAmbiguousError,
+    list_profile_buckets,
+    read_profile_bucket,
+    read_profile_bucket_by_id,
+    workflow_state_repository,
+)
+from ._contracts import ArchiveBucketCommand, BrowseBucketCommand, DeleteBucketCommand, RestoreBucketCommand
 from ._service import BucketMaintenanceService
 
-SANDBOX_LABEL_PREFIX = "sandbox:"
-"""Reserved operator-visible label prefix identifying a sandbox bucket.
-
-A profile whose label starts with this prefix is a sandbox: created through
-:func:`create_sandbox`, safe to discard without the non-sandbox confirmation
-escalation. :func:`create_sandbox` is the only path this module exposes for
-minting one, and :func:`discard_sandbox` (via :func:`is_sandbox_label`)
-decides whether a bucket may be discarded without the extra confirmation.
-"""
+#: Reserved operator-visible label prefix identifying a sandbox bucket.
+#:
+#: A profile whose label starts with this prefix is a sandbox: created through
+#: :func:`create_sandbox`, safe to discard without the non-sandbox confirmation
+#: escalation. :func:`create_sandbox` is the only path this module exposes for
+#: minting one, and :func:`discard_sandbox` (via :func:`is_sandbox_label`)
+#: decides whether a bucket may be discarded without the extra confirmation.
+#: The token itself is declared in the light :mod:`aeat.core.external_constants`
+#: layer so the state-free CLI surface can read it without importing this heavy
+#: module; it is re-exported here as the canonical application-facing name.
+SANDBOX_LABEL_PREFIX = _SANDBOX_LABEL_PREFIX
 
 
 def is_sandbox_label(label: str) -> bool:
@@ -129,10 +178,15 @@ class SandboxMergeScope(StrEnum):
     """Closed axis of promotable data categories a sandbox merge may select.
 
     ``LEDGER`` promotes ledger transactions only (the manual/imported
-    :class:`~aeat.domain.transactions.Transaction` catalogue, which already
+    :class:`~domain.transactions.Transaction` catalogue, which already
     carries classification decisions on each row). ``MODELO`` promotes the
     modelo work-unit, calculation-revision, and filing-record catalogues.
     ``ALL`` promotes every one of the above in one call.
+
+    Ledger promotion reads the sandbox
+    :class:`~domain.transactions.TransactionCatalogue` through the concrete
+    :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
+    and upserts the rows into the target bucket.
     """
 
     LEDGER = "ledger"
@@ -145,7 +199,7 @@ class PreviewDiscardSandboxCommand(BaseModel):
 
     Read-only counterpart to :class:`DiscardSandboxCommand`: it never opens
     the target bucket for write and never calls
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete.
+    :meth:`~application.bucket_maintenance.BucketMaintenanceService`.delete.
     ``allow_non_sandbox`` mirrors the discard command's escape hatch so a
     preview against a non-sandbox bucket reports the same "not a sandbox"
     refusal a real discard would, rather than silently previewing an erase
@@ -162,7 +216,7 @@ class PreviewDiscardSandboxResult(BaseModel):
     """Read-only preview of what discarding a sandbox would remove.
 
     ``namespaces`` is the same per-namespace row-count inventory
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.browse
+    :meth:`~application.bucket_maintenance.BucketMaintenanceService`.browse
     returns for the active bucket, computed here for a bucket that need not
     be active. ``is_active`` flags whether the target is the current session
     — a real discard of it would be refused until the operator switches away.
@@ -219,7 +273,7 @@ class DiscardSandboxCommand(BaseModel):
     """Operator request to permanently erase a sandbox bucket.
 
     ``confirmed=True`` is required, mirroring
-    :class:`~aeat.application.bucket_maintenance.DeleteBucketCommand`.
+    :class:`~application.bucket_maintenance.DeleteBucketCommand`.
     ``allow_non_sandbox`` must be explicitly set to erase a bucket whose
     label does NOT carry the reserved sandbox prefix — the default refuses,
     so a mistaken discard of a real profile is not silently possible.
@@ -247,7 +301,7 @@ class ArchiveSandboxCommand(BaseModel):
 
     Unlike :class:`DiscardSandboxCommand`, ``archive`` never removes the
     sandbox bucket: it composes
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+    :meth:`~application.bucket_maintenance.BucketMaintenanceService`.archive
     (soft tombstone only), so the bucket directory, manifest, and
     encrypted record all survive intact and :func:`restore_sandbox` can
     bring the same sandbox back. ``confirmed=True`` mirrors
@@ -337,8 +391,8 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
     """Fork a fresh, isolated sandbox bucket and make it the active profile.
 
     Composes the canonical atomic-create span
-    (:func:`~aeat.application.user_profile.profile_create_storage_span` +
-    :func:`~aeat.application.user_profile.register_active_profile`) — the
+    (:func:`~application.user_profile.profile_create_storage_span` +
+    :func:`~application.user_profile.register_active_profile`) — the
     exact primitive ``config profile create`` and ``config profile
     duplicate`` already use — so the sandbox bucket, its manifest, its
     encrypted record, and the active-profile pointer land in one
@@ -351,16 +405,6 @@ def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:
         :class:`CreateSandboxResult` describing the new sandbox bucket, which
         is now the active profile.
     """
-    from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileStatus, new_profile_id
-    from ..user_profile import (
-        ProfileAlreadyRegisteredError,
-        build_lifecycle_service,
-        profile_create_storage_span,
-        profile_storage_session,
-        register_active_profile,
-    )
-    from ..workflow import ProfileLabelAmbiguousError, read_profile_bucket, workflow_state_repository
-
     label = sandbox_label(command.name)
     if read_profile_bucket(label) is not None:
         raise SandboxAlreadyExistsError(label)
@@ -410,7 +454,7 @@ def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDis
     """Report what discarding ``command.bucket_id`` would remove, without removing it.
 
     Reads the target bucket's namespace inventory through a read-only
-    lifecycle session (:func:`~aeat.application.user_profile.profile_storage_session`)
+    lifecycle session (:func:`~application.user_profile.profile_storage_session`)
     — the identical read-only pattern :func:`create_sandbox` already uses to
     seed from a non-active source profile — so a sandbox need not be the
     active bucket to be previewed. No write primitive is invoked; the target
@@ -423,11 +467,6 @@ def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDis
         :class:`PreviewDiscardSandboxResult` describing the bucket's current
         contents.
     """
-    from ...core import resolve_active_bucket_id
-    from ..user_profile import profile_storage_session
-    from ._contracts import BrowseBucketCommand
-    from ._service import BucketMaintenanceService
-
     pointer = read_profile_bucket_by_id(command.bucket_id)
     if pointer is None:
         raise SandboxNotFoundError(command.bucket_id)
@@ -455,8 +494,6 @@ def list_sandboxes() -> tuple[tuple[BucketId, str], ...]:
 
     Read-only enumeration shared by ``sandbox list`` and ``sandbox prune``.
     """
-    from ..workflow import list_profile_buckets
-
     return tuple(
         sorted(
             (
@@ -472,7 +509,7 @@ def list_sandboxes() -> tuple[tuple[BucketId, str], ...]:
 def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
     """Permanently erase the sandbox bucket identified by ``command.bucket_id``.
 
-    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.delete
+    Composes :class:`~application.bucket_maintenance.BucketMaintenanceService`.delete
     — the same soft-tombstone-then-hard-directory-removal primitive
     ``config profile delete`` uses — after confirming the target either
     carries the reserved sandbox label or the caller explicitly set
@@ -505,7 +542,7 @@ def discard_sandbox(command: DiscardSandboxCommand) -> DiscardSandboxResult:
 def archive_sandbox(command: ArchiveSandboxCommand) -> ArchiveSandboxResult:
     """Move the sandbox bucket identified by ``command.bucket_id`` into reversible dormancy.
 
-    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.archive
+    Composes :class:`~application.bucket_maintenance.BucketMaintenanceService`.archive
     — the same soft-tombstone-only primitive that leaves the bucket
     directory, manifest, and encrypted record intact — after confirming
     the target either carries the reserved sandbox label or the caller
@@ -534,7 +571,7 @@ def archive_sandbox(command: ArchiveSandboxCommand) -> ArchiveSandboxResult:
 def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
     """Bring the archived sandbox bucket identified by ``command.bucket_id`` back to active.
 
-    Composes :class:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.restore
+    Composes :class:`~application.bucket_maintenance.BucketMaintenanceService`.restore
     — the symmetric inverse of :func:`archive_sandbox` — after confirming
     the target either carries the reserved sandbox label or the caller
     explicitly set ``allow_non_sandbox=True``. Refuses when the target is
@@ -551,8 +588,6 @@ def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
             f"bucket {command.bucket_id!r} (label {pointer.label!r}) is not a sandbox; "
             "pass allow_non_sandbox=True to restore a non-sandbox profile",
         )
-    from ...domain.buckets import BucketRestoreRefusedError
-
     try:
         outcome = BucketMaintenanceService().restore(RestoreBucketCommand(bucket_id=command.bucket_id))
     except BucketRestoreRefusedError as exc:
@@ -565,7 +600,7 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
 
     Composes the SAME typed-catalogue repositories and domain upsert
     primitives the portable-bundle import path
-    (:func:`~aeat.application.user_profile.deserialize_profile_bundle`) uses
+    (:func:`~application.user_profile.deserialize_profile_bundle`) uses
     for ledger/work-unit/calculation-revision/filing-record restore
     (``composition-service-no-parallel-write-path``): this function does not
     reimplement a write path, it selects which of those existing upserts to
@@ -584,18 +619,6 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
         :class:`MergeSandboxResult` reporting the per-category row counts
         merged into the target bucket.
     """
-    from ...core.time import now
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
-    from ...domain.modelos import upsert_calculation_revision, upsert_filing_record, upsert_work_unit
-    from ...domain.transactions import Transaction, TransactionCatalogue
-    from ..user_profile import profile_storage_session
-
     if not command.confirmed:
         raise SandboxMergeRefusedError(
             "sandbox merge requires explicit confirmation (confirmed=True); "
@@ -620,8 +643,6 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
     merged_counts: dict[str, int] = {}
 
     if command.scope in (SandboxMergeScope.LEDGER, SandboxMergeScope.ALL):
-        from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-
         with profile_storage_session(command.source_bucket_id):
             source_transactions = tuple(TransactionCatalogueRepository(bucket_id=command.source_bucket_id).load())
         if source_transactions:
@@ -635,10 +656,6 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
         merged_counts["ledger_transactions"] = len(source_transactions)
 
     if command.scope in (SandboxMergeScope.MODELO, SandboxMergeScope.ALL):
-        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-        from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-        from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-
         with profile_storage_session(command.source_bucket_id):
             source_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=command.source_bucket_id).load())
             source_revisions = tuple(

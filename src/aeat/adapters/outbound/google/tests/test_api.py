@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
+from typing import override
 
 import httplib2
 import pytest
@@ -53,6 +54,7 @@ def _local_google_request(
             self.end_headers()
             self.wfile.write(body)
 
+        @override
         def log_message(self, format: str, *args: object) -> None:
             return
 

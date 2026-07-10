@@ -399,6 +399,12 @@ aggregation:
         duplicado en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
         en la malla de fuentes.'
+      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
+        un resumen fuera de ventana no puede ser anterior a su fecha mínima.
+      out_of_window_summary_incomplete: Un resumen fuera de ventana debe establecer
+        conjuntamente el recuento, la fecha mínima de presentación y la fecha máxima
+        de presentación.
       owned_sources_blank: Las fuentes propiedad del mallado de fuentes no pueden
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
@@ -406,6 +412,8 @@ aggregation:
       relation_provenance_incomplete: La procedencia de la relacion debe incluir modelo
         origen, ejercicio, periodos, casillas, referencias legales y referencias de
         origen.
+      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
+      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
@@ -580,6 +588,8 @@ application:
         a otro perfil.
       archive_not_confirmed: Archivar es una transición de estado reversible, pero
         requiere confirmación explícita.
+      archive_schema_version_from_future: La versión de esquema del archivo {archive_schema_version}
+        es más reciente de lo que admite esta aplicación (hasta {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
       import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
@@ -606,6 +616,16 @@ application:
         seed_conflict: Ya existe un estado de compensación de IVA para este periodo;
           la semilla sobrescribiría el historial almacenado.
   filing:
+    errors:
+      amendment_not_persisted: no hay ninguna rectificación persistida con id %{amendment_id}
+      import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
+      modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
+        de cálculo
+      original_draft_not_persisted: el borrador original %{draft_id} no está persistido
+      period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo
+        %{period} para el ejercicio %{ejercicio}'
+      unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};
+        se requiere un año de cuatro dígitos'
     review:
       errors:
         approved_by_blank: El identificador del aprobador no puede estar vacio.
@@ -617,6 +637,10 @@ application:
         category_profiles_changed: los perfiles de categoria han cambiado
         draft_payload_changed: el contenido del borrador ha cambiado
         draft_review_changed: la superficie de validacion del borrador ha cambiado
+        invoice_catalogue_changed: el catalogo de facturas ha cambiado
+        prior_filing_observations_changed: las observaciones de declaraciones anteriores
+          han cambiado
+        profile_activity_changed: la actividad del perfil del contribuyente ha cambiado
         schema_formula_changed: la procedencia del esquema o la formula ha cambiado
         transaction_catalogue_changed: el catalogo de transacciones ha cambiado
         unknown: '%{reason}'
@@ -706,6 +730,15 @@ application:
         movimiento diferente, u omita la clave para añadir un duplicado deliberado.
       purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
         elimine o reemplace a través del flujo de adjuntos.
+      transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix}
+        coincide con %{count} transacciones: %{matches}'
+      transaction_id_prefix_no_match: ninguna transacción coincide con el prefijo
+        de id %{prefix}
+      transaction_id_prefix_non_hex: el prefijo de id de transacción %{prefix} contiene
+        caracteres no hexadecimales
+      transaction_id_prefix_too_long: el prefijo de id de transacción %{prefix} tiene
+        más de %{max_length} caracteres
+      transaction_not_found: 'transacción no encontrada: %{transaction_id}'
   live:
     expedientes:
       errors:
@@ -804,8 +837,12 @@ application:
         un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
         Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
         modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
-        canonico o es ambiguo. Usa el casilla.id canonico exacto: %{accepted}.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id
+        canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica
+        el casilla.id canónico exacto'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} es un número de casilla
+        impreso o de formulario, o una referencia de exportación, no un casilla.id
+        canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
         esta revision. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
         validos.
@@ -820,6 +857,13 @@ application:
       calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.
+      calculate_m210_tipo_renta_fetch_gated: 'El código de tipo de renta %{value}
+        del Modelo 210 está pendiente de fundamentación: su tipo de gravamen aún no
+        está fundamentado en el corpus incluido, por lo que todavía no puede presentarse.
+        Códigos aceptados: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no es un código de tipo de renta
+        válido del Modelo 210. Códigos aceptados: %{accepted}. Códigos pendientes
+        de fundamentación (aún no presentables): %{fetch_gated}.'
       calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
         %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
         art. 31.1.
@@ -834,6 +878,11 @@ application:
         casilla.id canonico de forma segura.
       calculate_semantic_role_missing: La revision del modelo no contiene ninguna
         casilla con el rol semantico %{semantic_role}.
+      calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
+        corresponde a un selector de declarante de data_type=%{data_type} no numérico
+        que identifica al contribuyente que obtiene los rendimientos, no un importe;
+        se recibió %{value}. Introduce el importe en su propia casilla numérica y
+        reserva esta casilla para el selector de miembro.
       calculate_text_input_empty: El valor de --casilla corresponde a una casilla
         de texto y no puede estar vacío.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -1181,6 +1230,10 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+      attribution_received_unfolded: 'los hechos attribution_received declaran una base atribuida para este ejercicio (modelo=100 year=%{filing_year} total=%{total_base} EUR) pero la casilla %{casilla_id} del régimen de atribución del M100 resulta vacía: la participación recibida se registró en el perfil pero no se incorporó a la declaración.'
+      attribution_received_unfolded_next_action: 'Incorpore la base atribuida a la casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para que la renta del régimen de atribución quede declarada.'
+      attribution_received_uncaptured: 'la casilla %{casilla_id} del régimen de atribución del M100 declara una base atribuida (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) pero ningún hecho attribution_received la respalda para este ejercicio: la renta declarada no tiene procedencia registrada.'
+      attribution_received_uncaptured_next_action: 'Registre los hechos attribution_received (NIF de la entidad, nombre, porcentaje de participación, base atribuida, ejercicio) en el perfil del contribuyente para que la renta declarada del régimen de atribución tenga la procedencia de su Modelo 184.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -1206,6 +1259,8 @@ application:
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
           resolvio a booleano; los booleanos no son claves validas de despacho enum.
   overview:
+    errors:
+      horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
@@ -1601,8 +1656,10 @@ cli:
           remove_help: Elimina una factura del catálogo de conciliación.
           view_help: Muestra una factura del catálogo de conciliación por identificador
             o prefijo no ambiguo.
-          wizard_help: 'Entrada manual guiada y no interactiva cuando la extracción no está disponible.'
-          wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura con esta identidad (%{invoice_id}); no se creó nada.'
+          wizard_help: Entrada manual guiada y no interactiva cuando la extracción
+            no está disponible.
+          wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
+            con esta identidad (%{invoice_id}); no se creó nada.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -1621,6 +1678,43 @@ cli:
         view_help: Muestra una factura de negocio
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
+      prorrata:
+        activity_code_help: Codigo de actividad CNAE / IAE agrupado en este sector
+          (repetible, al menos uno).
+        declare_sector_help: 'Declara un sector diferenciado (LIVA arts. 9.1.c / 101):
+          la particion del art. 9.1.c que declara el operador, nunca inferida del
+          libro.'
+        ejercicio_help: Ejercicio (ano) que cubre la eleccion.
+        elect_especial_help: 'Elige prorrata especial para un ejercicio (LIVA art.
+          103.Dos.1): la deduccion por input se enruta con --input-classification
+          en cada apunte.'
+        elect_general_help: 'Elige prorrata general para un ejercicio (LIVA art. 104):
+          un unico porcentaje de deduccion se aplica a cada cuota deducible.'
+        general_percentage_help: Porcentaje de deduccion provisional 0-100 (LIVA art.
+          104.Uno + 105.Uno).
+        group_help: 'Registro de prorrata de IVA entre ejercicios: elige el regimen
+          (general / especial) y declara sectores diferenciados (LIVA arts. 101 /
+          103 / 105 / 106).'
+        letra_help: Letra del art. 9.1.c de la LIVA (a/b/c/d) que hace diferenciado
+          este sector.
+        list_help: Lista cada entrada del registro y cada sector diferenciado declarado
+          en el perfil activo.
+        percentage_help: Porcentaje de deduccion de uso comun 0-100 (LIVA art. 106.Uno
+          regla 3.a / art. 104.Dos).
+        provenance_help: Origen del porcentaje provisional segun LIVA art. 105.
+        provenance_not_electable: 'El origen {provenance!r} no es declarable por el
+          operador; aceptados: {accepted}. El porcentaje de interrupcion del art.
+          105.Cinco se calcula desde el registro.'
+        reference_help: Referencia de la autorizacion de la AEAT (art. 105.Dos) o
+          de la propuesta de inicio (art. 105.Tres).
+        reference_not_permitted: --reference solo se permite con un origen aeat_autorizada
+          o inicio_actividad.
+        reference_required: El origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
+          requiere --reference.
+        sector_help: Identificador del sector diferenciado que cubre esta entrada;
+          omitir para la entrada de toda la actividad.
+        sector_id_help: Identificador estable del sector al que hacen referencia las
+          entradas del registro y los apuntes del libro.
       ratios:
         category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
         eligible_help: Lista las categorías que admiten proporción específica
@@ -1940,6 +2034,14 @@ cli:
           {kind}.
         list_help: Listar los filing records registrados
         modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
+        observe_local_file_help: Ruta a una hoja de cálculo local CSV o XLSX de filas
+          casilla_code,value (una reconstrucción sin certificado de una presentación
+          pasada). Se combina con --set; un valor de --set para la misma casilla sobrescribe
+          la fila de la hoja de cálculo
+        observe_local_help: Registrar una observación local aportada por el operador
+          para el prellenado del cálculo
+        observe_local_set_help: Id de casilla canónico y valor Decimal a registrar,
+          p. ej. --set 1391=0
         view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -2061,6 +2163,28 @@ cli:
         note_help: Nota opcional del operador (hasta 512 caracteres).
         view_help: Muestra una declaración M036 registrada por su id (o un prefijo
           inequívoco).
+      m145:
+        actor_help: Etiqueta del operador para el evento.
+        casilla_help: Asignación de campo del registro repetible, ID=VALOR.
+        communication_record_id_help: El id del registro de comunicación (o un prefijo
+          inequívoco).
+        create_help: Crea un registro local de comunicación al pagador del Modelo
+          145.
+        errors:
+          casilla_required: Proporcione al menos una entrada --casilla ID=VALOR.
+        export_help: Exporta un registro local de comunicación al pagador del Modelo
+          145.
+        group_help: Gestiona los registros locales de comunicación al pagador del
+          Modelo 145.
+        mark_delivered_to_payer_help: Marca un registro local de comunicación del
+          Modelo 145 como entregado al pagador.
+        mark_locally_completed_help: Marca un registro local de comunicación del Modelo
+          145 como completado localmente.
+        note_help: Nota opcional del operador.
+        period_help: 'Token del periodo de la comunicación: comunicacion o variacion.'
+        validate_help: Valida un registro local de comunicación al pagador del Modelo
+          145.
+        year_help: Año de la comunicación.
       project:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
@@ -2087,9 +2211,13 @@ cli:
         app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
           pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
           history lista las conciliaciones anteriores.'
-        file_help: Concilia una unidad de trabajo contra un PDF de justificante local.
-          Solo local; nunca contacta con AEAT.
-        file_path_help: Ruta al PDF del justificante AEAT con el que conciliar.
+        file_help: Concilia una unidad de trabajo contra un PDF de justificante o
+          declaración local. Solo local; nunca contacta con AEAT.
+        file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
+          todos los modelos) o declaration (PDF de declaración presentada, conciliación
+          a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
+        file_path_help: Ruta al PDF local de justificante o declaración con el que
+          conciliar.
         history_empty: Aun no hay conciliaciones registradas.
         history_help: Lista las conciliaciones registradas para el perfil activo.
         history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
@@ -2119,6 +2247,8 @@ cli:
       review_package:
         actor_help: Etiqueta del operador registrada en el descriptor del paquete
           y en el evento de exportación subyacente.
+        bucket_id_help: Id del bucket sobre el que opera el paquete de revisión (por
+          defecto el perfil activo).
         build_help: Ensambla un paquete de revisión compartible y verificable por
           checksum (borrador fichero-BOE, procedencia de la revisión y evidencia contable
           incluida) para entregar al asesor. Solo local; nunca contacta con la AEAT.
@@ -2219,6 +2349,11 @@ cli:
           repite la comprobación de integridad del manifiesto). Solo local; nunca
           contacta con la AEAT.
         work_unit_id_help: Id de la unidad de trabajo (SHA-256 o prefijo inequívoco).
+      support_matrix:
+        help: 'Muestra la matriz de soporte por modelo a nivel de registro: grado
+          de cálculo, manifiesto de completitud, formatos de exportación, cobertura
+          de extractores, renombrados de casillas declarados, decisiones de baja de
+          soporte y referencias cruzadas con el portal de la AEAT.'
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -2387,6 +2522,8 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
+        history_next_action: Revisa el estado actual de esta unidad de trabajo con
+          `aeat app modelo work status`.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
@@ -2415,6 +2552,9 @@ cli:
           signo igual y el valor a la derecha. Se recibio {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
+        list_next_action: Inspecciona el estado completo de una unidad de trabajo
+          con `aeat app modelo work status` y luego crea o recalcula el borrador con
+          `aeat app modelo work calculate`.
         meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
           de 3 años estaba en la unidad familiar (Art. 81 LIRPF deducción maternidad).
           Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
@@ -2606,7 +2746,14 @@ cli:
         state_label_presentado_supersedido: Presentacion sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
+        status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
+          calculate` y luego verifica el borrador con `aeat app modelo work verify`.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
+        verify_next_action_granted: La verificación se superó. Exporta el artefacto
+          de presentación con `aeat app modelo export`.
+        verify_next_action_incomplete: La verificación encontró elementos bloqueantes
+          (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
+          work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
         verify_selector_help: Selector de revision borrador (current, latest-draft
           o explicit).
         wizard_help: Guia paso a paso por las casillas manuales pendientes de la unidad
@@ -2628,6 +2775,11 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif} (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla como hechos attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) y después incorporar la base a la casilla %{casilla} del régimen de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
+    quickfile:
+      app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
+        comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
+        y exporta; nunca presenta ante la AEAT'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2735,6 +2887,11 @@ cli:
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
         %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
+      status_summary_configured: La autenticación está configurada pero aún no hay
+        una sesión activa disponible.
+      status_summary_ready: La autenticación está configurada y hay una sesión activa
+        disponible.
+      status_summary_unconfigured: La autenticación aún no está configurada.
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
@@ -2762,7 +2919,7 @@ cli:
           activo.
         public_key_help: La clave publica X25519 en bruto del destinatario, en 64
           caracteres hexadecimales en minuscula.
-        recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'gestor-de-kent').
+        recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'mi-gestor').
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
@@ -2972,10 +3129,12 @@ cli:
           está cifrado AEAD en reposo e incluye los bytes de evidencia de justificantes,
           el registro de auditoría y las entradas de cálculo entre periodos, además
           del perfil, el libro contable, los cálculos y el historial de presentaciones.
-          Guárdalo en un lugar seguro; restáuralo con ''aeat config profile archive
-          import''.'
+          Si se exporta con --recovery-wrap-passphrase, es la vía cifrada de transferencia
+          entre equipos para paquetes de perfil. Guárdalo en un lugar seguro; restáuralo
+          con ''aeat config profile archive import''.'
         export_help: Escribe un archivo de copia de seguridad completa, sellado y
-          cifrado, en RUTA.
+          cifrado AEAD, en RUTA; añade --recovery-wrap-passphrase antes de enviarlo
+          por correo o transferirlo entre equipos.
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo.
         export_recovery_wrap_help: Frase de paso opcional para sellar el archivo,
@@ -3048,14 +3207,31 @@ cli:
       duplicate_source_help: Id del perfil de origen a duplicar
       duplicate_target_help: Id del perfil de destino para el duplicado
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
-      export_help: Escribe un paquete portátil del perfil en un JSON
+      export_cleartext_local_help: Escribe JSON en claro solo para gestión local/SAR;
+        no es seguro para correo, sincronización ni transferencia.
+      export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
+        AEAD por frase de contraseña. Impórtalo con 'aeat config profile import PATH
+        --passphrase ...'. Solo contiene el paquete estructurado del perfil; usa el
+        archivo de recuperación cifrado para una copia completa con evidencias adjuntas
+        y auditoría.
+      export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
+        en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso local/SAR.
       export_name_help: Perfil que quieres exportar; por defecto, el activo
-      export_out_help: Ruta de destino para el paquete JSON
+      export_out_help: Ruta de destino para el paquete de perfil
+      export_passphrase_help: Frase de contraseña para cifrar con AEAD el paquete
+        de perfil serializado para transferencia.
+      export_passphrase_too_short: La frase de contraseña de exportación del perfil
+        debe tener al menos 8 caracteres.
+      export_requires_transport: Usa --passphrase para un paquete cifrado de transferencia,
+        o --cleartext-local solo para JSON local/SAR.
       export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
-        sensibles: el NIF en claro (sin ocultar), el libro de movimientos completo,
-        las revisiones de cálculo y los registros de presentación. Se escribió en
-        {out}. Bórralo tras la transferencia; no lo envíes por correo, no lo sincronices
-        ni lo dejes en disco.'
+        sensibles: el NIF en claro (sin ocultar), nombre y apellidos, el libro de
+        movimientos completo, las revisiones de cálculo y los registros de presentación.
+        Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
+        correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
+        local/SAR. Usa ''aeat config profile export --passphrase ...'' para un paquete
+        estructurado de transferencia cifrado AEAD.'
+      export_transport_conflict: Elige --passphrase o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -3078,7 +3254,9 @@ cli:
       import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
         las órdenes siguientes operan sobre él. Ejecuta 'aeat config switch <name>'
         para cambiar el perfil activo.
-      import_help: Registra un paquete portátil de perfil desde un JSON
+      import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete de
+        perfil cifrado. Comprueba la frase de contraseña y el archivo.
+      import_help: Registra un paquete portátil de perfil desde un archivo
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
       import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
@@ -3094,7 +3272,9 @@ cli:
       import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
         para presentar modelos. Corrige el paquete o vuelve a exportar un perfil completo
         con estos campos: %{missing_flags}.'
-      import_path_help: Ruta al paquete JSON del perfil
+      import_passphrase_help: Frase de contraseña para un paquete exportado con 'config
+        profile export --passphrase'.
+      import_path_help: Ruta al archivo del paquete de perfil
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
@@ -3206,6 +3386,11 @@ cli:
         cifrado; utilice el archivo de recuperación cifrado para incluirlos.'
       sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
         del interesado (RGPD): el paquete portátil del perfil.'
+      show:
+        summary_invalid: 'El registro del perfil no es válido: %{count} problema(s)
+          bloqueante(s).'
+        summary_tombstoned: El registro del perfil está marcado como eliminado.
+        summary_valid: El registro del perfil es válido.
       show_help: Muestra los datos de un perfil
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
@@ -3506,11 +3691,22 @@ cli:
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
         %{formulas} fórmulas, %{revisions} revisiones.'
       registry_unavailable: '%{package} %{version}: registro no disponible (%{error}).'
+  help:
+    panel:
+      arguments: Argumentos
+      commands: Comandos
+      error: 'Error'
+      options: Opciones
+    try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
+      art_104_tres_exclusion_help: 'Exclusion del denominador de prorrata declarada
+        por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero
+        u operacion inmobiliaria o financiera no habitual); excluye la operacion de
+        ambos terminos de la prorrata.'
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1; solo para filas MIXED.
         Omitir en filas totalmente BUSINESS.
@@ -3528,15 +3724,34 @@ cli:
         la fila. Omítala para añadir un duplicado deliberado.'
       idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción
         con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
+      input_classification_help: 'Clasificacion de uso por input declarada por el
+        operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccion
+        integra; exclusively_non_deductible sin deduccion; common al porcentaje general
+        de prorrata); solo relevante para operaciones soportadas en un bucket con
+        prorrata especial.'
+      input_classification_inert: '--input-classification es inerte para el ejercicio
+        {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que
+        el input se deduce al porcentaje general. Clasificar todos los inputs del
+        ejercicio tambien habilita la comprobacion de prorrata especial obligatoria
+        (LIVA art. 103.Dos.2) en la liquidacion para un regimen general. Ejecuta ''app
+        ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo segun
+        LIVA art. 106.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       notes_help: Notas del operador guardadas con la transacción
       prorrata_reference_help: Referencia de prorrata de IVA
+      prorrata_sector_help: Identificador del sector diferenciado (LIVA arts. 9.1.c
+        / 101) al que pertenece este input; debe coincidir con un sector declarado
+        con 'app ledger prorrata declare-sector'.
       purchase_invoice_evidence_help: Id de justificante de factura de compra
       recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
         a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
         del Modelo 303 por tipo de IVA
+      sector_unmatched: --sector '{sector_id}' no coincide con ningun sector diferenciado
+        declarado (LIVA arts. 9.1.c / 101), por lo que este input se deduce al porcentaje
+        de uso comun en lugar del propio del sector. Ejecuta 'app ledger prorrata
+        declare-sector --sector-id {sector_id} ...' para enrutarlo, o corrige la etiqueta.
       source_jurisdiction_help: Código de país ISO 3166-1 alfa-2 (dos letras) que
         identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
         para fuente española, FR para fuente francesa). Necesario para IRNR y para
@@ -4395,6 +4610,10 @@ cli:
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
     verbose_help: Mostrar detalles y siguiente acción cuando existan
+    warning:
+      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
+        calculo forfait del regimen simplificado aun no esta disponible; revise las
+        casillas del regimen simplificado antes de presentar.
     year_help: Año de declaración para --period (p. ej. 2024).
   registry:
     app_help: Gestión del registro de modelos fiscales
@@ -5072,6 +5291,8 @@ errors:
       en su identidad. El perfil no es utilizable.
     error_profile_inventory_ledger: Una operación del libro de inventario del perfil
       no es válida.
+    error_profile_prorrata_register_record: Un registro de prorrata de IVA entre periodos
+      no es estructuralmente válido.
     error_profile_tax_residence: Se produjo un error en el perfil de residencia fiscal.
     error_profile_validation: Un registro de perfil no superó la validación.
     error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
@@ -5129,6 +5350,10 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    m145_communication_record_not_found: Ningún registro local de comunicación del
+      Modelo 145 coincide con el id solicitado.
+    m145_communication_service: Falló una operación del servicio local de comunicación
+      del Modelo 145.
     modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
     modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
       con el selector indicado.
@@ -5337,6 +5562,10 @@ errors:
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
       es incompatible con su repositorio.
     integrity_storage_corpus_bundle: El paquete del corpus no pudo analizarse ni verificarse.
+    integrity_storage_corpus_bundle_signature: No se pudo verificar la firma de autenticidad
+      del paquete de corpus.
+    integrity_storage_corpus_bundle_signing_key_not_found: No se encontró ningún par
+      de claves de firma del paquete de corpus en la ruta solicitada.
     integrity_storage_corpus_bundle_verification: El paquete del corpus no superó
       la verificación de sumas de comprobación frente a su manifiesto incorporado.
     integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
@@ -5445,6 +5674,14 @@ errors:
       NIF.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
+      del Modelo 145 coincide con varios registros.
+    m145_communication_record_export: El registro local de comunicación del Modelo
+      145 no pudo exportarse.
+    m145_communication_record_transition: El registro local de comunicación del Modelo
+      145 no permite esa transición de estado.
+    m145_communication_record_validation: La operación local de comunicación del Modelo
+      145 está bloqueada por la validación.
     modelo_036_prior_alta_required: No se puede solicitar una modificación o baja
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
@@ -5694,6 +5931,8 @@ errors:
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.
     refused_profile_preflight_missing: La comprobación previa del modelo no encontró
       un dato de perfil obligatorio. Completa el perfil antes de continuar.
+    refused_profile_prorrata_register_validation: Un registro de prorrata de IVA entre
+      periodos no superó la validación.
     refused_profile_schema_validation: Los datos del perfil infringen el contrato
       del esquema. Corrige los valores indicados.
     refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera)
@@ -5784,6 +6023,14 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
+        espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
+        hacia {expected}.'
+      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
+        para el espacio de nombres {namespace} desde la versión {from_version}.
+      schema_version_from_future: La versión de esquema almacenada {schema_version}
+        del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
+        (hasta {expected}); no se puede leer.
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
@@ -5863,6 +6110,10 @@ locales:
     set:
       updated: updated %{locale_file}:%{key}
 mcp:
+  call:
+    timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
+      y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente
+      en un terminal.'
   elicitation:
     confirm:
       consequence_handoff: Esto genera el documento de presentación que el contribuyente
@@ -5894,6 +6145,14 @@ mcp:
       byte de evidencia — NUNCA salen de su equipo: permanecen en almacenamiento local
       cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor
       o profesional), confirme que esto es aceptable antes de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuando como el perfil del contribuyente: %{label}.'
+    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
+      primer cambio de esta sesion. Una presentacion o edicion nunca debe ejecutarse
+      bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' /
+      ''overview status'') para ver que contribuyente esta activo y vuelve a intentarlo;
+      una sola lectura de identidad lo desbloquea durante la sesion hasta que cambies
+      de perfil.'
   persona:
     handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
       propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
@@ -6283,6 +6542,22 @@ wizard:
           tipo reducido.
       notes:
         help: Notas para tu propio recuerdo (opcional)
+      objective-estimation-modulos-iae-epigraph:
+        help: Epígrafe IAE para módulos de estimación objetiva, por ejemplo 972.
+      objective-estimation-modulos-module-1-units:
+        help: Unidades anuales del módulo 1 para estimación objetiva.
+      objective-estimation-modulos-module-2-units:
+        help: Unidades anuales del módulo 2 para estimación objetiva.
+      objective-estimation-modulos-module-3-units:
+        help: Unidades anuales del módulo 3 para estimación objetiva.
+      objective-estimation-modulos-module-4-units:
+        help: Unidades anuales del módulo 4 para estimación objetiva.
+      objective-estimation-modulos-module-5-units:
+        help: Unidades anuales del módulo 5 para estimación objetiva.
+      objective-estimation-modulos-module-6-units:
+        help: Unidades anuales del módulo 6 para estimación objetiva.
+      objective-estimation-modulos-module-7-units:
+        help: Unidades anuales del módulo 7 para estimación objetiva.
       output-language:
         help: Idioma de salida de la CLI para este perfil
       pays-capital-income-with-retencion:
@@ -6441,6 +6716,28 @@ wizard:
         prompt: Periodos Modelo 111 sin retenciones
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
+      objective-estimation-modulos-iae-epigraph:
+        help: Se guarda una vez en el perfil anual. Los coeficientes siguen en el
+          registro del modelo.
+        prompt: Epígrafe IAE para módulos de estimación objetiva
+      objective-estimation-modulos-module-1-units:
+        prompt: Unidades anuales del módulo 1
+      objective-estimation-modulos-module-2-units:
+        prompt: Unidades anuales del módulo 2
+      objective-estimation-modulos-module-3-units:
+        prompt: Unidades anuales del módulo 3
+      objective-estimation-modulos-module-4-units:
+        prompt: Unidades anuales del módulo 4
+      objective-estimation-modulos-module-5-units:
+        prompt: Unidades anuales del módulo 5
+      objective-estimation-modulos-module-6-units:
+        prompt: Unidades anuales del módulo 6
+      objective-estimation-modulos-module-7-units:
+        prompt: Unidades anuales del módulo 7
+      objective-estimation-modulos-module-units:
+        help: Recuento anual estable para esta casilla de módulo. El epígrafe IAE
+          seleccionado define si significa personal, superficie del local, consumo
+          eléctrico u otro módulo oficial.
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
       pays-professionals-with-retencion:

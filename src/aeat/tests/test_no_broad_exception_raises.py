@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import ast
 import tokenize
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from io import StringIO
 from pathlib import Path
 from typing import NamedTuple
@@ -29,6 +31,7 @@ _BROAD_EXCEPTION_NAMES = frozenset(
 )
 _NOQA_TOKEN = "no" + "qa"
 _BROAD_RAISES_RULE = "B" + "017"
+_BROAD_SITE_MARKER = "# broad:"
 
 
 class _BroadExceptionSites(NamedTuple):
@@ -130,11 +133,10 @@ def _broad_exception_scan_inputs(tree: ast.AST) -> _BroadExceptionScanInputs:
                     if alias.name in {"BaseException", "Exception"}:
                         broad_exception_names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Assign):
-            target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
-            if target_names:
-                broad_alias_assignments.append((qualified_name(node.value), target_names))
+            for target in node.targets:
+                broad_alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
-            broad_alias_assignments.append((qualified_name(node.value), (node.target.id,)))
+            broad_alias_assignments.extend(_broad_alias_assignments_from_target(node.target, node.value))
 
     return _BroadExceptionScanInputs(
         pytest_aliases=pytest_aliases,
@@ -145,6 +147,24 @@ def _broad_exception_scan_inputs(tree: ast.AST) -> _BroadExceptionScanInputs:
         broad_alias_assignments=broad_alias_assignments,
         call_nodes=call_nodes,
     )
+
+
+def _broad_alias_assignments_from_target(
+    target: ast.expr,
+    value: ast.expr,
+) -> list[tuple[str, tuple[str, ...]]]:
+    """Return broad-exception alias assignments from one target/value pair."""
+    if isinstance(target, ast.Name):
+        if isinstance(value, ast.Tuple | ast.List | ast.Set):
+            return [(qualified_name(element), (target.id,)) for element in value.elts]
+        return [(qualified_name(value), (target.id,))]
+    if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
+        assignments: list[tuple[str, tuple[str, ...]]] = []
+        for target_element, value_element in zip(target.elts, value.elts, strict=False):
+            if isinstance(target_element, ast.Name):
+                assignments.append((qualified_name(value_element), (target_element.id,)))
+        return assignments
+    return []
 
 
 def _pytest_module_aliases(tree: ast.AST) -> set[str]:
@@ -221,6 +241,8 @@ def _contains_broad_exception_root(node: ast.AST, broad_exception_names: set[str
     name = qualified_name(node)
     if name in broad_exception_names:
         return True
+    if isinstance(node, ast.Starred):
+        return _contains_broad_exception_root(node.value, broad_exception_names)
     if isinstance(node, ast.Tuple | ast.List | ast.Set):
         return any(_contains_broad_exception_root(element, broad_exception_names) for element in node.elts)
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
@@ -244,30 +266,63 @@ def _b017_suppression_lines(path: Path) -> list[int]:
     ]
 
 
-@pytest.fixture(scope="module")
-def broad_exception_inventory() -> _BroadExceptionInventory:
-    """Return all broad exception policy violations from one test-control inventory pass."""
+def _broad_exception_inventory_for_module_trees(
+    module_trees: Iterable[tuple[str, ast.AST]],
+) -> _BroadExceptionInventory:
+    """Return broad exception policy violations for parsed modules."""
     pytest_raises: list[str] = []
     contextlib_suppressions: list[str] = []
-    broad_raise_suppressions: list[str] = []
 
-    for module_path in all_test_control_modules():
-        relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
-        if tree is not None:
-            sites = _broad_exception_sites(tree)
-            for lineno in sites.pytest_raises:
-                pytest_raises.append(f"{relative}:{lineno}: pytest.raises catches Exception/BaseException")
-            for lineno in sites.contextlib_suppressions:
-                contextlib_suppressions.append(
-                    f"{relative}:{lineno}: contextlib.suppress catches Exception/BaseException"
-                )
-        for lineno in _b017_suppression_lines(module_path):
-            broad_raise_suppressions.append(f"{relative}:{lineno}: {_NOQA_TOKEN} {_BROAD_RAISES_RULE}")
+    for relative, tree in module_trees:
+        sites = _broad_exception_sites(tree)
+        for lineno in sites.pytest_raises:
+            pytest_raises.append(f"{relative}:{lineno}: pytest.raises catches Exception/BaseException")
+        for lineno in sites.contextlib_suppressions:
+            contextlib_suppressions.append(f"{relative}:{lineno}: contextlib.suppress catches Exception/BaseException")
 
     return _BroadExceptionInventory(
         pytest_raises=tuple(pytest_raises),
         contextlib_suppressions=tuple(contextlib_suppressions),
+        broad_raise_suppressions=(),
+    )
+
+
+def _broad_exception_inventory_for_source(relative_path: str, source: str) -> _BroadExceptionInventory:
+    """Return broad exception policy violations for one in-memory source module."""
+    tree = ast.parse(source, filename=relative_path)
+    return _broad_exception_inventory_for_module_trees(((relative_path, tree),))
+
+
+def _violation_marker_counts(source: str, violations: Iterable[str]) -> Counter[str]:
+    """Return source-site marker counts for formatted policy violations."""
+    lines = source.splitlines()
+    markers: Counter[str] = Counter()
+    for violation in violations:
+        lineno = int(violation.split(":", maxsplit=2)[1])
+        line = lines[lineno - 1] if lineno <= len(lines) else ""
+        _, separator, marker = line.partition(_BROAD_SITE_MARKER)
+        markers[marker.strip() if separator else "<unmarked>"] += 1
+    return markers
+
+
+@pytest.fixture(scope="module")
+def broad_exception_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _BroadExceptionInventory:
+    """Return all broad exception policy violations from one test-control inventory pass."""
+    module_trees: list[tuple[str, ast.AST]] = []
+    broad_raise_suppressions: list[str] = []
+
+    for module_path in all_test_control_modules():
+        relative = repo_relative(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
+        if tree is not None:
+            module_trees.append((relative, tree))
+        for lineno in _b017_suppression_lines(module_path):
+            broad_raise_suppressions.append(f"{relative}:{lineno}: {_NOQA_TOKEN} {_BROAD_RAISES_RULE}")
+    inventory = _broad_exception_inventory_for_module_trees(module_trees)
+
+    return _BroadExceptionInventory(
+        pytest_raises=inventory.pytest_raises,
+        contextlib_suppressions=inventory.contextlib_suppressions,
         broad_raise_suppressions=tuple(broad_raise_suppressions),
     )
 
@@ -293,78 +348,134 @@ def test_no_broad_raise_suppressions(broad_exception_inventory: _BroadExceptionI
     assert not violations, "Broad exception assertion suppressions found:\n" + "\n".join(violations)
 
 
-def test_broad_raises_detector_rejects_keyword_and_union_shapes() -> None:
-    """Broad exception contracts must be caught across pytest.raises shapes."""
-    tree = ast.parse(
-        """
+@pytest.mark.parametrize(
+    ("source", "expected_pytest_markers", "expected_suppress_markers"),
+    (
+        pytest.param(
+            """
 import pytest
 
-with pytest.raises(Exception):
+with pytest.raises(Exception):  # broad:positional
     pass
 
-with pytest.raises(expected_exception=BaseException):
+with pytest.raises(expected_exception=BaseException):  # broad:keyword
     pass
 
-with pytest.raises(ValueError | Exception):
+with pytest.raises(ValueError | Exception):  # broad:union
     pass
 
 with pytest.raises(ValueError):
     pass
-"""
-    )
-
-    assert _broad_pytest_raises_sites(tree) == [4, 7, 10]
-
-
-def test_broad_raises_detector_rejects_pytest_alias_shapes() -> None:
-    """Aliasing pytest must not hide broad exception assertions."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"positional": 1, "keyword": 1, "union": 1}),
+            Counter(),
+            id="pytest-raises-call-shapes",
+        ),
+        pytest.param(
+            """
 import pytest as pt
 from pytest import raises as pytest_raises
 
-with pt.raises(Exception):
+with pt.raises(Exception):  # broad:pytest-module-alias
     pass
 
-with pytest_raises(expected_exception=BaseException):
+with pytest_raises(expected_exception=BaseException):  # broad:pytest-raises-alias
     pass
 
 with pt.raises(ValueError):
     pass
-"""
-    )
-
-    assert _broad_pytest_raises_sites(tree) == [5, 8]
-
-
-def test_broad_raises_detector_rejects_builtins_exception_aliases() -> None:
-    """Aliasing broad exception roots must not hide permissive assertions."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"pytest-module-alias": 1, "pytest-raises-alias": 1}),
+            Counter(),
+            id="pytest-aliases",
+        ),
+        pytest.param(
+            """
 import builtins as py_builtins
 from builtins import Exception as BroadException
 import pytest
 
 RaisedException = BroadException
 
-with pytest.raises(py_builtins.BaseException):
+with pytest.raises(py_builtins.BaseException):  # broad:builtins-module-alias
     pass
 
-with pytest.raises(RaisedException):
+with pytest.raises(RaisedException):  # broad:assigned-broad-alias
     pass
 
 with pytest.raises(ValueError):
     pass
-"""
-    )
+""",
+            Counter({"builtins-module-alias": 1, "assigned-broad-alias": 1}),
+            Counter(),
+            id="broad-exception-aliases",
+        ),
+        pytest.param(
+            """
+import builtins
+import pytest
 
-    assert _broad_pytest_raises_sites(tree) == [8, 11]
+ErrorAlias, NarrowAlias = Exception, ValueError
+BaseAlias, OtherAlias = builtins.BaseException, RuntimeError
 
+with pytest.raises(ErrorAlias):  # broad:tuple-exception-alias
+    pass
 
-def test_broad_suppress_detector_rejects_contextlib_alias_shapes() -> None:
-    """Broad contextlib.suppress calls must be caught across alias forms."""
-    tree = ast.parse(
-        """
+with pytest.raises(BaseAlias):  # broad:tuple-base-alias
+    pass
+
+with pytest.raises(NarrowAlias):
+    pass
+""",
+            Counter({"tuple-exception-alias": 1, "tuple-base-alias": 1}),
+            Counter(),
+            id="tuple-assigned-broad-aliases",
+        ),
+        pytest.param(
+            """
+import contextlib
+import pytest
+
+with pytest.raises(*(ValueError, Exception)):  # broad:starred-raises-container
+    pass
+
+with pytest.raises(*(ValueError,)):
+    pass
+
+with contextlib.suppress(*(RuntimeError, BaseException)):  # broad:starred-suppress-container
+    pass
+
+with contextlib.suppress(*(RuntimeError,)):
+    pass
+""",
+            Counter({"starred-raises-container": 1}),
+            Counter({"starred-suppress-container": 1}),
+            id="starred-exception-containers",
+        ),
+        pytest.param(
+            """
+import contextlib
+import pytest
+
+ExpectedErrors = (ValueError, Exception)
+SuppressedErrors = [RuntimeError, BaseException]
+NarrowErrors = (ValueError, RuntimeError)
+
+with pytest.raises(ExpectedErrors):  # broad:assigned-raises-container
+    pass
+
+with pytest.raises(NarrowErrors):
+    pass
+
+with contextlib.suppress(*SuppressedErrors):  # broad:assigned-suppress-container
+    pass
+""",
+            Counter({"assigned-raises-container": 1}),
+            Counter({"assigned-suppress-container": 1}),
+            id="assigned-exception-containers",
+        ),
+        pytest.param(
+            """
 import contextlib
 import contextlib as ctx
 from contextlib import suppress as ignored
@@ -372,21 +483,34 @@ from builtins import Exception as BroadException
 
 SuppressedException = BroadException
 
-with contextlib.suppress(Exception):
+with contextlib.suppress(Exception):  # broad:contextlib-direct
     pass
 
-with ctx.suppress(BaseException):
+with ctx.suppress(BaseException):  # broad:contextlib-module-alias
     pass
 
-with ignored(ValueError, SuppressedException):
+with ignored(ValueError, SuppressedException):  # broad:contextlib-call-alias
     pass
 
 with ignored(ValueError):
     pass
-"""
-    )
+""",
+            Counter(),
+            Counter({"contextlib-direct": 1, "contextlib-module-alias": 1, "contextlib-call-alias": 1}),
+            id="contextlib-aliases",
+        ),
+    ),
+)
+def test_broad_exception_policy_rejects_permissive_exception_shapes(
+    source: str,
+    expected_pytest_markers: Counter[str],
+    expected_suppress_markers: Counter[str],
+) -> None:
+    """Broad exception assertions must fail through the real policy path."""
+    inventory = _broad_exception_inventory_for_source("dev/tests/test_broad_exceptions.py", source)
 
-    assert _broad_contextlib_suppress_sites(tree) == [9, 12, 15]
+    assert _violation_marker_counts(source, inventory.pytest_raises) == expected_pytest_markers
+    assert _violation_marker_counts(source, inventory.contextlib_suppressions) == expected_suppress_markers
 
 
 def test_discovery_found_modules() -> None:

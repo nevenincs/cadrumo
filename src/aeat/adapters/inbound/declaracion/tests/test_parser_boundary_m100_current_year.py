@@ -9,6 +9,19 @@ bundled AEAT-published Diseño de Registro field dictionaries for ejercicio
 2024 and 2025 (see ``corpus/aeat_official/disenos_registro/modelo_100/files/``),
 per the ``verification_source = "synthetic_from_aeat_published_text"``
 grounding tier the registry profile declares.
+
+See Also:
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Public declaration-copy parser exercised against the current-year
+        synthetic fixtures.
+    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
+        Registry-owned ``declaracion_pdf`` profile contract asserted here.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m100_current_support`
+        Shared typed expected-casilla set for the 2024/2025 fixtures.
+    ``tests/fixtures/justificantes/_generate_modelo_100_current.py``
+        Fixture generator that stamps the expected printed values.
+    ``2026-07-05-modelo-130-100-continuity-audit``
+        Current-year M100 declaration coverage, including casilla 0604.
 """
 
 from __future__ import annotations
@@ -48,6 +61,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
     "0586": Decimal("100.00"),
     "0587": Decimal("200.00"),
     "0595": Decimal("200.00"),
+    "0604": Decimal("50.00"),
     "0610": Decimal("150.00"),
     "0670": Decimal("150.00"),
 }
@@ -62,7 +76,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
     ids=["2024", "2025"],
 )
 def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, profile_id: str) -> None:
-    """Registry profile declares exactly the 20-casilla current-year target set."""
+    """Registry profile declares exactly the 21-casilla current-year target set."""
     snapshot = _modelo_snapshot("100", filing_year=year, period="0A")
     profile = snapshot.extraction_profiles[profile_id]
     assert {target.casilla_id for target in profile.target_casillas} == M100_CURRENT_YEAR_EXPECTED_CASILLAS

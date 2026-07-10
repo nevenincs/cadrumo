@@ -4,13 +4,13 @@ The concrete auth providers return :class:`AeatSession` when AEAT access is
 available and :class:`AeatLoginAssertion` when that access is probed. Both
 records are strict, frozen, and secret-free; provider-specific details live in
 the discriminated unions of :class:`CertificateSessionDetail`,
-:class:`~aeat.adapters.outbound.aeat.auth.ClaveMovilSessionDetail`,
+:class:`~adapters.outbound.aeat.auth.ClaveMovilSessionDetail`,
 :class:`CertificateLoginAssertionDetail`, and
-:class:`~aeat.adapters.outbound.aeat.auth.ClaveMovilLoginAssertionDetail`
-owned by :mod:`aeat.adapters.outbound.aeat.auth._providers`.
+:class:`~adapters.outbound.aeat.auth.ClaveMovilLoginAssertionDetail`
+owned by :mod:`adapters.outbound.aeat.auth._providers`.
 
 The browser protocols mirror the subset of
-:class:`aeat.adapters.outbound.aeat.browser.BrowserSession` that auth providers
+:class:`adapters.outbound.aeat.browser.BrowserSession` that auth providers
 need, so tests and adapter callers can satisfy the same structural contract
 without importing Playwright directly.
 """
@@ -45,7 +45,7 @@ class AeatLoginAssertion(BaseModel):
 
     Certificate and Cl@ve providers use the same envelope while storing their
     provider-specific signals in :class:`CertificateLoginAssertionDetail` or
-    :class:`~aeat.adapters.outbound.aeat.auth.ClaveMovilLoginAssertionDetail`.
+    :class:`~adapters.outbound.aeat.auth.ClaveMovilLoginAssertionDetail`.
     Negative probes are returned as records with ``is_valid=False`` so callers
     can decide whether to reauthenticate, surface a diagnostic, or stop.
     """
@@ -95,7 +95,7 @@ class AeatSession(BaseModel):
     ``storage_state_path`` is the logical persisted-session key used by
     downstream Sede readers to reopen encrypted browser state. ``provider_detail``
     carries either :class:`CertificateSessionDetail` or
-    :class:`~aeat.adapters.outbound.aeat.auth.ClaveMovilSessionDetail`:
+    :class:`~adapters.outbound.aeat.auth.ClaveMovilSessionDetail`:
     certificate sessions expose thumbprint/subject/handshake data, while Cl@ve
     sessions expose DNI/NIE and landing metadata.
     """
@@ -190,7 +190,7 @@ class BrowserSessionProfileLike(Protocol):
     """Minimal profile surface a browser session exposes to resume state.
 
     Mirrors the single field auth reads off
-    :class:`aeat.adapters.outbound.aeat.browser.Profile`: the filesystem path
+    :class:`adapters.outbound.aeat.browser.Profile`: the filesystem path
     of the Playwright storage-state JSON a resumed session loads cookies from.
     """
 
@@ -205,7 +205,7 @@ class BrowserSessionLike(Protocol):
     """Browser-session factory surface used by certificate and Cl@ve auth.
 
     The signature mirrors
-    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`:
+    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`:
     certificate auth may pass a context provisioner, while resume paths pass
     either a storage-state path or an in-memory storage-state mapping.
 

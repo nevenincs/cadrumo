@@ -1,10 +1,10 @@
 """Corpus-fidelity gate for the ledger operator-testimonial corpus.
 
 Imports the raw bank-export corpus through the real
-:class:`aeat.adapters.inbound.financial.providers._csv.CsvProvider`, applies the
+:class:`~adapters.inbound.financial.providers.CsvProvider`, applies the
 ground-truth oracle classification (``ground-truth.manifest.json``), wires a
-corpus-local ECB-rate snapshot into :class:`aeat.domain.currency.CurrencyNormalizationService`
-for the foreign-currency rows, builds strict :class:`aeat.domain.transactions.Transaction`
+corpus-local ECB-rate snapshot into :class:`~domain.currency.CurrencyNormalizationService`
+for the foreign-currency rows, builds strict :class:`~domain.transactions.Transaction`
 records, and runs the real aggregation pipelines.
 
 The oracle states each row's expected typed facts and target bucket; the
@@ -12,6 +12,20 @@ pipelines independently route and gate from the typed fields. The assertions
 verify routing/gating/normalization (the system under test) against the oracle's
 independent expectation -- they do NOT re-compute registry tax formulas
 (per ``no-tautological-calculation-tests``).
+
+See Also:
+    Fixture corpus
+        ``tests/fixtures/financial/ledger-corpus`` contains the raw bank-export
+        files and ground-truth manifest consumed by this gate.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Strict transaction collection passed to the aggregation pipelines.
+    :func:`~application.aggregation.aggregate_iva_ledger_observations`
+        IVA projection path checked for gating and category/flow fidelity.
+    :func:`~application.aggregation.aggregate_renta_income_ledger`
+        M130 income projection path checked for trabajo/capital exclusions.
+
+The ledger commits to a raw-corpus-plus-typed-oracle contract, and the ECB
+conversion seam grounds every foreign-currency row's normalisation.
 """
 
 from __future__ import annotations
@@ -33,10 +47,12 @@ from ..domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ..domain.iva import IvaCategory, IvaFlowDirection
+from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
 from ..domain.transactions import (
+    BusinessClassification,
     Transaction,
     TransactionCatalogue,
+    TransactionDirection,
     TransactionLifecycleState,
 )
 
@@ -117,18 +133,18 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
 
             taxable_base, iva_rate, iva_amount = _derive_base_iva(rule, abs(raw.amount))
 
+            iva_category = rule.get("iva_category")
+            eu_member_state = rule.get("eu_member_state")
             payload: dict[str, Any] = {
                 "raw": raw,
-                "direction": rule["direction"],
-                "business_classification": rule["classification"],
+                "direction": TransactionDirection(rule["direction"]),
+                "business_classification": BusinessClassification(rule["classification"]),
                 "taxable_base": taxable_base,
                 "iva_rate": iva_rate,
                 "iva_amount": iva_amount,
                 "category_id": rule.get("category_id"),
-                "iva_category": rule.get("iva_category"),
-                "counterparty_eu_member_state": (
-                    rule["eu_member_state"].lower() if rule.get("eu_member_state") else None
-                ),
+                "iva_category": IvaCategory(iva_category) if iva_category else None,
+                "counterparty_eu_member_state": (EUMemberState(eu_member_state.lower()) if eu_member_state else None),
                 "irpf_category": rule.get("irpf_category"),
                 "source_jurisdiction": "ES",
                 "group_label": None,

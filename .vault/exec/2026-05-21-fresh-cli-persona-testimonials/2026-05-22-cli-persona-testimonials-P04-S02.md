@@ -1,7 +1,7 @@
 ---
 tags:
   - '#exec'
-  - '#cli-persona-testimonials'
+  - '#cli-persona-testimonials-legacy'
 date: '2026-05-22'
 modified: '2026-06-13'
 step_id: 'P04.S02'

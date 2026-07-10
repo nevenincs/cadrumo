@@ -7,17 +7,17 @@ deterministic order and returns the first non-``None``
 :class:`SiteHealthStatus`.
 
 The parsers are deliberately synchronous, side-effect free, and free of any
-Playwright dependency. :func:`aeat.adapters.outbound.aeat.browser._site_health_probe.probe_response`
+Playwright dependency. :func:`adapters.outbound.aeat.browser._site_health_probe.probe_response`
 is the adapter boundary used by
-:meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate`; it turns
+:meth:`adapters.outbound.aeat.browser.BrowserSession.navigate`; it turns
 navigation responses into :class:`SiteHealthStatus` records that can be carried
-by :class:`aeat.core.errors.SiteHealthError`. The marker corpora reflect the
+by :class:`core.errors.SiteHealthError`. The marker corpora reflect the
 observed mantenimiento, WAF, and rate-limit responses on AEAT Sede Electrónica.
 
 See Also:
-    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
+    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
         Frozen record returned by every positive parser classification.
-    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthState`
+    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthState`
         Closed state catalogue emitted by this parser suite.
 """
 
@@ -69,7 +69,7 @@ _WAF_CORRELATION_MARKERS: tuple[str, ...] = (
 def _utcnow() -> datetime:
     """Return the current UTC timestamp.
 
-    Delegates to :func:`aeat.core.time._clock.now` so call-sites remain
+    Delegates to :func:`core.time._clock.now` so call-sites remain
     uniform across the production codebase.
     """
     return now()
@@ -370,9 +370,9 @@ def evaluate_response(
     """Run the full parser suite and return the first non-OK hit.
 
     This is the public parser entry point consumed by
-    :func:`aeat.adapters.outbound.aeat.browser._site_health_probe.probe_response`.
-    :class:`~aeat.adapters.outbound.aeat.browser.BrowserSession` then raises
-    :class:`aeat.core.errors.SiteHealthError` for any returned status.
+    :func:`adapters.outbound.aeat.browser._site_health_probe.probe_response`.
+    :class:`~adapters.outbound.aeat.browser.BrowserSession` then raises
+    :class:`core.errors.SiteHealthError` for any returned status.
 
     Parsers are evaluated in cost-then-specificity order:
 

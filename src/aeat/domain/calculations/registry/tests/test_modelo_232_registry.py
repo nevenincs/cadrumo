@@ -36,29 +36,24 @@ def test_committed_modelo_232_validates_against_catalogues() -> None:
     assert set(modelo.revisions) == {"2018-y-siguientes", "2016-2017"}
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "expected_revision"),
-    [
+def test_committed_modelo_232_resolves_revision_by_filing_year() -> None:
+    modelo, catalogues = _load_modelo_232()
+    cases = (
         (2016, "2016-2017"),
         (2017, "2016-2017"),
         (2018, "2018-y-siguientes"),
         (2024, "2018-y-siguientes"),
-    ],
-)
-def test_committed_modelo_232_resolves_revision_by_filing_year(
-    filing_year: int,
-    expected_revision: str,
-) -> None:
-    modelo, catalogues = _load_modelo_232()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=filing_year,
-        period="0A",
     )
-    assert snapshot.revision.id == expected_revision
-    assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-816-2017:art-1",)
+    for filing_year, expected_revision in cases:
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period="0A",
+        )
+        assert snapshot.revision.id == expected_revision
+        assert snapshot.revision.orden_aplicabilidad == ("orden-hfp-816-2017:art-1",)
 
 
 def test_committed_modelo_232_is_informative_only() -> None:
@@ -231,34 +226,26 @@ def test_modelo_232_workflow_surfaces_are_snapshot_gated_and_construct_scoped() 
             assert link.id in construct.application_links
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "expected_open", "expected_close"),
-    [
+def test_committed_modelo_232_deadline_window_is_november_following_ejercicio() -> None:
+    modelo, _ = _load_modelo_232()
+    windows_by_year = {
+        window.filing_year: window
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
+    }
+    cases = (
         (2016, date(2017, 11, 1), date(2017, 11, 30)),
         (2017, date(2018, 11, 1), date(2018, 11, 30)),
         (2018, date(2019, 11, 1), date(2019, 11, 30)),
         (2023, date(2024, 11, 1), date(2024, 11, 30)),
         (2026, date(2027, 11, 1), date(2027, 11, 30)),
-    ],
-)
-def test_committed_modelo_232_deadline_window_is_november_following_ejercicio(
-    filing_year: int,
-    expected_open: date,
-    expected_close: date,
-) -> None:
-    modelo, _ = _load_modelo_232()
-    windows = [
-        window
-        for revision in modelo.revisions.values()
-        for window in revision.deadline_windows
-        if window.filing_year == filing_year
-    ]
-    assert len(windows) == 1, f"filing_year {filing_year} resolves to {len(windows)} windows"
-    window = windows[0]
-    assert window.period_kind == "annual"
-    assert window.opens_on == expected_open
-    assert window.closes_on == expected_close
-    assert window.payment_cutoff_on is None
+    )
+    for filing_year, expected_open, expected_close in cases:
+        window = windows_by_year[filing_year]
+        assert window.period_kind == "annual"
+        assert window.opens_on == expected_open
+        assert window.closes_on == expected_close
+        assert window.payment_cutoff_on is None
 
 
 def test_committed_modelo_232_deadline_windows_are_unique_by_filing_year() -> None:

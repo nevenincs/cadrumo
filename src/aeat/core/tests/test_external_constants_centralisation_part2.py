@@ -1,28 +1,45 @@
-"""Centralisation contract tests (part 2): IVA rate, modelo-ID groups, and renta deduction/amortizacion constants."""
+"""Centralisation contract tests for regulatory leaf constants.
+
+This second constants sweep pins IVA rate defaults, modelo-id groups, renta
+deduction values, and amortizacion scalars to ``core.external_constants`` so
+application and domain consumers alias the central registry instead of carrying
+local literals. The AST checks catch bare Decimal/minimum literals while identity
+checks prove known consumers import the shared objects.
+
+See Also:
+    :mod:`~core.external_constants`
+        Central registry that owns the typed leaf constants under test.
+    :func:`~domain.iva.lookup_rate`
+        IVA rate registry used to prove the default general IVA rate has not
+        drifted from the dated substrate.
+    :mod:`~application.aggregation._service`
+        Aggregation service consumers that alias modelo-id group constants.
+    :mod:`~application.inventory._service`
+        Inventory service consumer of the default IVA general-rate constant.
+"""
 
 from __future__ import annotations
 
 import ast
 import importlib
+import inspect
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...tests import leaf_name
+from ...tests import ast_for_path, leaf_name, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_REPO_ROOT = Path(__file__).parents[4]
-
-
-def _repo_source(relative_path: str) -> str:
-    return (_REPO_ROOT / relative_path).read_text(encoding="utf-8")
-
-
-def _repo_tree(relative_path: str) -> ast.AST:
-    return ast.parse(_repo_source(relative_path))
+def _repo_tree(relative_path: str, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
+    path = repo_path(relative_path)
+    tree = ast_for_path(path, source_tree_ast)
+    if tree is None:
+        raise AssertionError(f"unable to parse {repo_relative(path)}")
+    return tree
 
 
 def _assert_module_constant_identity(
@@ -44,9 +61,10 @@ def _decimal_call_literal_offenders(
     display_path: str,
     literal: str,
     replacement: str,
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> list[str]:
     offenders: list[str] = []
-    for node in ast.walk(_repo_tree(relative_path)):
+    for node in ast.walk(_repo_tree(relative_path, source_tree_ast)):
         if not isinstance(node, ast.Call):
             continue
         if leaf_name(node.func) != "Decimal":
@@ -62,9 +80,10 @@ def _min_arg_literal_offenders(
     display_path: str,
     literal: int,
     replacement: str,
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> list[str]:
     offenders: list[str] = []
-    for node in ast.walk(_repo_tree(relative_path)):
+    for node in ast.walk(_repo_tree(relative_path, source_tree_ast)):
         if not isinstance(node, ast.Call):
             continue
         if leaf_name(node.func) != "min":
@@ -316,7 +335,7 @@ def test_decimal_external_constant_values_and_types() -> None:
 def test_default_iva_general_rate_pct_matches_registry() -> None:
     """``DEFAULT_IVA_GENERAL_RATE_PCT`` equals the IVA-registry general rate for Spain on 2026-01-01.
 
-    Binds the default to the dated :func:`aeat.domain.iva.lookup_rate` registry so
+    Binds the default to the dated :func:`~domain.iva.lookup_rate` registry so
     it cannot silently drift when AEAT publishes a rate change.
     """
 
@@ -329,49 +348,39 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
 
 
-def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
-    """No bare ``"21.00"`` string literal as a typer Option default in ``_ledger_inventory_cli.py``.
+def test_inventory_movement_add_iva_rate_default_matches_core_constant() -> None:
+    """The CLI-facing ``--iva-rate`` default follows the core IVA constant."""
 
-    Anti-tautology: parses the AST and fails if the literal is re-introduced as a
-    bare Option default instead of ``str(DEFAULT_IVA_GENERAL_RATE_PCT)``.
-    """
+    from ...entrypoints.cli import _ledger_inventory_cli
+    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 
-    tree = _repo_tree("src/aeat/entrypoints/cli/_ledger_inventory_cli.py")
+    parameter = inspect.signature(_ledger_inventory_cli.inventory_movement_add).parameters["iva_rate"]
+    option = parameter.default
 
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        # Look for string constants with value "21.00" that are NOT inside str(...) calls.
-        if not isinstance(node, ast.Constant) or node.value != "21.00":
-            continue
-        offenders.append(
-            f"_ledger_inventory_cli.py:{node.lineno}: bare '21.00' string literal; "
-            f"use str(DEFAULT_IVA_GENERAL_RATE_PCT)",
-        )
+    assert option.default == str(DEFAULT_IVA_GENERAL_RATE_PCT)
+    assert option.param_decls == ("--iva-rate",)
 
-    assert offenders == [], (
-        "Bare '21.00' string literals found; use str(DEFAULT_IVA_GENERAL_RATE_PCT) instead:\n" + "\n".join(offenders)
+
+@pytest.mark.parametrize(
+    ("export_format", "expected_media_type"),
+    (
+        pytest.param("JSONL", "JSONL_MIME_TYPE", id="jsonl"),
+        pytest.param("XLSX", "XLSX_MIME_TYPE", id="xlsx"),
+    ),
+)
+def test_tabular_export_media_types_match_core_constants(export_format: str, expected_media_type: str) -> None:
+    """Serialized tabular results expose the core MIME constants."""
+
+    from ...application.export import ExportSerializationFormat, serialize_tabular_rows
+    from .. import external_constants
+
+    result = serialize_tabular_rows(
+        ({"col": "value"},),
+        fieldnames=("col",),
+        export_format=getattr(ExportSerializationFormat, export_format),
     )
 
-
-def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
-    """No bare JSONL/XLSX MIME literals in ``_tabular.py`` argument positions."""
-
-    tree = _repo_tree("src/aeat/application/export/_tabular.py")
-
-    guarded_literals = {
-        "application/x-ndjson": "_JSONL_MIME_TYPE",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "_XLSX_MIME_TYPE",
-    }
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-            continue
-        expected = guarded_literals.get(node.value)
-        if expected is None:
-            continue
-        offenders.append(f"_tabular.py:{node.lineno}: bare {node.value!r} literal; use {expected}")
-
-    assert offenders == [], "Bare JSONL/XLSX MIME literals found:\n" + "\n".join(offenders)
+    assert result.media_type == getattr(external_constants, expected_media_type)
 
 
 # ---------------------------------------------------------------------------
@@ -409,9 +418,8 @@ def test_modelo_group_consumers_alias_central_constants() -> None:
         )
 
 
-def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]) -> bool:
+def _ast_contains_modelo_group_tuple(tree: ast.AST, expected_elts: tuple[str, ...]) -> bool:
     """Return True if the AST contains a bare tuple literal whose string elements equal ``expected_elts``."""
-    tree = ast.parse(source)
     target_set = set(expected_elts)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Tuple):
@@ -425,7 +433,7 @@ def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]
     return False
 
 
-def test_no_bare_modelo_group_tuple_literals_in_consumers() -> None:
+def test_no_bare_modelo_group_tuple_literals_in_consumers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare modelo group tuple literals in consumers."""
 
     for _case_id, (relative_path, expected_elts, message) in zip(
@@ -433,7 +441,7 @@ def test_no_bare_modelo_group_tuple_literals_in_consumers() -> None:
         _MODELO_GROUP_LITERAL_CASES,
         strict=True,
     ):
-        assert not _ast_contains_modelo_group_tuple(_repo_source(relative_path), expected_elts), message
+        assert not _ast_contains_modelo_group_tuple(_repo_tree(relative_path, source_tree_ast), expected_elts), message
 
 
 # ---------------------------------------------------------------------------
@@ -481,7 +489,7 @@ def test_irpf_int_constant_consumers_alias_core_constants() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_no_bare_irpf_cap_literals_in_min_calls() -> None:
+def test_no_bare_irpf_cap_literals_in_min_calls(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare IRPF cap literals appear as ``min()`` arguments in consumers."""
 
     for _case_id, (relative_path, display_path, literal, replacement, message) in zip(
@@ -494,6 +502,7 @@ def test_no_bare_irpf_cap_literals_in_min_calls() -> None:
             display_path=display_path,
             literal=literal,
             replacement=replacement,
+            source_tree_ast=source_tree_ast,
         )
 
         assert offenders == [], message + ":\n" + "\n".join(offenders)
@@ -530,7 +539,7 @@ def test_decimal_constant_consumers_alias_core_constants() -> None:
         )
 
 
-def test_no_bare_decimal_literals_in_consumers() -> None:
+def test_no_bare_decimal_literals_in_consumers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No bare Decimal literals in Decimal-constant consumers."""
 
     for case_id, (relative_path, display_path, replacement) in zip(
@@ -543,6 +552,7 @@ def test_no_bare_decimal_literals_in_consumers() -> None:
             display_path=display_path,
             literal="21.00",
             replacement=replacement,
+            source_tree_ast=source_tree_ast,
         )
 
         assert offenders == [], (
@@ -560,6 +570,7 @@ def test_no_bare_decimal_literals_in_consumers() -> None:
             display_path=display_path,
             literal=literal,
             replacement=replacement,
+            source_tree_ast=source_tree_ast,
         )
 
         assert offenders == [], message + ":\n" + "\n".join(offenders)

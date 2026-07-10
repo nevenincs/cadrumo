@@ -1,9 +1,9 @@
 """A source-backed binding with no live resolver cannot silently calculate zero.
 
-This is the application-layer, live-mesh half of the W04.P08 source-connectivity
-gate. It joins the committed registry source inventory
+This is the application-layer live-mesh source-connectivity gate. It joins the
+committed registry source inventory
 (``RegistryQueryService.source_inventory`` — the domain-side report) against the
-LIVE enrolled resolver set (``BUCKET_AGGREGATION_OWNED_SOURCES``, derived from
+live enrolled resolver set (``BUCKET_AGGREGATION_OWNED_SOURCES``, derived from
 every enrolled resolver's ``owned_sources`` plus the pre-mesh tiers and
 ``manual_input``) and the disposition taxonomy
 (``build_binding_source_dispositions``), and proves three anti-silent-zero
@@ -21,6 +21,24 @@ invariants:
 The registry-inventory integrity half (no committed revision declares a reserved
 kind) lives in the domain companion
 ``domain/calculations/registry/tests/test_source_enrollment.py``.
+
+See Also:
+    :class:`BindingSourceKind`
+        Closed source-kind enum whose committed members are audited here.
+    :class:`~domain.calculations.registry.RegistryQueryService`
+        Domain query service that supplies the source-inventory report.
+    :class:`~domain.calculations.registry.DataBindingDefinition`
+        Binding schema mutated in the novel-source anti-tautology check.
+    :func:`~application.aggregation.build_binding_source_dispositions`
+        Builds the enrolled/deferred/reserved taxonomy used by this gate.
+    :class:`~application.aggregation.BindingSourceDisposition`
+        Disposition enum this gate accepts only as enrolled or deferred.
+    :func:`~application.modelo.assert_no_novel_source_kinds`
+        Live calculate-path guard proved by the synthetic source case.
+    :exc:`~application.modelo.ModeloAggregationBindingError`
+        Loud failure raised for novel source kinds instead of silent zero.
+    :mod:`~domain.calculations.registry.tests.test_source_enrollment`
+        Domain companion that verifies committed registry inventory.
 """
 
 from __future__ import annotations

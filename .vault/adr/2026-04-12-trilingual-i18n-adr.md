@@ -3,12 +3,12 @@ tags:
   - "#adr"
   - "#trilingual-i18n"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-trilingual-i18n-research]]"
 ---
 
-# Architecture Decision Record: Trilingual i18n
+# Architecture Decision Record: Trilingual i18n | (**status:** `accepted`)
 
 ## Status
 Accepted

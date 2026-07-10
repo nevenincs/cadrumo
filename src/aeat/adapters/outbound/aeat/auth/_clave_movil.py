@@ -112,7 +112,7 @@ _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "AEAT_CLAVE_MOVIL_DNI_NIE"
 class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
-    Constructed by :func:`aeat.adapters.outbound.aeat.auth.select_provider` when
+    Constructed by :func:`adapters.outbound.aeat.auth.select_provider` when
     ``kind == AuthProviderKind.CLAVE_MOVIL``. Fresh login can run the
     configured non-QR confirmation flow or the alternate QR flow;
     resume runs headlessly because the stored cookies are sufficient.

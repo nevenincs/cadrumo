@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-access-gate"
 date: 2026-04-17
-modified: '2026-06-13'
+modified: '2026-07-10'
 title: "Live AEAT Access Blocker & Verification Gate"
 related:
   - "[[2026-04-17-aeat-access-gate-research]]"
@@ -14,7 +14,7 @@ related:
   - "[[2026-04-16-submission-safety-sweep-adr]]"
 ---
 
-# ADR: Live AEAT Access Blocker & Verification Gate
+# ADR: Live AEAT Access Blocker & Verification Gate | (**status:** `accepted`)
 
 ## Status
 Accepted — 2026-04-17. Implements GitHub issue #167.

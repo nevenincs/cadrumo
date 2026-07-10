@@ -1,12 +1,20 @@
 """Tests for the bulk CSV/XLSX invoice import application service.
 
-:func:`import_invoices_from_rows` delegates every row's write to
-:func:`create_catalogue_invoice` -- the sole sanctioned
-:class:`~aeat.domain.invoices.Invoice` writer
+:func:`~application.invoices.import_invoices_from_rows` delegates every row's
+write to :func:`~application.invoices.create_catalogue_invoice` -- the sole
+sanctioned :class:`~domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``) -- and never persists a row
 itself. These tests exercise it against the real encrypted
-:class:`InvoiceCatalogueRepository` (real master-key provider, real engine) --
-no mocks.
+:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository` (real
+master-key provider, real engine) -- no mocks.
+
+See Also:
+    :class:`~application.invoices.BulkInvoiceImportRow`
+        Typed per-row boundary the tests validate before persistence.
+    :func:`~application.invoices.read_bulk_invoice_import_rows`
+        CSV/XLSX reader whose extension and column validation are covered here.
+    :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_import`
+        CLI wrapper that feeds operator files into this application service.
 """
 
 from __future__ import annotations
@@ -14,6 +22,7 @@ from __future__ import annotations
 import io
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from openpyxl import Workbook
@@ -35,7 +44,7 @@ _BUCKET_ID = "29292929-2929-4292-8292-292929292929"
 _CIF = "A58818501"
 
 
-def _csv_rows(text: str) -> list[tuple[int, dict[str, object]]]:
+def _csv_rows(text: str) -> list[tuple[int, dict[str | Any, str | Any]]]:
     import csv as _csv
 
     reader = _csv.DictReader(io.StringIO(text))
@@ -132,6 +141,7 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     xlsx_path = tmp_path / "invoices.xlsx"
     workbook = Workbook()
     sheet = workbook.active
+    assert sheet is not None
     sheet.append(
         ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
     )

@@ -35,12 +35,13 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import Modelo, RescateType
+from ...core import FETCH_GATED_M210_TIPO_RENTA_CODES, M210_TIPO_RENTA_CODE_PROJECTION, Modelo, RescateType
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
+    CasillaDefinition,
     CasillaId,
     DataBindingDefinition,
     ModeloRevision,
@@ -81,6 +82,7 @@ _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternida
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
+_DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
 _DETAIL_CASILLA_OVERRIDE_PREFIXES = ("perc.", "perceptor.", "inmueble.")
 
 
@@ -353,7 +355,12 @@ def build_work_calculate_input_bundle(
         key = _validated_canonical_casilla_id(raw_key, revision)
         casilla_def = revision_casillas_by_id.get(key)
         if casilla_def is not None and casilla_def.data_type == "text":
-            text_casilla_inputs[key] = _text_value(raw_value, key=key)
+            if casilla_def.semantic_role == "irnr_tipo_renta":
+                text_casilla_inputs[key] = _validated_m210_tipo_renta_code(raw_value, key=key)
+            elif casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
+                text_casilla_inputs[key] = _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def)
+            else:
+                text_casilla_inputs[key] = _text_value(raw_value, key=key)
         else:
             casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
     casilla_inputs = validate_casilla_input_ids(revision, casilla_inputs)
@@ -510,6 +517,87 @@ def _text_value(raw_value: str, *, key: str) -> str:
     return value
 
 
+def _validated_m210_tipo_renta_code(raw_value: str, *, key: str) -> str:
+    """Validate a Modelo 210 ``tipo_renta`` value against the declared official codes.
+
+    The generic ``--casilla key=value`` surface cannot render a static Typer
+    ``Choice`` for one casilla's value, so this is the sanctioned
+    architecture-boundaries fallback: a registry-driven refusal that LISTS the
+    accepted declared codes and names a fetch-gated code as fetch-gated rather
+    than "invalid". The fetch-gated codes
+    (:data:`~aeat.core.FETCH_GATED_M210_TIPO_RENTA_CODES`) are real AEAT
+    HOJA-INFORMATIVA-210 codes whose rate is not yet grounded, so an operator
+    entering code ``08`` is told it is not yet fileable, never that it is
+    invalid. The accepted set is the declared code axis
+    (:data:`~aeat.core.M210_TIPO_RENTA_CODE_PROJECTION`), kept in parity with the
+    registry ``m210-tipo-renta-code-2025`` parameter by the registry-build gate.
+
+    On acceptance the operator-entered official code is PROJECTED to its
+    :class:`~aeat.core.TipoRentaIrnr` rate-concept token — the value the engine
+    already keys the baseline rate table and treaty overrides on — so the
+    operator declares the code the form asks for while the rate machinery keeps
+    its conceptual key. (Codes that share a concept, e.g. arrendamiento ``01``
+    and empresariales ``03`` both ``general``, collapse to that concept here;
+    per-code form-fidelity display belongs to the fetch-gated full-casilla
+    schema, Slice C.)
+    """
+    value = _text_value(raw_value, key=key)
+    concept = M210_TIPO_RENTA_CODE_PROJECTION.get(value)
+    if concept is not None:
+        return concept.value
+    accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
+    if value in FETCH_GATED_M210_TIPO_RENTA_CODES:
+        raise ModeloCalculateTextInputError(
+            f"Modelo 210 tipo de renta code {value!r} is fetch-gated: its rate is not yet grounded "
+            f"in the bundled corpus, so it cannot be filed yet. Accepted codes: {accepted}.",
+            context={"key": key, "value": value, "accepted": accepted},
+            translated_message="application.modelo.errors.calculate_m210_tipo_renta_fetch_gated",
+        )
+    fetch_gated = ", ".join(sorted(FETCH_GATED_M210_TIPO_RENTA_CODES))
+    raise ModeloCalculateTextInputError(
+        f"{value!r} is not a valid Modelo 210 tipo de renta code. Accepted codes: {accepted}. "
+        f"Codes pending grounding (not yet fileable): {fetch_gated}.",
+        context={"key": key, "value": value, "accepted": accepted, "fetch_gated": fetch_gated},
+        translated_message="application.modelo.errors.calculate_m210_tipo_renta_unknown",
+    )
+
+
+def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_def: CasillaDefinition) -> str:
+    """Refuse a purely-numeric value routed to a declarante-selector text casilla.
+
+    A ``irpf_toma_datos_declarante_selector`` casilla (e.g. Modelo 100 ``0001``,
+    "Contribuyente que obtiene los rendimientos") names the member who obtains the
+    income — the contribuyente, the cónyuge, or a dependant — never a monetary
+    amount. A bare number such as ``38000`` is a mis-routed income figure: routed
+    onto the parallel text channel it would be stored silently in the text slot,
+    ignored by the formula chain, and — combined with a subtraction-convention
+    casilla — surface as a wrong (negative) base imponible. This guard fails the
+    override early, naming the casilla, its label, its ``data_type``, and the
+    numeric casilla channel the amount belongs on, mirroring the
+    :func:`_validated_m210_tipo_renta_code` semantic-role fallback for the generic
+    ``--casilla key=value`` surface that cannot render a per-casilla Typer choice.
+    """
+    value = _text_value(raw_value, key=key)
+    try:
+        Decimal(value)
+    except (InvalidOperation, ValueError):
+        return value
+    raise ModeloCalculateTextInputError(
+        f"--casilla value for {key!r} ({casilla_def.label}) is a non-numeric "
+        f"data_type={casilla_def.data_type!r} declarante selector naming the "
+        f"contribuyente who obtains the income, not an amount; got {raw_value!r}. "
+        f"Enter the income figure in its own numeric casilla (e.g. `--casilla 0003=<amount>`) "
+        f"and reserve this casilla for the member selector.",
+        context={
+            "key": key,
+            "value": raw_value,
+            "data_type": casilla_def.data_type,
+            "label": casilla_def.label,
+        },
+        translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
+    )
+
+
 def _refuse_detail_casilla_override(key: str) -> None:
     """Reject detail-row aliases before the decimal-only casilla path parses values."""
     if not is_detail_casilla_override_key(key):
@@ -612,7 +700,7 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
                 f"Candidate casilla.id values: {accepted}. "
                 "Supply the exact canonical casilla.id.",
                 context={"key": key, "accepted": accepted},
-                translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
+                translated_message="application.modelo.errors.calculate_casilla_noncanonical_ambiguous",
             )
         raise ModeloCalculateCasillaInputError(
             f"--casilla {key!r} is a printed casilla number or form number or export reference, "

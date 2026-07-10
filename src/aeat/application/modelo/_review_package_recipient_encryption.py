@@ -1,9 +1,9 @@
 """Encrypt-for-recipient transport for review packages (X25519 ECIES).
 
 This module adds a CONFIDENTIALITY layer on top of the review-package
-checksum-integrity (:mod:`aeat.application.modelo._review_package`) and
-authenticity (:mod:`aeat.application.modelo._review_package_signing`,
-:mod:`aeat.application.modelo._review_package_counter_sign`) layers: a
+checksum-integrity (:mod:`~application.modelo._review_package`) and
+authenticity (:mod:`~application.modelo._review_package_signing`,
+:mod:`~application.modelo._review_package_counter_sign`) layers: a
 review package sealed with :func:`encrypt_review_package_for_recipient`
 can be opened only by the holder of the matching X25519 private key --
 unlike ``sign``/``counter-sign``, which leave the archive itself in
@@ -17,17 +17,17 @@ shipped by this project -- no new dependency, see
    (``cryptography.hazmat.primitives.asymmetric.x25519.X25519PrivateKey.generate()``).
 2. ECDH is performed between the ephemeral private key and the
    recipient's long-term public key
-   (:class:`~aeat.application.modelo.RecipientFingerprintRecord`),
+   (:class:`~application.modelo.RecipientFingerprintRecord`),
    producing a 32-byte shared secret.
 3. The shared secret is NEVER used directly as an AEAD key. It is run
-   through :func:`~aeat.adapters.persistence.storage.crypto.derive_key`
+   through :func:`~adapters.persistence.storage.crypto.derive_key`
    (HKDF-SHA256), with the HKDF ``salt`` set to the ephemeral public key
    and the ``context`` (HKDF ``info``) bound to a fixed domain-separation
    string PLUS the recipient's public key -- so a derived key can never
    be reused across a different ephemeral sender key or a different
    recipient.
 4. The package bytes are AEAD-encrypted via
-   :func:`~aeat.adapters.persistence.storage.crypto.encrypt_record`
+   :func:`~adapters.persistence.storage.crypto.encrypt_record`
    (AES-256-GCM), with the recipient's public key bound into the
    associated data -- so a ciphertext cannot be silently re-targeted at
    a different recipient's key without the AEAD tag failing to verify.
@@ -43,7 +43,7 @@ CIPHERTEXT envelope is the only artefact this module returns to the
 caller; the caller is responsible for writing the envelope bytes to its
 requested output path. Nothing is staged to a temp file. The recipient's
 public key carries no secrecy requirement (it is looked up from
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`);
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`);
 the ephemeral sender private key exists only for the duration of one
 call and is never persisted.
 
@@ -61,7 +61,7 @@ review-only/expiry/replay follow-up slice): every envelope carries an
   decryption is even attempted. A ``valid_until=None`` envelope never expires.
 * **Replay defence** is a TWO-PARTY contract this module only half-owns: the
   envelope's ``envelope_nonce_hex`` is the token a caller checks against
-  :class:`~aeat.application.modelo.RecipientReplayGuardRepository` (a
+  :class:`~application.modelo.RecipientReplayGuardRepository` (a
   persisted, bucket-scoped consumed-nonce ledger) before or after calling
   :func:`decrypt_review_package_for_recipient` -- this module mints and
   carries the nonce but performs no persistence itself (this is the
@@ -77,16 +77,16 @@ review-only/expiry/replay follow-up slice): every envelope carries an
   and mistake a review-only handoff for a filing artefact.
 
 Recipient's own keypair (mint-or-load, symmetric to
-:func:`~aeat.application.modelo.ensure_review_package_signing_keypair`): a
+:func:`~application.modelo.ensure_review_package_signing_keypair`): a
 recipient (the accountant running :func:`decrypt_review_package_for_recipient`
 against a package sealed for them) needs their OWN X25519 private key, matching
 the public key a taxpayer registered via
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`.
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`.
 :func:`ensure_recipient_encryption_keypair` mints one on first use and persists
 it -- private key included -- ONLY as ciphertext through a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`, at
-:class:`SensitivityClass` ``SECRET``
-(:data:`~aeat.adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`),
+:class:`~adapters.persistence.storage.SecureObjectRepository`, at
+:class:`~adapters.persistence.storage.SensitivityClass` ``SECRET``
+(:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`),
 exactly as the Ed25519 signing keypair is minted and stored. It is never
 logged, never written to a plaintext file, and never leaves this module as raw
 bytes except transiently in process memory to decrypt. The exportable public
@@ -94,16 +94,16 @@ half (:func:`recipient_encryption_public_key`) is what a taxpayer registers via
 the fingerprint registry -- never the private key.
 
 See Also:
-    :mod:`aeat.application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo._review_package_recipient_registry`
         Where a recipient's trusted public key is registered and looked
         up before calling this module.
-    :mod:`aeat.application.modelo._review_package_recipient_replay_guard`
+    :mod:`~application.modelo._review_package_recipient_replay_guard`
         The consumed-nonce ledger a caller composes around
         :func:`decrypt_review_package_for_recipient` for replay defence.
-    :mod:`aeat.application.modelo._review_package`
+    :mod:`~application.modelo._review_package`
         Builds and integrity-verifies the review package this module
         encrypts.
-    :func:`aeat.application.modelo.ensure_review_package_signing_keypair`
+    :func:`~application.modelo.ensure_review_package_signing_keypair`
         The Ed25519 signing-keypair primitive this module's
         :func:`ensure_recipient_encryption_keypair` mirrors exactly (mint-once,
         persist-as-ciphertext, idempotent-reuse), for a distinct purpose
@@ -123,8 +123,14 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+)
+from ...adapters.persistence.storage import DecryptionError, SensitivityClass
+from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
@@ -180,8 +186,8 @@ class RecipientEncryptionKeypair(BaseModel):
     :meth:`public_key` reconstruct live ``cryptography`` key objects from the
     stored raw hex bytes. The caller (:func:`ensure_recipient_encryption_keypair`)
     is responsible for persisting it only through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`, mirroring
-    :class:`~aeat.application.modelo.ReviewPackageSigningKeypair` exactly --
+    :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~application.modelo.ReviewPackageSigningKeypair` exactly --
     a distinct keypair, for a distinct purpose (encryption, never signing).
     """
 
@@ -205,7 +211,7 @@ class RecipientEncryptionPublicKey(BaseModel):
     """The exportable, non-secret half of a bucket's encryption keypair.
 
     Safe to hand to a taxpayer so they can register it via
-    :class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`.
     Carries no secrecy requirement -- unlike :class:`RecipientEncryptionKeypair`,
     this model is fine to print, write to a plaintext file, or read aloud for
     out-of-band fingerprint verification.
@@ -219,7 +225,7 @@ class RecipientEncryptionPublicKey(BaseModel):
 
 
 def _recipient_encryption_key_object_key(bucket_id: str) -> str:
-    """Return the natural :class:`SecureObjectRepository` key for ``bucket_id``'s keypair.
+    """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
 
     Matches the namespace's declared
     ``object_key_grammar="review-package-recipient-encryption-key:{bucket_id}"``.
@@ -235,9 +241,9 @@ def ensure_recipient_encryption_keypair(
 ) -> RecipientEncryptionKeypair:
     """Return the bucket's X25519 encryption keypair, minting one on first use.
 
-    Mirrors :func:`~aeat.application.modelo.ensure_review_package_signing_keypair`
+    Mirrors :func:`~application.modelo.ensure_review_package_signing_keypair`
     exactly: loads the existing keypair from
-    :data:`~aeat.adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`
     when present; otherwise generates a fresh keypair via
     ``X25519PrivateKey.generate()``, persists it (private key included) as
     ciphertext, and returns it. Idempotent: a second call against the same
@@ -248,15 +254,10 @@ def ensure_recipient_encryption_keypair(
         bucket_id: The bucket this keypair is scoped to (the recipient's own
             profile bucket, resolved the same way the signing keypair is).
         repository: The bucket's
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+            :class:`~adapters.persistence.storage.SecureObjectRepository`.
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _recipient_encryption_key_object_key(bucket_id)
     existing = repository.load(
         _NAMESPACE.namespace,
@@ -281,7 +282,7 @@ def ensure_recipient_encryption_keypair(
         classification=SensitivityClass.SECRET,
         schema_version=_NAMESPACE.schema_version,
         written_at=keypair.created_at,
-        payload=keypair.model_dump_json().encode("utf-8"),
+        payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
         write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
     )
     return keypair
@@ -296,18 +297,14 @@ def load_recipient_encryption_keypair(
 
     Args:
         bucket_id: The bucket this keypair is scoped to.
-        repository: The bucket's :class:`SecureObjectRepository`.
+        repository: The bucket's
+            :class:`~adapters.persistence.storage.SecureObjectRepository`.
 
     Raises:
         RecipientEncryptionKeyNotFoundError: If no keypair has been minted yet
             for ``bucket_id``. Call :func:`ensure_recipient_encryption_keypair`
             first.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _recipient_encryption_key_object_key(bucket_id)
     record = repository.load(
         _NAMESPACE.namespace,
@@ -344,7 +341,7 @@ class RecipientEncryptedPackage(BaseModel):
     ``ephemeral_public_key_hex`` and ``recipient_public_key_hex`` are
     both raw 32-byte X25519 public keys, hex-encoded. ``ciphertext``
     is the AEAD wire form (``nonce || ciphertext_with_tag``) produced by
-    :func:`~aeat.adapters.persistence.storage.crypto.encrypt_record`, held
+    :func:`~adapters.persistence.storage.crypto.encrypt_record`, held
     as raw ``bytes`` on the Python object (matching every in-process caller
     in this module) but hex-encoded on the JSON boundary
     (:meth:`model_dump_json` / ``model_dump(mode="json")``) -- pydantic's
@@ -357,7 +354,7 @@ class RecipientEncryptedPackage(BaseModel):
 
     ``envelope_nonce_hex`` is a replay-detection token, independent of the
     AEAD nonce embedded in ``ciphertext``: a caller checks it against
-    :class:`~aeat.application.modelo.RecipientReplayGuardRepository` to
+    :class:`~application.modelo.RecipientReplayGuardRepository` to
     refuse a package presented more than once. ``issued_at`` /
     ``valid_until`` bound the envelope's validity window (``valid_until``
     of ``None`` means the envelope never expires); the deadline is checked
@@ -440,7 +437,7 @@ def encrypt_review_package_for_recipient(
             no filesystem I/O).
         recipient_public_key_hex: The recipient's raw 32-byte X25519
             public key, hex-encoded (see
-            :class:`~aeat.application.modelo.RecipientFingerprintRecord`).
+            :class:`~application.modelo.RecipientFingerprintRecord`).
         review_only: When ``True``, marks the sealed package as carrying
             no filing authority -- see the module docstring. Defaults to
             ``False`` (a normal filing-grade handoff).
@@ -458,8 +455,6 @@ def encrypt_review_package_for_recipient(
             a well-formed X25519 public key, or if ``valid_for`` is not a
             strictly positive duration.
     """
-    from ...adapters.persistence.storage.crypto import derive_key, encrypt_record
-
     try:
         recipient_public_key = X25519PublicKey.from_public_bytes(bytes.fromhex(recipient_public_key_hex))
     except (ValueError, TypeError) as exc:
@@ -550,7 +545,7 @@ def decrypt_review_package_for_recipient(
     encrypt/decrypt primitive with no persistence dependency
     (``composition-service-no-parallel-write-path``). A caller that needs
     replay defence composes
-    :class:`~aeat.application.modelo.RecipientReplayGuardRepository` around
+    :class:`~application.modelo.RecipientReplayGuardRepository` around
     this call, keyed on ``envelope.envelope_nonce_hex``.
 
     Args:
@@ -574,9 +569,6 @@ def decrypt_review_package_for_recipient(
             ciphertext fails AEAD authentication for any reason
             (tampering, corruption, wrong key).
     """
-    from ...adapters.persistence.storage import DecryptionError
-    from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key
-
     evaluated_at = now or _utc_now()
     if envelope.valid_until is not None and evaluated_at >= envelope.valid_until:
         raise RecipientPackageExpiredError(

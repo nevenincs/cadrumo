@@ -1,6 +1,6 @@
 """CLI ``--file`` spreadsheet import for local filed observations (issue #273).
 
-Kent's cert-free path: a hand-authored CSV or XLSX spreadsheet of
+A cert-free path: a hand-authored CSV or XLSX spreadsheet of
 ``casilla_code, value`` rows reconstructs a past filing's casilla values into a
 non-official local observation, without any AEAT certificate or live pull.
 """
@@ -8,6 +8,7 @@ non-official local observation, without any AEAT certificate or live pull.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -28,7 +29,7 @@ _SPREADSHEET_OBSERVATION_PROFILE_ID = "35353535-3535-4535-8535-353535353535"
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     """Real active encrypted profile storage for the spreadsheet-import CLI tests."""
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
@@ -70,7 +71,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
             "--period",
             "0A",
             "--by",
-            "kent-spreadsheet",
+            "operator-spreadsheet",
             "--file",
             str(sheet),
         ],
@@ -138,7 +139,7 @@ def test_observe_local_from_xlsx_spreadsheet_persists_values(
             "--period",
             "0A",
             "--by",
-            "kent-spreadsheet-xlsx",
+            "operator-spreadsheet-xlsx",
             "--file",
             str(sheet),
         ],
@@ -172,7 +173,7 @@ def test_observe_local_set_overrides_file_value_for_same_casilla(
             "--period",
             "0A",
             "--by",
-            "kent-override",
+            "operator-override",
             "--file",
             str(sheet),
             "--set",

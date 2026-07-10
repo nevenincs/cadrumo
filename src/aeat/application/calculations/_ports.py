@@ -3,16 +3,16 @@
 These runtime-checkable protocols declare the subset of AEAT filed-declaration
 records that the calculations application layer reads without importing the
 Sede adapter. Concrete records such as
-:class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`,
-:class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionArtefact`, and
-:class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue` satisfy these
+:class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`,
+:class:`~adapters.outbound.aeat.sede.FiledDeclaracionArtefact`, and
+:class:`~adapters.outbound.aeat.sede.ObservedCasillaValue` satisfy these
 ports structurally while remaining adapter-owned evidence records.
 
 See Also:
-    :mod:`aeat.application.calculations._iva_compensation_history`:
+    :mod:`application.calculations._iva_compensation_history`:
         Consumes :class:`FiledDeclaracionObservationProtocol` for Modelo 303
         period states and Modelo 390 annual cross-checks.
-    :mod:`aeat.application.live`:
+    :mod:`application.live`:
         Captures filed declarations and promotes registry-consumable
         observations into local encrypted stores.
 """
@@ -32,7 +32,7 @@ class FiledDeclaracionArtefactProtocol(Protocol):
     """Minimal artefact surface read by calculation evidence consumers.
 
     The concrete
-    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionArtefact`
+    :class:`~adapters.outbound.aeat.sede.FiledDeclaracionArtefact`
     carries more capture metadata, but calculation history only needs the
     artefact kind and hash witness to choose submitted-file evidence where it is
     present.
@@ -54,7 +54,7 @@ class ObservedCasillaValueProtocol(Protocol):
     """Minimal casilla-observation surface read by calculations.
 
     Values arrive as read-only evidence from an adapter-owned
-    :class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue`. The
+    :class:`~adapters.outbound.aeat.sede.ObservedCasillaValue`. The
     application treats ``casilla_id`` as a canonical ``CasillaId`` string and
     validates it against the resolved registry snapshot before using the value.
     """
@@ -80,12 +80,12 @@ class FiledDeclaracionObservationProtocol(Protocol):
     """Structural interface for a filed AEAT declaration observation.
 
     The application layer depends on this protocol rather than the concrete
-    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     model, eliminating the application-to-adapter import edge. The surface is
     intentionally limited to the fields consumed by
-    :func:`~aeat.application.calculations._iva_compensation_history.iva_compensation_state_from_filed_observation`
+    :func:`~application.calculations._iva_compensation_history.iva_compensation_state_from_filed_observation`
     and
-    :func:`~aeat.application.calculations._iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`.
+    :func:`~application.calculations._iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`.
     """
 
     @property
@@ -100,7 +100,7 @@ class FiledDeclaracionObservationProtocol(Protocol):
 
     @property
     def period(self) -> Period:
-        """Typed :class:`~aeat.core.Period` for the declaration."""
+        """Typed :class:`~core.Period` for the declaration."""
         ...
 
     @property

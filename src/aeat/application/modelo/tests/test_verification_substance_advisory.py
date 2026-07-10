@@ -36,21 +36,36 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["00501", "DP200014:00552", "0.70"])'
 _M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
+_AdvisoryPredicateCase = tuple[str, dict[CasillaId, Decimal], bool]
 
-
-@pytest.mark.parametrize(
-    ("values", "expected"),
-    (
-        (_casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
-        (_casilla_values((_CASILLA_00501, "12000"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
-        (_casilla_values((_CASILLA_00501, "9000"), (_M200_BIN_GENERATED_CASILLA, "15000")), False),
-        (_casilla_values((_CASILLA_00501, "5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
-    ),
-    ids=("exact-threshold", "above-threshold", "below-threshold", "zero-denominator"),
+_ADVISORY_RATIO_GE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
+    ("exact-threshold", _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
+    ("above-threshold", _casilla_values((_CASILLA_00501, "12000"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
+    ("below-threshold", _casilla_values((_CASILLA_00501, "9000"), (_M200_BIN_GENERATED_CASILLA, "15000")), False),
+    ("zero-denominator", _casilla_values((_CASILLA_00501, "5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
 )
-def test_advisory_when_ratio_ge_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
+
+_ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["00501", "DP200014:00552"])'
+_ADVISORY_IMPLIES_M200_BASE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
+    (
+        "positive-result-zero-base",
+        _casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "0")),
+        True,
+    ),
+    ("loss-result", _casilla_values((_CASILLA_00501, "-5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+    ("zero-result", _casilla_values((_CASILLA_00501, "0"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+    (
+        "determined-base",
+        _casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "140000")),
+        False,
+    ),
+)
+
+
+def test_advisory_when_ratio_ge_cases() -> None:
     """advisory_when_ratio_ge fires at or above the threshold and stays silent below it or with no denominator."""
-    assert evaluate_advisory_predicate_fires(_ADVISORY_RATIO_GE, values) is expected
+    for case_label, values, expected in _ADVISORY_RATIO_GE_CASES:
+        assert evaluate_advisory_predicate_fires(_ADVISORY_RATIO_GE, values) is expected, case_label
 
 
 def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
@@ -63,22 +78,10 @@ def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
         evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["00501", "bad key", "0.70"])', values)
 
 
-_ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["00501", "DP200014:00552"])'
-
-
-@pytest.mark.parametrize(
-    ("values", "expected"),
-    (
-        (_casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "0")), True),
-        (_casilla_values((_CASILLA_00501, "-5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
-        (_casilla_values((_CASILLA_00501, "0"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
-        (_casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "140000")), False),
-    ),
-    ids=("positive-result-zero-base", "loss-result", "zero-result", "determined-base"),
-)
-def test_advisory_implies_nonzero_cases(values: dict[CasillaId, Decimal], expected: bool) -> None:
+def test_advisory_implies_nonzero_cases() -> None:
     """The M200 advisory fires only when positive resultado contable has no determined base."""
-    assert evaluate_advisory_predicate_fires(_ADVISORY_IMPLIES_M200_BASE, values) is expected
+    for case_label, values, expected in _ADVISORY_IMPLIES_M200_BASE_CASES:
+        assert evaluate_advisory_predicate_fires(_ADVISORY_IMPLIES_M200_BASE, values) is expected, case_label
 
 
 def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() -> None:

@@ -205,7 +205,9 @@ def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_sh
     raw = buffer.getvalue()
     decoded = json.loads(raw)
 
-    assert set(decoded) == {"schema_version", "command", "status", "result", "notices"}
+    assert set(decoded) == {"schema_version", "command", "active_profile", "status", "result", "notices"}
+    # No active profile injected on this direct emit, so the identity anchor is null.
+    assert decoded["active_profile"] is None
     assert decoded["schema_version"] == ENVELOPE_SCHEMA_VERSION
     assert decoded["status"] == EnvelopeStatus.WARNING.value
     assert decoded["command"] == "app secure audit"

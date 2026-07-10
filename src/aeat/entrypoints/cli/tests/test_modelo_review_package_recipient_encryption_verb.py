@@ -10,6 +10,34 @@ X25519 keypair and recovers the original bytes byte-for-byte. Also proves the
 envelope on disk never carries the plaintext package bytes, a wrong bucket's
 keypair fails to decrypt, an expired package refuses, and a replayed envelope
 refuses on its second presentation.
+
+See Also:
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_encrypt_for_recipient`
+        CLI verb that seals a package to a registered recipient key.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_decrypt`
+        CLI verb that opens an envelope with the active bucket keypair.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 ECIES primitive behind the encrypt verb.
+    :func:`~application.modelo.decrypt_review_package_for_recipient`
+        Decryption primitive behind the decrypt verb.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Trusted-recipient registry used by ``encrypt-for-recipient``.
+    :func:`~application.modelo.ensure_recipient_encryption_keypair`
+        Mint-or-load path for the bucket's recipient decryption key.
+    :class:`~application.modelo.RecipientEncryptedPackage`
+        JSON envelope written to disk by the encrypt verb.
+    :class:`~application.modelo.RecipientReplayGuardRepository`
+        Consumed-nonce ledger that refuses the second decrypt.
+    :class:`~entrypoints.cli._modelo_review_package_payloads.ModeloReviewPackageEncryptForRecipientResult`
+        JSON result schema asserted for the encrypt verb.
+    :class:`~entrypoints.cli._modelo_review_package_payloads.ModeloReviewPackageDecryptResult`
+        JSON result schema asserted for the decrypt verb.
+    :class:`CasillaId`
+        Typed casilla ids used to seed the exportable Modelo 111 revision.
+    :class:`Period`
+        Typed filing period used to resolve the review-package work target.
+    :func:`~tests.cli_runner.invoke_cached_cli`
+        CLI runner used for the operator-visible command chain.
 """
 
 from __future__ import annotations
@@ -41,10 +69,10 @@ from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -206,7 +234,7 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
     public_key = recipient_encryption_public_key(keypair)
-    _register_recipient("kents-accountant", public_key_hex=public_key.public_key_hex)
+    _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
     encrypt_result = _invoke(
@@ -219,14 +247,14 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
             "encrypt-for-recipient",
             str(package_path),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(envelope_path),
         ],
     )
     assert encrypt_result.exit_code == 0, encrypt_result.output
     encrypt_payload = _payload(encrypt_result.output)
-    assert encrypt_payload["recipient_id"] == "kents-accountant"
+    assert encrypt_payload["recipient_id"] == "my-accountant"
     assert encrypt_payload["recipient_public_key_hex"] == public_key.public_key_hex
     assert encrypt_payload["review_only"] is False
     assert encrypt_payload["valid_until"] is None
@@ -276,7 +304,7 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
     public_key = recipient_encryption_public_key(keypair)
-    _register_recipient("kents-accountant", public_key_hex=public_key.public_key_hex)
+    _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
     encrypt_result = _invoke(
@@ -289,7 +317,7 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
             "encrypt-for-recipient",
             str(package_path),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(envelope_path),
             "--review-only",
@@ -328,7 +356,7 @@ def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
     public_key = recipient_encryption_public_key(keypair)
-    _register_recipient("kents-accountant", public_key_hex=public_key.public_key_hex)
+    _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
     encrypt_result = _invoke(
@@ -339,7 +367,7 @@ def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
             "encrypt-for-recipient",
             str(package_path),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(envelope_path),
         ],
@@ -434,7 +462,7 @@ def test_encrypt_for_recipient_refuses_missing_package(tmp_path: Path) -> None:
             "encrypt-for-recipient",
             str(tmp_path / "does-not-exist.zip"),
             "--recipient",
-            "kents-accountant",
+            "my-accountant",
             "--output",
             str(tmp_path / "envelope.json"),
         ],

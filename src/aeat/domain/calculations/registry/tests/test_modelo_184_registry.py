@@ -8,8 +8,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
-from ._registry_schema_support import _committed_modelo
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -55,22 +55,13 @@ def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
 
 
 def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
-    modelo, catalogues = _load_modelo_184()
-
     for filing_year in (2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=filing_year,
-            period="0A",
-        )
+        snapshot = _committed_snapshot("184", filing_year, "0A")
         assert snapshot.revision.id == "2015-y-siguientes"
 
 
 def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
-    modelo, catalogues = _load_modelo_184()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
+    snapshot = _committed_snapshot("184", 2025, "0A")
 
     assert "orden-hap-2250-2015:art-1" in snapshot.legal
     assert "orden-hap-2250-2015:art-4" in snapshot.legal

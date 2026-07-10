@@ -18,6 +18,7 @@ Submodules
    aeat.application.calculations._cross_period_clean_state
    aeat.application.calculations._cross_period_models
    aeat.application.calculations._errors
+   aeat.application.calculations._foreign_asset_redeclaration
    aeat.application.calculations._iva_compensation_annual_partition
    aeat.application.calculations._iva_compensation_history
    aeat.application.calculations._iva_wallet_balance

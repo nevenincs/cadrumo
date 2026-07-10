@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-06-30-agent-harness-W01-P01-S55]]'
   - '[[2026-06-30-agent-harness-W01-P01-summary]]'
@@ -46,8 +46,12 @@ related:
   - '[[2026-07-02-agent-harness-P06-S17]]'
   - '[[2026-07-02-agent-harness-P06-S18]]'
   - '[[2026-07-02-agent-harness-P06-S19]]'
+  - '[[2026-07-02-agent-harness-P06-S22]]'
+  - '[[2026-07-02-agent-harness-P07-S20]]'
+  - '[[2026-07-02-agent-harness-P07-S21]]'
   - '[[2026-07-02-agent-harness-audit]]'
   - '[[2026-07-02-agent-harness-plan]]'
+  - '[[2026-07-06-agent-harness-audit]]'
 ---
 
 # `agent-harness` feature index
@@ -65,6 +69,7 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 
 - `2026-06-30-agent-harness-audit` - `agent-harness` audit: `campaign close honesty review`
 - `2026-07-02-agent-harness-audit` - `agent-harness` audit: `git index sweep incident 84f84166f`
+- `2026-07-06-agent-harness-audit` - `agent-harness` audit: `Response formula provenance hardening review`
 
 ### exec
 
@@ -102,6 +107,9 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 - `2026-07-02-agent-harness-P06-S17` - status:done (commit df75c1b63) - category 8 golden scenario wiring confirmation_for_tool into a run so a CONFIRM-tier step is not auto-approved even with an auto-yes flag
 - `2026-07-02-agent-harness-P06-S18` - status:done (commit df75c1b63) - category 9 golden scenario wiring faithfulness_check against a real captured calculate JSON, advisory off-handoff and hard-block at export, grounded against the M130 oracle figure to avoid false positives
 - `2026-07-02-agent-harness-P06-S19` - status:done (pre-existing) - determinism-replay pinning test confirming byte-identical trajectory replay excluding scenario-declared non-deterministic fields
+- `2026-07-02-agent-harness-P07-S20` - status:deferred-gated (blocked on Track-1 #7 obligation-coverage) - enumerate the Tier-A persona-entry itinerary set once the profile-fact predicates it derives from are settled
+- `2026-07-02-agent-harness-P07-S21` - status:deferred-gated (blocked on Track-1 per-form surfaces, generally) - author the remaining Tier-B per-modelo completion skills beyond the M130/M303 vertical slice, each authored by diff against the shared lifecycle-spine fragment
+- `2026-07-02-agent-harness-P06-S22` - harden category 3 response provenance so expected computed response rows require formula_id
 
 ### plan
 

@@ -6,7 +6,7 @@ rules and the active persona verbatim (decision record R4's tools-only floor), a
 personas, resolves each to its verbatim ``text/markdown`` document, and refuses
 an unknown URI cleanly. The SDK-independent surface is asserted directly; the
 server wiring and capability negotiation are asserted through the real built
-``Server``. When the ``aeat[agent]`` extra is absent, the SDK-dependent build
+``Server``. When the ``aeat-cli[agent]`` extra is absent, the SDK-dependent build
 is asserted to fail at the optional-dependency boundary instead - the same
 graceful-degradation contract ``test_sdk_adaptation`` follows, never a skip.
 """
@@ -22,8 +22,12 @@ import pytest
 from ....agent import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
     HARNESS_LOAD_TOOL,
+    WHOAMI_TOOL,
+    WhoamiIdentity,
     build_harness_floor_payload,
+    build_whoami_identity,
     render_harness_floor_text,
+    render_whoami_identity_text,
 )
 from .._persona_scope import AgentPersona
 from .._resources import (
@@ -90,8 +94,8 @@ def test_floor_text_embeds_both_the_rules_and_the_active_persona() -> None:
 
 
 def test_floor_payload_carries_the_off_host_consent_disclosure() -> None:
-    # ADR R9: the off-host privacy disclosure rides on every floor load, for
-    # every persona (and the un-personified session), so it can never be skipped.
+    # The off-host privacy disclosure rides on every floor load, for every
+    # persona and the un-personified session, so it can never be skipped.
     from .._harness_tools import off_host_consent_text
 
     for persona in (None, AgentPersona.VERIFIER, AgentPersona.MODELO_PREPARER):
@@ -239,6 +243,138 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
         assert operator_rules_text() in result.content[0].text
 
     anyio.run(_drive)
+
+
+# --- whoami identity tool (ADR I1) --------------------------------------------
+
+
+def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:
+    # The identity-critical output is the human LABEL (the plaintext manifest
+    # display name), never the redacted bucket/profile UUID — the same label
+    # semantics the envelope spine carries. Driven against a real active bucket.
+    from ....tests.secure_sql import isolated_runtime_profile
+
+    with isolated_runtime_profile(tmp_path=tmp_path, label="Erika") as profile:
+        identity = build_whoami_identity()
+
+    assert identity.active_profile == "Erika"
+    assert identity.active_profile != profile.bucket_id
+    assert identity.readiness  # a non-empty health status
+    assert isinstance(identity.tax_id_present, bool)
+
+
+def test_whoami_identity_is_null_when_no_profile_is_active(tmp_path: Any) -> None:
+    from ....tests.secure_sql import isolated_profile_storage_root
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        identity = build_whoami_identity()
+
+    assert identity.active_profile is None
+    assert identity.tax_id_present is False
+    assert identity.readiness == "none"
+
+
+def test_render_whoami_identity_names_the_label_and_readiness() -> None:
+    text = render_whoami_identity_text(
+        WhoamiIdentity(
+            active_profile="Erika",
+            tax_id_present=True,
+            readiness="ready",
+            next_action="aeat app overview status",
+        ),
+    )
+    assert "Erika" in text
+    assert "ready" in text
+    assert "yes" in text  # tax id on file
+
+
+def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
+    # whoami is a console tool like search/execute: advertised on every session,
+    # in CORE and FULL, with no persona and under a restrictive persona — the
+    # identity assertion must never be scoped away.
+    from .._server import build_server
+    from .._surface import SurfaceMode
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import ListToolsRequest
+
+    async def _advertised(persona: AgentPersona | None, mode: SurfaceMode) -> set[str]:
+        server = cast("Any", build_server(descriptors, persona=persona, surface_mode=mode))
+        handlers = server.request_handlers
+        tools = (await handlers[ListToolsRequest](ListToolsRequest(method="tools/list"))).root.tools
+        return {tool.name for tool in tools}
+
+    async def _drive() -> None:
+        for persona in (None, AgentPersona.VERIFIER):
+            for mode in (SurfaceMode.CORE, SurfaceMode.FULL):
+                assert WHOAMI_TOOL in await _advertised(persona, mode)
+
+    anyio.run(_drive)
+
+
+def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> None:
+    from ....tests.secure_sql import isolated_runtime_profile
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    with isolated_runtime_profile(tmp_path=tmp_path, label="Erika") as profile:
+        server = cast("Any", build_server(descriptors, persona=None))
+        handlers = server.request_handlers
+
+        async def _drive() -> None:
+            request = CallToolRequest(
+                method="tools/call",
+                params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
+            )
+            result = (await handlers[CallToolRequest](request)).root
+            assert result.isError is False
+            assert result.structuredContent is not None
+            assert result.structuredContent["active_profile"] == "Erika"
+            assert result.structuredContent["active_profile"] != profile.bucket_id
+            assert "Erika" in result.content[0].text
+
+        anyio.run(_drive)
+
+
+def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None:
+    from ....tests.secure_sql import isolated_runtime_profile
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    with isolated_runtime_profile(tmp_path=tmp_path, label="Erika"):
+        server = cast("Any", build_server(descriptors, persona=None))
+        handlers = server.request_handlers
+
+        async def _drive() -> None:
+            request = CallToolRequest(
+                method="tools/call",
+                params=CallToolRequestParams(name=HARNESS_LOAD_TOOL, arguments={}),
+            )
+            result = (await handlers[CallToolRequest](request)).root
+            assert result.isError is False
+            assert result.structuredContent is not None
+            assert result.structuredContent["identity"]["active_profile"] == "Erika"
+
+        anyio.run(_drive)
 
 
 def test_server_negotiates_prompts_and_resources_capabilities() -> None:

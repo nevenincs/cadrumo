@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.application.aggregation._atribucion_member
    aeat.application.aggregation._business_proportion
    aeat.application.aggregation._counterpart
    aeat.application.aggregation._currency_predicates
@@ -25,6 +26,7 @@ Submodules
    aeat.application.aggregation._ledger_filing_snapshot
    aeat.application.aggregation._modelo_bindings
    aeat.application.aggregation._models
+   aeat.application.aggregation._observation_window
    aeat.application.aggregation._oss_ioss
    aeat.application.aggregation._percepciones_observations_repository
    aeat.application.aggregation._renta_gasto_ledger
@@ -35,6 +37,8 @@ Submodules
    aeat.application.aggregation._retenciones
    aeat.application.aggregation._service
    aeat.application.aggregation._shared_issue_reasons
+   aeat.application.aggregation._source_fincas
+   aeat.application.aggregation._source_inventory
    aeat.application.aggregation._source_mesh
    aeat.application.aggregation._source_profile
    aeat.application.aggregation._withholding_source

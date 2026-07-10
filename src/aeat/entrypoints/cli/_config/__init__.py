@@ -364,11 +364,26 @@ def config_profile_show(
     # profile read as a self-contradiction (``show: ready`` vs
     # ``status: blocked``). ``show`` now emits the ``record_validity`` token
     # with ``valid``/``invalid`` so the two measures no longer collide.
+    # The tab-separated ``key\tvalue`` lines below (``record_validity``,
+    # ``profile_id``, the fact paths, …) mirror the JSON envelope and key on
+    # stable machine identifiers, so they are deliberately not localised. This
+    # leading verdict line is the operator-facing prose the ``--language`` /
+    # ``--output-language`` flag localises, so the flag has a visible effect on
+    # the ``show`` output.
     if is_tombstoned:
+        lines.append(tr("cli.config.profile.show.summary_tombstoned", default="Profile record is tombstoned."))
         lines.append("record_validity\ttombstoned")
     elif blocking:
+        lines.append(
+            tr(
+                "cli.config.profile.show.summary_invalid",
+                default="Profile record is invalid: %{count} blocking issue(s).",
+                count=len(blocking),
+            ),
+        )
         lines.append(f"record_validity\tinvalid\tissues={len(blocking)}")
     else:
+        lines.append(tr("cli.config.profile.show.summary_valid", default="Profile record is valid."))
         lines.append(f"record_validity\tvalid\tissues={len(report.issues)}")
     lines.append(f"profile_id\t{record.profile_id}")
     lines.append(f"display_name\t{record.display_name}")

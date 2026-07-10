@@ -10,7 +10,7 @@ accepted.
 
 This module is the single typed authority for that closed, regulatory-shaped
 table, per the central-config discipline: the country -> pattern set lives here
-in :mod:`aeat.core`, not inlined as a literal in a feature module. Consumers
+in :mod:`core`, not inlined as a literal in a feature module. Consumers
 (the ledger invoice counterparty boundary today; the Modelo 349 manual-entry row
 in future) resolve a Member State's expected shape through
 :func:`nif_iva_format_for_country` and refuse a malformed number with an
@@ -50,7 +50,7 @@ class NifIvaPrefix(StrEnum):
     for every Member State equals its ISO 3166-1 alpha-2 code except Greece,
     whose VAT prefix is ``EL`` while its ISO code is ``GR``. Spain (``ES``) is
     excluded: Spanish identifiers route through
-    :func:`aeat.core.identity.validate_spanish_tax_id`. ``XI`` is the
+    :func:`core.identity.validate_spanish_tax_id`. ``XI`` is the
     post-Brexit Northern Ireland goods prefix accepted in intra-community
     contexts.
     """

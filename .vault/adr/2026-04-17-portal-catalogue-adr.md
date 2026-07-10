@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#portal-catalogue'
 date: '2026-04-17'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-04-17-portal-catalogue-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'
@@ -16,7 +16,7 @@ related:
   - '[[2026-04-12-base-module-structure-adr]]'
 ---
 
-# portal-catalogue adr: AEAT filing portal + URL registry (**status:** `accepted`)
+# portal-catalogue adr: AEAT filing portal + URL registry | (**status:** `accepted`)
 
 Date: 2026-04-17
 Branch: `feature/7-portal-catalogue`

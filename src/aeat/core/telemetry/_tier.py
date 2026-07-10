@@ -1,9 +1,17 @@
 """Closed remote-telemetry tier enum.
 
-Declared standalone (no dependency on :mod:`core.config`) so
+Declared standalone (no dependency on :mod:`~core.config`) so
 :class:`~core.config.Settings` can import it without a circular import, per
 ``aeat-architecture-boundaries``'s closed-value-set discipline (every closed
 axis is a :class:`~enum.StrEnum` declared in ``core/``).
+
+See Also:
+    :class:`~core.telemetry.TelemetryTier`
+        Public facade export of the closed remote-telemetry tier enum.
+    :func:`~core.telemetry.telemetry_emit_permitted`
+        Consent gate that interprets the tier for each attempted emission.
+    :class:`~core.config.Settings`
+        Deployment configuration carrying the selected telemetry tier.
 """
 
 from __future__ import annotations

@@ -14,6 +14,8 @@ Submodules
    :maxdepth: 4
 
    aeat.entrypoints.mcp._annotations
+   aeat.entrypoints.mcp._call_runtime
+   aeat.entrypoints.mcp._completions
    aeat.entrypoints.mcp._corpus_tools
    aeat.entrypoints.mcp._dispatch
    aeat.entrypoints.mcp._elicitation
@@ -26,6 +28,7 @@ Submodules
    aeat.entrypoints.mcp._prompts
    aeat.entrypoints.mcp._resources
    aeat.entrypoints.mcp._server
+   aeat.entrypoints.mcp._surface
    aeat.entrypoints.mcp._telemetry
    aeat.entrypoints.mcp._terminology_tools
    aeat.entrypoints.mcp._tools

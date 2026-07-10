@@ -1,4 +1,4 @@
-"""HITL confirmation gate wired end-to-end for the operator golden-task eval (category 8).
+"""HITL confirmation gate wiring for the operator golden-task eval.
 
 Covers eval-catalogue category 8 (HITL / confirmation bypass): an autonomous
 agent optimising for completion may pass ``--yes``, a failure mode no human
@@ -22,29 +22,45 @@ and that claim is wired into a real golden-scenario run via the caller-injected
 
 No mocks: every decision is the real ``confirmation_for_tool`` called against
 real ``McpAnnotations`` built by the real ``build_tool_descriptors`` /
-``annotations_for_command``, and the argument-independence proof reads the real
-``_server.py`` source text rather than asserting a hand-rolled boolean
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+``annotations_for_command``, and the argument-independence proof drives the real
+MCP server over an in-memory client session instead of asserting a hand-rolled
+boolean (``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+
+See Also:
+    :mod:`~entrypoints.mcp._hitl`
+        Human-in-the-loop confirmation policy projected onto MCP tool calls.
+    :class:`~agent.eval.ConfirmationGateCheck`
+        Caller-injected golden-eval verdict that records expected and actual
+        confirmation tiers.
+    :func:`~agent.eval.run_golden_scenario`
+        Golden runner that fails a scenario when an injected confirmation tier
+        mismatches.
+
+The MCP harness wires confirmation gates into its serving behavior and
+enforces the live-write prohibition at that same layer.
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import inspect
+from collections.abc import Coroutine, Iterator, Mapping
 from pathlib import Path
 
+import mcp.types as mcp_types
 import pytest
+from mcp.shared.memory import create_connected_server_and_client_session as connect
 
-from ....application.operator_surface import OperatorMutability
+from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import (
     ConfirmationPolicy,
-    McpAnnotations,
     McpToolDescriptor,
-    annotations_for_command,
+    build_server,
     build_tool_descriptors,
     confirmation_for_tool,
 )
-from ....entrypoints.mcp import _server as _mcp_server
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -76,6 +92,45 @@ def _tier(policy: ConfirmationPolicy) -> ConfirmationTier:
     return ConfirmationTier(policy.value)
 
 
+def _run[T](coro: Coroutine[object, object, T]) -> T:
+    return asyncio.run(coro)
+
+
+@contextlib.contextmanager
+def _declared_live_write(command_key: str) -> Iterator[None]:
+    """Declare ``command_key`` a live-write in the risk table for the test body.
+
+    A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
+    heuristic (ADR ``mcp-protocol-hardening`` H3): no real command declares
+    ``live_write`` (never-submit is enforced as "no such tool exists"), so a test
+    that exercises the defensive BLOCK branch must supply a declared live-write
+    row and restore the table after - test data, not a mocked behaviour.
+    """
+    previous = COMMAND_RISK.get(command_key)
+    COMMAND_RISK[command_key] = CommandRiskDeclaration(live_write=True)
+    try:
+        yield
+    finally:
+        if previous is None:
+            COMMAND_RISK.pop(command_key, None)
+        else:
+            COMMAND_RISK[command_key] = previous
+
+
+async def _call_tool(name: str, arguments: Mapping[str, object]) -> mcp_types.CallToolResult:
+    server = build_server(build_tool_descriptors(), persona=None)
+    async with connect(server) as session:
+        # Clear the block-first-mutation identity gate (ADR mcp-identity-linked-operation
+        # I2) with a real whoami identity read, so this confirmation-gate proof reaches
+        # the CONFIRM tier under test rather than the identity gate in front of it.
+        await session.call_tool("aeat_whoami", {})
+        return await session.call_tool(name, dict(arguments))
+
+
+def _texts(result: mcp_types.CallToolResult) -> list[str]:
+    return [block.text for block in result.content if isinstance(block, mcp_types.TextContent)]
+
+
 def test_export_handoff_confirms_and_is_argument_independent() -> None:
     """The export handoff step resolves CONFIRM and cannot be bypassed by an auto-yes arg.
 
@@ -83,14 +138,12 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
 
     1. Behavioural: the real ``confirmation_for_tool`` returns CONFIRM for
        ``modelo.export``.
-    2. Structural (signature): ``confirmation_for_tool`` accepts no
-       ``arguments``/``args`` parameter at all, so no call-supplied argument value
-       can be threaded into the decision by construction.
-    3. Structural (source order): the real ``_server.py::_call_tool`` computes the
-       BLOCK/CONFIRM decision BEFORE it ever dispatches the tool's ``arguments``
-       to build the CLI argv (``_run_subprocess_tool(descriptor, arguments)``) -
-       proving the gate sits in front of the call, not merely that the pure
-       function happens to ignore an argument it was never given in this test.
+    2. Structural (signature): ``confirmation_for_tool`` accepts ``command_key``
+       and nothing else - no ``arguments``/``args`` and no per-call annotations -
+       so no call-supplied value can be threaded into the decision by construction.
+    3. Serving behaviour: the real MCP server refuses an export handoff carrying
+       an auto-yes-shaped argument when no elicitation channel is available,
+       returning a refusal instead of a dispatched CLI envelope.
     """
     descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
 
@@ -100,37 +153,30 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
     # exposes a confirmation flag for a human operator to skip a prompt; an
     # autonomous agent could supply it to itself just as easily).
     plain_arguments: dict[str, object] = {}
-    auto_yes_arguments: dict[str, object] = {"yes": True}
+    auto_yes_arguments: dict[str, object] = {"actor": "--yes"}
 
-    assert set(inspect.signature(confirmation_for_tool).parameters) == {"command_key", "annotations"}, (
-        "confirmation_for_tool must not accept a call-arguments parameter; the "
-        "PreToolUse decision must be derivable from command identity alone"
+    assert set(inspect.signature(confirmation_for_tool).parameters) == {"command_key"}, (
+        "confirmation_for_tool must derive its decision from command identity "
+        "alone; no call-arguments or per-call annotation parameter may be accepted"
     )
 
-    decision_plain = confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+    decision_plain = confirmation_for_tool(command_key=descriptor.command_key)
     # The (unread) arguments payloads are irrelevant to the call above by
     # construction - demonstrated, not merely asserted, by resolving the SAME
     # decision a second time after "receiving" the auto-yes payload.
     assert plain_arguments != auto_yes_arguments
-    decision_auto_yes = confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+    decision_auto_yes = confirmation_for_tool(command_key=descriptor.command_key)
 
     assert decision_plain is ConfirmationPolicy.CONFIRM
     assert decision_auto_yes is ConfirmationPolicy.CONFIRM
     assert decision_plain is decision_auto_yes
 
-    # The schema-driven serving path consumes the call's `arguments` only inside
-    # `_run_subprocess_tool(descriptor, arguments)`, which `_call_tool` reaches
-    # strictly after the confirmation gate. Anchoring on that dispatch call site
-    # re-expresses the original ordering proof over the new argv construction (the
-    # retired `arguments.get("args")` bag is gone).
-    server_source = inspect.getsource(_mcp_server)
-    gate_offset = server_source.index("confirmation_for_tool(command_key=key")
-    dispatch_offset = server_source.index("envelope, is_error = _run_subprocess_tool(descriptor, arguments)")
-    assert gate_offset < dispatch_offset, (
-        "the PreToolUse confirmation gate must be evaluated before the direct call's "
-        "arguments are ever consumed to build the CLI argv in _server.py::_call_tool, "
-        "so no argument value (including an auto-yes-equivalent flag) can influence it"
-    )
+    result = _run(_call_tool(descriptor.name, auto_yes_arguments))
+    assert result.isError
+    text = "\n".join(_texts(result))
+    assert _EXPORT_STEP in text
+    assert len(result.content) == 1
+    assert result.structuredContent is None
 
 
 def test_read_step_auto_approves() -> None:
@@ -141,28 +187,24 @@ def test_read_step_auto_approves() -> None:
     confirmations, which is its own bypass risk.
     """
     descriptor = _descriptors_by_command_key()[_CALCULATE_STEP]
-    decision = confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+    decision = confirmation_for_tool(command_key=descriptor.command_key)
     assert decision is ConfirmationPolicy.AUTO_APPROVE
 
 
 def test_hypothetical_live_write_leaf_blocks_unconditionally() -> None:
-    """A hypothetical live-write leaf resolves BLOCK regardless of its mutability annotation.
+    """A declared live-write command resolves BLOCK regardless of its family mutability.
 
     Proves eval-catalogue category 8(c): if a live-write verb ever entered the
     exposed command set, the gate refuses it outright rather than falling through
     to CONFIRM - the strongest tier, requiring no human approval loop to bypass.
-    Checked against both plausible mutability classifications a real command
-    author might attach, proving the BLOCK outcome does not depend on getting the
-    mutability annotation right.
+    The BLOCK derives from the DECLARED ``live_write`` axis (ADR
+    ``mcp-protocol-hardening`` H3), which forces the command non-read-only
+    whatever its family mutability, so the outcome does not depend on getting the
+    mutability classification right.
     """
-    for mutability in (OperatorMutability.LOCAL_STATE_MUTATING, OperatorMutability.READ_ONLY):
-        annotations: McpAnnotations = annotations_for_command(
-            command_key=_HYPOTHETICAL_LIVE_WRITE_STEP,
-            mutability=mutability,
-            title="aeat app modelo work submit",
-        )
-        decision = confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP, annotations=annotations)
-        assert decision is ConfirmationPolicy.BLOCK, mutability
+    with _declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
+        decision = confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP)
+        assert decision is ConfirmationPolicy.BLOCK
 
 
 def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() -> None:
@@ -176,42 +218,25 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
     """
     export_descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
     calculate_descriptor = _descriptors_by_command_key()[_CALCULATE_STEP]
-    live_write_annotations = annotations_for_command(
-        command_key=_HYPOTHETICAL_LIVE_WRITE_STEP,
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-        title="aeat app modelo work submit",
-    )
+
+    with _declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
+        live_write_tier = _tier(confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP))
 
     checks = (
         ConfirmationGateCheck(
             step=_EXPORT_STEP,
             expected_tier=ConfirmationTier.CONFIRM,
-            actual_tier=_tier(
-                confirmation_for_tool(
-                    command_key=export_descriptor.command_key,
-                    annotations=export_descriptor.annotations,
-                ),
-            ),
+            actual_tier=_tier(confirmation_for_tool(command_key=export_descriptor.command_key)),
         ),
         ConfirmationGateCheck(
             step=_CALCULATE_STEP,
             expected_tier=ConfirmationTier.AUTO_APPROVE,
-            actual_tier=_tier(
-                confirmation_for_tool(
-                    command_key=calculate_descriptor.command_key,
-                    annotations=calculate_descriptor.annotations,
-                ),
-            ),
+            actual_tier=_tier(confirmation_for_tool(command_key=calculate_descriptor.command_key)),
         ),
         ConfirmationGateCheck(
             step=_HYPOTHETICAL_LIVE_WRITE_STEP,
             expected_tier=ConfirmationTier.BLOCK,
-            actual_tier=_tier(
-                confirmation_for_tool(
-                    command_key=_HYPOTHETICAL_LIVE_WRITE_STEP,
-                    annotations=live_write_annotations,
-                ),
-            ),
+            actual_tier=live_write_tier,
         ),
     )
     for check in checks:
@@ -238,7 +263,7 @@ def test_confirmation_gate_mismatch_fails_the_scenario() -> None:
     the offending step in ``failures``.
     """
     export_descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
-    actual = confirmation_for_tool(command_key=export_descriptor.command_key, annotations=export_descriptor.annotations)
+    actual = confirmation_for_tool(command_key=export_descriptor.command_key)
     assert actual is ConfirmationPolicy.CONFIRM, "fixture drift: the export step is expected to require confirmation"
 
     mismatched_check = ConfirmationGateCheck(

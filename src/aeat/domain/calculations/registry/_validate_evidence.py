@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import contextlib
 import json
+import logging
 import os
 import tempfile
 from collections.abc import Iterable, Mapping
@@ -17,6 +17,7 @@ from ._text import normalise_corpus_text
 
 _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
+_LOGGER = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=4096)
@@ -41,6 +42,7 @@ def _load_disk_cache() -> dict[str, str]:
             _DISK_CACHE = loaded
             return loaded
     except Exception:
+        _LOGGER.debug("Ignoring unreadable corpus text cache at %s", cache_path, exc_info=True)
         _DISK_CACHE = {}
         return _DISK_CACHE
 
@@ -54,9 +56,12 @@ def _write_disk_cache(data: dict[str, str]) -> None:
             temp_name = tf.name
         os.replace(temp_name, cache_path)
     except Exception:
+        _LOGGER.debug("Could not write corpus text cache at %s", cache_path, exc_info=True)
         if temp_name is not None:
-            with contextlib.suppress(Exception):
+            try:
                 os.unlink(temp_name)
+            except Exception:
+                _LOGGER.debug("Could not remove temporary corpus text cache file %s", temp_name, exc_info=True)
 
 
 def _extract_pdf_text_impl(path: str) -> str:

@@ -13,6 +13,8 @@ arts. 33/34); this module covers the other concepts.
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import pytest
 
 from .._temporal import select_revision
@@ -62,6 +64,7 @@ _SECTION_ROLE_GROUNDING_OVERRIDES: dict[tuple[str, int, str], tuple[str, ...]] =
 }
 
 
+@lru_cache
 def _m100_revision(filing_year: int):
     modelo, _ = _committed_modelo("100")
     return select_revision(modelo, filing_year=filing_year, period="0A")
@@ -72,36 +75,33 @@ def _section_casillas(filing_year: int, section_tag: str):
     return [c for c in rev.casillas if section_tag in tuple(c.section)]
 
 
-def _params():
+def _concept_section_cases():
     for tag, (articles, years) in _CONCEPT_SECTION_GROUNDING.items():
         expected_articles = (articles,) if isinstance(articles, str) else articles
         for y in years:
-            yield pytest.param(tag, expected_articles, y, id=f"{tag}-{y}")
+            yield tag, expected_articles, y
 
 
-@pytest.mark.parametrize(("section_tag", "articles", "year"), list(_params()))
-def test_concept_section_grounds_in_its_article_not_actividades(
-    section_tag: str,
-    articles: tuple[str, ...],
-    year: int,
-) -> None:
+def test_concept_section_grounds_in_its_article_not_actividades() -> None:
     """Every box in a corrected concept-section carries its concept article and no
     actividades article."""
-    casillas = _section_casillas(year, section_tag)
-    assert casillas, f"M100 {year} section {section_tag} must have casillas"
-    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
-    missing = []
-    for casilla in casillas:
-        expected = set(
-            _SECTION_ROLE_GROUNDING_OVERRIDES.get(
-                (section_tag, year, casilla.semantic_role),
-                articles,
+    for section_tag, articles, year in _concept_section_cases():
+        casillas = _section_casillas(year, section_tag)
+        assert casillas, f"M100 {year} section {section_tag} must have casillas"
+        actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+        assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
+        missing = []
+        for casilla in casillas:
+            semantic_role = casilla.semantic_role or ""
+            expected = set(
+                _SECTION_ROLE_GROUNDING_OVERRIDES.get(
+                    (section_tag, year, semantic_role),
+                    articles,
+                )
             )
-        )
-        if expected.isdisjoint(casilla.legal_refs):
-            missing.append((casilla.id, sorted(expected), sorted(casilla.legal_refs)))
-    assert not missing, f"M100 {year} {section_tag}: boxes not grounded in their article: {missing}"
+            if expected.isdisjoint(casilla.legal_refs):
+                missing.append((casilla.id, sorted(expected), sorted(casilla.legal_refs)))
+        assert not missing, f"M100 {year} {section_tag}: boxes not grounded in their article: {missing}"
 
 
 def _prevision_social_casillas(filing_year: int):
@@ -119,16 +119,16 @@ def _prevision_social_casillas(filing_year: int):
     return out
 
 
-@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
-def test_prevision_social_grounds_in_arts_51_52_not_actividades(year: int) -> None:
+def test_prevision_social_grounds_in_arts_51_52_not_actividades() -> None:
     """Previsión-social aportación/exceso boxes cite art. 51 (and not the actividades
     chapter) — the binding reduction provision (límite conjunto in art. 52)."""
-    casillas = _prevision_social_casillas(year)
-    assert casillas, f"M100 {year}: previsión-social section must have casillas"
-    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, f"M100 {year}: previsión-social boxes still cite the actividades chapter: {actividades}"
-    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-51" not in set(c.legal_refs)]
-    assert not missing, f"M100 {year}: previsión-social boxes not grounded in art. 51: {missing}"
+    for year in (2021, 2022, 2023, 2024):
+        casillas = _prevision_social_casillas(year)
+        assert casillas, f"M100 {year}: previsión-social section must have casillas"
+        actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+        assert not actividades, f"M100 {year}: previsión-social boxes still cite the actividades chapter: {actividades}"
+        missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-51" not in set(c.legal_refs)]
+        assert not missing, f"M100 {year}: previsión-social boxes not grounded in art. 51: {missing}"
 
 
 _AUTONOMIC_COMUNIDADES = (
@@ -172,8 +172,7 @@ def _autonomic_deduction_casillas(filing_year: int):
     return out
 
 
-@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
-def test_autonomic_deductions_ground_in_own_article_not_actividades(year: int) -> None:
+def test_autonomic_deductions_ground_in_own_article_not_actividades() -> None:
     """Autonomic-deduction boxes cite their governing deduction article and never
     the actividades chapter.
 
@@ -181,18 +180,21 @@ def test_autonomic_deductions_ground_in_own_article_not_actividades(year: int) -
     autonómica). New-company entity NIF boxes are still additional Anexo B data, but
     their governing deduction provision is art. 68.1.
     """
-    casillas = _autonomic_deduction_casillas(year)
-    assert casillas, f"M100 {year}: autonomic-deduction sections must have casillas"
-    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, (
-        f"M100 {year}: autonomic-deduction boxes still cite the actividades chapter: {actividades[:10]}"
-    )
-    missing = []
-    for casilla in casillas:
-        expected_ref = _AUTONOMIC_DEDUCTION_REFS_BY_ROLE.get(casilla.semantic_role, _AUTONOMIC_DEDUCTION_FRAMEWORK_REF)
-        if expected_ref not in set(casilla.legal_refs):
-            missing.append((casilla.id, casilla.semantic_role, expected_ref, sorted(casilla.legal_refs)))
-    assert not missing, f"M100 {year}: autonomic-deduction boxes not grounded in their article: {missing[:10]}"
+    for year in (2021, 2022, 2023, 2024):
+        casillas = _autonomic_deduction_casillas(year)
+        assert casillas, f"M100 {year}: autonomic-deduction sections must have casillas"
+        actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+        assert not actividades, (
+            f"M100 {year}: autonomic-deduction boxes still cite the actividades chapter: {actividades[:10]}"
+        )
+        missing = []
+        for casilla in casillas:
+            expected_ref = _AUTONOMIC_DEDUCTION_REFS_BY_ROLE.get(
+                casilla.semantic_role, _AUTONOMIC_DEDUCTION_FRAMEWORK_REF
+            )
+            if expected_ref not in set(casilla.legal_refs):
+                missing.append((casilla.id, casilla.semantic_role, expected_ref, sorted(casilla.legal_refs)))
+        assert not missing, f"M100 {year}: autonomic-deduction boxes not grounded in their article: {missing[:10]}"
 
 
 def _casillas_with_section_substr(filing_year: int, needle: str):
@@ -216,19 +218,19 @@ _SUBSTRING_CONCEPTS: dict[str, tuple[str, tuple[int, ...]]] = {
 }
 
 
-def _substring_params():
+def _substring_cases():
     for needle, (article, years) in _SUBSTRING_CONCEPTS.items():
         for y in years:
-            yield pytest.param(needle, article, y, id=f"{needle}-{y}")
+            yield needle, article, y
 
 
-@pytest.mark.parametrize(("needle", "article", "year"), list(_substring_params()))
-def test_substring_concept_section_grounding(needle: str, article: str, year: int) -> None:
+def test_substring_concept_section_grounding() -> None:
     """Boxes in a concept-section (matched by section substring) carry the concept's
     article and never the actividades chapter."""
-    casillas = _casillas_with_section_substr(year, needle)
-    assert casillas, f"M100 {year}: section substring '{needle}' must have casillas"
-    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, f"M100 {year} '{needle}': boxes still cite the actividades chapter: {actividades}"
-    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if article not in set(c.legal_refs)]
-    assert not missing, f"M100 {year} '{needle}': boxes not grounded in {article}: {missing}"
+    for needle, article, year in _substring_cases():
+        casillas = _casillas_with_section_substr(year, needle)
+        assert casillas, f"M100 {year}: section substring '{needle}' must have casillas"
+        actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+        assert not actividades, f"M100 {year} '{needle}': boxes still cite the actividades chapter: {actividades}"
+        missing = [(c.id, sorted(c.legal_refs)) for c in casillas if article not in set(c.legal_refs)]
+        assert not missing, f"M100 {year} '{needle}': boxes not grounded in {article}: {missing}"

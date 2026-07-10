@@ -1,84 +1,124 @@
-"""SensitivityClass pinning tests for the modelo catalogue repositories.
+"""Sensitivity-class pinning tests for modelo and bucket catalogues.
 
-Persistence of every modelo catalogue must classify under
-``SensitivityClass.FINANCIAL`` so an operator's encrypted database
-backend treats the rows under the FINANCIAL key-rotation policy.
-These tests read the catalogue source modules directly through ``ast``
-so a future rebrand from FINANCIAL to any other class is caught at
-review time, not at runtime.
+The suite writes through the real profile secure-object repositories and then
+checks the persisted metadata against the namespace authority, proving modelo
+calculation, filing, work-unit, verification-report, and bucket-event catalogues
+stay under the ``FINANCIAL`` storage class.
+
+See Also:
+    :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
+        Namespace source for sensitivity, schema-version, and object-key
+        contracts asserted here.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Encrypted repository whose persisted metadata is inspected after each
+        save.
+    :mod:`~adapters.persistence.profile.modelos_work_units`
+        Representative modelo catalogue repository covered by this shared
+        sensitivity guard.
 """
 
 from __future__ import annotations
 
-import ast
+from collections.abc import Callable
 from pathlib import Path
+from typing import Protocol
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage import (
+    BUCKET_EVENT_HISTORY_NAMESPACE,
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+    MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
+    MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+    SecureObjectNamespaceDefinition,
+    SecureObjectRepository,
+    SensitivityClass,
+)
+from ....domain.buckets import BucketEventHistoryCatalogue
+from ....tests.secure_sql import isolated_runtime_profile
+from .. import (
+    CalculationRevisionCatalogue,
+    ModeloRecordCatalogue,
+    VerificationReportCatalogue,
+    WorkUnitCatalogue,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_REPOSITORY_SOURCES: tuple[tuple[str, Path], ...] = (
+class _CatalogueRepository(Protocol):
+    def save(self, catalogue: object) -> None: ...
+
+
+_REPOSITORY_CASES: tuple[
+    tuple[
+        str,
+        Callable[[SecureObjectRepository], _CatalogueRepository],
+        Callable[[], object],
+        SecureObjectNamespaceDefinition,
+    ],
+    ...,
+] = (
     (
         "CalculationRevisionCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_calculation.py",
+        lambda objects: CalculationRevisionCatalogueRepository(objects=objects),
+        CalculationRevisionCatalogue,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     ),
     (
         "ModeloRecordCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_filing.py",
+        lambda objects: ModeloRecordCatalogueRepository(objects=objects),
+        ModeloRecordCatalogue,
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     ),
     (
         "WorkUnitCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_work_units.py",
+        lambda objects: WorkUnitCatalogueRepository(objects=objects),
+        WorkUnitCatalogue,
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     ),
     (
         "VerificationReportCatalogueRepository",
-        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "modelos_verification_reports.py",
+        lambda objects: VerificationReportCatalogueRepository(objects=objects),
+        VerificationReportCatalogue,
+        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
     ),
     (
         "BucketEventHistoryRepository",
-        PROJECT_ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile" / "buckets.py",
+        lambda objects: BucketEventHistoryRepository(objects=objects),
+        BucketEventHistoryCatalogue,
+        BUCKET_EVENT_HISTORY_NAMESPACE,
     ),
 )
 
 
-def _sensitivity_attr_references(source: Path) -> set[str]:
-    """Return every ``SensitivityClass.<NAME>`` attribute referenced in ``source``."""
+@pytest.mark.parametrize(("repository_name", "repository_factory", "catalogue_type", "namespace"), _REPOSITORY_CASES)
+def test_repository_persists_catalogue_under_financial_secure_object_metadata(
+    tmp_path: Path,
+    repository_name: str,
+    repository_factory: Callable[[SecureObjectRepository], _CatalogueRepository],
+    catalogue_type: Callable[[], object],
+    namespace: SecureObjectNamespaceDefinition,
+) -> None:
+    """Each repository must commit its catalogue as a FINANCIAL secure object.
 
-    tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
-    found: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "SensitivityClass":
-            found.add(node.attr)
-    return found
+    The parametrized cases bind each repository to its declared namespace object
+    so this test verifies storage metadata rather than mirroring repository
+    implementation details.
+    """
 
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = repository_factory(profile.repository)
 
-def test_repository_classifies_every_persistence_under_financial() -> None:
-    """Each modelo / bucket-event-history repository must use only
-    ``SensitivityClass.FINANCIAL`` for its load / save calls.
-    A future migration to a different class would be a deliberate
-    architectural change requiring updates here and in
-    ``aeat.core.classification``."""
+        repository.save(catalogue_type())
+        metadata = profile.repository.peek_metadata(namespace.namespace, namespace.default_object_key)
 
-    for repository_name, source_path in _REPOSITORY_SOURCES:
-        classes_used = _sensitivity_attr_references(source_path)
-        assert classes_used == {"FINANCIAL"}, (
-            f"{repository_name} ({source_path.relative_to(PROJECT_ROOT)}) "
-            f"references unexpected SensitivityClass members: {sorted(classes_used)!r}"
-        )
-
-
-def test_every_repository_source_actually_references_sensitivity_class() -> None:
-    """Guard against an accidental drop of the SensitivityClass call:
-    every repository file MUST still reference the enum so the test
-    above never silently passes on a repository that lost its
-    classification."""
-
-    for repository_name, source_path in _REPOSITORY_SOURCES:
-        classes_used = _sensitivity_attr_references(source_path)
-        assert classes_used, (
-            f"{repository_name} ({source_path.relative_to(PROJECT_ROOT)}) "
-            "lost all SensitivityClass references; persistence is unclassified"
-        )
+    assert metadata is not None, f"{repository_name} did not persist its catalogue"
+    assert metadata.classification == SensitivityClass.FINANCIAL.value
+    assert metadata.schema_version == namespace.schema_version

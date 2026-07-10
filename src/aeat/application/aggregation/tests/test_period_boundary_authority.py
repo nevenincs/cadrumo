@@ -3,20 +3,34 @@
 The CLI ledger surface (``--filter period=``+``--filter year=`` /
 ``--period``+``--year``) and the modelo calculation snapshot
 (``aggregation_period_for_modelo``) are two spellings of the same
-``(year, AEAT-token)`` input that MUST both resolve to the same :class:`Period`
-and its fully-closed :meth:`Period.contains` boundary. No parallel period
+``(year, AEAT-token)`` input that MUST both resolve to the same :class:`~core.Period`
+and its fully-closed :meth:`~core.Period.contains` boundary. No parallel period
 boundary implementation is permitted.
 
 This module pins that convergence: for every canonical span token, the CLI
 transport and the calc-engine transport produce an *identical* ``Period``
 object. It also pins the secure-storage invariant: the filter is a
 pure in-memory selection predicate that adds no plaintext persistence surface;
-the rows it selects ride the encrypted :class:`SecureObjectRepository`.
+the rows it selects ride the encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`.
+
+See Also:
+    :func:`~entrypoints.cli._common._canonical_period`
+        ``--period`` / ``--year`` transport that constructs the core period
+        directly from separated operator inputs.
+    :func:`~entrypoints.cli._common._filter_canonical_period`
+        ``--filter period=`` / ``--filter year=`` transport that reuses the
+        same canonical resolver.
+    :func:`~application.aggregation.aggregation_period_for_modelo`
+        Calculation-snapshot transport that must converge on the same
+        :class:`~core.Period` boundary.
+    :class:`~core.StandardPeriodCode`
+        Canonical AEAT token vocabulary filtered here to span-bearing tokens.
 """
 
 from __future__ import annotations
 
 import inspect
+from datetime import date, timedelta
 
 import pytest
 
@@ -90,7 +104,7 @@ def test_both_transports_route_through_one_period_boundary() -> None:
 
     Forbids a parallel boundary implementation: for the same (year, token) the
     CLI ``(--year, AEAT token)`` resolution and the calc-engine translator must
-    produce the *identical* :class:`Period` date span, so neither side can drift
+    produce the *identical* :class:`~core.Period` date span, so neither side can drift
     to a private boundary shape. There is no intermediate calendar string on the
     CLI side — the pair builds the Period directly.
     """
@@ -116,27 +130,29 @@ def test_no_parallel_contains_boundary_is_defined_on_period() -> None:
     assert boundary_methods == {"contains"}, boundary_methods
 
 
-def test_period_filter_adds_no_plaintext_persistence_surface() -> None:
-    """The boundary authority is a pure in-memory predicate (secure-storage gate).
+def test_period_filter_is_a_closed_in_memory_boundary_predicate() -> None:
+    """The boundary authority is a closed in-memory predicate.
 
     The period filter selects rows that already ride the per-profile encrypted
-    bucket-scoped :class:`SecureObjectRepository`; the
-    filter itself must add no plaintext persistence. ``Period.contains`` is a
-    pure ``date`` comparison — it performs no I/O and writes nothing. Pin that:
-    the boundary computes from the model's own fields and the input date alone,
-    touching no repository, file, or serialisation surface.
+    bucket-scoped :class:`~adapters.persistence.storage.SecureObjectRepository`; the
+    filter itself must add no plaintext persistence. Pin the runtime contract:
+    the predicate answers solely from the resolved period span and the candidate
+    date, including both closed endpoints and rejecting neighbouring dates.
     """
-    source = inspect.getsource(Period.contains)
-    # The predicate must be a pure start<=value<=end comparison: no persistence,
-    # serialisation, or repository token may appear in its body.
-    forbidden = ("open(", "write", "Secure", "Repository", "serialize", "model_dump", "json", "save", "persist")
-    lowered = source.lower()
-    for needle in forbidden:
-        assert needle.lower() not in lowered, f"Period.contains must stay a pure predicate; found {needle!r}"
+    period_cases = (
+        aggregation_period_for_modelo(filing_year=2025, code="1T"),
+        aggregation_period_for_modelo(filing_year=2025, code="2T"),
+        aggregation_period_for_modelo(filing_year=2025, code="0A"),
+    )
 
-    # And it genuinely discriminates: a real date inside is contained, one
-    # outside is not — proving it is a live boundary, not a no-op pass-through.
-    from datetime import date
+    for period in period_cases:
+        midpoint = period.start_date + (period.end_date - period.start_date) // 2
+
+        assert period.contains(period.start_date), period
+        assert period.contains(midpoint), period
+        assert period.contains(period.end_date), period
+        assert not period.contains(period.start_date - timedelta(days=1)), period
+        assert not period.contains(period.end_date + timedelta(days=1)), period
 
     q1_2025 = aggregation_period_for_modelo(filing_year=2025, code="1T")
     assert q1_2025.contains(date(2025, 2, 14))

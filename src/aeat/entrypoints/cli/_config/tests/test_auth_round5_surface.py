@@ -35,7 +35,7 @@ from .. import app as config_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_BUCKET_ID = "round5"
+_BUCKET_ID = "50505050-5050-4505-8505-050505050505"
 _STORAGE_BACKEND = "file"
 
 

@@ -24,10 +24,10 @@ payload AEAD associated data so ciphertext copied across rows fails
 authentication.
 
 All decorators and helpers resolve key bytes through
-:func:`~aeat.adapters.persistence.storage.master_key._active_session.get_active_master_key`
+:func:`~adapters.persistence.storage.master_key._active_session.get_active_master_key`
 on the active
-:class:`~aeat.adapters.persistence.storage.master_key._bucket_session.BucketSession`.
-Tests use :class:`~aeat.adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`,
+:class:`~adapters.persistence.storage.master_key._bucket_session.BucketSession`.
+Tests use :class:`~adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`,
 whose context manager enters a real session without touching the OS
 keychain or file backend.
 
@@ -134,7 +134,7 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
 
     Exposed so iterator consumers (notably
-    :class:`aeat.adapters.persistence.storage.SecureObjectRepository`)
+    :class:`adapters.persistence.storage.SecureObjectRepository`)
     can decrypt rows one-by-one inside their own try/except, rather than
     delegating to SQLAlchemy's column processor whose failure mode aborts
     the entire result-set materialisation.

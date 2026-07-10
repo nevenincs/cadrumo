@@ -4,11 +4,11 @@ Modelo 349's declarant-summary scalar casillas (``decl.numero-operadores``,
 ``decl.importe-operaciones``) and the per-operador-clave row-producer bindings
 (``iva-349-operador-row-*``, the AEAT Diseno de Registros Tipo-2 "registro de
 operador" detail) are resolved by two structurally INDEPENDENT code paths over
-the same :class:`~aeat.domain.calculations.registry.InvoiceObservation` set:
-:func:`~aeat.domain.calculations.registry.resolve_invoice_binding_values` folds
+the same :class:`~domain.calculations.registry.InvoiceObservation` set:
+:func:`~domain.calculations.registry.resolve_invoice_binding_values` folds
 the observations directly into a scalar (``operator_count`` / ``base_sum``
 facts), while
-:func:`~aeat.domain.calculations.registry.resolve_invoice_binding_row_values`
+:func:`~domain.calculations.registry.resolve_invoice_binding_row_values`
 groups them into per-``(country, party_tax_id, clave)`` rows.
 
 Nothing in the registry cross-checks that these two independently-derived
@@ -20,7 +20,7 @@ today's engine would silently accept both without complaint
 
 This module drives the REAL registry-loaded Modelo 349 ``2020-y-siguientes``
 snapshot and the REAL scalar/row resolvers (no mocks) to prove
-:func:`~aeat.domain.calculations.registry.compute_modelo_349_operador_totals_parity`:
+:func:`~domain.calculations.registry.compute_modelo_349_operador_totals_parity`:
 a consistent observation set (rows reconstruct the resolved scalar summary)
 passes, and a dropped operator observation (the row set no longer accounts for
 the full summary total) is CAUGHT with the exact delta named, never silently
@@ -32,6 +32,17 @@ operador intracomunitario" (posiciones 76-146); the declarant summary
 Tipo 2 records sharing the same clave set (``E``, ``M``, ``H``, ``A``, ``T``,
 ``S``, ``I``, ``R``, ``D``, ``C``) per the bundled AEAT instructions text
 cited by the registry's own ``iva-349-declarante-*`` bindings.
+
+See Also:
+    :class:`~domain.calculations.registry.Modelo349OperadorTotalsParity`
+        Typed parity verdict asserted by these consistency and shortfall cases.
+    :func:`~domain.calculations.registry.resolve_invoice_binding_values`
+        Scalar declarant-summary resolver compared against the row set.
+    :func:`~domain.calculations.registry.resolve_invoice_binding_row_values`
+        Per-operador row resolver whose totals reconstruct the summary.
+    :mod:`~domain.calculations.registry._invoice_bindings`
+        Invoice-binding implementation that owns the Modelo 349 row and scalar
+        aggregation paths.
 """
 
 from __future__ import annotations

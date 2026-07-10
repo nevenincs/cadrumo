@@ -1,12 +1,12 @@
 """On-host vision fallback for invoice-field extraction from a scan-only PDF or image.
 
-:func:`extract_invoice_fields` (see :mod:`._evidence_draft`) reads a PDF's embedded
-text layer. A scan-only or image-only invoice has no text layer at all, so that
-primitive raises. This module supplies the on-host fallback: rasterise the PDF (or
-use an image directly) into in-memory base64 PNG pages
-(:func:`aeat.adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`) and read them
+:func:`~application.ledger.extract_invoice_fields` reads a PDF's embedded text
+layer. A scan-only or image-only invoice has no text layer at all, so that
+primitive raises. This module supplies the on-host fallback: rasterise the PDF
+(or use an image directly) into in-memory base64 PNG pages
+(:func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`) and read them
 with the same LOCAL Ollama vision model the classification path already uses
-(:class:`aeat.application.ledger.LocalVisionLLMClassifier`), fully on-host
+(:class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`), fully on-host
 (``sensitive-financial-data-secure-storage-only``). Nothing is written to disk and
 nothing leaves the machine; this needs no cloud consent gate.
 
@@ -15,20 +15,33 @@ prompt instructs it to copy each field's printed value verbatim (or emit ``null`
 when a field is not visibly printed) and forbids it from computing, inferring, or
 estimating any figure. Every field the model returns is re-validated through the
 exact same grounded heuristics the text-layer path uses --
-:func:`aeat.core.identity.validate_spanish_tax_id`,
-:func:`aeat.core.parsing.parse_date`, and :class:`~decimal.Decimal` parsing via
-:func:`aeat.core.decimal.normalize_decimal_separators` -- so a malformed or
+:func:`~core.identity.validate_spanish_tax_id`,
+:func:`~core.parsing.parse_date`, and :class:`~decimal.Decimal` parsing via
+:func:`~core.decimal.normalize_decimal_separators` -- so a malformed or
 hallucinated value is rejected (left ``None``) rather than trusted. This mirrors the
-document-printed-value semantics :func:`._evidence_draft.extract_invoice_fields`
-already has for text-layer PDFs: both paths recover what is *printed on the
+document-printed-value semantics
+:func:`~application.ledger.extract_invoice_fields` already has for text-layer PDFs:
+both paths recover what is *printed on the
 document*, never a registry-derived or model-computed tax figure
 (``evidence-read-never-emits-regulated-numbers`` in spirit -- the persisted
-:class:`aeat.domain.invoices.Invoice` this draft eventually confirms into still goes
+:class:`~domain.invoices.Invoice` this draft eventually confirms into still goes
 through the operator review step before anything is minted).
 
-Gated by :attr:`aeat.core.ServiceCapability.LLM_VISION`: an operator who has opted
+Gated by :attr:`~core.ServiceCapability.LLM_VISION`: an operator who has opted
 out of on-host vision reading gets a typed refusal naming the capability toggle,
 never a silent empty draft.
+
+See Also:
+    :class:`~application.ledger.InvoiceDraft`
+        Typed draft this vision path returns after grounded re-validation.
+    :func:`~application.ledger.extract_invoice_fields`
+        Text-layer extraction primitive this module complements for scan-only
+        or image-only evidence.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        Orchestration layer that falls back to this on-host reader.
+    :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`
+        Sibling local Ollama vision transport used for classification and
+        split suggestions.
 """
 
 from __future__ import annotations
@@ -157,9 +170,9 @@ def _grounded_date(raw: str | None) -> str | None:
     day-first form the document actually shows (mirroring the text-layer
     heuristic's ``_DATE_RE``); ISO-8601 is tried second in case the model
     normalises the printed value itself. Only these two real, registered
-    :data:`aeat.core.parsing._DateFmt` members are ever passed -- an invented
+    :data:`~core.parsing._DateFmt` members are ever passed -- an invented
     format string silently degrades to one of the two delegates
-    (:func:`aeat.core.parsing._parse_date` has no third branch), which would
+    (:func:`~core.parsing._parse_date` has no third branch), which would
     make a "fallback" attempt a silent no-op duplicate.
     """
     if raw is None:
@@ -205,18 +218,18 @@ def _ground_extracted_fields(fields: _VisionExtractedFields, *, raw_text_length:
 class LocalVisionInvoiceFieldExtractor:
     """Read an invoice image on-host with a local Ollama vision model into an :class:`InvoiceDraft`.
 
-    Mirrors :class:`aeat.application.ledger.LocalVisionLLMClassifier`'s transport
+    Mirrors :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`'s transport
     (a local Ollama vision model fed in-memory base64 images) but for field
     transcription instead of category classification. Every returned field is
     re-validated through the grounded heuristics
-    :func:`._evidence_draft.extract_invoice_fields` uses for the text-layer path,
+    :func:`~application.ledger.extract_invoice_fields` uses for the text-layer path,
     so a hallucinated or malformed value never reaches the operator as a
     fabricated fact.
 
     Args:
         model: Local Ollama vision model identifier; defaults to
             ``Settings.aeat_llm_ollama_vision_model``.
-        client: Injected :class:`~aeat.adapters.outbound.llm.LLMClient` (dependency
+        client: Injected :class:`~adapters.outbound.llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
@@ -256,7 +269,7 @@ class LocalVisionInvoiceFieldExtractor:
 
         Args:
             evidence_images: In-memory base64 page/image renders of the evidence
-                (from :func:`aeat.adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`
+                (from :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`
                 for a scan-only PDF, or the raw image bytes base64-encoded for an
                 image attachment).
 

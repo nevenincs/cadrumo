@@ -46,7 +46,7 @@ def test_wizard_success_text_uses_central_output_redaction(capsys: pytest.Captur
 
 
 def test_wizard_success_text_accepts_non_resident_next_step(capsys: pytest.CaptureFixture[str]) -> None:
-    _emit_wizard_success("create", "marta-irnr", next_command="aeat app modelo describe 210")
+    _emit_wizard_success("create", "irnr-profile", next_command="aeat app modelo describe 210")
 
     output = capsys.readouterr().out
     assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in output
@@ -80,7 +80,13 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
 
         document = json.loads(capsys.readouterr().out)
 
-        assert set(document) == {"schema_version", "command", "status", "result", "notices"}
+        assert set(document) == {"schema_version", "command", "active_profile", "status", "result", "notices"}
+        # The shared spine carries the active_profile identity anchor (ADR
+        # mcp-identity-linked-operation I3). On create the newly-created profile
+        # IS the active one, so the wizard injects its name as the label; on edit
+        # the active profile is not necessarily the edited one, so the spine stays
+        # null (the label is not the wizard's to assert there).
+        assert document["active_profile"] == ("probe-profile" if mode == "create" else None)
         assert document["command"] == command_path
         assert document["status"] == "success"
 

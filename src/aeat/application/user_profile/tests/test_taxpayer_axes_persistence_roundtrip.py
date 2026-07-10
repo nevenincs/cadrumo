@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -39,7 +40,6 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
-    read_active_profile,
     register_active_profile,
 )
 from .._projections import projection_for_taxpayer
@@ -90,6 +90,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
 # - irpf_income_categories: a multi-member set in non-sorted input order
 #   so the canonical-string projection is exercised on a real set
 # - irpf.estimation_regime: a non-default regime
+# - objective-estimation módulos facts: annual operator inputs for M131/M100 support
 # - iva.regime: REAGP (the non-default member, not GENERAL)
 # - IVA group role, SII, and REDEME flags: True (default False)
 _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
@@ -100,6 +101,10 @@ _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
         value="trabajo,capital_inmobiliario,pension",
     ),
     UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
+    UserProfileFact(path="irpf.objective_estimation_modulos_iae_epigraph", value="972.1"),
+    UserProfileFact(path="irpf.objective_estimation_modulos_module_1_units", value="2.50"),
+    UserProfileFact(path="irpf.objective_estimation_modulos_module_2_units", value="85"),
+    UserProfileFact(path="irpf.objective_estimation_modulos_module_3_units", value="12000.75"),
     UserProfileFact(path="iva.group_member_enrolled", value=True),
     UserProfileFact(path="iva.group_dominant_entity_enrolled", value=True),
     UserProfileFact(path="iva.sii_enrolled", value=True),
@@ -124,7 +129,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     non-default values through ``register_active_profile`` (which
     delegates the cross-store create to ``ProfileRepository``), reloads
     the :class:`UserProfileRecord` from the encrypted store via
-    ``read_active_profile``, and asserts every fact survived. The
+    ``WorkflowState.active_profile_record``, and asserts every fact survived. The
     reloaded record is then projected through the canonical
     ``taxpayer_profile_from_mapping`` path to confirm the typed
     three-axis model reconstructs correctly on the far side.
@@ -145,7 +150,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 
@@ -155,6 +160,10 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     assert _fact_value(record, "taxpayer_type.legal_entity_form") == "cooperativa"
     assert _fact_value(record, "taxpayer_type.irpf_income_categories") == "trabajo,capital_inmobiliario,pension"
     assert _fact_value(record, "irpf.estimation_regime") == "directa_simplificada"
+    assert str(_fact_value(record, "irpf.objective_estimation_modulos_iae_epigraph")) == "972.1"
+    assert _fact_value(record, "irpf.objective_estimation_modulos_module_1_units") == Decimal("2.50")
+    assert _fact_value(record, "irpf.objective_estimation_modulos_module_2_units") == Decimal("85")
+    assert _fact_value(record, "irpf.objective_estimation_modulos_module_3_units") == Decimal("12000.75")
     assert _fact_value(record, "iva.regime") == "REAGP"
     assert _fact_value(record, "iva.group_member_enrolled") is True
     assert _fact_value(record, "iva.group_dominant_entity_enrolled") is True
@@ -173,6 +182,10 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
         },
     )
     assert profile.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
+    assert profile.objective_estimation_modulos_iae_epigraph == "972.1"
+    assert profile.objective_estimation_modulos_module_1_units == Decimal("2.50")
+    assert profile.objective_estimation_modulos_module_2_units == Decimal("85")
+    assert profile.objective_estimation_modulos_module_3_units == Decimal("12000.75")
     assert profile.iva_regime is IVARegime.REAGP
     assert profile.iva.group_member_enrolled is True
     assert profile.iva.group_dominant_entity_enrolled is True
@@ -214,7 +227,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
     # No taxpayer-axis facts crossed the boundary.
@@ -223,6 +236,14 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
         "taxpayer_type.legal_entity_form",
         "taxpayer_type.irpf_income_categories",
         "irpf.estimation_regime",
+        "irpf.objective_estimation_modulos_iae_epigraph",
+        "irpf.objective_estimation_modulos_module_1_units",
+        "irpf.objective_estimation_modulos_module_2_units",
+        "irpf.objective_estimation_modulos_module_3_units",
+        "irpf.objective_estimation_modulos_module_4_units",
+        "irpf.objective_estimation_modulos_module_5_units",
+        "irpf.objective_estimation_modulos_module_6_units",
+        "irpf.objective_estimation_modulos_module_7_units",
         "iva.group_member_enrolled",
         "iva.group_dominant_entity_enrolled",
         "iva.sii_enrolled",
@@ -278,7 +299,7 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
             routing_profile_id=routing_profile_id,
         )
 
-        record = read_active_profile(state, schema=schema)
+        record = state.active_profile_record(schema=schema)
     assert record is not None
     assert record.profile_id == "ffffffff-ffff-4fff-8fff-ffffffffffff"
     # The fact survives the encrypted boundary with its exact value;

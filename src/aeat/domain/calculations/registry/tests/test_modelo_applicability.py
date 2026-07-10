@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -30,9 +31,16 @@ from ..applicability import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
+class _FactUpdateParams(TypedDict, total=False):
+    pays_rent_with_retencion: bool
+    does_intracomunitario: bool
+    third_party_transactions_above_347_threshold: bool
+
+
 _PERIODIC_IVA_MODELOS = ("303", "390")
 _NON_PERIODIC_IVA_REGIMES = (IVARegime.EXENTO, IVARegime.RECARGO_EQUIVALENCIA)
-_FACT_GATED_MODELO_CASES = (
+_FACT_GATED_MODELO_CASES: tuple[tuple[str, _FactUpdateParams], ...] = (
     ("115", {"pays_rent_with_retencion": True}),
     ("180", {"pays_rent_with_retencion": True}),
     ("349", {"does_intracomunitario": True}),

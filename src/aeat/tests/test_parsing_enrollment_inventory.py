@@ -14,6 +14,22 @@ Exclusions
 - ``test_*.py`` files: test suites verify the helpers and may use direct calls.
 - ``src/aeat/core/parsing/_dates.py``: the canonical implementation itself.
 - ``src/aeat/core/parsing/_utils.py``: the canonical bool-parsing implementation.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the shared production AST inventory used by this parsing
+        enrollment gate.
+    :func:`~core.parsing.parse_iso8601_date`
+        Public ISO date parser that production callers should use instead of
+        direct ``date.fromisoformat`` calls.
+    :func:`~core.parsing.parse_ddmmyyyy_date`
+        Public Spanish day-first parser for Sede and form-input dates.
+    :func:`~core.parsing.parse_bool`
+        Public boolean-token parser that replaces inline lower-case string
+        comparisons.
+
+Date, day-first, and boolean parsing must funnel through one canonical helper
+each, so a locale or format quirk is fixed in exactly one place.
 """
 
 from __future__ import annotations
@@ -24,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, production_ast_items, production_python_files, repo_relative
+from ._inventory import SRC_AEAT, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -80,34 +96,37 @@ def _fromisoformat_call_linenos(tree: ast.AST) -> Iterator[int]:
 
 
 # ---------------------------------------------------------------------------
-# Text-based detection of inline boolean parsing patterns
-# ---------------------------------------------------------------------------
-
-_INLINE_BOOL_PATTERNS: tuple[str, ...] = (
-    '.lower() == "true"',
-    '.lower() == "false"',
-    ".lower() == 'true'",
-    ".lower() == 'false'",
-)
-
-
-def _inline_bool_violations(path: Path, lines: list[str]) -> list[str]:
-    """Return ``file:line`` strings for inline bool-parsing patterns."""
-    hits: list[str] = []
-    for lineno, line in enumerate(lines, start=1):
-        stripped = line.strip()
-        if stripped.startswith("#"):
-            continue
-        for pattern in _INLINE_BOOL_PATTERNS:
-            if pattern in line:
-                hits.append(f"{repo_relative(path)}:{lineno}")
-                break
-    return hits
-
-
-# ---------------------------------------------------------------------------
 # Violation collectors
 # ---------------------------------------------------------------------------
+
+
+def _is_lower_call(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "lower"
+        and not node.args
+        and not node.keywords
+    )
+
+
+def _is_bool_literal(node: ast.AST) -> bool:
+    return isinstance(node, ast.Constant) and node.value in {"true", "false"}
+
+
+def _inline_bool_linenos(tree: ast.AST) -> Iterator[int]:
+    """Yield line numbers of ``value.lower() == "true"/"false"`` comparisons."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Compare):
+            continue
+        if len(node.ops) != 1 or not isinstance(node.ops[0], ast.Eq):
+            continue
+        if len(node.comparators) != 1:
+            continue
+        if (_is_lower_call(node.left) and _is_bool_literal(node.comparators[0])) or (
+            _is_bool_literal(node.left) and _is_lower_call(node.comparators[0])
+        ):
+            yield node.lineno
 
 
 def _collect_fromisoformat_violations(
@@ -129,14 +148,13 @@ def _collect_fromisoformat_violations(
     return violations
 
 
-def _collect_inline_bool_violations() -> list[str]:
+def _collect_inline_bool_violations(source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
     violations: list[str] = []
-    for path in production_python_files():
+    for path, tree in production_ast_items(source_tree_ast):
         if _is_excluded(path):
             continue
-        source = path.read_text(encoding="utf-8", errors="replace")
-        lines = source.splitlines()
-        violations.extend(_inline_bool_violations(path, lines))
+        for lineno in _inline_bool_linenos(tree):
+            violations.append(f"{repo_relative(path)}:{lineno}")
     return violations
 
 
@@ -163,13 +181,13 @@ def test_no_bare_date_fromisoformat(source_tree_ast: Mapping[Path, ast.AST]) -> 
         )
 
 
-def test_no_inline_bool_lower_comparison() -> None:
+def test_no_inline_bool_lower_comparison(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Zero ``value.lower() == \"true\"/\"false\"`` patterns survive in production modules.
 
     All boolean string parsing must go through ``_parse_bool`` from
     ``aeat.core.parsing._utils``.
     """
-    violations = _collect_inline_bool_violations()
+    violations = _collect_inline_bool_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(

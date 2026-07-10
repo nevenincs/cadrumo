@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-04'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
 ---
@@ -89,16 +89,68 @@ test file carried non-authored WIP during this pass. The named follow-up is the 
 W05.P08 F8 verification row, resuming when the selector coverage owner has cleared or
 landed that test update.
 
+## 2026-07-04 D9 Status Refresh
+
+Current `vault plan status 2026-06-26-binding-vocabulary-cli-cohesion-plan --json`
+reports 23 of 27 steps complete, `next_open_step` = `W04.P07.S21`, and
+`exec_missing_ids` = `[]`. The open rows at HEAD are now only `W04.P07.S21`,
+`W04.P07.S22`, `W04.P07.S23`, and `W04.P07.S24`; W03 and W05 are checked.
+
+The prior W03 observation-prefix blocker is superseded by landed work. The plan now
+shows `W03.P05.S15` through `W03.P05.S18` and `W03.P06.S19` through
+`W03.P06.S20` checked with exec records.
+
+G1 and G2 have also landed in code. Commit `c9d4cc09b0` renames `app modelo
+bindings preview` to `app modelo bindings resolve`; current CLI help shows the
+bindings subgroup exposing `list` and `resolve`. Commit `03ddcff732` splits
+`config google sync calc pull --compute` into transport-only `pull` plus the read-only
+sibling `compute`; current CLI help shows `export`, `verify`, `pull`, and `compute`.
+This pass added missing S21 and S22 exec records from those landed commits and today's
+focused evidence.
+
+Verification refreshed for the reconciled G1/G2 surface:
+
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py -k "bindings"` passed (`2 passed`).
+- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/tests/test_google_payloads.py` passed (`7 passed`).
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` passed (`140 passed`).
+- `vaultspec-core vault check features --feature binding-vocabulary-cli-cohesion` is clean after rebuilding the feature index.
+
+`test_documented_command_conformance.py` is not clean, but the failure is unrelated to
+this feature: `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md` cites `aeat app agent --layout
+plugin`, where `plugin` is parsed as a nonexistent subcommand, plus an ellipsis command
+path. No failure names `modelo bindings resolve`, `config google sync calc pull`, or
+`config google sync calc compute`.
+
+The S21/S22 checkboxes remain unchecked in this pass only because the plan file carries
+non-authored WIP that removes the template link-rule comment block. Mutating the plan
+checkboxes would violate the abort-on-WIP rule. Once that plan-file WIP is cleared, S21
+and S22 can be checked against the exec records added here.
+
+`W04.P07.S23` is still open on intent. The live command remains `app modelo work
+calculate`, and no landed G3 commit analogous to G1/G2 was found. The ADR acceptance
+note says phase 2.4/W04 is delivered, but current code does not show a work-calculate
+verb rename; this needs coordinator adjudication before any checkbox is claimed. If
+`work calculate` is intentionally retained as the canonical aggregation-engine verb,
+S23 should be closed with a no-rename/no-shift exec record that cites that decision. If
+not, S23 still needs the operator-visible rename sweep.
+
+`W04.P07.S24` remains open until S23 is adjudicated and the documented-command
+conformance failure is either fixed by its owning campaign or formally inventoried as an
+unrelated gate failure for W04 verification.
+
 ## Closure Decision
 
-For Wave 1 D9 purposes, this campaign's remaining tail is honestly drained: every open
-row is formally deferred to a named in-plan follow-up sequence with its blocker named.
-The vault plan remains open by design; no missing exec alert remains.
+For Wave 1 D9 purposes, this campaign's remaining tail is now narrowed rather than fully
+drained: S21/S22 have matching exec evidence and await safe checkbox mutation; S23/S24
+remain open with the blocker above. The vault plan remains open by design; no missing
+exec alert remains.
 
 ## Recommendations
 
-Resume at `W03.P05.S15` once `_ledger_bindings.py` and the affected observation
-carrier files are clean, then run `W03.P05.S18` before starting W04. Resume W04 at
-`W04.P07.S21` only after the locale/operator-surface WIP is clear. Keep S27 open
-until the selector coverage test is green. Do not lift the bindings freeze from this
-campaign: `vault plan status` still reports open steps.
+When the plan-file WIP clears, run `vaultspec-core vault plan step check` for
+`W04.P07.S21` and `W04.P07.S22` if no newer code drift invalidates the evidence. Do
+not check `W04.P07.S23` until the G3/work-calculate intent is adjudicated against the
+accepted ADR note and current command tree. Run `W04.P07.S24` only after S23 is
+resolved and the documented-command conformance failure is either green or explicitly
+inventoried as unrelated. Do not lift the bindings freeze from this campaign:
+`vault plan status` still reports open steps.

@@ -23,6 +23,7 @@ casilla_ids = [
     "cuentas.valoracion",
     "valores.identificacion",
     "valores.valoracion",
+    "inmuebles.valoracion",
 ]
 bindings = [
     "modelo-720-2013.type_1.1-1.tipo-de-registro",
@@ -74,6 +75,9 @@ bindings = [
     "modelo-720-asset-row-identifier",
     "modelo-720-asset-row-valuation",
     "modelo-720-asset-row-acquisition-date",
+    "modelo-720-prior-year-cuentas-valoracion-baseline",
+    "modelo-720-prior-year-valores-valoracion-baseline",
+    "modelo-720-prior-year-inmuebles-valoracion-baseline",
 ]
 export_layouts = ["modelo-720-fichero-aeat"]
 extraction_profiles = ["modelo-720-declaracion-pdf"]

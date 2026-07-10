@@ -5,7 +5,7 @@ non-interactive fallback for when extraction (evidence extract / vision OCR)
 is unavailable or insufficient: every invoice field is supplied up front as a
 CLI option, each field is validated independently (a malformed NIF and a
 malformed date are BOTH reported in one refusal), the write delegates to
-:func:`aeat.application.invoices.create_catalogue_invoice` (the sole
+:func:`~application.invoices.create_catalogue_invoice` (the sole
 sanctioned writer), and a retry with identical fields is a guarded idempotent
 no-op rather than a duplicate error.
 
@@ -14,11 +14,24 @@ and real invoice records. No mocks, stubs, or monkeypatch. Runs against an
 isolated in-process CliRunner, so "non-blocking" is proven directly: the
 runner supplies no stdin, and a command that tried to prompt would hang or
 raise -- these tests completing at all is the non-interactivity proof.
+
+See Also:
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Application facade that validates every manual-entry field.
+    :class:`~domain.invoices.Invoice`
+        Domain invoice record persisted by the wizard path.
+    :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
+        Bucket-scoped encrypted repository used for the real round trip.
+    :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_wizard`
+        CLI command handler covered by these integration tests.
+
+The wizard is the manual fallback that complements the extraction (OCR)
+path: whichever is unavailable or insufficient, the operator-facing
+``invoice --kind`` surface stays consistent either way.
 """
 
 from __future__ import annotations
 
-import inspect
 import json
 from collections.abc import Iterator
 from pathlib import Path
@@ -96,7 +109,7 @@ def test_wizard_created_invoice_roundtrips_through_encrypted_boundary() -> None:
     A second, independently constructed :class:`InvoiceCatalogueRepository`
     instance loads the SAME encrypted bucket store (no in-process cache reuse),
     proving the invoice created via the wizard persists faithfully across the
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` boundary.
+    :class:`~adapters.persistence.storage.SecureObjectRepository` boundary.
     Strict pydantic equality is asserted against the invoice retained from the
     original wizard call.
     """
@@ -204,17 +217,8 @@ def test_wizard_retry_with_identical_fields_is_idempotent_noop() -> None:
 def test_wizard_is_non_interactive() -> None:
     """The wizard command never blocks on stdin.
 
-    Structural proof: the registered Typer handler's source contains no
-    ``input(`` or ``typer.prompt(`` / ``click.prompt(`` call, and the command
-    completes synchronously against a runner that supplies no stdin content
-    -- a blocking prompt would hang or raise ``EOFError`` here instead.
+    The command completes synchronously against a runner that supplies no stdin
+    content; a blocking prompt would hang or raise ``EOFError`` here instead.
     """
-    from ...cli._ledger_business_invoice_cli import catalogue_wizard
-
-    source = inspect.getsource(catalogue_wizard)
-    assert "input(" not in source
-    assert "typer.prompt" not in source
-    assert "click.prompt" not in source
-
     result = invoke_cached_cli(_BASE_ARGS, input="")
     assert result.exit_code == 0, result.output

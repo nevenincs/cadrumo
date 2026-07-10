@@ -2,20 +2,23 @@
 tags:
   - "#adr"
   - "#export-first"
-date: 2026-04-17
-modified: '2026-06-13'
+date: '2026-04-17'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-16-submission-safety-sweep-adr-audit]]"
   - "[[2026-04-18-auth-provider-ecosystem-research]]"
   - "[[2026-04-27-export-first-research]]"
+  - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'
 ---
 
-# export-first-adr
+# export-first-adr | (**status:** `accepted`)
 
 ## status
 
-Proposed — 2026-04-17. Supersedes the implicit "first live filing" milestone direction encoded in `0.2.0-alpha` (milestone #4) and the "unattended filing" framing of `0.3.0-beta` (milestone #5).
+Accepted — ratified 2026-07-10 by the ADR decision-authority ruling pass. Originally self-declared Proposed on 2026-04-17; the decision was subsequently executed in full and has governed the product direction since: the produce-verify-export flow is the shipped canonical path (calculate → verify → export → reconcile pull) and the posture is codified in the always-on `aeat-safety-legal-gates` rule. Supersedes the implicit "first live filing" milestone direction encoded in `0.2.0-alpha` (milestone #4) and the "unattended filing" framing of `0.3.0-beta` (milestone #5).
+
+**Scope amendment — 2026-07-10.** This ADR's live-filing deferral ("moved to the final release milestone (1.0.0), gated behind an explicit opt-in") no longer describes the end state: `2026-04-27-live-submit-permanently-forbidden-adr` (accepted) replaced deferral with permanent prohibition — live AEAT submission is permanently out of scope, the submission code this ADR chose to retain was excised, and the engine at HEAD exposes no transport method. The produce-verify-export re-anchoring — this ADR's core decision — remains in force and is restated by that successor as the controlling product charter.
 
 ## context
 

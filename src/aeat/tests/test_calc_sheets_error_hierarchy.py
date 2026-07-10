@@ -49,18 +49,26 @@ _CALC_SHEETS_ERROR_CASES: tuple[tuple[type[AeatError], str, AeatError], ...] = (
 )
 
 
-def test_calc_sheets_error_contracts_are_registered_and_serializable() -> None:
+@pytest.mark.parametrize(
+    ("error_cls", "expected_code", "instance"),
+    _CALC_SHEETS_ERROR_CASES,
+    ids=lambda case: case.__name__ if isinstance(case, type) else str(case),
+)
+def test_calc_sheets_error_contracts_are_registered_and_serializable(
+    error_cls: type[AeatError],
+    expected_code: str,
+    instance: AeatError,
+) -> None:
     """Each calc_sheets error keeps its hierarchy, registry, and envelope contract."""
-    for error_cls, expected_code, instance in _CALC_SHEETS_ERROR_CASES:
-        assert issubclass(error_cls, AeatError), error_cls.__name__
-        ec = get_registered_error_code(error_cls)
-        assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
-        assert ec.code == expected_code
-        envelope = build_error_envelope(instance)
-        assert isinstance(envelope, ErrorEnvelope)
-        json_text = envelope.model_dump_json()
-        reloaded = ErrorEnvelope.model_validate_json(json_text)
-        assert reloaded == envelope
+    assert issubclass(error_cls, AeatError), error_cls.__name__
+    ec = get_registered_error_code(error_cls)
+    assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"
+    assert ec.code == expected_code
+    envelope = build_error_envelope(instance)
+    assert isinstance(envelope, ErrorEnvelope)
+    json_text = envelope.model_dump_json()
+    reloaded = ErrorEnvelope.model_validate_json(json_text)
+    assert reloaded == envelope
 
 
 # ---------------------------------------------------------------------------
@@ -68,13 +76,17 @@ def test_calc_sheets_error_contracts_are_registered_and_serializable() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_validation_error_mro_does_not_include_value_error() -> None:
-    cases: tuple[tuple[type[AeatError], type[AeatError]], ...] = (
+@pytest.mark.parametrize(
+    ("error_cls", "base_cls"),
+    [
         (BucketValidationError, BucketError),
         (GoogleAuthValidationError, GoogleAuthError),
-    )
-
-    for error_cls, base_cls in cases:
-        assert not issubclass(error_cls, ValueError), error_cls
-        assert issubclass(error_cls, base_cls), error_cls
-        assert issubclass(error_cls, AeatError), error_cls
+    ],
+)
+def test_validation_error_mro_does_not_include_value_error(
+    error_cls: type[AeatError],
+    base_cls: type[AeatError],
+) -> None:
+    assert not issubclass(error_cls, ValueError), error_cls
+    assert issubclass(error_cls, base_cls), error_cls
+    assert issubclass(error_cls, AeatError), error_cls

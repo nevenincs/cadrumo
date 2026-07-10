@@ -3,10 +3,13 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-program'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-program-adr]]'
+  - '[[2026-07-05-arch-remediation-program-audit]]'
+  - '[[2026-07-06-arch-remediation-program-audit]]'
+  - '[[2026-07-06-arch-remediation-program-research]]'
 ---
 
 # `arch-remediation-program` feature index
@@ -17,4 +20,13 @@ Auto-generated index of all documents tagged with `#arch-remediation-program`.
 
 ### adr
 
-- `2026-07-02-arch-remediation-program-adr` - `arch-remediation-program` adr: `architecture remediation program: wave ordering, ratchets, plan topology` | (**status:** `proposed`)
+- `2026-07-02-arch-remediation-program-adr` - `arch-remediation-program` adr: `architecture remediation program: wave ordering, ratchets, plan topology` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-05-arch-remediation-program-audit` - `arch-remediation-program` audit: `Wave 4 closure honesty review`
+- `2026-07-06-arch-remediation-program-audit` - `arch-remediation-program` audit: `ratchet refresh after import-tail reconciliation`
+
+### research
+
+- `2026-07-06-arch-remediation-program-research` - `arch-remediation-program` research: `program decision research bridge`

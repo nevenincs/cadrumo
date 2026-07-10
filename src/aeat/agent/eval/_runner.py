@@ -148,7 +148,8 @@ def _check_response_provenance(
     inspects the decoded JSON ``observations`` rows from a real
     ``modelo.work.calculate`` CLI/MCP dispatch - the payload the operator
     actually reads - and proves the CLI/MCP boundary relayed the registry's
-    ``legal_refs``/``source_refs`` rather than dropping them on the way out
+    ``legal_refs``/``source_refs`` and computed-casilla ``formula_id`` rather
+    than dropping them on the way out
     (the real repro: a real M130 calculate returned correct casilla values
     but no ``legal_refs``/``formula_id`` at the CLI layer).
 
@@ -165,15 +166,38 @@ def _check_response_provenance(
         )
         return False
     ungrounded = 0
+    expected_computed = set(scenario.expected_computed_casillas)
+    expected_computed_seen: set[str] = set()
+    computed_without_formula: list[str] = []
     for observation in response_observations:
         legal_refs = _observation_field(observation, "legal_refs")
         source_refs = _observation_field(observation, "source_refs")
         if not legal_refs or not source_refs:
             ungrounded += 1
+        casilla_id = _observation_field(observation, "casilla_id")
+        if casilla_id is None or str(casilla_id) not in expected_computed:
+            continue
+        casilla_id_text = str(casilla_id)
+        expected_computed_seen.add(casilla_id_text)
+        formula_id = _observation_field(observation, "formula_id")
+        if not formula_id:
+            computed_without_formula.append(casilla_id_text)
     if ungrounded:
         failures.append(
             f"{ungrounded} observation(s) in the {scenario.modelo} {scenario.period} calculate RESPONSE "
             "payload lack legal_refs/source_refs",
+        )
+        return False
+    missing_computed = sorted(expected_computed - expected_computed_seen)
+    if computed_without_formula or missing_computed:
+        details: list[str] = []
+        if computed_without_formula:
+            details.append("missing formula_id: " + ", ".join(sorted(computed_without_formula)))
+        if missing_computed:
+            details.append("absent from RESPONSE observations: " + ", ".join(missing_computed))
+        failures.append(
+            f"{scenario.modelo} {scenario.period} calculate RESPONSE payload lacks computed-casilla "
+            f"formula provenance ({'; '.join(details)})",
         )
         return False
     return True
@@ -274,10 +298,13 @@ def _check_verification_contract(scenario: GoldenScenario, revision: object, fai
 def _iter_casillas(casillas: object) -> Iterable[object]:
     if isinstance(casillas, dict):
         return tuple(casillas.values())
-    # TYPE-IGNORE-RATIONALE-CASILLAS-ITERABLE: ``casillas`` is typed ``object``
-    # at this parse boundary (raw scenario TOML value); the non-dict branch is
-    # only ever a list/tuple in practice, which ``tuple()`` accepts at runtime.
-    return tuple(casillas)  # type: ignore[arg-type]
+    # ``casillas`` is typed ``object`` at this parse boundary (raw scenario
+    # source value); in practice it is always a list or tuple (the registry's
+    # ``ModeloRevision.casillas: tuple[CasillaDefinition, ...]``, or the
+    # caller's ``()`` default), never any other shape.
+    if isinstance(casillas, list | tuple):
+        return tuple(casillas)
+    return ()
 
 
 def run_golden_scenario(
@@ -462,7 +489,7 @@ def check_exit_code_scenario(
     next_action_is_continuation = False
     if envelope_well_formed and next_action_resolves:
         expected_cli_form = _cli_form(scenario.expected_next_action)
-        notice_rows: list[object] = notices if isinstance(notices, list) else []
+        notice_rows: Iterable[object] = notices if isinstance(notices, list) else []
         next_action_is_continuation = any(_cites_continuation(notice, expected_cli_form) for notice in notice_rows)
     if not next_action_is_continuation:
         failures.append(
@@ -485,6 +512,19 @@ def _finding_field(finding: object, field: str) -> object:
     if isinstance(finding, Mapping):
         return finding.get(field)
     return getattr(finding, field, None)
+
+
+def _decoded_string_items(value: object) -> tuple[str, ...]:
+    """Coerce a decoded-JSON finding field to its string items, or empty.
+
+    A JSON array decodes to a Python ``list`` (never any other iterable), so a
+    missing/``None``/malformed field and a genuine empty array both read as
+    "no items" - the same fallback the caller's prior ``value or ()`` guard
+    provided, without widening the element type to bare ``object``.
+    """
+    if isinstance(value, list | tuple):
+        return tuple(str(item) for item in value)
+    return ()
 
 
 def check_under_declaration_scenario(
@@ -537,7 +577,7 @@ def check_under_declaration_scenario(
         )
 
     legal_refs_grounded = any(
-        set(scenario.expected_legal_refs) <= {str(ref) for ref in (_finding_field(f, "legal_refs") or ())}
+        set(scenario.expected_legal_refs) <= set(_decoded_string_items(_finding_field(f, "legal_refs")))
         for f in advisory_findings
     )
     if advisory_finding_present and not legal_refs_grounded:

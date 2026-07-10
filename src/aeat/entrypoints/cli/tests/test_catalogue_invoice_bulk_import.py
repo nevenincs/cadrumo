@@ -1,8 +1,8 @@
 """CLI regression for bulk catalogue-invoice import (``ledger invoice catalogue import``).
 
 Covers the #254 sub-slice 4c (CSV/XLSX bulk import): a spreadsheet of invoice
-rows creates one catalogue :class:`~aeat.domain.invoices.Invoice` per row,
-delegating every write to :func:`aeat.application.invoices.create_catalogue_invoice`
+rows creates one catalogue :class:`~domain.invoices.Invoice` per row,
+delegating every write to :func:`~application.invoices.create_catalogue_invoice`
 (the sole sanctioned writer), a re-import of the identical file is a guarded
 idempotent no-op (every row reports ``skipped_duplicate``), and a malformed row
 is refused with its row number and failing field while the remaining valid
@@ -10,6 +10,19 @@ rows still import.
 
 Real behaviour only: a real encrypted bucket session, the live Typer tree, and
 real CSV/XLSX bytes. No mocks, stubs, or monkeypatch.
+
+See Also:
+    :func:`~entrypoints.cli._ledger_business_invoice_cli.catalogue_import`
+        Typer command exercised by this regression file.
+    :func:`~application.invoices.import_invoices_from_rows`
+        Application service receiving the rows parsed by the CLI.
+    :func:`~application.invoices.read_bulk_invoice_import_rows`
+        CSV/XLSX reader covering required-column and unknown-column refusal.
+    :data:`~application.invoices.BULK_INVOICE_IMPORT_REQUIRED_COLUMNS`
+        Public row-shape contract asserted by the CLI regression.
+
+Catalogue identity and validation are the same contract bulk imports must
+preserve as any other invoice-creation path.
 """
 
 from __future__ import annotations
@@ -59,21 +72,26 @@ def _json_result(output: str) -> dict[str, object]:
     envelope: dict[str, object] = json.loads(output)
     result = envelope["result"]
     assert isinstance(result, dict), f"Expected dict, got {type(result)}"
-    return result
+    # A decoded JSON object always has str keys; the isinstance check above narrows the
+    # runtime class but (correctly) cannot verify the key type, so key/value pairs are
+    # re-keyed through str() to prove the dict[str, object] shape to the type checker.
+    return {str(key): value for key, value in result.items()}
 
 
 def _get_list_value(payload: dict[str, object], key: str) -> list[object]:
     """Safely extract a list value from a JSON payload dict."""
     value = payload[key]
     assert isinstance(value, list), f"Expected list for {key}, got {type(value)}"
-    return value
+    return list[object](value)
 
 
 def _get_dict_value(payload: dict[str, object], key: str) -> dict[str, object]:
     """Safely extract a dict value from a JSON payload dict."""
     value = payload[key]
     assert isinstance(value, dict), f"Expected dict for {key}, got {type(value)}"
-    return value
+    # A decoded JSON object always has str keys; see _json_result for why the
+    # re-keyed comprehension (not a bare return) proves the shape to the checker.
+    return {str(item_key): item_value for item_key, item_value in value.items()}
 
 
 def _get_int_value(payload: dict[str, object], key: str) -> int:
@@ -127,7 +145,7 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
     assert listed.exit_code == 0, listed.output
     listed_payload = _json_result(listed.output)
     rows = _get_list_value(listed_payload, "rows")
-    numbers = {row["invoice_number"] for row in rows if isinstance(row, dict) and "invoice_number" in row}
+    numbers = {row.get("invoice_number") for row in rows if isinstance(row, dict) and "invoice_number" in row}
     assert {"2026-BULK-001", "2026-BULK-002", "2026-BULK-003"}.issubset(numbers)
     exempt_row = next(
         (row for row in rows if isinstance(row, dict) and row.get("invoice_number") == "2026-BULK-003"),

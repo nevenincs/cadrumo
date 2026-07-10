@@ -31,11 +31,14 @@ from ....tests import FIXTURES_DIR
 from .._overview import _local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,
+    PRIMARY_PROFILE_ID,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
     _observed_casilla_observations,
     isolated_calendar_backend,
 )
+
+_SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,7 +57,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         filing_period=Period.from_year_and_code(2025, "1T"),
         observations=_observed_casilla_observations(Decimal("10.00")),
     )
-    with profile_storage_session("operator"):
+    with profile_storage_session(PRIMARY_PROFILE_ID):
         CalculationObservationRepository().save_observation(
             observation,
             source_kind="aeat_sede_justificante",
@@ -164,20 +167,24 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             ),
         )
 
-    with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
+    with profile_create_storage_span(_SECOND_PROFILE_ID):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(
                 state,
-                profile_id="22222222-2222-4222-8222-222222222222",
+                profile_id=_SECOND_PROFILE_ID,
                 display_name="Second Operator",
                 enforce_unique_tax_id=False,
             ),
         )
 
-    with profile_storage_session("second"):
-        second_evidence = _local_calendar_filing_evidence("second", ())
-    with profile_storage_session("operator"):
-        operator_evidence = _local_calendar_filing_evidence("operator", (), expected_tax_id="X1234567L")
+    with profile_storage_session(_SECOND_PROFILE_ID):
+        second_evidence, _second_notice = _local_calendar_filing_evidence(_SECOND_PROFILE_ID, ())
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        operator_evidence, _operator_notice = _local_calendar_filing_evidence(
+            PRIMARY_PROFILE_ID,
+            (),
+            expected_tax_id="X1234567L",
+        )
 
     assert second_evidence == ()
     by_period = {row.period: row for row in operator_evidence}
@@ -201,7 +208,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:
     pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
-    with profile_storage_session("operator"):
+    with profile_storage_session(PRIMARY_PROFILE_ID):
         store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
         artefact = store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
@@ -240,8 +247,8 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
             ),
         )
 
-        evidence = _local_calendar_filing_evidence(
-            "operator",
+        evidence, _notice = _local_calendar_filing_evidence(
+            PRIMARY_PROFILE_ID,
             (),
             expected_tax_id="00000000T",
         )
@@ -266,13 +273,13 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
 
 def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata() -> None:
     csv = "JUST-303-2025-1T"
-    with profile_storage_session("operator"):
-        repo = ModeloRecordCatalogueRepository(bucket_id="operator")
+    with profile_storage_session(PRIMARY_PROFILE_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
         JustificanteRepository().save(_justificante_metadata(csv=csv))
 
-        evidence = _local_calendar_filing_evidence(
-            "operator",
+        evidence, _notice = _local_calendar_filing_evidence(
+            PRIMARY_PROFILE_ID,
             (),
             expected_tax_id="X1234567L",
         )

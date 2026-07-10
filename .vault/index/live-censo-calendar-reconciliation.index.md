@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-censo-calendar-reconciliation'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-04'
+modified: '2026-07-04'
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-W01-P01-S01]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W01-P01-S02]]'
@@ -12,6 +12,7 @@ related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-W02-P02-S04]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S05]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S06]]'
+  - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S07]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S08]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S09]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S12]]'
@@ -64,7 +65,7 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 - `2026-06-05-live-censo-calendar-reconciliation-W02-P02-S04` - W02.P02.S04 - code review and audit
 - `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S05` - W03.P03.S05 - live Modelo 036 censo refresh attempt
 - `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S08` - W03.P03.S08 - live-backed calendar filing and message evidence
-- `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S06` - W03.P03.S06-S07 - censo calendar hardening and live verification attempt
+- `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S06` - W03.P03.S06 - reconcile censo snapshot into profile-derived taxpayer model and obligation enrolment facts
 - `2026-06-05-live-censo-calendar-reconciliation-W04-P04-S09` - `live-censo-calendar-reconciliation` `W04.P04.S09` exec - fresh profile password unlock
 - `2026-06-05-live-censo-calendar-reconciliation-W04-P04-S12` - `live-censo-calendar-reconciliation` `W04.P04.S12` exec - noninteractive unlock fail-fast
 - `2026-06-05-live-censo-calendar-reconciliation-W05-P05-S13` - `live-censo-calendar-reconciliation` `W05.P05.S13` exec - authenticated live surface proof
@@ -87,6 +88,7 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 - `2026-06-12-live-censo-calendar-reconciliation-W05-P05-S26` - W05.P05.S26 - ModeloRecord AEAT acceptance evidence invariant
 - `2026-06-12-live-censo-calendar-reconciliation-W05-P05-S27` - W05.P05.S27 - External evidence requires AEAT acceptance
 - `2026-06-12-live-censo-calendar-reconciliation-W05-P05-S29` - W05.P05.S29 - Live command-tree pull-only drift guard
+- `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates
 
 ### plan
 

@@ -54,6 +54,7 @@ def _run_modulos_engine(
     modulo_3: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal]:
     snapshot = _committed_snapshot("303", 2025, "4T")
+    assert snapshot.filing_period is not None
     text_inputs = {"modulos-iva-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
         snapshot,

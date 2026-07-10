@@ -49,9 +49,13 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 _COMPLETENESS_MANIFEST_LEGAL_REFS = frozenset(
     [
         "ley-58-2003:art-93",
+        "ley-58-2003:da-18",
         "orden-hap-72-2013:art-1",
         "orden-hap-72-2013:art-2",
         "orden-hap-72-2013:art-7",
+        "rd-1065-2007:art-42-bis",
+        "rd-1065-2007:art-42-ter",
+        "rd-1065-2007:art-54-bis",
     ]
 )
 
@@ -88,6 +92,9 @@ def test_committed_modelo_720_resolves_revision_by_filing_year(
 
 def test_committed_modelo_720_is_informative_only() -> None:
     modelo, _ = _load_modelo_720()
+    assert modelo.calculation_class == "informative", (
+        "Modelo 720 must be declared calculation_class='informative' in its manifest"
+    )
     for revision in modelo.revisions.values():
         assert revision.formulas == (), (
             f"revision {revision.id!r} declares calculation formulas; "

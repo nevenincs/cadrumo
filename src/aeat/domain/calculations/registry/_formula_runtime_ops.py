@@ -2,19 +2,19 @@
 
 The formula evaluator delegates arithmetic dispatch, dated parameter lookup,
 rounding, and input validation here while executing
-:class:`~aeat.domain.calculations.registry.ModeloRevision` formula graphs.
-Helpers raise :class:`~aeat.domain.calculations.registry.RegistryValidationError`
-so :func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
+:class:`~domain.calculations.registry.ModeloRevision` formula graphs.
+Helpers raise :class:`~domain.calculations.registry.RegistryValidationError`
+so :func:`domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
 reports contract failures through the registry error channel.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._formula_runtime`
+    :mod:`domain.calculations.registry._formula_runtime`
         Snapshot evaluator that calls these helpers while materialising
-        :class:`~aeat.domain.calculations.registry.RegistrySnapshot` outputs.
-    :mod:`aeat.domain.calculations.registry._runtime_graph`
+        :class:`~domain.calculations.registry.RegistrySnapshot` outputs.
+    :mod:`domain.calculations.registry._runtime_graph`
         Formula graph walkers that discover the casilla, binding, relation, and
         parameter refs consumed before operation dispatch starts.
-    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
         Registry authority loaded by :func:`read_parameter` for ad hoc parameter
         reads outside snapshot execution.
 """
@@ -25,6 +25,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,6 +36,9 @@ from ._ids import CasillaId, validated_casilla_id
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 
 if TYPE_CHECKING:
+    from _typeshed import SupportsAllComparisons
+
+    from ._authority import ValidatedRegistryAuthority
     from ._formula_runtime import _EvalContext
 
 _ZERO = Decimal("0")
@@ -46,9 +50,9 @@ _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period
 class UnresolvedFormulaDependencyError(RegistrySnapshotError):
     """Raised internally when a non-blocking source gap makes a formula unresolved.
 
-    Shared between :mod:`~aeat.domain.calculations.registry._formula_runtime`
+    Shared between :mod:`~domain.calculations.registry._formula_runtime`
     and its per-family op-evaluator siblings (e.g.
-    :mod:`~aeat.domain.calculations.registry._formula_runtime_irnr`) so a
+    :mod:`~domain.calculations.registry._formula_runtime_irnr`) so a
     family module can signal a deferred dependency without importing back
     into the dispatcher module.
     """
@@ -105,9 +109,9 @@ def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
     """Evaluate a resolved formula operation over decimal operands.
 
     Operation names mirror
-    :class:`~aeat.domain.calculations.registry.FormulaExpression` ``op`` values
+    :class:`~domain.calculations.registry.FormulaExpression` ``op`` values
     consumed by
-    :func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
+    :func:`domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
     """
     if op in {"add", "sum", "previous_period_sum"}:
         if op == "previous_period_sum":
@@ -228,7 +232,7 @@ def resolve_bracket(
 def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
     """Resolve one dated value from a :class:`ParameterDefinition`.
 
-    Exactly one :class:`~aeat.domain.calculations.registry.DatedValue` must match
+    Exactly one :class:`~domain.calculations.registry.DatedValue` must match
     the selected date axes for the parameter lookup to be deterministic.
     """
     if not parameter.values:
@@ -250,7 +254,7 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
 def apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
     """Apply a registry rounding rule to a decimal formula result.
 
-    ``money-2`` uses :func:`aeat.core.money.round_to_cents`; ``integer`` uses
+    ``money-2`` uses :func:`core.money.round_to_cents`; ``integer`` uses
     half-up quantization for registry-authored integer targets.
     """
     if rounding is None:
@@ -276,8 +280,8 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
 ) -> dict[CasillaId, Decimal]:
     """Canonicalise decimal input keys against a :class:`ModeloRevision`.
 
-    Raw string keys become validated :class:`~aeat.domain.calculations.registry.CasillaId`
-    values, then :func:`aeat.domain.calculations.registry._casilla_membership.undeclared_casilla_ids`
+    Raw string keys become validated :class:`~domain.calculations.registry.CasillaId`
+    values, then :func:`domain.calculations.registry._casilla_membership.undeclared_casilla_ids`
     rejects inputs outside the revision's declared casilla set.
     """
     invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
@@ -318,7 +322,11 @@ def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 
-def reject_unknown_external_values[Key](items: Mapping[Key, Decimal], known_ids: set[Key], label: str) -> None:
+def reject_unknown_external_values[Key: SupportsAllComparisons](
+    items: Mapping[Key, Decimal],
+    known_ids: set[Key],
+    label: str,
+) -> None:
     """Reject external ids not declared by the current registry snapshot."""
     unknown = sorted(set(items).difference(known_ids))
     if unknown:
@@ -337,6 +345,13 @@ def _require_non_empty(op: str, args: list[Decimal]) -> None:
         raise RegistryValidationError(f"formula op {op!r} expects at least one arg")
 
 
+@cache
+def _default_read_parameter_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority:
+    from ._authority import ValidatedRegistryAuthority
+
+    return ValidatedRegistryAuthority.load(root, source_root=source_root)
+
+
 def read_parameter(
     modelo_id: str,
     revision_id: str,
@@ -349,14 +364,19 @@ def read_parameter(
 
     The ad hoc public helper loads the same validated registry authority used by
     snapshot callers, narrows to the selected
-    :class:`~aeat.domain.calculations.registry.ModeloRevision`, and delegates the
+    :class:`~domain.calculations.registry.ModeloRevision`, and delegates the
     dated value lookup to :func:`resolve_parameter`.
     """
     from ....core.resources import bundled_path
     from ._authority import ValidatedRegistryAuthority
 
-    root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
-    authority = ValidatedRegistryAuthority.load(root, source_root=bundled_path())
+    source_root = bundled_path()
+    if registry_root is None:
+        root = bundled_path("registry", "aeat")
+        authority = _default_read_parameter_authority(root, source_root)
+    else:
+        root = registry_root
+        authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
     try:
         modelo_match = authority.modelo(modelo_id)
     except RegistrySnapshotError as exc:

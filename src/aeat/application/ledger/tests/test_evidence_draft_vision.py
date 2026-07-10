@@ -5,6 +5,19 @@ tax ids, unparsable dates/amounts) and the full transport against a real loopbac
 Ollama HTTP server (no mocks) -- exactly the harness
 ``_llm_vision_evidence_support._run_against_loopback_ollama`` already uses for the
 classification vision path.
+
+See Also:
+    :class:`~application.ledger._evidence_draft_vision.LocalVisionInvoiceFieldExtractor`
+        On-host Ollama transport exercised through the loopback server.
+    :func:`~application.ledger._evidence_draft_vision.parse_vision_extraction_response`
+        JSON-object recovery and strict schema boundary covered by adversarial
+        response cases.
+    :func:`~application.ledger._evidence_draft_vision._ground_extracted_fields`
+        Grounded re-validation step that rejects hallucinated identifiers and
+        unparsable values.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        Text-layer-first orchestration path that routes scan-only evidence to
+        this local vision fallback.
 """
 
 from __future__ import annotations
@@ -16,6 +29,7 @@ import pytest
 
 from ....core.config import load_settings
 from ....tests.secure_sql import TestRuntimeProfile
+from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import InvoiceDraft
 from .._evidence_draft_vision import (
     LocalVisionInvoiceFieldExtractor,
@@ -36,7 +50,7 @@ _SUPPLIER_CIF = "B12345674"
 
 
 def _extraction_json(**overrides: str | None) -> str:
-    payload = {
+    payload: dict[str, str | None] = {
         "supplier_tax_id": _SUPPLIER_CIF,
         "invoice_number": "2026-0142",
         "invoice_date": "10/03/2026",
@@ -64,12 +78,12 @@ class TestParseVisionExtractionResponse:
         assert parsed.invoice_number == "2026-0142"
 
     def test_no_json_object_refuses(self) -> None:
-        with pytest.raises(Exception, match="no parsable JSON object"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no parsable JSON object"):
             parse_vision_extraction_response("I could not read the image clearly.")
 
     def test_schema_violation_refuses(self) -> None:
         """A non-string field value (e.g. a nested object) fails strict schema validation."""
-        with pytest.raises(Exception, match="schema validation"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="schema validation"):
             parse_vision_extraction_response('{"supplier_tax_id": {"nested": "object"}}')
 
 

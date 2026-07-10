@@ -376,7 +376,7 @@ async def fetch_notifications_summary(
     Args:
         session: An authenticated :class:`AeatSession` whose encrypted
             browser state carries valid AEAT cookies.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         A :class:`NotificationsSnapshot` parsed from the live HTML.
@@ -398,7 +398,7 @@ async def fetch_notifications_query(
 
     Args:
         session: An authenticated :class:`AeatSession`.
-        settings: Optional :class:`aeat.core.config.Settings` override.
+        settings: Optional :class:`core.config.Settings` override.
 
     Returns:
         A :class:`NotificationsSnapshot` parsed from the live HTML.

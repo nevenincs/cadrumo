@@ -9,7 +9,7 @@ backend.
 ``CertificateBackend.HTTPX_FALLBACK`` remains available as a dispatch target so
 certificate health checks return a structured :class:`HandshakeResult` instead
 of attempting an unsafe downgrade. Browser sessions should use
-:class:`~aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`.
+:class:`~adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ class HttpxFallbackBackend(_CertBackend):
 
     Verify-only backend; rejects any attempt to preload a browser
     context with :class:`AuthConfigurationError`. See
-    :class:`~aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
+    :class:`~adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
     for the interactive counterpart.
     """
 

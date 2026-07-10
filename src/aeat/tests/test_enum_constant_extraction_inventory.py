@@ -6,6 +6,21 @@ documented escape hatches.
 
 Canonical definition sites are excluded from every scan; the test
 asserts the *non-canonical* production code is clean.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the package-file and regex inventory helpers used by this
+        literal-survivor gate.
+    :class:`~core.aggregation.BindingSourceKind`
+        Canonical source-kind enum whose value strings must not drift back into
+        runtime literals.
+    :mod:`~core.external_constants`
+        Central constant registry for external encodings, extensions, MIME
+        strings, hostnames, and route fragments.
+
+The source-kind enum is the single closed taxonomy for binding sources; this
+inventory keeps that consolidation from regressing back into scattered
+runtime literals.
 """
 
 from __future__ import annotations
@@ -16,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, package_python_files, regex_line_hits
+from ._inventory import SRC_AEAT, non_test_package_python_files, regex_line_hits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,12 +59,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
 
 def _production_py_files() -> tuple[Path, ...]:
     """Return all non-test Python source files under src/aeat/."""
-    return tuple(
-        p
-        for p in package_python_files(include_data=True)
-        if not any(part.startswith("test_") or part == "__pycache__" for part in p.parts)
-        and p not in _CANONICAL_DEFINITIONS
-    )
+    return tuple(p for p in non_test_package_python_files(include_data=True) if p not in _CANONICAL_DEFINITIONS)
 
 
 def _scan(files: Iterable[Path], pattern: re.Pattern[str], skip_comment_lines: bool = True) -> list[str]:

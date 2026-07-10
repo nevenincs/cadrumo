@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#mandatory-citations'
 date: '2026-04-25'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-25-mandatory-citations-research]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
 ---
 
-# `mandatory-citations` adr (**status:** `accepted`)
+# `mandatory-citations` adr | (**status:** `accepted`)
 
 ## Problem Statement
 

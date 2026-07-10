@@ -1,7 +1,7 @@
-"""Core-layer :class:`~aeat.core.errors.ErrorCode` registry declarations.
+"""Core-layer :class:`~core.errors.ErrorCode` registry declarations.
 
 Rows map core exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
@@ -343,6 +343,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE_VERIFICATION",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_storage_corpus_bundle_verification",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.corpus_manifest._bundle_signing.CorpusBundleSigningError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNATURE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle_signature",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.corpus_manifest._bundle_signing.CorpusBundleSigningKeyNotFoundError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNING_KEY_NOT_FOUND",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_corpus_bundle_signing_key_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

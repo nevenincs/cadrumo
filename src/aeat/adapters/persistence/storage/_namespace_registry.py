@@ -335,6 +335,17 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+PROFILE_PRORRATA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_prorrata_register",
+    namespace="aeat.persistence.profile.prorrata_register",
+    owner="aeat.adapters.persistence.profile.prorrata_register",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="repair_integrity_decisions",
     namespace="aeat.application.repair_integrity.decisions",
@@ -526,6 +537,16 @@ LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+M145_COMMUNICATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="m145_communication_record",
+    namespace="aeat.application.modelo.m145_communication_record",
+    owner="aeat.application.modelo",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="m145-communication:{bucket_id}:{communication_record_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_snapshot_base_probe",
     namespace="aeat.application.live.test_snapshot_base_probe",
@@ -651,6 +672,16 @@ AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
 CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="clave_movil_diagnostics",
     namespace="aeat.outbound.aeat.auth.clave_movil.diagnostics",
+    owner="aeat.adapters.outbound.aeat.auth",
+    sensitivity=SensitivityClass.SESSION,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{diagnostic_id_or_timestamp_iso}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+)
+CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="clave_permanente_diagnostics",
+    namespace="aeat.outbound.aeat.auth.clave_permanente.diagnostics",
     owner="aeat.adapters.outbound.aeat.auth",
     sensitivity=SensitivityClass.SESSION,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -1052,6 +1083,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         PROFILE_ASSETS_LEDGER_NAMESPACE,
         PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
         PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
+        PROFILE_PRORRATA_REGISTER_NAMESPACE,
         REPAIR_INTEGRITY_DECISION_NAMESPACE,
         APPLICATION_FILING_HISTORY_NAMESPACE,
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -1069,6 +1101,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_CENSO_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,
+        M145_COMMUNICATION_RECORD_NAMESPACE,
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         TEST_SESSION_LIFECYCLE_NAMESPACE,
         TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
@@ -1081,6 +1114,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         ATTACHMENT_MANIFEST_NAMESPACE,
         AEAT_BROWSER_SESSION_NAMESPACE,
         CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+        CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE,
         GOOGLE_OAUTH_CLIENT_NAMESPACE,
         GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -1121,6 +1155,7 @@ __all__ = [
     "BUCKET_MANIFEST_FILENAME",
     "CALCULATION_OBSERVATIONS_NAMESPACE",
     "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
+    "CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE",
     "DOMAIN_NAMESPACE_DEFINITIONS",
     "GOOGLE_CREDENTIAL_SOURCE_NAMESPACE",
     "GOOGLE_DRIVE_CONFIG_NAMESPACE",
@@ -1145,6 +1180,7 @@ __all__ = [
     "LLM_CACHE_NAMESPACE",
     "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
+    "M145_COMMUNICATION_RECORD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE",
@@ -1152,6 +1188,7 @@ __all__ = [
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
     "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
+    "PROFILE_PRORRATA_REGISTER_NAMESPACE",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "SECRET_RECORD_SCHEMA_VERSION",
     "SECURE_OBJECT_CATALOGUE_KEY",

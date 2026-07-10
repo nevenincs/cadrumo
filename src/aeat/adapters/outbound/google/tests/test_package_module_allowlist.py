@@ -1,11 +1,23 @@
-"""Module allow-list for the Google OAuth Desktop adapter package.
+"""Module allow-list for the Google OAuth Desktop adapter tests package.
 
-Pins the exact set of `.py` files under
-`src/aeat/adapters/outbound/google/`. A new untracked file fails the
-gate so module additions are deliberate.
+Pins the accepted ``.py`` files in the directory containing this test. A
+new untracked test module fails the gate so additions are deliberate and
+carry local rationale in ``_ALLOWED_MODULES``; stale allow-list entries
+are enforced for test modules by the ``test_`` prefix. The test
+introspects the source tree directly rather than importing the package,
+so it stays runnable even when the broader import chain is broken during
+adapter restructuring.
 
-The test introspects the source tree directly (not via Python import)
-so it stays runnable even when the broader import chain is broken.
+See Also:
+    :mod:`~adapters.outbound.google`
+        Public Google outbound adapter facade whose colocated tests are
+        guarded by this inventory check.
+    :mod:`~adapters.outbound.google._oauth_flow`
+        Desktop OAuth flow surface whose legacy predecessors remain outside
+        the allowed module list.
+    :mod:`~adapters.outbound.google._session_store`
+        Secure per-profile OAuth session persistence enrolled as a deliberate
+        package module.
 """
 
 from __future__ import annotations
@@ -29,14 +41,13 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
         "_errors.py",
-        "_impersonation.py",  # google-sa-impersonation ADR: service-account impersonation credential source
+        "_impersonation.py",  # service-account impersonation credential source
         "_oauth_flow.py",
         "_active_profile.py",
         "_records.py",
         "_session_store.py",
         "test_api.py",  # contract: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",
-        "test_calc_sheets_apply.py",
         "test_calc_sheets_apply_evidence.py",  # online Evidencia render + offline/online evidence parity
         "test_calc_sheets_export_integration.py",  # offline request-pipeline integration for live export
         "test_calc_sheets_offline_online_conformance.py",  # offline/online renderer conformance
@@ -49,7 +60,8 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_drive_folder_listing.py",  # contract (#262): Drive-folder bulk listing/filter/pagination/refusal
         "test_drive_folder_bulk_fetch_roundtrip.py",  # contract (#262): folder sweep fetch-and-encrypt-or-refuse
         "test_grid_resize.py",
-        "test_impersonation.py",  # google-sa-impersonation ADR: ADC discovery + IAM refusal + config validation
+        "test_impersonation.py",  # service-account ADC discovery, IAM refusal, and config validation
+        "test_impersonation_live.py",  # live opt-in IAM token minting for provisioned service accounts
         "test_oauth_flow.py",  # contract: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
         "test_package_module_allowlist.py",
@@ -80,6 +92,11 @@ def test_only_allowed_modules_present_in_package() -> None:
 
     found_files = {entry.name for entry in _PACKAGE_ROOT.iterdir() if entry.is_file() and entry.suffix == ".py"}
     unexpected = sorted(found_files - _ALLOWED_MODULES)
+    missing_tests = sorted(name for name in _ALLOWED_MODULES - found_files if name.startswith("test_"))
     assert unexpected == [], (
         f"unexpected .py files in {_PACKAGE_ROOT.name}: {unexpected}; add to _ALLOWED_MODULES with rationale or remove"
+    )
+    assert missing_tests == [], (
+        f"allowed test .py files missing from {_PACKAGE_ROOT.name}: {missing_tests}; "
+        "remove stale _ALLOWED_MODULES entries or restore the files"
     )

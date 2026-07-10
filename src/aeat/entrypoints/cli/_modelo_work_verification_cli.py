@@ -37,7 +37,6 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     derive_taxpayer_files_economic_activity,
     file_modelo_revision,
-    get_work_unit,
     require_profile_ready_for_work_unit,
     verify_modelo_revision,
 )
@@ -50,6 +49,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _profile_to_taxpayer
+from ._modelo_cli_support import load_calculation_revision, load_work_unit
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -62,10 +62,17 @@ from ._modelo_payloads import (
 from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
+    m184_socio_handoff_notices,
+    next_action_notice,
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
 )
+
+_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
+_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
+_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
+_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
 
 
 # KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
@@ -128,22 +135,10 @@ def _register_work_verify_command(
             str | None,
             typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
         ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        revision: _RevisionOpt = None,
         work_unit_id: Annotated[
             str | None,
             typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
@@ -185,7 +180,7 @@ def _register_work_verify_command(
                 selector=select.to_calculation_revision_selector().value,
                 default_for="verify",
             )
-            require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
+            require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
             report = verify_modelo_revision(
                 selected_revision.calculation_revision_id,
@@ -205,6 +200,35 @@ def _register_work_verify_command(
         result = WorkVerifyResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.verify", *verification_report_lines(report)]
         notices = verification_report_notices(report)
+        if report.granted_verificado_completo:
+            notices.append(
+                next_action_notice(
+                    "modelo.work.verify.next_action_granted",
+                    tr(
+                        "cli.app.modelo.work.verify_next_action_granted",
+                        default=("Verification passed. Export the filing artefact with `aeat app modelo export`."),
+                    ),
+                    suggestion="aeat app modelo export",
+                ),
+            )
+        else:
+            notices.append(
+                next_action_notice(
+                    "modelo.work.verify.next_action_incomplete",
+                    tr(
+                        "cli.app.modelo.work.verify_next_action_incomplete",
+                        default=(
+                            "Verification found blocking items (see the notices above). "
+                            "Resolve them, recalculate with `aeat app modelo work calculate`, "
+                            "then re-run `aeat app modelo work verify`."
+                        ),
+                    ),
+                    suggestion=f"aeat app modelo work calculate {selected_revision.work_unit_id}",
+                ),
+            )
+        notices.extend(
+            m184_socio_handoff_notices(load_calculation_revision(selected_revision.calculation_revision_id)),
+        )
         _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
 
         if not report.granted_verificado_completo:
@@ -225,14 +249,8 @@ def _register_work_dependencies_command(
             int,
             typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
         ],
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
+        modelo: _ModeloOpt = None,
+        period: _PeriodOpt = None,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -434,22 +452,10 @@ def _register_work_file_command(
             str | None,
             typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
         ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        revision: _RevisionOpt = None,
         work_unit_id: Annotated[
             str | None,
             typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
@@ -502,7 +508,7 @@ def _register_work_file_command(
                 selector=select,
                 default_for="file",
             )
-            require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
+            require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
             # A revision already in PRESENTADO is the current filed answer, so the
             # file call is a guarded-idempotent no-op that returns the existing
@@ -548,6 +554,9 @@ def _register_work_file_command(
                 ),
             )
             lines.append(noop_message)
+        notices.extend(
+            m184_socio_handoff_notices(load_calculation_revision(record.calculation_revision_id)),
+        )
         _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)
 
 

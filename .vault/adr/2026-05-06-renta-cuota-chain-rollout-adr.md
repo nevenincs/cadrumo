@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#renta-cuota-chain-rollout'
 date: '2026-05-06'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-06-renta-cuota-chain-rollout-plan]]'
   - '[[2026-04-21-modelo-100-renta-research]]'
@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-renta-cuota-chain-rollout-research]]'
 ---
 
-# `renta-cuota-chain-rollout` adr
+# `renta-cuota-chain-rollout` adr | (**status:** `accepted`)
 
 ## Context
 

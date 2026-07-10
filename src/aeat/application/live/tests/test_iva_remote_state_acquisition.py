@@ -625,16 +625,22 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
 
 
 def test_acquisition_payloads_require_explicit_auth_outcome() -> None:
+    # Deliberately omits the required `auth` field to prove pydantic's own
+    # validation refuses it; model_validate (not the constructor) is used so
+    # the omission is a runtime ValidationError, not a static missing-argument
+    # error.
     with pytest.raises(ValidationError) as report_exc:
-        IvaRemoteStateAcquisitionReport(
-            output_root="missing-auth-output",
-            year_from=2024,
-            year_to=2024,
-            target_year=2026,
-            target_period=_TARGET_1T,
-            filed_history=None,
-            wallet=None,
-            outcomes=(),
+        IvaRemoteStateAcquisitionReport.model_validate(
+            {
+                "output_root": "missing-auth-output",
+                "year_from": 2024,
+                "year_to": 2024,
+                "target_year": 2026,
+                "target_period": _TARGET_1T,
+                "filed_history": None,
+                "wallet": None,
+                "outcomes": (),
+            },
         )
 
     assert any(error["loc"] == ("auth",) and error["type"] == "missing" for error in report_exc.value.errors())

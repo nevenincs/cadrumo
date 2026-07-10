@@ -16,17 +16,28 @@ LLM run telemetry is read from encrypted local secure-object storage and the
 auth probe reads only the locally persisted session token's metadata.
 
 This module is the transport adapter over
-:func:`~aeat.application.diagnostics_run_health.build_run_health_report`,
-:func:`~aeat.application.diagnostics_run_health.list_recent_runs`,
-:func:`~aeat.application.diagnostics_run_health.build_latency_report`,
-:func:`~aeat.application.diagnostics_run_health.build_error_breakdown`, and
-:func:`~aeat.application.diagnostics_run_health.build_llm_usage_report`. It
-emits :class:`~aeat.entrypoints.cli._diagnostics_payloads.RunHealthResult`,
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.RunsListResult`,
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.LatencyResult`,
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
-and :class:`~aeat.entrypoints.cli._diagnostics_payloads.LlmUsageResult`
+:func:`~application.diagnostics_run_health.build_run_health_report`,
+:func:`~application.diagnostics_run_health.list_recent_runs`,
+:func:`~application.diagnostics_run_health.build_latency_report`,
+:func:`~application.diagnostics_run_health.build_error_breakdown`, and
+:func:`~application.diagnostics_run_health.build_llm_usage_report`. It
+emits :class:`~entrypoints.cli._diagnostics_payloads.RunHealthResult`,
+:class:`~entrypoints.cli._diagnostics_payloads.RunsListResult`,
+:class:`~entrypoints.cli._diagnostics_payloads.LatencyResult`,
+:class:`~entrypoints.cli._diagnostics_payloads.ErrorsBreakdownResult`,
+and :class:`~entrypoints.cli._diagnostics_payloads.LlmUsageResult`
 through :func:`_emit_envelope`.
+
+See Also:
+    :mod:`~application.diagnostics_run_health`
+        Application service layer that builds the local-only diagnostic
+        reports exposed by this CLI group.
+    :mod:`~entrypoints.cli._diagnostics_payloads`
+        Typed JSON payload schemas emitted by these diagnostics commands.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        Nested telemetry subcommand group for the default-off remote tier.
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Encrypted local run-timing store read by the application diagnostics.
 """
 
 from __future__ import annotations

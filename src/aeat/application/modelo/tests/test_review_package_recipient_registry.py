@@ -1,13 +1,24 @@
 """Recipient fingerprint registry: encrypted roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_recipient_registry`
-against a REAL encrypted :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
+Exercises :mod:`~application.modelo._review_package_recipient_registry`
+against a REAL encrypted
+:class:`~adapters.persistence.storage.SecureObjectRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): add a recipient, confirm the
 register roundtrips through the encrypted boundary with strict equality,
 confirm the register is real ciphertext at rest, confirm duplicate/missing-id
-refusal, and confirm a corrupted on-disk payload is refused at load
-(the anti-tautology proof required by ``aeat-roundtrip-discipline``).
+refusal, and confirm a corrupted on-disk payload is refused at load (the
+anti-tautology proof required by ``aeat-roundtrip-discipline``).
+
+See Also:
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`:
+        Encrypted public-key trust register under test.
+    :class:`~application.modelo.RecipientFingerprintRegister`:
+        Strict register model roundtripped through the secure object store.
+    :mod:`~application.modelo._review_package_recipient_encryption`:
+        Consumer that encrypts review packages to registered public keys.
+    :mod:`~entrypoints.cli._config._collab`:
+        CLI surface that lets operators add, list, and remove recipients.
 """
 
 from __future__ import annotations
@@ -18,10 +29,15 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-from ....adapters.persistence.storage import (
+from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
-from ....adapters.persistence.storage import SensitivityClass
+from ....tests.review_package_adapters import (
+    DecryptionError,
+    SecureObjectRow,
+    SensitivityClass,
+    session_scope,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,
@@ -53,9 +69,9 @@ def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
 
         added = repository.add(
-            recipient_id="kents-accountant",
+            recipient_id="my-accountant",
             public_key_hex=public_key_hex,
-            label="Kent's Accountant",
+            label="My Accountant",
             added_at=_NOW,
         )
         reloaded = repository.load()
@@ -63,8 +79,8 @@ def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
     assert reloaded == added
     assert len(reloaded.records) == 1
     record = reloaded.records[0]
-    assert record.recipient_id == "kents-accountant"
-    assert record.label == "Kent's Accountant"
+    assert record.recipient_id == "my-accountant"
+    assert record.label == "My Accountant"
     assert record.public_key_hex == public_key_hex
     assert record.added_at == _NOW
     # fingerprint_sha256 is computed, never a stored independent field --
@@ -81,7 +97,7 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
     public_key_hex = _fresh_public_key_hex()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-ciphertext") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, added_at=_NOW)
+        repository.add(recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
         raw_record = profile.repository.load(
             _NAMESPACE.namespace,
@@ -94,9 +110,6 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         from sqlalchemy import select
 
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
-
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
                 select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
@@ -104,16 +117,16 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
             ciphertext_bytes = bytes(row.payload)
 
     assert public_key_hex.encode("utf-8") not in ciphertext_bytes
-    assert b"kents-accountant" not in ciphertext_bytes
+    assert b"my-accountant" not in ciphertext_bytes
 
 
 def test_add_refuses_duplicate_recipient_id(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-dup") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+        repository.add(recipient_id="my-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
 
         with pytest.raises(RecipientAlreadyRegisteredError):
-            repository.add(recipient_id="kents-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+            repository.add(recipient_id="my-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
 
 
 def test_remove_refuses_missing_recipient_id(tmp_path: Path) -> None:
@@ -175,12 +188,9 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
     public_key_hex = _fresh_public_key_hex()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-corrupt") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=public_key_hex, added_at=_NOW)
+        repository.add(recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
         from sqlalchemy import select, update
-
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
@@ -192,8 +202,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
                 .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
                 .values(payload=corrupted_payload),
             )
-
-        from ....adapters.persistence.storage import DecryptionError
 
         with pytest.raises(DecryptionError):
             repository.load()

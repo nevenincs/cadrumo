@@ -1,12 +1,24 @@
 """Tests for the six Batch-2 declaración-informativa registry foundations.
 
 Modelos 165, 233, 156 (annual, January plazo) and 038, 185, 186 (monthly plazo)
-were promoted from ``UNMODELED_OBLIGATIONS`` to registry-loadable definitions.
+were promoted from :data:`~core.UNMODELED_OBLIGATIONS` to registry-loadable definitions.
 Each is approved by a bundled orden whose approval (art 1) and plazo (art 4 or 6)
 articles are cross-checked against the bundled BOE corpus at build. These
 revisions are scheduling/applicability-grade (declaration-header casillas only):
 no authoritative diseño de registro is bundled for any of the six, so no numbered
 form casilla is fabricated.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :func:`~domain.calculations.registry._authority.bundled_authority`
+        Authority facade used to resolve annual and monthly deadline windows.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership these six informativas extend.
+    :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch3_registry`
+        Follow-on informativa promotion with annual and windowless deadline shapes.
 """
 
 from __future__ import annotations
@@ -24,40 +36,60 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, period_kind)
 _MODELOS = [
-    ("165", "2013-y-siguientes", "orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "BOE-A-2013-13798", "annual"),
-    ("233", "2018-y-siguientes", "orden-hac-1400-2018:art-1", "orden-hac-1400-2018:art-4", "BOE-A-2018-17772", "annual"),
-    ("156", "2003-y-siguientes", "orden-hac-3580-2003:art-1", "orden-hac-3580-2003:art-4", "BOE-A-2003-23509", "annual"),
+    (
+        "165",
+        "2013-y-siguientes",
+        "orden-hap-2455-2013:art-1",
+        "orden-hap-2455-2013:art-4",
+        "BOE-A-2013-13798",
+        "annual",
+    ),
+    (
+        "233",
+        "2018-y-siguientes",
+        "orden-hac-1400-2018:art-1",
+        "orden-hac-1400-2018:art-4",
+        "BOE-A-2018-17772",
+        "annual",
+    ),
+    (
+        "156",
+        "2003-y-siguientes",
+        "orden-hac-3580-2003:art-1",
+        "orden-hac-3580-2003:art-4",
+        "BOE-A-2003-23509",
+        "annual",
+    ),
     ("038", "2002-y-siguientes", "orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "BOE-A-2002-1041", "monthly"),
-    ("185", "2025-y-siguientes", "orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "BOE-A-2025-21726", "monthly"),
+    (
+        "185",
+        "2025-y-siguientes",
+        "orden-hac-1197-2025:art-1",
+        "orden-hac-1197-2025:art-4",
+        "BOE-A-2025-21726",
+        "monthly",
+    ),
     ("186", "2003-y-siguientes", "orden-hac-539-2003:art-1", "orden-hac-539-2003:art-4", "BOE-A-2003-5304", "monthly"),
 ]
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, kind) -> None:
+def test_committed_definition_legal_refs_and_deadlines_are_grounded(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, kind: str
+) -> None:
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo, doc, kind) -> None:
-    """Approval (art 1) and plazo (art 4/6) resolve as bundled legal authority.
-
-    Both required_text sets are cross-checked against the bundled orden corpus at
-    build; here we pin their evidence tier and document id.
-    """
-    _, catalogues = _committed_modelo(mid)
+    # Approval (art 1) and plazo (art 4/6) resolve as bundled legal authority.
+    # Both required_text sets are cross-checked against the bundled orden corpus
+    # at build; here we pin their evidence tier and document id.
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,kind", _MODELOS)
-def test_deadline_windows_cite_plazo_and_match_cadence(mid, rev, approval, plazo, doc, kind) -> None:
-    modelo, _ = _committed_modelo(mid)
     revision = modelo.revisions[rev]
     assert revision.deadline_windows, f"{mid} must declare deadline windows"
     for window in revision.deadline_windows:

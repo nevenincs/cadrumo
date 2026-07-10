@@ -1,14 +1,23 @@
 """Recipient replay-guard ledger: encrypted roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_recipient_replay_guard`
-against a REAL encrypted :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
-``BUCKET_DEK_V1`` bucket, no mocks or fakes): mark a nonce consumed, confirm the
-ledger roundtrips through the encrypted boundary with strict equality, confirm
-the ledger is real ciphertext at rest, confirm a second ``mark_consumed`` for
-the same nonce is refused as a replay, and confirm a corrupted on-disk payload
-is refused at load (the anti-tautology proof required by
-``aeat-roundtrip-discipline``).
+Exercises :mod:`~application.modelo._review_package_recipient_replay_guard`
+against a REAL encrypted
+:class:`~adapters.persistence.storage.SecureObjectRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
+``BUCKET_DEK_V1`` bucket, no mocks or fakes): mark a nonce consumed, confirm
+the ledger roundtrips through the encrypted boundary with strict equality,
+confirm the ledger is real ciphertext at rest, confirm a second
+``mark_consumed`` for the same nonce is refused as a replay, and confirm a
+corrupted on-disk payload is refused at load (the anti-tautology proof required
+by ``aeat-roundtrip-discipline``).
+
+See Also:
+    :class:`~application.modelo.RecipientReplayGuardRepository`:
+        Encrypted consumed-nonce ledger under test.
+    :class:`~application.modelo.RecipientEncryptedPackage`:
+        Transport envelope carrying the ``envelope_nonce_hex`` replay token.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_decrypt`:
+        CLI composition point that consumes the nonce after decryption.
 """
 
 from __future__ import annotations
@@ -19,6 +28,14 @@ from pathlib import Path
 
 import pytest
 
+from ....tests.review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
+)
+from ....tests.review_package_adapters import (
+    DecryptionError,
+    SecureObjectRow,
+    session_scope,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_replay_guard import (
     ConsumedNonceLedger,
@@ -74,12 +91,6 @@ def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:
         repository.mark_consumed(nonce_hex, consumed_at=_NOW)
 
         from sqlalchemy import select
-
-        from ....adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
@@ -137,12 +148,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         from sqlalchemy import select, update
 
-        from ....adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
-
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
                 select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
@@ -153,8 +158,6 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
                 .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
                 .values(payload=corrupted_payload),
             )
-
-        from ....adapters.persistence.storage import DecryptionError
 
         with pytest.raises(DecryptionError):
             repository.load()

@@ -1,27 +1,27 @@
 """Ed25519 signing and signature verification for review packages.
 
 This module implements the signing slice deferred by
-:mod:`aeat.application.modelo._review_package`: that module's
-:func:`~aeat.application.modelo.verify_review_package` is an INTEGRITY check
+:mod:`~application.modelo._review_package`: that module's
+:func:`~application.modelo.verify_review_package` is an INTEGRITY check
 only (did every archived member arrive byte-for-byte as built); it makes no
 claim about WHO built the package. This module adds the AUTHENTICITY layer on
 top of that integrity check by signing the package's self-attesting
-:attr:`~aeat.core.corpus_manifest.CorpusManifest.manifest_sha256` digest with a
+:attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` digest with a
 per-profile Ed25519 keypair.
 
 Signing the manifest digest (not the archive bytes or a re-derived hash) means
 the signature transitively covers every archived member: the digest is a
 SHA-256 over the canonical JSON of the manifest's per-file entries, and a
 tampered member is already caught by
-:func:`~aeat.core.corpus_manifest.verify_corpus_bundle` before signature
+:func:`~core.corpus_manifest.verify_corpus_bundle` before signature
 verification is even attempted (see :func:`verify_review_package_signature`).
 
 Key custody (``sensitive-financial-data-secure-storage-only`` /
 ``no-legacy-compatibility``): the private key is generated once per profile
 bucket and persisted ONLY as ciphertext through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-:attr:`~aeat.adapters.persistence.storage.SensitivityClass.SECRET` sensitivity
-(:data:`~aeat.adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`).
+:class:`~adapters.persistence.storage.SecureObjectRepository` at
+:attr:`~adapters.persistence.storage.SensitivityClass.SECRET` sensitivity
+(:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`).
 It is never logged, never written to a plaintext file, and never leaves this
 module as raw bytes except transiently in process memory to sign. The public
 key is, by construction, safe to export and hand to a receiving accountant for
@@ -32,10 +32,12 @@ this module; it exposes only the primitive: mint/load a per-profile keypair,
 sign a package's manifest digest, verify a signature against a public key.
 
 See Also:
-    :mod:`aeat.application.modelo._review_package`
+    :mod:`~application.modelo._review_package`
         Builds and integrity-verifies the review package this module signs.
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
         Encrypted substrate the private key is persisted through.
+    :class:`~adapters.persistence.storage.SensitivityClass`
+        Storage classification policy used for the persisted signing keypair.
 """
 
 from __future__ import annotations
@@ -57,8 +59,12 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from pydantic import BaseModel, Field, field_validator
 
+from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
+from ...adapters.persistence.storage import SensitivityClass
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
 
@@ -98,7 +104,7 @@ class ReviewPackageSigningKeypair(BaseModel):
     stored raw hex bytes. Nothing about this model changes the secure-storage
     contract: the caller (:func:`ensure_review_package_signing_keypair`) is
     responsible for persisting it only through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`.
     """
 
     model_config = _STRICT_FROZEN
@@ -137,8 +143,8 @@ class SignedReviewPackage(BaseModel):
     """Signature envelope binding a review package's manifest digest to a signer.
 
     ``manifest_sha256`` is the review package's own self-attesting
-    :attr:`~aeat.core.corpus_manifest.CorpusManifest.manifest_sha256` (recovered
-    via :func:`~aeat.application.modelo.verify_review_package`), NOT a
+    :attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` (recovered
+    via :func:`~application.modelo.verify_review_package`), NOT a
     re-derived hash of the archive bytes: signing the manifest digest
     transitively covers every archived member because the manifest digest
     already covers every per-file checksum record.
@@ -163,7 +169,7 @@ class SignedReviewPackage(BaseModel):
 
 
 def _signing_key_object_key(bucket_id: str) -> str:
-    """Return the natural :class:`SecureObjectRepository` key for ``bucket_id``'s keypair.
+    """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
 
     Matches the namespace's declared
     ``object_key_grammar="review-package-signing-key:{bucket_id}"``.
@@ -184,7 +190,7 @@ def ensure_review_package_signing_keypair(
     """Return the profile's Ed25519 signing keypair, minting one on first use.
 
     Loads the existing keypair from
-    :data:`~aeat.adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`
     when present; otherwise generates a fresh keypair via
     ``Ed25519PrivateKey.generate()``, persists it (private key included) as
     ciphertext, and returns it. Idempotent: a second call against the same
@@ -194,17 +200,12 @@ def ensure_review_package_signing_keypair(
     Args:
         bucket_id: The active profile bucket id this keypair is scoped to.
         repository: The bucket's
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`,
+            :class:`~adapters.persistence.storage.SecureObjectRepository`,
             e.g. obtained via
-            :func:`~aeat.adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+            :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
         generated_at: Optional override for the keypair's ``created_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _signing_key_object_key(bucket_id)
     existing = repository.load(
         _NAMESPACE.namespace,
@@ -236,7 +237,7 @@ def ensure_review_package_signing_keypair(
         classification=SensitivityClass.SECRET,
         schema_version=_NAMESPACE.schema_version,
         written_at=keypair.created_at,
-        payload=keypair.model_dump_json().encode("utf-8"),
+        payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
         write_provenance="application.modelo.review_package_signing.ensure_keypair",
     )
     return keypair
@@ -249,16 +250,16 @@ def load_review_package_signing_keypair(
 ) -> ReviewPackageSigningKeypair:
     """Load the profile's existing Ed25519 signing keypair.
 
+    Args:
+        bucket_id: The profile bucket whose signing keypair is loaded.
+        repository: The bucket's
+            :class:`~adapters.persistence.storage.SecureObjectRepository`.
+
     Raises:
         ReviewPackageSigningKeyNotFoundError: If no keypair has been minted
             yet for ``bucket_id``. Call
             :func:`ensure_review_package_signing_keypair` first.
     """
-    from ...adapters.persistence.storage import (
-        MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
-    )
-    from ...adapters.persistence.storage import SensitivityClass
-
     object_key = _signing_key_object_key(bucket_id)
     record = repository.load(
         _NAMESPACE.namespace,
@@ -298,7 +299,7 @@ def sign_review_package(
     """Verify ``package_path``'s checksum manifest, then sign its digest.
 
     Delegates the integrity check entirely to
-    :func:`~aeat.application.modelo.assert_review_package_verifies` (no
+    :func:`~application.modelo.assert_review_package_verifies` (no
     hashing logic is re-derived here): a package that is not checksum-clean
     raises before any signature is produced, so a signature can never be
     minted over a package this module itself cannot vouch is intact.
@@ -314,7 +315,7 @@ def sign_review_package(
         FileNotFoundError: If ``package_path`` does not exist.
         ReviewPackageIntegrityError: If the package fails checksum-manifest
             verification (propagated from
-            :func:`~aeat.application.modelo.assert_review_package_verifies`).
+            :func:`~application.modelo.assert_review_package_verifies`).
     """
     manifest = assert_review_package_verifies(package_path)
     manifest_sha256 = _package_manifest_sha256(package_path)
@@ -339,7 +340,7 @@ def verify_review_package_signature(
     """Verify ``signed_package``'s signature against ``public_key_hex``.
 
     Re-runs the checksum-manifest integrity check (a fresh
-    :func:`~aeat.core.corpus_manifest.verify_corpus_bundle` call, not a trust
+    :func:`~core.corpus_manifest.verify_corpus_bundle` call, not a trust
     of ``signed_package.manifest_sha256``) first. This matters because
     ``manifest_sha256`` is a digest over the embedded manifest's OWN recorded
     per-file hashes -- it does NOT change if an archived member's bytes are
@@ -354,7 +355,7 @@ def verify_review_package_signature(
         signed_package: The :class:`SignedReviewPackage` envelope produced by
             :func:`sign_review_package`.
         public_key_hex: The signer's raw public key, as 64 lowercase hex
-            characters (see :meth:`ReviewPackageSigningPublicKey.public_key_hex`).
+            characters (see :attr:`~ReviewPackageSigningPublicKey.public_key_hex`).
             Passed explicitly (never read off ``signed_package``) so a
             verifier must supply the key it actually trusts, rather than
             trusting whatever key the envelope claims.
@@ -366,11 +367,9 @@ def verify_review_package_signature(
         mismatch or invalid-signature outcome -- signature verification is an
         authenticity *check*, not an assertion; callers that want a raising
         assertion should call :func:`sign_review_package`'s sibling
-        :func:`~aeat.application.modelo.assert_review_package_verifies` first
+        :func:`~application.modelo.assert_review_package_verifies` first
         and test this function's boolean themselves.
     """
-    from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
-
     try:
         result = verify_corpus_bundle(package_path)
     except (CorpusBundleError, CorpusManifestTamperError):
@@ -395,14 +394,12 @@ def verify_review_package_signature(
 def _package_manifest_sha256(package_path: Path) -> str:
     """Return the package's current self-attesting corpus manifest digest.
 
-    Re-runs :func:`~aeat.core.corpus_manifest.verify_corpus_bundle` directly
-    (the same checksum layer :func:`~aeat.application.modelo.verify_review_package`
+    Re-runs :func:`~core.corpus_manifest.verify_corpus_bundle` directly
+    (the same checksum layer :func:`~application.modelo.verify_review_package`
     delegates to) so the digest reflects the archive's CURRENT bytes, never a
     cached value, and is available even when the caller only needs the digest
     rather than the full review-specific verification result.
     """
-    from ...core.corpus_manifest import verify_corpus_bundle
-
     return verify_corpus_bundle(package_path).manifest.manifest_sha256
 
 

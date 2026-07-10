@@ -2,9 +2,9 @@
 
 Persists one :class:`LLMRunRecord` per completed (or failed) LLM
 classification/completion invocation to encrypted secure-object storage under
-:data:`adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
-:class:`~aeat.adapters.outbound.llm.UsageRecorder`'s persistence shape. Every
-record is written at :class:`core.classification.SensitivityClass`
+:data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
+:class:`~adapters.outbound.llm.UsageRecorder`'s persistence shape. Every
+record is written at :class:`~core.classification.SensitivityClass`
 ``DIAGNOSTIC`` and carries ONLY timing and outcome metadata (provider label,
 duration, success flag, optional error-kind string) -- never prompt text,
 response text, or any transaction/financial content, honouring
@@ -17,16 +17,29 @@ This is the durable capture half of the local-only run-diagnostics surface
 classification run is otherwise invisible until an operator notices a stuck
 CLI invocation.
 
-:meth:`LLMRunTelemetryRecorder.prune` bounds this store's growth with a
-retention window (:attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_retention_days`)
+:meth:`~LLMRunTelemetryRecorder.prune` bounds this store's growth with a
+retention window (:attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`)
 and a maximum record count
-(:attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_max_records`),
-mirroring :meth:`~aeat.adapters.outbound.llm.LLMCache.prune`'s
+(:attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`),
+mirroring :meth:`~adapters.outbound.llm.LLMCache.prune`'s
 list-then-delete-by-reconstructed-key shape. The object key each record was
 saved under embeds a random UUID4 suffix (so two runs starting in the same
 microsecond never collide); that suffix is persisted inside the record's own
 payload alongside its natural fields so pruning can reconstruct the exact
 save-time key and issue a matching delete, without a parallel index.
+
+See Also:
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Public recorder that appends and reads these local-only records.
+    :class:`~adapters.outbound.llm.LLMRunRecord`
+        Timing/outcome-only payload stored for each completed LLM run.
+    :func:`~application.diagnostics_run_health.build_run_health_report`
+        Application diagnostic that aggregates these records for operators.
+    :mod:`~application.diagnostics_telemetry`
+        Remote-telemetry preview/flush layer that aggregates only the same
+        non-sensitive accounting signal through a separate consent gate.
+    :data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`
+        Secure-object namespace used for the encrypted local store.
 """
 
 from __future__ import annotations
@@ -39,8 +52,10 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE
+from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
+from ....core.classification import SensitivityClass
 from ....core.config import load_settings
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
 from ....core.time import now
 from ._errors import LLMCacheError
@@ -88,11 +103,11 @@ class LLMRunTelemetrySummary(BaseModel):
 class LLMRunTelemetryRecorder:
     """Append local LLM run-timing records to encrypted secure-object storage.
 
-    Mirrors :class:`~aeat.adapters.outbound.llm.UsageRecorder`'s persistence
+    Mirrors :class:`~adapters.outbound.llm.UsageRecorder`'s persistence
     shape: each :meth:`record` call appends one redacted-free
     :class:`LLMRunRecord` (there is no free text to redact -- the model
     carries only accounting metadata) through
-    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
 
     Attributes:
         root_dir: Logical partition used for run-telemetry records.
@@ -110,10 +125,6 @@ class LLMRunTelemetryRecorder:
     def record(self, record: LLMRunRecord) -> Path:
         """Append ``record`` to encrypted secure-object storage.
 
-        Storage-layer imports are deferred to the method body so that
-        callers which never touch the recorder do not pull storage-layer
-        plugin discovery into their import graph.
-
         Args:
             record: Run-timing record to append.
 
@@ -121,12 +132,9 @@ class LLMRunTelemetryRecorder:
             Logical daily run-telemetry path for operator display only.
 
         Raises:
-            :exc:`adapters.outbound.llm.LLMCacheError`: When the storage
+            :exc:`~adapters.outbound.llm.LLMCacheError`: When the storage
             write fails.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         path = self.root_dir / f"run-telemetry-{record.started_at.date().isoformat()}.jsonl"
         # The uuid4 suffix is minted once here and persisted inside the
         # payload (rather than only folded into the object key) so
@@ -176,16 +184,13 @@ class LLMRunTelemetryRecorder:
         the object key is needed only for pruning and is not part of the
         public :meth:`load_records` contract.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-        from ....core.classification import SensitivityClass
-
         rows: list[tuple[LLMRunRecord, str]] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _RUN_TELEMETRY_NAMESPACE,
             expected_class=SensitivityClass.DIAGNOSTIC,
             max_supported_version=_RUN_TELEMETRY_VERSION,
         ):
-            decoded = json.loads(stored.payload.decode("utf-8"))
+            decoded = json.loads(stored.payload.decode(UTF_8_ENCODING))
             if decoded.get("logical_root") != self._logical_root():
                 continue
             record = LLMRunRecord.model_validate_json(json.dumps(decoded["record"]))
@@ -243,13 +248,13 @@ class LLMRunTelemetryRecorder:
         """Delete records older than the retention window or beyond the count cap.
 
         Applies a two-stage bound, mirroring
-        :meth:`~aeat.adapters.outbound.llm.LLMCache.prune`'s
+        :meth:`~adapters.outbound.llm.LLMCache.prune`'s
         list-then-delete-by-reconstructed-key shape: first every record
         older than ``retention_days`` (measured against the current time) is
         removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to
-        the centralized :attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_retention_days`
-        and :attr:`~aeat.core.config.Settings.aeat_llm_run_telemetry_max_records`
+        the centralized :attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`
+        and :attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`
         settings.
 
         Args:
@@ -264,8 +269,6 @@ class LLMRunTelemetryRecorder:
             longer resolves (e.g. removed by a concurrent prune) is silently
             skipped rather than counted or raised.
         """
-        from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-
         settings = load_settings()
         effective_retention_days = (
             retention_days if retention_days is not None else settings.aeat_llm_run_telemetry_retention_days

@@ -2,12 +2,28 @@
 
 :class:`SecureObjectWrite` is the persistence-boundary contract between a domain
 repository port — which declares ``to_secure_object_write(...) -> SecureObjectWrite``
-in :mod:`aeat.domain.modelos` — and the storage adapter that persists it. It is a
-pure value object depending only on :mod:`aeat.core`
-(:data:`~aeat.core.STRICT_FROZEN_CONFIG`,
-:class:`~aeat.core.classification.SensitivityClass`), so a domain port can name it
+in :mod:`~domain.modelos` — and the storage adapter that persists it. It is a
+pure value object depending only on :mod:`~core`
+(:data:`~core.STRICT_FROZEN_CONFIG`,
+:class:`~core.classification.SensitivityClass`), so a domain port can name it
 in a method signature without importing the ``aeat.adapters`` layer. The storage
-adapter (:mod:`aeat.adapters.persistence.storage`) re-exports it unchanged.
+adapter (:mod:`~adapters.persistence.storage`) re-exports it unchanged.
+
+See Also:
+    :class:`~core.SecureObjectWrite`
+        Public core facade export for this DTO.
+    :class:`~core.classification.SensitivityClass`
+        Classification carried by every prepared secure-object write.
+    :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`
+        Domain repository port that can prepare a calculation catalogue write
+        without importing adapters.
+    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`
+        Domain repository port that can co-write filing records through the same
+        DTO.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Storage adapter that consumes these prepared writes.
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many`
+        Unit-of-work API that persists one or more prepared writes atomically.
 """
 
 from __future__ import annotations

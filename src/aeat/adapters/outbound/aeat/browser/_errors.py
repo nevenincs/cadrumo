@@ -7,13 +7,13 @@ stable :class:`BrowserFailureMode`. That mode is copied into the structured
 without parsing message text.
 
 See Also:
-    :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`
+    :class:`adapters.outbound.aeat.browser.BrowserSession`
         Central owner that emits these browser errors.
-    :class:`aeat.adapters.outbound.aeat.browser.EvasionStrategy`
+    :class:`adapters.outbound.aeat.browser.EvasionStrategy`
         Strategy hook whose setup failures surface as :class:`BrowserEvasionError`.
-    :class:`aeat.adapters.outbound.aeat.browser.SiteHealthStatus`
+    :class:`adapters.outbound.aeat.browser.SiteHealthStatus`
         Site-health record carried separately by
-        :class:`aeat.core.errors.SiteHealthError` when AEAT itself returns a
+        :class:`core.errors.SiteHealthError` when AEAT itself returns a
         classified non-OK response.
 """
 
@@ -73,9 +73,9 @@ class BrowserValidationError(BrowserError, ValueError):
 class BrowserEvasionError(BrowserError):
     """Raised when browser evasion setup cannot be applied.
 
-    :class:`PlaywrightStealthEvasion <aeat.adapters.outbound.aeat.browser.PlaywrightStealthEvasion>`
+    :class:`PlaywrightStealthEvasion <adapters.outbound.aeat.browser.PlaywrightStealthEvasion>`
     raises this when ``playwright-stealth`` is unavailable. Failures that occur
-    while :class:`BrowserSession <aeat.adapters.outbound.aeat.browser.BrowserSession>`
+    while :class:`BrowserSession <adapters.outbound.aeat.browser.BrowserSession>`
     applies any strategy are wrapped with
     :attr:`BrowserFailureMode.EVASION_FAILED`.
     """
@@ -84,7 +84,7 @@ class BrowserEvasionError(BrowserError):
 class BrowserFailureMode(StrEnum):
     """Closed browser-backend failure modes emitted by the central session.
 
-    :class:`BrowserSession <aeat.adapters.outbound.aeat.browser.BrowserSession>`
+    :class:`BrowserSession <adapters.outbound.aeat.browser.BrowserSession>`
     uses these values for one-live-context enforcement, browser launch,
     context creation, evasion, provider annotation, page-content reads,
     navigation transport failures, site-health classifications, and retained

@@ -141,6 +141,14 @@ def resolve_iva_compensation_decision_for_calculation(
     if supplied_decision is None:
         persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
         if persisted is not None:
+            persisted = _refresh_first_period_zero_decision_if_local_evidence_changed(
+                work_unit,
+                snapshot=snapshot,
+                decision=persisted,
+                repository=repository,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+            )
             return _require_first_period_zero_decision_grounded(work_unit, snapshot, persisted)
         if caller_supplied_prior_compensation_value(
             binding_values=binding_values,
@@ -458,6 +466,52 @@ def _decision_is_first_period_zero(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "first_period_zero"
 
 
+def _refresh_first_period_zero_decision_if_local_evidence_changed(
+    work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    decision: IvaCompensationReconciliationDecision,
+    repository: IvaWalletDecisionRepository | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> IvaCompensationReconciliationDecision:
+    if not _decision_is_first_period_zero(decision):
+        return decision
+    refreshed = lazily_reconcile_local_iva_compensation_for_work_unit(
+        work_unit,
+        snapshot=snapshot,
+        repository=repository,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        persist=False,
+    )
+    if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
+        return decision
+    _save_iva_compensation_decision(refreshed, repository=repository)
+    return refreshed
+
+
+def _decision_replay_basis(decision: IvaCompensationReconciliationDecision) -> tuple[object, ...]:
+    return (
+        decision.selected_authority,
+        decision.selected_amount,
+        decision.local_recurrence_amount,
+        decision.divergence,
+        decision.blocked,
+        tuple(
+            (
+                source.source_kind,
+                source.amount,
+                source.source_locator,
+                source.source_modelo,
+                source.source_filing_year,
+                source.source_periods,
+            )
+            for source in decision.authority_sources
+        ),
+    )
+
+
 def _decision_is_missing_local_authority(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "missing" and getattr(decision, "selected_amount", None) is None
 
@@ -510,8 +564,8 @@ def _save_iva_compensation_decision(
 def _require_first_period_zero_decision_grounded(
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
-    decision: object,
-) -> object:
+    decision: IvaCompensationReconciliationDecision,
+) -> IvaCompensationReconciliationDecision:
     """Fail closed unless a first-period-zero decision is profile/registry-grounded."""
     if not _decision_is_first_period_zero(decision):
         return decision

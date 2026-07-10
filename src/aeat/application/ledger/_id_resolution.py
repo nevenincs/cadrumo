@@ -87,16 +87,26 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
     if not normalized:
         raise TransactionIdPrefixError("transaction id prefix is empty")
     if not _HEX_ALPHABET.issuperset(normalized):
-        raise TransactionIdPrefixError(f"transaction id prefix {prefix!r} contains non-hex characters")
+        raise TransactionIdPrefixError(
+            translated_message="application.ledger.errors.transaction_id_prefix_non_hex",
+            context={"prefix": repr(prefix)},
+        )
     if len(normalized) > _FULL_ID_LENGTH:
-        raise TransactionIdPrefixError(f"transaction id prefix {prefix!r} is longer than {_FULL_ID_LENGTH} characters")
+        raise TransactionIdPrefixError(
+            translated_message="application.ledger.errors.transaction_id_prefix_too_long",
+            context={"prefix": repr(prefix), "max_length": _FULL_ID_LENGTH},
+        )
     matches: list[str] = sorted(tx_id for tx_id in transaction_ids if tx_id.startswith(normalized))
     if not matches:
-        raise TransactionIdPrefixError(f"no transaction matches id prefix {prefix!r}")
+        raise TransactionIdPrefixError(
+            translated_message="application.ledger.errors.transaction_id_prefix_no_match",
+            context={"prefix": repr(prefix)},
+        )
     if len(matches) > 1:
         joined = ", ".join(matches)
         raise TransactionIdPrefixError(
-            f"transaction id prefix {prefix!r} matches {len(matches)} transactions: {joined}",
+            translated_message="application.ledger.errors.transaction_id_prefix_ambiguous",
+            context={"prefix": repr(prefix), "count": len(matches), "matches": joined},
         )
     return matches[0]
 
@@ -158,11 +168,12 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
     try:
         return resolve_transaction_id(prefix, live_ids)
     except TransactionIdPrefixError as live_error:
-        if "no transaction matches" not in str(live_error):
+        if live_error.translated_message != "application.ledger.errors.transaction_id_prefix_no_match":
             # Empty / non-hex / too-long / ambiguous-live: the prefix is
             # malformed or already ambiguous over live rows. Lineage
             # resolution cannot make it less ambiguous, so surface the
-            # original refusal unchanged.
+            # original refusal unchanged. Discriminate on the typed error key
+            # rather than the rendered (now localised) message text.
             raise
         normalized = prefix.strip().lower()
         heirs: dict[str, str] = {}

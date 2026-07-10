@@ -15,7 +15,7 @@ functions over typed models: :func:`build_harness_floor_payload` and
 :func:`render_harness_floor_text` carry no protocol detail and are unit-tested
 directly, while :func:`build_harness_floor_tool` lazily adapts the payload
 surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
-server still refuses gracefully) when the ``aeat[agent]`` extra is absent.
+server still refuses gracefully) when the ``aeat-cli[agent]`` extra is absent.
 
 The operating-layer text is read through the ``aeat.agent`` package facade
 (:func:`~agent.operator_rules_text` and
@@ -25,17 +25,33 @@ The operating-layer text is read through the ``aeat.agent`` package facade
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import StorageValidationError
 from ...agent import iter_personas, operator_rules_text
+from ...application.user_profile import TAX_ID_FACT_PATH
+from ...application.workflow import assess_active_profile_health, read_profile_bucket_by_id
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ._persona_scope import AgentPersona
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``);
+    # the real import stays deferred to inside the function body below.
+    from mcp.types import Tool
 
 #: The floor tool's MCP name, following the per-verb ``aeat_<key>`` naming
 #: convention (``_dispatch.tool_name_for_command``): the conceptual
 #: ``harness.load`` verb renders as ``aeat_harness_load``.
 HARNESS_LOAD_TOOL = "aeat_harness_load"
+
+#: The identity-assertion tool's MCP name (ADR I1). Like the floor and
+#: grounding tools it is a read-only console tool carrying the ``aeat_``
+#: prefix; unlike the per-verb surface it is always advertised and never
+#: persona-scoped away, so an agent can always confirm the active taxpayer.
+WHOAMI_TOOL = "aeat_whoami"
 
 _MARKDOWN_SUFFIX = ".md"
 
@@ -77,6 +93,29 @@ class ActivePersonaDocument(BaseModel):
     text: str = Field(min_length=1)
 
 
+class WhoamiIdentity(BaseModel):
+    """The active taxpayer identity block returned by the ``whoami`` tool.
+
+    The identity anchor the agent reconciles before a mutating command: a
+    filing must never run under the wrong profile (Erika must not file while
+    Erik is the active profile). ``active_profile`` is the operator-chosen
+    display LABEL (the plaintext manifest name, never the redacted
+    profile/bucket UUID — the same label semantics the envelope-spine
+    ``active_profile`` carries), or ``None`` when no profile is active.
+    ``tax_id_present`` states whether the active profile carries a tax id
+    (its legal identity). ``readiness`` is the active-profile health status
+    (``ready`` / ``incomplete`` / ``none`` / a degraded-pointer status), and
+    ``next_action`` is the recovery step the health projection recommends.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    active_profile: str | None = None
+    tax_id_present: bool = False
+    readiness: str = Field(min_length=1)
+    next_action: str = ""
+
+
 class HarnessFloorPayload(BaseModel):
     """The floor tool's structured result: operator rules plus the active persona.
 
@@ -87,7 +126,10 @@ class HarnessFloorPayload(BaseModel):
     operating-rule text - the always-on operating contract every session carries.
     ``active_persona`` is the persona document resolved from the session's
     ``AEAT_MCP_PERSONA`` scope, or ``None`` for an un-personified session (the
-    full, unscoped surface).
+    full, unscoped surface). ``identity`` is the same active-taxpayer block the
+    ``whoami`` tool returns, so session orientation (this floor tool's job)
+    carries WHO is active; it is ``None`` when the caller does not inject it (the
+    SDK-independent unit surface), resolved and passed in at the server boundary.
     """
 
     model_config = _STRICT_FROZEN
@@ -95,6 +137,7 @@ class HarnessFloorPayload(BaseModel):
     off_host_consent: str = Field(min_length=1)
     operator_rules: str = Field(min_length=1)
     active_persona: ActivePersonaDocument | None = None
+    identity: WhoamiIdentity | None = None
 
 
 def _persona_document_text(persona: AgentPersona) -> str | None:
@@ -111,13 +154,25 @@ def _persona_document_text(persona: AgentPersona) -> str | None:
     return None
 
 
-def build_harness_floor_payload(*, persona: AgentPersona | None) -> HarnessFloorPayload:
+def build_harness_floor_payload(
+    *,
+    persona: AgentPersona | None,
+    identity: WhoamiIdentity | None = None,
+) -> HarnessFloorPayload:
     """Build the floor payload for ``persona`` (``None`` = un-personified session).
 
     Reads the shipped operator rules verbatim and, when a persona is active,
     its document verbatim. A persona whose document is somehow absent yields a
     ``None`` ``active_persona`` rather than raising: the floor's rules half must
     always deliver even if a persona document is missing.
+
+    ``identity`` is the active-taxpayer block surfaced on the floor response so
+    session orientation carries WHO is active. It stays a caller-injected
+    parameter (defaulting ``None``) rather than being resolved here so this
+    builder stays a pure function over shipped data: the server boundary
+    resolves the runtime identity (which reads storage) and passes it in, the
+    same resolve-at-the-boundary / inject-into-the-payload shape the envelope
+    spine uses.
 
     Returns:
         The :class:`HarnessFloorPayload` for the session.
@@ -131,6 +186,7 @@ def build_harness_floor_payload(*, persona: AgentPersona | None) -> HarnessFloor
         off_host_consent=off_host_consent_text(),
         operator_rules=operator_rules_text(),
         active_persona=active,
+        identity=identity,
     )
 
 
@@ -152,22 +208,24 @@ def render_harness_floor_text(payload: HarnessFloorPayload) -> str:
         "",
         payload.operator_rules,
     ]
+    if payload.identity is not None:
+        parts += ["", "# active taxpayer identity", "", render_whoami_identity_text(payload.identity)]
     if payload.active_persona is not None:
         parts += ["", f"# active persona: {payload.active_persona.name}", "", payload.active_persona.text]
     return "\n".join(parts)
 
 
-def build_harness_floor_tool() -> object:
+def build_harness_floor_tool() -> Tool:
     """Build the SDK ``Tool`` object for the ``harness.load`` floor tool.
 
     Lazily imports the SDK types so the module still imports when the
-    ``aeat[agent]`` extra is absent. The tool takes no arguments (the active
+    ``aeat-cli[agent]`` extra is absent. The tool takes no arguments (the active
     persona is resolved server-side from the session scope) and is annotated
     ``readOnlyHint`` / ``idempotentHint``: it reads shipped data and never
     mutates state.
 
     Returns:
-        The ``harness.load`` :class:`mcp.types.Tool` object.
+        The ``harness.load`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 
@@ -187,12 +245,100 @@ def build_harness_floor_tool() -> object:
     )
 
 
+def build_whoami_identity() -> WhoamiIdentity:
+    """Resolve the active taxpayer identity block (ADR I1), best-effort.
+
+    Wraps the active-profile health assessment
+    (:func:`~application.workflow.assess_active_profile_health`): its
+    ``status`` is the ``readiness`` and its ``next_action`` the recovery
+    step. The display LABEL is resolved from the plaintext bucket manifest
+    (:func:`~application.workflow.read_profile_bucket_by_id`) - the same
+    non-secret name the envelope-spine ``active_profile`` carries, never the
+    redacted bucket/profile UUID the health projection's ``active_profile``
+    field holds. ``tax_id_present`` is derived from the health projection: a
+    tax id is on file when the profile record is present and the canonical
+    ``identity.tax_id`` fact path (:data:`~application.user_profile.TAX_ID_FACT_PATH`)
+    is not among the missing required fields, so it reports correctly even for
+    an otherwise-incomplete profile. The health assessment never raises for an
+    absent or unreadable profile (it returns a degraded status), and label
+    resolution is guarded, so this read-only identity probe is safe to call on
+    every session and before every mutation.
+    """
+    health = assess_active_profile_health()
+    label: str | None = None
+    if health.active_profile is not None:
+        try:
+            pointer = read_profile_bucket_by_id(health.active_profile)
+        except (OSError, ValueError, StorageValidationError):
+            pointer = None
+        label = pointer.label if pointer is not None else None
+    tax_id_present = health.profile_record_present and TAX_ID_FACT_PATH not in health.missing_required
+    return WhoamiIdentity(
+        active_profile=label,
+        tax_id_present=tax_id_present,
+        readiness=health.status,
+        next_action=health.next_action,
+    )
+
+
+def render_whoami_identity_text(identity: WhoamiIdentity) -> str:
+    """Render the identity block as plain text for a tools-only MCP client."""
+    label = identity.active_profile if identity.active_profile is not None else "(no active profile)"
+    lines = [
+        f"active profile: {label}",
+        f"tax id on file: {'yes' if identity.tax_id_present else 'no'}",
+        f"readiness: {identity.readiness}",
+    ]
+    if identity.next_action:
+        lines.append(f"next: {identity.next_action}")
+    return "\n".join(lines)
+
+
+def build_whoami_tool() -> Tool:
+    """Build the SDK ``Tool`` object for the ``whoami`` identity tool (ADR I1).
+
+    Lazily imports the SDK types so the module still imports when the
+    ``aeat-cli[agent]`` extra is absent. The tool takes no arguments and is
+    annotated ``readOnlyHint`` / ``idempotentHint``: it reads the active-profile
+    health projection and never mutates state. Its description states its
+    identity-safety job so an agent calls it to confirm WHO is active before a
+    mutation and again after a profile switch.
+
+    Returns:
+        The ``whoami`` :class:`~mcp.types.Tool` object.
+    """
+    from mcp.types import Tool, ToolAnnotations
+
+    return Tool(
+        name=WHOAMI_TOOL,
+        description=(
+            "Report which taxpayer profile is active right now: its display name (label), whether a "
+            "tax id is on file, filing readiness, and the next step. Call this before any command that "
+            "writes, files, or exports to confirm WHO you are acting for, and again after switching "
+            "profiles - a filing must never run under the wrong identity (Erika must not file while "
+            "Erik is the active profile)."
+        ),
+        inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
+        annotations=ToolAnnotations(
+            title="Confirm the active taxpayer identity",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+        ),
+    )
+
+
 __all__ = [
     "HARNESS_LOAD_TOOL",
+    "WHOAMI_TOOL",
     "ActivePersonaDocument",
     "HarnessFloorPayload",
+    "WhoamiIdentity",
     "build_harness_floor_payload",
     "build_harness_floor_tool",
+    "build_whoami_identity",
+    "build_whoami_tool",
     "off_host_consent_text",
     "render_harness_floor_text",
+    "render_whoami_identity_text",
 ]

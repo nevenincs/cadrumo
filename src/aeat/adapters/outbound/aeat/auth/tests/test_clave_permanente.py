@@ -1,15 +1,28 @@
 """Protocol-level tests for the Cl@ve Permanente authentication provider.
 
-Exercises :class:`aeat.adapters.outbound.aeat.auth._clave_permanente.ClavePermanenteAuthProvider`
+Exercises :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
 against hand-written ``BrowserSessionLike`` stand-ins that record the
 navigation and form interactions performed by the provider. The stand-ins
 satisfy the same Protocol the production
-:class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents, so the
+:class:`~adapters.outbound.aeat.browser.BrowserSession` presents, so the
 provider's choreography (selector navigation, credential form fill, post-auth
 landing wait) is verified without a real browser.
 
 These tests do not prove real AEAT authentication; the live handshake is
 covered by the gated probe in ``test_clave_permanente_live.py``.
+
+See Also:
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+        Provider whose selector, credential, persistence, resume, and verify
+        contracts are exercised here.
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+        Public session detail asserted after fresh-login and resume paths.
+    :class:`~adapters.outbound.aeat.auth._clave_permanente_metadata.ClavePermanenteSessionMetadata`
+        Encrypted provider metadata persisted beside browser storage state.
+    :mod:`~adapters.outbound.aeat.auth.tests._clave_permanente_support`
+        Recording browser/page harness shared by these protocol tests.
+    :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente_live`
+        Live Playwright probe covering the real AEAT Cl@ve Permanente surface.
 """
 
 from __future__ import annotations
@@ -355,7 +368,7 @@ class TestVerify:
             from .._authenticator_types import AeatSession
 
             attempted_at = now()
-            dummy = AeatSession(
+            session_without_context = AeatSession(
                 provider_kind=AuthProviderKind.CLAVE_PERMANENTE,
                 authenticated_at=attempted_at,
                 idle_deadline=attempted_at,
@@ -364,6 +377,6 @@ class TestVerify:
                 provider_detail=ClavePermanenteSessionDetail(dni_nie="12345678Z"),
             )
             with pytest.raises(AeatLoginAssertionError, match="active browser context"):
-                await provider.verify(dummy)
+                await provider.verify(session_without_context)
 
         _run(run())

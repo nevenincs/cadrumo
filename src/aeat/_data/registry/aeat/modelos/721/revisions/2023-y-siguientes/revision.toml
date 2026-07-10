@@ -4,7 +4,6 @@ valid_from = 2023-08-01
 period_selector = { year_from = 2023, periods = ["0A"] }
 legal_refs = [
     "ley-58-2003:da-18",
-    "ley-11-2021:da-10",
     "rd-1065-2007:art-42-quater",
     "orden-hfp-886-2023:art-1",
     "orden-hfp-886-2023:art-2",

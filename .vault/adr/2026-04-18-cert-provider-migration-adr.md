@@ -2,15 +2,15 @@
 tags:
   - "#adr"
   - "#cert-provider"
-date: 2026-04-18
-modified: '2026-06-13'
+date: '2026-04-18'
+modified: '2026-07-10'
 related:
   - "[[2026-04-18-cert-provider-migration-research]]"
   - "[[2026-04-18-auth-provider-ecosystem-research]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
 ---
 
-# cert-provider-migration-adr
+# cert-provider-migration-adr | (**status:** `rejected`)
 
 ## status
 Accepted — 2026-04-18. This acts as the execution-level ADR for the Certificate Provider Migration sub-task.

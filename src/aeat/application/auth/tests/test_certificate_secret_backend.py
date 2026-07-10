@@ -1,16 +1,30 @@
 """Real-behavior tests for the certificate-secret backend abstraction.
 
-Exercises :mod:`application.auth._certificate_secret_backend` against a
+Exercises :mod:`~application.auth._certificate_secret_backend` against a
 real encrypted :class:`~adapters.persistence.storage.SecretStore` (an
 :class:`~adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`
 under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
 — no mocks or fakes) and the operator verbs
-(:func:`application.auth.set_operator_certificate_source_secret`,
-:func:`application.auth.remove_operator_certificate_source_secret`,
-:func:`application.auth.resolve_certificate_source_secret`) against a
+(:func:`~application.auth.set_operator_certificate_source_secret`,
+:func:`~application.auth.remove_operator_certificate_source_secret`,
+:func:`~application.auth.resolve_certificate_source_secret`) against a
 real workflow-state repository, mirroring the pattern already
 established for the sibling certificate-source registry tests. See
 GitHub issue #591 (cert-secret backend abstraction slice).
+
+See Also:
+    :mod:`~application.auth._certificate_secret_backend`
+        Certificate-secret backend contract and secure-storage/keyring
+        implementations under test.
+    :class:`~application.auth.SecureStorageCertificateSecretBackend`
+        Default bucket-scoped backend exercised with a real encrypted store.
+    :class:`~adapters.persistence.storage.SecretStore`
+        Encrypted secret substrate used for certificate passphrase persistence.
+    :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
+        Blob encryption layer backing the isolated real-behavior store.
+    :func:`~application.auth.set_operator_certificate_source_secret`
+        Operator-facing mutation verb whose redaction and rotation behavior is
+        covered by the integration cases.
 """
 
 from __future__ import annotations

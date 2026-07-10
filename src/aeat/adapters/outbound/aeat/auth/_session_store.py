@@ -1,15 +1,15 @@
 """Encrypted persistence for AEAT browser session state.
 
 This module is the concrete adapter behind
-:class:`aeat.application.auth._protocols.SessionStoreProtocol`. It stores
+:class:`application.auth._protocols.SessionStoreProtocol`. It stores
 :class:`PersistedBrowserSession` payloads in
-:data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`,
+:data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`,
 whose registry entry pins the records to bucket-local
-``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+``SESSION`` :class:`~adapters.persistence.storage.SensitivityClass`
 storage, schema version, process-local custody, and logical-path object-key
 grammar.
 
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` encrypts
+:class:`~adapters.persistence.storage.SecureObjectRepository` encrypts
 payload bytes and digests the logical object key at the column boundary, so
 Playwright cookies, local storage, and provider metadata never appear as
 plaintext files.
@@ -46,7 +46,7 @@ class PersistedBrowserSession(BaseModel):
     """Encrypted Playwright storage state plus provider-owned metadata.
 
     This is the typed payload stored under
-    :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
+    :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
     ``storage_state`` carries the payload returned by
     ``BrowserContext.storage_state()``. ``metadata`` remains a provider-owned
     mapping so certificate auth and Cl@ve Móvil can persist different validated
@@ -70,7 +70,7 @@ def exists(path: Path) -> bool:
     """Return whether an encrypted session exists for logical ``path``.
 
     ``path`` is the logical storage-state identifier produced by
-    :func:`~aeat.application.auth.storage_state_paths` or provider-specific
+    :func:`~application.auth.storage_state_paths` or provider-specific
     helpers, not a plaintext file path to inspect.
     """
     return _repository().exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
@@ -80,14 +80,17 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     """Persist ``storage_state`` and ``metadata`` in the browser-session namespace.
 
     The values are wrapped in a :class:`PersistedBrowserSession` envelope before
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     encrypts the serialized JSON payload. The namespace definition supplies the
-    ``SESSION`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
-    classification and schema version.
+    ``SESSION`` :class:`~adapters.persistence.storage.SensitivityClass`
+    classification and schema version. ``storage_state``/``metadata`` are
+    validated JSON-safe here (mirroring :func:`_storage_state_sha256`) so the
+    caller-facing boundary stays the wide ``Mapping[str, object]`` shape
+    :class:`~._authenticator_types.BrowserContextLike` exposes.
     """
     payload = PersistedBrowserSession(
-        storage_state=storage_state,
-        metadata=metadata,
+        storage_state=_JSON_OBJECT_ADAPTER.validate_python(storage_state),
+        metadata=_JSON_OBJECT_ADAPTER.validate_python(metadata),
         written_at=now(),
     )
     _repository().save(
@@ -105,9 +108,9 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
     Returns ``None`` when the logical key is absent. A present record is read
     from
-    :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`
+    :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`
     with the expected
-    :class:`~aeat.adapters.persistence.storage.SensitivityClass` and current
+    :class:`~adapters.persistence.storage.SensitivityClass` and current
     namespace schema version.
     """
     record = _repository().load(
@@ -140,8 +143,8 @@ def logical_object_key(path: Path) -> str:
     """Return the natural secure-object key for a browser-session ``path``.
 
     The key shape follows
-    :data:`aeat.adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     HMAC-digests this value before writing the row, so callers can use the same
     logical key without exposing it on disk.
     """

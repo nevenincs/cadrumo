@@ -36,7 +36,7 @@ Expose the recorder as the iva-wallet override verb with localized help/errors a
 
 - [x] `P02.S04` - Register the iva-wallet override Typer verb with --filing-year --period --amount --reason --evidence-locator and mandatory default-off --confirm, refusing to overrule a fresh AEAT wallet decision; `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
 - [x] `P02.S05` - Add the IvaWalletOverrideResult output schema and register it for JSON-schema conformance; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `P02.S06` - Author override help/confirm/error locale leaves for en es ca hu via python -m aeat.locales set, then scaffold --check clean; `src/aeat/locales`.
+- [x] `P02.S06` - Author override help/confirm/error locale leaves for en es ca hu via python -m aeat.locales set, then scaffold --check clean; `src/aeat/locales`.
 - [x] `P02.S07` - Add a CLI conformance test exercising the override verb end to end and run the documented-command conformance gate; `src/aeat/entrypoints/cli/tests/test_iva_wallet_inspector.py`.
 
 ## Description

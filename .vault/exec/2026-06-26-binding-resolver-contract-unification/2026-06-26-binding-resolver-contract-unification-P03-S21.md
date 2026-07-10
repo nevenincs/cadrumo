@@ -37,3 +37,37 @@ related:
 
 - No P03.S21 plan check was run. This record is evidence plus formal deferral inventory, not closure.
 - No registry, resolver-enrollment, or `_calculation_actions.py` edit was made.
+
+## Current worktree follow-up check (2026-07-04)
+
+- Non-authored WIP now exists for the M347 counterpart-source modelling follow-up:
+  `src/aeat/_data/registry/aeat/modelos/347/revisions/2008-y-siguientes/bindings/0001-counterpart-summary.toml`,
+  a construct reference in `constructs/0001-informative.toml`, and
+  `src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py`.
+- The WIP's domain-level registry-binding proof passes:
+  `uv run --no-sync pytest -q -n 0 src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py`
+  (`2 passed`).
+- The P03.S21 service-level proof remains blocked in the current shared worktree:
+  `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py::test_counterpart_m347_mesh_resolution_matches_prior_aggregate_exactly`
+  fails before reaching the 347 assertion because non-authored untracked Modelo 145
+  scaffolding invalidates registry authority (`revision must declare official workbook
+  parity coverage`; `revision must declare at least one casilla`).
+- P03.S21 remains unchecked until the 347 modelling is landed/owned and the service
+  proof can run against a valid registry authority.
+
+## Retry check (2026-07-04, observed at `f4ed27f35a`)
+
+- Authoritative plan status remains open at `P03.S21`: `17/21` complete,
+  `exec_missing_ids=[]`.
+- Current focused counterpart service run remains red:
+  `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py -k "counterpart"`
+  wrote full output to
+  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-counterpart-20260704.log`
+  and exited `1` (`1 failed`, `2 passed`, `21 deselected`).
+- The failing M349 proof still stops at registry authority load because the non-authored
+  untracked Modelo 145 scaffold lacks official workbook parity coverage and any casilla.
+- The current non-authored `test_per_modelo_service.py` WIP also weakens the M347 service check
+  to `test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings`; that checks
+  non-claim behavior for invoice-owned bindings, not the plan row's exact equality between
+  live-mesh resolution and the prior `aggregate_counterpart_347` output.
+- No P03.S21 plan check was run.

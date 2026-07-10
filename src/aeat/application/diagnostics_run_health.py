@@ -4,11 +4,11 @@ Folds two existing local-only signals into one typed operator-facing report so
 a slow LLM-backed classification run or a stale/expired persisted AEAT auth
 session is diagnosable without leaving the host:
 
-* :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder` records
+* :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` records
   duration/outcome metadata for every LLM classification, split-proposal, and
-  completion run (see :mod:`aeat.adapters.outbound.llm._client` and
-  :mod:`aeat.application.ledger._llm_classification`); and
-* :func:`aeat.application.auth.test_operator_auth` reports whether an
+  completion run (see :class:`~adapters.outbound.llm.LLMClient` and
+  :mod:`~application.ledger._llm_classification`); and
+* :func:`~application.auth.test_operator_auth` reports whether an
   encrypted AEAT session token is present on disk and whether it has passed
   its idle deadline.
 
@@ -21,7 +21,7 @@ only the locally persisted session token's metadata. This backs the
 individually (most-recent-first, optionally limited) rather than aggregated
 per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb
 (also GitHub issue #407). It reuses
-:meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+:meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here.
 
 :func:`build_latency_report` and :func:`build_error_breakdown` project the
@@ -29,22 +29,36 @@ directly -- there is no parallel capture or storage path here.
 error-kind breakdown, backing the ``aeat app diagnostics latency`` and
 ``aeat app diagnostics errors`` verbs (also GitHub issue #407). Neither
 introduces a new capture or storage path -- both read
-:meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+:meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 exactly as ``run-health`` and ``runs`` do, honouring
 ``composition-service-no-parallel-write-path``.
 
 :func:`build_llm_usage_report` projects the same recorded rows into a
 run-count/duration/success-rate summary grouped by provider AND by model,
 backing the ``aeat app diagnostics llm-usage`` verb (also GitHub issue #407).
-:class:`~aeat.adapters.outbound.llm.LLMRunRecord` carries only timing and
+:class:`~adapters.outbound.llm.LLMRunRecord` carries only timing and
 outcome metadata -- no token counts are recorded on this store -- so the
 usage summary reports run counts, durations, and success rate rather than
 token/cost figures (those are covered by the separate
-:mod:`aeat.application.ledger._llm_diagnostics` usage/cost/confidence
-report, which folds the distinct completion-call
-:class:`~aeat.adapters.outbound.llm.UsageRecord` log). This report again
-reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+:func:`~application.ledger.build_llm_diagnostics_report`
+usage/cost/confidence report, which folds the distinct completion-call
+:class:`~adapters.outbound.llm.UsageRecord` log). This report again
+reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here either.
+
+See Also:
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Local encrypted recorder that supplies every run row this module reads.
+    :class:`~adapters.outbound.llm.LLMRunRecord`
+        Timing/outcome-only record projected into each diagnostic report.
+    :func:`~application.auth.test_operator_auth`
+        Local auth-session probe folded into the run-health report.
+    :mod:`~entrypoints.cli._app_diagnostics`
+        CLI transport for the run-health, runs, latency, errors, and
+        llm-usage verbs.
+    :mod:`~application.diagnostics_telemetry`
+        Remote-telemetry posture/flush service that reuses the aggregate
+        LLM-run signal without widening the payload.
 """
 
 from __future__ import annotations
@@ -81,7 +95,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 class LlmRunProviderMetrics(BaseModel):
     """Per-provider aggregate of recent local LLM run-timing telemetry.
 
-    Aggregated from :class:`~aeat.adapters.outbound.llm.LLMRunRecord` rows for
+    Aggregated from :class:`~adapters.outbound.llm.LLMRunRecord` rows for
     a single :attr:`provider`. Carries only timing and outcome metadata --
     never prompt or response text.
     """
@@ -154,10 +168,10 @@ def build_run_health_report(
             this filter.
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
-            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
-        auth_probe: Injected :class:`~aeat.application.auth.AuthTestResult`
+            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
+        auth_probe: Injected :class:`~application.auth.AuthTestResult`
             (dependency injection for tests); defaults to a fresh call to
-            :func:`aeat.application.auth.test_operator_auth` with no provider
+            :func:`~application.auth.test_operator_auth` with no provider
             override, so it reports whatever AEAT auth provider is configured
             in workflow state (or "none configured").
 
@@ -191,7 +205,7 @@ def build_run_health_report(
 class RunRecordView(BaseModel):
     """One individual local LLM run-timing record, as reported to an operator.
 
-    Mirrors :class:`~aeat.adapters.outbound.llm.LLMRunRecord` field-for-field;
+    Mirrors :class:`~adapters.outbound.llm.LLMRunRecord` field-for-field;
     carries only accounting/timing metadata, never prompt or response text.
     """
 
@@ -217,7 +231,7 @@ def list_recent_runs(
 ) -> tuple[RunRecordView, ...]:
     """Return recent local LLM run-timing records, most-recent-first.
 
-    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    Reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
     directly -- the same recorder :func:`build_run_health_report` reads -- so
     there is no parallel capture or storage path for this listing.
 
@@ -230,7 +244,7 @@ def list_recent_runs(
             ``None`` returns every matching record.
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
-            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
 
     Returns:
         Matching :class:`RunRecordView` rows ordered most-recent-first (ties
@@ -376,7 +390,7 @@ def build_latency_report(
 ) -> LatencyReport:
     """Aggregate recorded run durations into overall and per-provider percentiles.
 
-    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    Reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
     directly -- the same recorder :func:`build_run_health_report` and
     :func:`list_recent_runs` read -- so there is no parallel capture or
     storage path for this report.
@@ -389,7 +403,7 @@ def build_latency_report(
             empty (a single-provider breakdown would duplicate ``overall``).
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
-            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
 
     Returns:
         The populated :class:`LatencyReport`.
@@ -422,7 +436,7 @@ def build_error_breakdown(
 ) -> ErrorsBreakdownReport:
     """Group failed recorded runs by provider and ``error_kind``.
 
-    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    Reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
     directly -- the same recorder every sibling diagnostics report reads --
     so there is no parallel capture or storage path for this report.
 
@@ -433,7 +447,7 @@ def build_error_breakdown(
             provider's failures.
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
-            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
 
     Returns:
         The populated :class:`ErrorsBreakdownReport`.
@@ -469,7 +483,7 @@ def build_error_breakdown(
 class LlmUsageModelMetrics(BaseModel):
     """One provider's per-model aggregate of recent local LLM run telemetry.
 
-    Aggregated from :class:`~aeat.adapters.outbound.llm.LLMRunRecord` rows
+    Aggregated from :class:`~adapters.outbound.llm.LLMRunRecord` rows
     sharing a single provider (recorded on the owning
     :class:`LlmUsageProviderMetrics`) AND :attr:`model`. Carries only
     run-count, duration, and outcome metadata -- :class:`LLMRunRecord` records
@@ -528,7 +542,7 @@ class LlmUsageReport(BaseModel):
     """Typed local-only LLM usage summary: run counts, durations, and success rate.
 
     Produced by :func:`build_llm_usage_report`. Groups the same recorded
-    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` rows
+    :class:`~adapters.outbound.llm.LLMRunRecord` rows
     :func:`build_run_health_report` reads by provider (:attr:`by_provider`),
     each provider row carrying its own per-model breakdown
     (:attr:`~LlmUsageProviderMetrics.models`). :attr:`has_run_data` is
@@ -581,11 +595,11 @@ def build_llm_usage_report(
 ) -> LlmUsageReport:
     """Aggregate recorded LLM run telemetry into a usage summary by provider and model.
 
-    Reuses :meth:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
+    Reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
     directly -- the same recorder every sibling diagnostics report reads --
     so there is no parallel capture or storage path for this report
     (``composition-service-no-parallel-write-path``).
-    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` carries no token
+    :class:`~adapters.outbound.llm.LLMRunRecord` carries no token
     counts, so this is a run-count/duration/success-rate summary rather than
     a token-usage summary.
 
@@ -596,7 +610,7 @@ def build_llm_usage_report(
             provider.
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
-            :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`.
+            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
 
     Returns:
         The populated :class:`LlmUsageReport`.

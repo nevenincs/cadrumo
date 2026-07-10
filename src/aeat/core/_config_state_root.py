@@ -23,6 +23,20 @@ frozen :class:`StateRootInputs` seam so the detection is deterministic and
 testable without mutating the ambient process. :func:`default_storage_root` is
 the live entry point :class:`~core.config.Settings` binds as its
 ``aeat_local_storage_root`` default factory.
+
+See Also:
+    :class:`~core.config.Settings`
+        Central settings aggregate whose storage-root default is resolved here.
+    :data:`~core.config.PROJECT_ROOT`
+        Checkout-root anchor mirrored when source-tree defaults are preserved.
+    :class:`StateRootInputs`
+        Frozen seam that captures every environmental input used by resolution.
+    :func:`detect_run_mode`
+        Checkout-versus-installed classifier used before selecting a root.
+    :func:`resolve_state_root`
+        Pure resolver that returns the effective storage root.
+    :func:`default_storage_root`
+        Live default factory bound into the settings model.
 """
 
 from __future__ import annotations
@@ -38,7 +52,7 @@ from ._models import STRICT_FROZEN_CONFIG
 
 # Project-root candidate: four levels up from this module
 # (file → core/ → aeat/ → src/ → REPO_ROOT), mirroring
-# :data:`core.config.PROJECT_ROOT` exactly so the checkout default is
+# :data:`~core.config.PROJECT_ROOT` exactly so the checkout default is
 # byte-identical to the historical value.
 _MODULE_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -103,7 +117,7 @@ class StateRootResolution(BaseModel):
 def live_state_root_inputs() -> StateRootInputs:
     """Capture the running process's state-root inputs.
 
-    Snapshots the module-derived project-root candidate, :data:`sys.platform`,
+    Snapshots the module-derived project-root candidate, :data:`~sys.platform`,
     a copy of ``os.environ``, and the user's home directory into a frozen
     :class:`StateRootInputs` for :func:`resolve_state_root`.
     """

@@ -1,22 +1,22 @@
 """Revision closure and reference-surface validation helpers.
 
 Runs closure validators for one
-:class:`~aeat.domain.calculations.registry.ModeloRevision`, checking application
+:class:`~domain.calculations.registry.ModeloRevision`, checking application
 links, constructs, formulas, completeness-manifest references, continuity
 references, and revision-level invariants against a prebuilt
-:class:`~aeat.domain.calculations.registry._validate_revision_context.RevisionValidationContext`.
+:class:`~domain.calculations.registry._validate_revision_context.RevisionValidationContext`.
 
 The reference-surface pass checks revision-level
-:class:`~aeat.domain.calculations.registry.LegalReference` and
-:class:`~aeat.domain.calculations.registry.SourceReference` ids with the
-:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~domain.calculations.registry.LegalReference` and
+:class:`~domain.calculations.registry.SourceReference` ids with the
+:class:`~domain.calculations.registry._validate_evidence.EvidenceValidator`.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._validate_application_links.validate_application_link_closure`
+    :func:`domain.calculations.registry._validate_application_links.validate_application_link_closure`
         Application-link surface closure invoked by this module.
-    :func:`aeat.domain.calculations.registry._validate_constructs.validate_construct_closure`
+    :func:`domain.calculations.registry._validate_constructs.validate_construct_closure`
         Construct member and grounding closure invoked by this module.
-    :func:`aeat.domain.calculations.registry._validate_formulas.validate_formula_dag`
+    :func:`domain.calculations.registry._validate_formulas.validate_formula_dag`
         Formula dependency-cycle guard invoked by this module.
 """
 
@@ -53,9 +53,9 @@ def _validate_revision_closure_sections(
 ) -> None:
     """Append section-closure failures for one registry revision.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` is evaluated
+    The :class:`~domain.calculations.registry.ModeloRevision` is evaluated
     with its precomputed
-    :class:`~aeat.domain.calculations.registry._validate_revision_context.RevisionValidationContext`
+    :class:`~domain.calculations.registry._validate_revision_context.RevisionValidationContext`
     so member ids, application links, constructs, formula dependencies, and
     revision rules share one closure view.
     """
@@ -105,10 +105,10 @@ def _validate_revision_reference_surfaces(
 ) -> None:
     """Append completeness-manifest and continuity reference failures.
 
-    :class:`~aeat.domain.calculations.registry.LegalReference` and
-    :class:`~aeat.domain.calculations.registry.SourceReference` maps provide id
+    :class:`~domain.calculations.registry.LegalReference` and
+    :class:`~domain.calculations.registry.SourceReference` maps provide id
     closure, while
-    :class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`
+    :class:`~domain.calculations.registry._validate_evidence.EvidenceValidator`
     enforces the source-tier requirements for revision-level reference surfaces.
     """
     manifest = revision.completeness_manifest

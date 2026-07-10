@@ -33,34 +33,42 @@ _STATUS_REDACTED = f"status={_REDACTED}"
 # ---------------------------------------------------------------------
 
 
-def test_parse_filter_clause_normalizes_key_value_pairs() -> None:
-    cases = {
-        "status=pending": ("status", "pending"),
-        "  STATUS  =pending": ("status", "pending"),
-        "status=  pending ": ("status", "pending"),
-    }
-    for raw, (expected_key, expected_value) in cases.items():
-        clause = parse_filter_clause(raw)
-        assert clause.key == expected_key
-        assert clause.value == expected_value
+@pytest.mark.parametrize(
+    ("raw", "expected_key", "expected_value"),
+    (
+        ("status=pending", "status", "pending"),
+        ("  STATUS  =pending", "status", "pending"),
+        ("status=  pending ", "status", "pending"),
+    ),
+)
+def test_parse_filter_clause_normalizes_key_value_pairs(
+    raw: str,
+    expected_key: str,
+    expected_value: str,
+) -> None:
+    clause = parse_filter_clause(raw)
+    assert clause.key == expected_key
+    assert clause.value == expected_value
 
 
-def test_parse_filter_clause_rejects_malformed_tokens() -> None:
-    cases = {
-        "status pending": "missing-equals",
-        "=pending": "empty-key",
-        "status=": "empty-value",
-        "status=   ": "empty-value",
-    }
-    for raw, expected_reason in cases.items():
-        with pytest.raises(FilterParseError, match=expected_reason) as exc:
-            parse_filter_clause(raw)
-        assert exc.value.reason == expected_reason
-        if expected_reason == "missing-equals":
-            assert exc.value.raw_token == raw
-            assert exc.value.safe_token == _REDACTED
-            assert exc.value.translated_message == "review.filter.errors.parse_failed"
-            assert exc.value.context == {"reason": "missing-equals"}
+@pytest.mark.parametrize(
+    ("raw", "expected_reason"),
+    (
+        ("status pending", "missing-equals"),
+        ("=pending", "empty-key"),
+        ("status=", "empty-value"),
+        ("status=   ", "empty-value"),
+    ),
+)
+def test_parse_filter_clause_rejects_malformed_tokens(raw: str, expected_reason: str) -> None:
+    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+        parse_filter_clause(raw)
+    assert exc.value.reason == expected_reason
+    if expected_reason == "missing-equals":
+        assert exc.value.raw_token == raw
+        assert exc.value.safe_token == _REDACTED
+        assert exc.value.translated_message == "review.filter.errors.parse_failed"
+        assert exc.value.context == {"reason": "missing-equals"}
 
 
 def test_parse_filter_clauses_preserves_order() -> None:
@@ -110,42 +118,55 @@ def test_ledger_spec_parses_supported_fields_together() -> None:
     ]
 
 
-def test_ledger_spec_requires_period_and_year_pairing() -> None:
+@pytest.mark.parametrize("clauses", (["period=1T"], ["year=2026"]))
+def test_ledger_spec_requires_period_and_year_pairing(clauses: list[str]) -> None:
     """A bare ``period=`` token with no ``year=`` clause refuses (the pair travels together)."""
-    for clauses in (["period=1T"], ["year=2026"]):
-        with pytest.raises(FilterParseError, match=r"period-year-pairing"):
-            LedgerReviewFilterSpec.from_strings(clauses)
+    with pytest.raises(FilterParseError, match=r"period-year-pairing"):
+        LedgerReviewFilterSpec.from_strings(clauses)
 
 
-def test_ledger_spec_rejects_non_filterable_period_values() -> None:
-    for period_code in ("Q1", "quarter-1", "1P", "not-a-period"):
-        with pytest.raises(FilterParseError, match=r"invalid-value-ledger-period") as exc:
-            LedgerReviewFilterSpec.from_strings([f"period={period_code}", "year=2026"])
+@pytest.mark.parametrize("period_code", ("Q1", "quarter-1", "1P", "not-a-period"))
+def test_ledger_spec_rejects_non_filterable_period_values(period_code: str) -> None:
+    with pytest.raises(FilterParseError, match=r"invalid-value-ledger-period") as exc:
+        LedgerReviewFilterSpec.from_strings([f"period={period_code}", "year=2026"])
 
-        assert exc.value.reason == "invalid-value-ledger-period"
-        assert exc.value.safe_token == f"period={_REDACTED}"
+    assert exc.value.reason == "invalid-value-ledger-period"
+    assert exc.value.safe_token == f"period={_REDACTED}"
 
 
-def test_ledger_spec_coerces_issue_direction_and_classification_values() -> None:
-    for raw_issue, expected_issue in (
+@pytest.mark.parametrize(
+    ("raw_issue", "expected_issue"),
+    (
         ("gap", LedgerImportDiagnosticKind.GAP),
         ("duplicate", LedgerImportDiagnosticKind.DUPLICATE),
-    ):
-        spec = LedgerReviewFilterSpec.from_strings([f"issue={raw_issue}"])
-        assert spec.issue is expected_issue
+    ),
+)
+def test_ledger_spec_coerces_issue_values(raw_issue: str, expected_issue: LedgerImportDiagnosticKind) -> None:
+    spec = LedgerReviewFilterSpec.from_strings([f"issue={raw_issue}"])
+    assert spec.issue is expected_issue
 
-    for raw_direction, expected_direction in (
+
+@pytest.mark.parametrize(
+    ("raw_direction", "expected_direction"),
+    (
         ("outgoing", TransactionDirection.OUTGOING),
         ("internal_transfer", TransactionDirection.INTERNAL_TRANSFER),
         ("INCOMING", TransactionDirection.INCOMING),
         ("incoming", TransactionDirection.INCOMING),
-    ):
-        spec = LedgerReviewFilterSpec.from_strings([f"direction={raw_direction}"])
-        assert spec.direction is expected_direction
+    ),
+)
+def test_ledger_spec_coerces_direction_values(
+    raw_direction: str,
+    expected_direction: TransactionDirection,
+) -> None:
+    spec = LedgerReviewFilterSpec.from_strings([f"direction={raw_direction}"])
+    assert spec.direction is expected_direction
 
-    for raw_classification in ("BUSINESS", "business"):
-        spec = LedgerReviewFilterSpec.from_strings([f"classification={raw_classification}"])
-        assert spec.classification is BusinessClassification.BUSINESS
+
+@pytest.mark.parametrize("raw_classification", ("BUSINESS", "business"))
+def test_ledger_spec_coerces_classification_values(raw_classification: str) -> None:
+    spec = LedgerReviewFilterSpec.from_strings([f"classification={raw_classification}"])
+    assert spec.classification is BusinessClassification.BUSINESS
 
 
 def test_ledger_spec_empty_returns_empty_spec() -> None:
@@ -157,8 +178,9 @@ def test_ledger_spec_empty_returns_empty_spec() -> None:
     assert spec.clauses == ()
 
 
-def test_ledger_spec_rejects_invalid_keys_and_values() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("clauses", "expected_reason", "expected_safe_token", "expected_context"),
+    (
         (["kind=received"], "unknown-key-ledger", None, None),
         (
             ["status=fictional"],
@@ -169,15 +191,21 @@ def test_ledger_spec_rejects_invalid_keys_and_values() -> None:
         (["issue=fictional"], "invalid-value-ledger-issue", None, None),
         (["direction=sideways"], "invalid-value-ledger-direction", None, None),
         (["status=pending", "status=skipped"], "duplicate-key-ledger", None, None),
-    )
-    for clauses, expected_reason, expected_safe_token, expected_context in cases:
-        with pytest.raises(FilterParseError, match=expected_reason) as exc:
-            LedgerReviewFilterSpec.from_strings(clauses)
-        assert exc.value.reason == expected_reason
-        if expected_safe_token is not None:
-            assert exc.value.safe_token == expected_safe_token
-        if expected_context is not None:
-            assert exc.value.context == expected_context
+    ),
+)
+def test_ledger_spec_rejects_invalid_keys_and_values(
+    clauses: list[str],
+    expected_reason: str,
+    expected_safe_token: str | None,
+    expected_context: dict[str, str] | None,
+) -> None:
+    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+        LedgerReviewFilterSpec.from_strings(clauses)
+    assert exc.value.reason == expected_reason
+    if expected_safe_token is not None:
+        assert exc.value.safe_token == expected_safe_token
+    if expected_context is not None:
+        assert exc.value.context == expected_context
 
 
 def test_ledger_filter_parse_error_message_omits_sensitive_filter_value() -> None:
@@ -219,16 +247,18 @@ def test_invoice_spec_parses_status_and_case_folded_kind() -> None:
     assert spec.kind is InvoiceKind.ISSUED
 
 
-def test_invoice_spec_rejects_invalid_keys_and_values() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("clauses", "expected_reason"),
+    (
         (["period=1T"], "unknown-key-invoice"),
         (["kind=draft"], "invalid-value-invoice-kind"),
         (["kind=issued", "kind=received"], "duplicate-key-invoice"),
-    )
-    for clauses, expected_reason in cases:
-        with pytest.raises(FilterParseError, match=expected_reason) as exc:
-            InvoiceReviewFilterSpec.from_strings(clauses)
-        assert exc.value.reason == expected_reason
+    ),
+)
+def test_invoice_spec_rejects_invalid_keys_and_values(clauses: list[str], expected_reason: str) -> None:
+    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+        InvoiceReviewFilterSpec.from_strings(clauses)
+    assert exc.value.reason == expected_reason
 
 
 # ---------------------------------------------------------------------
@@ -236,24 +266,23 @@ def test_invoice_spec_rejects_invalid_keys_and_values() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_declaration_spec_parses_status_values() -> None:
-    spec = DeclaracionReviewFilterSpec.from_strings(["status=pending"])
-    assert spec.status is DeclaracionReviewStatus.PENDING
-
-    for status in DeclaracionReviewStatus:
-        spec = DeclaracionReviewFilterSpec.from_strings([f"status={status.value}"])
-        assert spec.status is status
+@pytest.mark.parametrize("status", tuple(DeclaracionReviewStatus))
+def test_declaration_spec_parses_status_values(status: DeclaracionReviewStatus) -> None:
+    spec = DeclaracionReviewFilterSpec.from_strings([f"status={status.value}"])
+    assert spec.status is status
 
 
-def test_declaration_spec_rejects_invalid_keys_and_values() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("clauses", "expected_reason"),
+    (
         (["period=1T"], "unknown-key-declaration"),
         (["status=fictional"], "invalid-value-declaration-status"),
-    )
-    for clauses, expected_reason in cases:
-        with pytest.raises(FilterParseError, match=expected_reason) as exc:
-            DeclaracionReviewFilterSpec.from_strings(clauses)
-        assert exc.value.reason == expected_reason
+    ),
+)
+def test_declaration_spec_rejects_invalid_keys_and_values(clauses: list[str], expected_reason: str) -> None:
+    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+        DeclaracionReviewFilterSpec.from_strings(clauses)
+    assert exc.value.reason == expected_reason
 
 
 # ---------------------------------------------------------------------

@@ -5,7 +5,7 @@ CLI discovery commands call this module instead of constructing
 facade delegates to the central validated authority exposed by
 ``resources().modelos.authority`` and returns the domain query report unchanged.
 
-The ``*_for_scope`` helpers accept a concrete :class:`~aeat.core.Period` and
+The ``*_for_scope`` helpers accept a concrete :class:`~core.Period` and
 pass its filing year plus bare registry token into the query service, so
 revision selection stays inside the authority-backed registry layer.
 """
@@ -16,7 +16,7 @@ from datetime import date
 
 from ...core import Period, TaxDomain
 from ...core.resources import resources
-from ...domain.calculations.registry import InputKind, RegistryQueryService
+from ...domain.calculations.registry import InputKind, ModeloSupportMatrixReport, RegistryQueryService
 
 
 def _service() -> RegistryQueryService:
@@ -36,6 +36,18 @@ def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
 def registry_modelo_codes() -> tuple[str, ...]:
     """Return registry-backed modelo codes in authority order."""
     return tuple(str(modelo.id) for modelo in _service()._authority.modelos)
+
+
+def registry_support_matrix() -> ModeloSupportMatrixReport:
+    """Return the registry-wide per-modelo support/capability matrix.
+
+    Every :class:`~domain.calculations.registry.ModeloEntry` is derived
+    directly from the loaded registry authority (calc-grade, manifest, export
+    formats, extractor, declared casilla renames, declared deprecation
+    decisions, and declared AEAT-portal cross-references) — never
+    hand-maintained.
+    """
+    return _service().support_matrix()
 
 
 def registry_list_modelos(*, year: int | None = None, domain: TaxDomain | None = None):
@@ -231,4 +243,5 @@ __all__ = [
     "registry_formulas_for_scope",
     "registry_list_modelos",
     "registry_modelo_codes",
+    "registry_support_matrix",
 ]

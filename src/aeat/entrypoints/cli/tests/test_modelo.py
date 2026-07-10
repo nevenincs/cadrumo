@@ -18,6 +18,17 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
     "0100",
     surface="_VERIFICATION_FINDING_CASILLA",
 )
+_HELP_SURFACES = (
+    ["app", "modelo", "work", "revisions", "--help"],
+    ["app", "modelo", "work", "verify", "--help"],
+    ["app", "modelo", "export", "--help"],
+)
+_INVALID_PERIODS = (
+    "2026Q1",  # year-prefixed form ambiguous to the resolver
+    "INVALID",  # completely invalid
+    "Q1X",  # garbled quarter token
+)
+_OUT_OF_RANGE_YEARS = ("1899", "2100", "1000")
 
 
 @pytest.fixture
@@ -96,29 +107,26 @@ def test_work_calculate_help_exposes_by_actor_flag() -> None:
     actor; the default factory pulls the active profile display name when
     ``--by`` is omitted."""
 
-    from ....tests.cli_runner import invoke_cached_cli
-
     result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
     assert result.exit_code == 0, result.output
     assert "--by" in result.output
 
 
-@pytest.mark.parametrize(
-    "args",
-    [
-        ["app", "modelo", "work", "revisions", "--help"],
-        ["app", "modelo", "work", "verify", "--help"],
-        ["app", "modelo", "export", "--help"],
-    ],
-)
-def test_modelo_help_surfaces_do_not_leak_registry_validation(args: list[str]) -> None:
+def test_modelo_help_surfaces_do_not_leak_registry_validation() -> None:
     """Reported modelo help surfaces render as CLI help, not registry failures."""
+    failures: list[str] = []
+    for args in _HELP_SURFACES:
+        label = " ".join(args)
+        result = invoke_cached_cli(args)
+        if result.exit_code != 0:
+            failures.append(f"{label}: exit {result.exit_code}: {result.output!r}")
+            continue
+        if "registry validation failed" in result.output:
+            failures.append(f"{label}: leaked registry validation failure")
+        if "config repair integrity" in result.output:
+            failures.append(f"{label}: leaked config repair integrity hint")
 
-    result = invoke_cached_cli(args)
-
-    assert result.exit_code == 0, result.output
-    assert "registry validation failed" not in result.output
-    assert "config repair integrity" not in result.output
+    assert not failures, "\n".join(failures)
 
 
 def test_reported_top_level_revisions_typo_is_usage_error() -> None:
@@ -135,15 +143,7 @@ def test_reported_top_level_revisions_typo_is_usage_error() -> None:
 # --- Fix 2: work create validates period token eagerly ---
 
 
-@pytest.mark.parametrize(
-    "period",
-    [
-        "2026Q1",  # year-prefixed form ambiguous to the resolver
-        "INVALID",  # completely invalid
-        "Q1X",  # garbled quarter token
-    ],
-)
-def test_work_create_rejects_invalid_period_at_create_time(period: str, _active_cli_profile: None) -> None:
+def test_work_create_rejects_invalid_period_at_create_time(_active_cli_profile: None) -> None:
     """``work create`` must reject an un-parseable period token immediately
     rather than storing it and failing later at ``calculate`` time.
 
@@ -152,28 +152,33 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str, _active_
     After fix: ``typer.BadParameter`` fires at create time with a
     human-readable message.
     """
+    failures: list[str] = []
+    for period in _INVALID_PERIODS:
+        result = invoke_cached_cli(
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                "2026",
+                "--period",
+                period,
+                "--revision",
+                "2009-y-siguientes",
+            ],
+        )
+        output_lower = result.output.lower()
+        if result.exit_code == 0:
+            failures.append(f"{period!r}: unexpectedly accepted: {result.output!r}")
+        if "Traceback" in result.output:
+            failures.append(f"{period!r}: leaked Traceback")
+        if "period must be" not in output_lower and "invalid value" not in output_lower:
+            failures.append(f"{period!r}: missing period validation message: {result.output!r}")
 
-    result = invoke_cached_cli(
-        [
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "303",
-            "--year",
-            "2026",
-            "--period",
-            period,
-            "--revision",
-            "2009-y-siguientes",
-        ],
-    )
-
-    assert result.exit_code != 0, f"period {period!r} should be rejected; got: {result.output}"
-    assert "Traceback" not in result.output
-    output_lower = result.output.lower()
-    assert "period must be" in output_lower or "invalid value" in output_lower
+    assert not failures, "\n".join(failures)
 
 
 def test_work_create_rejects_unknown_modelo(_active_cli_profile: None) -> None:
@@ -207,8 +212,7 @@ def test_work_create_rejects_unknown_modelo(_active_cli_profile: None) -> None:
     assert "999" in result.output
 
 
-@pytest.mark.parametrize("year", ["1899", "2100", "1000"])
-def test_work_create_rejects_out_of_range_year(year: str, _active_cli_profile: None) -> None:
+def test_work_create_rejects_out_of_range_year(_active_cli_profile: None) -> None:
     """``work create --year 1899`` is refused with the bad year named.
 
     Before fix: an out-of-range year built a token like ``1899-Q1``,
@@ -217,28 +221,34 @@ def test_work_create_rejects_out_of_range_year(year: str, _active_cli_profile: N
     validation" boundary error.
     After fix: the refusal names the year and the supported range.
     """
+    failures: list[str] = []
+    for year in _OUT_OF_RANGE_YEARS:
+        result = invoke_cached_cli(
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                year,
+                "--period",
+                "Q1",
+                "--revision",
+                "2009-y-siguientes",
+            ],
+        )
+        if result.exit_code == 0:
+            failures.append(f"{year}: unexpectedly accepted: {result.output!r}")
+        if "Traceback" in result.output:
+            failures.append(f"{year}: leaked Traceback")
+        if year not in result.output:
+            failures.append(f"{year}: refusal did not name bad year: {result.output!r}")
+        if "config repair" in result.output:
+            failures.append(f"{year}: leaked config repair hint")
 
-    result = invoke_cached_cli(
-        [
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "303",
-            "--year",
-            year,
-            "--period",
-            "Q1",
-            "--revision",
-            "2009-y-siguientes",
-        ],
-    )
-
-    assert result.exit_code != 0, result.output
-    assert "Traceback" not in result.output
-    assert year in result.output
-    assert "config repair" not in result.output
+    assert not failures, "\n".join(failures)
 
 
 def test_work_create_rejects_unknown_revision(_active_cli_profile: None) -> None:

@@ -5,16 +5,20 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision, resolve_ledger_iva_aggregation_binding_values
+from ....core import Art104TresExclusion, Period
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....domain.calculations.registry import (
+    DataBindingDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ....domain.iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from ....domain.transactions import (
     BusinessClassification,
@@ -46,9 +50,89 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-@cache
-def _modelo_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
-    return resources().modelos.get(modelo_id).revisions[revision_id]
+def _iva_binding(
+    binding_id: str,
+    *,
+    categories: tuple[IvaCategory, ...],
+    rate_kinds: tuple[IvaRateKind, ...],
+    flow_direction: IvaFlowDirection,
+) -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=binding_id,
+        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        selector={
+            "categories": categories,
+            "rate_kinds": rate_kinds,
+            "flow_direction": flow_direction,
+            "fact": "iva_amount_sum",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=("ley-37-1992:art-88",),
+        source_refs=("test-iva-ledger-binding",),
+    )
+
+
+def _revision_with_iva_bindings(revision_id: str, *bindings: DataBindingDefinition) -> ModeloRevision:
+    return ModeloRevision(
+        id=revision_id,
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(year_from=2026, periods=("1T", "2T", "3T", "4T", "0A")),
+        legal_refs=("ley-37-1992:art-88",),
+        source_refs=("test-iva-ledger-binding",),
+        bindings=bindings,
+    )
+
+
+def _modelo_303_iva_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2009-y-siguientes",
+        _iva_binding(
+            "modelo-303-iva-repercutido-general-cuota",
+            categories=(IvaCategory.DOMESTIC_GENERAL_21,),
+            rate_kinds=(IvaRateKind.GENERAL,),
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+        ),
+        _iva_binding(
+            "modelo-303-iva-soportado-interiores-cuota",
+            categories=(
+                IvaCategory.DOMESTIC_GENERAL_21,
+                IvaCategory.DOMESTIC_REDUCED_10,
+                IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            ),
+            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
+            flow_direction=IvaFlowDirection.SOPORTADO,
+        ),
+    )
+
+
+def _modelo_309_iva_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2004-y-siguientes",
+        _iva_binding(
+            "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
+            categories=(IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,),
+            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        ),
+        _iva_binding(
+            "modelo-309-iva-soportado-recargo-equivalencia-cuota",
+            categories=(IvaCategory.RECARGO_EQUIVALENCIA,),
+            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
+            flow_direction=IvaFlowDirection.SOPORTADO,
+        ),
+    )
+
+
+def _modelo_390_without_recargo_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2010-y-siguientes",
+        _iva_binding(
+            "modelo-390-iva-repercutido-general-cuota",
+            categories=(IvaCategory.DOMESTIC_GENERAL_21,),
+            rate_kinds=(IvaRateKind.GENERAL,),
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+        ),
+    )
 
 
 _Q2_2023 = _period(2023, "2T")
@@ -110,6 +194,7 @@ def _transaction(
     value_in_eur: Decimal | None = None,
     iva_category: IvaCategory | None = None,
     exemption_article: IvaExemptionArticle | None = None,
+    art_104_tres_exclusion: Art104TresExclusion | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -136,6 +221,7 @@ def _transaction(
             "iva_amount": iva_amount,
             "iva_category": iva_category,
             "exemption_article": exemption_article,
+            "art_104_tres_exclusion": art_104_tres_exclusion,
             "prorrata_reference": prorrata_reference,
             "lifecycle_state": lifecycle_state,
             "fx_rate": fx_rate,
@@ -144,6 +230,29 @@ def _transaction(
             "classified_by": "manual",
         },
     )
+
+
+def test_art_104_tres_tagged_transaction_is_recorded_as_excluded_ledger_id() -> None:
+    """An operator-tagged art. 104.Tres judgment operation is recorded for prorrata exclusion.
+
+    The tagged sale still projects its IVA cuota observation (it is a real
+    taxable supply); only its ledger id is collected so the prorrata annual
+    volume rollup can skip it from both terms of the ratio.
+    """
+    untagged = _transaction("row-taxable-sale", direction=TransactionDirection.INCOMING)
+    tagged = _transaction(
+        "row-non-habitual-inmueble",
+        direction=TransactionDirection.INCOMING,
+        art_104_tres_exclusion=Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((untagged, tagged)),
+        period=_Q2_2026,
+    )
+
+    assert len(result.observations) == 2
+    assert result.art_104_tres_excluded_ledger_ids == (tagged.transaction_id,)
 
 
 def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -> None:
@@ -533,6 +642,130 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
     assert result.observations[0].ledger_id == transaction.transaction_id
 
 
+def test_repository_backed_projection_reports_out_of_period_catalogue_transactions(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A catalogue transaction outside the requested quarter must surface as a summary.
+
+    Regression test (issue #408): the repository-backed entry point must NOT
+    silently drop out-of-window rows. The compact summary keeps the operator
+    visibility signal without allocating one row-level issue per excluded
+    plaintext index entry.
+    """
+    in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+    out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
+
+    result = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+    assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2026, 7, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2026, 7, 10)
+
+
+def test_repository_backed_projection_summarizes_previously_silent_out_of_window_rows(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Out-of-window rows surface as one compact period-exclusion summary.
+
+    Reviewed-excluded and archived rows are ignored before the in-window IVA
+    classifier runs. When those rows fall outside the requested window, the
+    repository-backed partition reports their count and date span instead of
+    dropping them before aggregation.
+    """
+    in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+    excluded_out_of_period = _transaction(
+        "row-excluded-out-of-period",
+        value_date=date(2026, 7, 1),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+    archived_out_of_period = _transaction(
+        "row-archived-out-of-period",
+        value_date=date(2026, 7, 2),
+        lifecycle_state=TransactionLifecycleState.ARCHIVED,
+    )
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository.save(
+        TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
+    )
+
+    result = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+    assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 2
+    assert result.out_of_window_summary.min_filing_date == date(2026, 7, 1)
+    assert result.out_of_window_summary.max_filing_date == date(2026, 7, 2)
+
+
+def test_repository_backed_projection_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The partitioned result matches the full-scan result for declared values.
+
+    The same multi-period catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and prorrata references must match; only the
+    out-of-window issue taxonomy can differ between the two paths.
+    """
+    q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
+    q2_row_b = _transaction("row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"))
+    q1_row = _transaction("row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = _transaction("row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"))
+    excluded_q3_row = _transaction(
+        "row-q3-excluded",
+        value_date=date(2026, 9, 1),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+    catalogue = TransactionCatalogue.from_transactions(
+        (q2_row_a, q2_row_b, q1_row, q3_row, excluded_q3_row),
+    )
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    repository.save(catalogue)
+
+    partitioned = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+    full_scan = aggregate_iva_ledger_observations(catalogue, period=_Q2_2026)
+
+    # Declared-value invariance: observations and prorrata references are
+    # identical SETS between the two paths (order may differ: full-scan
+    # iterates catalogue insertion order, partitioned iterates sorted ids).
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert set(partitioned.prorrata_references) == set(full_scan.prorrata_references)
+    assert {o.ledger_id for o in partitioned.observations} == {q2_row_a.transaction_id, q2_row_b.transaction_id}
+
+    # Permitted delta: repository-backed partitioning reports one compact
+    # out-of-window summary, while full-scan refines by row after decryption.
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 3
+    assert partitioned.out_of_window_summary.min_filing_date == date(2026, 2, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2026, 9, 1)
+
+    full_scan_ids_with_issues = {i.transaction_id for i in full_scan.issues}
+    assert full_scan_ids_with_issues == {q1_row.transaction_id, q3_row.transaction_id}
+    assert all(i.reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD for i in full_scan.issues)
+    # excluded_q3_row is silently skipped by full-scan (no issue) but surfaces
+    # under the partitioned path.
+    assert excluded_q3_row.transaction_id not in full_scan_ids_with_issues
+
+
 def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
     transaction = _transaction(
         "row-transfer",
@@ -704,7 +937,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
 
 
 def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bindings() -> None:
-    revision = _modelo_revision("309", "2004-y-siguientes")
+    revision = _modelo_309_iva_revision()
     candidates = (
         IvaLedgerCandidate(
             ledger_id="eu-acquisition",
@@ -733,7 +966,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
 
 
 def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
-    revision = _modelo_revision("390", "2010-y-siguientes")
+    revision = _modelo_390_without_recargo_revision()
     candidate = IvaLedgerCandidate(
         ledger_id="retail-recargo",
         transaction_date=date(2026, 4, 12),
@@ -769,7 +1002,7 @@ def test_preclassified_candidate_rejects_non_declarable_sentinel_category() -> N
 
 
 def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> None:
-    revision = _modelo_revision("309", "2004-y-siguientes")
+    revision = _modelo_309_iva_revision()
     candidate = IvaLedgerCandidate(
         ledger_id="late-row",
         transaction_date=date(2026, 7, 1),
@@ -803,7 +1036,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
         TransactionCatalogue.from_transactions((incoming, outgoing)),
         period=_Q2_2026,
     )
-    revision = _modelo_revision("303", "2009-y-siguientes")
+    revision = _modelo_303_iva_revision()
 
     binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)
 

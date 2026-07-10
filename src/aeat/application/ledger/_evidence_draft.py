@@ -1,19 +1,22 @@
 """On-host invoice-PDF field extraction into a typed draft.
 
 Given an ``EvidenceInput`` already resolved from secure storage (see
-:mod:`._evidence_input`), :func:`extract_invoice_fields` runs the in-tree
-on-host text-layer extractor (:func:`._evidence_textlayer.extract_evidence_text`)
-and applies grounded heuristics -- the shared Spanish tax-id validator
-(:func:`aeat.core.identity.validate_spanish_tax_id`), the shared day-first date
-parser (:func:`aeat.core.parsing.parse_date`), and the shared European decimal
-separator normaliser (:func:`aeat.core.decimal.normalize_decimal_separators`) --
-to recover a supplier NIF/NIE/CIF, invoice number, invoice date, taxable base,
-IVA rate, IVA amount, and grand total.
+:mod:`~application.ledger._evidence_input`),
+:func:`~application.ledger.extract_invoice_fields` runs the in-tree on-host
+text-layer extractor
+(:func:`~application.ledger._evidence_textlayer.extract_evidence_text`) and
+applies grounded heuristics -- the shared Spanish tax-id validator
+(:func:`~core.identity.validate_spanish_tax_id`), the shared day-first date
+parser (:func:`~core.parsing.parse_date`), and the shared European decimal
+separator normaliser (:func:`~core.decimal.normalize_decimal_separators`) -- to
+recover a supplier NIF/NIE/CIF, invoice number, invoice date, taxable base, IVA
+rate, IVA amount, and grand total.
 
 This is the extraction PRIMITIVE only: it returns an :class:`InvoiceDraft` the
-operator reviews and confirms. It never persists an :class:`aeat.domain.invoices.Invoice`
-and never guesses a value it cannot ground in the extracted text -- every field
-it cannot recover is left ``None`` rather than fabricated
+operator reviews and confirms. It never persists an
+:class:`~domain.invoices.Invoice` and never guesses a value it cannot ground in
+the extracted text -- every field it cannot recover is left ``None`` rather than
+fabricated
 (``no-silent-under-declaration`` in spirit: an unconfident field is absent, not
 invented).
 
@@ -24,48 +27,69 @@ LLM (``sensitive-financial-data-secure-storage-only``,
 call and performs no filesystem write.
 
 A scan-only PDF (no embedded text layer) or an image attachment has nothing for
-:func:`extract_invoice_fields` to read, so
-:func:`extract_invoice_draft_from_evidence` falls back to the on-host LOCAL vision
-reader (:mod:`._evidence_draft_vision`) -- the same rasterise-then-read-with-Ollama
-transport :class:`aeat.application.ledger.LocalVisionLLMClassifier` already uses for
-classification, gated by :attr:`aeat.core.ServiceCapability.LLM_VISION` and never a
-cloud call. When on-host vision reading is disabled for the profile, or the local
-Ollama runtime is unreachable, the caller gets a typed, instructive refusal --
-never a silent empty draft.
+:func:`~application.ledger.extract_invoice_fields` to read, so
+:func:`~application.ledger.extract_invoice_draft_from_evidence` falls back to the
+on-host LOCAL vision reader (:mod:`~application.ledger._evidence_draft_vision`)
+-- the same rasterise-then-read-with-Ollama transport
+:class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier` already
+uses for classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and
+never a cloud call. When on-host vision reading is disabled for the profile, or
+the local Ollama runtime is unreachable, the caller gets a typed, instructive
+refusal -- never a silent empty draft.
 
-:func:`extract_invoice_draft_from_evidence` is the CLI-facing wiring layer: it
-resolves an already-stored ``purchase_invoice_evidence`` record or a linked
-``attachment_id`` to its in-memory bytes (through
-:func:`._evidence_input.resolve_purchase_invoice_evidence_input` /
-:func:`._evidence_input.resolve_attachment_evidence_input`) and runs
-:func:`extract_invoice_fields` over them, falling back to the on-host vision reader
-for scan-only PDFs and images, so ``aeat app ledger evidence extract`` needs only a
-bucket id plus one of the two reference ids.
+:func:`~application.ledger.extract_invoice_draft_from_evidence` is the CLI-facing
+wiring layer: it resolves an already-stored ``purchase_invoice_evidence`` record
+or a linked ``attachment_id`` to its in-memory bytes (through the private
+evidence-input resolvers
+:func:`~application.ledger._evidence_input.resolve_purchase_invoice_evidence_input`
+and
+:func:`~application.ledger._evidence_input.resolve_attachment_evidence_input`) and
+runs :func:`~application.ledger.extract_invoice_fields` over them, falling back
+to the on-host vision reader for scan-only PDFs and images, so
+``aeat app ledger evidence extract`` needs only a bucket id plus one of the two
+reference ids.
 
-:func:`confirm_invoice_draft_from_evidence` is the non-interactive CONFIRM step
-that closes the review loop: it re-runs the on-host extraction, applies any
-operator-supplied field overrides (extraction is best-effort -- every field may
-be corrected), and delegates the actual write to
-:func:`aeat.application.invoices.create_catalogue_invoice` -- the sole
-sanctioned :class:`aeat.domain.invoices.Invoice` writer
+:func:`~application.ledger.confirm_invoice_draft_from_evidence` is the
+non-interactive CONFIRM step that closes the review loop: it re-runs the on-host
+extraction, applies any operator-supplied field overrides (extraction is
+best-effort -- every field may be corrected), and delegates the actual write to
+:func:`~application.invoices.create_catalogue_invoice` -- the sole sanctioned
+:class:`~domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``). A confirm keyed on the same
 evidence/attachment reference and the same resolved fields is a guarded no-op
 that returns the existing invoice rather than raising or duplicating
 (``single-subject-mutation-is-idempotent-guarded``); a same-reference confirm
 whose resolved fields genuinely differ from the already-stored invoice mints a
 second, distinct invoice record (a different content-derived
-:attr:`~aeat.domain.invoices.Invoice.invoice_id`) rather than silently
+:attr:`~domain.invoices.Invoice.invoice_id`) rather than silently
 overwriting one filer's data with another's.
 
 Confirming also auto-links the source evidence to the resulting invoice:
-:func:`aeat.domain.attachments.link_attachment_invoice` appends the invoice's id
-to the backing :class:`~aeat.domain.attachments.Attachment`'s
-:attr:`~aeat.domain.attachments.Attachment.linked_invoice_ids`, closing the
+:func:`~domain.attachments.link_attachment_invoice` appends the invoice's id
+to the backing :class:`~domain.attachments.Attachment`'s
+:attr:`~domain.attachments.Attachment.linked_invoice_ids`, closing the
 provenance loop in both directions (the invoice is discoverable from the
 evidence, and the evidence is the invoice's traceable source). The link is
 re-asserted on a guarded no-op confirm too, so a re-confirm never regresses a
 provenance link that was never wired for older evidence, and the append itself
 is idempotent (dedup on the linked-ids tuple).
+
+See Also:
+    :class:`~application.ledger.InvoiceDraft`
+        Public draft record returned before an invoice is persisted.
+    :func:`~application.ledger.extract_invoice_fields`
+        Text-layer extraction primitive used before any evidence reference
+        resolution or confirm write.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        CLI-facing resolver that loads stored evidence bytes and chooses the
+        text-layer or on-host vision path.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Non-interactive confirm step that re-extracts, applies overrides, and
+        delegates the catalogue write.
+    :mod:`~application.ledger._evidence_draft_vision`
+        On-host vision fallback for scan-only PDFs and image attachments.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Sole sanctioned writer for the resulting catalogue invoice.
 """
 
 from __future__ import annotations
@@ -76,13 +100,25 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...adapters.outbound.llm import (
+    LLMPdfRasterisationError,
+    LLMProviderError,
+    rasterise_pdf_pages_to_base64_png,
+)
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
+from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings
+from ...core.config import load_settings as _load_settings
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import IdentityError, validate_spanish_tax_id
-from ...core.parsing import parse_date
+from ...core.parsing import parse_date, parse_iso8601_date
+from ...domain.attachments import link_attachment_invoice
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
+from ..provisioning import probe_ollama_vision
+from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
@@ -145,7 +181,7 @@ class InvoiceDraft(BaseModel):
     Every field is optional: a field the extractor cannot ground in the
     document's text is left ``None`` rather than guessed. The operator reviews
     this draft and supplies or corrects fields before any
-    :class:`aeat.domain.invoices.Invoice` is minted from it -- this model is
+    :class:`~domain.invoices.Invoice` is minted from it -- this model is
     never itself persisted as a filing-grade record.
 
     Attributes:
@@ -282,9 +318,11 @@ def extract_invoice_draft_from_evidence(
     either a ``purchase_invoice_evidence`` id (looked up through
     :class:`PurchaseInvoiceEvidenceService`) or a linked ``attachment_id``,
     reads the evidence's bytes from secure storage into memory
-    (:func:`._evidence_input.resolve_purchase_invoice_evidence_input` /
-    :func:`._evidence_input.resolve_attachment_evidence_input`) and runs the
-    on-host extractor over them. Exactly one of *evidence_id* /
+    (the private evidence-input resolvers
+    :func:`~application.ledger._evidence_input.resolve_purchase_invoice_evidence_input`
+    and
+    :func:`~application.ledger._evidence_input.resolve_attachment_evidence_input`)
+    and runs the on-host extractor over them. Exactly one of *evidence_id* /
     *attachment_id* must be supplied.
 
     Nothing is written to disk and nothing leaves the host: the resolved
@@ -300,7 +338,7 @@ def extract_invoice_draft_from_evidence(
 
     Returns:
         :class:`InvoiceDraft`: The best-effort extracted fields, for operator
-        review. Never itself persisted as an :class:`aeat.domain.invoices.Invoice`.
+        review. Never itself persisted as an :class:`~domain.invoices.Invoice`.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When neither or both of
@@ -312,9 +350,6 @@ def extract_invoice_draft_from_evidence(
         PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
             record in *bucket_id*.
     """
-    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-    from ...core.config import load_settings as _load_settings
-
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
             "exactly one of evidence_id or attachment_id must be supplied",
@@ -345,19 +380,13 @@ def extract_invoice_draft_from_evidence(
 def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Settings) -> InvoiceDraft:
     """Rasterise/encode *evidence* and read it with the on-host local vision model.
 
-    Gated by :attr:`aeat.core.ServiceCapability.LLM_VISION` -- an operator who has
+    Gated by :attr:`~core.ServiceCapability.LLM_VISION` -- an operator who has
     opted out gets a typed refusal naming the capability toggle, never a silent
     empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
     PDF, is converted to the same instructive refusal the classification vision
-    path uses (:func:`aeat.application.provisioning.probe_ollama_vision`).
+    path uses (:func:`~application.provisioning.probe_ollama_vision`).
     """
     import httpx
-
-    from ...adapters.outbound.llm import LLMPdfRasterisationError, LLMProviderError
-    from ...core import ServiceCapability
-    from ..provisioning import probe_ollama_vision
-    from ..user_profile import resolve_active_capability
-    from ._evidence_draft_vision import extract_invoice_fields_from_images
 
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(
@@ -367,9 +396,9 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         )
 
     try:
-        if evidence.media_kind is MediaKind.PDF:
-            from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
+        from ._evidence_draft_vision import extract_invoice_fields_from_images
 
+        if evidence.media_kind is MediaKind.PDF:
             images = rasterise_pdf_pages_to_base64_png(evidence.data)
         else:
             import base64
@@ -391,7 +420,7 @@ class InvoiceConfirmationResult(BaseModel):
 
     Attributes:
         invoice: The persisted (or already-existing, on a guarded no-op)
-            :class:`aeat.domain.invoices.Invoice`.
+            :class:`~domain.invoices.Invoice`.
         draft: The re-run on-host extraction the confirmation was based on
             (before overrides were applied), kept so the operator can see what
             was actually read from the document versus what they overrode.
@@ -445,13 +474,13 @@ def confirm_invoice_draft_from_evidence(
     stay in memory only), then layers any operator-supplied override on top of
     each extracted field -- extraction is best-effort, so every field may be
     corrected before the record is minted. The resulting identity fields are
-    handed to :func:`aeat.application.invoices.create_catalogue_invoice`, the
+    handed to :func:`~application.invoices.create_catalogue_invoice`, the
     single sanctioned :class:`Invoice` writer
     (``composition-service-no-parallel-write-path``); this function never
     writes the catalogue itself.
 
     Idempotent-guarded (``single-subject-mutation-is-idempotent-guarded``): the
-    persisted :attr:`Invoice.invoice_id` is a stable hash of
+    persisted :attr:`~domain.invoices.Invoice.invoice_id` is a stable hash of
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)`` — a confirm carrying identical resolved fields to an
     already-persisted invoice returns that invoice unchanged
@@ -497,12 +526,6 @@ def confirm_invoice_draft_from_evidence(
         InvoiceValidationError: When the resolved fields fail invoice-model
             validation (e.g. an invalid counterparty tax id or IVA rate).
     """
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-    from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
-    from ...core.config import load_settings as _load_settings
-    from ...domain.attachments import link_attachment_invoice
-
     resolved_settings = settings or _load_settings()
     draft = extract_invoice_draft_from_evidence(
         bucket_id=bucket_id,
@@ -527,15 +550,7 @@ def confirm_invoice_draft_from_evidence(
         field="invoice_number",
     )
     assert isinstance(resolved_invoice_number, str)
-    resolved_invoice_date = invoice_date
-    if resolved_invoice_date is None and draft.invoice_date is not None:
-        resolved_invoice_date = date.fromisoformat(draft.invoice_date)
-    if resolved_invoice_date is None:
-        raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
-            "override was supplied",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
-        )
+    resolved_invoice_date = _resolve_confirmed_invoice_date(invoice_date, draft)
     resolved_taxable_base = _require_confirmed_field(
         taxable_base if taxable_base is not None else draft.taxable_base,
         field="taxable_base",
@@ -606,6 +621,20 @@ def confirm_invoice_draft_from_evidence(
     return InvoiceConfirmationResult(invoice=result.invoice, draft=draft, created=True)
 
 
+def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:
+    if invoice_date is not None:
+        return invoice_date
+    if draft.invoice_date is not None:
+        parsed = parse_iso8601_date(draft.invoice_date)
+        if parsed is not None:
+            return parsed
+    raise PurchaseInvoiceEvidenceInputError(
+        "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
+        "override was supplied",
+        suggestion="aeat app ledger evidence extract --evidence-id <id>",
+    )
+
+
 def _resolve_evidence_attachment_id(
     *,
     bucket_id: str,
@@ -615,14 +644,15 @@ def _resolve_evidence_attachment_id(
 ) -> str:
     """Return the in-store ``attachment_id`` backing one evidence reference.
 
-    Mirrors the exactly-one-of resolution :func:`extract_invoice_draft_from_evidence`
-    already enforces (that call already ran, so the invariant holds here too): when
-    *attachment_id* is supplied directly it is returned unchanged; when *evidence_id*
-    is supplied, the linked ``purchase_invoice_evidence`` record's own
+    Mirrors the exactly-one-of resolution
+    :func:`~application.ledger.extract_invoice_draft_from_evidence` already
+    enforces (that call already ran, so the invariant holds here too): when
+    *attachment_id* is supplied directly it is returned unchanged; when
+    *evidence_id* is supplied, the linked ``purchase_invoice_evidence`` record's own
     :attr:`~._evidence.PurchaseInvoiceEvidence.attachment_id` is looked up (guaranteed
     non-``None`` for any evidence whose bytes were actually read, since
-    :func:`._evidence_input.resolve_purchase_invoice_evidence_input` already refused
-    a record with no in-store attachment).
+    :func:`~application.ledger._evidence_input.resolve_purchase_invoice_evidence_input`
+    already refused a record with no in-store attachment).
     """
     if attachment_id is not None:
         return attachment_id

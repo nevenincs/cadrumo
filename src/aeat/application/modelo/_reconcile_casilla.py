@@ -1,7 +1,7 @@
 """Casilla-level divergence detection between a computed revision and a filed declaration.
 
 ``detect_casilla_divergences`` is the typed, pure comparison primitive this
-module contributes to :mod:`aeat.application.modelo._reconcile`: given the
+module contributes to :mod:`~application.modelo._reconcile`: given the
 canonical ``revision.casilla_values`` a work unit already persisted (the same
 values the calculate path, the result summary, and the export surface render,
 per ``one-aggregation-path-pull-equals-calculate``) and the per-casilla values a
@@ -12,9 +12,9 @@ sides declare the casilla but the amounts disagree beyond tolerance),
 declaration omitted it), and ``extra_in_filed`` (the filed declaration prints a
 casilla the computed revision never resolved a value for). The comparison is
 scoped to the registry's own reconciliation policy
-(:meth:`~aeat.domain.calculations.registry.RegistrySnapshot.verification_policy`)
+(:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`)
 so the compared set is declared registry data, never an ad hoc casilla list —
-the same scoping :func:`aeat.application.verification.verify_declaracion` already
+the same scoping :func:`~application.verification.verify_declaracion` already
 applies to printed-vs-computed comparisons before a filing, kept here for the
 after-filing reconcile use.
 
@@ -22,6 +22,24 @@ This module is intentionally free of any PDF-parsing, work-unit, or
 bucket-event dependency: it is a pure function over two ``{casilla_id: Decimal}``
 mappings plus a tolerance, so it can be tested and reused without a persisted
 work unit, a registry snapshot, or a parsed declaración.
+
+See Also:
+    :mod:`~application.modelo._reconcile`
+        Reconciliation workflow that loads work-unit state and delegates
+        casilla comparison to this pure primitive.
+    :class:`~domain.modelos.CalculationRevision`
+        Persisted computed revision whose ``casilla_values`` are compared.
+    :class:`~domain.calculations.registry.RegistryVerificationPolicy`
+        Registry-declared scope and tolerance used before divergences are
+        surfaced.
+    :class:`~adapters.inbound.pdf.ExtractedCasilla`
+        Parsed declaration row shape that feeds the filed-value mapping.
+    :class:`CasillaDivergence`
+        Typed row returned for each surfaced disagreement.
+    :class:`CasillaDivergenceKind`
+        Closed divergence taxonomy emitted by the comparison.
+    :func:`detect_casilla_divergences`
+        Pure comparison entry point exported by this module.
 """
 
 from __future__ import annotations
@@ -76,18 +94,18 @@ def detect_casilla_divergences(
     *,
     computed: Mapping[CasillaId, Decimal],
     filed: Mapping[CasillaId, Decimal],
-    scope: Mapping[CasillaId, Decimal] | None = None,
+    scope: Mapping[CasillaId, object] | None = None,
     tolerance: Decimal = Decimal("0.01"),
 ) -> tuple[CasillaDivergence, ...]:
     """Classify every casilla-level disagreement between ``computed`` and ``filed``.
 
     Args:
         computed: Canonical ``{casilla_id: value}`` read from the persisted
-            :class:`~aeat.domain.modelos.CalculationRevision`
+            :class:`~domain.modelos.CalculationRevision`
             (``revision.casilla_values``).
         filed: ``{casilla_id: value}`` printed on the filed declaration, decoded
             from the declaration parser's
-            :class:`~aeat.adapters.inbound.pdf.ExtractedCasilla` rows.
+            :class:`~adapters.inbound.pdf.ExtractedCasilla` rows.
         scope: Optional casilla-id-to-anything mapping restricting comparison to
             its keys (typically the registry's ``verification_policy()``
             ``computed_casilla_ids``). When supplied, both ``computed`` and

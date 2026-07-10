@@ -6,19 +6,19 @@ aggregate in encrypted AUDIT-class persistence.
 
 The payload is intentionally narrower than the modelo filing-record catalogue:
 it records local filing history rows by modelo and period, while
-:class:`aeat.domain.modelos.ModeloRecord` carries the richer current /
+:class:`domain.modelos.ModeloRecord` carries the richer current /
 superseded filing lifecycle for calculation revisions.
 
 See Also:
-    :class:`aeat.application.filing.ModeloHistoryRepository`
+    :class:`application.filing.ModeloHistoryRepository`
         Encrypted AUDIT-class repository that stores these payloads.
-    :mod:`aeat.domain.modelos`
+    :mod:`domain.modelos`
         Work-unit filing records and supersession history for calculation
         revisions.
-    :class:`aeat.domain.modelos.ModeloRecordCatalogue`
+    :class:`domain.modelos.ModeloRecordCatalogue`
         Current/superseded filing-record catalogue that owns the authoritative
         work-unit filing lifecycle.
-    :mod:`aeat.application.calculations`
+    :mod:`application.calculations`
         Past-filing casilla observations used by cross-period calculation
         resolvers.
 """

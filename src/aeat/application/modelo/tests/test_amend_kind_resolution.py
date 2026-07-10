@@ -1,9 +1,9 @@
 """End-to-end tests for period-aware amendment-kind routing.
 
-These tests exercise the real :func:`~aeat.application.modelo.amend_modelo_revision`
+These tests exercise the real :func:`~application.modelo.amend_modelo_revision`
 composition path (no mocks) against seeded Modelo 303 baselines that straddle the
 diseño-grounded rectificativa boundary (filing_year 2024, period 09/3T onward — see
-:mod:`aeat.core._amendment_kind_regime`). They prove:
+:mod:`~core._amendment_kind_regime`). They prove:
 
 * an illegal ``--kind`` for the resolved period is refused, naming the accepted
   kind set;
@@ -11,6 +11,19 @@ diseño-grounded rectificativa boundary (filing_year 2024, period 09/3T onward �
 * a pre-rectificativa ``complementaria`` that would lower declared liability is
   refused with guidance toward the solicitud de rectificación procedure, while
   an increase is accepted.
+
+See Also:
+    :mod:`~application.modelo._amendment_kind_resolution`
+        Period-aware kind gate and complementaria liability-decrease guard under
+        test.
+    :func:`~core.resolve_amendment_kind_regime`
+        Codified per-modelo amendment-kind regime that drives accepted-kind
+        resolution.
+    :func:`~application.modelo.amend_modelo_revision`
+        Public application composition path exercised end to end here.
+    :class:`~domain.modelos.CalculationRevisionAmendmentKind`
+        Domain enum for ``complementaria``, ``rectificativa``, and
+        ``sustitutiva`` values.
 """
 
 from __future__ import annotations
@@ -124,7 +137,7 @@ def _seed_m303_external_baseline(
     """Seed a CURRENT M303 filing record carrying ``external_evidence``.
 
     The single casilla populated is casilla 71 (the codified final-result
-    casilla — see :func:`aeat.core.result_disposition_casilla_ids`), so the
+    casilla — see :func:`~core.result_disposition_casilla_ids`), so the
     liability-direction guard has a real value to compare.
     """
     wu_repo, cr_repo, fr_repo, _ = repos_tuple

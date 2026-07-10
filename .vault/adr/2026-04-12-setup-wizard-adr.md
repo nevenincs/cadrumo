@@ -2,17 +2,17 @@
 tags:
   - "#adr"
   - "#setup-wizard"
-date: 2026-04-12
-modified: '2026-06-13'
-title: First-run setup wizard — ADR
+date: '2026-04-12'
 related:
   - "[[2026-04-12-setup-wizard-research]]"
   - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-deadline-engine-adr]]"
+superseded_by: '2026-05-12-schema-driven-wizard-adr'
+modified: '2026-07-10'
+title: First-run setup wizard — ADR
 issue: wgergely/aeat#61
 ---
-
-# adr: first-run interactive setup wizard (#61)
+# adr: first-run interactive setup wizard (#61) | (**status:** `superseded`)
 
 ## context
 

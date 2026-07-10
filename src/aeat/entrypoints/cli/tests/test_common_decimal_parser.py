@@ -50,15 +50,15 @@ def _english_locale() -> object:
     clear_output_language_cache()
 
 
-@pytest.mark.parametrize("raw", _REJECTED)
-def test_parse_decimal_amount_refuses_non_canonical(raw: str) -> None:
-    with pytest.raises(typer.BadParameter):
-        parse_decimal_amount(raw, label="amount")
+def test_parse_decimal_amount_refuses_non_canonical() -> None:
+    for raw in _REJECTED:
+        with pytest.raises(typer.BadParameter):
+            parse_decimal_amount(raw, label="amount")
 
 
-@pytest.mark.parametrize(("raw", "expected"), _ACCEPTED_NONNEGATIVE)
-def test_parse_decimal_amount_accepts_canonical(raw: str, expected: Decimal) -> None:
-    assert parse_decimal_amount(raw, label="amount", signed=False) == expected
+def test_parse_decimal_amount_accepts_canonical() -> None:
+    for raw, expected in _ACCEPTED_NONNEGATIVE:
+        assert parse_decimal_amount(raw, label="amount", signed=False) == expected, raw
 
 
 def test_parse_decimal_amount_signed_accepts_negative() -> None:

@@ -11,6 +11,7 @@ stays independent of any registry-authoring state elsewhere in the tree.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -22,7 +23,7 @@ from ....application.ledger import MediaKind, PurchaseInvoiceEvidence, preflight
 from ....core import BindingSourceKind, Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -46,7 +47,7 @@ _PERIOD_1T_2026 = Period.from_year_and_code(2026, "1T")
 
 
 @pytest.fixture
-def _tx_repository(tmp_path: Path) -> TransactionCatalogueRepository:
+def _tx_repository(tmp_path: Path) -> Generator[TransactionCatalogueRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
 
@@ -162,7 +163,7 @@ def _work_unit(*, modelo: str = "130", period: Period = _PERIOD_1T_2026, name: s
     return WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
-        modelo=modelo,
+        modelo=ModeloCode(modelo),
         filing_year=period.year,
         period=period,
         revision_id="2019-y-siguientes",

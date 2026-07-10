@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#release-please"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-10'
 title: Release-please LOCAL-only autorelease — ADR
 related:
   - "[[2026-04-12-release-please-research]]"
@@ -12,7 +12,7 @@ issue: wgergely/aeat#60
 status: accepted
 ---
 
-# adr: release-please local-only autorelease
+# adr: release-please local-only autorelease | (**status:** `accepted`)
 
 ## context
 

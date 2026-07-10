@@ -18,17 +18,30 @@ below (legacy-root growth budgets, raw-id-regex placement, legacy-selector
 reintroduction, centralized-addressing bypass) are modelo-CLI-decomposition-
 specific structural rules, not import-hygiene duplicates, and remain this
 module's own authority.
+
+See Also:
+    :func:`~tests._inventory.package_python_files`
+        Shared source inventory used to enumerate focused modelo CLI modules.
+    :func:`~tests._inventory.ast_for_path`
+        Cached AST lookup used by the structural boundary scans.
+    :mod:`~entrypoints.cli.tests.test_cli_module_size`
+        Companion size-budget guard for CLI decomposition.
+
+Modelo revision commands must stay thin transports over public application
+facades, and every modelo command module must respect the CLI's
+backend-boundary rule.
 """
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from ....core.paths import PROJECT_ROOT
-from ....tests import leaf_name
+from ....tests import ast_for_path, leaf_name, package_python_files
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -63,16 +76,31 @@ _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES = {
 }
 
 
+def _modelo_cli_modules() -> tuple[Path, ...]:
+    return tuple(
+        path
+        for path in package_python_files()
+        if path.parent == _CLI_ROOT and path.name.startswith(_MODELO_MODULE_PREFIX)
+    )
+
+
 def _production_modelo_cli_modules() -> tuple[Path, ...]:
     return tuple(
         path
-        for path in sorted(_CLI_ROOT.glob(f"{_MODELO_MODULE_PREFIX}*.py"))
+        for path in _modelo_cli_modules()
         if path.name not in {_MODELO_LEGACY_ROOT, _MODELO_PAYLOADS}
     )
 
 
-def _import_from_modules(path: Path) -> tuple[tuple[int, int, str], ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
+    tree = ast_for_path(path, source_tree_ast)
+    if tree is None:
+        raise AssertionError(f"unable to parse {path.relative_to(PROJECT_ROOT).as_posix()}")
+    return tree
+
+
+def _import_from_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[int, int, str], ...]:
+    tree = _tree_for_path(path, source_tree_ast)
     modules: list[tuple[int, int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module is not None:
@@ -86,9 +114,9 @@ def _normalized_module(level: int, module: str) -> str:
     return module.removeprefix("aeat.")
 
 
-def _private_backend_import_modules(path: Path) -> tuple[str, ...]:
+def _private_backend_import_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[str, ...]:
     modules: list[str] = []
-    for _line_number, level, module in _import_from_modules(path):
+    for _line_number, level, module in _import_from_modules(path, source_tree_ast):
         normalized = _normalized_module(level, module)
         is_private_application = normalized.startswith("application.") and "._" in normalized
         is_private_domain = normalized.startswith("domain.") and "._" in normalized
@@ -97,8 +125,8 @@ def _private_backend_import_modules(path: Path) -> tuple[str, ...]:
     return tuple(sorted(modules))
 
 
-def _registry_query_service_call_count(path: Path) -> int:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _registry_query_service_call_count(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> int:
+    tree = _tree_for_path(path, source_tree_ast)
     count = 0
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "RegistryQueryService":
@@ -106,8 +134,8 @@ def _registry_query_service_call_count(path: Path) -> int:
     return count
 
 
-def _raw_id_regex_lines(path: Path) -> tuple[int, ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _raw_id_regex_lines(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[int, ...]:
+    tree = _tree_for_path(path, source_tree_ast)
     lines: list[int] = []
     for node in ast.walk(tree):
         if (
@@ -128,44 +156,48 @@ def _raw_id_regex_lines(path: Path) -> tuple[int, ...]:
     return tuple(sorted(set(lines)))
 
 
-def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root() -> None:
+def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Extracted command modules must not depend on the monolithic root module."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
-        for line_number, _level, module in _import_from_modules(path):
+        for line_number, _level, module in _import_from_modules(path, source_tree_ast):
             if module == "_modelo":
                 offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "extracted modelo modules import _modelo.py:\n  " + "\n  ".join(offenders)
 
 
-def test_legacy_modelo_root_does_not_add_private_backend_imports() -> None:
+def test_legacy_modelo_root_does_not_add_private_backend_imports(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """The legacy root may shrink private backend debt, but it must not grow it."""
     path = _CLI_ROOT / _MODELO_LEGACY_ROOT
-    private_imports = set(_private_backend_import_modules(path))
+    private_imports = set(_private_backend_import_modules(path, source_tree_ast))
     unexpected = sorted(private_imports - _LEGACY_ROOT_PRIVATE_IMPORT_MODULES)
 
     assert unexpected == [], "new private backend imports in _modelo.py:\n  " + "\n  ".join(unexpected)
 
 
-def test_legacy_modelo_root_does_not_add_registry_authority_reads() -> None:
+def test_legacy_modelo_root_does_not_add_registry_authority_reads(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Registry authority reads must move out of the CLI root, not multiply."""
     path = _CLI_ROOT / _MODELO_LEGACY_ROOT
     text = path.read_text(encoding="utf-8")
     authority_reads = text.count("resources().modelos.authority")
-    service_calls = _registry_query_service_call_count(path)
+    service_calls = _registry_query_service_call_count(path, source_tree_ast)
 
     assert authority_reads <= _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET
     assert service_calls <= _LEGACY_ROOT_REGISTRY_QUERY_SERVICE_CALL_BUDGET
 
 
-def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support() -> None:
+def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Raw exact-id shape checks belong in the shared CLI support helper."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
         if path.name in _RAW_ID_REGEX_HELPERS:
             continue
-        for line_number in _raw_id_regex_lines(path):
+        for line_number in _raw_id_regex_lines(path, source_tree_ast):
             offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "modelo CLI modules define raw id regexes outside shared support:\n  " + "\n  ".join(
@@ -173,13 +205,15 @@ def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_suppo
     )
 
 
-def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls() -> None:
+def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Extracted command modules delegate work/revision selection to application facades."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
         if path.name in _LEGACY_SELECTOR_HELPERS:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = _tree_for_path(path, source_tree_ast)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 name = leaf_name(node.func)
@@ -189,13 +223,13 @@ def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls()
     assert offenders == [], "modelo CLI modules reintroduced local selector policy:\n  " + "\n  ".join(offenders)
 
 
-def test_modelo_cli_uses_centralized_operator_addressing_facades() -> None:
+def test_modelo_cli_uses_centralized_operator_addressing_facades(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Modelo CLI code must not rebuild work/revision addressing policy locally."""
     offenders: list[str] = []
-    for path in sorted(_CLI_ROOT.glob(f"{_MODELO_MODULE_PREFIX}*.py")):
+    for path in _modelo_cli_modules():
         if path.name in {_MODELO_PAYLOADS, _MODELO_CLI_SUPPORT}:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = _tree_for_path(path, source_tree_ast)
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:

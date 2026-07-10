@@ -75,51 +75,6 @@ def _snapshot(modelo: str, year: int, period: str, on: date):
     return resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
 
 
-def _plan_casilla_keys(snapshot: RegistrySnapshot) -> set[tuple[str, str | None]]:
-    """Return the (number, segmento) key for every casilla the plan emits a cell for."""
-    by_id = {c.id: c for c in snapshot.revision.casillas}
-    plan = build_export_plan(snapshot)
-    emitted_ids: set[str] = set()
-    for cell in plan.value_cells:
-        if cell.casilla_id is not None:
-            emitted_ids.add(cell.casilla_id)
-    for cell in plan.formula_cells:
-        emitted_ids.add(cell.casilla_id)
-    return {(by_id[cid].number, by_id[cid].segmento) for cid in emitted_ids if cid in by_id}
-
-
-@pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_export_plan_covers_completeness_manifest(modelo: str, year: int, period: str, on: date) -> None:
-    snapshot = _snapshot(modelo, year, period, on)
-    manifest = snapshot.revision.completeness_manifest
-    assert manifest is not None, f"modelo {modelo} has no completeness manifest to ground parity against"
-    required = {(c.number, c.segmento) for c in manifest.casillas}
-    emitted = _plan_casilla_keys(snapshot)
-    missing = sorted(required - emitted)
-    # Every official-manifest casilla must appear in the exported workbook.
-    assert not missing, f"modelo {modelo} export omits official casillas: {missing}"
-
-
-@pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_every_computed_casilla_has_a_live_formula(modelo: str, year: int, period: str, on: date) -> None:
-    snapshot = _snapshot(modelo, year, period, on)
-    # An ``internal_only`` casilla whose formula op has no closed-form Sheets
-    # translation is app-internal calculation-support the AEAT Diseño de Registros
-    # omits and the workbook cannot render as a live formula (the M303
-    # régimen-simplificado módulos advisory-support figures resolve through custom
-    # runtime-dispatch ops — the same untranslatable class as the M100/M210 ops
-    # that keep those modelos out of _COVERED). The export omits it by design, so
-    # the gate scopes to casillas the official-structure workbook renders.
-    excluded = _untranslatable_internal_only_ids(snapshot)
-    computed_ids = {c.id for c in snapshot.revision.casillas if c.formula is not None and c.id not in excluded}
-    plan = build_export_plan(snapshot)
-    formula_ids = {fc.casilla_id for fc in plan.formula_cells}
-    assert computed_ids, f"modelo {modelo} declares no computed casillas"
-    missing = sorted(computed_ids - formula_ids)
-    # Every renderable computed casilla must carry a live spreadsheet formula in the export.
-    assert not missing, f"modelo {modelo} computed casillas without a live formula cell: {missing}"
-
-
 _FORMAT_BY_REGISTRY_TYPE = {
     "money": ("money", "#,##0.00"),
     "integer": ("integer", "0"),
@@ -128,18 +83,47 @@ _FORMAT_BY_REGISTRY_TYPE = {
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_numeric_casillas_carry_number_format_facet(modelo: str, year: int, period: str, on: date) -> None:
+def test_export_plan_mirrors_registry_manifest_formulas_and_formats(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     snapshot = _snapshot(modelo, year, period, on)
+    revision = snapshot.revision
+    manifest = revision.completeness_manifest
+    assert manifest is not None, f"modelo {modelo} has no completeness manifest to ground parity against"
+    by_id = {c.id: c for c in revision.casillas}
     plan = build_export_plan(snapshot)
+    emitted_ids = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
+    emitted_ids.update(cell.casilla_id for cell in plan.formula_cells)
+
+    required = {(c.number, c.segmento) for c in manifest.casillas}
+    emitted = {(by_id[cid].number, by_id[cid].segmento) for cid in emitted_ids if cid in by_id}
+    missing = sorted(required - emitted)
+    # Every official-manifest casilla must appear in the exported workbook.
+    assert not missing, f"modelo {modelo} export omits official casillas: {missing}"
+
+    # An ``internal_only`` casilla whose formula op has no closed-form Sheets
+    # translation is app-internal calculation-support the AEAT Diseño de Registros
+    # omits and the workbook cannot render as a live formula (the M303
+    # régimen-simplificado módulos advisory-support figures resolve through custom
+    # runtime-dispatch ops — the same untranslatable class as the M100/M210 ops
+    # that keep those modelos out of _COVERED). The export omits it by design, so
+    # the gate scopes to casillas the official-structure workbook renders.
+    excluded = _untranslatable_internal_only_ids(snapshot)
+    computed_ids = {c.id for c in revision.casillas if c.formula is not None and c.id not in excluded}
+    formula_ids = {fc.casilla_id for fc in plan.formula_cells}
+    assert computed_ids, f"modelo {modelo} declares no computed casillas"
+    missing_formulas = sorted(computed_ids - formula_ids)
+    # Every renderable computed casilla must carry a live spreadsheet formula in the export.
+    assert not missing_formulas, f"modelo {modelo} computed casillas without a live formula cell: {missing_formulas}"
+
     formats = {item.casilla_id: item for item in plan.number_formats}
     # Untranslatable ``internal_only`` casillas are omitted from the export
-    # layout entirely (see test_every_computed_casilla_has_a_live_formula), so
+    # layout entirely (see the live-formula assertion above), so
     # they carry no cell to format; scope the expectation to casillas the
     # official-structure workbook actually renders.
-    excluded = _untranslatable_internal_only_ids(snapshot)
     expected = {
         casilla.id: _FORMAT_BY_REGISTRY_TYPE[casilla.data_type]
-        for casilla in snapshot.revision.casillas
+        for casilla in revision.casillas
         if casilla.data_type in _FORMAT_BY_REGISTRY_TYPE and casilla.id not in excluded
     }
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-source-kind-deferrals'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S01]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S09]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-adr]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]'
+  - '[[2026-07-06-arch-remediation-source-kind-deferrals-research]]'
 ---
 
 # `arch-remediation-source-kind-deferrals` feature index
@@ -44,3 +45,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-source-kind
 ### plan
 
 - `2026-07-02-arch-remediation-source-kind-deferrals-plan` - `arch-remediation-source-kind-deferrals` plan
+
+### research
+
+- `2026-07-06-arch-remediation-source-kind-deferrals-research` - `arch-remediation-source-kind-deferrals` research: `program-track decision research bridge`

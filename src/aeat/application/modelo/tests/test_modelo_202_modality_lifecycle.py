@@ -11,6 +11,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -86,7 +87,7 @@ def _workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
 def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
     facts = [
         UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-        UserProfileFact(path="identity.name", value="Marta"),
+        UserProfileFact(path="identity.name", value="Ana"),
         UserProfileFact(path="identity.surnames", value="Sociedad Limitada"),
         UserProfileFact(path="identity.legal_name", value="Taller Sol Sociedad Limitada"),
         UserProfileFact(path="activities.description", value="taller mecanico"),
@@ -271,7 +272,8 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp
                 clock=_CLOCK,
             )
 
-        assert set(exc_info.value.context["missing_bindings"]) == {
+        context: Any = exc_info.value.context
+        assert set(context["missing_bindings"]) == {
             _M202_INCN_BINDING,
             _M202_RELATION_BINDING,
             _M202_PRIOR_PAYMENTS_BINDING,
@@ -407,7 +409,8 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_p
                 clock=_CLOCK,
             )
 
-        assert tuple(exc_info.value.context["missing_bindings"]) == (_M202_INCN_BINDING,)
+        context2: Any = exc_info.value.context
+        assert tuple(context2["missing_bindings"]) == (_M202_INCN_BINDING,)
 
 
 @pytest.mark.parametrize("incn", (Decimal("500000"), Decimal("7000000")))

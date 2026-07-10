@@ -7,15 +7,16 @@ produces differently because both paths persisted to the same revision without a
 cross-path comparison.  The relation-canonicalisation work centralised relation handling so that:
 
 * The **live bucket-aggregation calculate path** enrolls
-  :class:`~aeat.application.calculations._relation_prefill.RelationPrefillSourceResolver`
+  :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
   in its ``merge_source_resolutions`` mesh, which delegates to
-  :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
+  :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
   before calling the formula engine. The M180 perceptor count is a separate
   RET-1 ``retenciones_aggregation`` source, so the parity path seeds and
   resolves that source explicitly instead of summing quarterly counts.
 
 * The **standalone relay path** calls ``resolve_relations_from_local_store``
-  directly and feeds its output into :func:`calculate_registry_snapshot`.
+  directly and feeds its output into
+  :func:`~domain.calculations.registry.calculate_registry_snapshot`.
 
 Both paths share one implementation — ``resolve_relations_from_local_store`` —
 so divergence at the relation-resolution boundary is structurally impossible:
@@ -41,6 +42,18 @@ regression:
     real ``CalculationRevisionCatalogueRepository``, real retención observation
     repository, real registry authority, real formula engine.  No mocks, no
     skips, no xfail.
+
+See Also:
+    :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        Live source-mesh adapter whose ``resolve`` path is compared with the
+        direct relay path.
+    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+        Shared relation-resolution implementation both transports consume.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Registry formula engine that consumes the resolved relation values.
+    :class:`~application.aggregation.RetencionesAggregationSourceResolver`
+        RET-1 source resolver seeded explicitly so M180 count parity is not
+        faked by summing quarterly relation values.
 """
 
 from __future__ import annotations
@@ -52,14 +65,18 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    BindingId,
     CasillaId,
     InputKind,
     RegistryModeloObservation,
@@ -67,10 +84,22 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
+from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.transactions import (
+    BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionDirection,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
+    LedgerIvaAggregationSourceResolver,
     RetencionesAggregationSourceResolver,
     RetencionObservation,
     RetencionObservationRepository,
@@ -79,9 +108,10 @@ from ...aggregation import (
 from ...modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
+    resolve_available_bound_inputs_by_casilla_id,
 )
 from ...user_profile import UserProfileLifecycleRepository
-from .. import RelationPrefillSourceResolver
+from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
@@ -92,6 +122,10 @@ _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _T0 = datetime(_YEAR, 1, 5, 10, 0, tzinfo=UTC)
 _T1 = datetime(_YEAR, 3, 31, 14, 0, tzinfo=UTC)
+_PRORRATA_YEAR = 2026
+_PRORRATA_PERIOD = Period.from_year_and_code(_PRORRATA_YEAR, "1T")
+_PRORRATA_T0 = datetime(_PRORRATA_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_PRORRATA_T1 = datetime(_PRORRATA_YEAR, 3, 31, 14, 0, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -109,6 +143,14 @@ _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores
 _M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
 _M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.soportado.interiores")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_OFICIAL_DEDUCIBLE_INTERIORES_CUOTA: CasillaId = _casilla_id("29")
+_M303_DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: BindingId = "modelo-303-compensacion-pendiente-anteriores"
+_M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"
 
 # Distinct per-quarter bases so cross-quarter contamination surfaces
 # as a mismatch rather than a false-positive cancellation.
@@ -210,7 +252,7 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
 
 def _retencion_observation(nif: str) -> RetencionObservation:
     return RetencionObservation(
-        source_kind="ledger_transaction",
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"retencion-{nif}",
         perceptor_nif=nif,
         perceptor_name="Arrendador Ejemplo SL",
@@ -233,6 +275,83 @@ def _seed_180_retencion_observations() -> Decimal:
     return Decimal(len(set(_M180_PERCEPTOR_NIFS)))
 
 
+def _m303_raw_transaction(provider_id: str, *, amount: Decimal) -> RawTransaction:
+    return RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=date(_PRORRATA_YEAR, 2, 10),
+        value_date=date(_PRORRATA_YEAR, 2, 10),
+        amount=amount,
+        currency="EUR",
+        counterparty="Cliente o proveedor",
+        description=f"prorrata parity row {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="8" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=datetime(_PRORRATA_YEAR, 2, 11, 12, 0, tzinfo=UTC),
+            provider_name="manual-ledger",
+        ),
+        raw_fields={"source_kind": "ledger_transaction"},
+    )
+
+
+def _m303_iva_transaction(
+    provider_id: str,
+    *,
+    direction: TransactionDirection,
+    amount: Decimal,
+    taxable_base: Decimal,
+    iva_amount: Decimal,
+) -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _m303_raw_transaction(provider_id, amount=amount),
+            "direction": direction,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "group_label": None,
+            "category_id": "test_iva_operation",
+            "taxable_base": taxable_base,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": iva_amount,
+            "classified_at": datetime(_PRORRATA_YEAR, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=_PRORRATA_YEAR,
+        target_period=_PRORRATA_PERIOD,
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("0.00"),
+        wallet_amount=Decimal("0.00"),
+        local_recurrence_amount=Decimal("0.00"),
+        override_amount=None,
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason="prorrata pull calculate parity fixture",
+        wallet_captured_at=_PRORRATA_T1,
+        decided_at=_PRORRATA_T1,
+    )
+
+
+def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
+    return create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_PRORRATA_YEAR,
+        period=_PRORRATA_PERIOD,
+        revision_id="2023-y-siguientes",
+        repository=work_unit_repository,
+        clock=_PRORRATA_T0,
+    )
+
+
 def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_values(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -242,12 +361,14 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     store and verifies that:
 
     (A) The live bucket-aggregation calculate path for M180 (which enrolls
-        :class:`RelationPrefillSourceResolver` in its source mesh) produces the
-        same casilla values as
+        :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        in its source mesh) produces the same casilla values as
 
-    (B) The standalone relay path (:class:`RelationPrefillSourceResolver` called
-        directly against the same observation store, feeding its resolved
-        ``relation_values`` into :func:`calculate_registry_snapshot`).
+    (B) The standalone relay path
+        (:class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        called directly against the same observation store, feeding its resolved
+        ``relation_values`` into
+        :func:`~domain.calculations.registry.calculate_registry_snapshot`).
 
     This locks the parity guarantee: the relation-canonicalisation work centralised both
     paths onto one shared ``resolve_relations_from_local_store`` call so divergence is
@@ -368,4 +489,113 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     assert relay_resolution.relation_values == standalone_relation_values, (
         "RelationPrefillSourceResolver.resolve() and resolve_relations_from_local_store() "
         "returned different relation values — the two paths no longer share one resolver"
+    )
+
+
+def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The apportioned M303 deducible cuota casilla is identical on both transports."""
+    auth = resources().modelos.authority
+    snapshot = auth.snapshot("303", filing_year=_PRORRATA_YEAR, period="1T")
+    work_unit_repository = WorkUnitCatalogueRepository(objects=secure_objects)
+    calculation_repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    bucket_event_repository = BucketEventHistoryRepository(objects=secure_objects)
+    transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
+
+    wallet_decision = _m303_wallet_decision()
+    IvaWalletDecisionRepository(objects=secure_objects).save_decision(wallet_decision)
+    sale = _m303_iva_transaction(
+        "prorrata-sale",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    purchase = _m303_iva_transaction(
+        "prorrata-purchase",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("242.00"),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+    )
+    transaction_repository.save(TransactionCatalogue.from_transactions((sale, purchase)))
+    ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=_PRORRATA_YEAR,
+                    regime=ProrrataRegisterRegime.GENERAL,
+                    provisional_percentage=Decimal("80"),
+                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    source_observation_ref="303:2025:4T",
+                ),
+            ),
+        ),
+    )
+
+    work_unit = _seed_m303_prorrata_work_unit(work_unit_repository)
+    live_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        binding_values={
+            _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: Decimal("0.00"),
+            _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
+        },
+        iva_compensation_decision=wallet_decision,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+        clock=_PRORRATA_T1,
+    )
+
+    context = CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_PRORRATA_YEAR,
+        period=_PRORRATA_PERIOD,
+        revision=snapshot.revision,
+        calculated_at=_PRORRATA_T1,
+    )
+    pull_resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+    ).resolve(context)
+    pull_binding_values = dict(pull_resolution.binding_values)
+    pull_binding_values.update(
+        {
+            _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: Decimal("0.00"),
+            _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
+        },
+    )
+    pull_inputs = {
+        casilla.id: Decimal("0")
+        for casilla in snapshot.revision.casillas
+        if casilla.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL)
+        and casilla.id != _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+    }
+    pull_inputs.update(resolve_available_bound_inputs_by_casilla_id(snapshot.revision, pull_binding_values))
+    pull_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=pull_inputs,
+        binding_values=pull_binding_values,
+        date_context={"filing_period": date(_PRORRATA_YEAR, 3, 31)},
+    )
+
+    assert purchase.iva_amount is not None
+    apportioned_binding = pull_resolution.binding_values[_M303_DEDUCIBLE_CUOTA_BINDING]
+    assert Decimal("0") < apportioned_binding < purchase.iva_amount
+
+    live_semantic = Decimal(live_result.revision.casilla_values[_M303_SOPORTADO_INTERIORES_CASILLA])
+    live_official = Decimal(live_result.revision.casilla_values[_M303_OFICIAL_DEDUCIBLE_INTERIORES_CUOTA])
+    assert Decimal(live_result.revision.binding_overrides[_M303_DEDUCIBLE_CUOTA_BINDING]) == apportioned_binding
+    assert live_semantic == apportioned_binding
+    assert live_official == live_semantic
+    assert pull_result.values[_M303_SOPORTADO_INTERIORES_CASILLA] == live_semantic
+    assert pull_result.values[_M303_OFICIAL_DEDUCIBLE_INTERIORES_CUOTA] == live_official
+    assert tuple(live_result.revision.source_transaction_ids) == tuple(
+        sorted((sale.transaction_id, purchase.transaction_id)),
     )

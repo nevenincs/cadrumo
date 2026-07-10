@@ -12,6 +12,7 @@ the fusion, cosine, and assembly logic under real numpy arrays.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import override
 
 import numpy as np
 import pytest
@@ -35,6 +36,7 @@ class _FixedVectorEmbedder(QueryEmbedder):
         super().__init__(cache_dir=Path("unused"))
         self._vector = np.asarray(vector, dtype=np.float32)
 
+    @override
     def embed_query(self, text: str) -> np.ndarray:
         if not text.strip():
             raise CorpusSearchInputError("empty", context={"query": text})
@@ -44,8 +46,9 @@ class _FixedVectorEmbedder(QueryEmbedder):
 class _UnavailableEmbedder(QueryEmbedder):
     """Refuse as if the search extra were absent, to prove clean degrade."""
 
+    @override
     def embed_query(self, text: str) -> np.ndarray:
-        raise CorpusSearchDependencyError("model2vec absent", suggestion="pip install aeat[search]")
+        raise CorpusSearchDependencyError("model2vec absent", suggestion="pip install aeat-cli[search]")
 
 
 def _index_and_chunks(tmp_path: Path) -> tuple[Path, list[str]]:

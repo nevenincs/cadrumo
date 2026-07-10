@@ -1,18 +1,33 @@
 """Typed ``--json`` payload schemas for ``aeat app registry diff-revisions``.
 
 Each class declared here is a strict
-:class:`OutputSchema` subclass and is decorated
-with :func:`register_schema` so the JSON-contract test suite can enumerate the
+:class:`~entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~entrypoints.cli._schemas.register_schema` so the JSON-contract test suite can enumerate the
 ``registry.diff_revisions`` command surface.
 
-Field sets mirror :class:`~aeat.application.registry.RegistryRevisionDiffReport`
+Field sets mirror :class:`~application.registry.RegistryRevisionDiffReport`
 and its nested projections. All sequence fields use ``list`` rather than
 ``tuple`` because ``model_dump(mode='json')`` serialises pydantic tuples as
 JSON arrays, and the strict ``OutputSchema`` base does not coerce lists back to
 tuples on re-validation. ``expression`` fields stay ``dict[str, object]``
-because :class:`~aeat.domain.calculations.registry.FormulaExpression` is a
+because :class:`~domain.calculations.registry.FormulaExpression` is a
 recursive tree; every other field is a concrete typed projection, not a bare
 mapping.
+
+See Also:
+    :class:`~application.registry.RegistryRevisionDiffReport`
+        Application report shape these JSON payloads project.
+    :func:`~application.registry.diff_registry_revisions`
+        Read-side service that builds the revision diff report.
+    :mod:`~entrypoints.cli.registry`
+        CLI command surface that emits these payload schemas.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Registry revision type whose casillas, formulas, parameters, bindings,
+        and legal refs are compared.
+    :class:`~entrypoints.cli._schemas.OutputSchema`
+        Strict base class for typed CLI JSON result payloads.
+    :func:`~entrypoints.cli._schemas.register_schema`
+        Schema registry hook used by the JSON-contract tests.
 """
 
 from __future__ import annotations
@@ -69,8 +84,8 @@ class BindingDiffPayload(OutputSchema):
 class RegistryDiffRevisionsResult(OutputSchema):
     """JSON envelope for ``aeat app registry diff-revisions``.
 
-    Mirrors :class:`~aeat.application.registry.RegistryRevisionDiffReport`
-    returned by :func:`~aeat.application.registry.diff_registry_revisions`.
+    Mirrors :class:`~application.registry.RegistryRevisionDiffReport`
+    returned by :func:`~application.registry.diff_registry_revisions`.
     ``same_revision`` is ``True`` when ``from_year`` and ``to_year`` resolve to
     the identical revision id, in which case every diff dimension is empty.
     """

@@ -18,12 +18,17 @@ this module stays SDK-independent and unit-tested.
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...application.command_search import CommandDoc, CommandIndex, build_command_index
+from ...application.operator_surface import declared_risk
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
+from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_toolsets, toolset_for_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -34,7 +39,13 @@ ToolRunner = Callable[[McpToolDescriptor, dict[str, object]], tuple[dict[str, ob
 
 
 class MetaSearchResult(BaseModel):
-    """One command matched by :func:`search_commands`, with its decision hints."""
+    """One command matched by :func:`search_commands`, with its decision hints.
+
+    The result is self-sufficient (ADR ``mcp-progressive-discovery`` P2): besides
+    the mutability hints it carries the per-verb ``input_schema``, so a model that
+    finds a verb through ``search`` can call it through ``execute`` in ONE more
+    round-trip without a separate schema lookup.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -43,7 +54,8 @@ class MetaSearchResult(BaseModel):
     description: str = Field(min_length=1)
     read_only: bool
     destructive: bool
-    score: int = Field(ge=1)
+    score: float
+    input_schema: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetaExecuteResult(BaseModel):
@@ -62,60 +74,232 @@ class MetaExecuteResult(BaseModel):
     is_error: bool = False
 
 
-def _query_tokens(query: str) -> tuple[str, ...]:
-    return tuple(token for token in query.lower().replace("-", " ").replace(".", " ").split() if token)
+#: Curated outcome-vocabulary aliases folded into a command's search document
+#: (ADR ``mcp-progressive-discovery`` P2/S08). This is INDEX text only, never the
+#: model-facing tool description (H5 English-boundary): it lets an outcome-phrased
+#: query ("file my quarterly VAT", "do my taxes") reach the composite ``quickfile``
+#: chain that literal-verb tokens miss. English plus the Spanish outcome nouns the
+#: CLI help uses (``presentar``, ``declaración``, ``trimestral``, ``autoliquidación``).
+_COMMAND_ALIASES: dict[str, str] = {
+    "quickfile": (
+        "file my taxes do my taxes file my return file quarterly taxes "
+        "submit quarterly VAT IVA tax return declaration "
+        "presentar la declaración trimestral autoliquidación de impuestos "
+        "one command full filing chain"
+    ),
+}
 
 
-def _score(descriptor: McpToolDescriptor, tokens: tuple[str, ...]) -> int:
-    """Score a descriptor against the query tokens.
+def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
+    """Build the weighted searchable document for one command.
 
-    A token in the command key weighs more than one only in the description, so a
-    verb named for the query outranks a verb that merely mentions it.
+    The document splits into BM25-weighted tiers (ADR ``mcp-progressive-discovery``
+    P2/S07): ``key_and_name`` (the command key's dotted tokens - ``calculate``,
+    ``export``, ``iva_wallet`` - plus the tool name) ranks highest, curated outcome
+    ``aliases`` next, then the English ``description``, then the command's own
+    per-verb CLI ``help``. The help is the CLI's Spanish domain vocabulary, so
+    folding it into the index - NOT into the English model-facing description (H5) -
+    lets a Spanish concept query recall the right verb; the aliases surface the
+    composite verbs on outcome-phrased queries without touching the model surface.
     """
-    key = descriptor.command_key.lower()
-    description = descriptor.description.lower()
-    total = 0
-    for token in tokens:
-        if token in key:
-            total += 2
-        elif token in description:
-            total += 1
-    return total
+    key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
+    key_and_name = f"{descriptor.command_key} {key_tokens} {descriptor.name}"
+    return CommandDoc(
+        command_key=descriptor.command_key,
+        tool_name=descriptor.name,
+        key_and_name=key_and_name,
+        description=descriptor.description,
+        aliases=_COMMAND_ALIASES.get(descriptor.command_key, ""),
+        help=descriptor.verb_schema.help,
+    )
+
+
+def build_command_search_index(descriptors: tuple[McpToolDescriptor, ...]) -> CommandIndex:
+    """Build the hybrid command-search index over the descriptor set.
+
+    Built once per server from the full descriptor set so ``search`` reaches the
+    whole verb universe, not just the advertised surface.
+    """
+    return build_command_index(_command_doc(descriptor) for descriptor in descriptors)
 
 
 def search_commands(
     query: str,
     *,
     descriptors: tuple[McpToolDescriptor, ...],
+    index: CommandIndex | None = None,
     limit: int = 20,
 ) -> tuple[MetaSearchResult, ...]:
     """Rank the command surface against ``query`` for the ``search`` meta-tool.
 
-    Every descriptor with a non-zero token overlap is returned, ordered by score
-    then command key, capped at ``limit``. The result carries the read-only and
-    destructive hints so the caller sees a verb's mutability before executing it.
+    Backed by the hybrid command index (FTS5 lexical + Spanish stemming +
+    diacritics folding, degrading to token overlap on a minimal install), so a
+    concept query bridges the operator's vocabulary to the command's own tokens
+    where a bare substring match would miss it (ADR ``mcp-progressive-discovery``
+    P2). Each result carries the mutability hints AND the per-verb input schema so
+    it is actionable in one further ``execute`` round-trip. ``index`` may be a
+    prebuilt index (the server builds it once); when omitted it is built from
+    ``descriptors``.
 
     Returns:
-        The matched commands, highest score first.
-
-    Returns:
-        A :class:`MetaSearchResult`.
+        The matched commands, highest score first, capped at ``limit``.
     """
-    tokens = _query_tokens(query)
-    if not tokens:
+    if not query.strip():
         return ()
-    scored = ((score, descriptor) for descriptor in descriptors if (score := _score(descriptor, tokens)) > 0)
-    ordered = sorted(scored, key=lambda pair: (-pair[0], pair[1].command_key))
-    return tuple(
-        MetaSearchResult(
-            command_key=descriptor.command_key,
-            tool_name=descriptor.name,
-            description=descriptor.description,
-            read_only=descriptor.annotations.read_only_hint,
-            destructive=descriptor.annotations.destructive_hint,
-            score=score,
+    search_index = index if index is not None else build_command_search_index(descriptors)
+    by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    results: list[MetaSearchResult] = []
+    for hit in search_index.search(query, limit=limit):
+        descriptor = by_key.get(hit.command_key)
+        if descriptor is None:
+            continue
+        results.append(
+            MetaSearchResult(
+                command_key=descriptor.command_key,
+                tool_name=descriptor.name,
+                description=descriptor.description,
+                read_only=descriptor.annotations.read_only_hint,
+                destructive=descriptor.annotations.destructive_hint,
+                score=hit.score,
+                input_schema=descriptor.input_schema,
+            )
         )
-        for score, descriptor in ordered[:limit]
+    return tuple(results)
+
+
+class MetaSearchResponse(BaseModel):
+    """The ``search`` meta-tool result with its overflow signal.
+
+    Wraps the capped :class:`MetaSearchResult` page with how much the corpus
+    actually matched (ADR ``mcp-progressive-discovery`` P2/S11): ``total_matches``
+    is the full count over the whole verb surface, ``truncated`` is true when the
+    page dropped some of them, and ``hint`` names the next moves - ``describe`` for
+    one command's full schema, ``toolsets`` to widen the advertised surface - so a
+    model that overflowed the page knows it did and how to recover.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    results: tuple[MetaSearchResult, ...] = ()
+    total_matches: int = Field(ge=0)
+    truncated: bool
+    hint: str = ""
+
+
+def search_commands_response(
+    query: str,
+    *,
+    descriptors: tuple[McpToolDescriptor, ...],
+    index: CommandIndex | None = None,
+    limit: int = 20,
+) -> MetaSearchResponse:
+    """Rank the command surface and report how much of it overflowed the page.
+
+    Returns the same capped page as :func:`search_commands` alongside the full
+    match count over the whole verb corpus, so the client sees whether the page
+    truncated the result set. ``total_matches`` counts every command key the index
+    matches (capped internally at the corpus size, never a semantic backend - that
+    is a later step); ``truncated`` and the recovery ``hint`` follow from it. A
+    blank query returns the empty response.
+
+    Returns:
+        The :class:`MetaSearchResponse` for ``query``.
+    """
+    if not query.strip():
+        return MetaSearchResponse(results=(), total_matches=0, truncated=False, hint="")
+    search_index = index if index is not None else build_command_search_index(descriptors)
+    results = search_commands(query, descriptors=descriptors, index=search_index, limit=limit)
+    known_keys = {descriptor.command_key for descriptor in descriptors}
+    all_hits = search_index.search(query, limit=len(descriptors))
+    total_matches = sum(1 for hit in all_hits if hit.command_key in known_keys)
+    truncated = total_matches > len(results)
+    hint = (
+        "More commands matched than were returned; narrow the query, call `describe` with a "
+        "command_key for one command's full schema, or activate a domain toolset through `toolsets` "
+        "to widen the advertised surface."
+        if truncated
+        else ""
+    )
+    return MetaSearchResponse(results=results, total_matches=total_matches, truncated=truncated, hint=hint)
+
+
+class MetaDescribeResult(BaseModel):
+    """One command's full descriptor for the ``describe`` meta-tool.
+
+    The self-sufficient counterpart to a :class:`MetaSearchResult` hit (ADR
+    ``mcp-progressive-discovery`` P2/S10): where ``search`` returns a ranked page
+    of decision hints, ``describe`` returns ONE command's whole shape by key - its
+    per-verb ``input_schema``, its mutability annotations, its confirmation tier,
+    its declared risk posture, its owning curated toolset, and exactly which
+    personas may call it - so a model can inspect a verb fully before spending an
+    ``execute`` round-trip on it.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    command_key: str = Field(min_length=1)
+    tool_name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    input_schema: dict[str, Any] = Field(default_factory=dict)
+    read_only: bool
+    destructive: bool
+    idempotent: bool
+    open_world: bool
+    confirmation_tier: str = Field(min_length=1)
+    risk_destructive: bool
+    risk_handoff: bool
+    risk_live_write: bool
+    owning_toolset: str | None = None
+    reachable_personas: tuple[str, ...] = ()
+
+
+def describe_command(
+    command_key: str,
+    *,
+    descriptors: tuple[McpToolDescriptor, ...],
+) -> MetaDescribeResult | None:
+    """Return one command's full descriptor by key, or ``None`` when unexposed.
+
+    Resolves everything from the live descriptor set and the real classifiers -
+    the annotation hints from the descriptor, the confirmation tier from
+    :func:`~entrypoints.mcp._hitl.confirmation_for_tool`, the declared risk from
+    :func:`~application.operator_surface.declared_risk` (all-false for a read-only
+    command with no row), the owning toolset from
+    :func:`~entrypoints.mcp._toolsets.toolset_for_command`, and the reachable
+    personas from the same scope + handoff-deny gates the call path enforces. A
+    key that names no exposed descriptor returns ``None``.
+
+    Returns:
+        The :class:`MetaDescribeResult` for ``command_key``, or ``None``.
+    """
+    descriptor = next((candidate for candidate in descriptors if candidate.command_key == command_key), None)
+    if descriptor is None:
+        return None
+    risk = declared_risk(command_key)
+    toolset = toolset_for_command(command_key, family_map=_family_domain_map())
+    reachable = tuple(
+        sorted(
+            persona.value
+            for persona in AgentPersona
+            if is_tool_in_persona_scope(persona=persona, command_key=command_key)
+            and not is_handoff_denied(persona=persona, command_key=command_key)
+        )
+    )
+    return MetaDescribeResult(
+        command_key=descriptor.command_key,
+        tool_name=descriptor.name,
+        description=descriptor.description,
+        input_schema=descriptor.input_schema,
+        read_only=descriptor.annotations.read_only_hint,
+        destructive=descriptor.annotations.destructive_hint,
+        idempotent=descriptor.annotations.idempotent_hint,
+        open_world=descriptor.annotations.open_world_hint,
+        confirmation_tier=confirmation_for_tool(command_key=command_key).value,
+        risk_destructive=risk.destructive if risk is not None else False,
+        risk_handoff=risk.handoff if risk is not None else False,
+        risk_live_write=risk.live_write if risk is not None else False,
+        owning_toolset=toolset.value if toolset is not None else None,
+        reachable_personas=reachable,
     )
 
 
@@ -138,11 +322,105 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
     if persona is not None and is_handoff_denied(persona=persona, command_key=descriptor.command_key):
         return handoff_denial_message(persona=persona, command_key=descriptor.command_key)
     if (
-        confirmation_for_tool(command_key=descriptor.command_key, annotations=descriptor.annotations)
+        confirmation_for_tool(command_key=descriptor.command_key)
         is ConfirmationPolicy.BLOCK
     ):
         return "refused: AEAT live-write is permanently forbidden"
     return None
+
+
+class ToolsetAction(StrEnum):
+    """The three verbs the ``toolsets`` management meta-tool accepts."""
+
+    LIST = "list"
+    ACTIVATE = "activate"
+    DEACTIVATE = "deactivate"
+
+
+class ToolsetManageResult(BaseModel):
+    """The outcome of a :func:`manage_toolsets` call.
+
+    ``changed`` is true only when the active set actually moved (so the caller
+    knows whether to emit ``tools/list_changed``). ``groups`` lists every toolset
+    with its member count and current active state; ``refused`` carries an
+    instructive message when an action could not be applied (unknown name, cap
+    reached).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    action: str
+    changed: bool
+    active: tuple[str, ...]
+    groups: tuple[dict[str, object], ...]
+    refused: str | None = None
+
+
+def manage_toolsets(
+    action: str,
+    name: str | None,
+    *,
+    active: set[Toolset],
+) -> ToolsetManageResult:
+    """Apply a ``toolsets`` action, mutating ``active`` in place.
+
+    ``list`` reports the groups and current state without change. ``activate``
+    adds a toolset (refused past :data:`~entrypoints.mcp._toolsets.MAX_ACTIVE_TOOLSETS`
+    or on an unknown name); ``deactivate`` removes one. Activation widens the
+    advertised surface within the active persona's scope (the server applies the
+    scope filter when it rebuilds the tool list), so this function owns only the
+    set membership and the cap.
+
+    Returns:
+        A :class:`ToolsetManageResult`; ``changed`` drives the list-changed
+        notification.
+    """
+    groups = build_toolsets()
+    member_counts = {group.toolset: len(group.command_keys) for group in groups}
+    changed = False
+    refused: str | None = None
+
+    try:
+        parsed_action = ToolsetAction(action)
+    except ValueError:
+        accepted = ", ".join(a.value for a in ToolsetAction)
+        parsed_action = ToolsetAction.LIST
+        refused = f"unknown toolsets action {action!r}; accepted: {accepted}"
+
+    if refused is None and parsed_action in (ToolsetAction.ACTIVATE, ToolsetAction.DEACTIVATE):
+        try:
+            toolset = Toolset(str(name or ""))
+        except ValueError:
+            accepted = ", ".join(t.value for t in Toolset)
+            refused = f"unknown toolset {name!r}; accepted: {accepted}"
+        else:
+            if parsed_action is ToolsetAction.ACTIVATE:
+                if toolset in active:
+                    pass
+                elif len(active) >= MAX_ACTIVE_TOOLSETS:
+                    refused = f"at most {MAX_ACTIVE_TOOLSETS} toolsets may be active; deactivate one first"
+                else:
+                    active.add(toolset)
+                    changed = True
+            elif toolset in active:
+                active.discard(toolset)
+                changed = True
+
+    group_payload = tuple(
+        {
+            "toolset": group.toolset.value,
+            "member_count": member_counts[group.toolset],
+            "active": group.toolset in active,
+        }
+        for group in groups
+    )
+    return ToolsetManageResult(
+        action=parsed_action.value,
+        changed=changed,
+        active=tuple(sorted(t.value for t in active)),
+        groups=group_payload,
+        refused=refused,
+    )
 
 
 def meta_execute(

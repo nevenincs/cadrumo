@@ -2,8 +2,8 @@
 tags:
   - "#adr"
   - "#aeat-auth-providers"
-date: 2026-04-18
-modified: '2026-06-13'
+date: '2026-04-18'
+modified: '2026-07-10'
 related:
   - "[[2026-04-18-aeat-auth-providers-research]]"
   - "[[2026-04-12-cert-auth-adr]]"
@@ -11,7 +11,7 @@ related:
   - "[[2026-04-17-export-first-adr]]"
 ---
 
-# auth-provider-abstraction-adr
+# auth-provider-abstraction-adr | (**status:** `accepted`)
 
 ## status
 

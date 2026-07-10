@@ -40,7 +40,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -71,9 +71,11 @@ class _ObservationEnvelopePayload(BaseModel):
     adding persistence concerns to the inner registry record.
 
     The ``stamped_revision_id`` field is the registry revision id the
-    source filing resolved to at capture time. It is mandatory in the stored
-    envelope so every carry-read can re-confirm the source value against the
-    law-determined registry revision before trusting it.
+    source filing resolved to at capture time. Current writes always stamp it
+    so every carry-read can re-confirm the source value against the
+    law-determined registry revision before trusting it. Legacy envelopes that
+    predate the field load it as ``None`` so ADR-specific readers can surface
+    an explicit missing-stamp advisory instead of fabricating a stamp.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -97,7 +99,8 @@ class _ObservationEnvelopePayload(BaseModel):
             "single-filer (modelo, filing_year, period) key bit-for-bit."
         ),
     )
-    stamped_revision_id: str = Field(
+    stamped_revision_id: str | None = Field(
+        default=None,
         min_length=1,
         max_length=128,
         description=(
@@ -115,6 +118,13 @@ class _ObservationEnvelopePayload(BaseModel):
             "register row produced the calculation history."
         ),
     )
+
+    @field_validator("stamped_revision_id", mode="before")
+    @classmethod
+    def _reject_explicit_null_revision_stamp(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("stamped_revision_id may be absent on legacy envelopes, but must not be null")
+        return value
 
 
 class IvaWalletDecisionEnvelopePayload(BaseModel):

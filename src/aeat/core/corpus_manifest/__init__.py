@@ -23,9 +23,10 @@ This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded
 :class:`CorpusManifest` (see :func:`build_corpus_bundle` and
 :func:`verify_corpus_bundle`), for offline installation of the bundled
-corpus checksummed against its own manifest. Cryptographic signing is
-out of scope here; the SHA-256 manifest is an integrity gate, not an
-authenticity gate.
+corpus checksummed against its own manifest. The SHA-256 manifest alone is
+an integrity gate, not an authenticity gate; :mod:`._bundle_signing`
+(re-exported here) adds the Ed25519 authenticity layer on top -- see
+:func:`sign_corpus_bundle` and :func:`verify_corpus_bundle_signature`.
 """
 
 from __future__ import annotations
@@ -48,6 +49,19 @@ from ..hashing import sha256_hex as _sha256_hex
 from ..logging import get_logger as _get_logger
 from ..time import now as _clock_now
 from ..time import validate_utc_aware
+from ._bundle_signing import (
+    CorpusBundleSigningError,
+    CorpusBundleSigningKeyNotFoundError,
+    CorpusSigningKeypair,
+    CorpusSigningPublicKey,
+    SignedCorpusBundle,
+    assert_corpus_bundle_signature_verifies,
+    corpus_signing_public_key,
+    generate_corpus_signing_keypair,
+    load_corpus_signing_keypair,
+    sign_corpus_bundle,
+    verify_corpus_bundle_signature,
+)
 from ._errors import (
     CorpusBundleError,
     CorpusBundleVerificationError,
@@ -692,6 +706,8 @@ def assert_corpus_bundle_verifies(bundle_path: Path) -> CorpusManifest:
 
 __all__ = [
     "CorpusBundleError",
+    "CorpusBundleSigningError",
+    "CorpusBundleSigningKeyNotFoundError",
     "CorpusBundleVerification",
     "CorpusBundleVerificationError",
     "CorpusEntry",
@@ -700,13 +716,22 @@ __all__ = [
     "CorpusManifestDriftError",
     "CorpusManifestError",
     "CorpusManifestTamperError",
+    "CorpusSigningKeypair",
+    "CorpusSigningPublicKey",
+    "SignedCorpusBundle",
+    "assert_corpus_bundle_signature_verifies",
     "assert_corpus_bundle_verifies",
     "assert_corpus_clean",
     "build_corpus_bundle",
     "build_corpus_manifest",
+    "corpus_signing_public_key",
+    "generate_corpus_signing_keypair",
     "load_corpus_manifest",
+    "load_corpus_signing_keypair",
     "manifest_path_for",
     "save_corpus_manifest",
+    "sign_corpus_bundle",
     "verify_corpus_bundle",
+    "verify_corpus_bundle_signature",
     "verify_corpus_manifest",
 ]

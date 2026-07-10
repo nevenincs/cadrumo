@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
@@ -48,7 +48,7 @@ def _collect_legal_refs(value: object) -> set[LegalRefId]:
         collected = set()
         refs = value.get("legal_refs")
         if isinstance(refs, (list, tuple)):
-            collected.update(cast(LegalRefId, ref) for ref in refs if isinstance(ref, str))
+            collected.update(ref for ref in refs if isinstance(ref, str))
         for child in value.values():
             collected.update(_collect_legal_refs(child))
         return collected

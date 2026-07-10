@@ -84,6 +84,7 @@ class Modelo(StrEnum):
     M136 = "136"
     M140 = "140"
     M143 = "143"
+    M145 = "145"
     M149 = "149"
     M150 = "150"
     M151 = "151"
@@ -230,26 +231,14 @@ class Modelo(StrEnum):
 #: or an entity may owe, grounded against AEAT's published catalogue of
 #: declaraciones informativas and retención forms; it is not yet AEAT's full
 #: ~200-form set.
-UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-    Modelo.M140: "IRPF deduccion por maternidad, solicitud de abono anticipado",
-    Modelo.M341: "reintegro de compensaciones del regimen especial de agricultura, ganaderia y pesca del IVA",
-    Modelo.M380: "IVA operaciones asimiladas a las importaciones (declaracion-liquidacion)",
-    Modelo.M143: "IRPF deducciones familia numerosa/discapacidad, solicitud de abono anticipado",
-    Modelo.M848: "comunicacion del importe neto de la cifra de negocios a efectos del IAE",
-    Modelo.M490: "Impuesto sobre Determinados Servicios Digitales (autoliquidacion trimestral)",
-    Modelo.M604: "Impuesto sobre las Transacciones Financieras (autoliquidacion mensual)",
-    Modelo.M763: "Impuesto sobre actividades de juego (autoliquidacion trimestral)",
-    Modelo.M592: "impuesto especial sobre envases de plastico no reutilizables (fabricantes/adquirentes)",
-    Modelo.M576: "IEDMT autoliquidacion por matriculacion de determinados medios de transporte",
-    Modelo.M121: "comunicacion de cesion del derecho a deducciones por familia numerosa o discapacidad",
-    Modelo.M122: "regularizacion de deducciones familia numerosa/discapacidad por no obligados a declarar",
-}
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
 
 
 #: Registry modelos (with a TOML definition) deliberately out of scope of the
 #: overview obligation calendar, each with the recorded reason it is not scheduled.
 _REGISTRY_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M036: "registration form, not a periodic self-assessment the calendar schedules",
+    Modelo.M145: "local IRPF payer communication, not an AEAT filing/calendar obligation",
     Modelo.M151: "IRPF impatriado special regime, outside the autonomo/PYME core",
     Modelo.M714: "Impuesto sobre el Patrimonio, outside the IRPF/IVA/IS core",
     Modelo.M840: "Impuesto sobre Actividades Economicas, most taxpayers exempt (INCN < 1M)",

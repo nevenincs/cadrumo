@@ -67,12 +67,14 @@ def test_withholding_observation_clave_must_be_a_valid_retencion_clave() -> None
     member -- the closed-set hardening that replaced the former uppercase-only check.
     """
     with pytest.raises(ValidationError, match="not a valid RetencionClave"):
-        WithholdingObservation.model_validate({
-            "source_id": "p1",
-            "perceptor_tax_id": "12345678A",
-            "transaction_date": date(2025, 3, 15),
-            "clave": "a",
-        })
+        WithholdingObservation.model_validate(
+            {
+                "source_id": "p1",
+                "perceptor_tax_id": "12345678A",
+                "transaction_date": date(2025, 3, 15),
+                "clave": "a",
+            }
+        )
 
 
 def test_withholding_observation_amounts_reject_negative() -> None:

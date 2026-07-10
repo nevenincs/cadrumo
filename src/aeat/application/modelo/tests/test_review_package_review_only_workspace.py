@@ -1,14 +1,32 @@
 """Review-only workspace guard: real decrypt -> workspace -> official-action refusal.
 
-Exercises :mod:`aeat.application.modelo._review_package_review_only_workspace`
+Exercises :mod:`~application.modelo._review_package_review_only_workspace`
 end to end against a real recipient-encryption round trip: build a real
 review package, seal it with ``review_only=True`` (and, separately,
 ``review_only=False``), decrypt it with the real X25519/HKDF/AES-256-GCM
 primitives (no mocks, no hand-rolled crypto), open a
-:class:`~aeat.application.modelo.ReviewOnlyWorkspace` from the recovered
-bytes, and assert the structural guard behaves per the ADR's authority
-boundary: a review-only workspace is refused for any composition requiring
+:class:`~application.modelo.ReviewOnlyWorkspace` from the recovered
+bytes, and assert the structural guard enforces the authority boundary: a
+review-only workspace is refused for any composition requiring
 filing authority, and a filing-grade (non-review-only) workspace is not.
+
+See Also:
+    :func:`~application.modelo.open_review_only_workspace`
+        Projects decrypted review-package bytes into a workspace.
+    :func:`~application.modelo.assert_workspace_permits_official_action`
+        Authority guard that refuses review-only workspaces.
+    :exc:`~application.modelo.ReviewOnlyWorkspaceAuthorityError`
+        Refusal raised when review-only material is used for filing authority.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        X25519 transport primitive that stamps the ``review_only`` flag.
+    :func:`~application.modelo.decrypt_review_package_for_recipient`
+        Decrypt primitive that carries the flag into the recovered package.
+    :func:`~application.modelo.verify_review_package`
+        Manifest verifier used before opening the workspace.
+    :class:`~domain.calculations.registry.CasillaObservation`
+        Provenance row embedded in the review-package fixture.
+    :class:`Period`
+        Typed filing period used to derive the work-unit identifiers.
 """
 
 from __future__ import annotations

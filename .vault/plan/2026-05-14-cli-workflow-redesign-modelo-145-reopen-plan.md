@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-06-30'
+modified: '2026-07-05'
 tier: L2
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
@@ -11,6 +11,16 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 
@@ -38,41 +48,41 @@ This Phase adds non-filing vocabulary only if current schema vocabulary cannot r
 
 This Phase adds the Modelo 145 registry foundation as a non-filing local payer communication.
 
-- [ ] `P03.S11` - Add Modelo 145 registry TOML using only source-backed communication, validation, and export authority; `registry/aeat/modelos`.
-- [ ] `P03.S12` - Model Modelo 145 lifecycle as local payer communication rather than AEAT filing; `registry/aeat/modelos`.
-- [ ] `P03.S13` - Add export layout metadata grounded in the official record design; `registry/aeat/modelos`.
-- [ ] `P03.S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145; `registry/aeat/modelos`.
-- [ ] `P03.S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces; `tests/domain/calculations/registry`.
+- [x] `P03.S11` - Add Modelo 145 registry TOML using only source-backed communication, validation, and export authority; `registry/aeat/modelos`.
+- [x] `P03.S12` - Model Modelo 145 lifecycle as local payer communication rather than AEAT filing; `registry/aeat/modelos`.
+- [x] `P03.S13` - Add export layout metadata grounded in the official record design; `registry/aeat/modelos`.
+- [x] `P03.S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145; `registry/aeat/modelos`.
+- [x] `P03.S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces; `tests/domain/calculations/registry`.
 
 ### Phase `P04` - backend service
 
 This Phase implements real backend-owned local communication behavior before any CLI exposure.
 
-- [ ] `P04.S16` - Add backend service ownership for Modelo 145 local payer communication; `src/aeat/application/modelo`.
-- [ ] `P04.S17` - Add create behavior for bucket-scoped Modelo 145 communication records; `src/aeat/application/modelo`.
-- [ ] `P04.S18` - Add validate behavior backed by registry and source authority; `src/aeat/application/modelo`.
-- [ ] `P04.S19` - Add export behavior backed by the Modelo 145 registry layout; `src/aeat/application/modelo`.
-- [ ] `P04.S20` - Add local delivered-to-payer and completed communication state transitions; `src/aeat/application/modelo`.
-- [ ] `P04.S21` - Emit communication-specific bucket events without filing or filed-state terminology; `src/aeat/application/modelo`.
-- [ ] `P04.S22` - Add service-level errors and logs using communication vocabulary only; `src/aeat/application/modelo`.
+- [x] `P04.S16` - Add backend service ownership for Modelo 145 local payer communication; `src/aeat/application/modelo`.
+- [x] `P04.S17` - Add create behavior for bucket-scoped Modelo 145 communication records; `src/aeat/application/modelo`.
+- [x] `P04.S18` - Add validate behavior backed by registry and source authority; `src/aeat/application/modelo`.
+- [x] `P04.S19` - Add export behavior backed by the Modelo 145 registry layout; `src/aeat/application/modelo`.
+- [x] `P04.S20` - Add local delivered-to-payer and completed communication state transitions; `src/aeat/application/modelo`.
+- [x] `P04.S21` - Emit communication-specific bucket events without filing or filed-state terminology; `src/aeat/application/modelo`.
+- [x] `P04.S22` - Add service-level errors and logs using communication vocabulary only; `src/aeat/application/modelo`.
 
 ### Phase `P05` - thin CLI
 
 This Phase exposes only thin CLI delegation after backend behavior exists.
 
-- [ ] `P05.S23` - Add Modelo 145 command handlers that delegate to the backend communication service; `src/aeat/entrypoints/cli`.
-- [ ] `P05.S24` - Keep Modelo 145 argument parsing separate from business behavior; `src/aeat/entrypoints/cli`.
-- [ ] `P05.S25` - Render Modelo 145 command results through centralized output emitters; `src/aeat/entrypoints/cli`.
-- [ ] `P05.S26` - Route Modelo 145 command failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `P05.S27` - Validate Modelo 145 help text avoids file, filing, deadline, live-read, and AEAT submission vocabulary; `tests/entrypoints/cli`.
+- [x] `P05.S23` - Add Modelo 145 command handlers that delegate to the backend communication service; `src/aeat/entrypoints/cli`.
+- [x] `P05.S24` - Keep Modelo 145 argument parsing separate from business behavior; `src/aeat/entrypoints/cli`.
+- [x] `P05.S25` - Render Modelo 145 command results through centralized output emitters; `src/aeat/entrypoints/cli`.
+- [x] `P05.S26` - Route Modelo 145 command failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `P05.S27` - Validate Modelo 145 help text avoids file, filing, deadline, live-read, and AEAT submission vocabulary; `tests/entrypoints/cli`.
 
 ### Phase `P06` - real verification and no shims
 
 This Phase proves the successor behavior is real, local, and free of forbidden surfaces.
 
-- [ ] `P06.S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior; `tests/application/modelo`.
-- [ ] `P06.S29` - Add CLI behavior tests exercising Modelo 145 through real backend services; `tests/entrypoints/cli`.
-- [ ] `P06.S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface; `tests`.
-- [ ] `P06.S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases; `tests`.
-- [ ] `P06.S32` - Confirm Modelo 036 and Modelo 037 behavior and metadata remain unaffected by Modelo 145 successor work; `tests/domain/calculations/registry`.
-- [ ] `P06.S33` - Run the targeted registry, application, and CLI test slices without skips, xfails, mocks, stubs, or tautological assertions; `tests`.
+- [x] `P06.S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior; `tests/application/modelo`.
+- [x] `P06.S29` - Add CLI behavior tests exercising Modelo 145 through real backend services; `tests/entrypoints/cli`.
+- [x] `P06.S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface; `tests`.
+- [x] `P06.S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases; `tests`.
+- [x] `P06.S32` - Confirm Modelo 036 and Modelo 037 behavior and metadata remain unaffected by Modelo 145 successor work; `tests/domain/calculations/registry`.
+- [x] `P06.S33` - Run the targeted registry, application, and CLI test slices without skips, xfails, mocks, stubs, or tautological assertions; `tests`.

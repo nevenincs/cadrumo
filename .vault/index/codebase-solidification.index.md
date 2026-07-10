@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#codebase-solidification'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-05-28-codebase-solidification-W01-P01-S01]]'
   - '[[2026-05-28-codebase-solidification-W01-P01-S02]]'
@@ -326,9 +326,11 @@ related:
   - '[[2026-05-28-codebase-solidification-W26-P58-S667]]'
   - '[[2026-05-28-codebase-solidification-W29-P63-S801]]'
   - '[[2026-05-28-codebase-solidification-W29-P63-S802]]'
+  - '[[2026-05-28-codebase-solidification-W30-P64-S804]]'
   - '[[2026-05-28-codebase-solidification-W30-P64-S806]]'
   - '[[2026-05-28-codebase-solidification-W30-P64-S807]]'
   - '[[2026-05-28-codebase-solidification-W30-P64-S808]]'
+  - '[[2026-05-28-codebase-solidification-W30-P64-S809]]'
   - '[[2026-05-28-codebase-solidification-adr]]'
   - '[[2026-05-28-codebase-solidification-exec]]'
   - '[[2026-05-28-codebase-solidification-plan]]'
@@ -874,6 +876,8 @@ Auto-generated index of all documents tagged with `#codebase-solidification`.
 - `2026-05-28-codebase-solidification-W30-P64-S806` - Promote inline ReportLab Canvas constructions to module-scoped fixtures
 - `2026-05-28-codebase-solidification-W30-P64-S807` - Add session-scoped source_tree_ast fixture and migrate the ratchets to consume it
 - `2026-05-28-codebase-solidification-W30-P64-S808` - Migrate ValidatedRegistryAuthority.load call sites to the session authority fixture
+- `2026-05-28-codebase-solidification-W30-P64-S804` - Hoist secure-storage runtime fixture from autouse function-scope to module scope across `application/filing/conftest.py`, `application/ledger/test_*.py`, `adapters/persistence/storage/sql/test_*.py`, `storage/envelope/test_*.py`, `storage/master_key/test_*.py`, `storage/secret_store/test_*.py`. Replace ~440 inline create_engine_from_settings + EphemeralMasterKeyProvider constructions with the module-scoped fixture. Use `Session().begin_nested()` for per-test isolation where roundtrip-anti-tautology tests demand it. Estimated savings 1.5-6 min sequential
+- `2026-05-28-codebase-solidification-W30-P64-S809` - Add `-n auto --dist=loadfile` to the pytest default addopts in pyproject.toml. Precondition: S804 has landed so module-scoped fixtures actually reduce work across workers. Verify each worker pays the registry compile once via lru_cache. Estimated savings: 4-6x sequential time on an 8-core box
 
 ### plan
 

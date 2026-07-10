@@ -275,6 +275,19 @@ def test_manual_ledger_export_help_keeps_serialization_format_named_as_export_fo
 def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path: Path) -> None:
     """The root ``--format`` flag must remain the rendering switch used by ``_emit``."""
 
+    created = invoke_cached_cli(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Operator",
+            "--activity", "design",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+
     statement = tmp_path / "statement.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -424,7 +437,7 @@ def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
 def test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent() -> None:
     """The CLI may expose aggregation only through the central service command."""
 
-    canonical_cli = _CLI_ROOT / "_modelo.py"
+    canonical_cli = _CLI_ROOT / "_modelo_aggregate_cli.py"
     forbidden_family_calls = (
         "aggregate_retenciones_",
         "aggregate_counterpart_",
@@ -525,6 +538,43 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
             if token in text:
                 offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
     assert offenders == [], "removed censo modelo shim/stub surfaces returned:\n  " + "\n  ".join(offenders)
+
+
+def test_modelo_145_shims_stubs_and_compatibility_aliases_stay_absent() -> None:
+    """Modelo 145 must stay a real local communication surface, not a compatibility shell."""
+
+    application_dir = PROJECT_ROOT / "src" / "aeat" / "application" / "modelo"
+    scanned_files = (
+        _CLI_ROOT / "_modelo_m145_cli.py",
+        _CLI_ROOT / "_modelo_m145_parsing.py",
+        _CLI_ROOT / "_modelo_m145_rendering.py",
+        _CLI_ROOT / "_modelo_payloads_m145.py",
+        application_dir / "_m145_communication.py",
+        application_dir / "_m145_communication_records.py",
+        *_modelo_source_paths("145"),
+    )
+    forbidden_tokens = (
+        "NotImplementedError",
+        "_Fake",
+        "_Stub",
+        "aliases also accepted",
+        "backwards compatibility",
+        "compatibility alias",
+        "deprecated",
+        "deprecated spelling",
+        "deprecation",
+        "fake support",
+        "not implemented",
+        "shim",
+        "stub",
+    )
+    offenders: list[str] = []
+    for path in scanned_files:
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    assert offenders == [], "modelo 145 shim/stub/compatibility surfaces returned:\n  " + "\n  ".join(offenders)
 
 
 def test_legacy_application_aggregation_test_tree_stays_absent() -> None:

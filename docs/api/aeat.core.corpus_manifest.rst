@@ -13,4 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.core.corpus_manifest._bundle_signing
    aeat.core.corpus_manifest._errors

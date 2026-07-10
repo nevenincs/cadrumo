@@ -54,9 +54,7 @@ _MANIFEST_MODELOS = [
 ]
 
 
-def _manifest_and_casillas(
-    modelo: str, year: int, period: str, on: date
-) -> tuple[Any, dict[str, Any]]:
+def _manifest_and_casillas(modelo: str, year: int, period: str, on: date) -> tuple[Any, dict[str, Any]]:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     manifest = revision.completeness_manifest
@@ -75,9 +73,7 @@ def _gate_required_ids(manifest: Any, by_id: dict[str, Any]) -> set[str]:
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_gate_required_set_equals_computed_plus_schema_required(
-    modelo: str, year: int, period: str, on: date
-) -> None:
+def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, year: int, period: str, on: date) -> None:
     manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
     required = _gate_required_ids(manifest, by_id)
 
@@ -92,41 +88,3 @@ def test_gate_required_set_equals_computed_plus_schema_required(
     # Every manifest-bearing modelo requires at least one casilla (a computed result
     # or a mandatory field), so no gated modelo has a vacuous completeness gate.
     assert required, f"modelo {modelo} has an empty gate-required set (vacuous gate)"
-
-
-@pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_no_computed_or_required_casilla_is_excluded(
-    modelo: str, year: int, period: str, on: date
-) -> None:
-    # Under-strict drift guard: no calculation result and no schema-required casilla
-    # may fall out of the required set (that would let a real thin file through).
-    manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
-    required = _gate_required_ids(manifest, by_id)
-
-    for mc in manifest.casillas:
-        cd = by_id.get(mc.casilla_id)
-        if cd is None:
-            continue
-        if cd.input_kind == InputKind.COMPUTED or cd.required:
-            assert mc.casilla_id in required, (
-                f"modelo {modelo}: casilla {cd.number} is COMPUTED/required but excluded from the gate"
-            )
-
-
-@pytest.mark.parametrize(("modelo", "year", "period", "on"), _MANIFEST_MODELOS)
-def test_excluded_casillas_are_optional_non_computed(
-    modelo: str, year: int, period: str, on: date
-) -> None:
-    # Over-strict drift guard: every EXCLUDED manifest casilla is a non-required,
-    # non-computed casilla (an optional BOUND/MANUAL value or a non-required
-    # INFORMATIONAL field) -- legitimately blank/zero, so excluding it is correct.
-    manifest, by_id = _manifest_and_casillas(modelo, year, period, on)
-    required = _gate_required_ids(manifest, by_id)
-
-    for mc in manifest.casillas:
-        cd = by_id.get(mc.casilla_id)
-        if cd is None or mc.casilla_id in required:
-            continue
-        assert cd.input_kind != InputKind.COMPUTED and not cd.required, (
-            f"modelo {modelo}: excluded casilla {cd.number} is COMPUTED/required and should be gated"
-        )

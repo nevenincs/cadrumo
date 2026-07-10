@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.domain.calculations.registry import RegistryLoadError
+
 from ..checklist import CHECKLIST, render_checklist
 from ..manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
 
@@ -106,21 +108,22 @@ def test_check_detects_partial_drift_after_manual_deletion(tmp_path: Path) -> No
     assert Path("revisions") / _THROWAWAY_REVISION_ID / "casillas" / "0001-casillas.toml" in drift.missing
 
 
-@pytest.mark.parametrize("bad_modelo_id", ["", "AB", "12", "1234", "abc"])
-def test_scaffold_rejects_malformed_modelo_id(tmp_path: Path, bad_modelo_id: str) -> None:
+def test_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     """A modelo id that is not exactly three digits is refused, matching ModeloId's pattern."""
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    with pytest.raises(NewModeloError):
-        manager.scaffold(bad_modelo_id, _THROWAWAY_REVISION_ID)
+    for bad_modelo_id in ("", "AB", "12", "1234", "abc"):
+        with pytest.raises(NewModeloError):
+            manager.scaffold(bad_modelo_id, _THROWAWAY_REVISION_ID)
+        assert not tuple(tmp_path.iterdir()), bad_modelo_id
 
 
-@pytest.mark.parametrize("bad_revision_id", ["", "Bad Revision", "_leading-underscore", "trailing-"])
-def test_scaffold_rejects_malformed_revision_id(tmp_path: Path, bad_revision_id: str) -> None:
+def test_scaffold_rejects_malformed_revision_id(tmp_path: Path) -> None:
     """A revision id outside the registry ref pattern is refused before any write."""
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    with pytest.raises(NewModeloError):
-        manager.scaffold(_THROWAWAY_MODELO_ID, bad_revision_id)
-    assert not (tmp_path / _THROWAWAY_MODELO_ID).exists()
+    for bad_revision_id in ("", "Bad Revision", "_leading-underscore", "trailing-"):
+        with pytest.raises(NewModeloError):
+            manager.scaffold(_THROWAWAY_MODELO_ID, bad_revision_id)
+        assert not (tmp_path / _THROWAWAY_MODELO_ID).exists(), bad_revision_id
 
 
 def test_scaffold_refuses_when_modelo_root_is_a_file(tmp_path: Path) -> None:
@@ -190,7 +193,7 @@ def test_scaffolded_tree_loads_as_a_valid_directory_mode_modelo_definition(tmp_p
     # (TODO tax_domain, cadence, dates) and must not validate as-is: a scaffold
     # that "passes" the loader with all-TODO content would be a false green.
     modelo_root = tmp_path / _THROWAWAY_MODELO_ID
-    with pytest.raises(Exception):  # noqa: B017 - any RegistryLoadError/ValidationError proves the TODOs are unfilled
+    with pytest.raises(RegistryLoadError):
         load_modelo_directory(modelo_root)
 
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#schema-driven-wizard-closure'
 date: '2026-05-12'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-12-schema-driven-wizard-closure-plan]]'
   - '[[2026-05-12-schema-driven-wizard-adr]]'
@@ -11,7 +11,7 @@ related:
   - '[[2026-06-04-schema-driven-wizard-closure-research]]'
 ---
 
-# `schema-driven-wizard-closure` adr
+# `schema-driven-wizard-closure` adr | (**status:** `accepted`)
 
 ## Context
 

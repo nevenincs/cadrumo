@@ -16,6 +16,19 @@ files that do not belong to a runtime module.
 Per the project pydantic mandate, the JSON payloads are parsed into
 strict pydantic v2 models so typos in either config file are caught
 as test failures rather than silent drift.
+
+See Also:
+    :func:`~tests._inventory.repo_path`
+        Resolves repository-root release metadata without depending on the
+        current working directory.
+    ``RELEASING.md``
+        Human release procedure that cites the same checklist, soak, and
+        rollback surfaces validated here.
+    ``docs/_release_checklist.yaml``
+        Machine-readable release-readiness contract parsed into strict models
+        by this module.
+    ``docs/_release_notes_template.md``
+        Human release-body template required by the checklist.
 """
 
 from __future__ import annotations
@@ -25,6 +38,7 @@ import re
 import tomllib
 
 import pytest
+import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._inventory import repo_path
@@ -36,6 +50,9 @@ MANIFEST_PATH = repo_path(".release-please-manifest.json")
 CHANGELOG_PATH = repo_path("CHANGELOG.md")
 PYPROJECT_PATH = repo_path("pyproject.toml")
 INIT_PATH = repo_path("src/aeat/__init__.py")
+RELEASE_CHECKLIST_PATH = repo_path("docs/_release_checklist.yaml")
+RELEASE_NOTES_TEMPLATE_PATH = repo_path("docs/_release_notes_template.md")
+RELEASING_PATH = repo_path("RELEASING.md")
 
 
 class ChangelogSection(BaseModel):
@@ -83,6 +100,88 @@ class ReleasePleaseManifest(BaseModel):
     root: str = Field(alias=".")
 
 
+class SoakChecklist(BaseModel):
+    """The RC-soak section of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    applies_to: str
+    minimum_hours: int
+    maximum_hours: int
+    vehicle: str
+    exit_gates: list[str]
+
+
+class VersioningChecklist(BaseModel):
+    """The versioning-discipline section of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    scheme: str
+    pre_1_0_discipline: str
+    post_1_0_discipline: str
+
+
+class ChangelogChecklist(BaseModel):
+    """The changelog-automation section of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    automation: str
+    template: str
+
+
+class HotfixCycleTimes(BaseModel):
+    """Emergency hotfix cycle-time targets, in hours, by trigger category."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    security_or_data_loss: int
+    portal_drift: int
+    other_critical: int
+
+
+class HotfixChecklist(BaseModel):
+    """The hotfix section of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    cycle_times_hours: HotfixCycleTimes
+
+
+class RollbackChecklist(BaseModel):
+    """The rollback section of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    triggers: list[str]
+    procedure_ref: str
+    mechanism: str
+
+
+class AuditStateGateChecklist(BaseModel):
+    """The audit-state-gate section of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    description: str
+    checks: list[str]
+
+
+class ReleaseChecklist(BaseModel):
+    """Full shape of ``docs/_release_checklist.yaml``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: int
+    soak: SoakChecklist
+    versioning: VersioningChecklist
+    changelog: ChangelogChecklist
+    hotfix: HotfixChecklist
+    rollback: RollbackChecklist
+    audit_state_gate: AuditStateGateChecklist
+
+
 _VERSION_RE = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
 
 
@@ -95,6 +194,13 @@ def _read_init_version() -> str:
     match = _VERSION_RE.search(INIT_PATH.read_text(encoding="utf-8"))
     assert match, f"__version__ not found in {INIT_PATH}"
     return match.group(1)
+
+
+@pytest.fixture(scope="module")
+def release_checklist() -> ReleaseChecklist:
+    """Return the strict release checklist model once for this module."""
+    payload = yaml.safe_load(RELEASE_CHECKLIST_PATH.read_text(encoding="utf-8"))
+    return ReleaseChecklist.model_validate(payload)
 
 
 def test_release_please_config_is_well_formed() -> None:
@@ -166,3 +272,45 @@ def test_no_release_please_github_actions_workflow() -> None:
         f"{workflow} must not exist: release-please runs LOCALLY only on this repo "
         "(GitHub Actions is permanently disabled)."
     )
+
+
+def test_release_checklist_is_well_formed(release_checklist: ReleaseChecklist) -> None:
+    """``docs/_release_checklist.yaml`` parses as the strict pydantic model.
+
+    Machine-validates the RC-soak window, versioning discipline, hotfix
+    cycle times, and rollback triggers the audit-state gate and RELEASING.md
+    both cite — a typo or dropped section here silently breaks the gate's
+    contract with the printed rollback/soak procedure.
+    """
+    assert release_checklist.schema_version == 1
+    assert 0 < release_checklist.soak.minimum_hours <= release_checklist.soak.maximum_hours
+    assert release_checklist.rollback.triggers, "rollback.triggers must not be empty"
+    assert release_checklist.audit_state_gate.checks, "audit_state_gate.checks must not be empty"
+    # The hotfix cycle times must be a strictly increasing severity ladder:
+    # security/data-loss is the fastest, other-critical the slowest.
+    times = release_checklist.hotfix.cycle_times_hours
+    assert times.security_or_data_loss <= times.portal_drift <= times.other_critical
+
+
+def test_release_notes_template_exists_and_is_referenced(release_checklist: ReleaseChecklist) -> None:
+    """The release-notes template exists and the checklist points at it."""
+    assert RELEASE_NOTES_TEMPLATE_PATH.is_file(), f"{RELEASE_NOTES_TEMPLATE_PATH} is missing"
+    text = RELEASE_NOTES_TEMPLATE_PATH.read_text(encoding="utf-8")
+    assert text.strip()
+
+    assert release_checklist.changelog.template == "docs/_release_notes_template.md"
+
+
+def test_releasing_doc_documents_rc_soak_and_rollback() -> None:
+    """RELEASING.md documents the RC-soak procedure and the rollback procedure.
+
+    Prevents the RC-soak / rollback narrative from silently drifting out of
+    sync with the machine-validated checklist and the `dev/release/readiness`
+    gate and `just release-rollback` recipe that implement it.
+    """
+    text = RELEASING_PATH.read_text(encoding="utf-8")
+    assert "## Release-candidate soak" in text
+    assert "## Rollback procedure" in text
+    assert "just release-readiness" in text
+    assert "just release-rollback" in text
+    assert "docs/_release_checklist.yaml" in text

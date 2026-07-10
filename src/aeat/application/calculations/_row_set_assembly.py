@@ -34,7 +34,7 @@ See Also:
         selector dictionaries.
     :class:`~core.aggregation.RowSetGroupingKind`
         Closed grouping-axis values consumed by this module's dispatcher.
-    :mod:`domain.calculations.registry`
+    :mod:`~domain.calculations.registry`
         Registry-side row-value resolvers that perform the inverse operation for
         export and sheet population.
 """
@@ -55,6 +55,7 @@ from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     AtributionMemberObservation,
     BindingAggregationOp,
+    DonativoDonorObservation,
     Modelo720RowObservation,
     ModeloRevision,
     RefundOperationObservation,
@@ -68,6 +69,7 @@ from ...domain.calculations.registry import (
 __all__ = [
     "AssembledObservations",
     "assemble_atribucion_observations",
+    "assemble_donativo_observations",
     "assemble_foreign_asset_observations",
     "assemble_observations_for_grouping",
     "assemble_refund_observations",
@@ -87,6 +89,7 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_foreign_asset": RowSetGroupingKind.FOREIGN_ASSET,
     "per_atribucion_member": RowSetGroupingKind.ATRIBUCION,
     "per_refund_operation": RowSetGroupingKind.REFUND,
+    "per_donativo_donor": RowSetGroupingKind.DONATIVO,
 }
 
 
@@ -101,6 +104,7 @@ AssembledObservations = (
     | tuple[str, tuple[Modelo720RowObservation, ...]]
     | tuple[str, tuple[AtributionMemberObservation, ...]]
     | tuple[str, tuple[RefundOperationObservation, ...]]
+    | tuple[str, tuple[DonativoDonorObservation, ...]]
 )
 
 
@@ -122,7 +126,7 @@ def assemble_observations_for_grouping(
     Args:
         grouping: Row-set grouping token; selects which assembler runs
             (``withholding`` / ``related_party`` / ``foreign_asset`` /
-            ``atribucion`` / ``refund``).
+            ``atribucion`` / ``refund`` / ``donativo``).
         cells: Per-row cell shapes consumed by the chosen assembler.
         revision: The
             :class:`~domain.calculations.registry.ModeloRevision` used to
@@ -135,7 +139,7 @@ def assemble_observations_for_grouping(
     Returns a 2-tuple ``(source_kind, observations)`` where
     ``source_kind`` identifies the assembler that ran (``withholding`` /
     ``related_party`` / ``foreign_asset`` / ``atribucion`` /
-    ``refund``). Raises
+    ``refund`` / ``donativo``). Raises
     :class:`~domain.calculations.registry.RegistryValidationError` for groupings
     that have no matching assembler — those are registry layout
     declarations the application layer cannot consume yet.
@@ -157,6 +161,8 @@ def assemble_observations_for_grouping(
         return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.REFUND:
         return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.DONATIVO:
+        return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
     # Unreachable: dispatch table is exhaustive.
     raise RegistryValidationError(f"row-set grouping {grouping!r} dispatch fell through")
 
@@ -263,6 +269,22 @@ def _optional_text_kwarg(
     if not text:
         return {}
     return {key: text}
+
+
+def _coerce_flag(value: Decimal | str | None) -> bool:
+    """Parse a row-set boolean-flag cell (``"1"``/``"0"``) into a real bool.
+
+    Mirrors the ``"1"`` / ``"0"`` string convention
+    :func:`~domain.calculations.registry._donativo_bindings._build_donativo_rows`
+    writes for the ``is_recurrent`` field on the resolve-time (registry ->
+    Sheets) side of the same detail-record family, so the pull-side reassembly
+    round-trips the same wire shape.
+    """
+    if value is None:
+        return False
+    if isinstance(value, Decimal):
+        return value != Decimal("0")
+    return value.strip() == "1"
 
 
 def assemble_withholding_observations(
@@ -541,6 +563,55 @@ def assemble_refund_observations(
                     operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
                     supplier_tax_id=_coerce_text(fields.get("supplier_tax_id")),
                     refund_amount=coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
+                ),
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+    return tuple(observations)
+
+
+def assemble_donativo_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[DonativoDonorObservation, ...]:
+    """Reassemble Modelo 182 per-donor donativo records from row-set cells.
+
+    Args:
+        cells: Row-set cells exported from the calc sheet.
+        revision: The
+            :class:`~domain.calculations.registry.ModeloRevision` used to
+            map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive the default
+            transaction date.
+
+    Each element in the returned tuple is a
+    :class:`~domain.calculations.registry.DonativoDonorObservation`.
+    """
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_date = date(filing_year, 12, 31)
+
+    observations: list[DonativoDonorObservation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                DonativoDonorObservation(
+                    source_id=f"detalle:per_donativo_donor:row-{row_index}",
+                    donor_tax_id=_coerce_text(fields.get("donor_tax_id")),
+                    donor_legal_name=_coerce_text(fields.get("donor_legal_name")),
+                    transaction_date=default_date,
+                    amount_donated=coerce_decimal(fields.get("amount_donated"), default=Decimal("0")),
+                    deduction_percentage=coerce_decimal(fields.get("deduction_percentage"), default=Decimal("0")),
+                    is_recurrent=_coerce_flag(fields.get("is_recurrent")),
                 ),
             )
         except ValidationError as exc:

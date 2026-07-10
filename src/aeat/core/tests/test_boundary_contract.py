@@ -1,15 +1,15 @@
-"""Boundary checks that protect :mod:`aeat.core` from upward dependencies.
+"""Boundary checks that protect :mod:`~core` from upward dependencies.
 
-The :mod:`aeat.core` package sits at the bottom of the dependency
-graph: the outer layers (:mod:`aeat.adapters`, :mod:`aeat.application`,
-:mod:`aeat.domain`, :mod:`aeat.entrypoints`) depend on it, never the
+The :mod:`~core` package sits at the bottom of the dependency
+graph: the outer layers (:mod:`~adapters`, :mod:`~application`,
+:mod:`~domain`, :mod:`~entrypoints`) depend on it, never the
 other way round. The tests here parse every production module under
-:mod:`aeat.core` and assert that none of them imports anything from
+:mod:`~core` and assert that none of them imports anything from
 those outer packages at *import time*.
 
 Import-time coupling is what the layered architecture forbids: a
 module-level ``import`` of an outer package would make loading
-:mod:`aeat.core` drag the outer layer in, opening the door to import
+:mod:`~core` drag the outer layer in, opening the door to import
 cycles and layer inversion. Two import forms are deliberately *not*
 import-time edges and are excluded from the scan, matching the
 authoritative ``core-not-outer`` import-linter contract
@@ -19,37 +19,44 @@ authoritative ``core-not-outer`` import-linter contract
   checkers, never at runtime.
 * Function- and method-scoped (deferred) imports — evaluated only when
   the enclosing callable runs. ``aeat.core`` uses this pattern
-  deliberately (for example :mod:`aeat.core.config` and the resource
+  deliberately (for example :mod:`~core.config` and the resource
   repositories) so a core primitive can call into a higher layer
   lazily without a load-time dependency.
 
 A second test guards against the re-introduction of the historical
 ``WorkspaceLockedError`` symbol that was removed during the
 storage-foundation cleanup.
+
+See Also:
+    :func:`~tests._inventory.production_ast_items`
+        Shared AST inventory used to scan production modules for import-time
+        layer inversions.
+    :func:`~tests._inventory.production_python_files`
+        Production source inventory used by the removed-symbol regression
+        guard.
+    :mod:`~core.resources`
+        Core resource boundary whose deferred outer-layer access pattern is
+        intentionally excluded from import-time coupling.
 """
 
 from __future__ import annotations
 
 import ast
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
 
+from ...tests import SRC_AEAT, production_ast_items, production_python_files, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_CORE_ROOT = Path("src/aeat/core")
-_SOURCE_ROOT = Path("src/aeat")
 _FORBIDDEN_CORE_PREFIXES = (
     "aeat.adapters",
     "aeat.application",
     "aeat.domain",
     "aeat.entrypoints",
 )
-
-
-def _is_production_module(path: Path) -> bool:
-    return not (path.name.startswith("test_") or path.name.startswith("_test_"))
 
 
 def _absolute_import_name(module: str | None, names: list[ast.alias]) -> str:
@@ -61,7 +68,7 @@ def _absolute_import_name(module: str | None, names: list[ast.alias]) -> str:
 
 
 def _resolve_relative_import(path: Path, level: int, module: str | None) -> str:
-    package_parts = list(path.with_suffix("").relative_to(Path("src")).parts)
+    package_parts = list(path.with_suffix("").relative_to(SRC_AEAT.parent).parts)
     package_parts = package_parts[:-1]
     if level:
         package_parts = package_parts[: len(package_parts) - level + 1]
@@ -83,7 +90,7 @@ def _is_type_checking_guard(node: ast.stmt) -> bool:
     return False
 
 
-def _iter_import_time_imports(path: Path) -> list[str]:
+def _iter_import_time_imports(path: Path, tree: ast.AST) -> list[str]:
     """Collect every import that executes when ``path`` is loaded.
 
     Imports nested inside a function or method body are deferred and do
@@ -92,7 +99,6 @@ def _iter_import_time_imports(path: Path) -> list[str]:
     real import-time dependency graph the layered contract protects.
     """
 
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     imports: list[str] = []
 
     def _record(node: ast.Import | ast.ImportFrom) -> None:
@@ -134,15 +140,16 @@ def _iter_import_time_imports(path: Path) -> list[str]:
     return imports
 
 
-def test_core_production_modules_do_not_import_outer_layers() -> None:
+def test_core_production_modules_do_not_import_outer_layers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Core production modules must not import the outer layers at load time."""
     violations: list[str] = []
-    for path in sorted(_CORE_ROOT.rglob("*.py")):
-        if not _is_production_module(path):
+    for path, tree in production_ast_items(source_tree_ast):
+        relative_path = repo_relative(path)
+        if not relative_path.startswith("src/aeat/core/"):
             continue
-        for imported in _iter_import_time_imports(path):
+        for imported in _iter_import_time_imports(path, tree):
             if imported.startswith(_FORBIDDEN_CORE_PREFIXES):
-                violations.append(f"{path}:{imported}")
+                violations.append(f"{relative_path}:{imported}")
 
     assert violations == []
 
@@ -151,10 +158,8 @@ def test_workspace_locked_error_is_not_present_in_production_sources() -> None:
     """The removed ``WorkspaceLockedError`` symbol must not reappear."""
     removed_error_name = "Workspace" + "LockedError"
     offenders: list[str] = []
-    for path in sorted(_SOURCE_ROOT.rglob("*.py")):
-        if not _is_production_module(path):
-            continue
+    for path in production_python_files():
         if removed_error_name in path.read_text(encoding="utf-8"):
-            offenders.append(str(path))
+            offenders.append(repo_relative(path))
 
     assert offenders == []

@@ -194,21 +194,20 @@ def test_invalid_language_value_is_refused_with_accepted_set(tmp_path: Path) -> 
     assert _CREATE_HELP_EN not in result.stdout, combined
 
 
-@pytest.mark.parametrize(
-    ("argv", "expected"),
-    [
-        (["--language", "en", "config", "profile", "create", "--help"], "en"),
-        (["--lang", "ca", "app", "ledger", "import"], "ca"),
-        (["--language=hu", "config", "profile", "list"], "hu"),
-        (["--lang=es"], "es"),
-        (["config", "profile", "create"], None),
-        (["--language", "xx", "config"], None),
-        (["--language"], None),
-        (["--profile", "alice", "config", "profile", "list"], None),
-        (["--language", "EN", "config"], "en"),
-    ],
+_LANGUAGE_ARGV_CASES = (
+    (["--language", "en", "config", "profile", "create", "--help"], "en"),
+    (["--lang", "ca", "app", "ledger", "import"], "ca"),
+    (["--language=hu", "config", "profile", "list"], "hu"),
+    (["--lang=es"], "es"),
+    (["config", "profile", "create"], None),
+    (["--language", "xx", "config"], None),
+    (["--language"], None),
+    (["--profile", "alice", "config", "profile", "list"], None),
+    (["--language", "EN", "config"], "en"),
 )
-def test_language_from_argv_extracts_supported_value(argv: list[str], expected: str | None) -> None:
+
+
+def test_language_from_argv_extracts_supported_value() -> None:
     """The pure argv parser extracts the supported language or ``None``.
 
     Unit-isolated pure logic: no external dependency, so a direct assertion on
@@ -216,4 +215,53 @@ def test_language_from_argv_extracts_supported_value(argv: list[str], expected: 
     unrelated flags (``--profile``) all yield ``None`` so the canonical Typer
     validation stays the single refusal authority.
     """
-    assert _language_from_argv(argv) == expected
+    failures: list[str] = []
+    for argv, expected in _LANGUAGE_ARGV_CASES:
+        actual = _language_from_argv(argv)
+        if actual != expected:
+            failures.append(f"{argv!r}: expected {expected!r}, got {actual!r}")
+
+    assert not failures, "\n".join(failures)
+
+
+# The ``Options`` Rich help panel title is localised to the resolved output
+# locale by ``_localise_help_section_headers`` in the console entry point. The
+# Hungarian rendering is the observable proof the ``--help`` SECTION HEADER (not
+# just the option descriptions) localises.
+_OPTIONS_PANEL_HU = "Kapcsolók"
+_OPTIONS_PANEL_EN = "─ Options"
+
+
+def test_help_section_headers_localise_to_hungarian(tmp_path: Path) -> None:
+    """``--language hu`` localises the Rich ``--help`` section header, not just descriptions.
+
+    The option *descriptions* already localise via the env promotion; this pins
+    the residual framework-owned ``Options`` panel title (the section header) to
+    the resolved locale, closing the S332 gap.
+    """
+    result = _run_console(
+        ["--language", "hu", "config", "auth", "status", "--help"],
+        _console_env(tmp_path, language=None),
+    )
+    combined = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, combined
+    assert _OPTIONS_PANEL_HU in result.stdout, combined
+    assert _OPTIONS_PANEL_EN not in result.stdout, combined
+
+
+def test_help_section_header_locale_does_not_leak_across_processes(tmp_path: Path) -> None:
+    """A Hungarian ``--help`` run must not leak its localised header into a later English run.
+
+    ``_localise_help_section_headers`` rebinds module-level
+    :mod:`typer.rich_utils` constants, so this guards the invocation-scoping
+    contract: because each real ``aeat`` invocation is its own process, an ``hu``
+    run's rebind must not survive into a subsequent ``en`` run. Two separate
+    console processes prove the rebind reflects only its own invocation's locale.
+    """
+    env = _console_env(tmp_path, language=None)
+    hu = _run_console(["--language", "hu", "config", "auth", "status", "--help"], env)
+    assert _OPTIONS_PANEL_HU in hu.stdout, f"{hu.stdout}\n{hu.stderr}"
+    en = _run_console(["--language", "en", "config", "auth", "status", "--help"], env)
+    en_combined = f"{en.stdout}\n{en.stderr}"
+    assert _OPTIONS_PANEL_EN in en.stdout, en_combined
+    assert _OPTIONS_PANEL_HU not in en.stdout, en_combined

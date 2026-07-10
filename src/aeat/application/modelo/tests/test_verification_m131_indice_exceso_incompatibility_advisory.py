@@ -24,11 +24,23 @@ non-blocking ADVISORY findings: the índice-exceso chain feeds only the
 internal-only ``modulos-rendimiento-neto-actividad`` reference casilla, never
 the filed casilla 01, so the gate prompts a review rather than refusing the
 draft.
+
+See Also:
+    :mod:`~domain.calculations.registry._formula_runtime_m131`
+        M131 módulos runtime evaluator whose índice-exceso path this advisory
+        guards.
+    :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
+        Application verification entry point that emits the advisory finding.
+    :func:`~application.modelo._verification_actions._evaluate_advisory_predicate_fires`
+        Predicate helper exercised directly by the focused firing cases.
+    ``src/aeat/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml``
+        Registry-authored 2025 advisory predicate declarations under test.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -73,6 +85,10 @@ _MERCANCIAS_EXPRESSION = (
     'casilla_equals_implies_diverges(["modulos-epigrafe", "722", '
     '"modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
 )
+_INDICE_EXCESO_CASES = (
+    (_AUTOTAXI_EXPRESSION, "721.2"),
+    (_MERCANCIAS_EXPRESSION, "722"),
+)
 
 
 def _profile() -> TaxpayerProfile:
@@ -86,6 +102,7 @@ def _profile() -> TaxpayerProfile:
     )
 
 
+@lru_cache
 def _m131_2025_revision():
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "131"))
     return modelo.revisions["2025"]
@@ -110,50 +127,31 @@ def test_incompatibility_predicates_ship_on_2025_revision() -> None:
         ), predicate_id
 
 
-@pytest.mark.parametrize(
-    ("expression", "epigrafe"),
-    (
-        (_AUTOTAXI_EXPRESSION, "721.2"),
-        (_MERCANCIAS_EXPRESSION, "722"),
-    ),
-    ids=("autotaxi-721-2", "mercancias-722"),
-)
-def test_advisory_fires_when_epigrafe_matches_and_indice_exceso_activated(expression: str, epigrafe: str) -> None:
+def test_advisory_fires_when_epigrafe_matches_and_indice_exceso_activated() -> None:
     """Índice-exceso adjustment on a tabled especial-índice epígrafe fires the advisory."""
     values: dict[CasillaId, Decimal] = {
         _CASILLA_MINORADO: Decimal("40000.00"),
         _CASILLA_MODULOS: Decimal("40858.12"),
     }
-    text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: epigrafe}
 
-    assert _evaluate_advisory_predicate_fires(expression, values, text_values) is True
+    for expression, epigrafe in _INDICE_EXCESO_CASES:
+        text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: epigrafe}
+        assert _evaluate_advisory_predicate_fires(expression, values, text_values) is True, epigrafe
 
 
-@pytest.mark.parametrize(
-    ("expression", "epigrafe"),
-    (
-        (_AUTOTAXI_EXPRESSION, "721.2"),
-        (_MERCANCIAS_EXPRESSION, "722"),
-    ),
-    ids=("autotaxi-721-2", "mercancias-722"),
-)
-def test_advisory_does_not_fire_when_indice_exceso_not_activated(expression: str, epigrafe: str) -> None:
+def test_advisory_does_not_fire_when_indice_exceso_not_activated() -> None:
     """No divergence (minorado below the cuantía threshold) never fires, even on the flagged epígrafes."""
     values: dict[CasillaId, Decimal] = {
         _CASILLA_MINORADO: Decimal("10000.00"),
         _CASILLA_MODULOS: Decimal("10000.00"),
     }
-    text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: epigrafe}
 
-    assert _evaluate_advisory_predicate_fires(expression, values, text_values) is False
+    for expression, epigrafe in _INDICE_EXCESO_CASES:
+        text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: epigrafe}
+        assert _evaluate_advisory_predicate_fires(expression, values, text_values) is False, epigrafe
 
 
-@pytest.mark.parametrize(
-    "expression",
-    (_AUTOTAXI_EXPRESSION, _MERCANCIAS_EXPRESSION),
-    ids=("autotaxi-721-2", "mercancias-722"),
-)
-def test_advisory_does_not_fire_for_non_especial_epigrafe(expression: str) -> None:
+def test_advisory_does_not_fire_for_non_especial_epigrafe() -> None:
     """A tabled epígrafe with no documented índice especial (e.g. cafetería 672.1) never fires."""
     values: dict[CasillaId, Decimal] = {
         _CASILLA_MINORADO: Decimal("40000.00"),
@@ -161,22 +159,19 @@ def test_advisory_does_not_fire_for_non_especial_epigrafe(expression: str) -> No
     }
     text_values: dict[CasillaId, str] = {_CASILLA_EPIGRAFE: "672.1"}
 
-    assert _evaluate_advisory_predicate_fires(expression, values, text_values) is False
+    for expression, epigrafe in _INDICE_EXCESO_CASES:
+        assert _evaluate_advisory_predicate_fires(expression, values, text_values) is False, epigrafe
 
 
-@pytest.mark.parametrize(
-    "expression",
-    (_AUTOTAXI_EXPRESSION, _MERCANCIAS_EXPRESSION),
-    ids=("autotaxi-721-2", "mercancias-722"),
-)
-def test_advisory_does_not_fire_when_epigrafe_absent(expression: str) -> None:
+def test_advisory_does_not_fire_when_epigrafe_absent() -> None:
     """An absent epígrafe text value never fires (no antecedent match)."""
     values: dict[CasillaId, Decimal] = {
         _CASILLA_MINORADO: Decimal("40000.00"),
         _CASILLA_MODULOS: Decimal("40858.12"),
     }
 
-    assert _evaluate_advisory_predicate_fires(expression, values) is False
+    for expression, epigrafe in _INDICE_EXCESO_CASES:
+        assert _evaluate_advisory_predicate_fires(expression, values) is False, epigrafe
 
 
 def test_autotaxi_and_mercancias_predicates_are_mutually_scoped() -> None:

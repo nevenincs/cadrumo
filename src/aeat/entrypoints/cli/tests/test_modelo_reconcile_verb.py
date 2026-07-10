@@ -1,30 +1,44 @@
 """CLI surface tests for the `aeat app modelo reconcile` group.
 
-`reconcile file --file PATH` reconciles a local justificante; `reconcile history`
-lists past runs. `reconcile pull` fetches from AEAT (a live read) and is covered
-by the application-layer orchestrator + reconcile_capture tests, not here.
+`reconcile file --file PATH` reconciles a local justificante (the default
+`--kind`) or a filed declaración (`--kind declaration`, casilla-level compare,
+enrolled modelos only); `reconcile history` lists past runs. `reconcile pull`
+fetches from AEAT (a live read) and is covered by the application-layer
+orchestrator + reconcile_capture tests, not here.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import (
+    profile_create_storage_span,
+    register_minimal_profile,
+    set_active_fields,
+)
 from ....application.workflow import workflow_state_repository
 from ....core import Period
+from ....domain.calculations.registry import validated_casilla_id
 from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
     ModeloCode,
     WorkUnit,
+    derive_calculation_revision_id,
     derive_work_unit_id,
+    upsert_calculation_revision,
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -177,3 +191,641 @@ def test_reconcile_history_lists_recorded_reconciliation() -> None:
     result = invoke_cached_cli(["app", "modelo", "reconcile", "history"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t1" in result.output
+
+
+# --- `--kind declaration`: casilla-level declaración reconcile (#317-#327) --
+
+MODELO_303_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
+"""Synthetic-generated (declared ``synthetic_generated`` in its sidecar), AEAT
+Modelo 303 layout-faithful declaración PDF for ejercicio 2024, 1T. Its
+extraction has been independently confirmed by
+``test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy``
+(``adapters/inbound/declaracion/tests/test_parser_boundary_m303.py``); the
+values asserted below are read straight from that confirmed parse, not
+hand-guessed."""
+
+_DECLARACION_FIXTURE_TAX_ID = "Y0000001S"
+"""Tax id every committed synthetic declaración fixture under
+``fixtures/justificantes/{111,130,190,303,390}/`` prints; must match the active
+profile's ``identity.tax_id`` for the reconcile's header identity compare to
+pass."""
+
+_M303_2024_1T_REVISION_ID = "2023-y-siguientes"
+"""Law-determined registry revision for M303 filing_year=2024, period=1T
+(confirmed via ``authority.snapshot("303", filing_year=2024, period="1T").revision.id``);
+required by ``revision-resolution-is-law-determined`` so the seeded work unit's
+pinned ``revision_id`` matches the resolver's answer."""
+
+# The 9 `computed_casilla_ids` the registry's verification policy actually
+# reconciles for this revision AND that the 2024-1T fixture prints; the other
+# 4 declared computed ids (`iva.compensacion-disponible-fin-periodo`,
+# `iva.compensacion-generada-periodo`, `iva.cuota-deducible-total`,
+# `iva.cuota-devengada-total`) are absent from this older fixture's printed
+# layout and are deliberately left un-persisted below so both sides are
+# `None` for them (a legitimate skip, not a divergence) rather than seeding a
+# fabricated value for a casilla the fixture never prints.
+_M303_2024_1T_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "27": Decimal("13200.00"),
+    "45": Decimal("8400.00"),
+    "64": Decimal("4800.00"),
+    "66": Decimal("4800.00"),
+    "71": Decimal("4800.00"),
+    "iva.compensacion-aplicada-periodo": Decimal("0.00"),
+    "iva.compensacion-pendiente-periodos-posteriores": Decimal("0.00"),
+    "iva.resultado": Decimal("4800.00"),
+    "iva.resultado-regimen-general": Decimal("4800.00"),
+}
+
+
+@pytest.fixture
+def _declaracion_fixture_profile() -> None:
+    """Retarget the module-level autouse profile's `identity.tax_id` to the
+    committed declaración fixtures' printed NIF (`Y0000001S`), distinct from
+    the module's justificante-fixture NIF (`00000000T`). Reuses the same
+    isolated backend `_isolated_backend` already opened for the test rather
+    than nesting a second storage root, which `SecureObjectRepository`
+    per-bucket session handling does not support."""
+    from ....domain.user_profile import UserProfileFact
+
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            [UserProfileFact(path="identity.tax_id", value=_DECLARACION_FIXTURE_TAX_ID)],
+        ),
+    )
+
+
+def _seed_declaracion_work_unit_with_revision(
+    *,
+    modelo: str,
+    filing_year: int,
+    period_code: str,
+    revision_id: str,
+    casilla_values: dict[str, Decimal],
+) -> str:
+    """Seed a work unit plus a persisted, filed `CalculationRevision` carrying
+    `casilla_values` — the persisted "computed" side a declaración reconcile
+    compares the fixture's "filed" side against. Modelo-agnostic: used by the
+    M303, M111 (and, as further modelos are enrolled, M130/M190/M390)
+    declaración-kind reconcile tests."""
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    period = Period.from_year_and_code(filing_year, period_code)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{period_code}",
+        created_at=datetime(2026, 5, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 1, tzinfo=UTC),
+    )
+    WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
+
+    validated_values = {validated_casilla_id(k, surface="test"): v for k, v in casilla_values.items()}
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=validated_values,
+    )
+    repo = CalculationRevisionCatalogueRepository()
+    repo.save(
+        upsert_calculation_revision(
+            repo.load(),
+            CalculationRevision(
+                calculation_revision_id=calculation_revision_id,
+                work_unit_id=work_unit_id,
+                state=CalculationRevisionState.PRESENTADO,
+                casilla_values=validated_values,
+                observations=registry_grounded_observations(
+                    modelo=modelo,
+                    filing_year=filing_year,
+                    period=period_code,
+                    casilla_values=validated_values,
+                ),
+                created_at=datetime(2026, 5, 1, tzinfo=UTC),
+                updated_at=datetime(2026, 5, 1, tzinfo=UTC),
+                verified_at=datetime(2026, 5, 1, tzinfo=UTC),
+                verified_by="test",
+                filed_at=datetime(2026, 5, 1, tzinfo=UTC),
+                filed_by="test",
+            ),
+        ),
+    )
+    return work_unit_id
+
+
+def _seed_m303_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    return _seed_declaracion_work_unit_with_revision(
+        modelo="303",
+        filing_year=2024,
+        period_code="1T",
+        revision_id=_M303_2024_1T_REVISION_ID,
+        casilla_values=casilla_values,
+    )
+
+
+def test_reconcile_file_kind_declaration_matches_when_computed_agrees(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """`reconcile file --file --kind declaration` reports a clean `matches` when
+    the persisted revision's computed casilla values agree with the filed
+    declaración the fixture prints -- the calc-verify-roundtrip claim behind
+    acceptance wall #326 (Modelo 303), proven end-to-end through the real CLI
+    against a real (synthetic-declared) declaración PDF, not a hand-computed
+    in-memory observation."""
+    work_unit_id = _seed_m303_work_unit_with_revision(casilla_values=_M303_2024_1T_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_303_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmatches" in result.output
+    assert "diffs\t0" in result.output
+
+
+def test_reconcile_file_kind_declaration_catches_casilla_divergence(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """A computed revision that disagrees with the filed declaración on one
+    casilla is CAUGHT as a typed `casilla` diff naming both values -- not a
+    silent identity `matches` (`no-silent-under-declaration`). Proves the
+    engine actually re-derives and compares the casilla, rather than the
+    reconcile trivially passing regardless of the persisted value."""
+    mismatched = dict(_M303_2024_1T_MATCHING_CASILLA_VALUES)
+    mismatched["iva.resultado"] = Decimal("5300.00")  # fixture prints 4800.00
+    work_unit_id = _seed_m303_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_303_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmismatches" in result.output
+    assert "diff\tiva.resultado\twork_unit=5300.00\tevidence=4800.00" in result.output
+
+
+# --- Modelo 130 (pagos fraccionados IRPF): printed AEAT box numbers --------
+#
+# M130's fixture, like M303's, self-detects its own modelo/año/período header
+# cleanly with no overrides needed. Modelo 111's, 190's, and 390's real-corpus
+# declaración fixtures do NOT carry a detectable "Ejercicio: YYYY" header
+# stamp (a real AEAT filing can print the field label as a blank
+# dots-placeholder template on the receipt copy, not a filled value); those
+# three modelos are enrolled further below in this file, unblocked by the
+# work-unit-context override forwarding now landed in `modelo_reconcile`'s
+# declaración branch (`application/modelo/_reconcile.py`).
+
+MODELO_130_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
+"""Synthetic-generated M130 declaración PDF for ejercicio 2024, 1T. Extraction
+confirmed by ``test_real_redacted_modelo_130_declaration_copy_extracts_partial_casillas``
+(``adapters/inbound/declaracion/tests/test_parser_boundary_m130.py``): prints
+casillas `03`=5600.00 and `19`=1020.00."""
+
+_M130_2024_1T_REVISION_ID = "2019-y-siguientes"
+"""Law-determined registry revision for M130 filing_year=2024, period=1T
+(confirmed via ``authority.snapshot("130", filing_year=2024, period="1T").revision.id``)."""
+
+# `computed_casilla_ids` for this revision has 10 entries; only `03` and `19`
+# are printed by this fixture. The other 8 are deliberately left un-persisted
+# below so both sides are `None` for them (a legitimate skip), matching the
+# same pattern the M303 section documents above.
+_M130_2024_1T_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "03": Decimal("5600.00"),
+    "19": Decimal("1020.00"),
+}
+
+
+def _seed_m130_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    return _seed_declaracion_work_unit_with_revision(
+        modelo="130",
+        filing_year=2024,
+        period_code="1T",
+        revision_id=_M130_2024_1T_REVISION_ID,
+        casilla_values=casilla_values,
+    )
+
+
+def test_reconcile_file_kind_declaration_m130_matches_when_computed_agrees(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #321 (Modelo 130): the persisted revision's computed `03`/`19`
+    agree with the filed declaración the fixture prints -- a clean `matches`
+    through the real CLI against a real declaración PDF."""
+    work_unit_id = _seed_m130_work_unit_with_revision(casilla_values=_M130_2024_1T_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_130_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmatches" in result.output
+    assert "diffs\t0" in result.output
+
+
+def test_reconcile_file_kind_declaration_m130_catches_casilla_divergence(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #321 (Modelo 130): a computed `19` that disagrees with the
+    filed declaración is CAUGHT as a typed `casilla` diff, not a silent
+    identity `matches`."""
+    mismatched = dict(_M130_2024_1T_MATCHING_CASILLA_VALUES)
+    mismatched["19"] = Decimal("1500.00")  # fixture prints 1020.00
+    work_unit_id = _seed_m130_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_130_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmismatches" in result.output
+    assert "diff\t19\twork_unit=1500.00\tevidence=1020.00" in result.output
+
+
+# --- Modelo 111 (retenciones trimestrales): printed AEAT box numbers -------
+#
+# M111's committed declaración fixture lacks an "Ejercicio: YYYY" header
+# stamp `parse_declaracion`'s auto-detector requires. `modelo_reconcile`'s
+# declaración branch now forwards the addressed work unit's own known
+# modelo/filing_year/period as `parse_declaracion` overrides (see
+# `application/modelo/_reconcile.py`), which lets this fixture parse without
+# requiring a detectable header -- while a genuinely wrong-modelo PDF (a
+# detectable template that conflicts with the override) still refuses; see
+# `test_reconcile_file_kind_declaration_override_still_catches_wrong_modelo_pdf`.
+
+MODELO_111_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "111" / "2024-1T.pdf"
+"""Synthetic-generated M111 declaración PDF for ejercicio 2024, 1T. Extraction
+confirmed by ``test_parser_extracts_modelo_111_casillas_from_corpus``
+(``adapters/inbound/declaracion/tests/test_parser_boundary_m111.py``): prints
+casillas 07/08/09/28/30, both `28` and `30` at `1000.00`."""
+
+_M111_2024_1T_REVISION_ID = "2019-y-siguientes"
+"""Law-determined registry revision for M111 filing_year=2024, period=1T."""
+
+# `computed_casilla_ids` for this revision is exactly {28, 30}; both are
+# printed by the fixture at 1000.00, so a matching seed compares cleanly.
+_M111_2024_1T_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "28": Decimal("1000.00"),
+    "30": Decimal("1000.00"),
+}
+
+
+def _seed_m111_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    return _seed_declaracion_work_unit_with_revision(
+        modelo="111",
+        filing_year=2024,
+        period_code="1T",
+        revision_id=_M111_2024_1T_REVISION_ID,
+        casilla_values=casilla_values,
+    )
+
+
+def test_reconcile_file_kind_declaration_m111_matches_when_computed_agrees(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #318 (Modelo 111): the persisted revision's computed `28`/`30`
+    agree with the filed declaración the fixture prints -- a clean `matches`
+    through the real CLI against a real declaración PDF whose header lacks a
+    detectable ejercicio stamp, proving the work-unit-context override
+    forwarding actually lets the parse succeed."""
+    work_unit_id = _seed_m111_work_unit_with_revision(casilla_values=_M111_2024_1T_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_111_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmatches" in result.output
+    assert "diffs\t0" in result.output
+
+
+def test_reconcile_file_kind_declaration_m111_catches_casilla_divergence(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #318 (Modelo 111): a computed `30` that disagrees with the
+    filed declaración is CAUGHT as a typed `casilla` diff, not a silent
+    identity `matches`."""
+    mismatched = dict(_M111_2024_1T_MATCHING_CASILLA_VALUES)
+    mismatched["30"] = Decimal("1250.00")  # fixture prints 1000.00
+    work_unit_id = _seed_m111_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_111_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmismatches" in result.output
+    assert "diff\t30\twork_unit=1250.00\tevidence=1000.00" in result.output
+
+
+# --- Modelo 390 (IVA resumen anual): compound iva.anual.* casilla ids -------
+
+MODELO_390_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "390" / "2022-0A.pdf"
+"""Synthetic-generated M390 declaración PDF for ejercicio 2022, 0A. The
+sibling `2021-0A.pdf` fixture is NOT used here: it carries a bilingual
+(English-render) header whose printed NIF label
+(``Tax identification number(NIF)of filer:``) does not match the parser's
+Spanish-only tax-id regex (`_TAX_ID_RE` / `_TAX_ID_BEFORE_LABEL_RE` in
+``adapters/inbound/declaracion/_parser.py``) -- a separate, pre-existing
+fixture-content defect unrelated to the override-forwarding fix this section
+exercises. `2022-0A.pdf` and `2023-0A.pdf` are both Spanish-only and parse
+cleanly."""
+
+_M390_2022_0A_REVISION_ID = "2010-y-siguientes"
+"""Law-determined registry revision for M390 filing_year=2022, period=0A."""
+
+# `computed_casilla_ids` for this revision has 3 entries, all printed by the
+# fixture: cuota-devengada-total=10500.00, cuota-deducible-total=8400.00,
+# resultado-regimen-general=2100.00.
+_M390_2022_0A_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "iva.anual.cuota-devengada-total": Decimal("10500.00"),
+    "iva.anual.cuota-deducible-total": Decimal("8400.00"),
+    "iva.anual.resultado-regimen-general": Decimal("2100.00"),
+}
+
+
+def _seed_m390_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    return _seed_declaracion_work_unit_with_revision(
+        modelo="390",
+        filing_year=2022,
+        period_code="0A",
+        revision_id=_M390_2022_0A_REVISION_ID,
+        casilla_values=casilla_values,
+    )
+
+
+def test_reconcile_file_kind_declaration_m390_matches_when_computed_agrees(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #327 (Modelo 390): the persisted revision's 3 computed IVA
+    anual casillas agree with the filed declaración -- a clean `matches`
+    through the real CLI against a real declaración PDF."""
+    work_unit_id = _seed_m390_work_unit_with_revision(casilla_values=_M390_2022_0A_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_390_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmatches" in result.output
+    assert "diffs\t0" in result.output
+
+
+def test_reconcile_file_kind_declaration_m390_catches_casilla_divergence(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #327 (Modelo 390): a computed `iva.anual.resultado-regimen-general`
+    that disagrees with the filed declaración is CAUGHT as a typed `casilla`
+    diff, not a silent identity `matches`."""
+    mismatched = dict(_M390_2022_0A_MATCHING_CASILLA_VALUES)
+    mismatched["iva.anual.resultado-regimen-general"] = Decimal("2600.00")  # fixture prints 2100.00
+    work_unit_id = _seed_m390_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_390_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmismatches" in result.output
+    assert "diff\tiva.anual.resultado-regimen-general\twork_unit=2600.00\tevidence=2100.00" in result.output
+
+
+# --- Modelo 190 (resumen anual de retenciones): compound decl.* ids ---------
+
+MODELO_190_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
+"""Synthetic-generated M190 declaración PDF for ejercicio 2024, 0A."""
+
+_M190_2024_0A_REVISION_ID = "2024-y-siguientes"
+"""Law-determined registry revision for M190 filing_year=2024, period=0A."""
+
+# `computed_casilla_ids` for this revision has 3 entries, all printed by the
+# fixture: percepciones-total=1000.00, retenciones-total=1000.00,
+# total-percepciones=1 (a headcount, still a Decimal-typed casilla).
+_M190_2024_0A_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "decl.percepciones-total": Decimal("1000.00"),
+    "decl.retenciones-total": Decimal("1000.00"),
+    "decl.total-percepciones": Decimal("1"),
+}
+
+
+def _seed_m190_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    return _seed_declaracion_work_unit_with_revision(
+        modelo="190",
+        filing_year=2024,
+        period_code="0A",
+        revision_id=_M190_2024_0A_REVISION_ID,
+        casilla_values=casilla_values,
+    )
+
+
+def test_reconcile_file_kind_declaration_m190_matches_when_computed_agrees(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #328 (Modelo 190, Tier-S summary return): the persisted
+    revision's 3 computed casillas agree with the filed declaración -- a
+    clean `matches` through the real CLI against a real declaración PDF."""
+    work_unit_id = _seed_m190_work_unit_with_revision(casilla_values=_M190_2024_0A_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_190_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmatches" in result.output
+    assert "diffs\t0" in result.output
+
+
+def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Acceptance wall #328 (Modelo 190): a computed `decl.retenciones-total` that
+    disagrees with the filed declaración is CAUGHT as a typed `casilla` diff,
+    not a silent identity `matches`."""
+    mismatched = dict(_M190_2024_0A_MATCHING_CASILLA_VALUES)
+    mismatched["decl.retenciones-total"] = Decimal("1500.00")  # fixture prints 1000.00
+    work_unit_id = _seed_m190_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_190_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tdeclaration" in result.output
+    assert "verdict\tmismatches" in result.output
+    assert "diff\tdecl.retenciones-total\twork_unit=1500.00\tevidence=1000.00" in result.output
+
+
+def test_reconcile_file_kind_declaration_override_still_catches_wrong_modelo_pdf(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Anti-regression proof for the work-unit-context override forwarding
+    fix: an M111 work unit reconciled against the M130 fixture (a real,
+    cleanly-self-detecting PDF for a DIFFERENT modelo) must still be refused,
+    not silently coerced into "matching" the wrong modelo via the override.
+    `parse_declaracion`'s `_resolve_template` reconciles a successful
+    detection against the passed `modelo_override` and raises on conflict --
+    the override forwarding only rescues a fixture whose OWN header fails to
+    self-detect; it never suppresses a genuine wrong-PDF mismatch."""
+    work_unit_id = _seed_m111_work_unit_with_revision(casilla_values=_M111_2024_1T_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_130_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_reconcile_file_kind_declaration_refuses_unenrolled_modelo(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """A modelo outside `_DECLARATION_CASILLA_RECONCILE_MODELOS` (e.g. 100)
+    refuses `--kind declaration` cleanly rather than silently degrading to a
+    header-only compare."""
+    work_unit_id = _seed_work_unit(modelo="100", filing_year=2024, period="0A")
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_303_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_reconcile_file_default_kind_is_justificante() -> None:
+    """Omitting `--kind` preserves the pre-existing default behaviour
+    (justificante), so no existing caller's behaviour changes."""
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind\tjustificante" in result.output

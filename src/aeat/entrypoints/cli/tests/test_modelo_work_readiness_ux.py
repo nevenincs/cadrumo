@@ -246,7 +246,14 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
     assert _payload(listed.output)["work_unit_count"] == 0
 
 
-def test_modelo_349_readiness_refuses_attribution_entity_before_work_create() -> None:
+def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> None:
+    """Modelo 349 applicability was widened to include attribution entities.
+
+    An attribution entity that trades intracommunity is a legitimate M349
+    filer (RD 1624/1992 art. 79), so the profile gate must pass; readiness
+    still withholds ``ready`` until the invoice-source bindings are present,
+    and ``work create`` must succeed rather than refuse.
+    """
     _create_attribution_entity_intracom_profile()
 
     readiness = _invoke(
@@ -263,10 +270,11 @@ def test_modelo_349_readiness_refuses_attribution_entity_before_work_create() ->
     assert readiness.exit_code == 0, readiness.output
     readiness_payload = _payload(readiness.output)
     assert readiness_payload["registry_ready"] is True
+    assert readiness_payload["profile_ready"] is True
+    assert readiness_payload["profile_refusal"] == ""
     assert readiness_payload["ready"] is False
-    assert readiness_payload["profile_ready"] is False
-    assert "Modelo 349 is not applicable to the active profile" in readiness_payload["profile_refusal"]
-    assert "Modelo 349 no aplica" in readiness_payload["profile_refusal"]
+    assert readiness_payload["binding_ready"] is False
+    assert readiness_payload["missing_bindings"]
 
     create = _invoke(
         [
@@ -279,16 +287,14 @@ def test_modelo_349_readiness_refuses_attribution_entity_before_work_create() ->
         ],
     )  # fmt: skip
 
-    assert create.exit_code != 0, create.output
-    create_payload = json.loads(create.output)
-    assert create_payload["status"] == "error"
-    assert create_payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
-    assert "Modelo 349" in create_payload["error"]["message"]
-    assert "Traceback" not in create.output
+    assert create.exit_code == 0, create.output
+    create_payload = _payload(create.output)
+    assert create_payload["status"] == "created"
+    assert create_payload["modelo"] == "349"
 
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
-    assert _payload(listed.output)["work_unit_count"] == 0
+    assert _payload(listed.output)["work_unit_count"] == 1
 
 
 def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() -> None:

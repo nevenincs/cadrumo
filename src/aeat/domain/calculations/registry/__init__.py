@@ -259,6 +259,7 @@ from ._formula_runtime import (
     calculate_registry_snapshot,
     read_parameter,
 )
+from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
@@ -329,10 +330,18 @@ from ._queries import (
     ModeloFormulasReport,
     ModeloListReport,
     ModeloListRow,
+    ModeloSupportMatrixReport,
     RegistryQueryService,
     RegistrySourceInventoryReport,
     RegistrySourceInventoryRow,
     RegistrySourceSite,
+)
+from ._support_matrix import (
+    ModeloEntry,
+    ModeloPortalCompatibilityRef,
+    ModeloRenameRecord,
+    ModeloSupportRemovalRecord,
+    build_support_matrix,
 )
 from ._record_design import (
     DerivedDisenoCasilla,
@@ -468,6 +477,7 @@ from ._workbook_parity import (
     WorkbookParityComparison,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
+    WorkbookScanStatus,
     WorkbookScanOptions,
     assert_formula_workbook_runner_ready,
     assert_workbook_scan_clean,
@@ -598,16 +608,21 @@ __all__ = [
     "ModeloCasillasReport",
     "ModeloDefinition",
     "ModeloDescribeReport",
+    "ModeloEntry",
     "ModeloFilingCapability",
     "ModeloFormulaRow",
     "ModeloFormulasReport",
     "ModeloId",
     "ModeloListReport",
     "ModeloListRow",
+    "ModeloPortalCompatibilityRef",
+    "ModeloRenameRecord",
     "ModeloRevision",
     "ModeloRevisionSource",
     "ModeloScheduleDefinition",
     "ModeloSource",
+    "ModeloSupportMatrixReport",
+    "ModeloSupportRemovalRecord",
     "NoRevisionForPeriodError",
     "OracleEnvironment",
     "OracleId",
@@ -701,6 +716,7 @@ __all__ = [
     "WorkbookParityRunReport",
     "WorkbookRunnerAvailability",
     "WorkbookScanOptions",
+    "WorkbookScanStatus",
     "XmlDictionaryEntry",
     "aggregate_withholding_by_clave",
     "applicable_filing_schedules",
@@ -719,6 +735,7 @@ __all__ = [
     "build_diseno_coverage_report",
     "build_model_law_coverage_ledger",
     "build_snapshot",
+    "build_support_matrix",
     "bundled_authority",
     "calculate_registry_snapshot",
     "calculation_closure_casilla_ids",
@@ -768,6 +785,7 @@ __all__ = [
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",
     "has_applicability_rule",
+    "initial_value_casilla_ids",
     "input_casilla_id_map",
     "inventory_workbook_coverage",
     "invoice_binding_requirements",

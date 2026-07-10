@@ -12,16 +12,23 @@ functions over typed models: :func:`corpus_search_payload_from_response` and
 :func:`render_corpus_search_text` carry no protocol detail and are unit-tested
 directly, while :func:`build_corpus_search_tool` lazily adapts onto the MCP
 SDK's ``Tool`` type so the module still imports (and the server refuses
-gracefully) when the ``aeat[agent]`` extra is absent. The retrieval itself is
+gracefully) when the ``aeat-cli[agent]`` extra is absent. The retrieval itself is
 owned by the application service (:func:`~application.corpus_search.search_corpus`),
 consumed through the package facade per ``service-imports-via-top-level-reexports``.
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.corpus_search import RetrievalMode, RetrievalResponse, search_corpus
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``);
+    # the real import stays deferred to inside the function body below.
+    from mcp.types import Tool
 
 #: The grounding tool's MCP name (the ``corpus.search`` verb, per the
 #: ``aeat_<key>`` convention).
@@ -155,15 +162,15 @@ def render_corpus_search_text(payload: CorpusSearchPayload) -> str:
     return "\n".join(lines)
 
 
-def build_corpus_search_tool() -> object:
+def build_corpus_search_tool() -> Tool:
     """Build the SDK ``Tool`` for the grounding search tool.
 
     Lazily imports the SDK types so the module imports without the
-    ``aeat[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``: it
+    ``aeat-cli[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``: it
     reads the bundled corpus and never mutates state.
 
     Returns:
-        The ``aeat_corpus_search`` :class:`mcp.types.Tool` object.
+        The ``aeat_corpus_search`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 

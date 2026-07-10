@@ -1,10 +1,10 @@
 """Ed25519 review-package signing + signature-verify roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_signing` end to end
+Exercises :mod:`~application.modelo._review_package_signing` end to end
 against a REAL built-and-checksummed review package
-(:func:`~aeat.application.modelo.build_review_package`) and a REAL encrypted
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
-(:func:`~aeat.tests.secure_sql.isolated_runtime_profile` -- a genuine
+(:func:`~application.modelo.build_review_package`) and a REAL encrypted
+:class:`~adapters.persistence.storage.SecureObjectRepository`
+(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): mint a keypair, confirm the
 private key is persisted only as ciphertext, sign a package, verify the
 signature, then tamper the package/manifest and confirm verification fails.
@@ -12,6 +12,21 @@ signature, then tamper the package/manifest and confirm verification fails.
 Mirrors the anti-tautology discipline already established in
 ``test_review_package.py``: every negative-path test names the exact way the
 system deviates from "clean" before asserting the refusal.
+
+See Also:
+    :mod:`~application.modelo._review_package_signing`
+        Ed25519 authenticity layer exercised by the roundtrip and tamper cases.
+    :mod:`~application.modelo._review_package`
+        Checksum-manifest package builder whose integrity guarantee is verified
+        before signature validation.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Encrypted per-bucket storage boundary for the signing private key.
+    :mod:`~application.modelo._review_package_counter_sign`
+        Accountant receipt layer that signs over this module's original
+        signature bytes.
+    :mod:`~core.corpus_manifest._bundle_signing`
+        Corpus-bundle signing analogue that reuses the same manifest-digest
+        signing pattern.
 """
 
 from __future__ import annotations
@@ -23,7 +38,6 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from ....adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
 from ....domain.modelos import (
@@ -34,6 +48,12 @@ from ....domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
+)
+from ....tests.review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
+    SecureObjectRow,
+    SensitivityClass,
+    session_scope,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package import build_review_package
@@ -161,9 +181,6 @@ def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
         # ciphertext directly (bypassing the repository's decrypt step) and
         # confirm the plaintext private-key hex does NOT appear in it.
         from sqlalchemy import select
-
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(

@@ -6,7 +6,27 @@ it lists with its derived fingerprint, confirm a duplicate id refuses, and
 confirm removal drops it from the register. The registered public key is then
 proven to be the exact key
 ``aeat app modelo review-package encrypt-for-recipient`` seals against in
-:mod:`~aeat.entrypoints.cli.tests.test_modelo_review_package_recipient_encryption_verb`.
+:mod:`~entrypoints.cli.tests.test_modelo_review_package_recipient_encryption_verb`.
+
+See Also:
+    :mod:`~entrypoints.cli._config._collab`
+        Command handlers for the ``config collab recipient`` surface.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Encrypted active-bucket registry the CLI delegates to.
+    :class:`~application.modelo.RecipientFingerprintRecord`
+        Public-key trust record projected by ``add`` and ``list``.
+    :func:`~application.modelo.public_key_hex_from_raw_bytes`
+        Application validator for raw X25519 public-key bytes.
+    :class:`~entrypoints.cli._config._collab_payloads.ConfigCollabRecipientAddResult`
+        JSON result schema asserted after ``recipient add``.
+    :class:`~entrypoints.cli._config._collab_payloads.ConfigCollabRecipientListResult`
+        JSON result schema asserted after ``recipient list``.
+    :class:`~entrypoints.cli._config._collab_payloads.ConfigCollabRecipientRemoveResult`
+        JSON result schema asserted after ``recipient remove``.
+    :func:`~tests.cli_runner.invoke_typer_app`
+        Real Typer runner used to exercise the config root.
+    :func:`~tests.secure_sql.isolated_profile_storage_root`
+        Encrypted profile-storage harness used by these integration tests.
 """
 
 from __future__ import annotations
@@ -75,17 +95,17 @@ def test_collab_recipient_add_then_list_then_remove(tmp_path: Path) -> None:
                 "collab",
                 "recipient",
                 "add",
-                "kents-accountant",
+                "my-accountant",
                 "--public-key",
                 public_key_hex,
                 "--label",
-                "Kent's accountant",
+                "My accountant",
             ],
         )
         assert add_result.exit_code == 0, add_result.output
         add_payload = _payload(add_result.output)
-        assert add_payload["recipient_id"] == "kents-accountant"
-        assert add_payload["label"] == "Kent's accountant"
+        assert add_payload["recipient_id"] == "my-accountant"
+        assert add_payload["label"] == "My accountant"
         assert add_payload["public_key_hex"] == public_key_hex
         assert len(add_payload["fingerprint_sha256"]) == 64
         bytes.fromhex(add_payload["fingerprint_sha256"])  # is valid hex
@@ -95,7 +115,7 @@ def test_collab_recipient_add_then_list_then_remove(tmp_path: Path) -> None:
         assert list_result.exit_code == 0, list_result.output
         list_payload = _payload(list_result.output)
         assert list_payload["count"] == 1
-        assert list_payload["recipients"][0]["recipient_id"] == "kents-accountant"
+        assert list_payload["recipients"][0]["recipient_id"] == "my-accountant"
         assert list_payload["recipients"][0]["public_key_hex"] == public_key_hex
 
         # A duplicate recipient_id refuses instructively rather than silently
@@ -108,7 +128,7 @@ def test_collab_recipient_add_then_list_then_remove(tmp_path: Path) -> None:
                 "collab",
                 "recipient",
                 "add",
-                "kents-accountant",
+                "my-accountant",
                 "--public-key",
                 _fresh_public_key_hex(),
             ],
@@ -118,7 +138,7 @@ def test_collab_recipient_add_then_list_then_remove(tmp_path: Path) -> None:
         _dispose()
         remove_result = invoke_typer_app(
             root_app,
-            ["--format", "json", "config", "collab", "recipient", "remove", "kents-accountant"],
+            ["--format", "json", "config", "collab", "recipient", "remove", "my-accountant"],
         )
         assert remove_result.exit_code == 0, remove_result.output
         remove_payload = _payload(remove_result.output)

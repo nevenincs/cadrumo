@@ -1,17 +1,17 @@
 """Core revision record-section validation helpers.
 
 Validates the primary record sections declared on a
-:class:`~aeat.domain.calculations.registry.ModeloRevision`: casillas, formulas,
+:class:`~domain.calculations.registry.ModeloRevision`: casillas, formulas,
 parameters, bindings, and extraction profiles. Each validator checks local
 reference closure plus legal/source grounding through
-:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~domain.calculations.registry._validate_evidence.EvidenceValidator`.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+    :func:`~domain.calculations.registry._validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes these record-section validators.
-    :mod:`aeat.domain.calculations.registry._validate_formulas`
+    :mod:`~domain.calculations.registry._validate_formulas`
         Formula-expression validation used by the formula section.
-    :mod:`aeat.domain.calculations.registry._validate_extraction_profiles`
+    :mod:`~domain.calculations.registry._validate_extraction_profiles`
         Extraction-profile artefact and specimen gates used by this module.
 """
 
@@ -57,8 +57,8 @@ def validate_casilla_section(
 ) -> None:
     """Append casilla metadata, formula, binding, and export-ref failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~aeat.domain.calculations.registry.CasillaDefinition` rows. Each
+    The :class:`~domain.calculations.registry.ModeloRevision` supplies
+    :class:`~domain.calculations.registry.CasillaDefinition` rows. Each
     casilla, constraint, and alias must be legally/source grounded; formula,
     binding, alternate-binding, and export-field references must point at ids in
     the shared revision-validation context.
@@ -136,12 +136,12 @@ def validate_formula_section(
 ) -> None:
     """Append formula reference, evidence, citation, and duplicate-target failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~aeat.domain.calculations.registry.FormulaDefinition` rows. Each
+    The :class:`~domain.calculations.registry.ModeloRevision` supplies
+    :class:`~domain.calculations.registry.FormulaDefinition` rows. Each
     formula must cite official-source guidance, target a declared
-    :class:`~aeat.domain.calculations.registry.CasillaId`, and contain only
+    :class:`~domain.calculations.registry.CasillaId`, and contain only
     expression references accepted by
-    :func:`aeat.domain.calculations.registry._validate_formulas.validate_formula_expression`.
+    :func:`~domain.calculations.registry._validate_formulas.validate_formula_expression`.
     """
     for formula in revision.formulas:
         owner = f"formula {formula.id}"
@@ -186,8 +186,8 @@ def validate_parameter_section(
 ) -> None:
     """Append parameter reference, citation, and dated-value failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~aeat.domain.calculations.registry.ParameterDefinition` rows. Each
+    The :class:`~domain.calculations.registry.ModeloRevision` supplies
+    :class:`~domain.calculations.registry.ParameterDefinition` rows. Each
     parameter must carry known legal/source refs, official-source citations, and
     valid dated-value windows.
     """
@@ -219,8 +219,8 @@ def validate_binding_section(
 ) -> None:
     """Append binding selector-shape, reference, and evidence failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` rows.
+    The :class:`~domain.calculations.registry.ModeloRevision` supplies
+    :class:`~domain.calculations.registry.DataBindingDefinition` rows.
     Selectors are validated through the single binding-selector contract; layout
     bindings require layout-authority evidence, while other bindings require
     official-source guidance and source citations.
@@ -273,8 +273,8 @@ def validate_extraction_profile_section(
 ) -> None:
     """Append extraction-profile reference, artefact, and specimen failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~aeat.domain.calculations.registry.ExtractionProfileDefinition`
+    The :class:`~domain.calculations.registry.ModeloRevision` supplies
+    :class:`~domain.calculations.registry._schema_extraction.ExtractionProfileDefinition`
     rows. Each profile must target declared/exported casillas as required,
     declare layout-authority evidence, use a dotted parser callable, and satisfy
     bundled justificante PDF specimen/round-trip gates when a corpus root is

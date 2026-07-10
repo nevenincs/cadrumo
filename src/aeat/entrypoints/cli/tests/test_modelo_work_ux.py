@@ -22,6 +22,7 @@ pin the modelo-work findings reported by the persona fleet:
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -593,6 +594,80 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
     assert payload["revision_id"] == expected_revision
 
 
+def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
+    _isolated_cli_backend: Path,
+) -> None:
+    created = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "objetiva",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Readiness",
+            "--activity", "objective-estimation taxi activity",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+
+    created_work = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "131", "--year", "2026", "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert created_work.exit_code == 0, created_work.output
+    work_unit_id = _payload(created_work.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "01=12000",
+            "--casilla", "02=0",
+            "--casilla", "03=0",
+            "--casilla", "05=0",
+            "--casilla", "08=0",
+            "--casilla", "09=0",
+            "--casilla", "12=0",
+            "--casilla", "14=0",
+            "--casilla", "modulos-epigrafe=721.2",
+            "--casilla", "modulos-1-unidades=0",
+            "--casilla", "modulos-1-unidades-anterior=0",
+            "--casilla", "modulos-2-unidades=1",
+            "--casilla", "modulos-3-unidades=40",
+            "--casilla", "modulos-4-unidades=0",
+            "--casilla", "modulos-5-unidades=0",
+            "--casilla", "modulos-6-unidades=0",
+            "--casilla", "modulos-7-unidades=0",
+            "--casilla", "modulos-minoracion-inversion=0",
+            "--binding", "modelo-131-2026-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    calculated_payload = _payload(calculated.output)
+    revision_id = calculated_payload["calculation_revision_id"]
+
+    shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
+    assert shown.exit_code == 0, shown.output
+    revision_payload = _payload(shown.output)
+
+    inputs = revision_payload["input_values_by_casilla_id"]
+    assert inputs["01"] == "12000"
+    assert inputs["modulos-epigrafe"] == "721.2"
+    assert inputs["modulos-2-unidades"] == "1"
+    assert inputs["modulos-3-unidades"] == "40"
+    assert inputs["modulos-minoracion-inversion"] == "0"
+
+    casillas = revision_payload["casilla_values"]
+    assert Decimal(casillas["01"]) == Decimal("12000")
+    assert Decimal(casillas["modulos-rendimiento-neto-actividad"]) > Decimal("0")
+    assert Decimal(casillas["modulos-rendimiento-neto-actividad"]) != Decimal(casillas["01"])
+
+
 def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:
     """A different --name supplied on an idempotent re-create is not
     silently dropped: it is applied as a rename and the result says so."""
@@ -727,22 +802,18 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
     """Supplying a numeric value for a text-type casilla via --casilla must
     be refused before reaching the engine.
 
-    M100 2024 casilla ``0001`` has ``data_type = "text"`` (it names the
-    declarante, not a numeric income amount).  Passing ``--casilla "0001=38000"``
-    silently stored Decimal(38000) in the text slot, which the formula chain
-    ignores, producing a negative base imponible when combined with a
-    subtraction-convention casilla like ``0006``.  The guard must fire early
-    with a diagnostic naming the casilla, its label, its data_type, and the
-    correct input channel.
-
-    tracked: #53 — this test currently fails at ``_create_profile()`` with
-    REFUSED_PROFILE_NOT_FOUND: the held ``profile_create_storage_span`` and the
-    in-process CLI ``profile create`` disagree on the bucket-manifest
-    registration for the ``operator`` profile (the UUID-vs-display-name /
-    manifest-registration in-process resolution class split into task #53,
-    distinct from the #52 bucket-session bootstrap this module's other tests
-    needed). Left failing loudly per the #52 brief until #53's
-    profile-resolution fix lands.
+    M100 2024 casilla ``0001`` has ``data_type = "text"`` with
+    ``semantic_role = "irpf_toma_datos_declarante_selector"``: it names the
+    contribuyente who obtains the income (declarante / cónyuge / dependant),
+    not a numeric amount. Passing ``--casilla "0001=38000"`` would otherwise
+    route the number onto the parallel text channel, store it silently in the
+    text slot, and be ignored by the formula chain — surfacing as a wrong base
+    imponible. The input-validation guard
+    (``_validated_declarante_selector`` in
+    ``aeat.application.modelo._calculate_input``) fires early with a typed
+    ``ModeloCalculateTextInputError`` naming the casilla, its label, its
+    ``data_type``, and the numeric casilla channel the amount belongs on, so
+    the engine is never reached.
     """
 
     _create_profile()

@@ -1,22 +1,31 @@
-"""Real-behavior tests for LedgerProviderID enum coverage.
+"""Real-behavior tests for ledger provider ID dispatch coverage.
 
-Asserts that LedgerProviderID covers every dispatch literal used in the
-ledger import chain and that no bare-string provider IDs survive in production
-source outside the canonical StrEnum definition.
+The ledger import service accepts provider IDs as operator text, normalises them
+through :class:`~application.ledger._actions_import.LedgerProviderID`, and then
+dispatches to the concrete inbound financial provider implementations. These
+tests pin the enum's public strings, alias handling, and unknown-provider
+diagnostic surface.
+
+See Also:
+    :class:`~application.ledger._actions_import.LedgerProviderID`
+        Canonical set of ledger import provider IDs accepted by the service.
+    :func:`~application.ledger._actions_import._resolve_financial_provider`
+        Resolver that maps provider IDs to concrete parser implementations.
+    :mod:`~adapters.inbound.financial.providers`
+        Provider package supplying CSV, OFX, XLSX, and N26 PDF parsers.
 """
 
 from __future__ import annotations
 
-import re
+from pathlib import Path
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
-from .._actions_import import LedgerProviderID
+from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider
+from ....domain.transactions import TransactionValidationError
+from .._actions_import import LedgerProviderID, _resolve_financial_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_ACTIONS_IMPORT_MODULE = PROJECT_ROOT / "src" / "aeat" / "application" / "ledger" / "_actions_import.py"
 
 
 def test_ledger_provider_id_enum_contract() -> None:
@@ -29,26 +38,41 @@ def test_ledger_provider_id_enum_contract() -> None:
         assert reconstructed is member, f"LedgerProviderID({member.value!r}) did not return the canonical member"
 
 
-def test_no_bare_string_dispatch_survivors_in_import_service() -> None:
-    """The import-service dispatch chain contains no bare-string provider-ID comparisons.
+@pytest.mark.parametrize(
+    ("provider", "expected_type"),
+    [
+        ("csv", CsvProvider),
+        ("ofx", OfxProvider),
+        ("qfx", OfxProvider),
+        ("xlsx", XlsxProvider),
+        ("excel", XlsxProvider),
+        ("pdf", PdfN26Provider),
+        ("pdf-n26", PdfN26Provider),
+    ],
+    ids=("csv", "ofx", "qfx", "xlsx", "excel", "pdf", "pdf-n26"),
+)
+def test_ledger_provider_id_dispatch_resolves_real_provider(provider: str, expected_type: type[object]) -> None:
+    """Explicit provider IDs dispatch through the canonical enum-backed resolver."""
 
-    After the contract migration every if-branch uses identity comparison on
-    LedgerProviderID members; bare string literals of the form
-    ``provider_id == "csv"`` or ``provider_id in {"ofx", "qfx"}`` must not
-    survive.
-    """
-    source = _ACTIONS_IMPORT_MODULE.read_text(encoding="utf-8")
-    # Exclude lines that define the StrEnum values themselves
-    lines_with_bare_dispatch = []
-    for i, line in enumerate(source.splitlines(), start=1):
-        # Skip lines inside the LedgerProviderID class body (value assignments)
-        stripped = line.strip()
-        if stripped.startswith("#"):
-            continue
-        # Detect any remaining provider-id string comparison pattern
-        if re.search(r'provider_id\s*(?:==|in)\s*["\']', line):
-            lines_with_bare_dispatch.append(f"_actions_import.py:{i}: {stripped!r}")
+    resolved = _resolve_financial_provider(provider, Path("statement.placeholder"))
 
-    assert not lines_with_bare_dispatch, "Bare provider_id string comparison(s) survived migration:\n" + "\n".join(
-        f"  {line}" for line in lines_with_bare_dispatch
-    )
+    assert isinstance(resolved, expected_type)
+
+
+def test_ledger_provider_id_dispatch_is_case_and_whitespace_normalised() -> None:
+    """Operator input is normalised before enum construction."""
+
+    resolved = _resolve_financial_provider("  CSV  ", Path("statement.csv"))
+
+    assert isinstance(resolved, CsvProvider)
+
+
+def test_unknown_ledger_provider_reports_known_enum_values() -> None:
+    """Unknown provider refusal cites the current enum values."""
+
+    with pytest.raises(TransactionValidationError) as exc_info:
+        _resolve_financial_provider("bank-json", Path("statement.json"))
+
+    assert exc_info.value.translated_message == "errors.transaction.unknown_ledger_provider"
+    assert exc_info.value.context["provider"] == "bank-json"
+    assert exc_info.value.context["providers"] == ", ".join(provider.value for provider in LedgerProviderID)

@@ -75,7 +75,7 @@ class BindingAggregation(BaseModel):
     closed :class:`BindingAggregationOp` set is the only key real binding
     aggregation mappings carry in the registry authoring tree. The model is
     strict and frozen, matching the registry schema's
-    :data:`core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
+    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
     a stray extra key is rejected at registry-build validation rather than
     silently re-parsed at resolve time.
     """
@@ -129,7 +129,7 @@ class RelationAggregation(BaseModel):
     aggregation mappings carry in the registry authoring tree (every relation
     declares ``aggregation = {op = "copy" | "sum"}`` or none). The model is strict
     and frozen, matching the registry schema's
-    :data:`core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
+    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
     stray extra key is rejected at registry-build validation rather than silently
     re-parsed at resolve time. This is the relation sibling of
     :class:`BindingAggregation`; the two op axes are deliberately separate.
@@ -166,8 +166,8 @@ class PeriodKind(StrEnum):
     is forbidden).
 
     This lightweight cadence enum is an aggregation/deadline taxonomy, not the
-    public :class:`core.Period` classifier. Concrete filing-period values
-    should use :class:`core.Period` and its exported ``PeriodKind``, which
+    public :class:`~core.Period` classifier. Concrete filing-period values
+    should use :class:`~core.Period` and its exported ``PeriodKind``, which
     also distinguishes instalment and extended registry tokens.
     """
 
@@ -213,7 +213,7 @@ class RowSetGroupingKind(StrEnum):
 class BindingSourceKind(StrEnum):
     """The single canonical closed set of binding/source-mesh tokens.
 
-    Every :class:`domain.calculations.registry.DataBindingDefinition`
+    Every :class:`~domain.calculations.registry.DataBindingDefinition`
     declares exactly one ``source`` drawn from the registry-declared subset of
     this enum. The same enum also carries mesh-only source decisions such as
     :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
@@ -286,24 +286,20 @@ class BindingSourceKind(StrEnum):
     IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
     # Capital-goods IVA deduction regularización (LIVA arts. 107-110): the source
     # that would materialise Modelo 303 casilla 43 / the Modelo 390 regularización
-    # field from the profile-scoped bienes-de-inversión register plus the
-    # definitive prorrata percentages. Registered in ``DEFERRED_SOURCE_KINDS`` for
-    # the first slice — the automatic feed is blocked on the separately-deferred
-    # prorrata-definitiva source (2026-06-19-silent-zero-base-aggregation-adr), so
-    # it carries no registry binding yet and surfaces an advisory rather than a
-    # hard binding (ADR 2026-07-01-iva-bienes-inversion-regularizacion).
+    # field from the profile-scoped bienes-de-inversión register plus definitive
+    # prorrata percentages. It is registry-declared and source-mesh enrolled for
+    # the governed M303/M390 binding targets; the separate advisory path remains
+    # available for operator review when the definitive prorrata fact is missing
+    # or only a non-blocking proposed value can be shown.
     BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage
     # (prior-year definitive, art. 105.Uno) applied across the year and the
     # current-year definitive percentage (art. 104) over full-year volumes.
-    # Registered in ``DEFERRED_SOURCE_KINDS`` for the first slice — it carries no
-    # registry binding yet and surfaces an advisory (the automatic casilla-44
-    # feed is promoted to a live mesh binding once the provisional-carry store
-    # lands), per ADR 2026-07-01-iva-complexity-hardening-scope. This is the same
-    # definitive-percentage source the capital-goods regularización (#349) is
-    # blocked on.
+    # Registry-declared live mesh source once the provisional-carry store and Q4
+    # regularisation path are proven end to end, per ADR
+    # 2026-07-01-iva-complexity-hardening-scope.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
@@ -333,10 +329,10 @@ class BindingSourceKind(StrEnum):
     # the "registro tipo 2" detail row carrying the donor's NIF, importe
     # donado, porcentaje de deducción aplicable, and the recurrencia flag
     # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
-    # No live resolver yet — Sheets-pull-only, the same shape as the sibling
-    # detail-record families (ATRIBUCION_MEMBER, FOREIGN_ASSET,
-    # RELATED_PARTY_OPERATION, REFUND_OPERATION); registered in
-    # DEFERRED_SOURCE_KINDS (application/aggregation/_source_mesh.py).
+    # No live resolver yet - Sheets-pull-only, the same deferred shape as the
+    # sibling detail-record families (ATRIBUCION_MEMBER, RELATED_PARTY_OPERATION,
+    # REFUND_OPERATION); the latter two remain registered in DEFERRED_SOURCE_KINDS
+    # (application/aggregation/_source_mesh.py).
     DONATIVO_DONOR = "donativo_donor"
 
 
@@ -444,7 +440,7 @@ so the registry stays the single source of truth for ledger readiness.
 class BindingTypedEnumKind(StrEnum):
     """The closed set of substrate enum-class names a binding value bridges.
 
-    A :class:`domain.calculations.registry.DataBindingDefinition` whose
+    A :class:`~domain.calculations.registry.DataBindingDefinition` whose
     value bridges a closed-membership substrate axis declares ``typed_enum`` =
     one of these members. Each value is the NAME of the closed enum class a
     consumer routes the binding value through:
@@ -459,8 +455,9 @@ class BindingTypedEnumKind(StrEnum):
     annotation token that was previously a bare ``str`` in
     ``DataBindingDefinition.typed_enum``. Those tokens live in registry TOML and
     flow through operator-facing surfaces (``bindings list`` table, the
-    :class:`ModeloBindingQueryRow` projection, the borrador resolver, the
-    Sheets-pull router); a :class:`~enum.StrEnum` serialises to its value, so
+    :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
+    projection, the borrador resolver, the Sheets-pull router); a
+    :class:`~enum.StrEnum` serialises to its value, so
     narrowing the field from ``str | None`` to this enum changes the static type
     without changing any stored, compared, or emitted string (the
     modelo-enum-hardening precedent). Do NOT rename a stored token.
@@ -468,7 +465,7 @@ class BindingTypedEnumKind(StrEnum):
     Declared in :mod:`core` as a closed value set per the architecture
     contract; the loader hydrates the registry TOML's raw token to its member at
     the schema boundary (see
-    :meth:`domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
+    :meth:`~domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
     It is the closed-set *annotation* on the binding, distinct from the engine
     ``input_channel`` (how a formula consumes the value); a binding may carry a
     ``typed_enum`` yet still be a numeric ``decimal`` channel.
@@ -673,13 +670,15 @@ class IntracomOperationType(StrEnum):
 class ForeignAssetClass(StrEnum):
     """Modelo 720 asset classes (clave de tipo de bien).
 
-    Source: AEAT Modelo 720 instrucciones. Each class is declared separately;
-    the declarability gate (50,000 EUR per class) is applied after the
-    aggregator runs. Declared in :mod:`core` as a closed value set.
+    Source: AEAT Modelo 720 instrucciones. Each clave is declared separately;
+    the declarability gate applies the 50,000 EUR floor to the regulatory
+    obligation block that contains the class after the aggregator runs.
+    Declared in :mod:`core` as a closed value set.
     """
 
-    ACCOUNT = "cuenta_entidad_financiera"  # clave C
-    SECURITY = "valor_seguro_renta"  # clave V
-    REAL_ESTATE = "inmueble_extranjero"  # clave I
-    INSURANCE = "seguro_renta_temporal_vitalicia"  # clave S
-    VIRTUAL_CURRENCY = "moneda_virtual"  # clave M
+    ACCOUNT = "cuenta_entidad_financiera"  # Modelo 720 clave C
+    SECURITY = "valor_derecho_extranjero"  # Modelo 720 clave V
+    COLLECTIVE_INVESTMENT = "institucion_inversion_colectiva"  # Modelo 720 clave I
+    INSURANCE = "seguro_renta_temporal_vitalicia"  # Modelo 720 clave S
+    REAL_ESTATE = "inmueble_derecho_real_extranjero"  # Modelo 720 clave B
+    VIRTUAL_CURRENCY = "moneda_virtual"  # Modelo 721 sibling; no Modelo 720 clave

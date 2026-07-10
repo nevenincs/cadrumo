@@ -1,16 +1,18 @@
 """Real-behavior coverage for ``aeat config google credential-source set|show``.
 
 Drives the full CLI surface (Typer callback, envelope emission, error
-boundary) through :func:`invoke_cached_cli` against a real provisioned
-profile — no mocks. Confirms:
+boundary) through :func:`~tests.cli_runner.invoke_cached_cli` against a real provisioned
+profile. Confirms:
 
 1. ``set --kind service-account-impersonation`` persists a
-   :class:`GoogleCredentialSourceSelection` and ``show`` reflects it back.
+   :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` and
+   ``show`` reflects it back.
 2. The persisted selection reaches
-   :func:`build_google_credentials` (the real factory dispatch), proven the
-   same way :mod:`adapters.outbound.storage.tests.test_factory` proves it:
-   pointing ``GOOGLE_APPLICATION_CREDENTIALS`` at a nonexistent path makes
-   the real, unmocked ``google.auth.default()`` call raise
+   :func:`~adapters.outbound.storage.build_google_credentials` (the real factory
+   dispatch), proven the same way
+   :mod:`~adapters.outbound.storage.tests.test_factory` proves it: pointing
+   ``GOOGLE_APPLICATION_CREDENTIALS`` at a nonexistent path makes the real
+   ``google.auth.default()`` call raise
    ``GoogleAuthAdcUnavailableError`` naming the persisted
    ``target_principal`` — reachable only if the CLI-persisted selection
    actually drove the impersonation resolver, not the OAuth-Desktop path.
@@ -32,8 +34,28 @@ non-CLI primitive directly (`build_google_credentials`,
 `load_credential_source_selection`) instead wrap the whole exchange in
 `isolated_runtime_profile`, whose `with`-block keeps one bucket session
 active across both the CLI invocation and the direct call — the same
-pattern :mod:`adapters.outbound.google.tests.test_session_store_roundtrip`
-and :mod:`adapters.outbound.storage.tests.test_factory` use.
+pattern :mod:`~adapters.outbound.google.tests.test_session_store_roundtrip`
+and :mod:`~adapters.outbound.storage.tests.test_factory` use.
+
+See Also:
+    :mod:`~entrypoints.cli._config._google_credential_source_cli`
+        Typer command group under test.
+    :class:`GoogleCredentialSourceKind`
+        Closed credential-source selector accepted by ``--kind``.
+    :class:`~adapters.outbound.google.GoogleImpersonationConfig`
+        Typed service-account impersonation configuration persisted by ``set``.
+    :func:`~adapters.outbound.google.load_credential_source_selection`
+        Secure-storage read path used to prove persistence.
+    :func:`~adapters.outbound.google.save_credential_source_selection`
+        Secure-storage write path invoked by the CLI command.
+    :func:`~adapters.outbound.storage.build_google_credentials`
+        Factory dispatch that consumes the persisted selection.
+    :exc:`~adapters.outbound.google.GoogleAuthAdcUnavailableError`
+        Real ADC failure proving impersonation dispatch was selected.
+    :class:`~entrypoints.cli._config._google_credential_source_payloads.GoogleCredentialSourceShowResult`
+        JSON envelope schema asserted for secret-free ``show`` output.
+    :func:`~tests.secure_sql.isolated_runtime_profile`
+        Real bucket-session harness used around direct repository reads.
 """
 
 from __future__ import annotations
@@ -43,12 +65,12 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.google import GoogleAuthAdcUnavailableError
-from .....adapters.outbound.google._session_store import load_credential_source_selection
+from .....adapters.outbound.google import GoogleAuthAdcUnavailableError, load_credential_source_selection
 from .....adapters.outbound.storage import build_google_credentials
 from .....core import GoogleCredentialSourceKind
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
+from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -125,7 +147,8 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
     """The persisted selection roundtrips through secure storage with no secret field.
 
     Asserted through both surfaces: the CLI ``show`` JSON payload schema
-    (:class:`GoogleCredentialSourceShowResult`) is itself the proof no secret
+    (:class:`~entrypoints.cli._config._google_credential_source_payloads.GoogleCredentialSourceShowResult`)
+    is itself the proof no secret
     field exists — it declares exactly `target_principal` / `target_scopes`
     / `delegates` / `subject` / `lifetime_s`, never a private key or access
     token field — and a direct secure-storage reload (inside the same
@@ -183,19 +206,20 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
     }
 
 
-def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path) -> None:
     """The CLI-persisted selection genuinely drives `build_google_credentials`.
 
     Pointing `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent path makes the
-    real, unmocked `google.auth.default()` call inside
+    real `google.auth.default()` call inside
     `resolve_impersonated_credentials` raise `GoogleAuthAdcUnavailableError`
     naming the persisted `target_principal` — a failure mode only reachable
     if the factory actually dispatched to the impersonation resolver (the
     OAuth-Desktop path would instead raise a client-not-registered error).
     """
-    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-credential-source") as profile:
+    with (
+        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-credential-source") as profile,
+    ):
         result = invoke_cached_cli(
             [
                 "config",

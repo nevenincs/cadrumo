@@ -25,6 +25,20 @@ The hook targets a source-tree build (``uv build`` run from
 up. When the wheel is instead built from an extracted sdist, the binaries are
 already embedded under ``aeat_data/_data/corpus`` and the hook force-includes
 them from there.
+
+See Also:
+    :class:`CustomBuildHook`
+        Hatchling hook that injects this companion's owned corpus binaries into
+        the build ``force_include`` map.
+    :func:`_corpus_root`
+        Source-tree versus embedded-sdist resolver used before scanning owned
+        binaries.
+    :mod:`~core.resources`
+        Runtime corpus locator seam that reads the mirrored ``aeat_data`` tree
+        produced by this hook.
+    :mod:`~dev.packaging.smoke_split_install`
+        Split-install smoke lane proving the slim wheel degrades loudly and both
+        companions restore byte parity.
 """
 
 from __future__ import annotations

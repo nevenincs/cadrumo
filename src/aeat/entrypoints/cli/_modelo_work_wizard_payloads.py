@@ -2,7 +2,7 @@
 
 The wizard walks an operator through a work unit's outstanding manual-input
 casillas and bindings/relations in plain language, then calls the same
-:func:`~aeat.application.modelo.calculate_modelo_work_revision` composition
+:func:`~application.modelo.calculate_modelo_work_revision` composition
 path :mod:`_modelo_work_calculate_cli` uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and calculation
 delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
@@ -45,7 +45,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
 class WorkWizardResult(OutputSchema):
     """Successful ``aeat app modelo work wizard`` result payload.
 
-    Mirrors the shape of :class:`~aeat.entrypoints.cli._modelo_payloads.WorkCalculateResult`
+    Mirrors the shape of :class:`~entrypoints.cli._modelo_payloads.WorkCalculateResult`
     (the wizard composes the exact same calculation path) plus the
     ``prompted_casillas`` audit trail of what the wizard asked and what the
     operator (or the scripted answer queue) supplied.

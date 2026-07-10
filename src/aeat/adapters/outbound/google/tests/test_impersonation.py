@@ -1,7 +1,7 @@
 """Tests for the service-account impersonation credential source.
 
 The ADC-discovery-failure path is exercised against the REAL
-``google.auth.default()`` resolver (no mocks): pointing
+``google.auth.default()`` resolver: pointing
 ``GOOGLE_APPLICATION_CREDENTIALS`` at a nonexistent file deterministically
 reproduces the real ``DefaultCredentialsError`` Google's own library raises
 on a host with no usable credential, giving a genuine (not simulated)
@@ -10,8 +10,19 @@ on a host with no usable credential, giving a genuine (not simulated)
 The live token-mint path (a real network round-trip to Google's IAM
 credentials endpoint, requiring a real GCP project + a provisioned target
 service account) is gated behind
-:func:`aeat.tests.live_gate.requires_live_google_enabled` and is not part of
+:func:`~tests.live_gate.requires_live_google_enabled` and is not part of
 the default test run, per the project's live-external-call safety posture.
+
+See Also:
+    :class:`GoogleCredentialSourceKind`:
+        Closed taxonomy that distinguishes OAuth Desktop from service-account
+        impersonation.
+    :class:`~adapters.outbound.google.GoogleImpersonationConfig`:
+        Frozen target-principal and scope record under test.
+    :func:`~adapters.outbound.google.resolve_impersonated_credentials`:
+        ADC discovery and impersonation wrapper validated by these tests.
+    :mod:`~entrypoints.cli._config._google_credential_source_cli`:
+        CLI surface that persists the chosen credential source.
 """
 
 from __future__ import annotations
@@ -23,6 +34,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import GoogleCredentialSourceKind
+from .....tests.env_scope import scoped_env_var
 from .._errors import GoogleAuthError
 from .._impersonation import (
     GoogleAuthAdcStaleError,
@@ -34,12 +46,12 @@ from .._impersonation import (
     describe_impersonation_target,
     resolve_impersonated_credentials,
 )
-
-if TYPE_CHECKING:
-    from google.oauth2.credentials import Credentials
 from .._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+if TYPE_CHECKING:
+    from google.oauth2.credentials import Credentials
 
 _TARGET_PRINCIPAL = "aeat-export@example-project.iam.gserviceaccount.com"
 
@@ -50,7 +62,7 @@ _TARGET_PRINCIPAL = "aeat-export@example-project.iam.gserviceaccount.com"
 
 
 def test_google_credential_source_kind_has_exactly_two_members() -> None:
-    """The taxonomy is closed to the two mechanisms this ADR distinguishes."""
+    """The taxonomy is closed to the two supported credential mechanisms."""
     assert {member.value for member in GoogleCredentialSourceKind} == {
         "oauth_desktop",
         "service_account_impersonation",
@@ -157,19 +169,19 @@ def test_describe_impersonation_target_returns_exact_principal() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_refuses_when_adc_is_genuinely_unavailable(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A real, unmocked ``google.auth.default()`` call against a bad ADC path.
+def test_resolve_refuses_when_adc_is_genuinely_unavailable() -> None:
+    """A real ``google.auth.default()`` call against a bad ADC path.
 
     Pointing ``GOOGLE_APPLICATION_CREDENTIALS`` at a path that does not
     exist is the real mechanism Google's own library uses to report "no
     usable ADC source"; this is not a simulated failure.
     """
-    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
     config = GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL)
 
-    with pytest.raises(GoogleAuthAdcUnavailableError) as raised:
+    with (
+        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
+        pytest.raises(GoogleAuthAdcUnavailableError) as raised,
+    ):
         resolve_impersonated_credentials(config)
 
     assert isinstance(raised.value, GoogleAuthError)
@@ -177,15 +189,15 @@ def test_resolve_refuses_when_adc_is_genuinely_unavailable(
     assert raised.value.suggestion == "gcloud auth application-default login"
 
 
-def test_resolve_refusal_names_the_exact_target_principal_for_a_different_config(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_resolve_refusal_names_the_exact_target_principal_for_a_different_config() -> None:
     """The refusal context always names the specific SA the caller tried to impersonate."""
-    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
     other_principal = "another-sa@other-project.iam.gserviceaccount.com"
     config = GoogleImpersonationConfig(target_principal=other_principal)
 
-    with pytest.raises(GoogleAuthAdcUnavailableError) as raised:
+    with (
+        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
+        pytest.raises(GoogleAuthAdcUnavailableError) as raised,
+    ):
         resolve_impersonated_credentials(config)
 
     assert raised.value.context == {"target_principal": other_principal}
@@ -194,7 +206,7 @@ def test_resolve_refusal_names_the_exact_target_principal_for_a_different_config
 # ---------------------------------------------------------------------------
 # _ensure_source_credential_is_fresh — ADC freshness auto-remediation
 #
-# Every credential built below is a real, unmocked
+# Every credential built below is a real
 # ``google.oauth2.credentials.Credentials`` instance; ``token_state`` and
 # ``.refresh()`` are the real google-auth implementations. The "genuinely
 # stale/unrefreshable" case reproduces a real, hermetic (no-network)

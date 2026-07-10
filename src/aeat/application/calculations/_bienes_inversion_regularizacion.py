@@ -1,23 +1,23 @@
 """Advisory projection for the capital-goods IVA regularización (LIVA arts. 107-110).
 
 Builds the non-blocking source diagnostics the calculate path surfaces for
-Modelo 303 casilla 43 / the Modelo 390 regularización field: the ordinary annual
+Modelo 303 casilla 43 / Modelo 390 casilla 63: the ordinary annual
 art-109 comparison for in-window, non-disposed goods
 (:func:`build_bienes_inversion_regularizacion_advisory`), and the art-110 single
 ("única") disposal regularización for a good disposed of during the filing year
-(:func:`build_bienes_inversion_transmision_advisory`). In the first slice the
-``bienes_inversion_regularizacion`` source kind is DEFERRED (the automatic annual
-feed is blocked on the separately-deferred prorrata-definitiva source), so the
-annual projection produces an advisory — never a silent zero — carrying the
-proposed casilla-43 value the operator confirms. The art-110 disposal projection
-carries no such pending state (every disposal fact is already on the register), so
-its advisory always names a concrete proposed figure.
+(:func:`build_bienes_inversion_transmision_advisory`). The source resolver
+projects the same register-backed amount into the governed M303/M390 binding
+targets when the current-year definitive prorrata percentage is available; the
+advisory functions remain as the visible fallback for operator review.
 
-Both are pure functions over the register; neither is yet wired into the live
-calculate MESH BINDING (that promotion is gated on the prorrata-definitiva source,
-per ADR ``2026-07-01-iva-bienes-inversion-regularizacion``) — they are wired into
-the calculate-path ADVISORY collector
-(:mod:`aeat.application.modelo._bienes_inversion_advisory`).
+The pure projections never derive the definitive percentage. M303 supplies it
+from the registry materialisation seam, while M390 may read the stamped current
+year M303 settlement observation that already owns ``iva.prorrata-porcentaje``.
+
+See Also:
+    :class:`ModeloRevision`
+        Compiled revision whose bindings the advisory functions resolve their
+        Modelo 303 / 390 output casillas against.
 """
 
 from __future__ import annotations
@@ -25,24 +25,142 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, Modelo, Period
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
+    BienInversionRecordError,
     RegistroRegularizacionResult,
     RegistroTransmisionesResult,
     compute_registro_regularizacion,
     compute_registro_transmisiones,
 )
-from ..aggregation import CalculationSourceDiagnostic
+from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision
+from ..aggregation import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+    storage_degradation_resolution,
+)
+from ..bienes_inversion import BienesInversionIvaRegisterRepository
+from ._observations_repository import CalculationObservationRepository
+from ._revision_carry_gate import revision_carry_outcome
 
 #: The Modelo 303 casilla the register feeds. Deducciones block, "Regularización
 #: de bienes de inversión" (LIVA arts. 107-110).
 CASILLA_REGULARIZACION_BIENES_INVERSION = "43"
+CASILLA_M390_REGULARIZACION_BIENES_INVERSION: CasillaId = "iva.anual.regularizacion-bienes-inversion"
+_SOURCE_KIND = BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+_OUTPUT_MODELO_303_CASILLA_43 = "modelo_303_casilla_43"
+_OUTPUT_MODELO_390_CASILLA_63 = "modelo_390_casilla_63"
+_CURRENT_YEAR_PRORRATA_ID: CasillaId = "iva.prorrata-porcentaje"
+_ZERO = Decimal("0.00")
+_M303_SETTLEMENT_PERIOD = "4T"
 
 #: Distinct advisory source-kind label for the art-110 disposal path, so an
 #: operator (and a future mesh-binding promotion) can tell the annual comparison
 #: apart from the single-disposal regularización on the same casilla.
 _TRANSMISION_SOURCE_KIND = f"{BindingSourceKind.BIENES_INVERSION_REGULARIZACION.value}_transmision"
+
+
+def _binding_source_refs(revision: ModeloRevision) -> tuple[str, ...]:
+    refs: list[str] = []
+    for binding in revision.bindings:
+        if binding.source == _SOURCE_KIND:
+            refs.extend(str(ref) for ref in getattr(binding, "source_refs", ()))
+    return tuple(dict.fromkeys(refs))
+
+
+def _declared_binding_ids(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    return tuple(binding.id for binding in revision.bindings if binding.source == _SOURCE_KIND)
+
+
+def _bindings_by_output(revision: ModeloRevision) -> dict[str, BindingId]:
+    by_output: dict[str, BindingId] = {}
+    for binding in revision.bindings:
+        if binding.source != _SOURCE_KIND:
+            continue
+        selector = binding.selector
+        output = None
+        if isinstance(selector, Mapping):
+            output = selector.get("regularizacion_output")
+        else:
+            output = getattr(selector, "regularizacion_output", None)
+        if isinstance(output, str):
+            by_output[output] = binding.id
+    return by_output
+
+
+def _unresolved_binding_diagnostics(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+    message: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=_SOURCE_KIND.value,
+            binding_id=binding_id,
+            resolver_id=resolver_id,
+            message=message,
+        )
+        for binding_id in binding_ids
+    )
+
+
+def _target_inputs(
+    revision: ModeloRevision,
+    *,
+    binding_values: Mapping[BindingId, Decimal],
+    modelo: str,
+) -> dict[CasillaId, Decimal]:
+    if modelo == Modelo.M303.value:
+        binding_id = _bindings_by_output(revision).get(_OUTPUT_MODELO_303_CASILLA_43)
+        casilla_id = CASILLA_REGULARIZACION_BIENES_INVERSION
+    elif modelo == Modelo.M390.value:
+        binding_id = _bindings_by_output(revision).get(_OUTPUT_MODELO_390_CASILLA_63)
+        casilla_id = CASILLA_M390_REGULARIZACION_BIENES_INVERSION
+    else:
+        return {}
+    if binding_id is None or binding_id not in binding_values:
+        return {}
+    return {casilla_id: binding_values[binding_id]}
+
+
+def _resolve_binding_values(
+    revision: ModeloRevision,
+    *,
+    projected_value: Decimal,
+) -> dict[BindingId, Decimal]:
+    return {
+        binding_id: projected_value
+        for output, binding_id in _bindings_by_output(revision).items()
+        if output in {_OUTPUT_MODELO_303_CASILLA_43, _OUTPUT_MODELO_390_CASILLA_63}
+    }
+
+
+def _current_year_prorrata_from_m303_observation(
+    repository: CalculationObservationRepository,
+    *,
+    filing_year: int,
+) -> Decimal | None:
+    payload = repository.load_observation(
+        Modelo.M303.value,
+        Period.from_year_and_code(filing_year, _M303_SETTLEMENT_PERIOD),
+    )
+    if payload is None:
+        return None
+    observation = payload.observation
+    refused = revision_carry_outcome(
+        payload.stamped_revision_id,
+        source_modelo=observation.modelo,
+        source_filing_year=observation.filing_year,
+        source_period=observation.period,
+    )
+    if refused:
+        return None
+    return observation.casilla_values.get(_CURRENT_YEAR_PRORRATA_ID)
 
 
 def build_bienes_inversion_regularizacion_advisory(
@@ -51,10 +169,10 @@ def build_bienes_inversion_regularizacion_advisory(
     regularizacion_year: int,
     prorrata_definitiva_by_identifier: Mapping[str, Decimal],
 ) -> tuple[RegistroRegularizacionResult, CalculationSourceDiagnostic | None]:
-    """Project the register and build the deferred-source advisory diagnostic.
+    """Project the register and build the fallback advisory diagnostic.
 
     Returns the register projection plus a non-blocking
-    :class:`~aeat.core.aggregation.CalculationSourceDiagnostic` when the register
+    :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
     holds in-window, art-108-eligible, non-disposed goods for
     ``regularizacion_year`` — so a taxpayer who owns capital goods in their
     regularisation window is alerted that casilla 43 may be due, rather than
@@ -65,7 +183,7 @@ def build_bienes_inversion_regularizacion_advisory(
 
     The diagnostic ``message`` names the in-window count, the number of goods whose
     regularización could be computed (a definitive percentage was supplied), the
-    number still pending the deferred percentage, and the proposed casilla-43 value.
+    number still pending a definitive percentage, and the proposed casilla-43 value.
 
     Args:
         register: The persisted :class:`BienesInversionIvaRegister`.
@@ -112,7 +230,7 @@ def build_bienes_inversion_transmision_advisory(
     """Project the register's art-110 disposals and build the advisory diagnostic.
 
     Returns the register-wide transmisión projection plus a non-blocking
-    :class:`~aeat.core.aggregation.CalculationSourceDiagnostic` when the register
+    :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
     holds a good disposed of in ``disposal_year`` with window time remaining — so
     a taxpayer who sold, transmitted, or otherwise disposed of a tracked capital
     good is alerted that the art-110 single regularización is due on casilla 43,
@@ -156,8 +274,158 @@ def build_bienes_inversion_transmision_advisory(
     return projection, diagnostic
 
 
+class BienesInversionRegularizacionSourceResolver:
+    """Resolve capital-goods regularizacion bindings from the profile register."""
+
+    resolver_id = _SOURCE_KIND.value
+    owned_sources: tuple[BindingSourceKind, ...] = (_SOURCE_KIND,)
+
+    def __init__(
+        self,
+        *,
+        current_year_values: Mapping[CasillaId, Decimal] | None = None,
+        missing_current_year_casilla_ids: tuple[CasillaId, ...] = (),
+        unresolved_current_year_casilla_ids: tuple[CasillaId, ...] = (),
+        register_repository: BienesInversionIvaRegisterRepository | None = None,
+        observation_repository: CalculationObservationRepository | None = None,
+    ) -> None:
+        self._current_year_values = dict(current_year_values or {})
+        self._missing_current_year_casilla_ids = missing_current_year_casilla_ids
+        self._unresolved_current_year_casilla_ids = unresolved_current_year_casilla_ids
+        self._register_repository = register_repository
+        self._observation_repository = observation_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        declared_binding_ids = _declared_binding_ids(context.revision)
+        if not declared_binding_ids:
+            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+
+        if context.modelo not in {Modelo.M303.value, Modelo.M390.value}:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=declared_binding_ids,
+                diagnostics=_unresolved_binding_diagnostics(
+                    binding_ids=declared_binding_ids,
+                    resolver_id=self.resolver_id,
+                    message=(
+                        "bienes_inversion_regularizacion declares only the Modelo 303 casilla 43 "
+                        "and Modelo 390 casilla 63 targets"
+                    ),
+                ),
+            )
+
+        repository = self._register_repository or BienesInversionIvaRegisterRepository(bucket_id=context.bucket_id)
+        try:
+            register = repository.load()
+        except BienInversionRecordError as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+
+        if not register.records:
+            zero_values = _resolve_binding_values(context.revision, projected_value=_ZERO)
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                binding_values=zero_values,
+                bound_inputs_by_casilla_id=_target_inputs(
+                    context.revision,
+                    binding_values=zero_values,
+                    modelo=context.modelo,
+                ),
+            )
+
+        current_year_values = dict(self._current_year_values)
+        if _CURRENT_YEAR_PRORRATA_ID not in current_year_values and context.modelo == Modelo.M390.value:
+            observed_pct = _current_year_prorrata_from_m303_observation(
+                self._observation_repository or CalculationObservationRepository(),
+                filing_year=context.filing_year,
+            )
+            if observed_pct is not None:
+                current_year_values[_CURRENT_YEAR_PRORRATA_ID] = observed_pct
+
+        missing_pct = (
+            _CURRENT_YEAR_PRORRATA_ID not in current_year_values
+            or (
+                _CURRENT_YEAR_PRORRATA_ID in self._missing_current_year_casilla_ids
+                and _CURRENT_YEAR_PRORRATA_ID not in current_year_values
+            )
+            or (
+                _CURRENT_YEAR_PRORRATA_ID in self._unresolved_current_year_casilla_ids
+                and _CURRENT_YEAR_PRORRATA_ID not in current_year_values
+            )
+        )
+        annual_projection = compute_registro_regularizacion(
+            register,
+            regularizacion_year=context.filing_year,
+            prorrata_definitiva_by_identifier={}
+            if missing_pct
+            else {
+                record.identifier: current_year_values[_CURRENT_YEAR_PRORRATA_ID]
+                for record in register.in_window_records(context.filing_year)
+            },
+        )
+        disposal_projection = compute_registro_transmisiones(register, disposal_year=context.filing_year)
+        if annual_projection.pending_percentage_count:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                unresolved_binding_ids=declared_binding_ids,
+                diagnostics=_unresolved_binding_diagnostics(
+                    binding_ids=declared_binding_ids,
+                    resolver_id=self.resolver_id,
+                    message=(
+                        "bienes_inversion_regularizacion requires current-year definitive prorrata "
+                        "casilla 'iva.prorrata-porcentaje' for every in-window non-disposed good"
+                    ),
+                ),
+            )
+
+        projected_value = annual_projection.proposed_casilla_43 + disposal_projection.proposed_casilla_43
+        binding_values = _resolve_binding_values(context.revision, projected_value=projected_value)
+        unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
+        provenance = ()
+        if annual_projection.rows or disposal_projection.rows:
+            provenance = (
+                CalculationSourceProvenance(
+                    source_kind=_SOURCE_KIND.value,
+                    source_ref=f"bienes-inversion-register:{context.filing_year}",
+                    legal_refs=(
+                        "ley-37-1992:art-107",
+                        "ley-37-1992:art-108",
+                        "ley-37-1992:art-109",
+                        "ley-37-1992:art-110",
+                    ),
+                    source_refs=_binding_source_refs(context.revision),
+                ),
+            )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=binding_values,
+            bound_inputs_by_casilla_id=_target_inputs(
+                context.revision,
+                binding_values=binding_values,
+                modelo=context.modelo,
+            ),
+            unresolved_binding_ids=unresolved,
+            diagnostics=_unresolved_binding_diagnostics(
+                binding_ids=unresolved,
+                resolver_id=self.resolver_id,
+                message="bienes_inversion_regularizacion binding selector did not map to a resolver output",
+            ),
+            provenance=provenance,
+        )
+
+
 __all__ = [
+    "CASILLA_M390_REGULARIZACION_BIENES_INVERSION",
     "CASILLA_REGULARIZACION_BIENES_INVERSION",
+    "BienesInversionRegularizacionSourceResolver",
     "build_bienes_inversion_regularizacion_advisory",
     "build_bienes_inversion_transmision_advisory",
 ]

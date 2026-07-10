@@ -10,7 +10,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core import Art104TresExclusion
 from ...iva import (
+    InputClassification,
     IvaCategory,
     IvaExemptionArticle,
 )
@@ -18,6 +20,8 @@ from .. import (
     BusinessClassification,
     ClassificationHistoryEntry,
     DecisionProvenance,
+    OutOfWindowTransactionStub,
+    OutOfWindowTransactionSummary,
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -203,6 +207,211 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
     assert restored.prorrata_reference == "prorrata-2026"
     assert restored.purchase_invoice_evidence_id == "purchase-evidence-1"
     assert restored.attachment_ids == ("attachment-1",)
+
+
+def test_transaction_json_roundtrip_preserves_non_default_fields_and_derived_id() -> None:
+    raw = _sample_raw(amount=Decimal("121.00"), description="Consulting invoice")
+    original = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": "Client A",
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.50"),
+            "category_id": "professional-services",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+            "irpf_category": "actividad_economica",
+            "usage_ratio_id": "ratio-office",
+            "prorrata_reference": "prorrata-2026",
+            "purchase_invoice_evidence_id": "purchase-evidence-1",
+            "attachment_ids": ("attachment-1",),
+            "classified_by": "manual",
+            "classification_reason": "operator classified from invoice evidence",
+            "classification_confidence": Decimal("1.00"),
+            "created_by": "operator-A",
+            "source_command": "aeat ledger add",
+            "created_event_id": "c" * 64,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert original.transaction_id == derive_transaction_id(raw)
+    assert restored == original
+    assert restored.transaction_id == derive_transaction_id(restored.raw)
+    assert restored.business_classification is BusinessClassification.MIXED
+    assert restored.business_pct == Decimal("0.50")
+    assert restored.group_label == "Client A"
+    assert restored.classification_confidence == Decimal("1.00")
+    assert restored.attachment_ids == ("attachment-1",)
+
+
+def test_transaction_json_rejects_tampered_derived_id_in_storage_payload() -> None:
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00"), description="Consulting invoice"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": "Client A",
+            "source_jurisdiction": "ES",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["transaction_id"] = "0" * 64
+
+    with pytest.raises(ValidationError, match="transaction_id must match"):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
+def test_art_104_tres_exclusion_roundtrips_for_judgment_exclusion() -> None:
+    """A judgment art. 104.Tres exclusion tag survives a strict JSON save/load cycle.
+
+    The field is populated with a NON-default judgment member so a
+    save-drops-field / load-re-defaults-field regression cannot hide behind the
+    ``None`` default.
+    """
+    raw = _sample_raw(amount=Decimal("5000.00"), description="Venta inmueble no habitual")
+    original = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "art_104_tres_exclusion": Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+
+
+def test_art_104_tres_exclusion_rejects_auto_derived_operator_tag() -> None:
+    """An auto-derived art. 104.Tres member is refused as an operator transaction tag."""
+    with pytest.raises(ValidationError, match="art_104_tres_exclusion is operator-declared only"):
+        Transaction.model_validate(
+            {
+                "raw": _sample_raw(),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "art_104_tres_exclusion": Art104TresExclusion.NON_SUBJECT_ART_7,
+            },
+        )
+
+
+def test_art_104_tres_exclusion_rejects_tampered_auto_derived_value_on_load() -> None:
+    """A persisted payload mutated to an auto-derived member is refused at load.
+
+    Anti-tautology proof: the operator-declared-only invariant fires on the
+    load path, not only at construction, so a corrupted on-disk value cannot
+    silently mis-scope the prorrata denominator.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("5000.00"), description="Venta inmueble no habitual"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "art_104_tres_exclusion": Art104TresExclusion.FOREIGN_PERMANENT_ESTABLISHMENT,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["art_104_tres_exclusion"] = Art104TresExclusion.DIRECT_IVA_CUOTAS.value
+
+    with pytest.raises(ValidationError, match="art_104_tres_exclusion is operator-declared only"):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
+def test_input_classification_roundtrips_for_especial_common_use() -> None:
+    """The operator-declared LIVA art. 106 input_classification survives a strict JSON cycle.
+
+    The field is populated with a NON-default member so a save-drops / load-re-defaults
+    regression cannot hide behind the ``None`` default.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00"), description="Compra de uso comun"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "input_classification": InputClassification.COMMON,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.input_classification is InputClassification.COMMON
+
+
+def test_input_classification_rejects_unknown_member_on_load() -> None:
+    """A persisted payload mutated to a non-member input_classification is refused at load."""
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00"), description="Compra exclusiva deducible"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "input_classification": InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["input_classification"] = "not_a_real_classification"
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
+def test_prorrata_sector_id_roundtrips_for_declared_sector() -> None:
+    """The operator-declared LIVA arts. 9.1.c/101 sector reference survives a strict JSON cycle.
+
+    The field is populated with a NON-default sector id so a save-drops / load-re-defaults
+    regression cannot hide behind the ``None`` (common-use / whole-entity) default.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("242.00"), description="Compra sector arrendamiento"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "prorrata_sector_id": "arrendamiento",
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.prorrata_sector_id == "arrendamiento"
+
+
+def test_prorrata_sector_id_rejects_blank_value_on_load() -> None:
+    """A persisted payload mutated to an empty prorrata_sector_id is refused at load.
+
+    Anti-tautology: the ``min_length=1`` constraint fires on the load path, not
+    only at construction, so a corrupted on-disk empty string cannot silently
+    masquerade as a declared sector (which would mis-route the deducible cuota).
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("242.00"), description="Compra sector arrendamiento"),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "prorrata_sector_id": "arrendamiento",
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["prorrata_sector_id"] = ""
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(storage_payload))
 
 
 def test_transaction_exemption_article_round_trips_for_domestic_exempt_category() -> None:
@@ -608,3 +817,125 @@ def test_group_label_is_required_but_nullable() -> None:
                 "source_jurisdiction": "ES",
             },
         )
+
+
+def test_dict_mode_model_validate_accepts_json_shaped_dict_values() -> None:
+    """A strict-mode ``model_validate`` call accepts JSON-shaped strings too.
+
+    ``Transaction`` is strict-mode, but a python-mode ``dict`` (real
+    enum/``Decimal``/``date`` instances, as ``model_dump(mode="python")``
+    produces) and a JSON-decoded ``dict`` (string stand-ins for those types,
+    as ``model_dump(mode="json")`` or a deserialised storage payload
+    produces) are BOTH valid ``model_validate`` inputs -- neither is a
+    second-class caller. Field-level ``mode="before"`` coercions on the
+    affected fields (enum/Decimal/datetime/the nested ``raw`` record) bridge
+    the JSON-shaped case without a model-level re-route: a model-level
+    ``mode="before"`` that re-dispatched to ``model_validate_json`` would
+    recurse forever, because ``model_validate_json`` re-decodes to a plain
+    dict and re-runs every model-level ``mode="before"`` validator on that
+    still string-shaped dict before applying the rest of the schema.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("121.00")),
+            "direction": TransactionDirection.INCOMING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "taxable_base": Decimal("100.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21.00"),
+        },
+    )
+
+    json_shaped_dict = original.model_dump(mode="json")
+    assert isinstance(json_shaped_dict["direction"], str)
+    assert isinstance(json_shaped_dict["taxable_base"], str)
+    assert isinstance(json_shaped_dict["raw"]["booked_date"], str)
+
+    restored = Transaction.model_validate(json_shaped_dict)
+    assert restored == original
+    assert restored.direction is TransactionDirection.INCOMING
+    assert restored.business_classification is BusinessClassification.BUSINESS
+    assert restored.taxable_base == Decimal("100.00")
+
+    restored_via_json = Transaction.model_validate_json(json.dumps(json_shaped_dict))
+    assert restored_via_json == original
+
+
+def test_dict_mode_model_validate_still_rejects_genuinely_malformed_payload() -> None:
+    """The JSON-shaped-dict coercion must not launder a truly invalid payload."""
+    with pytest.raises(ValidationError):
+        Transaction.model_validate(
+            {
+                "raw": _sample_raw(),
+                "direction": "NOT_A_REAL_DIRECTION",
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "created_at": "not-a-real-timestamp",
+            },
+        )
+
+
+def test_python_mode_dict_with_real_instances_round_trips() -> None:
+    """A genuine python-mode dict (as ``model_dump(mode="python")`` produces) validates directly.
+
+    ``model_dump(mode="python")`` always flattens a nested ``BaseModel`` field
+    (``raw``) to a plain ``dict``, even in python mode; the leaf scalar values
+    inside it (``Decimal``, ``date``, enums) stay their real Python types
+    rather than JSON-string stand-ins, which is what strict-mode
+    ``model_validate`` accepts for a nested model field.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+    python_mode_dict = original.model_dump(mode="python")
+    assert isinstance(python_mode_dict["direction"], TransactionDirection)
+    assert isinstance(python_mode_dict["raw"]["booked_date"], date)
+    assert isinstance(python_mode_dict["raw"]["amount"], Decimal)
+
+    restored = Transaction.model_validate(python_mode_dict)
+
+    assert restored == original
+
+
+def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
+    """The diagnostics-only summary is structurally incapable of leaking decrypted facts.
+
+    ``OutOfWindowTransactionSummary`` collapses N out-of-window
+    ``OutOfWindowTransactionStub`` rows into one summary carrying ONLY the
+    excluded-row count and the filing-date span. This pins that guarantee
+    structurally -- the declared field set is exactly
+    ``{count, min_filing_date, max_filing_date}`` -- so a future field
+    addition (amount, counterparty, category, direction, business
+    classification, or any other decrypted transaction fact) is a loud
+    model-shape test failure, not a silent contract erosion.
+    """
+    assert set(OutOfWindowTransactionSummary.model_fields) == {
+        "count",
+        "min_filing_date",
+        "max_filing_date",
+    }
+
+    stubs = (
+        OutOfWindowTransactionStub(transaction_id="a" * 40, filing_date=date(2026, 1, 5)),
+        OutOfWindowTransactionStub(transaction_id="b" * 40, filing_date=date(2026, 3, 20)),
+        OutOfWindowTransactionStub(transaction_id="c" * 40, filing_date=date(2026, 2, 1)),
+    )
+    summary = OutOfWindowTransactionSummary.from_stubs(stubs)
+
+    assert summary is not None
+    assert summary.count == 3
+    assert summary.min_filing_date == date(2026, 1, 5)
+    assert summary.max_filing_date == date(2026, 3, 20)
+    assert summary.model_dump().keys() == {"count", "min_filing_date", "max_filing_date"}
+
+
+def test_out_of_window_transaction_summary_is_none_for_empty_stubs() -> None:
+    """An empty out-of-window set collapses to ``None``, not a zero-count summary."""
+    assert OutOfWindowTransactionSummary.from_stubs(()) is None

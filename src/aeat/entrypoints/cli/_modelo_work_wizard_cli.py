@@ -1,6 +1,6 @@
 """Typer registration for the guided ``aeat app modelo work wizard`` command.
 
-Kent knows "gross income" and "deductible expenses" in plain language, not
+An operator knows "gross income" and "deductible expenses" in plain language, not
 that Modelo 130 casilla ``06`` is "Retenciones e ingresos a cuenta". The
 wizard walks a work unit's *outstanding* manual-input surface —
 ``input_kind = "manual"`` casillas plus any binding or relation the registry
@@ -8,7 +8,7 @@ still needs (the same set ``aeat app modelo bindings list --missing``
 surfaces) — one question at a time, showing each item's official label, help
 text, and legal grounding before asking for a value. Every value the operator
 confirms then flows through the exact same
-:func:`~aeat.application.modelo.calculate_modelo_work_revision` composition
+:func:`~application.modelo.calculate_modelo_work_revision` composition
 path that ``aeat app modelo work calculate`` uses (via
 :func:`~._modelo_cli_support.work_calculate_input_bundle_from_cli`); the
 wizard is a guided front end over that one calculation path, not a second one
@@ -23,12 +23,12 @@ refusal.
 
 A real interactive terminal is required by default:
 :class:`_QuestionaryTextPrompter` reuses the exact non-TTY / Windows-no-console
-detection :class:`~aeat.application.wizard.QuestionaryPrompter` applies for
+detection :class:`~application.wizard.QuestionaryPrompter` applies for
 the profile setup wizard, and raises the same translated
-:class:`~aeat.application.wizard.WizardUnsupportedConsoleError`.
+:class:`~application.wizard.WizardUnsupportedConsoleError`.
 Tests and scripted callers inject a deque-backed :class:`_ScriptedTextPrompter`
 through the keyword-only ``_prompter`` slot, mirroring
-:func:`~aeat.application.wizard.build_wizard_command`. Prompt copy is dynamic
+:func:`~application.wizard.build_wizard_command`. Prompt copy is dynamic
 (the casilla number and label come from the resolved registry snapshot, not a
 static translation-catalogue key), so this module does not reuse the wizard
 package's ``WizardQuestion`` model — that model's ``prompt`` field is a static
@@ -79,12 +79,12 @@ class _TextAnswerPrompter(Protocol):
     """Capability protocol for collecting one free-text answer to a dynamic prompt.
 
     Deliberately narrower than
-    :class:`~aeat.application.wizard.Prompter`: the wizard's questions are
+    :class:`~application.wizard.Prompter`: the wizard's questions are
     always plain-text casilla/binding/relation values, and the prompt text
     itself is built from a runtime-resolved registry label rather than a
     static translation-catalogue key, so it takes an already-rendered
     ``prompt`` string rather than a
-    :class:`~aeat.application.wizard._models.WizardQuestion`.
+    :class:`~application.wizard._models.WizardQuestion`.
     """
 
     def ask_text(self, prompt: str, *, help_text: str | None) -> str: ...
@@ -94,10 +94,10 @@ class _QuestionaryTextPrompter:
     """Production prompter: renders ``prompt`` with ``questionary.text``.
 
     Reuses the exact console-support detection
-    :class:`~aeat.application.wizard.QuestionaryPrompter` applies (non-TTY
+    :class:`~application.wizard.QuestionaryPrompter` applies (non-TTY
     stdin, Windows no-console-buffer) so a non-interactive host refuses with
     the same translated
-    :class:`~aeat.application.wizard.WizardUnsupportedConsoleError`
+    :class:`~application.wizard.WizardUnsupportedConsoleError`
     the profile setup wizard raises, rather than hanging or crashing with a
     raw ``questionary``/``prompt_toolkit`` traceback.
     """
@@ -131,7 +131,7 @@ class _QuestionaryTextPrompter:
 class _ScriptedTextPrompter:
     """Test-only prompter that pops canonical-token answers from a FIFO queue.
 
-    Mirrors :class:`~aeat.application.wizard.ScriptedPrompter`'s contract
+    Mirrors :class:`~application.wizard.ScriptedPrompter`'s contract
     (pop-and-raise-on-underflow) for the narrower ``ask_text`` surface, so
     tests can drive the wizard's full step sequence deterministically without
     a live terminal.
@@ -153,9 +153,9 @@ class _ScriptedTextPrompter:
 
 
 #: Context-local prompter override, mirroring
-#: :func:`~aeat.core.config.override_settings`'s contextvar-based test-injection
+#: :func:`~core.config.override_settings`'s contextvar-based test-injection
 #: pattern. Typer statically introspects a registered command's *signature*, so
-#: (unlike :func:`~aeat.application.wizard.build_wizard_command`, which builds
+#: (unlike :func:`~application.wizard.build_wizard_command`, which builds
 #: its own dynamic ``__signature__`` with no ``_prompter`` slot at all) a plain
 #: ``@work_app.command`` function cannot carry a hidden keyword-only test
 #: parameter — Typer would try to resolve it into a CLI option and fail on

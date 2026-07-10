@@ -3,7 +3,7 @@
 The index is the lexical half of the R3 hybrid grounding surface. It is
 built from the already-bundled ``*.extracted.json`` corpus triples (the
 same triples the registry legal catalogue grounds against, read through
-the :mod:`aeat.core.resources` boundary) into a caller-supplied SQLite
+the :mod:`~core.resources` boundary) into a caller-supplied SQLite
 path. No dependency beyond the standard library ``sqlite3`` (FTS5 is
 present in every standard CPython build) and ``snowballstemmer`` (a
 pure-Python Spanish Snowball stemmer) is required, so this module is
@@ -19,7 +19,8 @@ column.
 
 Exact citation lookup ("art. 27.2 LGT") does NOT go through this index;
 it is a structured key lookup over the registry legal catalogue (see
-:mod:`._citation_lookup`). This index covers in-prose concept recall.
+:mod:`~application.corpus_search._citation_lookup`). This index covers
+in-prose concept recall.
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ import re
 import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import Protocol
 
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
@@ -171,17 +173,23 @@ def _split_oversized(paragraph: str) -> list[str]:
     return pieces
 
 
-def _spanish_stemmer() -> object:
+class _SpanishStemmer(Protocol):
+    """The one ``snowballstemmer`` method this module uses; the package ships no stubs."""
+
+    def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - matches the real C-extension method name
+
+
+def _spanish_stemmer() -> _SpanishStemmer:
     import snowballstemmer
 
     return snowballstemmer.stemmer("spanish")
 
 
-def _stem_text(stemmer: object, text: str) -> str:
+def _stem_text(stemmer: _SpanishStemmer, text: str) -> str:
     tokens = _WORD_RE.findall(text.lower())
     if not tokens:
         return ""
-    stemmed = stemmer.stemWords(tokens)  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-stubs: PyStemmer.stemWords is a C-extension method absent from type stubs
+    stemmed = stemmer.stemWords(tokens)
     return " ".join(stemmed)
 
 
@@ -316,7 +324,7 @@ def search_lexical(
             context={"query": query},
         )
     stemmer = _spanish_stemmer()
-    stemmed_terms = stemmer.stemWords(folded_terms)  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-stubs: PyStemmer.stemWords is a C-extension method absent from type stubs
+    stemmed_terms = stemmer.stemWords(folded_terms)
     match_expression = (
         f"text_folded : ({_fts_or_group(folded_terms)}) OR text_stemmed : ({_fts_or_group(stemmed_terms)})"
     )

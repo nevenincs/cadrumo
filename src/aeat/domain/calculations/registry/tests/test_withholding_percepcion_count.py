@@ -14,41 +14,53 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import cache
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....core.resources import resources
-from .._schema import DataBindingDefinition, ModeloRevision
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
+from .._schema import DataBindingDefinition, ModeloRevision, PeriodSelector
 from .._withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-
-@cache
-def _m190_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("190", filing_year=2024, period="0A").revision
-
-
-def _percepcion_count_binding() -> DataBindingDefinition:
-    """Lift a real M190 withholding binding to the ``percepcion_count`` fact.
-
-    Reusing a committed binding's id + grounding keeps the carrier valid; only
-    the source/selector/op are lifted to exercise the distinct-count primitive.
-    """
-    base = next(b for b in _m190_revision().bindings if b.source == BindingSourceKind.WITHHOLDING)
-    return base.model_copy(
-        update={
-            "source": BindingSourceKind.WITHHOLDING,
-            "selector": {"fact": "percepcion_count"},
-            "aggregation": BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
-        },
-    )
+_PERCEPCION_BINDING_ID = "modelo-190-percepciones-anual"
+_M190_WITHHOLDING_LEGAL_REFS = (
+    "ley-35-2006:art-99",
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-80",
+    "ley-35-2006:art-101",
+    "rd-439-2007:art-86",
+    "ley-58-2003:art-93",
+)
+_M190_WITHHOLDING_SOURCE_REFS = (
+    "aeat-dr-190-2025",
+    "aeat-modelo-190-instructions-2025",
+    "boe-modelo-190-2025-form",
+)
 
 
 def _revision_with(binding: DataBindingDefinition) -> ModeloRevision:
-    return _m190_revision().model_copy(update={"bindings": (binding,)})
+    return ModeloRevision(
+        id="2024-y-siguientes",
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
+        source_refs=_M190_WITHHOLDING_SOURCE_REFS,
+        bindings=(binding,),
+    )
+
+
+def _percepcion_count_binding() -> DataBindingDefinition:
+    return DataBindingDefinition(
+        id=_PERCEPCION_BINDING_ID,
+        source=BindingSourceKind.WITHHOLDING,
+        selector={"fact": "percepcion_count"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
+        legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
+        source_refs=_M190_WITHHOLDING_SOURCE_REFS,
+    )
 
 
 def _obs(nif: str, clave: str, subclave: str = "") -> WithholdingObservation:
@@ -56,7 +68,7 @@ def _obs(nif: str, clave: str, subclave: str = "") -> WithholdingObservation:
         source_id=f"{nif}:{clave}:{subclave or '-'}",
         perceptor_tax_id=nif,
         transaction_date=date(2024, 6, 1),
-        clave=clave,
+        clave=RetencionClave(clave),
         subclave=subclave,
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),

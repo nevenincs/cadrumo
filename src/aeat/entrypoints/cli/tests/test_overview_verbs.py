@@ -78,15 +78,31 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("verb", ["status", "calendar", "agenda", "backlog", "explain"])
-def test_overview_verb_help_renders(verb: str) -> None:
+_OVERVIEW_VERBS = ("status", "calendar", "agenda", "backlog", "explain")
+_RETIRED_DEADLINES_VERBS = (
+    ["deadlines"],
+    ["deadlines", "list"],
+    ["deadlines", "status"],
+    ["deadlines", "show"],
+    ["app", "deadlines"],
+    ["app", "deadlines", "list"],
+)
+
+
+def test_overview_verb_help_renders() -> None:
     """Every `aeat app overview <verb> --help` renders cleanly; each
     verb is mounted and its help-text translation key resolves to a
     non-empty default."""
+    violations: list[str] = []
+    for verb in _OVERVIEW_VERBS:
+        result = invoke_cached_cli(["app", "overview", verb, "--help"])
+        if result.exit_code != 0:
+            violations.append(f"{verb}: exit {result.exit_code}: {result.output!r}")
+            continue
+        if "Usage:" not in result.output and "Uso:" not in result.output:
+            violations.append(f"{verb}: help did not render usage: {result.output!r}")
 
-    result = invoke_cached_cli(["app", "overview", verb, "--help"])
-    assert result.exit_code == 0, result.output
-    assert "Usage:" in result.output or "Uso:" in result.output, result.output
+    assert not violations, "\n".join(violations)
 
 
 def test_overview_status_returns_envelope_on_empty_bucket() -> None:
@@ -154,33 +170,22 @@ def test_overview_status_period_filter_accepts_instalment_period() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "retired_verb",
-    [
-        ["deadlines"],
-        ["deadlines", "list"],
-        ["deadlines", "status"],
-        ["deadlines", "show"],
-        ["app", "deadlines"],
-        ["app", "deadlines", "list"],
-    ],
-)
-def test_retired_deadlines_noun_group_is_unknown(
-    retired_verb: list[str],
-) -> None:
+def test_retired_deadlines_noun_group_is_unknown() -> None:
     """Reaching for `aeat deadlines ...` (or `aeat app deadlines ...`)
     must surface Click's "No such command" refusal. The verb tree
     retired the standalone deadlines noun-group; its surfaces live
     under `aeat app overview` (calendar, agenda, backlog)."""
+    violations: list[str] = []
+    for retired_verb in _RETIRED_DEADLINES_VERBS:
+        result = invoke_cached_cli(retired_verb)
+        if result.exit_code == 0:
+            violations.append(f"{retired_verb!r}: unexpectedly exited 0: {result.output!r}")
+            continue
+        haystack = result.output.lower()
+        if "no such command" not in haystack and "no such" not in haystack:
+            violations.append(f"{retired_verb!r}: did not surface unknown-command refusal: {result.output!r}")
 
-    result = invoke_cached_cli(retired_verb)
-    assert result.exit_code != 0, (
-        f"retired verb path {retired_verb!r} should be unknown but exited 0: {result.output!r}"
-    )
-    haystack = result.output.lower()
-    assert "no such command" in haystack or "no such" in haystack, (
-        f"retired verb path {retired_verb!r} did not surface unknown-command refusal: {result.output!r}"
-    )
+    assert not violations, "\n".join(violations)
 
 
 def _valid_modelo_130_inputs() -> dict[CasillaId, Decimal]:

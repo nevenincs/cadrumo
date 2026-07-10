@@ -6,6 +6,7 @@ date: '2026-06-26'
 modified: '2026-06-30'
 tier: L1
 related:
+  - '[[2026-07-05-binding-adr-corpus-reconciliation-adr]]'
   - '[[2026-06-26-bindings-architecture-unification-research]]'
 ---
 

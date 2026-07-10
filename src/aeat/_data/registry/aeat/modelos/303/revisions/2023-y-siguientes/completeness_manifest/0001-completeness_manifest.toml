@@ -18,6 +18,11 @@ legal_refs = [
     "ley-12-2002:art-29",
     "ley-37-1992:art-102",
     "ley-37-1992:art-104",
+    "ley-37-1992:art-105",
+    "ley-37-1992:art-107",
+    "ley-37-1992:art-108",
+    "ley-37-1992:art-109",
+    "ley-37-1992:art-110",
     "ley-37-1992:art-115",
     "ley-37-1992:art-116",
     "ley-37-1992:art-122",
@@ -26,10 +31,16 @@ legal_refs = [
     "ley-37-1992:art-13",
     "ley-37-1992:art-15",
     "ley-37-1992:art-161",
+    "ley-37-1992:art-163-decies",
+    "ley-37-1992:art-163-duodecies",
+    "ley-37-1992:art-163-quinquiesdecies",
+    "ley-37-1992:art-163-terdecies",
+    "ley-37-1992:art-163-undecies",
     "ley-37-1992:art-17",
     "ley-37-1992:art-21",
     "ley-37-1992:art-22",
     "ley-37-1992:art-25",
+    "ley-37-1992:art-75",
     "ley-37-1992:art-79",
     "ley-37-1992:art-84",
     "ley-37-1992:art-88",
@@ -304,3 +315,35 @@ number = "modulos-iva-2-unidades"
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "modulos-iva-3-unidades"
 number = "modulos-iva-3-unidades"
+
+# Deducción regularización cuota casillas (43 regularización bienes de inversión,
+# LIVA art. 107-110; 44 regularización prorrata por porcentaje definitivo, LIVA
+# art. 104-105). Manual-input official record-file boxes referenced as operands of
+# the total-a-deducir deduction chain, so they enter the calculation closure.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "43"
+number = "43"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "44"
+number = "44"
+
+# Régimen especial del criterio de caja informativa boxes (62/63 entregas
+# devengadas art. 75 LIVA base/cuota, 74/75 adquisiciones base/cuota) join the
+# calculation closure once their ledger_iva_aggregation criterio-caja bindings
+# landed (LIVA art. 163 decies-terdecies / quinquiesdecies).
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "62"
+number = "62"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "63"
+number = "63"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "74"
+number = "74"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "75"
+number = "75"

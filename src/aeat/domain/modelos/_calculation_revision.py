@@ -48,6 +48,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
@@ -158,11 +159,52 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _nif_key(r)))]
 
 
+def _validated_row_binding_index(value: object, *, surface: str) -> str:
+    if isinstance(value, bool):
+        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+    if isinstance(value, int):
+        index = value
+    elif isinstance(value, str):
+        try:
+            index = int(value)
+        except ValueError as exc:
+            raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}") from exc
+    else:
+        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+    if index < 1:
+        raise ModeloValidationError(f"{surface} contains non-positive row index {value!r}")
+    return str(index)
+
+
+def _canonical_row_binding_values(
+    row_binding_values: Mapping[BindingId, Mapping[str, str]],
+    *,
+    surface: str,
+) -> dict[BindingId, dict[str, str]]:
+    canonical: dict[BindingId, dict[str, str]] = {}
+    for raw_binding_id, raw_rows in row_binding_values.items():
+        binding_id = _validated_binding_id(raw_binding_id, surface=surface)
+        if not isinstance(raw_rows, Mapping):
+            raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
+        rows: dict[str, str] = {}
+        for raw_row_index, raw_value in raw_rows.items():
+            row_index = _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]")
+            if row_index in rows:
+                raise ModeloValidationError(
+                    f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}",
+                )
+            rows[row_index] = str(raw_value).strip()
+        if rows:
+            canonical[binding_id] = dict(sorted(rows.items(), key=lambda item: int(item[0])))
+    return dict(sorted(canonical.items()))
+
+
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
     input_values_by_casilla_id: Mapping[CasillaId, str],
     binding_overrides: Mapping[BindingId, str],
+    row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
     relation_overrides: Mapping[RelationId, str] | None = None,
     source_transaction_ids: Sequence[str] = (),
@@ -173,8 +215,10 @@ def derive_calculation_revision_id(
     """Return the deterministic SHA-256 id for a calculation attempt.
 
     The id is content-addressed by the parent work unit plus the
-    three payload mappings: input casilla values, operator-supplied
-    binding overrides, and computed casilla outputs. Two
+    three payload mappings: input casilla values, scalar binding overrides, and
+    computed casilla outputs. Row-indexed binding values are carried as their
+    own nested map so repeating-record coordinates participate in identity
+    without being flattened into synthetic binding ids. Two
     structurally identical re-runs produce the same id; the
     catalogue's content-addressing invariant then makes a second
     ``calculate`` call idempotent (the existing revision is
@@ -208,6 +252,9 @@ def derive_calculation_revision_id(
                 for k, v in relation_overrides.items()
             ),
         )
+    canonical_row_bindings = _canonical_row_binding_values(row_binding_values or {}, surface="row_binding_values")
+    if canonical_row_bindings:
+        payload["row_binding_values"] = canonical_row_bindings
     normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
     normalized_borrador_bindings = tuple(
         sorted(
@@ -268,6 +315,44 @@ def _outputs_for_hash_from_observations(
     return _outputs_for_hash_from_mapping({obs.casilla_id: obs.value for obs in observations})
 
 
+class CalculationSourceRef(BaseModel):
+    """One resolver-level source-object trace persisted on a calculation revision.
+
+    The calculation source mesh (``aeat.application.aggregation``) resolves each
+    registry binding source through an enrolled resolver and produces a typed
+    ``CalculationSourceProvenance`` row per contributing source object. This is
+    the DOMAIN-side, persistence-shaped projection of that provenance: it carries
+    exactly the resolver→source-object→fingerprint trace that lets an audit reader
+    reconstruct which resolver mesh and which upstream source objects produced a
+    revision, and whether those objects have since drifted.
+
+    It deliberately does NOT carry ``legal_refs`` / ``source_refs`` — those are the
+    per-casilla regulatory grounding already carried by
+    :class:`~aeat.domain.calculations.registry.CasillaObservation` on the same
+    revision; duplicating them here would fragment the grounding across two
+    surfaces.
+
+    Attributes:
+        source_kind: Free-form resolver source token (e.g. ``collectible_invoice``).
+            Always the token the resolver declared for the contributing source.
+        binding_source: The canonical :class:`BindingSourceKind` when
+            ``source_kind`` names a registry binding source; ``None`` for advisory
+            or non-binding provenance rows.
+        source_ref: Stable reference to the contributing source object
+            (e.g. ``collectible_invoice:{invoice_id}``).
+        fingerprint: Data-dependent digest of the contributing source object when
+            the resolver produced one; ``None`` when the resolver emits a
+            reference without a content digest.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: str = Field(min_length=1, max_length=64)
+    binding_source: BindingSourceKind | None = None
+    source_ref: str = Field(min_length=1, max_length=256)
+    fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+
+
 class CalculationRevision(BaseModel):
     """One calculation attempt attached to a work unit.
 
@@ -286,6 +371,9 @@ class CalculationRevision(BaseModel):
         binding_overrides: Mapping of operator-supplied binding
             overrides applied during this calculation. Empty when
             no binding overrides were used.
+        row_binding_values: Mapping of row-indexed binding values produced by
+            source meshes for repeating export records. Kept separate from
+            ``binding_overrides`` so the row coordinate remains structured.
         relation_overrides: Mapping of relation values applied during
             this calculation. Kept separate from ``binding_overrides`` so
             BindingId-keyed snapshots never carry RelationId keys.
@@ -326,6 +414,7 @@ class CalculationRevision(BaseModel):
     state: CalculationRevisionState
     input_values_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
+    row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
@@ -361,6 +450,18 @@ class CalculationRevision(BaseModel):
     # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
     # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
+    # Resolver-level source-mesh provenance (per the calculation-source-connectivity
+    # ADR, Phase 9): the typed resolver→source-object→fingerprint trace projected
+    # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist
+    # time. Where ``observations`` carry the per-casilla legal/source grounding,
+    # this carries WHICH resolver mesh and WHICH upstream source objects produced
+    # the revision, and their content fingerprints, so an audit can trace source
+    # connectivity and detect upstream drift. Defaults to () so existing persisted
+    # revisions load without migration. Deliberately NOT threaded into
+    # ``derive_calculation_revision_id`` (it is derived from the same inputs the id
+    # already content-addresses, not an independent identity axis) — mirroring
+    # ``ledger_filing_snapshot`` / ``ledger_filing_evidence``.
+    source_provenance: tuple[CalculationSourceRef, ...] = Field(default_factory=tuple)
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
     # values (M184 atribución members, M232 operaciones vinculadas,
@@ -389,6 +490,7 @@ class CalculationRevision(BaseModel):
             work_unit_id=self.work_unit_id,
             input_values_by_casilla_id=self.input_values_by_casilla_id,
             binding_overrides=self.binding_overrides,
+            row_binding_values=self.row_binding_values,
             relation_overrides=self.relation_overrides,
             casilla_values=self.casilla_values,
             source_transaction_ids=self.source_transaction_ids,
@@ -406,6 +508,18 @@ class CalculationRevision(BaseModel):
             raise ModeloValidationError(
                 "calculation revision replay ids must be channel-unique; "
                 f"ids appear in both binding_overrides and relation_overrides: {overlapping_replay_ids!r}",
+            )
+        overlapping_row_replay_ids = sorted(set(self.binding_overrides).intersection(self.row_binding_values))
+        if overlapping_row_replay_ids:
+            raise ModeloValidationError(
+                "calculation revision replay ids must be channel-unique; "
+                f"ids appear in both binding_overrides and row_binding_values: {overlapping_row_replay_ids!r}",
+            )
+        overlapping_row_relation_ids = sorted(set(self.row_binding_values).intersection(self.relation_overrides))
+        if overlapping_row_relation_ids:
+            raise ModeloValidationError(
+                "calculation revision replay ids must be channel-unique; "
+                f"ids appear in both row_binding_values and relation_overrides: {overlapping_row_relation_ids!r}",
             )
         # The typed `observations` envelope is the logical source of truth;
         # the flat `casilla_values` field is a denormalised cache enforced
@@ -497,6 +611,15 @@ class CalculationRevision(BaseModel):
         if len(set(normalized)) != len(normalized):
             raise ModeloValidationError("source_transaction_ids must not contain duplicates")
         return normalized
+
+    @field_validator("row_binding_values", mode="before")
+    @classmethod
+    def _normalise_row_binding_values(cls, value: object) -> Mapping[BindingId, Mapping[str, str]]:
+        if value is None:
+            return {}
+        if not isinstance(value, Mapping):
+            raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
+        return _canonical_row_binding_values(value, surface="row_binding_values")
 
     def _require_set(self, *names: str) -> None:
         for name in names:
@@ -601,6 +724,7 @@ __all__ = [
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
+    "CalculationSourceRef",
     "LedgerFilingCoverageError",
     "assert_revision_snapshot_evidence_coverage",
     "derive_calculation_revision_id",

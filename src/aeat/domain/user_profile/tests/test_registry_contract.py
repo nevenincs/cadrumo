@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -17,6 +18,11 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .._schema import ProfileSchemaDefinition
+
+_MODELO_100_ANUALIDADES_YEARS = (2021, 2022, 2023)
 
 
 def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
@@ -34,26 +40,38 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
     assert "profile_tax_id" in index.export_headers
 
 
-@pytest.mark.parametrize("year", (2021, 2022, 2023))
-def test_modelo_100_anualidades_selector_is_declared_for_each_separate_escala_year(year: int) -> None:
+def test_modelo_100_anualidades_selector_is_declared_for_each_separate_escala_year() -> None:
     schema = load_user_profile_schema()
-    selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+    index = build_user_profile_selector_index(schema)
+    failures: list[str] = []
 
-    assert selector in schema.field_paths
-    assert selector in build_user_profile_selector_index(schema).profile_selectors
+    for year in _MODELO_100_ANUALIDADES_YEARS:
+        selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+        if selector not in schema.field_paths:
+            failures.append(f"{year}: {selector!r} missing from schema.field_paths")
+            continue
+        if selector not in index.profile_selectors:
+            failures.append(f"{year}: {selector!r} missing from profile selectors")
+
+    assert not failures, "\n".join(failures)
 
 
-@pytest.mark.parametrize("year", (2021, 2022, 2023))
-def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year(year: int) -> None:
+def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year() -> None:
     schema = load_user_profile_schema()
     model = resources().modelos.authority.modelo("100")
-    broken_schema = _schema_without_field(schema, f"renta_family.anualidades_sin_minimo_descendientes_{year}")
+    failures: list[str] = []
 
-    report = validate_user_profile_registry_contract((model,), broken_schema)
+    for year in _MODELO_100_ANUALIDADES_YEARS:
+        selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+        broken_schema = _schema_without_field(schema, selector)
+        report = validate_user_profile_registry_contract((model,), broken_schema)
+        if report.valid:
+            failures.append(f"{year}: removing {selector!r} unexpectedly left the report valid")
+            continue
+        if not any(issue.selector == selector for issue in report.errors):
+            failures.append(f"{year}: removing {selector!r} did not produce a matching error")
 
-    selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
-    assert not report.valid
-    assert any(issue.selector == selector for issue in report.errors), selector
+    assert not failures, "\n".join(failures)
 
 
 def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector_forms() -> None:
@@ -125,7 +143,10 @@ def test_user_profile_imports_before_registry_barrel() -> None:
     assert result.returncode == 0, result.stderr
 
 
-def _schema_without_field(schema, path: str):
+def _schema_without_field(
+    schema: ProfileSchemaDefinition,
+    path: str,
+) -> ProfileSchemaDefinition:
     section_key, field_key = path.split(".", 1)
     sections = []
     for section in schema.sections:

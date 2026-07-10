@@ -26,6 +26,22 @@ _DELTA: tuple[CrossPeriodCleanStateBlocker, ...] = tuple(_OFFICIAL_EVIDENCE_DELT
 _M130_SOURCE_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_19")
 _M130_REQUIREMENT_LEGAL_REFS = ("rd-439-2007:art-110",)
 _M130_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-130-instructions",)
+_NON_DELTA_BLOCKERS: tuple[CrossPeriodCleanStateBlocker, ...] = (
+    CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE,
+    CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA,
+    CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
+    CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION,
+    CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT,
+    CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
+)
+_NON_APP_SOURCE_KINDS: tuple[str | None, ...] = (
+    "operator_manual",
+    "aeat_sede_justificante",
+    "aeat_csv_register",
+    None,
+)
 
 
 def _evidence(
@@ -60,30 +76,18 @@ def test_same_year_app_filing_only_delta_is_admitted() -> None:
     assert out.blockers == ()
 
 
-@pytest.mark.parametrize(
-    "extra",
-    [
-        CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE,
-        CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE,
-        CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE,
-        CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA,
-        CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
-        CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION,
-        CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT,
-        CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
-    ],
-)
-def test_same_year_app_filing_with_extra_blocker_stays_blocking(extra: CrossPeriodCleanStateBlocker) -> None:
+def test_same_year_app_filing_with_extra_blocker_stays_blocking() -> None:
     """ATTACK: a same-year app_filing chain with ANY non-delta blocker must NOT relax.
 
     A value divergence, operator-manual source, revision divergence, or missing
     record is a genuine defect; relaxing it would launder a corrupt chain.
     """
-    ev = _evidence(filing_year=2026, source_kind="app_filing", blockers=(*_DELTA, extra))
-    out = _relax_same_year_local_chain(ev, target_filing_year=2026)
-    assert not out.clean, f"{extra.value} must keep the row blocking"
-    assert not out.non_official_local_chain_advisory
-    assert extra in out.blockers
+    for extra in _NON_DELTA_BLOCKERS:
+        ev = _evidence(filing_year=2026, source_kind="app_filing", blockers=(*_DELTA, extra))
+        out = _relax_same_year_local_chain(ev, target_filing_year=2026)
+        assert not out.clean, f"{extra.value} must keep the row blocking"
+        assert not out.non_official_local_chain_advisory, extra.value
+        assert extra in out.blockers, extra.value
 
 
 def test_cross_year_app_filing_stays_blocking() -> None:
@@ -94,12 +98,12 @@ def test_cross_year_app_filing_stays_blocking() -> None:
     assert not out.non_official_local_chain_advisory
 
 
-@pytest.mark.parametrize("kind", ["operator_manual", "aeat_sede_justificante", "aeat_csv_register", None])
-def test_non_app_filing_source_stays_blocking(kind: str | None) -> None:
+def test_non_app_filing_source_stays_blocking() -> None:
     """ATTACK: only app_filing relaxes; operator_manual/official/None must NOT."""
-    ev = _evidence(filing_year=2026, source_kind=kind, blockers=_DELTA)
-    out = _relax_same_year_local_chain(ev, target_filing_year=2026)
-    assert not out.non_official_local_chain_advisory
+    for kind in _NON_APP_SOURCE_KINDS:
+        ev = _evidence(filing_year=2026, source_kind=kind, blockers=_DELTA)
+        out = _relax_same_year_local_chain(ev, target_filing_year=2026)
+        assert not out.non_official_local_chain_advisory, kind
 
 
 def test_clean_row_is_not_falsely_flagged() -> None:

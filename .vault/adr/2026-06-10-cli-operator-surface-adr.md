@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-06-10-cli-operator-surface-research]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
@@ -18,7 +18,7 @@ related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
 
-# `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `accepted` -- operator approval with caveats recorded 2026-06-10)
+# `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `accepted`)
 
 ## Problem Statement
 

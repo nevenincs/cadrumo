@@ -152,6 +152,6 @@ source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
 # Aggregated foreign-asset row-producer bindings (Orden HAP/72/2013 Anexo
 # tipo 2 records). Each tipo-2 record carries: asset_class, country, NIF/ID,
 # valuation, currency, acquisition date. Subject to the 50,000 EUR
-# per-asset-class threshold (encoded as parameter
+# per-obligation-block threshold (encoded as parameter
 # modelo-720-asset-declaration-threshold-eur).
 # -----------------------------------------------------------------------------

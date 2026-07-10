@@ -778,6 +778,8 @@ def _build_modelo_readiness(
                 bucket_id=pointer.bucket_id,
                 profile_record=record,
                 ledger_sources_ready=ledger_report is not None and ledger_report.ready,
+                modelo=request.modelo,
+                period=readiness_period,
             )
             if registry_resolution.snapshot is not None
             else ()
@@ -938,6 +940,8 @@ def _missing_calculation_bindings_for_readiness(
     bucket_id: str,
     profile_record: object,
     ledger_sources_ready: bool,
+    modelo: str,
+    period: Period,
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
     """Return non-constant registry bindings not available to calculation readiness.
 
@@ -946,11 +950,21 @@ def _missing_calculation_bindings_for_readiness(
     they are available only through the ledger preflight path. Once that
     preflight passes, the calculation mesh can resolve them from the bucket
     ledger and readiness must not report them as missing operator inputs.
+
+    A relation-prefill binding the calculate resolver zero-defaults for
+    ``period`` (the Modelo 202 first-period same-model previous-payment carry,
+    which has no upstream filing before its first target period) is likewise
+    not a missing operator input: calculate satisfies it with a zero default,
+    so readiness must not report it as missing. Both surfaces read the one
+    shared authority (:func:`relation_prefill_period_zero_default_binding_ids`)
+    so the readiness missing set and the calculate refusal set agree by
+    construction (``one-aggregation-path-pull-equals-calculate``).
     """
     from ..domain.calculations.registry import (
         enum_consumed_binding_ids,
         revision_date_binding_ids,
     )
+    from .calculations import relation_prefill_period_zero_default_binding_ids
     from .modelo import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
     revision = snapshot.revision
@@ -958,6 +972,14 @@ def _missing_calculation_bindings_for_readiness(
     date_consumed = {str(binding_id) for binding_id in revision_date_binding_ids(revision)}
     if not revision.bindings:
         return ()
+    period_zero_defaulted = {
+        str(binding_id)
+        for binding_id in relation_prefill_period_zero_default_binding_ids(
+            revision,
+            modelo=modelo,
+            period=period.registry_token,
+        )
+    }
     try:
         profile_resolution = resolve_profile_sourced_bindings(
             snapshot,
@@ -987,6 +1009,8 @@ def _missing_calculation_bindings_for_readiness(
         if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
             continue
         if binding.source == BindingSourceKind.PROFILE and binding_id in profile_resolved:
+            continue
+        if binding_id in period_zero_defaulted:
             continue
         missing.append(
             ProjectionModeloBindingRequirement(

@@ -1,0 +1,307 @@
+"""The block-first-mutation identity gate (ADR I2 / I4).
+
+Proves the pure decision logic directly (SDK-independent) and the wired gate
+through the real built ``Server`` (SDK-gated, never skipped): an unconfirmed
+first mutating call is refused; an identity read clears it; a profile switch
+re-arms it; and the refusal is byte-identical on the direct call path and the
+``execute`` meta path. No mocks - the state object and decision function are
+exercised as real logic and the server drives real handlers.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+from typing import Any, cast
+
+import anyio
+import pytest
+
+from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
+from .._identity_gate import (
+    IDENTITY_READ_COMMANDS,
+    IDENTITY_READ_CONSOLE_TOOLS,
+    PROFILE_SWITCHING_COMMANDS,
+    SessionIdentityState,
+    identity_elicitation_echo,
+    identity_gate_refusal,
+)
+from .._tools import build_tool_descriptors
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_SDK_PRESENT = importlib.util.find_spec("mcp") is not None
+
+# A concrete mutating verb (declared not-read-only in the risk table) and its
+# MCP tool name, plus a concrete read-only identity verb. A handoff verb is used
+# for the server-level cases so a CLEARED gate refuses at the confirmation route
+# (no elicitation channel in a unit build) instead of spawning a real CLI
+# subprocess - the identity refusal and that confirmation refusal are distinct
+# texts, so "gate cleared" is asserted by the identity refusal being absent.
+_MUTATING_KEY = "ledger.export"
+_MUTATING_TOOL = "aeat_ledger_export"
+_IDENTITY_READ_KEY = "overview.status"
+
+
+# --- pure decision logic (SDK-independent) ------------------------------------
+
+
+def test_first_mutation_is_refused_when_unconfirmed() -> None:
+    state = SessionIdentityState()
+    assert state.identity_confirmed is False
+    refusal = identity_gate_refusal(_MUTATING_KEY, state=state)
+    assert refusal is not None
+    assert refusal.strip()
+
+
+def test_an_identity_read_clears_the_gate() -> None:
+    state = SessionIdentityState()
+    # An identity-read verb records the read and is itself allowed...
+    assert identity_gate_refusal(_IDENTITY_READ_KEY, state=state) is None
+    assert state.identity_confirmed is True
+    # ...so the next mutating call proceeds.
+    assert identity_gate_refusal(_MUTATING_KEY, state=state) is None
+
+
+def test_whoami_style_direct_read_clears_the_gate() -> None:
+    # whoami carries no command key; the server records it via this method.
+    state = SessionIdentityState()
+    state.record_identity_read()
+    assert identity_gate_refusal(_MUTATING_KEY, state=state) is None
+
+
+def test_a_profile_switch_re_arms_the_gate() -> None:
+    state = SessionIdentityState()
+    state.record_identity_read()
+    assert identity_gate_refusal(_MUTATING_KEY, state=state) is None  # confirmed, allowed
+    for switch_key in sorted(PROFILE_SWITCHING_COMMANDS):
+        state.record_identity_read()  # confirm again before each switch
+        # The switch itself is allowed (it establishes identity) and re-arms.
+        assert identity_gate_refusal(switch_key, state=state) is None
+        assert state.identity_confirmed is False
+        # The next mutating call is refused again until a fresh read.
+        assert identity_gate_refusal(_MUTATING_KEY, state=state) is not None
+
+
+def test_harness_load_and_whoami_are_the_console_identity_reads() -> None:
+    assert HARNESS_LOAD_TOOL in IDENTITY_READ_CONSOLE_TOOLS
+    assert WHOAMI_TOOL in IDENTITY_READ_CONSOLE_TOOLS
+
+
+def test_a_profile_switch_after_a_console_read_re_arms_the_gate() -> None:
+    # harness.load / whoami clear the gate via record_identity_read (the server's
+    # console-identity-read hook). A profile switch AFTER that console read still
+    # re-arms, so identity is re-confirmed before any mutation post-switch - the
+    # Erik/Erika guarantee survives the harness.load path.
+    state = SessionIdentityState()
+    state.record_identity_read()  # e.g. a harness.load floor read on session start
+    assert identity_gate_refusal(_MUTATING_KEY, state=state) is None  # cleared
+    assert identity_gate_refusal("config.switch", state=state) is None  # switch allowed
+    assert state.identity_confirmed is False  # ...and re-arms
+    assert identity_gate_refusal(_MUTATING_KEY, state=state) is not None  # refused again
+
+
+def test_read_only_calls_never_trip_the_gate_and_do_not_confirm() -> None:
+    state = SessionIdentityState()
+    # A non-identity read-only verb (declared read_only in the manifest) is
+    # allowed but does NOT clear the gate.
+    assert identity_gate_refusal("overview.agenda", state=state) is None
+    assert state.identity_confirmed is False
+    # So a following mutation is still refused.
+    assert identity_gate_refusal(_MUTATING_KEY, state=state) is not None
+
+
+def test_every_identity_read_command_clears_the_gate() -> None:
+    for read_key in sorted(IDENTITY_READ_COMMANDS):
+        state = SessionIdentityState()
+        assert identity_gate_refusal(read_key, state=state) is None
+        assert state.identity_confirmed is True
+
+
+def test_elicitation_echo_names_the_label_never_empty() -> None:
+    assert "Erika" in identity_elicitation_echo(active_profile_label="Erika")
+    # A missing label renders a neutral placeholder, not an empty name.
+    assert identity_elicitation_echo(active_profile_label=None).strip()
+    assert identity_elicitation_echo(active_profile_label="").strip()
+
+
+# --- wired gate through the real server (SDK-gated, never skipped) -------------
+
+
+def _direct_refusal_text(server: Any) -> str:
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    handlers = server.request_handlers
+
+    async def _drive() -> str:
+        request = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
+        )
+        result = (await handlers[CallToolRequest](request)).root
+        assert result.isError is True
+        return " ".join(block.text for block in result.content if block.type == "text")
+
+    return anyio.run(_drive)
+
+
+def _execute_refusal_text(server: Any) -> str:
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    handlers = server.request_handlers
+
+    async def _drive() -> str:
+        request = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(
+                name="execute",
+                arguments={"command_key": _MUTATING_KEY, "arguments": {}},
+            ),
+        )
+        result = (await handlers[CallToolRequest](request)).root
+        assert result.isError is True
+        # The execute path carries the refusal inside the error envelope.
+        assert result.structuredContent is not None
+        return str(result.structuredContent["refusal"])
+
+    return anyio.run(_drive)
+
+
+def test_unconfirmed_first_mutation_refuses_on_both_paths_byte_identical() -> None:
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    # The expected refusal, computed from the same decision function.
+    expected = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
+    assert expected is not None
+
+    # A fresh server per path so neither call has a prior identity read.
+    direct = _direct_refusal_text(cast("Any", build_server(descriptors, persona=None)))
+    execute = _execute_refusal_text(cast("Any", build_server(descriptors, persona=None)))
+
+    assert direct == expected
+    assert execute == expected
+    # Gate invariance: byte-identical across the two call paths.
+    assert direct == execute
+
+
+def test_a_whoami_read_clears_the_gate_on_the_direct_path() -> None:
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
+    assert expected_refusal is not None
+
+    server = cast("Any", build_server(descriptors, persona=None))
+    handlers = server.request_handlers
+
+    async def _drive() -> None:
+        # A whoami read first, on the same session...
+        whoami = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
+        )
+        whoami_result = (await handlers[CallToolRequest](whoami)).root
+        assert whoami_result.isError is False
+        # ...so the subsequent mutating call is no longer identity-refused. It may
+        # still fail downstream (e.g. no active profile), but NOT with the gate.
+        mutate = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
+        )
+        mutate_result = (await handlers[CallToolRequest](mutate)).root
+        text = " ".join(block.text for block in mutate_result.content if block.type == "text")
+        assert expected_refusal not in text
+
+    anyio.run(_drive)
+
+
+def test_a_harness_load_read_clears_the_gate_on_the_direct_path() -> None:
+    # ADR I2 refinement: harness.load carries the identity block (P02), so loading
+    # the floor clears the gate - the subsequent first mutation is not identity-
+    # refused (it refuses instead at the confirmation route, a distinct text).
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
+    assert expected_refusal is not None
+
+    server = cast("Any", build_server(descriptors, persona=None))
+    handlers = server.request_handlers
+
+    async def _drive() -> None:
+        load = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=HARNESS_LOAD_TOOL, arguments={}),
+        )
+        load_result = (await handlers[CallToolRequest](load)).root
+        assert load_result.isError is False
+        mutate = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
+        )
+        mutate_result = (await handlers[CallToolRequest](mutate)).root
+        text = " ".join(block.text for block in mutate_result.content if block.type == "text")
+        assert expected_refusal not in text
+
+    anyio.run(_drive)
+
+
+def test_identity_state_is_shared_across_the_two_call_paths() -> None:
+    # State is shared: an identity read on the DIRECT path (whoami, no
+    # subprocess) clears the gate for a subsequent ``execute`` mutating call on
+    # the same session, so the execute call is no longer identity-refused (it
+    # refuses instead at the confirmation route, a distinct text).
+    from .._server import build_server
+
+    descriptors = build_tool_descriptors()
+    if not _SDK_PRESENT:
+        with pytest.raises(ModuleNotFoundError, match="mcp"):
+            build_server(descriptors)
+        return
+
+    from mcp.types import CallToolRequest, CallToolRequestParams
+
+    expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
+    assert expected_refusal is not None
+
+    server = cast("Any", build_server(descriptors, persona=None))
+    handlers = server.request_handlers
+
+    async def _drive() -> None:
+        whoami = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
+        )
+        whoami_result = (await handlers[CallToolRequest](whoami)).root
+        assert whoami_result.isError is False
+        mutate = CallToolRequest(
+            method="tools/call",
+            params=CallToolRequestParams(
+                name="execute",
+                arguments={"command_key": _MUTATING_KEY, "arguments": {}},
+            ),
+        )
+        mutate_result = (await handlers[CallToolRequest](mutate)).root
+        assert mutate_result.structuredContent is not None
+        assert expected_refusal not in str(mutate_result.structuredContent.get("refusal", ""))
+
+    anyio.run(_drive)

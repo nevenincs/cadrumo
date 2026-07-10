@@ -719,10 +719,12 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
-# Pag. 4: IVA deducible - suma de deducciones y resultado del regimen
-# general. Box [64] "Suma de deducciones" is the total cuota deducible
-# anual (modelo-390-iva-anual-cuota-deducible-total), box [65] "Resultado
-# regimen general" is the annual net result
+# Pag. 4: IVA deducible - regularizacion de inversiones, regularizacion
+# prorrata, suma de deducciones y resultado del regimen general. Box [63] is
+# "Regularizacion de inversiones", box [522] is the annual regularizacion por
+# aplicacion porcentaje definitivo de prorrata, box [64] "Suma de deducciones"
+# is the total cuota deducible anual (modelo-390-iva-anual-cuota-deducible-total),
+# box [65] "Resultado regimen general" is the annual net result
 # (modelo-390-iva-anual-resultado-regimen-general).
 
 [[revisions."2010-y-siguientes".export_layouts.records]]
@@ -786,6 +788,34 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-63"
+offset = 625
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-bienes-inversion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-522"
+offset = 642
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-prorrata-definitiva"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]

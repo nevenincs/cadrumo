@@ -1,12 +1,12 @@
-"""Retention-window pruning for :class:`LLMRunTelemetryRecorder`.
+"""Retention-window pruning for :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
 
 ``prune`` bounds the run-telemetry store's growth in two stages: an age
 cutoff (``retention_days``) and a record-count cap (``max_records``). Both
-default to the centralized :class:`~aeat.core.config.Settings` fields, and
+default to the centralized :class:`~core.config.Settings` fields, and
 both accept an explicit per-call override.
 
 Ages are anchored to real wall-clock time (``datetime.now(UTC)``) rather than
-:func:`aeat.core.time.frozen_clock`: freezing the clock would also freeze the
+:func:`~core.time.frozen_clock`: freezing the clock would also freeze the
 storage runtime's idle-session-expiry check (which reads the same clock seam),
 and an arbitrary frozen instant unrelated to the session's real
 ``opened_at + idle_window`` deadline spuriously expires the test's active
@@ -16,6 +16,20 @@ Anti-tautology: every assertion checks *which* records survive pruning by
 ``run_id`` identity, not merely a post-prune count -- a broken cutoff or an
 inverted oldest/newest ordering would flip which records are removed and
 fail these tests even if the raw counts happened to coincide.
+
+See Also:
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+        Local-only recorder whose ``prune`` method enforces age and count
+        bounds.
+    :class:`~adapters.outbound.llm.LLMRunRecord`
+        Diagnostic metadata record used to assert survivor identity.
+    :class:`~adapters.outbound.llm.LLMCache`
+        Cache store whose list-then-delete prune shape is mirrored by run
+        telemetry.
+    :data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`
+        Secure-object namespace that keeps run telemetry local and diagnostic.
+    :class:`~core.config.Settings`
+        Central source for the default telemetry retention window and cap.
 """
 
 from __future__ import annotations
@@ -133,7 +147,7 @@ def test_load_records_raises_on_a_payload_missing_its_object_key_uuid(tmp_path: 
     """Anti-tautology proof: a corrupted payload with no ``object_key_uuid`` raises loudly.
 
     This is not a legacy-migration tolerance branch (``no-legacy-compatibility``):
-    every record written by :meth:`LLMRunTelemetryRecorder.record` always carries
+    every record written by :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.record` always carries
     ``object_key_uuid``, so a payload missing it can only be storage corruption or
     a malformed direct write, and the loader must refuse rather than silently
     reconstruct a malformed delete key.

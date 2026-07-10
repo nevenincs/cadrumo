@@ -4,7 +4,7 @@ tags:
   - '#repo-health-triage'
 date: '2026-06-04'
 modified: '2026-06-13'
-step_id: 'W03.P10.S34'
+step_id: 'S34'
 related:
   - '[[2026-06-04-repo-health-triage-plan]]'
 ---

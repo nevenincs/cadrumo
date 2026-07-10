@@ -531,30 +531,31 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
 
 def test_snapshot_integrity_checks_completeness_manifest_refs() -> None:
     """Snapshot integrity rejects manifest refs missing from the slice catalogue."""
-    manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
-    ).model_copy(update={"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)})
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
-        update={"completeness_manifest": manifest},
+    cases = (
+        (
+            {"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)},
+            build_snapshot_with_missing_legal,
+            _MISSING_LEGAL_ID,
+            r"calculation_completeness_manifest\.legal_refs",
+        ),
+        (
+            {"source_ref": _MISSING_SOURCE_ID, "source_refs": (_MISSING_SOURCE_ID,)},
+            build_snapshot_with_missing_source,
+            _MISSING_SOURCE_ID,
+            r"calculation_completeness_manifest\.source_ref",
+        ),
     )
-    snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
+    for manifest_update, snapshot_builder, missing_ref, match in cases:
+        manifest = completeness_manifest(
+            (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        ).model_copy(update=manifest_update)
+        revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+            update={"completeness_manifest": manifest},
+        )
+        snapshot = snapshot_builder(revision, missing_ref)
 
-    with pytest.raises(RegistryValidationError, match=r"calculation_completeness_manifest\.legal_refs"):
-        check_all_id_references(snapshot)
-
-
-def test_snapshot_integrity_checks_completeness_manifest_source_ref() -> None:
-    """Snapshot integrity rejects a manifest source_ref missing from the slice catalogue."""
-    manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
-    ).model_copy(update={"source_ref": _MISSING_SOURCE_ID, "source_refs": (_MISSING_SOURCE_ID,)})
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
-        update={"completeness_manifest": manifest},
-    )
-    snapshot = build_snapshot_with_missing_source(revision, _MISSING_SOURCE_ID)
-
-    with pytest.raises(RegistryValidationError, match=r"calculation_completeness_manifest\.source_ref"):
-        check_all_id_references(snapshot)
+        with pytest.raises(RegistryValidationError, match=match):
+            check_all_id_references(snapshot)
 
 
 def test_snapshot_integrity_checks_casilla_continuidad_evolution_refs() -> None:

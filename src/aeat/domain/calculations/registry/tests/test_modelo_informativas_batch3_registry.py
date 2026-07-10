@@ -7,6 +7,20 @@ RGAT art 54.6 — neither RGAT article is bundled, so no fixed date is fabricate
 All five are scheduling/applicability-grade: declaration-header casillas only, no
 bundled diseño de registro, no fabricated form casilla. Each orden's approval (art
 1) and plazo article are cross-checked against the bundled BOE corpus at build.
+
+See Also:
+    :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
+        Test loader for the committed registry definitions and legal catalogues.
+    :class:`~domain.calculations.registry._validate.RegistryValidator`
+        Registry validator that checks the authored legal/source references.
+    :func:`~domain.calculations.registry._authority.bundled_authority`
+        Authority facade used to resolve the annual windows and windowless cases.
+    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+        Canonical fleet membership these five informativas extend.
+    :data:`~core.UNMODELED_OBLIGATIONS`
+        Former recognized-unmodeled set reduced by this Batch-3 promotion.
+    :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch2_registry`
+        Sibling M182-template informativa promotion with annual/monthly windows.
 """
 
 from __future__ import annotations
@@ -33,31 +47,20 @@ _MODELOS = [
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_validator_accepts_committed_definition(mid, rev, approval, plazo, doc, has_windows) -> None:
+def test_committed_definition_legal_authority_and_deadline_shape(
+    mid: str, rev: str, approval: str, plazo: str, doc: str, has_windows: bool
+) -> None:
+    """Each Batch-3 informativa validates and carries only grounded deadline windows."""
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_approval_and_plazo_resolve_as_legal_authority(mid, rev, approval, plazo, doc, has_windows) -> None:
-    _, catalogues = _committed_modelo(mid)
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
         assert entry.evidence_tier == "legal_authority"
         assert entry.document_id == doc
 
-
-@pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)
-def test_deadline_window_shape_matches_bundled_grounding(mid, rev, approval, plazo, doc, has_windows) -> None:
-    """Annual modelos carry January windows citing the plazo; 234/238 carry none.
-
-    234's event-driven plazo (RGAT 46.3) and 238's delegated annual plazo (RGAT
-    54.6) have no bundled calendar provision, so no window is authored — the
-    absence is the honest, non-fabricated state, not an omission.
-    """
-    modelo, _ = _committed_modelo(mid)
     revision = modelo.revisions[rev]
     if has_windows:
         assert revision.deadline_windows

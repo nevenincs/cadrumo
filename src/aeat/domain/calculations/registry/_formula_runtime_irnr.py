@@ -1,27 +1,27 @@
 """IRNR / Modelo 210 formula-op evaluators for the registry runtime.
 
-Extracted from :mod:`aeat.domain.calculations.registry._formula_runtime` to
+Extracted from :mod:`~domain.calculations.registry._formula_runtime` to
 keep that module under its size budget (`aeat-architecture-boundaries`,
 `registry-resolver-family-extraction`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
 and their private argument-resolution and rate-computation helpers. Dispatch
-still lives in :func:`aeat.domain.calculations.registry._formula_runtime._evaluate_expression`,
+still lives in :func:`~domain.calculations.registry._formula_runtime._evaluate_expression`,
 which imports this module at package level and calls
 :func:`evaluate_irnr_resolve_tipo_gravamen` /
 :func:`evaluate_m210_resolve_base_imponible` exactly as it calls the sibling
-:mod:`~aeat.domain.calculations.registry._formula_runtime_ops` helpers. The
+:mod:`~domain.calculations.registry._formula_runtime_ops` helpers. The
 shared error types, the unresolved-outcome reason enum, and the generic
 numeric-casilla-value accessor live in ``_formula_runtime_ops`` (not in
 ``_formula_runtime`` itself) so this module can depend on them without a
 runtime import cycle back into the dispatcher module.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._formula_runtime`
+    :mod:`~domain.calculations.registry._formula_runtime`
         Owns the dispatcher and :class:`_EvalContext`.
-    :mod:`aeat.domain.calculations.registry._formula_runtime_ops`
+    :mod:`~domain.calculations.registry._formula_runtime_ops`
         Owns the shared unresolved-formula error types,
         :class:`RegistryUnresolvedOutcomeReason`, and
-        :func:`~aeat.domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`.
+        :func:`~domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`.
 """
 
 from __future__ import annotations
@@ -85,7 +85,7 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
     declares a fiscal-residence country, consults the cross-cutting
     :class:`~._convenio.ConvenioAuthority` projected onto the snapshot. On a
     matched override it branches on the typed
-    :class:`~aeat.core.ConvenioOverrideKind`:
+    :class:`~core.ConvenioOverrideKind`:
 
     * ``flat`` replaces the domestic rate outright,
     * ``ceiling`` applies ``min(domestic, treaty)`` so "más favorable" is
@@ -238,7 +238,7 @@ def _resolve_convenio_override(
     """Resolve the treaty override for the declared country + income type, or None.
 
     Hydrates the free-text ``tipo_renta`` casilla value to the closed
-    :class:`~aeat.core.TipoRentaIrnr` enum at this boundary; an unrecognised
+    :class:`~core.TipoRentaIrnr` enum at this boundary; an unrecognised
     value carries no treaty override (the domestic baseline stands).
     """
     if not country:

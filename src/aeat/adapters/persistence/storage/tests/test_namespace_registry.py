@@ -106,6 +106,19 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
 
 
+def test_secure_object_registry_names_m145_communication_record_namespace() -> None:
+    """Modelo 145 local communication records persist through this namespace."""
+    from .. import M145_COMMUNICATION_RECORD_NAMESPACE
+
+    record = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("m145_communication_record")
+
+    assert record == M145_COMMUNICATION_RECORD_NAMESPACE
+    assert record.namespace == "aeat.application.modelo.m145_communication_record"
+    assert record.sensitivity is SensitivityClass.FINANCIAL
+    assert record.object_key_grammar == "m145-communication:{bucket_id}:{communication_record_id}"
+    assert record.scope is StorageNamespaceScope.BUCKET_LOCAL
+
+
 def test_secure_object_registry_names_live_justificante_capture_namespace() -> None:
     """The live justificante-capture verb persists the pulled receipt
     through this bucket-scoped FINANCIAL namespace (live-justificante-reconcile decision).

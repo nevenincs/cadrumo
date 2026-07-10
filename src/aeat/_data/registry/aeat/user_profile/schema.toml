@@ -1,6 +1,6 @@
 [schema]
 id = "aeat.user_profile"
-version = 3
+version = 4
 title = "AEAT user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -515,6 +515,16 @@ model_selectors = ["attribution_entity_socios.share_pct"]
 legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
 
 [[sections.fields]]
+key = "base_imponible_assigned"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit income or base imponible amount attributed to this socio for Modelo 184. It is required because the filing row reports the assigned amount and the resolver must not fabricate it from share_pct without an independently declared entity total."
+model_selectors = ["attribution_entity_socios.base_imponible_assigned"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
 key = "role"
 type = "enum"
 required = true
@@ -524,6 +534,65 @@ description = "Legal member role inside the attribution entity."
 enum_values = ["socio", "comunero", "participe"]
 model_selectors = ["attribution_entity_socios.role"]
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]
+
+[[sections]]
+key = "attribution_received"
+title = "Attribution received from entities"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "entity_nif"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "NIF/CIF of the attribution entity (sociedad civil, comunidad de bienes, herencia yacente) whose income this socio, comunero, or participe receives under the regimen de atribucion de rentas. Socio-side counterpart of attribution_entity_socios: the entity files Modelo 184 in its own workspace and the member records the received share here so the member's own Modelo 100 has a typed, provenance-carrying home for it."
+model_selectors = ["attribution_received.entity_nif"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "entity_name"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Display or legal name of the attribution entity that attributed income to this member."
+model_selectors = ["attribution_received.entity_name"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "share_pct"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Participation percentage attributed to this member by the entity, expressed in the closed interval 0..100."
+minimum = "0"
+maximum = "100"
+model_selectors = ["attribution_received.share_pct"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "base_imponible_attributed"
+type = "money"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit base imponible amount attributed to this member for the filing year, taken from the entity's Modelo 184 output. It is required because the member's Modelo 100 reports the received amount and the value must not be fabricated from share_pct without an independently declared entity total."
+model_selectors = ["attribution_received.base_imponible_attributed"]
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
+
+[[sections.fields]]
+key = "filing_year"
+type = "integer"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Ejercicio (filing year) the attributed base is imputed to, so the member's Modelo 100 for that year folds in the matching share and a later year's attribution stays distinct."
+model_selectors = ["attribution_received.filing_year"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-89"]
 
 [[sections]]
 key = "vivienda_office"
@@ -668,6 +737,86 @@ effective_dated = true
 description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
 legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_iae_epigraph"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IAE epigraph declared for IRPF estimacion objetiva modulos. This is an annual operator fact used to prefill the M131 modulos epigraph input; coefficient tables remain in the modelo registry."
+model_selectors = ["irpf.objective_estimation_modulos_iae_epigraph"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_1_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema."
+model_selectors = ["irpf.objective_estimation_modulos_module_1_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_2_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 2. The slot stores the operator's stable annual unit count only; coefficients and activity labels remain registry-owned."
+model_selectors = ["irpf.objective_estimation_modulos_module_2_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_3_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot."
+model_selectors = ["irpf.objective_estimation_modulos_module_3_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_4_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient."
+model_selectors = ["irpf.objective_estimation_modulos_module_4_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_5_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero."
+model_selectors = ["irpf.objective_estimation_modulos_module_5_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_6_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero."
+model_selectors = ["irpf.objective_estimation_modulos_module_6_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+
+[[sections.fields]]
+key = "objective_estimation_modulos_module_7_units"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero."
+model_selectors = ["irpf.objective_estimation_modulos_module_7_units"]
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
 
 [[sections.fields]]
 key = "special_regime"

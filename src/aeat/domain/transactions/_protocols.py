@@ -8,19 +8,20 @@ layer free of adapter imports while still providing a typed port surface.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ._models import TransactionCatalogue
+from ._models import LedgerDatePartition, TransactionCatalogue
 
 
 @runtime_checkable
 class TransactionCatalogueRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the transaction catalogue.
 
-    Any object that provides ``exists``, ``load``, and ``save`` over a
-    per-bucket :class:`TransactionCatalogue` satisfies this protocol. The
-    concrete secure-object-backed implementation is
-    :class:`TransactionCatalogueRepository`.
+    Any object that provides ``exists``, ``load``, ``load_for_date_range``,
+    ``partition_by_date_range``, and ``save`` over a per-bucket
+    :class:`TransactionCatalogue` satisfies this protocol. The concrete
+    secure-object-backed implementation is :class:`TransactionCatalogueRepository`.
     """
 
     @property
@@ -37,6 +38,38 @@ class TransactionCatalogueRepositoryProtocol(Protocol):
 
         Returns:
             The :class:`TransactionCatalogue` loaded from storage.
+        """
+        ...
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        """Return the persisted catalogue filtered to ``[start, end]`` inclusive.
+
+        Implementations MAY use a non-sensitive routing index to select
+        candidate rows before decrypting, but MUST always return the same
+        result :meth:`load` filtered by filing date would return.
+
+        Args:
+            start: Inclusive lower bound of the filing-date window.
+            end: Inclusive upper bound of the filing-date window.
+        """
+        ...
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        """Split the persisted catalogue into an in-window half and an out-of-window remainder.
+
+        Implementations MAY use a non-sensitive routing index to decide the
+        split without decrypting the out-of-window half, but MUST always
+        return the same in-window transaction set :meth:`load` filtered by
+        filing date would return. They MUST also represent every remaining
+        catalogue transaction (regardless of any other field) either as
+        row-level out-of-window stubs during migration or as the compact
+        count/date-span summary authorized by the latency ADR -- never
+        silently omit one from either half. Summary payloads must carry only
+        plaintext date-index facts, never decrypted transaction fields.
+
+        Args:
+            start: Inclusive lower bound of the filing-date window.
+            end: Inclusive upper bound of the filing-date window.
         """
         ...
 

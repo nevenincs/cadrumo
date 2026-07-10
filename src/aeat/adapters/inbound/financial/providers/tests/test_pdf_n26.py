@@ -39,56 +39,51 @@ from .._detection import detect_provider
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _FIXTURES = FIXTURES_DIR / "financial" / "n26"
+_N26_FIXTURE_PAIRS = (
+    ("n26-savings-2024-06.pdf", "n26-savings-2024-06.expected.json"),
+    ("n26-savings-2025-01.pdf", "n26-savings-2025-01.expected.json"),
+    ("n26-savings-2025-05.pdf", "n26-savings-2025-05.expected.json"),
+)
 
 
 def _load_expected(name: str) -> list[dict[str, object]]:
     return json.loads((_FIXTURES / name).read_text(encoding="utf-8"))
 
 
-@pytest.mark.parametrize(
-    ("fixture_name", "expected_name"),
-    [
-        ("n26-savings-2024-06.pdf", "n26-savings-2024-06.expected.json"),
-        ("n26-savings-2025-01.pdf", "n26-savings-2025-01.expected.json"),
-        ("n26-savings-2025-05.pdf", "n26-savings-2025-05.expected.json"),
-    ],
-)
-def test_pdf_n26_provider_ingests_fixture_rows(
-    fixture_name: str,
-    expected_name: str,
-) -> None:
+def test_pdf_n26_provider_ingests_fixture_rows() -> None:
     """The provider must emit the manually transcribed rows for each fixture."""
-    provider = PdfN26Provider()
-    fixture = _FIXTURES / fixture_name
-    validation = provider.validate_source(fixture)
-    assert validation.is_valid, validation.warnings
-    parsed_rows = tuple(provider.ingest(fixture))
-    expected_rows = _load_expected(expected_name)
-    assert len(parsed_rows) == len(expected_rows)
-    for parsed, expected in zip(parsed_rows, expected_rows, strict=True):
-        transaction = parsed.raw
-        assert transaction.booked_date.isoformat() == expected["booked_date"]
-        expected_value_date = expected["value_date"]
-        assert (
-            transaction.value_date.isoformat() if transaction.value_date is not None else None
-        ) == expected_value_date
-        # The expected JSON carries the bank statement's signed ground truth.
-        # The parser stores the absolute magnitude and lifts the sign into
-        # the authoritative direction at the parse boundary.
-        expected_signed = Decimal(str(expected["amount"]))
-        assert transaction.amount == abs(expected_signed)
-        assert parsed.direction is (
-            TransactionDirection.OUTGOING if expected_signed < Decimal("0") else TransactionDirection.INCOMING
-        )
-        assert transaction.currency == expected["currency"]
-        assert transaction.counterparty == expected["counterparty"]
-        assert transaction.description == expected["description"]
-        assert transaction.provenance.source_row_index == expected["source_row_index"]
-        assert transaction.provenance.source_format.value == "pdf"
-        assert transaction.provider_transaction_id.startswith("n26-pdf-")
-        assert transaction.provider_transaction_id.endswith(f"-{expected['source_row_index']}")
-        assert transaction.raw_fields["statement_period"]
-        assert transaction.raw_fields["description_line"]
+    for fixture_name, expected_name in _N26_FIXTURE_PAIRS:
+        provider = PdfN26Provider()
+        fixture = _FIXTURES / fixture_name
+        validation = provider.validate_source(fixture)
+        assert validation.is_valid, (fixture_name, validation.warnings)
+        parsed_rows = tuple(provider.ingest(fixture))
+        expected_rows = _load_expected(expected_name)
+        assert len(parsed_rows) == len(expected_rows), fixture_name
+        for parsed, expected in zip(parsed_rows, expected_rows, strict=True):
+            transaction = parsed.raw
+            assert transaction.booked_date.isoformat() == expected["booked_date"], fixture_name
+            expected_value_date = expected["value_date"]
+            assert (
+                transaction.value_date.isoformat() if transaction.value_date is not None else None
+            ) == expected_value_date, fixture_name
+            # The expected JSON carries the bank statement's signed ground truth.
+            # The parser stores the absolute magnitude and lifts the sign into
+            # the authoritative direction at the parse boundary.
+            expected_signed = Decimal(str(expected["amount"]))
+            assert transaction.amount == abs(expected_signed), fixture_name
+            assert parsed.direction is (
+                TransactionDirection.OUTGOING if expected_signed < Decimal("0") else TransactionDirection.INCOMING
+            ), fixture_name
+            assert transaction.currency == expected["currency"], fixture_name
+            assert transaction.counterparty == expected["counterparty"], fixture_name
+            assert transaction.description == expected["description"], fixture_name
+            assert transaction.provenance.source_row_index == expected["source_row_index"], fixture_name
+            assert transaction.provenance.source_format.value == "pdf", fixture_name
+            assert transaction.provider_transaction_id.startswith("n26-pdf-"), fixture_name
+            assert transaction.provider_transaction_id.endswith(f"-{expected['source_row_index']}"), fixture_name
+            assert transaction.raw_fields["statement_period"], fixture_name
+            assert transaction.raw_fields["description_line"], fixture_name
 
 
 def test_pdf_n26_provider_rejects_non_n26_pdf(tmp_path: Path) -> None:
@@ -128,27 +123,20 @@ def test_pdf_n26_provider_invalid_pdf_does_not_expose_filename(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "fixture_name",
-    [
-        "n26-savings-2024-06.pdf",
-        "n26-savings-2025-01.pdf",
-        "n26-savings-2025-05.pdf",
-    ],
-)
-def test_detect_provider_identifies_n26_corpus_pdf(fixture_name: str) -> None:
+def test_detect_provider_identifies_n26_corpus_pdf() -> None:
     """detect_provider must return PdfN26Provider for every N26 corpus fixture.
 
     A mis-detection (returning None or a different provider) signals either
     that the detection heuristic is broken or the fixture is not a valid N26
     statement — both are real failures that must surface loudly.
     """
-    fixture = _FIXTURES / fixture_name
-    provider = detect_provider(fixture)
-    assert provider is not None, f"detect_provider returned None for {fixture_name}"
-    assert isinstance(provider, PdfN26Provider), (
-        f"expected PdfN26Provider, got {type(provider).__name__} for {fixture_name}"
-    )
+    for fixture_name, _expected_name in _N26_FIXTURE_PAIRS:
+        fixture = _FIXTURES / fixture_name
+        provider = detect_provider(fixture)
+        assert provider is not None, f"detect_provider returned None for {fixture_name}"
+        assert isinstance(provider, PdfN26Provider), (
+            f"expected PdfN26Provider, got {type(provider).__name__} for {fixture_name}"
+        )
 
 
 # ---------------------------------------------------------------------------

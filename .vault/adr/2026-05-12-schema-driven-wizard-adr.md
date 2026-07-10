@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#schema-driven-wizard'
 date: '2026-05-12'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - "[[2026-05-12-schema-driven-wizard-research]]"
   - "[[2026-05-12-schema-driven-wizard-reference]]"
 ---
 
-# `schema-driven-wizard` adr: `schema-driven-wizard-adr` | (**status:** `accepted — execution-ready`)
+# `schema-driven-wizard` adr: `schema-driven-wizard-adr` | (**status:** `accepted`)
 
 ## Context
 

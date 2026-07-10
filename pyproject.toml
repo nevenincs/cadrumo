@@ -72,6 +72,12 @@ dependencies = [
   # Typer imports Rich at runtime for help/error rendering. Keep the direct
   # pin version-bounded here; application code should not import Rich directly.
   "rich>=14.2.0,<16",
+  # Rust-backed TOML parser for the registry/profile-schema read boundary
+  # (`core/_toml.py`). ~2.4x faster than stdlib tomllib on the ~16k-fragment
+  # registry tree with proven byte-identical output (see
+  # `registry-toml-parser` ADR); zero transitive dependencies, MIT license,
+  # prebuilt wheels including win_amd64.
+  "rtoml>=0.13.0,<1",
   # Persistence
   "sqlalchemy>=2.0.36,<3",
   # CLI
@@ -439,7 +445,7 @@ convention = "google"
 # Bundled test modules colocated under src/aeat/. Docstring (D) rules are
 # audience-scoped out of the test surface (tests are excluded from autodoc
 # and interrogate too).
-"src/aeat/**/tests/**/*.py" = ["S101", "T20", "D"]
+"src/aeat/**/tests/**/*.py" = ["S101", "T20", "D", "E501"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
@@ -459,6 +465,15 @@ convention = "google"
 "dev/packaging/smoke_browser.py" = ["S603"]
 "dev/packaging/smoke_core.py" = ["S603"]
 "dev/packaging/smoke_docker.py" = ["S603"]
+# The release audit-state gate resolves `gh` via `shutil.which` (or accepts an
+# explicit resolved path for tests) before invoking it with a fixed argv;
+# ruff's S603 heuristic cannot see the resolved-executable contract.
+"dev/release/readiness.py" = ["S603"]
+# The gate's own tests invoke a real explicit-path stub executable plus
+# `sys.executable` against a controlled, in-test-authored driver script; no
+# untrusted input reaches subprocess. Long CHANGELOG.md/merge-marker fixture
+# literals cannot wrap without breaking their real-content assertions.
+"dev/release/tests/test_readiness.py" = ["S603", "E501"]
 "dev/quality/quiet.py" = ["S603"]
 "dev/quality/suite.py" = ["S603", "S607"]
 "dev/quality/types.py" = ["S603", "S607"]
@@ -599,12 +614,18 @@ convention = "google"
 "src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
-# The Kent-wall regression gate runs the trusted `sys.executable -m pytest`
+# The acceptance-wall regression gate runs the trusted `sys.executable -m pytest`
 # driver against explicit, catalogue-derived node ids (never untrusted input);
 # ruff's S603 heuristic cannot prove the catalogue-sourced argv is fixed
 # because it is built from a parametrized/loop-derived node id, not a static
 # literal list.
-"src/aeat/tests/test_kent_wall_catalogue.py" = ["S603"]
+"src/aeat/tests/test_acceptance_wall_catalogue.py" = ["S603"]
+# The bundled-root disk-cache cross-session regression proof runs the trusted
+# `sys.executable -m pytest` driver against a node id built from this test's
+# own pid-suffixed scratch-module path (never untrusted input); ruff's S603
+# heuristic cannot prove the argv is fixed because it is derived from a
+# runtime path, not a static literal list.
+"src/aeat/domain/calculations/registry/tests/test_loader_cache_isolation.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
 "src/aeat/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
 # `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
@@ -648,10 +669,7 @@ convention = "google"
 # Rationale-marker ratchets enumerate strings that ruff's S105/S106
 # heuristic flags as hardcoded passwords. They are assertion tokens,
 # not credentials.
-"src/aeat/tests/test_any_return_rationale_markers.py" = ["S105", "S106"]
-"src/aeat/tests/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
 "src/aeat/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
-"src/aeat/tests/test_ratchet_extensions_and_marker_completion.py" = ["S105", "S106"]
 # OAuth / mTLS / clave-pin fixture authoring uses literal credential
 # shape examples (e.g., the example access_token "ya29.fake-bearer"
 # documented in the AEAT auth ADR); they are not real credentials.
@@ -771,6 +789,7 @@ markers = [
   "hex_entrypoint: exercises entrypoints.* command and presentation surfaces",
   "hex_core: exercises core.* foundational cross-cutting utilities",
   "docs: documentation build, stubs, and docstring structure verification",
+  "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────

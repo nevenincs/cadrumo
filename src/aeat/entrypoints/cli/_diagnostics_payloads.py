@@ -3,11 +3,22 @@
 Every declared payload is an :class:`OutputSchema` subclass registered with
 :func:`register_schema` for the local-only run-health diagnostic surface
 carried by :class:`SchemaEnvelope` through :func:`_emit_envelope`. These
-schemas project :class:`~aeat.application.diagnostics_run_health.RunHealthReport`,
-:class:`~aeat.application.diagnostics_run_health.LatencyReport`,
-:class:`~aeat.application.diagnostics_run_health.ErrorsBreakdownReport`, and
-:class:`~aeat.application.diagnostics_run_health.LlmUsageReport` into the CLI
+schemas project :class:`~application.diagnostics_run_health.RunHealthReport`,
+:class:`~application.diagnostics_run_health.LatencyReport`,
+:class:`~application.diagnostics_run_health.ErrorsBreakdownReport`, and
+:class:`~application.diagnostics_run_health.LlmUsageReport` into the CLI
 JSON contract.
+
+See Also:
+    :mod:`~entrypoints.cli._app_diagnostics`
+        CLI transport that populates the local-only diagnostics payloads.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        CLI transport that populates the telemetry status/flush payloads.
+    :mod:`~application.diagnostics_run_health`
+        Application report models mirrored by the run-health payload family.
+    :mod:`~application.diagnostics_telemetry`
+        Application posture/flush models mirrored by the telemetry payload
+        family.
 """
 
 from __future__ import annotations
@@ -18,7 +29,7 @@ from ._schemas import OutputSchema, register_schema
 class LlmRunProviderPayload(OutputSchema):
     """One provider's aggregated local LLM run-timing metrics.
 
-    Mirrors :class:`~aeat.application.diagnostics_run_health.LlmRunProviderMetrics`.
+    Mirrors :class:`~application.diagnostics_run_health.LlmRunProviderMetrics`.
     """
 
     provider: str
@@ -37,7 +48,7 @@ class RunHealthResult(OutputSchema):
     Presents local-only LLM run-timing telemetry (per-provider run counts,
     outcomes, and duration distribution) alongside the persisted-AEAT-session
     staleness probe in one read-only report, both sourced from
-    :func:`~aeat.application.diagnostics_run_health.build_run_health_report`. It
+    :func:`~application.diagnostics_run_health.build_run_health_report`. It
     reports only accounting/timing metadata, never prompt or response content.
     """
 
@@ -60,7 +71,7 @@ class RunHealthResult(OutputSchema):
 class RunRecordPayload(OutputSchema):
     """One individual local LLM run-timing record.
 
-    Mirrors :class:`~aeat.application.diagnostics_run_health.RunRecordView`.
+    Mirrors :class:`~application.diagnostics_run_health.RunRecordView`.
     """
 
     run_id: str
@@ -78,7 +89,7 @@ class RunsListResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics runs``.
 
     Lists individual local LLM run-timing records, most-recent-first, sourced
-    from :func:`~aeat.application.diagnostics_run_health.list_recent_runs`. It
+    from :func:`~application.diagnostics_run_health.list_recent_runs`. It
     reports only accounting/timing metadata, never prompt or response content.
     """
 
@@ -94,7 +105,7 @@ class RunsListResult(OutputSchema):
 class LatencyPercentilesPayload(OutputSchema):
     """Percentile and summary latency statistics for one scope (overall or one provider).
 
-    Mirrors :class:`~aeat.application.diagnostics_run_health.LatencyPercentiles`.
+    Mirrors :class:`~application.diagnostics_run_health.LatencyPercentiles`.
     """
 
     entries: int
@@ -120,7 +131,7 @@ class LatencyResult(OutputSchema):
     Presents P50/P95/P99 (plus min/max/mean) run-duration percentiles overall
     and, unless ``--provider`` scopes the query, broken down per provider.
     Sourced from
-    :func:`~aeat.application.diagnostics_run_health.build_latency_report`. It
+    :func:`~application.diagnostics_run_health.build_latency_report`. It
     reports only accounting/timing metadata, never prompt or response content.
     """
 
@@ -135,7 +146,7 @@ class LatencyResult(OutputSchema):
 class ErrorKindCountPayload(OutputSchema):
     """One provider/``error_kind`` failure count.
 
-    Mirrors :class:`~aeat.application.diagnostics_run_health.ErrorKindCount`.
+    Mirrors :class:`~application.diagnostics_run_health.ErrorKindCount`.
     """
 
     error_kind: str
@@ -149,7 +160,7 @@ class ErrorsBreakdownResult(OutputSchema):
 
     Presents a breakdown of failed LLM runs by provider and ``error_kind``,
     sorted by descending failure count. Sourced from
-    :func:`~aeat.application.diagnostics_run_health.build_error_breakdown`. It
+    :func:`~application.diagnostics_run_health.build_error_breakdown`. It
     reports only accounting/timing metadata, never prompt or response content.
     """
 
@@ -165,7 +176,7 @@ class ErrorsBreakdownResult(OutputSchema):
 class LlmUsageModelPayload(OutputSchema):
     """One provider's per-model aggregated run-usage metrics.
 
-    Mirrors :class:`~aeat.application.diagnostics_run_health.LlmUsageModelMetrics`.
+    Mirrors :class:`~application.diagnostics_run_health.LlmUsageModelMetrics`.
     """
 
     model: str
@@ -182,7 +193,7 @@ class LlmUsageModelPayload(OutputSchema):
 class LlmUsageProviderPayload(OutputSchema):
     """One provider's aggregated run-usage metrics, plus its per-model breakdown.
 
-    Mirrors :class:`~aeat.application.diagnostics_run_health.LlmUsageProviderMetrics`.
+    Mirrors :class:`~application.diagnostics_run_health.LlmUsageProviderMetrics`.
     """
 
     provider: str
@@ -203,9 +214,9 @@ class LlmUsageResult(OutputSchema):
 
     Presents a run-count/duration/success-rate usage summary grouped by
     provider and, within each provider, by model. Sourced from
-    :func:`~aeat.application.diagnostics_run_health.build_llm_usage_report`,
+    :func:`~application.diagnostics_run_health.build_llm_usage_report`,
     which projects the same recorded
-    :class:`~aeat.adapters.outbound.llm.LLMRunRecord` telemetry every sibling
+    :class:`~adapters.outbound.llm.LLMRunRecord` telemetry every sibling
     diagnostics verb reads -- no new capture or storage path. That record
     carries no token counts, so this is a run/timing/success-rate summary
     rather than a token-usage summary; it reports only accounting/timing
@@ -227,10 +238,10 @@ class LlmUsageResult(OutputSchema):
 class TelemetryStatusResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics telemetry status``.
 
-    Mirrors :class:`~aeat.application.diagnostics_telemetry.TelemetryStatusReport`.
+    Mirrors :class:`~application.diagnostics_telemetry.TelemetryStatusReport`.
     Default-off, consent-gated remote telemetry posture
     (``2026-07-04-remote-telemetry-adr``); this verb never emits anything, it
-    only reports the currently-effective :class:`~aeat.core.config.Settings`
+    only reports the currently-effective :class:`~core.config.Settings`
     fields plus the derived verdict a fully-acknowledged invocation would
     currently receive.
     """
@@ -245,9 +256,9 @@ class TelemetryStatusResult(OutputSchema):
 class TelemetryPayloadPreviewPayload(OutputSchema):
     """The exact allowlisted event a flush would transmit.
 
-    Mirrors :class:`~aeat.core.telemetry.TelemetryEventPayload` field-for-field.
-    This IS the whole transmission allowlist: there is no other field a flush
-    could send.
+    Mirrors :class:`~core.telemetry.TelemetryEventPayload` field-for-field.
+    This IS the whole transmission allowlist: there is no other field
+    :func:`~application.diagnostics_telemetry.flush_telemetry` could send.
     """
 
     schema_version: int
@@ -264,7 +275,7 @@ class TelemetryPayloadPreviewPayload(OutputSchema):
 class TelemetryFlushResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics telemetry flush``.
 
-    Mirrors :class:`~aeat.application.diagnostics_telemetry.TelemetryFlushPreview`.
+    Mirrors :class:`~application.diagnostics_telemetry.TelemetryFlushPreview`.
     ``dry_run=True`` never performs a network call regardless of ``sent``;
     ``sent`` reports whether a real (non-dry-run) invocation actually handed
     the payload to the HTTP sink (``gate_permits and endpoint_configured``).

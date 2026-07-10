@@ -93,7 +93,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _numbers_by_section(result: dict) -> dict[str, set[str]]:
+def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, set[str]]:
     return {
         section: {row["number"] for row in result[section]}
         for section in ("required_manual", "optional_manual", "ledger_derivable", "profile_derivable")
@@ -103,9 +103,9 @@ def _numbers_by_section(result: dict) -> dict[str, set[str]]:
 def test_requires_classifies_m130_casillas_against_live_registry_no_active_profile() -> None:
     """``requires`` for Modelo 130 matches the registry's own input_kind/source split.
 
-    No active profile is set: Kent has not created a taxpayer profile yet, but
-    the checklist must still tell him what data he needs from the registry
-    alone (required/optional manual casillas, ledger-derivable casillas).
+    No active profile is set: the operator has not created a taxpayer profile
+    yet, but the checklist must still tell them what data is needed from the
+    registry alone (required/optional manual casillas, ledger-derivable casillas).
     """
     expected = _registry_derived_expectation(
         modelo=_M130_MODELO,
@@ -191,7 +191,7 @@ def _partial_m100_profile() -> Iterator[None]:
 
     Mirrors ``test_bindings_list_missing_filter.py``'s partial-profile
     pattern: real facts persisted through the workflow state repository, not
-    a mock or a stub.
+    a mock or a placeholder.
     """
     with profile_create_storage_span("22222222-2222-4222-8222-222222222222"):
         workflow_state_repository().update(
@@ -218,8 +218,8 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     status, spouse identity, descendant/ascendant rows, ...). The seeded
     profile resolves only a proper subset (tax residence, declaration type,
     birth date, minor children count); every other profile-derivable binding
-    must be reported as unresolved so Kent knows exactly which coefficient he
-    still owes -- never a silent gap.
+    must be reported as unresolved so the operator knows exactly which
+    coefficient is still owed -- never a silent gap.
     """
     resolved = {
         "renta-2025-profile-tax-residence-ccaa",

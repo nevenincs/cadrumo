@@ -1,59 +1,41 @@
-"""Anti-regression structural gate for the workflow declaration-pointer surface (DB-05).
+"""Anti-regression tests for the workflow declaration-pointer surface (DB-05).
 
-Asserts that ``declaration_key`` and ``update_declaration_pointer`` each have
-exactly one *production* definition across the :mod:`aeat.application.workflow`
-package. The duplicate ``update_declaration_pointer`` that lived in ``_engine.py``
-was collapsed onto the canonical ``_models.py`` definition; this gate
-keeps the duplication from silently returning. It also pins the typed key
-contract: ``declaration_key`` stores the filing year and bare registry token
-as separate key segments, never as a combined token such as ``2025Q1``.
+The public facade and engine must use the canonical ``_models.py`` helpers,
+and ``declaration_key`` stores the filing year and bare registry token as
+separate key segments, never as a combined token such as ``2025Q1``.
 
-Real-behavior AST walk over the package source — no mocks, no stubs.
+See Also:
+    :func:`~application.workflow.declaration_key`
+        Public facade helper that must remain the single declaration-key entry
+        point for callers.
+    :func:`~application.workflow._models.declaration_key`
+        Canonical model helper whose separated period identity is under test.
+    :func:`~application.workflow._models.update_declaration_pointer`
+        Pointer upsert helper that writes keys through the same canonical path.
+    :class:`~application.workflow.WorkflowState`
+        Immutable state record whose ``declarations`` map is keyed by
+        ``declaration_key``.
+    :class:`~core.Period`
+        Typed period identity required instead of combined string period tokens.
 """
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
 from typing import Any, cast
 
 import pytest
 
 from ....core import Period
-from .. import WorkflowState, declaration_key, update_declaration_pointer
+from .. import WorkflowState, _engine, _models, declaration_key, update_declaration_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_WORKFLOW_DIR = Path(__file__).parents[1]
 
-
-def _production_def_count(name: str) -> dict[str, int]:
-    """Return ``{filename: count}`` of ``def <name>`` across production package modules.
-
-    Test modules (``test_*.py``) and ``conftest.py`` are excluded so the gate
-    measures production duplication only.
-    """
-    hits: dict[str, int] = {}
-    for path in sorted(_WORKFLOW_DIR.glob("*.py")):
-        if path.name.startswith("test_") or path.name == "conftest.py":
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        count = sum(
-            1
-            for node in ast.walk(tree)
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
-        )
-        if count:
-            hits[path.name] = count
-    return hits
-
-
-def test_workflow_declaration_pointer_surface_has_exactly_one_definition() -> None:
-    """DB-05: declaration-pointer helpers live in exactly one production module."""
-    for name in ("declaration_key", "update_declaration_pointer"):
-        hits = _production_def_count(name)
-        total = sum(hits.values())
-        assert total == 1, f"expected exactly one {name} definition, found {total}: {hits}"
+def test_workflow_declaration_pointer_surface_uses_canonical_helpers() -> None:
+    """DB-05: public and engine call sites use the canonical model helpers."""
+    assert declaration_key is _models.declaration_key
+    assert update_declaration_pointer is _models.update_declaration_pointer
+    assert _engine.declaration_key is declaration_key
 
 
 def test_declaration_key_uses_separated_period_identity() -> None:

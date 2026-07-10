@@ -1,15 +1,27 @@
-"""Real-behavior tests for :mod:`aeat.application.diagnostics_telemetry`.
+"""Real-behavior tests for :mod:`~application.diagnostics_telemetry`.
 
 Exercises the status report and the dry-run-safe flush composition against
-real :class:`~aeat.core.config.Settings` and a real
-:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder` (real encrypted
+real :class:`~core.config.Settings` and a real
+:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` (real encrypted
 secure-object persistence, no mocks). Proves the default-off posture, that
 ``build_telemetry_flush_preview`` never performs a network call regardless of
-posture, and that :func:`~aeat.application.diagnostics_telemetry.flush_telemetry`
+posture, and that :func:`~application.diagnostics_telemetry.flush_telemetry`
 composes the real core gate/sink primitives rather than re-implementing them
 (``composition-service-no-parallel-write-path``): a real loopback HTTP server
 proves a fully-permitted flush actually transmits the exact previewed payload,
 and a refused-consent flush never dials out.
+
+See Also:
+    :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
+        Application service that reports the deployment telemetry posture.
+    :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
+        Dry-run-safe payload builder shared by preview and send paths.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed allowlisted payload shape asserted by the tests.
+    :class:`~core.telemetry.TelemetryTier`
+        Closed opt-in tier enum used to exercise the consent gate.
+    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
+        CLI transport covered by the sibling end-to-end telemetry tests.
 """
 
 from __future__ import annotations

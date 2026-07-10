@@ -35,8 +35,13 @@ def _profile() -> TaxpayerProfile:
 def test_agenda_horizon_must_be_positive() -> None:
     """A non-positive horizon is refused at the service boundary."""
 
-    with pytest.raises(OverviewAgendaError, match=r"horizon_days must be positive"):
+    with pytest.raises(OverviewAgendaError) as exc_info:
         build_overview_agenda(_profile(), as_of=date(2026, 1, 15), horizon_days=0)
+    # The refusal carries a typed translated_message key + context, not a raw
+    # args[0] string; assert the locale-independent identity.
+    assert exc_info.value.translated_message == "application.overview.errors.horizon_days_not_positive"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["horizon_days"] == 0
 
 
 def test_agenda_returns_typed_envelope_with_required_fields() -> None:

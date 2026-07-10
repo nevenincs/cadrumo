@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 
+from ....core import Modelo
 from ._schema import ModeloRevision
 
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
@@ -57,7 +58,7 @@ def validate_application_link_closure(
     """
     surfaces = {link.surface for link in revision.application_links}
     communication_surfaces = surfaces.intersection(_COMMUNICATION_SURFACES)
-    modelo_requires_communication = modelo_id == "145"
+    modelo_requires_communication = modelo_id == Modelo.M145.value
     failures = _application_link_surface_failures(
         scope,
         revision,

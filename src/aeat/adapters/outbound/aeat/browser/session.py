@@ -4,9 +4,9 @@
 application auth providers and live Sede readers. It creates one
 Playwright ``BrowserContext`` at a time from a :class:`Profile`, optional
 persisted storage state, and an optional
-:class:`aeat.adapters.outbound.aeat.auth.BrowserContextProvisioner`.
+:class:`adapters.outbound.aeat.auth.BrowserContextProvisioner`.
 Certificate auth passes a
-:class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner` so
+:class:`adapters.outbound.aeat.auth.CertificateContextProvisioner` so
 the AEAT origin receives the configured PKCS#12 certificate at context
 construction time.
 
@@ -102,7 +102,7 @@ class BrowserSession:
         When ``provisioner`` is supplied, it can inject auth-provider-
         specific ``browser.new_context(...)`` kwargs and tag the
         resulting context after construction. Certificate auth uses this
-        hook through :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`;
+        hook through :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`;
         Cl@ve Móvil usually passes only persisted in-memory storage state.
 
         Args:

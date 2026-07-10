@@ -591,11 +591,13 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
         )
 
     with pytest.raises(ValidationError, match=r"legal_refs"):
-        RegistryTopicProjection.model_validate({
-            "slug": "iva-regime",
-            "title": "IVA",
-            "body": "IVA regime",
-        })
+        RegistryTopicProjection.model_validate(
+            {
+                "slug": "iva-regime",
+                "title": "IVA",
+                "body": "IVA regime",
+            }
+        )
 
     with pytest.raises(ValidationError, match=r"title"):
         RegistryTopicProjection(

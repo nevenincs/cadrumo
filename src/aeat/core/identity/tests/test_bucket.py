@@ -1,9 +1,19 @@
-"""Tests for :data:`aeat.core.identity.BucketId`.
+"""Tests for :data:`~core.identity.BucketId`.
 
 Covers the four boundary properties the alias contract pins: a valid
 value constructs cleanly, an empty value is rejected, a value longer
 than 128 characters is rejected, and surrounding whitespace is stripped
 on construction.
+
+See Also:
+    :mod:`~core.identity._bucket`
+        Pydantic-ready bucket identity alias under test.
+    :class:`~application.workflow.ProfileBucketPointer`
+        Workflow-facing pointer that carries the bucket identity and mutable
+        operator label separately.
+    :mod:`~application.bucket_maintenance`
+        Application service layer that composes bucket lifecycle operations
+        without owning the identity constraint.
 """
 
 from __future__ import annotations
@@ -20,17 +30,27 @@ class _Container(BaseModel):
     bucket_id: BucketId
 
 
-def test_bucket_id_constraint_accepts_valid_values_and_rejects_invalid_values() -> None:
-    valid_cases = (
-        ("profile-7b9c-bucket", "profile-7b9c-bucket"),
-        ("x" * 128, "x" * 128),
-        ("  profile-bucket  ", "profile-bucket"),
-    )
+@pytest.mark.parametrize(
+    ("bucket_id", "expected"),
+    (
+        pytest.param("profile-7b9c-bucket", "profile-7b9c-bucket", id="label"),
+        pytest.param("x" * 128, "x" * 128, id="max-length"),
+        pytest.param("  profile-bucket  ", "profile-bucket", id="trimmed"),
+    ),
+)
+def test_bucket_id_constraint_accepts_valid_values(bucket_id: str, expected: str) -> None:
+    container = _Container(bucket_id=bucket_id)
+    assert container.bucket_id == expected
 
-    for bucket_id, expected in valid_cases:
-        container = _Container(bucket_id=bucket_id)
-        assert container.bucket_id == expected
 
-    for bucket_id in ("", "x" * 129, "   "):
-        with pytest.raises(ValidationError):
-            _Container(bucket_id=bucket_id)
+@pytest.mark.parametrize(
+    "bucket_id",
+    (
+        pytest.param("", id="empty"),
+        pytest.param("x" * 129, id="too-long"),
+        pytest.param("   ", id="blank-after-trim"),
+    ),
+)
+def test_bucket_id_constraint_rejects_invalid_values(bucket_id: str) -> None:
+    with pytest.raises(ValidationError):
+        _Container(bucket_id=bucket_id)
