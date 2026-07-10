@@ -3,12 +3,22 @@ tags:
   - '#plan'
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-07-08'
+modified: '2026-07-10'
 tier: L2
 related:
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
   - '[[2026-07-08-mcp-protocol-hardening-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `mcp-protocol-hardening` plan
 
@@ -44,9 +54,9 @@ Move the destructive, idempotent, handoff, live-write, and open-world axes from 
 
 Keep structuredContent the typed summary and move bulk provenance and evidence arrays to resource_link URIs resolved by the resource read handlers, with output schemas updated in lock-step and a size-budget check (ADR H4).
 
-- [ ] `P04.S14` - Add resource templates and read handlers for the bulk payload classes (calculation observations, evidence rows, corpus excerpts) resolved from persisted state; `src/aeat/entrypoints/mcp/_resources.py`.
-- [ ] `P04.S15` - Emit resource_link content items in place of inlined bulk arrays on the identified verbs while keeping structuredContent the typed summary; `src/aeat/entrypoints/mcp/_server.py`.
-- [ ] `P04.S16` - Update the affected per-verb output schemas in lock-step with the thinned payload shapes; `src/aeat/entrypoints/mcp/_tools.py`.
+- [x] `P04.S14` - Add resource templates and read handlers for the bulk payload classes (calculation observations, evidence rows, corpus excerpts) resolved from persisted state; `src/aeat/entrypoints/mcp/_resources.py`.
+- [x] `P04.S15` - Emit resource_link content items in place of inlined bulk arrays on the identified verbs while keeping structuredContent the typed summary; `src/aeat/entrypoints/mcp/_server.py`.
+- [x] `P04.S16` - Update the affected per-verb output schemas in lock-step with the thinned payload shapes; `src/aeat/entrypoints/mcp/_tools.py`.
 - [x] `P04.S17` - Add the structured-summary size-budget conformance check flagging verbs over budget; `src/aeat/entrypoints/mcp/tests/test_result_size_budget.py`.
 
 ### Phase `P05` - Declared protocol boundaries
