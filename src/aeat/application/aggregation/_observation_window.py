@@ -17,7 +17,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
+
+from pydantic import BaseModel
 
 from ...adapters.persistence.storage import safe_repository_id
 from ...core import Period
@@ -35,8 +37,8 @@ class _WindowKeyedPayload(Protocol):
     period: Period
 
 
-def replace_observation_window[ObservationT](
-    repository: SecureBoundRepository[_WindowKeyedPayload],
+def replace_observation_window[ObservationT, PayloadT: BaseModel](
+    repository: SecureBoundRepository[PayloadT],
     *,
     modelo: str,
     filing_year: int,
@@ -59,10 +61,11 @@ def replace_observation_window[ObservationT](
     safe_repository_id(modelo, context="modelo")
     when = captured_at if captured_at is not None else now()
     for payload in tuple(repository.iter_records()):
+        window_payload = cast(_WindowKeyedPayload, payload)
         if (
-            payload.modelo == modelo
-            and payload.filing_year == filing_year
-            and payload.period.registry_token == period.registry_token
+            window_payload.modelo == modelo
+            and window_payload.filing_year == filing_year
+            and window_payload.period.registry_token == period.registry_token
         ):
             repository.delete(repository.extract_identifier(payload))
     for observation in observations:
