@@ -12,6 +12,7 @@ related:
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
   - '[[2026-07-09-m210-irnr-phase-2-engine-adr]]'
+  - '[[2026-07-10-m210-irnr-phase-2-engine-adr]]'
 ---
 
 
@@ -35,7 +36,7 @@ Model agrupacion anual as period/deadline/predicate machinery, not a new aggrega
 
 - [x] `W01.P02.S04` - add the M210 period token `0A` (agrupacion anual) to the canonical period grammar scoped to M210, resolved through the single `Period.contains` boundary authority; `src/aeat/domain/period.py`.
 - [x] `W01.P02.S05` - declare the M210 plazo windows as REGISTRY deadline_windows TOML (grounded in the bundled CONSOLIDATED Orden EHA/3316/2010 art 5, in vigor 24/06/2026 - amended by HAC/56/2024 art 4.2 + HAC/623/2026 art 1.2), NOT hand-coded in the read-only _plazo.py resolver. CURRENT LAW (supersedes the stale HAC/56/2024 January wording the earlier spec carried): a-ingresar general = 20 primeros dias de abril/julio/octubre/enero por el trimestre natural anterior (period 1T-4T); `arrendamiento a-ingresar = 20 primeros dias de ABRIL del ano siguiente; cuota cero = 1-20 enero; a devolver = desde el 1 de febrero (4 anos); imputadas tipo 02 = presentacion todo el ano natural siguiente (1 enero-31 diciembre; la domiciliacion es 1 abril-23 diciembre). Only the a-ingresar-general quarterly (1T-4T) is a clean (modelo,period) window and is built now; the resultado/tipo-dependent annual plazos are DEFERRED to a resultado/tipo-keyed deadline ADR addendum (a period token cannot express a computed resultado or tipo). period_selector widen (1T-4T) also deferred - pinned EVENT-N by test_modelo_210_registry.py:110; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/ + src/aeat/_data/registry/aeat/legal/irnr.toml + src/aeat/_data/registry/aeat/modelos/210/revisions/2025/application_links/`.
-- [ ] `W01.P02.S06` - Defer grouping-validity predicates until an ADR-backed M210 grouped-renta row contract and row-set predicate evaluator exist; `the fixed-box layout does not supply that model.; `src/aeat/domain/modelos + src/aeat/application/modelo`.
+- [ ] `W01.P02.S06` - Implement the accepted M210 grouped-renta detail-row contract and registry row-set verification for agrupacion 0A, including the code-35 payer exception and no-offset rule; `src/aeat/domain/modelos + src/aeat/application/modelo`.
 
 ### Phase `W01.P03` - Slice C: full casilla schema (fetch-gated)
 
@@ -56,11 +57,11 @@ Defence-in-depth layer for the source_jurisdiction axis that lands once both the
 
 ### Phase `W02.P05` - M210 IRNR base imponible scope filter
 
-Apply the TRLIRNR Art 25.1 base-scope rule at the M210 aggregation surface: only rows whose source_jurisdiction is `"ES"` enter the IRNR base imponible. Foreign-source rows on a non-resident profile are a category error at the CLI boundary (refused by S384's `_resolve_source_jurisdiction`) but the aggregation engine must still defend the contract for catalogues imported before the CLI gate landed, for catalogues set up through a future API surface, and for the rare legitimate case where a non-resident operator has staged a foreign-source row as informational provenance (audit trail, never as IRNR base). The filter is provenance-respecting: foreign-source rows are NOT silently dropped from the catalogue read; they are excluded from the base sum with a typed `IrnrAggregationIssueReason.FOREIGN_SOURCE_OUT_OF_SCOPE` finding that carries the transaction id and the original jurisdiction code so the operator sees what was excluded and why.
+Project explicitly M210-classified, Spanish-source transaction rows through one registry-owned gross-income binding; surface foreign, unresolved, and incomplete rows as typed provenance-bearing issues before aggregation.
 
-- [ ] `W02.P05.S10` - Defer M210 source-jurisdiction provenance pass-through until an approved M210 ledger base-ingestion and aggregation binding design exists; `the current engine accepts manual base inputs.; `src/aeat/application/aggregation`.
-- [ ] `W02.P05.S11` - Defer the M210 foreign-source classifier until the approved ledger base-ingestion and aggregation binding design supplies per-row observations.; `src/aeat/application/aggregation`.
-- [ ] `W02.P05.S12` - Defer the M210 source-scope anti-tautology test until the approved ledger aggregation classifier exists.; `src/aeat/application/aggregation/tests/test_irnr_aggregation.py`.
+- [ ] `W02.P05.S10` - Add the accepted M210 IRNR ledger binding source and registry selector for the gross-income target, with exclusive source ownership; `src/aeat/core/aggregation.py + src/aeat/_data/registry/aeat/modelos/210`.
+- [ ] `W02.P05.S11` - Implement explicit persisted M210 transaction classification plus the Spanish-source classifier and resolver, with typed foreign, unresolved, and incomplete-classification issues; `src/aeat/domain/transactions + src/aeat/application/aggregation`.
+- [ ] `W02.P05.S12` - Add secure-store behavioural tests proving ES-only M210 aggregation, retained provenance, and source-jurisdiction/classification mutation outcomes; `src/aeat/application/aggregation/tests`.
 
 ### Phase `W02.P06` - Beckham M151 IRPF base segregation gate
 
@@ -80,10 +81,10 @@ The cross-domain-continuity decomposition lands the S378 `implies_nonzero` opera
 
 Two new issue-reason locale keys, populated via `python -m aeat.locales scaffold` + per-locale `set` per the cross-domain-continuity S383b / S384b pattern. Refusal/issue messages must route through `tr()` per G3; never hand-edit yml structure.
 
-- [ ] `W02.P08.S17` - Defer the M210 foreign-source issue locale key until the approved M210 aggregation classifier exists; `M151 issues use typed free-text details and require no locale key.; `src/aeat/locales`.
+- [ ] `W02.P08.S17` - Localize the accepted M210 source-ingestion issue reasons through the locale CLI and route calculate-time diagnostics through the canonical translation surface; `src/aeat/locales + src/aeat/application/aggregation`.
 
 ### Phase `W02.P09` - cross-domain-continuity follow-up close
 
 Once W02.P01 through W02.P04 land, close cross-domain-continuity task #62 (deferred S385b) and update the source-jurisdiction-axis-adr Consequences section to record the deferral closure with the W02 commit SHAs.
 
-- [ ] `W02.P09.S18` - Defer cross-domain task #62 closure and the ADR consequence update until the M210 source-scope aggregation classifier is implemented.; `.vault/adr/2026-05-27-source-jurisdiction-axis-adr.md`.
+- [ ] `W02.P09.S18` - Close cross-domain task #62 and update the source-jurisdiction ADR consequences with the verified M210 implementation commit SHAs; `.vault/adr/2026-05-27-source-jurisdiction-axis-adr.md`.
