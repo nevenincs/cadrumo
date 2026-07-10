@@ -88,6 +88,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from ._profile_repository import TAX_ID_FACT_PATH
+
 from ...core.identity import ProfileId
 from ._language_resolver import register_language_resolver as _register_language_resolver
 
