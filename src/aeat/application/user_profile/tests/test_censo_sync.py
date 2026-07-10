@@ -86,14 +86,37 @@ def test_service_refuses_blank_bucket_id_with_translated_error(secure_store: Sec
 def test_refresh_captures_active_snapshot(secure_store: SecureObjectRepository) -> None:
     service = _service(secure_store)
 
-    snapshot = service.refresh_censo(
+    outcome = service.refresh_censo(
         profile_id="11111111-1111-4111-8111-111111111111",
         source_url=_G313,
         fact_source=_facts,
     )
 
+    snapshot = outcome.snapshot
     assert snapshot.state is SnapshotLifecycleState.ACTIVE
     assert snapshot.censo_facts["censo.establecimiento_type"] == "propio"
+    assert outcome.dropped_fields == ()
+
+
+def test_refresh_reports_only_fields_dropped_from_prior_active_snapshot(secure_store: SecureObjectRepository) -> None:
+    service = _service(secure_store)
+    profile_id = "11111111-1111-4111-8111-111111111111"
+    service.refresh_censo(profile_id=profile_id, source_url=_G313, fact_source=_facts)
+
+    outcome = service.refresh_censo(
+        profile_id=profile_id,
+        source_url=_G313,
+        fact_source=lambda: {
+            "censo.establecimiento_type": "arrendado",
+            "vivienda_office.total_m2": "120.00",
+        },
+    )
+
+    assert outcome.dropped_fields == (
+        "censo.activity_start_date",
+        "censo.elected_withholding_pct",
+        "vivienda_office.office_m2",
+    )
 
 
 def test_refresh_with_production_factory_enrolls_censo_event(secure_store: SecureObjectRepository) -> None:
@@ -105,7 +128,7 @@ def test_refresh_with_production_factory_enrolls_censo_event(secure_store: Secur
         events=BucketEventHistoryRepository(objects=secure_store),
     )
 
-    snapshot = service.refresh_censo(
+    outcome = service.refresh_censo(
         profile_id="11111111-1111-4111-8111-111111111111",
         source_url=_G313,
         fact_source=_facts,
@@ -116,7 +139,7 @@ def test_refresh_with_production_factory_enrolls_censo_event(secure_store: Secur
     assert len(events) == 1
     assert events[0].bucket_id == _BUCKET_ID
     assert events[0].object_id == "11111111-1111-4111-8111-111111111111"
-    assert events[0].payload["snapshot_id"] == snapshot.snapshot_id
+    assert events[0].payload["snapshot_id"] == outcome.snapshot.snapshot_id
 
 
 def test_refresh_refuses_when_sede_returns_no_facts(secure_store: SecureObjectRepository) -> None:
@@ -134,14 +157,14 @@ def test_show_returns_latest_active(secure_store: SecureObjectRepository) -> Non
 
     shown = service.show_censo(profile_id="11111111-1111-4111-8111-111111111111")
 
-    assert shown.snapshot_id == captured.snapshot_id
+    assert shown.snapshot_id == captured.snapshot.snapshot_id
 
 
 def test_show_refuses_explicit_snapshot_for_another_profile(secure_store: SecureObjectRepository) -> None:
     service = _service(secure_store)
     other = service.refresh_censo(
         profile_id="44444444-4444-4444-8444-444444444444", source_url=_G313, fact_source=_facts
-    )
+    ).snapshot
 
     with pytest.raises(CensoNotAvailableError) as exc_info:
         service.show_censo(profile_id="11111111-1111-4111-8111-111111111111", snapshot_id=other.snapshot_id)

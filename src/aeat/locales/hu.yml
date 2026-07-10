@@ -3090,6 +3090,7 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+        dropped_fields_notice: 'Az AEAT censo mar nem tartalmaz olyan mezoket, amelyek a legutobbi pillanatfelvetelben szerepeltek: {dropped_fields}. Ha nem valtoztattad meg es nem szuntetted meg ezeket a bejegyzeseket, elofordulhat, hogy reszleges letoltes tortent: futtasd ujra a censo letoltest, vagy add meg ismet az ertekeket; az otthoni iroda levonasi aranya nem biztos, hogy feloldodik.'
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
