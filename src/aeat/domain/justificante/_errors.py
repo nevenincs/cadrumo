@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import cast
 
 from ...core.errors import AeatError
 
@@ -66,7 +67,8 @@ class PdfExtractionCoverageMixin:
             coverage: Fraction of required targets successfully extracted,
                 or ``None`` when the error is not a coverage failure.
         """
-        super().__init__(
+        error_base = cast(AeatError, super())
+        error_base.__init__(
             message,
             context=context,
             suggestion=suggestion,
