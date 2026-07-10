@@ -8,7 +8,17 @@ related:
   - "[[2026-07-10-censo-g313-launcher-fix-research]]"
 ---
 
-# `censo-g313-launcher-fix` adr: `re-point censo read to the representation-gated Modelo 036 ZUL and re-ground the parser` | (**status:** `proposed`)
+# `censo-g313-launcher-fix` adr: `re-point censo read to the representation-gated Modelo 036 ZUL and re-ground the parser` | (**status:** `superseded`)
+
+> **Superseded 2026-07-11 by `2026-07-11-censo-operator-manual-enrolment-adr`.**
+> An authorized Fable architecture pass (on operator delegation) rejected this
+> ADR's chosen approach: the P02.S04 capture proved that reading census data
+> requires operating AEAT's "Censos WEB" *modification* ZKoss tool, which
+> `aeat-safety-legal-gates` prohibits (a read that is one accidental submit from
+> mutating census state is a live-write path with extra steps). The ruling is
+> Option 4 — retire the live censo scrape; censal facts become operator-manual;
+> the calendar's `censo.enrolment_unverified` posture is the honest end state.
+> This ADR and its L2 fix plan are closed by supersession.
 
 ## Problem Statement
 

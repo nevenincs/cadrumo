@@ -46,6 +46,16 @@ Prove the fix with a recorded-navigation regression and one operator-run live pu
 
 ## Description
 
+**CLOSED BY SUPERSESSION 2026-07-11.** After P01 (done) and P02.S04 (open,
+authenticated ZK capture), an authorized Fable architecture pass ruled that
+reading census data requires operating AEAT's "Censos WEB" *modification* tool,
+which `aeat-safety-legal-gates` prohibits. The direction changed to Option 4 —
+retire the live censo scrape; censal facts are operator-manual — recorded in
+`2026-07-11-censo-operator-manual-enrolment-adr`, which supersedes this plan's
+ADR. P02.S02/S03/S05 and P03.S06/S07 remain unchecked deliberately: they are not
+abandoned but replaced by the retirement work under the successor ADR. P01.S01
+and the partial P02.S04 exec records stand as the evidentiary anchors.
+
 Fix the outbound censo read defect. P01 (executed 2026-07-10 under a live
 authenticated session) proved the configured launcher `/wlpl/BUGC-JDIT/MdcAcceso`
 returns HTTP 404 — the premature-capture hypothesis was falsified. The real

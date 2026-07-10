@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#censo-g313-launcher-fix`.
 
 ### adr
 
-- `2026-07-10-censo-g313-launcher-fix-adr` - `censo-g313-launcher-fix` adr: `re-point censo read to the representation-gated Modelo 036 ZUL and re-ground the parser` | (**status:** `proposed`)
+- `2026-07-10-censo-g313-launcher-fix-adr` - `censo-g313-launcher-fix` adr: `re-point censo read to the representation-gated Modelo 036 ZUL and re-ground the parser` | (**status:** `superseded`)
 
 ### exec
 
