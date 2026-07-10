@@ -201,7 +201,7 @@ class CensoSyncService:
         source_url: str,
         fact_source: CensoFactSource,
     ) -> CensoRefreshOutcome:
-        """Fetch fresh censo facts, capture them as the new ACTIVE snapshot, and return the :class:`CensoRefreshOutcome`.
+        """Capture fresh censo facts as the new ACTIVE snapshot and return the :class:`CensoRefreshOutcome`.
 
         The outcome carries the captured :class:`CensoSnapshot` plus the
         set of censo paths the prior ACTIVE snapshot carried that the new
