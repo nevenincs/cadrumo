@@ -9,9 +9,6 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
-
 # Localize the accepted M210 source-ingestion issue reasons through the locale CLI and route calculate-time diagnostics through the canonical translation surface
 
 ## Scope
@@ -19,7 +16,6 @@ related:
 - `src/aeat/locales + src/aeat/application/aggregation`
 
 ## Description
-
 
 - Add M210 source-classification diagnostics, source-mode errors, and CLI option help through `aeat.locales`.
 - Route the aggregation and calculation errors through the canonical `tr()` translation surface.
@@ -30,6 +26,5 @@ related:
 `ca`, `en`, `es`, and `hu` locale scaffold and audit both pass. The CLI exposes localized M210 ledger-classification and gross-income-source help. Landed in `8f5f690ed0`.
 
 ## Notes
-
 
 Unrelated catalogue changes remained unstaged and are not part of this delivery.
