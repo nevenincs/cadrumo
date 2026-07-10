@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#arch-remediation-registry-format'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
+  - '[[2026-07-06-arch-remediation-registry-format-research]]'
 ---
-
 # `arch-remediation-registry-format` adr: `registry revision format convergence: fragmented layout as the single authoring format` | (**status:** `accepted`)
 
 ## Problem Statement

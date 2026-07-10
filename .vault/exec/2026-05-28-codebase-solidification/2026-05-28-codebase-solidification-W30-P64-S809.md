@@ -3,44 +3,11 @@ tags:
   - '#exec'
   - '#codebase-solidification'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S809'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace codebase-solidification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S809 and 2026-05-28-codebase-solidification-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add `-n auto --dist=loadfile` to the pytest default addopts in pyproject.toml. Precondition: S804 has landed so module-scoped fixtures actually reduce work across workers. Verify each worker pays the registry compile once via lru_cache. Estimated savings: 4-6x sequential time on an 8-core box and ## Scope
-
-- `pyproject.toml` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add `-n auto --dist=loadfile` to the pytest default addopts in pyproject.toml. Precondition: S804 has landed so module-scoped fixtures actually reduce work across workers. Verify each worker pays the registry compile once via lru_cache. Estimated savings: 4-6x sequential time on an 8-core box
 
@@ -49,8 +16,6 @@ related:
 - `pyproject.toml`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 Add `-n auto --dist=loadfile` to the pytest default `addopts` in `pyproject.toml`, ahead of the existing `--tb=short -m 'unit' --strict-markers --ignore=...workbook_parity` flags. The `--dist=loadfile` grouping keeps every test in one file on one worker, which is required so the module-scoped secure-storage runtime fixtures from S804 (and the per-file registry `lru_cache`) pay their setup once per file rather than being split across workers. Precondition S804 has landed (filing + ledger module-scoped teardown, storage dead-fixture removal).
 
@@ -63,8 +28,6 @@ No new failures beyond the known peer reds (criterion b): the slice showed 10 fa
 Plan step `W30.P64.S809` marked complete via the CLI, closing the final phase of the codebase-solidification epic's W30.P64 performance cluster.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 SHARED BLAST RADIUS (load-bearing): this change flips the DEFAULT test execution for every concurrent agent in this shared worktree from single-process to `-n auto` xdist. Any agent running a bare `pytest` now gets parallel execution. Two consequences agents must know: (1) the aeat-local-execution loader-cache-race guidance now applies to the DEFAULT run — a registry-suite failure under the default should be re-run sequentially (`-p no:xdist` or `-n0`) before being triaged as a real regression; (2) background pytest capture must continue to write the full log to disk (per aeat-pytest-background-capture), as xdist interleaves worker output. The user explicitly approved this shared-config change (durable authorization) after the S809 blast-radius go/no-go was surfaced.
 

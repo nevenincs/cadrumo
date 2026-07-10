@@ -3,21 +3,11 @@ tags:
   - '#plan'
   - '#iva-compensation-override-cli'
 date: '2026-06-19'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `iva-compensation-override-cli` plan
 

@@ -24,9 +24,9 @@ related:
 ## Outcome
 
 - The registry now declares Modelo 145 as an informative, ad-hoc local payer communication with one `2012-01-31-y-siguientes` revision.
-- The revision carries 14 manual, source-backed casillas and one official `record_design_layout` parity reference to `aeat-dr-145-v20`.
+- The revision carries 50 manual, source-backed casillas and one official `record_design_layout` parity reference to `aeat-dr-145-v20`.
 - The previous broad registry-load blocker is closed: the focused registry authority gates load Modelo 145 without the prior zero-casilla or missing-workbook-parity validation errors.
 
 ## Notes
 
-- `P03.S13` remains open. No fixed-width value-field export layout is registered in this step.
+- This step did not register the fixed-width layout. `P03.S13` later added the grounded DR145 fixed-width layout.

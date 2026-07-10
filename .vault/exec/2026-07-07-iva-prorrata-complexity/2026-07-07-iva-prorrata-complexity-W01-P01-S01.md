@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-08'
 step_id: 'S01'
 related:
   - "[[2026-07-07-iva-prorrata-complexity-plan]]"
 ---
-
-
-
 
 # Author the ley-37-1992 art-104 (art-104.Tres) legal entries with corpus_ref and required_text for the 6 real exclusions, correcting the stale subvenciones-no-vinculadas prose removed by Ley 3/2006
 

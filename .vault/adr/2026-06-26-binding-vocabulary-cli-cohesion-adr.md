@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-06-30'
+modified: '2026-07-08'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]"
   - "[[2026-06-10-cli-pull-file-standard-adr]]"
+  - '[[2026-07-05-binding-vocabulary-cli-cohesion-research]]'
 ---
-
 # `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `accepted`)
 
 > ACCEPTED — phase 2.4 is delivered and on origin. The vocabulary pass (F6 homonyms +

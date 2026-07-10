@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#iva-compensation-override-cli'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S03'
 related:
   - "[[2026-06-19-iva-compensation-override-cli-plan]]"
 ---
-
-
-
 
 # Add a behaviour test: record override then assert the persisted taxpayer_override decision unblocks calculate and applies the amount to casilla 110 (persona 2T resolves to 525)
 

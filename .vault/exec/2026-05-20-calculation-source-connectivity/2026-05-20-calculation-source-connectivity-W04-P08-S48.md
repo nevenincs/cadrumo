@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S48'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
-
-
-
 
 # Test missing source backed bindings cannot silently calculate zero
 

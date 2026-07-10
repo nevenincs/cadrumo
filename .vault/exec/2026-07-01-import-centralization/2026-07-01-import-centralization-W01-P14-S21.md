@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S21'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `decrypt_encrypted_bytes_column`, `decrypt_secure_object_payload`, `encrypt_secure_object_payload`, `secure_object_payload_aad` to `aeat.adapters.persistence.storage.crypto.__all__` with eager re-exports so the 9 existing cross-package consumer site(s) can import from the facade
 

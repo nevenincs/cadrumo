@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-06-15'
-modified: '2026-06-30'
+modified: '2026-07-08'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"
+  - '[[2026-07-06-dependency-provisioning-research]]'
 ---
-
 # `dependency-provisioning` adr: `Dependency management and graceful degradation: cohesive missing-dependency behaviour, provisioning, and a single doctor` | (**status:** `accepted`)
 
 ## Problem Statement

@@ -3,21 +3,11 @@ tags:
   - '#plan'
   - '#m303-refund-fichero-block'
 date: '2026-06-24'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-06-24-m303-refund-fichero-block-adr]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `m303-refund-fichero-block` plan
 

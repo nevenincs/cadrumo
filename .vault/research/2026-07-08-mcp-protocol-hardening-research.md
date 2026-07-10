@@ -10,8 +10,6 @@ related:
   - '[[2026-07-08-mcp-progressive-discovery-research]]'
 ---
 
-
-
 # `mcp-protocol-hardening` research: `MCP console protocol correctness and operations hardening`
 
 Companion to the `mcp-progressive-discovery` research (same 2026-07-08

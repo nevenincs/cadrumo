@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
+  - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
 ---
-
 # `arch-remediation-ports-inversion` plan
 
 ## Wave `W01` - quiet domains

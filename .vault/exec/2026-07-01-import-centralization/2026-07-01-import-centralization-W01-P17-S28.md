@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S28'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Decide and apply the public-surface disposition for `_parse_iso8601_date` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.core.parsing._dates` and consumed cross-package from `src/aeat/application/calculations/_row_set_assembly.py, src/aeat/application/user_profile/_validation.py, src/aeat/domain/contribuyente/__init__.py, src/aeat/domain/contribuyente/_descendant_facts.py, src/aeat/domain/contribuyente/family.py, src/aeat/domain/invoices/_models.py, src/aeat/domain/user_profile/_values.py`
 

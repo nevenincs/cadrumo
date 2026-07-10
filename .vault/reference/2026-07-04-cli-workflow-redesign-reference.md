@@ -9,34 +9,14 @@ related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace cli-workflow-redesign with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `cli-workflow-redesign` reference: `Modelo 145 fixed-width export layout ground-truth (dr145 v2.0)`
 
 This reference preserves the extractor-grounded ground-truth for the Modelo 145
 fixed-width export layout (plan step P03.S13, "Add export layout metadata
-grounded in the official record design"). S13 is DEFERRED / collision-blocked at
-the time of writing: the export surface was being edited concurrently by another
-actor, so this ground-truth is persisted here so whoever completes S13 has a
-zero-fabrication starting point. The P03 foundation steps S11/S12/S14/S15 are
-landed and green; S13 remains unchecked because it is genuinely incomplete.
+grounded in the official record design"). It was first written while S13 was
+collision-blocked by concurrent edits; the current registry state now implements
+the layout as `modelo-145-dr-v20-fixed-width`, with matching casilla
+`export_refs` and support-matrix `has_fixed_width_export=True`.
 
 ## Summary
 
@@ -132,18 +112,14 @@ Format: DR ordinal / offset / length / kind / mapping.
   export fields by offset; each field's `offset + length` equals the next field's
   offset; the last ends at 610, matching the extractor `total_positions`).
 
-### Completing S13 (for the owner)
+### Implemented S13 checklist
 
-1. Author `export_layouts/` (a single `format = "fixed_width"` layout id
+1. `export_layouts/` contains a single `format = "fixed_width"` layout id
    `modelo-145-dr-v20-fixed-width`, `source_refs = ["aeat-dr-145-v20"]`, one
-   record carrying the fields above). Field kinds: `literal` for the two envelope
+   record carrying the fields above. Field kinds: `literal` for the two envelope
    tags, `filler` for row 58, `casilla` for every data field.
-- 2. Flip the foundation test's `has_fixed_width_export` from `False` to `True`
-  and its `not revision.export_layouts` assertion to expect the single layout id;
-  add a gapless-coverage assertion that the export fields tile 1-610 and that
-  every non-reserved DR field position is covered by a non-filler field
-  (no silent drop), cross-checked against `extract_record_design_pdf`.
-- 3. Registry must load clean; commit with explicit pathspec.
+2. The foundation test expects the single layout id and `has_fixed_width_export=True`, with gapless coverage against the extracted DR145 positions.
+3. Registry loads clean with 50 casillas, one 53-field `communication` record, and 50 casillas carrying `export_refs`.
 
-The registry loads clean with the 50-casilla model that backs this layout
-(verified via a direct `load_modelo_directory` probe: 50 casillas, no duplicates).
+Backend-owned export behavior remains future work under `P04.S19`; this
+reference records the registry layout ground truth only.

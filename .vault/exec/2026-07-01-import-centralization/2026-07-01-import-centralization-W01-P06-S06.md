@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S06'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Decide and apply the public-surface disposition for `_period_sort_key` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.domain.iva_compensation._carry_forward` and consumed cross-package from `src/aeat/application/calculations/_iva_compensation_history.py`
 

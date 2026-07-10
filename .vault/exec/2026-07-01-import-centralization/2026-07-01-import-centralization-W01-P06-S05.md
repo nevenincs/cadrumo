@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S05'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Promote `DEFAULT_MAX_WALLET_AGE_DAYS`, `IvaCompensationAuthoritySource`, `IvaCompensationReconciliationDecision`, `IvaCompensationWalletObservationProtocol`, `local_recurrence_authority_source`, `reconcile_iva_compensation_wallet`, `validate_wallet_matches_snapshot` to `aeat.domain.iva_compensation.__all__` with eager re-exports so the 13 existing cross-package consumer site(s) can import from the facade
 

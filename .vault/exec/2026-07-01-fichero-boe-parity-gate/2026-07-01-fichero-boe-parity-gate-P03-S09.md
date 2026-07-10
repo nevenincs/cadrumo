@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#fichero-boe-parity-gate'
 date: '2026-07-04'
-modified: '2026-07-04'
+modified: '2026-07-08'
 step_id: 'S09'
 related:
   - "[[2026-07-01-fichero-boe-parity-gate-plan]]"
 ---
-
-
-
 
 # Add a pre-write structural-fidelity assertion that every rendered casilla number and segmento matches the registry-declared metadata with zero drift
 

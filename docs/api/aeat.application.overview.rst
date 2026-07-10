@@ -16,6 +16,7 @@ Submodules
    aeat.application.overview._agenda
    aeat.application.overview._backlog
    aeat.application.overview._calendar
+   aeat.application.overview._calendar_evidence
    aeat.application.overview._calendar_models
    aeat.application.overview._calendar_warnings
    aeat.application.overview._coverage

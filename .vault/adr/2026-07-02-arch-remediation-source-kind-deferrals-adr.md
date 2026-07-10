@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#arch-remediation-source-kind-deferrals'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
+  - '[[2026-07-06-arch-remediation-source-kind-deferrals-research]]'
 ---
-
 # `arch-remediation-source-kind-deferrals` adr: `deferred source-kind re-ratification with promotion targets` | (**status:** `accepted`)
 
 ## Problem Statement

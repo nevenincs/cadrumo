@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-04-30-secure-persistence-foundation-adr]]"
+  - '[[2026-07-06-arch-remediation-engine-lifecycle-research]]'
 ---
-
 # `arch-remediation-engine-lifecycle` adr: `engine and bucket-session lifecycle unification` | (**status:** `accepted`)
 
 ## Problem Statement

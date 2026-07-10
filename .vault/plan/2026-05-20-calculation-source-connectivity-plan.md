@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#calculation-source-connectivity'
 date: '2026-05-20'
-modified: '2026-07-04'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-05-20-calculation-source-connectivity-research]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-05-21-calculation-source-connectivity-reference]]'
 ---
-
 
 # `calculation-source-connectivity` `source mesh implementation` plan
 

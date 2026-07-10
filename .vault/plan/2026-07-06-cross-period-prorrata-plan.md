@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-06'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
@@ -12,18 +12,8 @@ related:
   - '[[2026-07-05-silent-zero-base-aggregation-audit]]'
   - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]'
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
+  - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `cross-period-prorrata` plan
 
 ## Wave `W01` - Register foundation (the carry home)

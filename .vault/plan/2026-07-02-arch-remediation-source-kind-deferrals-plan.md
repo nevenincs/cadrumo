@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#arch-remediation-source-kind-deferrals'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-08'
 tier: L1
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-adr]]'
+  - '[[2026-07-06-arch-remediation-source-kind-deferrals-research]]'
 ---
-
 # `arch-remediation-source-kind-deferrals` plan
 
 - [x] `S01` - Add the structured owner-and-trigger annotation type on the deferred source-kind declaration carrying the owning ADR stem and the promotion trigger condition, annotations only per the Wave 1 freeze; `src/aeat/application/aggregation/_source_mesh.py`.

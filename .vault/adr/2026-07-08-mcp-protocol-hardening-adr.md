@@ -10,8 +10,6 @@ related:
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
 ---
 
-
-
 # `mcp-protocol-hardening` adr: `long-running call contract, schema fidelity, and declared protocol boundaries` | (**status:** `accepted`)
 
 ## Problem Statement

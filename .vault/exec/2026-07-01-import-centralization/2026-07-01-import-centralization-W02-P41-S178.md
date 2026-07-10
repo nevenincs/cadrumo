@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S178'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Rewire 39 cross-package private import name(s) in this file onto the promoted facade(s) of `aeat.adapters.outbound.aeat.sede`, `aeat.adapters.persistence.storage.envelope`, `aeat.adapters.persistence.storage.sql`, `aeat.application.aggregation`, `aeat.application.calculations`, `aeat.application.evidence`, `aeat.application.filing`, `aeat.application.ledger`, `aeat.application.live`, `aeat.application.modelo`, `aeat.domain.filing`, `aeat.domain.justificante`, `aeat.domain.submission`, `aeat.domain.user_profile`
 

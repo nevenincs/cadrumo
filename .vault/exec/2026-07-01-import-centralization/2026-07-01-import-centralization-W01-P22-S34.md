@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#import-centralization'
 date: '2026-07-05'
-modified: '2026-07-05'
+modified: '2026-07-08'
 step_id: 'S34'
 related:
   - "[[2026-07-01-import-centralization-plan]]"
 ---
-
-
-
 
 # Decide and apply the public-surface disposition for `_build_google_credentials` (rename-to-public and promote, expose a narrower public API, or remove the reach) currently defined in `aeat.adapters.outbound.storage._factory` and consumed cross-package from `src/aeat/entrypoints/cli/_config/_google_sync_calc.py, src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`
 
