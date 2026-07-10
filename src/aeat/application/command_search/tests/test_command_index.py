@@ -60,8 +60,10 @@ def _token_overlap_only(docs: tuple[CommandDoc, ...], query: str) -> set[str]:
 
 def test_stemmed_recall_reaches_a_command_exact_overlap_misses() -> None:
     index = _index()
-    if index._connection is None:
-        pytest.skip("FTS5 unavailable; stemming recall is exercised only in the FTS5 path")
+    # FTS5 is a bundled capability of the sqlite3 every supported platform ships;
+    # the stemming property lives only in the FTS5 path, so require it here (a hard
+    # precondition, never a silent skip) — the degraded path is proven separately.
+    assert index._connection is not None
 
     # "declaración" (singular, accented) vs the corpus token "declaraciones"
     # (plural): exact overlap misses it, the Spanish-stemmed column recalls it.
@@ -73,8 +75,9 @@ def test_stemmed_recall_reaches_a_command_exact_overlap_misses() -> None:
 
 def test_diacritics_fold_so_an_unaccented_query_matches_accented_text() -> None:
     index = _index()
-    if index._connection is None:
-        pytest.skip("FTS5 unavailable; folding is exercised only in the FTS5 path")
+    # Diacritics folding is an FTS5-path property; FTS5 is always present on the
+    # supported sqlite3, so require it rather than skip.
+    assert index._connection is not None
     hits = index.search("transaccion bancaria", limit=5)
     assert "ledger.add" in {hit.command_key for hit in hits}
 
@@ -107,8 +110,9 @@ def test_key_tier_outranks_the_same_token_in_the_help_tier() -> None:
         ),
     )
     index = _index(docs)
-    if index._connection is None:
-        pytest.skip("per-column weighting is an FTS5-path property")
+    # Per-column BM25 weighting is an FTS5-path property; FTS5 is always present,
+    # so require it rather than skip.
+    assert index._connection is not None
     hits = index.search("widget", limit=5)
     assert hits
     assert hits[0].command_key == "widget.run"
