@@ -56,7 +56,7 @@ related:
 
 ## Outcome
 
-- A `modelo.work.calculate` / `modelo.work.observations` result no longer inlines the observation provenance array in `structuredContent`; it carries `observations_resource` + `observations_count` and a `resource_link` the client fetches on demand. `ledger.evidence.list` thins its `rows` the same way.
+- A `modelo.work.calculate` / `modelo.work.observations` / `modelo.work.revision` result no longer inlines the observation provenance array in `structuredContent`; it carries `observations_resource` + `observations_count` and a `resource_link` the client fetches on demand. `ledger.evidence.list` thins its `rows` the same way. (`modelo.work.revisions` nests per-entry revisions rather than a single flat array addressable by one id, so it is left inline — a clean follow-up if per-entry thinning is wanted.)
 - An error envelope, a zero-row result, or a result whose id is missing is left inline (nothing to thin), so no link is ever emitted that cannot resolve.
 
 ## Notes
