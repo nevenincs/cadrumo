@@ -120,6 +120,13 @@ THINNED_VERBS: dict[str, tuple[ThinnedArray, ...]] = {
             uri_id_key="calculation_revision_id",
         ),
     ),
+    "modelo.work.revision": (
+        ThinnedArray(
+            result_key="observations",
+            resource_kind=HarnessResourceKind.OBSERVATIONS,
+            uri_id_key="calculation_revision_id",
+        ),
+    ),
     "ledger.evidence.list": (
         ThinnedArray(
             result_key="rows",
