@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-cli-hardening'
 date: '2026-05-08'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
   - '[[2026-04-24-aeat-cli-wireframe-research]]'
@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-aeat-cli-hardening-research]]'
 ---
 
-# `aeat-cli-hardening` adr
+# `aeat-cli-hardening` adr | (**status:** `accepted`)
 
 ## Context
 

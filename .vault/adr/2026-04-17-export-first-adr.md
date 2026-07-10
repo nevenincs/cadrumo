@@ -2,8 +2,8 @@
 tags:
   - "#adr"
   - "#export-first"
-date: 2026-04-17
-modified: '2026-06-13'
+date: '2026-04-17'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-16-submission-safety-sweep-adr-audit]]"
@@ -11,7 +11,7 @@ related:
   - "[[2026-04-27-export-first-research]]"
 ---
 
-# export-first-adr
+# export-first-adr | (**status:** `proposed`)
 
 ## status
 

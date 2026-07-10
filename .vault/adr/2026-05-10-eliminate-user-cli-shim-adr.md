@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#eliminate-user-cli-shim'
 date: '2026-05-10'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-10-eliminate-user-cli-shim-plan]]'
   - '[[2026-05-10-cli-structural-localization-audit]]'
@@ -11,7 +11,7 @@ related:
   - '[[2026-06-04-eliminate-user-cli-shim-research]]'
 ---
 
-# ADR: Eliminating `user_cli.py` Architectural Shim
+# ADR: Eliminating `user_cli.py` Architectural Shim | (**status:** `accepted`)
 
 ## CLI Backend Boundary
 

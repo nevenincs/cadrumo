@@ -2,14 +2,14 @@
 tags:
   - "#adr"
   - "#playwright-anti-bot"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 title: Playwright Anti-Bot Evasion Strategy
 related:
   - "[[2026-04-12-playwright-anti-bot-research]]"
 ---
 
-# Architecture Decision Record: Playwright Anti-Bot Evasion
+# Architecture Decision Record: Playwright Anti-Bot Evasion | (**status:** `accepted`)
 
 ## Context
 AEAT interfaces require robust anti-bot evasion capabilities to ensure that our automated sessions are not immediately blocked or challenged during legitimate operations. We need a stable setup for browser automation using Python and `playwright`, managed within our `uv` environment. The strategy must handle fingerprint/entropy management, proxy configuration, and operational guardrails.

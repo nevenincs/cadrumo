@@ -2,16 +2,16 @@
 tags:
   - "#adr"
   - "#self-healing-sync"
-date: 2026-04-12
-modified: '2026-06-13'
-title: Self-Healing Live-to-Local Sync Runner
+date: '2026-04-12'
 related:
   - "[[2026-04-12-self-healing-sync-research]]"
   - "[[2026-04-12-playwright-anti-bot-adr]]"
   - "[[2026-04-12-base-module-structure-adr]]"
+superseded_by: '2026-06-12-live-pull-verification-sweep-adr'
+modified: '2026-07-10'
+title: Self-Healing Live-to-Local Sync Runner
 ---
-
-# architecture decision record: self-healing sync
+# architecture decision record: self-healing sync | (**status:** `superseded`)
 
 ## context
 

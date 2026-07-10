@@ -3,14 +3,14 @@ tags:
   - '#adr'
   - '#modelo-addressing-ux'
 date: '2026-06-05'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'
   - '[[2026-06-05-modelo-addressing-ux-plan]]'
 ---
 
-# Modelo Addressing UX Follow-Up ADR Queue
+# Modelo Addressing UX Follow-Up ADR Queue | (**status:** `accepted`)
 
 ## Status
 

@@ -2,15 +2,15 @@
 tags:
   - "#adr"
   - "#real-pdf-import"
-date: 2026-04-22
-modified: '2026-06-13'
+date: '2026-04-22'
+modified: '2026-07-10'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-ruleset-architecture-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
 ---
-# aeat-fichero-boe-export-adr
+# aeat-fichero-boe-export-adr | (**status:** `accepted`)
 
 ## status
 
