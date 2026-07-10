@@ -31,7 +31,6 @@ from .._config_state_root import (
     platform_user_data_root,
     resolve_state_root,
 )
-from ..config import Settings
 from ..paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
