@@ -30,10 +30,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.operator_surface import command_classification
 from ....core.config import override_settings
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
-from ....application.operator_surface import command_classification
 from ....entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -156,7 +156,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
     Cross-checks ``_CONFIRMATION_COMMAND`` and ``_MUTATING_COMMANDS`` against the REAL MCP
     tool-descriptor classification and confirmation gate (the same authority the ``PreToolUse``
     gate reads via ``entrypoints.mcp._hitl.confirmation_for_tool``), so neither declared set is
-    an invented label. Under the H3 declared-risk model (ADR ``mcp-protocol-hardening``) the
+    an invented label. Under the declared-risk model the
     ``config profile`` family is ``LOCAL_STATE_MUTATING`` at whole-family granularity (it also
     owns ``create``/``edit``/``delete``), so ``config.profile.status`` is non-read-only like the
     mutating leaves; the risk table carries only the destructive/handoff/live-write axes, so the
@@ -181,8 +181,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
     for command in _MUTATING_COMMANDS:
         assert command in by_key, f"'{command}' is not an exposed MCP tool"
         assert not command_classification(command).read_only, (
-            f"'{command}' is declared mutating in this scenario but the live manifest classifies "
-            "it read-only"
+            f"'{command}' is declared mutating in this scenario but the live manifest classifies it read-only"
         )
 
 

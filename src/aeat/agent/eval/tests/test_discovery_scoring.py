@@ -1,12 +1,11 @@
-"""Discovery selection-quality gate for the operator eval (ADR ``mcp-progressive-discovery`` P6).
+"""Discovery selection-quality gate for the operator evaluation.
 
 Scores how efficiently an OBSERVED trajectory reaches a long-tail verb through the
 console's CORE surface (``search`` + ``execute``) versus the FULL surface (a direct
-per-verb call), closing plan steps S23 (the scoring helpers) and exercising the S22
-discovery scenario. The metrics under test - ``rounds_to_correct_verb`` selection
+per-verb call). The metrics under test - ``rounds_to_correct_verb`` selection
 quality and the CORE-vs-FULL surface comparison - are pure over a constructed
 :class:`LiveTrajectory`, so no live model is driven here; the deterministic
-core-vs-full advantage the ADR already makes provable (a dozen-odd advertised tools
+core-vs-full advantage (a dozen-odd advertised tools
 vs ~300, the same long-tail verb still reachable) is measured from the live surface
 policy and asserted directly.
 
@@ -110,12 +109,12 @@ def _direct_call(command_key: str) -> LiveToolCallRecord:
 
 
 # --------------------------------------------------------------------------- #
-# S22: the discovery scenario is valid, runnable, and targets a long-tail verb
+# The discovery scenario is valid, runnable, and targets a long-tail verb.
 # --------------------------------------------------------------------------- #
 
 
 def test_discovery_scenario_loads_and_targets_a_resolvable_long_tail_verb() -> None:
-    """The S22 scenario is a valid GoldenScenario whose long-tail target resolves and is not orientation."""
+    """The scenario is valid, and its long-tail target resolves without being orientation."""
     scenario = load_scenario(_DISCOVERY_SCENARIO)
     assert scenario.name == "descubrimiento-verbo-long-tail"
     assert _TARGET in scenario.expected_trajectory
@@ -130,7 +129,7 @@ def test_discovery_scenario_passes_the_shared_golden_dimensions() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# S23: rounds-to-correct-verb selection quality over an observed trajectory
+# Measure rounds-to-correct-verb selection quality over an observed trajectory.
 # --------------------------------------------------------------------------- #
 
 
@@ -216,7 +215,7 @@ def test_a_trajectory_that_never_executes_the_target_does_not_pass() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# S24: the deterministic CORE-vs-FULL surface comparison
+# Compare the deterministic CORE and FULL surfaces.
 # --------------------------------------------------------------------------- #
 
 

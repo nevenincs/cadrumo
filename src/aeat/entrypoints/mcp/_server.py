@@ -129,6 +129,7 @@ if TYPE_CHECKING:
     # the standalone (non-nested) functions below can declare their true SDK
     # return/parameter types instead of the placeholder ``object``.
     from mcp.server import Server
+    from mcp.server.models import InitializationOptions
     from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'aeat-cli[agent]'"
@@ -554,6 +555,7 @@ def build_server(
             if descriptor.command_key in active_keys and descriptor.command_key not in advertised_keys
         )
         return build_sdk_tools((*advertised, *activated))
+
     floor_tool = build_harness_floor_tool()
     # Identity tool (ADR I1): the always-on read-only ``whoami`` that reports the
     # active taxpayer. Like the floor and grounding tools it is a console tool,
@@ -644,6 +646,7 @@ def build_server(
         rather than hung; a client that sent no token still gets the off-loop run.
         """
         import anyio
+        from anyio.to_thread import run_sync
 
         progress_token = None
         with contextlib.suppress(LookupError, AttributeError):
@@ -651,12 +654,12 @@ def build_server(
             progress_token = getattr(meta, "progressToken", None) if meta is not None else None
 
         if progress_token is None:
-            return await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
+            return await run_sync(_run_subprocess_tool, descriptor, arguments)
 
         holder: dict[str, tuple[dict[str, object], bool]] = {}
 
         async def _work() -> None:
-            holder["result"] = await anyio.to_thread.run_sync(_run_subprocess_tool, descriptor, arguments)
+            holder["result"] = await run_sync(_run_subprocess_tool, descriptor, arguments)
             task_group.cancel_scope.cancel()
 
         async def _heartbeat() -> None:
@@ -995,7 +998,7 @@ def build_server(
     return server
 
 
-def server_initialization_options(server: Server) -> object:
+def server_initialization_options(server: Server) -> InitializationOptions:
     """Build the negotiated initialization options for ``server``.
 
     Declares ``tools.listChanged`` because the console emits
