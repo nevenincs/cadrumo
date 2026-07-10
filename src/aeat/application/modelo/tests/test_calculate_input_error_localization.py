@@ -55,19 +55,19 @@ def test_m210_tipo_renta_accepts_a_declared_code_and_projects_to_its_concept() -
 
 
 def test_m210_tipo_renta_fetch_gated_code_refuses_as_fetch_gated_not_invalid() -> None:
-    # Code 08 (cánones propiedad industrial) is a REAL official code whose rate
-    # is not yet grounded — the operator must be told "fetch-gated", never "invalid".
+    # Code 13 (asistencia técnica) is a REAL official code whose rate is not yet
+    # grounded — the operator must be told "fetch-gated", never "invalid".
     with pytest.raises(ModeloCalculateTextInputError) as exc_info:
-        _validated_m210_tipo_renta_code("08", key="tipo_renta")
+        _validated_m210_tipo_renta_code("13", key="tipo_renta")
 
     error = exc_info.value
     assert isinstance(error, AeatError)
     assert error.translated_message == "application.modelo.errors.calculate_m210_tipo_renta_fetch_gated"
     assert error.context is not None
-    assert error.context["value"] == "08"
-    # The accepted set lists the declared codes (e.g. 18); it never lists the fetch-gated 08.
+    assert error.context["value"] == "13"
+    # The accepted set lists the declared codes (e.g. 18); it never lists the fetch-gated 13.
     assert "18" in error.context["accepted"]
-    assert "08" not in error.context["accepted"]
+    assert "13" not in error.context["accepted"]
     assert build_error_envelope(error).code
 
 
@@ -82,7 +82,7 @@ def test_m210_tipo_renta_unknown_code_refuses_and_lists_accepted_and_fetch_gated
     assert error.context is not None
     assert error.context["value"] == "99"
     assert "18" in error.context["accepted"]
-    assert "08" in error.context["fetch_gated"]
+    assert "13" in error.context["fetch_gated"]
     message = resolve_error_message(error)
     assert message != error.translated_message
 

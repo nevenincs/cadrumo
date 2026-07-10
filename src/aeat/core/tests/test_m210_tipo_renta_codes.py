@@ -34,6 +34,11 @@ _EXPECTED_CONCEPT = {
     "05": TipoRentaIrnr.INTEREST,
     "06": TipoRentaIrnr.INTEREST,
     "07": TipoRentaIrnr.INTEREST,
+    "08": TipoRentaIrnr.CANONES,
+    "09": TipoRentaIrnr.CANONES,
+    "10": TipoRentaIrnr.CANONES,
+    "11": TipoRentaIrnr.CANONES,
+    "12": TipoRentaIrnr.CANONES,
     "14": TipoRentaIrnr.GENERAL,
     "15": TipoRentaIrnr.GENERAL,
     "16": TipoRentaIrnr.GENERAL,
@@ -47,6 +52,7 @@ _EXPECTED_CONCEPT = {
     "28": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
     "29": TipoRentaIrnr.DIVIDEND,
     "30": TipoRentaIrnr.DIVIDEND,
+    "32": TipoRentaIrnr.CANONES,
     "33": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
     "34": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
     "35": TipoRentaIrnr.GENERAL,
@@ -55,11 +61,16 @@ _EXPECTED_CONCEPT = {
     "38": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
 }
 
-# The codes deliberately NOT declared: their rate is not bundle-verifiable
-# (cánones may bear an un-bundled Art. 25 letter; asistencia técnica 13 is
-# cánones-adjacent in the HOJA INFORMATIVA; reaseguros/navegación/imposición-
-# complementaria/loterías carry special rates absent from the Phase-1 extract).
-_FETCH_GATED_CODES = frozenset({"08", "09", "10", "11", "12", "13", "19", "20", "27", "31", "32"})
+# The codes deliberately NOT declared: their rate is not bundle-verifiable.
+# The cánones codes 08/09/10/11/12/32 were promoted into the declared set —
+# cánones is the general rendimiento rate under the Art. 25.1.a residual clause
+# (the consolidated Art. 25.1 carries no cánones-specific letter). What remains
+# fetch-gated: asistencia técnica 13 (cánones-adjacent in the HOJA INFORMATIVA,
+# a possible non-bundled special letter, NOT cánones proper), reaseguros 19
+# (Art. 25.1.e), navegación 20 (Art. 25.1.d), imposición complementaria 27
+# (Art. 19.2), and premios de loterías 31 (D.A. 5ª) — special rates absent from
+# the Phase-1 extract.
+_FETCH_GATED_CODES = frozenset({"13", "19", "20", "27", "31"})
 
 
 def test_projection_maps_every_declared_code_to_its_grounded_concept() -> None:
@@ -87,11 +98,17 @@ def test_fetch_gated_code_raises_rather_than_fabricating_a_rate(code: str) -> No
 
 
 def test_grounding_tier_matches_the_rate_letter() -> None:
-    # RESIDUAL iff the concept is GENERAL (Art. 25.1.a residual clause);
-    # RATE_VERIFIED for every code whose concept is a named Art. 25 letter
-    # (pension/dividend/interest/ganancia) or the bundled inmobiliaria mechanism.
+    # RESIDUAL iff the concept rests on the Art. 25.1.a residual clause — an
+    # ordinary rendimiento with no special regime. Two concepts qualify: GENERAL,
+    # and CANONES (the consolidated Art. 25.1 carries no cánones-specific letter,
+    # so royalties are taxed at the general rendimiento rate). Both MUST cite the
+    # Art. 25.1.a residual clause. Every other concept is grounded on a named
+    # Art. 25 letter (pension 25.1.b; dividend/interest/ganancia 25.1.f) or the
+    # bundled Art. 13.1.h imputed real-estate mechanism (inmobiliaria — carried at
+    # the 25.1.a general rate but rate-verified), so it is RATE_VERIFIED.
+    residual_concepts = {TipoRentaIrnr.GENERAL, TipoRentaIrnr.CANONES}
     for entry in OFFICIAL_M210_TIPO_RENTA_CODES:
-        if entry.concept is TipoRentaIrnr.GENERAL:
+        if entry.concept in residual_concepts:
             assert entry.grounding_tier is TipoRentaGroundingTier.RESIDUAL
             assert entry.rate_legal_ref == "trlirnr-rdleg-5-2004:art-25.1.a"
         else:
