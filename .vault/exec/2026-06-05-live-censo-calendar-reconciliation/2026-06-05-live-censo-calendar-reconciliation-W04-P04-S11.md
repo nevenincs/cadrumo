@@ -9,39 +9,6 @@ related:
   - "[[2026-06-05-live-censo-calendar-reconciliation-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace live-censo-calendar-reconciliation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S11 and 2026-06-05-live-censo-calendar-reconciliation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence and ## Scope
-
-- `src/aeat/entrypoints/cli/_overview.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence
 
 ## Scope
@@ -89,9 +56,13 @@ defect (see S10).
 
 ## Notes
 
-Positive live-submitted/justificante-verified calendar evidence is deferred to
-the follow-up reference `2026-07-10-live-censo-calendar-reconciliation-reference`:
-it becomes producible once the G313 censo launcher is re-grounded and the AEAT
-account carries a filed declaration to reconcile against. No production code was
-changed by this step; it is a live-verification proof over the already-landed
-calendar hardening (W05 P05).
+The operator — the only party able to run the live account — accepted the
+calendar's correct-refusal / no-fabrication behaviour as the S11 evidence and
+confirmed the empty 2026 account is genuine (they have never filed the modelo),
+so the zero-row live reads are the real expected state, not a defect. On that
+acceptance this step is closed. Positive live-submitted/justificante-verified
+projection remains producible in future once the G313 censo launcher is
+re-grounded and the account carries a filed declaration (follow-up reference
+`2026-07-10-live-censo-calendar-reconciliation-reference`, Blocker 1). No
+production code was changed by this step; it is a live-verification proof over
+the already-landed calendar hardening (W05 P05).
