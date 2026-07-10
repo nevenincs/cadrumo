@@ -323,6 +323,7 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
+      notifications_bad_landing: 'La pàgina de notificacions de l''AEAT no s''ha carregat correctament; la vostra sessió pot haver caducat o l''AEAT està en manteniment. Executeu ''aeat config auth status'' i torneu-ho a provar. No ho interpreteu com una safata buida.'
 aggregation:
   grouping:
     errors:
@@ -614,7 +615,8 @@ application:
       import_failed: 'no es pot importar el model %{modelo}: %{detail}'
       modelo_not_in_registry: el model %{modelo} no és present al registre de càlcul
       original_draft_not_persisted: l'esborrany original %{draft_id} no està persistit
-      period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període %{period} per a l''exercici %{ejercicio}'
+      period_ejercicio_mismatch: 'model %{modelo}: no es pot canonicalitzar el període
+        %{period} per a l''exercici %{ejercicio}'
       unexpected_ejercicio: 'model %{modelo}: exercici inesperat %{ejercicio}; cal
         un any de quatre dígits'
     review:
@@ -722,10 +724,14 @@ application:
         un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
       purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
         elimineu-lo o substituïu-lo a través del flux d'adjunts.
-      transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix amb %{count} transaccions: %{matches}'
-      transaction_id_prefix_no_match: 'cap transacció coincideix amb el prefix d''id %{prefix}'
-      transaction_id_prefix_non_hex: 'el prefix d''id de transacció %{prefix} conté caràcters no hexadecimals'
-      transaction_id_prefix_too_long: 'el prefix d''id de transacció %{prefix} té més de %{max_length} caràcters'
+      transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
+        amb %{count} transaccions: %{matches}'
+      transaction_id_prefix_no_match: cap transacció coincideix amb el prefix d'id
+        %{prefix}
+      transaction_id_prefix_non_hex: el prefix d'id de transacció %{prefix} conté
+        caràcters no hexadecimals
+      transaction_id_prefix_too_long: el prefix d'id de transacció %{prefix} té més
+        de %{max_length} caràcters
       transaction_not_found: 'transacció no trobada: %{transaction_id}'
   live:
     expedientes:
@@ -842,6 +848,13 @@ application:
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
+      calculate_m210_tipo_renta_fetch_gated: 'El codi de tipus de renda %{value} del
+        Model 210 està pendent de fonamentació: el seu tipus de gravamen encara no
+        està fonamentat en el corpus inclòs, per la qual cosa encara no es pot presentar.
+        Codis acceptats: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no és un codi de tipus de renda
+        vàlid del Model 210. Codis acceptats: %{accepted}. Codis pendents de fonamentació
+        (encara no presentables): %{fetch_gated}.'
       calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
         que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
         31.1.
@@ -856,6 +869,11 @@ application:
         canonic de forma segura.
       calculate_semantic_role_missing: La revisio del model no conte cap casella amb
         el rol semantic %{semantic_role}.
+      calculate_text_casilla_numeric_value: El valor de --casilla per a %{key} (%{label})
+        correspon a un selector de declarant de data_type=%{data_type} no numèric
+        que identifica el contribuent que obté els rendiments, no un import; s'ha
+        rebut %{value}. Introdueix l'import a la seva pròpia casella numèrica i reserva
+        aquesta casella per al selector de membre.
       calculate_text_input_empty: El valor de --casilla correspon a una casella de
         text i no pot estar buit.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -1195,6 +1213,10 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      attribution_received_unfolded: 'els fets attribution_received declaren una base atribuïda per a aquest exercici (modelo=100 year=%{filing_year} total=%{total_base} EUR) però la casella %{casilla_id} del règim d''atribució del M100 queda buida: la participació rebuda es va registrar al perfil però no es va incorporar a la declaració.'
+      attribution_received_unfolded_next_action: 'Incorporeu la base atribuïda a la casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè la renda del règim d''atribució quedi declarada.'
+      attribution_received_uncaptured: 'la casella %{casilla_id} del règim d''atribució del M100 declara una base atribuïda (modelo=100 year=%{filing_year} value=%{casilla_value} EUR) però cap fet attribution_received no la fonamenta per a aquest exercici: la renda declarada no té procedència registrada.'
+      attribution_received_uncaptured_next_action: 'Registreu els fets attribution_received (NIF de l''entitat, nom, percentatge de participació, base atribuïda, exercici) al perfil del contribuent perquè la renda declarada del règim d''atribució tingui la procedència del seu Model 184.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -1221,7 +1243,7 @@ application:
           ha resolt a boolea; els booleans no son claus valides de dispatch enum.
   overview:
     errors:
-      horizon_days_not_positive: 'horizon_days ha de ser positiu; s''ha rebut %{horizon_days}'
+      horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
@@ -2722,6 +2744,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif} (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%). En el seu propi espai de treball, el soci l''ha de registrar com a fets attribution_received (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) i després incorporar la base a la casella %{casilla} del règim d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
@@ -2831,6 +2854,11 @@ cli:
       reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
         %{provider}.'
       status_help: Mostrar l'estat d'autenticació configurat
+      status_summary_configured: L'autenticació està configurada però encara no hi
+        ha cap sessió activa disponible.
+      status_summary_ready: L'autenticació està configurada i hi ha una sessió activa
+        disponible.
+      status_summary_unconfigured: L'autenticació encara no està configurada.
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
@@ -3317,6 +3345,11 @@ cli:
         l''arxiu de recuperació xifrat per incloure''ls.'
       sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
         de l''interessat (RGPD): el paquet portàtil del perfil.'
+      show:
+        summary_invalid: 'El registre del perfil no és vàlid: %{count} problema/es
+          bloquejant/s.'
+        summary_tombstoned: El registre del perfil està marcat com a eliminat.
+        summary_valid: El registre del perfil és vàlid.
       show_help: Mostra les dades d'un perfil
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
@@ -3615,6 +3648,13 @@ cli:
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles,
         %{formulas} fórmules, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registre no disponible (%{error}).'
+  help:
+    panel:
+      arguments: Arguments
+      commands: Ordres
+      error: 'Error'
+      options: Opcions
+    try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
   ledger:
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket

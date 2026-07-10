@@ -18,6 +18,7 @@ Subpackages
    aeat.application.bienes_inversion
    aeat.application.bucket_maintenance
    aeat.application.calculations
+   aeat.application.command_search
    aeat.application.corpus_search
    aeat.application.evidence
    aeat.application.export

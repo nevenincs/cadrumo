@@ -307,6 +307,7 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa az 'aeat config auth test' parancsot
         és próbálja újra.
+      notifications_bad_landing: 'Az AEAT értesítési oldala nem töltődött be megfelelően; a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtassa az ''aeat config auth status'' parancsot, és próbálja újra. Ne tekintse ezt üres postafióknak.'
 aggregation:
   grouping:
     errors:
@@ -572,7 +573,8 @@ application:
       import_failed: 'a(z) %{modelo} modell nem importálható: %{detail}'
       modelo_not_in_registry: a(z) %{modelo} modell nincs jelen a számítási nyilvántartásban
       original_draft_not_persisted: a(z) %{draft_id} eredeti vázlat nincs mentve
-      period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható a(z) %{ejercicio} évhez'
+      period_ejercicio_mismatch: '%{modelo} modell: a(z) %{period} időszak nem kanonizálható
+        a(z) %{ejercicio} évhez'
       unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű
         év szükséges'
     review:
@@ -671,10 +673,14 @@ application:
         vagy hagyja el a kulcsot szándékos duplikátum hozzáadásához.
       purchase_evidence_already_set: A főkönyvi tranzakciónak már van purchase_invoice_evidence_id-je;
         távolítsa el vagy cserélje ki a csatolmányok munkafolyamatán keresztül.
-      transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag %{count} tranzakcióra illeszkedik: %{matches}'
-      transaction_id_prefix_no_match: 'egyetlen tranzakció sem egyezik a(z) %{prefix} azonosító-előtaggal'
-      transaction_id_prefix_non_hex: 'a(z) %{prefix} tranzakcióazonosító-előtag nem hexadecimális karaktereket tartalmaz'
-      transaction_id_prefix_too_long: 'a(z) %{prefix} tranzakcióazonosító-előtag hosszabb mint %{max_length} karakter'
+      transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag
+        %{count} tranzakcióra illeszkedik: %{matches}'
+      transaction_id_prefix_no_match: egyetlen tranzakció sem egyezik a(z) %{prefix}
+        azonosító-előtaggal
+      transaction_id_prefix_non_hex: a(z) %{prefix} tranzakcióazonosító-előtag nem
+        hexadecimális karaktereket tartalmaz
+      transaction_id_prefix_too_long: a(z) %{prefix} tranzakcióazonosító-előtag hosszabb
+        mint %{max_length} karakter
       transaction_not_found: 'tranzakció nem található: %{transaction_id}'
   live:
     expedientes:
@@ -784,6 +790,12 @@ application:
         parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
         szazalekai pontosan 100%-ot kell adjanak; kapott ertek: %{total}, sorok: %{count}.'
+      calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} Modelo 210 jövedelemtípus-kód
+        még megalapozásra vár: az adómértéke még nincs megalapozva a csomagolt korpuszban,
+        ezért még nem nyújtható be. Elfogadott kódok: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: 'A(z) %{value} nem érvényes Modelo 210 jövedelemtípus-kód.
+        Elfogadott kódok: %{accepted}. Megalapozásra váró (még be nem nyújtható) kódok:
+        %{fetch_gated}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere osszesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR kuszobot.
       calculate_pension_inputs_incomplete: A nyugdijterv kivaltasi adatait egyutt
@@ -797,6 +809,11 @@ application:
         választhat biztonságosan kanonikus casilla.id értéket.'
       calculate_semantic_role_missing: 'A modell revíziója nem tartalmaz casillát
         ezzel a szemantikus szereppel: %{semantic_role}.'
+      calculate_text_casilla_numeric_value: A(z) %{key} (%{label}) --casilla értéke
+        egy nem numerikus, data_type=%{data_type} típusú bevallói választó, amely
+        a jövedelmet szerző adóalanyt nevezi meg, nem összeget; a kapott érték %{value}.
+        Add meg az összeget a saját numerikus rovatában, és tartsd fenn ezt a rovatot
+        a tag kiválasztásához.
       calculate_text_input_empty: A --casilla érték egy szöveges casillához tartozik,
         és nem lehet üres.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -1139,6 +1156,10 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      attribution_received_unfolded: 'az attribution_received tények hozzárendelt adóalapot jelentenek be erre az adóévre (modelo=100 year=%{filing_year} total=%{total_base} EUR), de az M100 hozzárendelési rendszerének %{casilla_id} rovata üres marad: a kapott részesedést rögzítették a profilban, de nem építették be a bevallásba.'
+      attribution_received_unfolded_next_action: 'Építse be a hozzárendelt adóalapot az M100 számításának %{casilla_id} rovatába, például a(z) `aeat app modelo work calculate ... --binding %{casilla_id}=%{total_base}` paranccsal, hogy a hozzárendelési rendszer jövedelme bevallásra kerüljön.'
+      attribution_received_uncaptured: 'az M100 hozzárendelési rendszerének %{casilla_id} rovata hozzárendelt adóalapot vall be (modelo=100 year=%{filing_year} value=%{casilla_value} EUR), de egyetlen attribution_received tény sem támasztja alá erre az adóévre: a bevallott jövedelemnek nincs rögzített eredete.'
+      attribution_received_uncaptured_next_action: 'Rögzítse az attribution_received tényeket (az entitás NIF-je, neve, részesedési százalék, hozzárendelt adóalap, adóév) az adózó profiljában, hogy a hozzárendelési rendszer bevallott jövedelme a Modelo 184 szerinti eredetét hordozza.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -1166,7 +1187,8 @@ application:
           ertekre oldodott fel; a boolean adatok nem ervenyes enum dispatch kulcsok.
   overview:
     errors:
-      horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie; a kapott érték: %{horizon_days}'
+      horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
+        a kapott érték: %{horizon_days}'
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
@@ -2666,6 +2688,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén attribution_received tényekként kell rögzítenie (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year), majd az adóalapot be kell építenie a saját Modelo 100 hozzárendelési rendszer (gazdasági tevékenység) %{casilla} rovatába (LIRPF 86-89. cikk).'
     quickfile:
       app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
@@ -2777,6 +2800,10 @@ cli:
       reserved_provider: 'A hitelesítési szolgáltató fenntartott, de nem elérhető:
         %{provider}.'
       status_help: Beállított hitelesítési állapot megjelenítése.
+      status_summary_configured: A hitelesítés be van állítva, de még nincs elérhető
+        aktív munkamenet.
+      status_summary_ready: A hitelesítés be van állítva, és van elérhető aktív munkamenet.
+      status_summary_unconfigured: A hitelesítés még nincs beállítva.
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
@@ -3274,6 +3301,10 @@ cli:
         a titkosított helyreállítási archívumot.'
       sar_help: A profilhoz tárolt összes személyes adat exportálása GDPR hozzáférési
         archívumként (a hordozható profilcsomag).
+      show:
+        summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
+        summary_tombstoned: A profil rekordja törlésre van jelölve.
+        summary_valid: A profil rekordja érvényes.
       show_help: 'Egy profil élő értékeinek megjelenítése (alapértelmezés: az aktív
         profil).'
       show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív
@@ -3566,6 +3597,13 @@ cli:
         mező, %{formulas} képlet, %{revisions} revízió.'
       registry_unavailable: '%{package} %{version}: a nyilvántartás nem érhető el
         (%{error}).'
+  help:
+    panel:
+      arguments: Argumentumok
+      commands: Parancsok
+      error: 'Hiba'
+      options: Kapcsolók
+    try_for_help: 'Súgóért futtassa: [blue]''{command_path} {help_option}''[/].'
   ledger:
     add:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.

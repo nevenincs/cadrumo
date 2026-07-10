@@ -13,11 +13,16 @@ source_refs = [
     "aeat-modelo-210-procedure",
     "aeat-irnr-renta-imputada-inmueble-urbano",
     "boe-modelo-210-2026-deadline-update",
+    "boe-modelo-210-diseno-registro-2011",
 ]
 formulas = [
     "m210-base-imponible-2025",
     "m210-tipo-gravamen-2025-resolve",
     "m210-cuota-integra-2025",
+    "m210-base-ganancias-h-2025",
+    "m210-cuota-ley-irnr-2025",
+    "m210-cuota-integra-reducida-2025",
+    "m210-reduccion-convenio-2025",
     "m210-cuota-diferencial-2025",
 ]
 application_links = [

@@ -116,6 +116,9 @@ def _spanish_stemmer() -> object | None:
 def _stem_terms(stemmer: object | None, terms: Sequence[str]) -> list[str]:
     if stemmer is None or not terms:
         return list(terms)
+    # TYPE-IGNORE-RATIONALE-STEMMER: the snowball stemmer is a duck-typed optional
+    # dependency (typed `object | None`); `stemWords` resolves at runtime on the
+    # concrete stemmer and cannot be statically attributed on `object`.
     return list(stemmer.stemWords(list(terms)))  # type: ignore[attr-defined]
 
 

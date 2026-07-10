@@ -1,9 +1,16 @@
-# Modelo 210 current casilla set.
+# Modelo 210 base / rate / cuota chain casillas.
 #
-# Thirteen casillas implementing the base / rate / cuota chain for
-# general, ue_residente, interest, ganancia_patrimonial, and the
-# Art. 13.1.h inmobiliaria imputed-real-estate base branch. Pension is
-# covered by the live Art. 25.1.b progressive tariff parameter.
+# The base / rate / cuota chain for general, ue_residente, interest,
+# ganancia_patrimonial, and the Art. 13.1.h inmobiliaria imputed-real-estate
+# base branch. Pension is covered by the live Art. 25.1.b progressive tariff
+# parameter. The Slice C diseño-de-registro pass renumbered the seven boxes that
+# map onto official liquidación numbers (rendimientos_integros=[5],
+# gastos_deducibles=[7], base_imponible=[8], tipo_gravamen=[21],
+# cuota_integra=[22], retencion_practicada=[29], cuota_diferencial=[31]) and
+# added the remaining official boxes in the companion
+# 0002-casillas-diseno-registro.toml fragment; the inmobiliaria-support inputs
+# (valor_catastral, coeficiente, días, valores) keep their engine-internal
+# identifiers as they are not [4]-[31] numbered boxes.
 #
 # Current wiring:
 #  - tipo_renta            manual text (operator-supplied enum key)
@@ -33,7 +40,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos_integros"
-number = "rendimientos_integros"
+number = "5"
 label = "Rendimientos íntegros"
 section = ["rendimientos"]
 data_type = "money"
@@ -111,7 +118,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "gastos_deducibles"
-number = "gastos_deducibles"
+number = "7"
 label = "Gastos deducibles"
 section = ["rendimientos"]
 data_type = "money"
@@ -123,7 +130,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".casillas]]
 id = "retencion_practicada"
-number = "retencion_practicada"
+number = "29"
 label = "Retención practicada"
 section = ["liquidacion"]
 data_type = "money"
@@ -135,7 +142,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".casillas]]
 id = "base_imponible"
-number = "base_imponible"
+number = "8"
 label = "Base imponible"
 section = ["liquidacion"]
 data_type = "money"
@@ -148,7 +155,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 
 [[revisions."2025".casillas]]
 id = "tipo_gravamen"
-number = "tipo_gravamen"
+number = "21"
 label = "Tipo de gravamen"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -161,7 +168,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".casillas]]
 id = "cuota_integra"
-number = "cuota_integra"
+number = "22"
 label = "Cuota íntegra"
 section = ["liquidacion"]
 data_type = "money"
@@ -174,7 +181,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".casillas]]
 id = "cuota_diferencial"
-number = "cuota_diferencial"
+number = "31"
 label = "Cuota diferencial"
 section = ["liquidacion"]
 data_type = "money"

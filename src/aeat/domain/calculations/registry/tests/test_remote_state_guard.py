@@ -7,6 +7,7 @@ from pydantic import AnyUrl, ValidationError
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
     AEAT_LEGACY_SEDE_CANARY,
     PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE,
@@ -43,6 +44,7 @@ _SEDE_HOST = aeat_host("sede")
 _WWW2_HOST = aeat_host("www2")
 _WWW6_HOST = aeat_host("www6")
 _AEAT_APEX_HOST = aeat_host("aeat_gob")
+_CLAVE_HOST = aeat_host("clave")
 _PLANNED_OPERATION_EXPECTED_FIXTURES = {
     GROI_ORACLE_ID: {"A28015865": "valid"},
     ORACLE_ID: {"DE111222333": "valid"},
@@ -429,6 +431,152 @@ def test_remote_state_guard_blocks_unknown_aeat_host() -> None:
                 url=AnyUrl(aeat_url("www2", UNCLASSIFIED_WWW2_READ_PATH_CANARY)),
             ),
         )
+
+
+def _host_suffix_policy() -> RemoteStateGuardPolicy:
+    # An authenticated read surface pinned to www6 but widened to accept any
+    # subdomain under the AEAT apex, mirroring the declarations/censo live-pull
+    # guards that must tolerate ``www{n}`` load-balancer dispatch.
+    return RemoteStateGuardPolicy(
+        id="host-suffix-read",
+        evidence_tier="official_source_guidance",
+        classification="authenticated_read_surface",
+        allowed_hosts=(_WWW6_HOST,),
+        allowed_host_suffixes=(AEAT_HOST_SUFFIX_EXPECTED,),
+        synthetic_data_allowed=False,
+        requires_authentication=True,
+        requires_aeat_authorization=True,
+    )
+
+
+def test_host_suffix_admits_sibling_load_balancer_host() -> None:
+    # A GET dispatched to www12 (not the pinned www6) is accepted because the
+    # policy widened to the AEAT apex suffix — the host-mapping-drift fix.
+    result = assert_remote_operation_allowed(
+        _host_suffix_policy(),
+        RemoteOperation(
+            kind="http",
+            method="GET",
+            url=AnyUrl(aeat_url("www12", configured_path("sede_paths", "declarations_listing"))),
+        ),
+    )
+
+    assert result.decision == "allowed"
+
+
+def test_host_suffix_still_refuses_non_aeat_host() -> None:
+    # Widening to the AEAT apex suffix must NOT admit an off-AEAT host: the
+    # suffix is AEAT-owned, so a foreign host still fails closed.
+    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
+        assert_remote_operation_allowed(
+            _host_suffix_policy(),
+            RemoteOperation(
+                kind="http",
+                method="GET",
+                url=AnyUrl("https://attacker.example/read/path"),
+            ),
+        )
+
+
+def test_host_suffix_field_rejects_non_aeat_suffix() -> None:
+    # A declared host suffix MUST itself be an AEAT-owned apex; a foreign
+    # suffix would silently widen the allow-list to a non-AEAT surface.
+    with pytest.raises(ValidationError, match="allowed host suffix is not an AEAT host"):
+        RemoteStateGuardPolicy(
+            id="host-suffix-foreign",
+            evidence_tier="official_source_guidance",
+            classification="authenticated_read_surface",
+            allowed_hosts=(_WWW6_HOST,),
+            allowed_host_suffixes=("example.com",),
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=True,
+        )
+
+
+def test_gov_idp_host_refused_without_opt_in() -> None:
+    """A sanctioned Cl@ve IdP host is refused at build unless the policy opts in."""
+    with pytest.raises(ValidationError, match="sanctioned government-IdP"):
+        RemoteStateGuardPolicy(
+            id="idp-no-optin",
+            evidence_tier="official_source_guidance",
+            classification="authenticated_read_surface",
+            allowed_hosts=(_WWW6_HOST, _CLAVE_HOST),
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=True,
+        )
+
+
+def test_gov_idp_opt_in_refused_on_open_simulator() -> None:
+    """The IdP opt-in is only for authenticated-read policies, never a simulator."""
+    with pytest.raises(ValidationError, match="authenticated_read_surface"):
+        RemoteStateGuardPolicy(
+            id="idp-open-sim",
+            evidence_tier="executable_parity_evidence",
+            classification="open_simulator",
+            allowed_hosts=(_SEDE_HOST,),
+            allows_gov_idp_hosts=True,
+            synthetic_data_allowed=False,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
+def test_gov_idp_opt_in_refused_on_public_read_surface() -> None:
+    """A public read policy has no business naming an identity provider."""
+    with pytest.raises(ValidationError, match="authenticated_read_surface"):
+        RemoteStateGuardPolicy(
+            id="idp-public",
+            evidence_tier="official_source_guidance",
+            classification="public_read_surface",
+            allowed_hosts=(_SEDE_HOST,),
+            allows_gov_idp_hosts=True,
+            synthetic_data_allowed=False,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
+def test_arbitrary_gob_es_host_refused_even_with_opt_in() -> None:
+    """The IdP allowance is the single Cl@ve apex only, not any *.gob.es host."""
+    with pytest.raises(ValidationError, match="not an AEAT host"):
+        RemoteStateGuardPolicy(
+            id="idp-arbitrary-gob",
+            evidence_tier="official_source_guidance",
+            classification="authenticated_read_surface",
+            allowed_hosts=(_SEDE_HOST, "foo.gob.es"),
+            allows_gov_idp_hosts=True,
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=True,
+        )
+
+
+def test_gov_idp_opt_in_auth_read_admits_the_clave_idp_host() -> None:
+    """A valid opt-in authenticated-read policy builds and admits the Cl@ve IdP host."""
+    policy = RemoteStateGuardPolicy(
+        id="idp-optin-valid",
+        evidence_tier="official_source_guidance",
+        classification="authenticated_read_surface",
+        allowed_hosts=(_WWW6_HOST,),
+        allowed_host_suffixes=(_CLAVE_HOST,),
+        allows_gov_idp_hosts=True,
+        synthetic_data_allowed=False,
+        requires_authentication=True,
+        requires_aeat_authorization=True,
+    )
+
+    result = assert_remote_operation_allowed(
+        policy,
+        RemoteOperation(
+            kind="http",
+            method="GET",
+            url=AnyUrl(f"https://se-pasarela.{_CLAVE_HOST}/idp/gateway"),
+        ),
+    )
+
+    assert result.decision == "allowed"
 
 
 def test_remote_state_guard_allows_local_workbook_for_static_policy() -> None:

@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ._aeat_hosts import first_aeat_host, is_aeat_host
+from ._aeat_hosts import first_aeat_host, is_aeat_host, is_sanctioned_gov_idp_host
 from ._errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
 
@@ -135,22 +135,27 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     evidence_tier: RemoteEvidenceTier
     classification: CrossReferenceClassification
     allowed_hosts: tuple[str, ...] = Field(default_factory=tuple)
+    allowed_host_suffixes: tuple[str, ...] = Field(default_factory=tuple)
     allowed_read_post_paths: tuple[str, ...] = Field(default_factory=tuple)
     allowed_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     synthetic_data_allowed: bool
     requires_authentication: bool
     requires_aeat_authorization: bool
     forbidden_actions: tuple[str, ...] = Field(default_factory=tuple)
+    allows_gov_idp_hosts: bool = False
 
     @model_validator(mode="after")
     def _validate_policy(self) -> RemoteStateGuardPolicy:
         # Each predicate group raises in the same order as before; the phases are
         # evidence-tier consistency, allowed-hosts presence, authentication
-        # consistency, then synthetic-data consistency.
+        # consistency, synthetic-data consistency, then the government-IdP opt-in
+        # gate (a sanctioned non-AEAT identity-provider host is admitted only for
+        # an explicit opt-in authenticated-read policy).
         self._validate_evidence_tier()
         self._validate_allowed_hosts_presence()
         self._validate_authentication_consistency()
         self._validate_synthetic_data_consistency()
+        self._validate_gov_idp_hosts()
         return self
 
     def _validate_evidence_tier(self) -> None:
@@ -200,6 +205,33 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
                     f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces",
                 )
 
+    def _validate_gov_idp_hosts(self) -> None:
+        # The field validators admit sanctioned government-IdP hosts syntactically
+        # but DEFER the policy-level decision here: an IdP host/suffix is legal only
+        # on an explicit opt-in (``allows_gov_idp_hosts``) authenticated-read policy.
+        # Default false + no IdP entry = every existing policy is unchanged; a
+        # non-AEAT, non-IdP host is already refused at the field-validator stage.
+        idp_entries = tuple(
+            entry
+            for entry in (*self.allowed_hosts, *self.allowed_host_suffixes)
+            if is_sanctioned_gov_idp_host(entry) and not _is_aeat_host(entry)
+        )
+        if self.allows_gov_idp_hosts:
+            if self.classification != "authenticated_read_surface":
+                raise RegistryValidationError(
+                    "government-IdP host opt-in requires an authenticated_read_surface policy, "
+                    f"got classification {self.classification!r}",
+                )
+            if not self.requires_authentication:
+                raise RegistryValidationError(
+                    "government-IdP host opt-in requires requires_authentication = true",
+                )
+        elif idp_entries:
+            raise RegistryValidationError(
+                f"policy {self.id!r} lists sanctioned government-IdP host(s) {idp_entries!r} "
+                "without the allows_gov_idp_hosts opt-in",
+            )
+
     @field_validator("allowed_hosts")
     @classmethod
     def _validate_hosts(cls, value: tuple[str, ...]) -> tuple[str, ...]:
@@ -207,8 +239,34 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             parsed = urlparse(f"https://{host}")
             if not parsed.hostname or parsed.hostname != host.lower():
                 raise RegistryValidationError(f"invalid allowed host {host!r}")
-            if not _is_aeat_host(host):
-                raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
+            if _is_aeat_host(host):
+                continue
+            # A sanctioned government-IdP host is syntactically admitted here and
+            # gated on the opt-in flag in the model phase (_validate_gov_idp_hosts);
+            # every other non-AEAT host is refused exactly as before.
+            if is_sanctioned_gov_idp_host(host):
+                continue
+            raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
+        return value
+
+    @field_validator("allowed_host_suffixes")
+    @classmethod
+    def _validate_host_suffixes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        # A host suffix widens the exact-host allow-list to any subdomain
+        # under an AEAT-owned apex, so AEAT's ``www{n}`` load-balancer
+        # dispatch (www1/www2/www6/www12/sede) is not refused. The suffix
+        # itself MUST still be an AEAT-owned host — or a sanctioned
+        # government-IdP apex, deferred to the model-phase opt-in gate — so the
+        # widening cannot admit an arbitrary non-AEAT surface.
+        for suffix in value:
+            parsed = urlparse(f"https://{suffix}")
+            if not parsed.hostname or parsed.hostname != suffix.lower():
+                raise RegistryValidationError(f"invalid allowed host suffix {suffix!r}")
+            if _is_aeat_host(suffix):
+                continue
+            if is_sanctioned_gov_idp_host(suffix):
+                continue
+            raise RegistryValidationError(f"allowed host suffix is not an AEAT host: {suffix!r}")
         return value
 
     @field_validator("allowed_read_post_paths")
@@ -350,7 +408,7 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
     if method not in _READ_ONLY_HTTP_METHODS and not read_post_allowed:
         return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
     host = operation.url.host
-    if host is None or host.lower() not in policy.allowed_hosts:
+    if host is None or not _host_within_policy(policy, host):
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
     text = f"{operation.url} {operation.action or ''}".lower()
     action = _first_declared_forbidden_action(policy, text)
@@ -374,6 +432,22 @@ def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOp
     if policy.allowed_browser_action_patterns and not _matches_allowed_browser_action(policy, text):
         return _blocked(policy, f"AEAT browser action {text!r} is not in the explicit read-only allow-list")
     return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
+
+
+def _host_within_policy(policy: RemoteStateGuardPolicy, host: str) -> bool:
+    """Return whether ``host`` is admitted by the policy's exact hosts or host suffixes.
+
+    Exact ``allowed_hosts`` membership is checked first; a policy may
+    additionally widen the allow-list with ``allowed_host_suffixes`` so
+    AEAT's ``www{n}`` load-balancer dispatch (a request pinned to one host
+    but served from a sibling subdomain under the same AEAT apex) is not
+    refused. The suffix set is validated to AEAT-owned apexes at build
+    time, so widening never admits a non-AEAT host.
+    """
+    normalized = host.lower()
+    if normalized in policy.allowed_hosts:
+        return True
+    return any(normalized == suffix or normalized.endswith(f".{suffix}") for suffix in policy.allowed_host_suffixes)
 
 
 def _blocked(policy: RemoteStateGuardPolicy, reason: str) -> RemoteStateGuardResult:

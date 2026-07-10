@@ -144,7 +144,33 @@ def auth_status(
         ctx,
         command="config.auth.status",
         result=envelope_result,
-        lines=tuple(f"{key}\t{value}" for key, value in payload.items()),
+        lines=(_auth_status_summary_line(payload), *(f"{key}\t{value}" for key, value in payload.items())),
+    )
+
+
+def _auth_status_summary_line(payload: dict[str, object]) -> str:
+    """Return the localised operator verdict prepended to the status dump.
+
+    The tab-separated ``key`` / ``value`` lines mirror the JSON envelope and key
+    on stable field identifiers (``configured``, ``authenticated``,
+    ``available``, …), so they are deliberately kept as machine identifiers
+    rather than localised. This verdict line is the operator-facing prose that
+    the ``--language`` / ``--output-language`` flag localises, so the flag has a
+    visible effect on the ``status`` output.
+    """
+    if payload.get("authenticated") and payload.get("available"):
+        return tr(
+            "cli.config.auth.status_summary_ready",
+            default="Authentication is configured and a live session is available.",
+        )
+    if payload.get("configured"):
+        return tr(
+            "cli.config.auth.status_summary_configured",
+            default="Authentication is configured but no live session is available yet.",
+        )
+    return tr(
+        "cli.config.auth.status_summary_unconfigured",
+        default="Authentication is not configured yet.",
     )
 
 

@@ -62,6 +62,24 @@ _CANONICAL_LOCALE = _LOCALES_DIR / "es.yml"
 # operator-facing renders; skip them to avoid false positives.
 _SKIP_FILE_STEMS = frozenset({"manager", "_ast_scanner", "test_parity", "conftest"})
 
+# (key, token) pairs whose ``{name}`` tokens are intentionally passed THROUGH
+# tr() to a downstream formatter rather than supplied by the tr() call site,
+# so they are NOT orphans. ``_interpolate`` fails closed on an unsupplied
+# ``{name}`` (its ``str.format`` pass raises ``KeyError`` and returns the
+# pre-format string), leaving the token intact for the downstream formatter.
+# ``cli.help.try_for_help`` routes Typer's RICH_HELP through tr() for
+# localisation while preserving Typer's own ``{command_path}`` /
+# ``{help_option}`` positional tokens, which Typer ``.format()``s itself when
+# it renders the help footer. Verified: the footer renders fully at runtime
+# with both tokens filled by Typer (S332). These are localised-prose surfaces
+# with a downstream ``.format()`` owner, not half-rendered operator strings.
+_DOWNSTREAM_FORMAT_PASSTHROUGH: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("cli.help.try_for_help", "command_path"),
+        ("cli.help.try_for_help", "help_option"),
+    }
+)
+
 
 def _locale_placeholders(value: str) -> frozenset[str]:
     """Return the set of placeholder names declared in a locale value.
@@ -192,6 +210,8 @@ def test_no_orphan_placeholder_tokens(
             continue
         all_supplied = frozenset().union(*call_kwargs_list)
         for token in sorted(required - all_supplied):
+            if (key, token) in _DOWNSTREAM_FORMAT_PASSTHROUGH:
+                continue
             findings.append(f"ORPHAN  key={key!r}  token={token!r}  locale={locale_val[:80]!r}")
     if findings:
         formatted = "\n  ".join(findings)

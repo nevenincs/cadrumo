@@ -6,7 +6,6 @@ import pytest
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
-from ..._errors import CliRefusedBoundaryError
 from ..__init__ import app
 
 # serial: shares the process-global master-key-provider / active-profile state
@@ -30,21 +29,25 @@ def test_apoderado_status_fails_without_profile(tmp_path: Path) -> None:
     # active-profile pointer left by a peer test cannot mask the
     # no-active-profile refusal this test asserts.
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        result = invoke_typer_app(app, ["auth", "apoderado", "status"])
-        # Must refuse — any non-zero exit code is acceptable (boundary maps
-        # refusals to its own exit category).
-        assert result.exit_code != 0
-        # The _config sub-app is invoked directly so the error boundary
-        # (applied only to the root CLI app) is absent. CliRefusedBoundaryError
-        # leaks as result.exception. Pin the exception type so an unrelated
-        # leaked exception cannot satisfy the check vacuously.
-        assert isinstance(result.exception, CliRefusedBoundaryError), (
-            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-        )
-        # CliRefusedBoundaryError carries the operator-facing copy via its
-        # translated_message key; str(exception) is intentionally empty
-        # because the rendering happens in the boundary, not on the exception.
-        assert result.exception.translated_message == "cli.config.profile.no_active_profile"
+        # Invoke through the ROOT app (the production path). The config
+        # sub-app is never reached directly in production, and invoking it
+        # directly breaks under test ordering once another test has lazily
+        # materialised the config subtree on the full app (see #211). Through
+        # the root app the error boundary RENDERS the no-active-profile
+        # refusal, so assert the rendered refusal rather than the leaked
+        # exception.
+        result = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
+        # Must refuse — any non-zero exit code is acceptable (the boundary
+        # maps refusals to its own exit category) — and it must be a clean
+        # refusal, not a crash.
+        assert result.exit_code != 0, result.output
+        assert "Traceback" not in result.output, result.output
+        assert "Refused" in result.output, result.output
+        # The rendered copy is the no-active-profile refusal specifically: it
+        # is the refusal that directs the operator to create a profile. The
+        # `config profile create` guidance is locale-independent (the prose
+        # around it localises, this command token does not).
+        assert "config profile create" in result.output, result.output
 
 
 def test_apoderado_scopes_list() -> None:

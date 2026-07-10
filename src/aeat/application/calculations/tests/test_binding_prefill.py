@@ -28,6 +28,8 @@ from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
+from ...bienes_inversion import BienesInversionIvaRegisterRepository
+from .._bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from .._binding_prefill import (
     _iva_compensation_history_observation,
     _observation_from_iva_compensation_history,
@@ -174,7 +176,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
     resolve through :func:`resolve_relations_from_local_store` and that the
     annual reconciliation casillas equal the ledger-derived annual totals.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         quarterly_observations = {
             "1T": (
                 _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
@@ -257,6 +259,23 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             ),
         )
         assert not annual_partition.unresolved_binding_ids
+        # M390 casilla 63 (regularización de bienes de inversión, LIVA arts.
+        # 107-110) is a declared binding on the annual revision; with no
+        # capital-goods register the live resolver returns its empty-register
+        # zero. Enrolling it here mirrors the calculate-path mesh so the
+        # annual snapshot has every declared binding fact.
+        bienes_resolution = BienesInversionRegularizacionSourceResolver(
+            register_repository=BienesInversionIvaRegisterRepository(objects=profile.repository),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=profile.bucket_id,
+                modelo="390",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision=snapshot.revision,
+            ),
+        )
+        assert not bienes_resolution.unresolved_binding_ids
         annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
             snapshot.revision,
             tuple(row for rows in quarterly_observations.values() for row in rows),
@@ -265,6 +284,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             **annual_ledger_values,
             **relation_binding_values,
             **annual_partition.binding_values,
+            **bienes_resolution.binding_values,
         }
         result = calculate_registry_snapshot(
             snapshot,

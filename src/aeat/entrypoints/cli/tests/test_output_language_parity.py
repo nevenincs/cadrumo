@@ -107,6 +107,55 @@ def _assert_output_language_registered(args: Sequence[str]) -> None:
     )
 
 
+def _assert_output_language_effective(args: Sequence[str]) -> None:
+    """Assert *args* actually localises its output, not just accepts the flag.
+
+    Runs the command twice — once in English and once in Hungarian — through both
+    the leaf ``--output-language`` option and the root ``--language`` flag, and
+    asserts the stdout differs. This closes the *ineffective-flag* gap: a command
+    that registers ``--output-language`` (so
+    :func:`_assert_output_language_registered` passes) but never routes its output
+    through ``tr(...)`` produces byte-identical output in both locales, which this
+    assertion catches. The surfaces enrolled here render a localised operator
+    verdict line, so the two locales must diverge.
+    """
+    leaf_en = invoke_cached_cli([*args, "--output-language", "en"])
+    leaf_hu = invoke_cached_cli([*args, "--output-language", "hu"])
+    assert leaf_en.exit_code == 0, f"`{' '.join(args)} --output-language en` exited {leaf_en.exit_code}:\n{leaf_en.output}"
+    assert leaf_hu.exit_code == 0, f"`{' '.join(args)} --output-language hu` exited {leaf_hu.exit_code}:\n{leaf_hu.output}"
+    assert leaf_en.output != leaf_hu.output, (
+        f"`{' '.join(args)}` output is identical under `--output-language en` and `hu`; "
+        f"the flag is accepted but INEFFECTIVE (output not routed through tr()).\n"
+        f"Output:\n{leaf_en.output}"
+    )
+    root_en = invoke_cached_cli(["--language", "en", *args])
+    root_hu = invoke_cached_cli(["--language", "hu", *args])
+    assert root_en.output != root_hu.output, (
+        f"`--language ... {' '.join(args)}` output is identical under `en` and `hu`; "
+        f"the root flag is accepted but INEFFECTIVE.\nOutput:\n{root_en.output}"
+    )
+
+
+# Surfaces that render a localised operator verdict line, so ``--language`` /
+# ``--output-language`` must produce different output per locale. These are the
+# anchors for the ineffective-flag regression gate; ``config auth status`` runs
+# without an active profile so it is driveable in the sessionless test harness.
+_OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS = (
+    ("config", "auth", "status"),
+)
+
+
+def test_output_language_is_effective_not_just_accepted() -> None:
+    """Enrolled surfaces must localise output, not merely accept ``--output-language``.
+
+    Regression companion to the presence checks: it fails when a command accepts
+    the flag but ignores it (the ZSOFIA R9-B ineffective-flag class), which the
+    presence-only assertions cannot detect.
+    """
+    for argv in _OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS:
+        _assert_output_language_effective(argv)
+
+
 def test_auth_commands_accept_output_language() -> None:
     """Config auth commands must accept ``--output-language``."""
     for argv in _AUTH_COMMANDS:

@@ -811,6 +811,40 @@ def __getattr__(name: str) -> object:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+def _localise_help_section_headers() -> None:
+    """Localise Typer's Rich ``--help`` section headers to the resolved locale.
+
+    Typer renders the ``Options`` / ``Commands`` / ``Arguments`` panel titles
+    (the ``--help`` section headers) and the parse-error ``Try '... --help' for
+    help.`` hint from module-level constants in :mod:`typer.rich_utils` that are
+    frozen to English at import. The already-``tr()``-bound option *descriptions*
+    localise via the :func:`_apply_language_argv_to_environment` env promotion,
+    but the framework-owned section headers stayed English — the residual gap the
+    operator-surface ``--language`` help-honesty contract (ADR D6) leaves open.
+    This rebinds those constants to the operator's resolved output language.
+
+    Invocation-scoped, no cross-invocation leak: it runs once per console
+    process from :func:`main` after the language flag has been promoted, always
+    sets every header to *this* invocation's locale (never a partial/stale set),
+    and is never reached by the in-process test runner (which does not call
+    :func:`main`). Real ``aeat`` runs are one process per invocation, so the
+    module-global rebind reflects only the current process's locale.
+    """
+    import typer.rich_utils as _rich_utils
+
+    _rich_utils.OPTIONS_PANEL_TITLE = tr("cli.help.panel.options", default="Options")
+    _rich_utils.COMMANDS_PANEL_TITLE = tr("cli.help.panel.commands", default="Commands")
+    _rich_utils.ARGUMENTS_PANEL_TITLE = tr("cli.help.panel.arguments", default="Arguments")
+    _rich_utils.ERRORS_PANEL_TITLE = tr("cli.help.panel.error", default="Error")
+    # RICH_HELP keeps the ``[blue]…[/]`` Rich markup and the ``{command_path}`` /
+    # ``{help_option}`` positional placeholders Typer ``.format()``s; tr() uses
+    # ``%{name}`` interpolation so it passes these ``{…}`` tokens through intact.
+    _rich_utils.RICH_HELP = tr(
+        "cli.help.try_for_help",
+        default="Try [blue]'{command_path} {help_option}'[/] for help.",
+    )
+
+
 def main() -> None:
     """Console-script entry point.
 
@@ -821,10 +855,13 @@ def main() -> None:
     ``AEAT_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
     render their ``tr(...)``-bound help, so the flag genuinely localises help
     text per operator-surface ADR decision D6 (see :mod:`._language_argv`).
+    The Rich ``--help`` section headers are then rebound to the same resolved
+    locale (see :func:`_localise_help_section_headers`).
     """
     import sys
 
     _apply_language_argv_to_environment(sys.argv[1:])
+    _localise_help_section_headers()
     with _ensure_help_render_width():
         app(prog_name="aeat")
 

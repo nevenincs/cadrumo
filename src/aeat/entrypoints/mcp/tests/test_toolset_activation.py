@@ -12,7 +12,6 @@ through the real built ``Server``.
 
 from __future__ import annotations
 
-import importlib.util
 from typing import Any, cast
 
 import anyio
@@ -23,8 +22,6 @@ from .._tools import build_tool_descriptors
 from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 
 
 def test_every_toolset_resolves_to_nonempty_command_keys() -> None:
@@ -86,7 +83,6 @@ def test_unknown_name_and_action_refuse_instructively() -> None:
     assert bad_action.refused is not None and "frobnicate" in bad_action.refused
 
 
-@pytest.mark.skipif(not _SDK_PRESENT, reason="asserted-absent branch covered elsewhere")
 def test_activating_a_toolset_widens_the_advertised_surface() -> None:
     from mcp.types import CallToolRequest, CallToolRequestParams, ListToolsRequest
 

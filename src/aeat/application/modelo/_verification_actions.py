@@ -102,6 +102,7 @@ from ._action_errors import (
 from ._art20_advisory import _art20_reduccion_advisory_finding
 from ._art52_advisory import _art52_reduccion_advisory_finding
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
+from ._attribution_received_advisory import _attribution_received_omission_advisory_findings
 from ._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_advisory_finding_for_work_unit
 from ._dt12_advisory import _dt12_reduccion_advisory_finding
 from ._dt12_antiquity_advisory import _dt12_antiquity_advisory_finding
@@ -877,6 +878,13 @@ def _append_revision_advisory_findings(
         if finding is not None:
             findings.append(finding)
     findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
+    findings.extend(
+        _attribution_received_omission_advisory_findings(
+            work_unit=work_unit,
+            snapshot=snapshot,
+            casilla_values=target.casilla_values,
+        )
+    )
 
 
 def _collect_revision_verification_findings(

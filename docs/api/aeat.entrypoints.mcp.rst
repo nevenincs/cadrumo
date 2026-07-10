@@ -22,6 +22,7 @@ Submodules
    aeat.entrypoints.mcp._faithfulness
    aeat.entrypoints.mcp._harness_tools
    aeat.entrypoints.mcp._hitl
+   aeat.entrypoints.mcp._identity_gate
    aeat.entrypoints.mcp._input_schema
    aeat.entrypoints.mcp._meta_tools
    aeat.entrypoints.mcp._persona_scope

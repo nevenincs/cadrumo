@@ -49,7 +49,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _profile_to_taxpayer
-from ._modelo_cli_support import load_work_unit
+from ._modelo_cli_support import load_calculation_revision, load_work_unit
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -62,6 +62,7 @@ from ._modelo_payloads import (
 from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
+    m184_socio_handoff_notices,
     next_action_notice,
     verification_report_lines,
     verification_report_notices,
@@ -225,6 +226,9 @@ def _register_work_verify_command(
                     suggestion=f"aeat app modelo work calculate {selected_revision.work_unit_id}",
                 ),
             )
+        notices.extend(
+            m184_socio_handoff_notices(load_calculation_revision(selected_revision.calculation_revision_id)),
+        )
         _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
 
         if not report.granted_verificado_completo:
@@ -550,6 +554,9 @@ def _register_work_file_command(
                 ),
             )
             lines.append(noop_message)
+        notices.extend(
+            m184_socio_handoff_notices(load_calculation_revision(record.calculation_revision_id)),
+        )
         _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)
 
 

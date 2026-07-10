@@ -24,14 +24,16 @@
 # Only the RATE-CONCEPT-grounded codes are declared. The bundled TRLIRNR corpus
 # is a Phase-1 extract carrying Art. 25 letters a) general 24%, b) pensiones,
 # and f) 19% dividendos/intereses/ganancias only; the special-rate letters
-# c/d/e/g/h are absent. So the codes whose rate is not bundle-verifiable are
-# NOT enrolled yet: cánones 08/09/10/11/12/32 and asistencia técnica 13
-# (cánones-adjacent in the HOJA INFORMATIVA, so a possible un-bundled special
-# letter), reaseguros 19 (Art. 25.1.e 1.5%), navegación 20 (Art. 25.1.d 4%),
-# imposición complementaria 27 (Art. 19.2), and premios de loterías 31
-# (D.A. 5ª gravamen especial). They enrol code-by-code once the full
-# consolidated Art. 25 is fetched, per the m210-irnr-phase-2-engine ADR
-# (Slice A). Force-mapping any to `general` would fabricate a rate.
+# c/d/e/g/h are absent. The cánones codes 08/09/10/11/12/32 ARE enrolled: cánones
+# has no specific letter in the consolidated Art. 25.1, so it is the general
+# rendimiento rate under Art. 25.1.a (24%) — bundle-grounded, no fabrication. The
+# codes whose rate is still not bundle-verifiable are NOT enrolled yet: asistencia
+# técnica 13 (cánones-ADJACENT in the HOJA INFORMATIVA, a possible un-bundled
+# special letter, NOT cánones proper), reaseguros 19 (Art. 25.1.e 1.5%),
+# navegación 20 (Art. 25.1.d 4%), imposición complementaria 27 (Art. 19.2), and
+# premios de loterías 31 (D.A. 5ª gravamen especial). They enrol code-by-code
+# once the full consolidated Art. 25 is fetched, per the m210-irnr-phase-2-engine
+# ADR (Slice A). Force-mapping any to a rate would fabricate it.
 
 [[revisions."2025".parameters]]
 id = "m210-tipo-renta-code-2025"
@@ -95,6 +97,36 @@ valid_from = 2025-01-01
 # Intereses bonificados (interest concept, Art 25.1.f.2º).
 [[revisions."2025".parameters.keyed_brackets]]
 key = "07"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2025".parameters.keyed_brackets]]
+key = "08"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2025".parameters.keyed_brackets]]
+key = "09"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2025".parameters.keyed_brackets]]
+key = "10"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2025".parameters.keyed_brackets]]
+key = "11"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2025".parameters.keyed_brackets]]
+key = "12"
 value = "1"
 valid_from = 2025-01-01
 
@@ -173,6 +205,12 @@ valid_from = 2025-01-01
 # Dividendos exentos, IIC Directiva 2009/65/CE (dividend concept, Art 25.1.f.1º; exención Art 14.1.l).
 [[revisions."2025".parameters.keyed_brackets]]
 key = "30"
+value = "1"
+valid_from = 2025-01-01
+
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+[[revisions."2025".parameters.keyed_brackets]]
+key = "32"
 value = "1"
 valid_from = 2025-01-01
 
