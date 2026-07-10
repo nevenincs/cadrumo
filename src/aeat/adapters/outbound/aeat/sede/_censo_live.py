@@ -21,18 +21,26 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
+
+from pydantic import AnyUrl
 
 from .....core.config import Settings
 from .....core.decimal import format_decimal
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....domain.calculations.registry import (
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from ._censo import CensoFactSet, parse_g313_html
+from ._censo import _G313_LABELS, CensoFactSet, parse_g313_html
 from ._errors import SedeFailureMode, SedeNavigationError
 
 if TYPE_CHECKING:
@@ -51,9 +59,30 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
-G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.censo_g313_launcher}"
+_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
+# ``Mis Datos Censales`` (G313) is served by the BUGC-JDIT sede application —
+# the same app family as the pre303 ``VentanaCensalIva`` entry point, which
+# AEAT publishes under the ``www1`` load-balancer host. The launcher redirects
+# (server- and client-side) into the authenticated ``es13`` censal SPA, so the
+# final landing host is not assumed: the read guard admits any subdomain under
+# the AEAT apex suffix and the driver captures ``page.url`` after the redirect.
+G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.censo_g313_launcher}"
 """AEAT-published entry point for *Mis Datos Censales* (the read-only
 operator-facing projection of the operator's 036 censo record)."""
+_RESUMEN_URL = f"{_EXTERNAL.aeat.domains.www6}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+"""Authenticated ``Mis Expedientes`` landing used only to warm the session
+cookie jar before the censal navigation, mirroring the notifications,
+declarations, and walker surfaces."""
+_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+    id="aeat-sede-censo-g313-read",
+    evidence_tier="official_source_guidance",
+    classification="authenticated_read_surface",
+    allowed_hosts=(urlsplit(_EXTERNAL.aeat.domains.www1).netloc,),
+    allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
+    synthetic_data_allowed=False,
+    requires_authentication=True,
+    requires_aeat_authorization=True,
+)
 
 
 async def fetch_g313_censo(
@@ -120,7 +149,9 @@ async def _fetch_g313_censo_with_storage_state(
         A :class:`CensoFactSet` parsed from the navigated G313 page.
 
     Raises:
-        SedeNavigationError: when the goto itself fails.
+        SedeNavigationError: when the goto itself fails, when AEAT redirects
+            off the AEAT apex, or when the landing page exposes no
+            recognisable censal fields (an empty parse).
     """
     browser_session = await browser_session_factory(settings)
     try:
@@ -128,18 +159,66 @@ async def _fetch_g313_censo_with_storage_state(
         try:
             page = await context.new_page()
             try:
+                # Warm the authenticated cookie jar on the ``Mis Expedientes``
+                # landing so AEAT's redirect chain resolves the operator's
+                # session, mirroring the notifications/declarations/walker
+                # surfaces. Warm-up failures are non-fatal: the primary
+                # navigation can still succeed.
+                try:
+                    await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
+                except (PlaywrightError, OSError) as exc:
+                    log.debug(
+                        "fetch_g313_censo: warm-up navigation to %s suppressed: %s",
+                        _RESUMEN_URL,
+                        exc,
+                        exc_info=True,
+                    )
+                _assert_read_http("GET", G313_LAUNCHER_URL)
                 await page.goto(G313_LAUNCHER_URL, wait_until=_WAIT_DOMCONTENTLOADED)
             except PlaywrightError as exc:
                 raise SedeNavigationError(
                     f"goto {G313_LAUNCHER_URL!r} failed: {exc}",
                     failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
                 ) from exc
+            # Follow the redirect chain rather than assuming the launcher
+            # host: capture the URL AEAT actually landed on and re-assert it
+            # against the read guard so an off-AEAT redirect fails closed
+            # while a ``www{n}`` load-balancer dispatch is tolerated.
+            landing_url = getattr(page, "url", "") or G313_LAUNCHER_URL
+            landing = urlsplit(landing_url)
+            landing_no_query = f"{landing.scheme}://{landing.netloc}{landing.path}"
+            _assert_read_http("GET", landing_no_query)
             html = await page.content()
             fact_set = parse_g313_html(html)
+            populated = _populated_count(fact_set)
+            if populated == 0:
+                marker_present = _censal_marker_present(html)
+                raise SedeNavigationError(
+                    "AEAT Mis Datos Censales (G313) navigation reached a page with no recognisable "
+                    "censal fields; the parser produced an empty CensoFactSet. This is far more often "
+                    "a wrong-service / auth-gate landing than a genuine 'no censo for this NIF'. "
+                    f"landing_host={landing.netloc!r} landing_path={landing.path!r} "
+                    f"censal_marker_present={marker_present} populated_fields=0",
+                    failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+                    context={
+                        "entry_url": G313_LAUNCHER_URL,
+                        "landing_host": landing.netloc,
+                        "landing_path": landing.path,
+                        "censal_marker_present": marker_present,
+                        "populated_field_count": 0,
+                    },
+                    suggestion=(
+                        "Capture the landing HTML under an authenticated session and confirm the "
+                        "es13 Mis Datos Censales content markers and field labels before trusting "
+                        "the censo parser; the launcher may need re-pointing or the parser labels "
+                        "may need re-grounding against the live page."
+                    ),
+                )
             log.info(
-                "fetch_g313_censo: parsed %d fields from %s",
-                _populated_count(fact_set),
-                G313_LAUNCHER_URL,
+                "fetch_g313_censo: parsed %d fields from landing host=%s path=%s",
+                populated,
+                landing.netloc,
+                landing.path,
             )
             return fact_set
         finally:
@@ -149,6 +228,25 @@ async def _fetch_g313_censo_with_storage_state(
                 log.debug("fetch_g313_censo: context.close suppressed: %s", exc, exc_info=True)
     finally:
         await browser_session.close()
+
+
+def _assert_read_http(method: str, url: str) -> None:
+    """Fail-closed guard: refuse any non-read-only or off-AEAT censal navigation."""
+    assert_remote_operation_allowed(
+        _READ_GUARD_POLICY,
+        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
+    )
+
+
+def _censal_marker_present(html: str) -> bool:
+    """Return whether the raw HTML carries any known G313 censal field label.
+
+    Used only for the empty-parse diagnostic: a present marker with zero
+    populated fields points at a parser/label drift on a reached censal page,
+    while an absent marker points at a wrong-service / auth-gate landing.
+    """
+    lowered = html.lower()
+    return any(label.lower() in lowered for label in _G313_LABELS.values())
 
 
 def censo_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:

@@ -135,6 +135,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     evidence_tier: RemoteEvidenceTier
     classification: CrossReferenceClassification
     allowed_hosts: tuple[str, ...] = Field(default_factory=tuple)
+    allowed_host_suffixes: tuple[str, ...] = Field(default_factory=tuple)
     allowed_read_post_paths: tuple[str, ...] = Field(default_factory=tuple)
     allowed_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     synthetic_data_allowed: bool
@@ -209,6 +210,22 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
                 raise RegistryValidationError(f"invalid allowed host {host!r}")
             if not _is_aeat_host(host):
                 raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
+        return value
+
+    @field_validator("allowed_host_suffixes")
+    @classmethod
+    def _validate_host_suffixes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        # A host suffix widens the exact-host allow-list to any subdomain
+        # under an AEAT-owned apex, so AEAT's ``www{n}`` load-balancer
+        # dispatch (www1/www2/www6/www12/sede) is not refused. The suffix
+        # itself MUST still be an AEAT-owned host so the widening cannot
+        # admit a non-AEAT surface.
+        for suffix in value:
+            parsed = urlparse(f"https://{suffix}")
+            if not parsed.hostname or parsed.hostname != suffix.lower():
+                raise RegistryValidationError(f"invalid allowed host suffix {suffix!r}")
+            if not _is_aeat_host(suffix):
+                raise RegistryValidationError(f"allowed host suffix is not an AEAT host: {suffix!r}")
         return value
 
     @field_validator("allowed_read_post_paths")
@@ -350,7 +367,7 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
     if method not in _READ_ONLY_HTTP_METHODS and not read_post_allowed:
         return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
     host = operation.url.host
-    if host is None or host.lower() not in policy.allowed_hosts:
+    if host is None or not _host_within_policy(policy, host):
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
     text = f"{operation.url} {operation.action or ''}".lower()
     action = _first_declared_forbidden_action(policy, text)
@@ -374,6 +391,25 @@ def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOp
     if policy.allowed_browser_action_patterns and not _matches_allowed_browser_action(policy, text):
         return _blocked(policy, f"AEAT browser action {text!r} is not in the explicit read-only allow-list")
     return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
+
+
+def _host_within_policy(policy: RemoteStateGuardPolicy, host: str) -> bool:
+    """Return whether ``host`` is admitted by the policy's exact hosts or host suffixes.
+
+    Exact ``allowed_hosts`` membership is checked first; a policy may
+    additionally widen the allow-list with ``allowed_host_suffixes`` so
+    AEAT's ``www{n}`` load-balancer dispatch (a request pinned to one host
+    but served from a sibling subdomain under the same AEAT apex) is not
+    refused. The suffix set is validated to AEAT-owned apexes at build
+    time, so widening never admits a non-AEAT host.
+    """
+    normalized = host.lower()
+    if normalized in policy.allowed_hosts:
+        return True
+    return any(
+        normalized == suffix or normalized.endswith(f".{suffix}")
+        for suffix in policy.allowed_host_suffixes
+    )
 
 
 def _blocked(policy: RemoteStateGuardPolicy, reason: str) -> RemoteStateGuardResult:
