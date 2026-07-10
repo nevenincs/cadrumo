@@ -2,8 +2,8 @@
 tags:
   - "#adr"
   - "#submission-engine"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 title: Filing Submission Engine — ADR
 related:
   - "[[2026-04-12-submission-engine-research]]"
@@ -11,7 +11,7 @@ related:
 issue: wgergely/aeat#42
 ---
 
-# adr: filing submission engine
+# adr: filing submission engine | (**status:** `accepted`)
 
 ## context
 

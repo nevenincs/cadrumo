@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-08'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-05-06-live-parity-oracle-backend-research]]"
   - "[[2026-05-07-live-parity-oracle-adr]]"
@@ -12,7 +12,7 @@ related:
   - "[[2026-05-07-live-parity-oracle-reference]]"
 ---
 
-# `live-parity-oracle` ADR: cross-reference applicability gate
+# `live-parity-oracle` ADR: cross-reference applicability gate | (**status:** `accepted`)
 
 ## Context
 

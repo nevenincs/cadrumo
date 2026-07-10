@@ -2,8 +2,8 @@
 tags:
   - "#adr"
   - "#filing-complementaria"
-date: 2026-04-13
-modified: '2026-06-13'
+date: '2026-04-13'
+modified: '2026-07-10'
 title: Filing Complementaria / Amendment Engine — ADR
 related:
   - "[[2026-04-13-filing-complementaria-research]]"
@@ -13,7 +13,7 @@ related:
 issue: wgergely/aeat#93
 ---
 
-# adr: filing complementaria
+# adr: filing complementaria | (**status:** `accepted`)
 
 ## context
 

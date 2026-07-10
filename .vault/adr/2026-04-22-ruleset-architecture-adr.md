@@ -2,16 +2,17 @@
 tags:
   - "#adr"
   - "#real-pdf-import"
-date: 2026-04-22
-modified: '2026-06-13'
+date: '2026-04-22'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
+superseded_by: '2026-05-20-registry-authority-flow-adr'
+modified: '2026-07-10'
 ---
-# ruleset-architecture-adr
+# ruleset-architecture-adr | (**status:** `superseded`)
 
 ## status
 

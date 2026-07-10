@@ -2,13 +2,13 @@
 tags:
   - "#adr"
   - "#category-assignment"
-date: 2026-04-18
-modified: '2026-06-13'
+date: '2026-04-18'
+modified: '2026-07-10'
 related:
   - "[[2026-04-18-category-assignment-cli-research]]"
 ---
 
-# category-assignment-cli-adr
+# category-assignment-cli-adr | (**status:** `accepted`)
 
 ## CLI Backend Boundary
 

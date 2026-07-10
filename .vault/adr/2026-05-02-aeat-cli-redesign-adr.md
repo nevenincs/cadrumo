@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-cli-redesign'
 date: '2026-05-02'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - "[[2026-05-02-aeat-cli-redesign-research]]"
   - "[[2026-05-02-aeat-cli-redesign-reference]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-04-21-auth-cli-adr]]"
 ---
 
-# `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `in progress`)
+# `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `proposed`)
 
 ## CLI Backend Boundary
 

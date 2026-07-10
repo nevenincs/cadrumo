@@ -4,15 +4,15 @@ description: Adopt SQLite + SQLAlchemy 2.x + Alembic as the primary persistence 
 tags:
   - "#adr"
   - "#data-storage"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-data-storage-research]]"
   - "[[2026-04-12-data-storage-plan]]"
   - "[[2026-04-12-base-module-structure-adr]]"
 ---
 
-# data-storage adr
+# data-storage adr | (**status:** `accepted`)
 
 ## status
 

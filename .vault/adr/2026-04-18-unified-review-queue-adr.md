@@ -2,8 +2,8 @@
 tags:
   - "#adr"
   - "#unified-review-queue"
-date: 2026-04-18
-modified: '2026-06-13'
+date: '2026-04-18'
+modified: '2026-07-10'
 related:
   - "[[2026-04-18-unified-review-queue-research]]"
   - "[[2026-04-17-export-first-adr]]"
@@ -12,7 +12,7 @@ related:
   - "[[2026-04-12-notifications-inbox-adr]]"
 ---
 
-# unified-review-queue-adr
+# unified-review-queue-adr | (**status:** `accepted`)
 
 ## status
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#schema-driven-wizard-revision'
 date: '2026-05-12'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-12-schema-driven-wizard-revision-plan]]'
   - '[[2026-05-12-schema-driven-wizard-adr]]'
@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-schema-driven-wizard-revision-research]]'
 ---
 
-# `schema-driven-wizard-revision` adr
+# `schema-driven-wizard-revision` adr | (**status:** `accepted`)
 
 ## Context
 

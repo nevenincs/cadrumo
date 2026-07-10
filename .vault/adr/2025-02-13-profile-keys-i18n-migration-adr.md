@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#profile-keys-i18n-migration'
 date: '2025-02-13'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'
   - '[[2026-04-12-trilingual-i18n-research]]'
@@ -11,7 +11,7 @@ related:
   - '[[2026-06-04-profile-keys-i18n-migration-research]]'
 ---
 
-# `profile-keys-i18n-migration` adr
+# `profile-keys-i18n-migration` adr | (**status:** `accepted`)
 
 ## Context
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#audit-concerns-2026-05'
 date: '2026-05-08'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-05-08-audit-concerns-2026-05-plan]]'
   - '[[2026-05-08-renta-cuota-integra-state-scale-adr]]'
@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-audit-concerns-2026-05-research]]'
 ---
 
-# `audit-concerns-2026-05` adr
+# `audit-concerns-2026-05` adr | (**status:** `accepted`)
 
 ## Context
 

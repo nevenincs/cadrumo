@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#modelo-115-calc-verify'
+  - "#adr"
+  - "#modelo-115-calc-verify"
 date: '2026-04-27'
-modified: '2026-06-13'
 related:
   - "[[2026-04-27-modelo-115-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
   - "[[2026-04-25-mandatory-citations-adr]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"
   - "[[2026-04-27-modelo-130-rule-delta-reference]]"
+superseded_by: '2026-05-20-registry-authority-flow-adr'
+modified: '2026-07-10'
 ---
-
-# `modelo-115-calc-verify` ADR — child of EPIC `#316`
+# `modelo-115-calc-verify` ADR — child of EPIC `#316` | (**status:** `superseded`)
 
 ## Context
 
