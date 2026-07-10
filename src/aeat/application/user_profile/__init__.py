@@ -134,6 +134,7 @@ if TYPE_CHECKING:
         CensoFactSource,
         CensoFieldComparison,
         CensoProfileComparison,
+        CensoRefreshOutcome,
         CensoSyncService,
     )
     from ._commands import (
@@ -293,6 +294,7 @@ def __getattr__(name: str):
         "CensoFactSource",
         "CensoFieldComparison",
         "CensoProfileComparison",
+        "CensoRefreshOutcome",
         "CensoSyncService",
     ):
         from . import _censo_sync
@@ -450,6 +452,7 @@ __all__ = [
     "CensoFieldValidationError",
     "CensoNotAvailableError",
     "CensoProfileComparison",
+    "CensoRefreshOutcome",
     "CensoSyncError",
     "CensoSyncService",
     "CustodyRecoverResult",
