@@ -60,7 +60,7 @@ Defence-in-depth layer for the source_jurisdiction axis that lands once both the
 Project explicitly M210-classified, Spanish-source transaction rows through one registry-owned gross-income binding; surface foreign, unresolved, and incomplete rows as typed provenance-bearing issues before aggregation.
 
 - [ ] `W02.P05.S10` - Add the accepted M210 IRNR ledger binding source and registry selector for the gross-income target, with exclusive source ownership; `src/aeat/core/aggregation.py + src/aeat/_data/registry/aeat/modelos/210`.
-- [ ] `W02.P05.S11` - Implement explicit persisted M210 transaction classification plus the Spanish-source classifier and resolver, with typed foreign, unresolved, and incomplete-classification issues; `src/aeat/domain/transactions + src/aeat/application/aggregation`.
+- [ ] `W02.P05.S11` - Implement explicit persisted M210 transaction classification plus its operator write surface, runtime tipo-renta source context, Spanish-source classifier, and resolver with typed foreign, unresolved, and incomplete-classification issues; `src/aeat/domain/transactions + src/aeat/entrypoints/cli + src/aeat/application/modelo + src/aeat/application/aggregation`.
 - [ ] `W02.P05.S12` - Add secure-store behavioural tests proving ES-only M210 aggregation, retained provenance, and source-jurisdiction/classification mutation outcomes; `src/aeat/application/aggregation/tests`.
 
 ### Phase `W02.P06` - Beckham M151 IRPF base segregation gate
