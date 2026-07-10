@@ -88,6 +88,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from ._profile_repository import TAX_ID_FACT_PATH
+
 from ...core.identity import ProfileId
 from ._language_resolver import register_language_resolver as _register_language_resolver
 
@@ -434,6 +437,7 @@ __all__ = [
     "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_SOURCE_TAG",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
+    "TAX_ID_FACT_PATH",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
     "CapabilityDecision",
@@ -528,7 +532,6 @@ __all__ = [
     "set_active_field",
     "set_active_fields",
     "snapshot_to_values",
-    "TAX_ID_FACT_PATH",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
     "validate_bundle_payload",
