@@ -9,25 +9,6 @@ related:
   - "[[2026-06-05-live-censo-calendar-reconciliation-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #research) and one feature tag.
-     Replace censo-g313-launcher-fix with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `censo-g313-launcher-fix` research: `G313 Mis Datos Censales launcher lands on access page`
 
 On 2026-07-10 the live-censo-calendar-reconciliation plan obtained a real
@@ -116,3 +97,24 @@ path/markers in `src/aeat/core/external_constants.toml`, the parser labels in
 `src/aeat/adapters/outbound/aeat/sede/tests/`. Out of scope: the censo-sync
 application (`_censo_sync.py`), the CLI verbs (`_profile_censo.py`), and the
 calendar projection — all proven correct by the reconciliation plan.
+
+### Update 2026-07-10 — P01 capture falsified the premature-capture hypothesis
+
+The pre-capture root-cause above ("Acceso launcher; SPA redirect not resolved at
+capture") is WRONG. The P01 authenticated capture
+(`2026-07-10-censo-g313-launcher-fix-P01-S01`) found `/wlpl/BUGC-JDIT/MdcAcceso`
+returns **HTTP 404** (`title = "Agencia Tributaria: 404"`) — it is a dead URL,
+not a launcher that redirects late. The session authenticates correctly (the
+operator's name renders in the sede chrome).
+
+The real censal data is the prefilled Modelo 036 behind
+`www6.../wlpl/OVCT-CXEW/DialogoRepresentacion` ("Selección del contribuyente a
+representar" — an en-nombre-propio chooser + CONFIRMAR), which then loads a
+ZK-framework (`.zul`) SPA (`BU36-ASIS/M036/index.zul` personas físicas,
+`BU36-M036/MOD036/index.zul` general). The page carries `zul`/`zkau` markers and
+zero G313 label matches — a ZK component tree, not `label:value` HTML.
+
+Consequently candidate fix 1 (wait for SPA) is dead, fix 2 (re-point) is the
+lead, and the parser must move from text-scraping to ZK-component extraction —
+a larger change than first scoped. The ADR decision and the plan P02 steps were
+revised accordingly on 2026-07-10.

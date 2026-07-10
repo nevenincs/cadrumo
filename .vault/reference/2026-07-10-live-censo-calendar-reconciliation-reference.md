@@ -8,31 +8,7 @@ related:
   - "[[2026-06-05-live-censo-calendar-reconciliation-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace live-censo-calendar-reconciliation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `live-censo-calendar-reconciliation` reference: `live censo G313 launcher blocker`
-
-<!-- Brief description of what was researched and what sources were consulted.
-
-Include any concrete references to files, line numbers, modules, etc. This is
-the information that coding agents will consult during implementation. -->
 
 ## Summary
 
@@ -43,30 +19,37 @@ read transport is proven end-to-end; two residual blockers remain, and NEITHER
 is remaining implementation scope of the reconciliation plan. This reference
 carries them so they do not rot.
 
-## Blocker 1 — G313 `Mis Datos Censales` launcher lands on an access gate
+## Blocker 1 — G313 launcher URL is a 404; real censo lives behind a representation-gated ZUL SPA
 
-Under a valid live session (`auth_persisted_session_state=live`,
-`auth_identity_alignment=matches`, `auth_identity_kind=NIE`),
-`config profile censo pull` reached AEAT G313 but the navigation landed on
-`landing_path=/wlpl/BUGC-JDIT/MdcAcceso` (`landing_host=sede.agenciatributaria.gob.es`)
-— an access/auth-gate page — and the parser produced an empty `CensoFactSet`.
+CONCRETE root cause (2026-07-10 authenticated capture, superseding the earlier
+"lands on an access gate" framing): the configured launcher
+`censo_g313_launcher = "/wlpl/BUGC-JDIT/MdcAcceso"` **returns HTTP 404** under a
+valid authenticated session (`title = "Agencia Tributaria: 404"`). The landing
+path never changes from the entry path and `censal_marker_present=false` because
+the page is AEAT's 404 error page. The prior `config profile censo pull`
+`ERROR_SEDE_NAVIGATION` empty-parse was a symptom of this dead URL, not an
+access gate and not "no censo for this NIF".
 
-- Error: `ERROR_SEDE_NAVIGATION`, `failure_mode=live_navigation_failed`,
-  `censal_marker_present=false`, `populated_field_count=0`.
-- The error message itself states this is "far more often a wrong-service /
-  auth-gate landing than a genuine 'no censo for this NIF'".
-- Consequence: `config profile censo compare` and `config profile censo apply`
-  cannot run (no snapshot), so positive censo-backed calendar enrolment
-  (`censo.enrolment_unverified` cleared) is not producible.
+- The session is genuinely authenticated (the logged-in operator's name renders
+  in the sede chrome), so the defect is purely the endpoint.
+- There is no simple read-only "Mis datos censales" HTML endpoint. The real
+  censal-data surface is the prefilled Modelo 036 behind
+  `www6.../wlpl/OVCT-CXEW/DialogoRepresentacion` — which renders "Selección del
+  contribuyente a representar" (an *en nombre propio* chooser + CONFIRMAR
+  button) — and only after that confirm does the ZK-framework (`.zul`) SPA
+  (`BU36-ASIS/M036/index.zul` personas físicas, `BU36-M036/MOD036/index.zul`
+  general) load the censal data. The representation page carried `zul`/`zkau`
+  markers and zero G313 label matches, confirming a ZK SPA, not label:value HTML.
 
-This supersedes the older, vaguer "AEAT G313 returned no readable censo"
-diagnosis from the `2026-06-12` blocker audit: the account-empty framing was
-wrong; the launcher is landing on the wrong page. Next action is to capture the
-authenticated landing HTML, confirm the es13 Mis Datos Censales content markers,
-and either re-point the launcher navigation or re-ground the censo parser
-labels against the live authenticated page. The censo-sync application logic
-(`_censo_sync.py`) and the CLI verbs (`_profile_censo.py`) are unchanged by this
-finding; the defect is in the outbound AEAT G313 launcher/parser.
+Consequence: the fix is (a) re-point the launcher to the representation-gated
+036 flow, (b) drive the *en nombre propio* representation confirm, and (c)
+re-ground the parser from HTML label-scraping (`parse_g313_html` /
+`_G313_LABELS`) to ZK-component extraction — materially larger than a URL swap
+or a wait-tweak. The censo-sync application (`_censo_sync.py`) and CLI verbs
+(`_profile_censo.py`) remain correct; the defect is entirely in the outbound
+sede launcher (`_censo_live.py`), the launcher constant, and the parser
+(`_censo.py`). Full findings: exec `2026-07-10-censo-g313-launcher-fix-P01-S01`;
+fix pipeline: `2026-07-10-censo-g313-launcher-fix-plan`.
 
 ## Blocker 2 — AEAT account is empty for 2026
 
