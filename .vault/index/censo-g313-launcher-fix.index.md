@@ -6,6 +6,8 @@ tags:
 date: '2026-07-10'
 modified: '2026-07-10'
 related:
+  - '[[2026-07-10-censo-g313-launcher-fix-adr]]'
+  - '[[2026-07-10-censo-g313-launcher-fix-plan]]'
   - '[[2026-07-10-censo-g313-launcher-fix-research]]'
 ---
 
@@ -14,6 +16,14 @@ related:
 Auto-generated index of all documents tagged with `#censo-g313-launcher-fix`.
 
 ## Documents
+
+### adr
+
+- `2026-07-10-censo-g313-launcher-fix-adr` - `censo-g313-launcher-fix` adr: `wait for es13 censal SPA before capturing G313 HTML` | (**status:** `proposed`)
+
+### plan
+
+- `2026-07-10-censo-g313-launcher-fix-plan` - `censo-g313-launcher-fix` plan
 
 ### research
 
