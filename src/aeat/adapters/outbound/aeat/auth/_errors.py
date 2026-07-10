@@ -1,16 +1,16 @@
 """Shared exception taxonomy for outbound AEAT authentication.
 
-Every class here inherits from :class:`~aeat.core.errors.AeatError`, so the
-core error registry binds a stable :class:`~aeat.core.errors.ErrorCode` and
+Every class here inherits from :class:`~core.errors.AeatError`, so the
+core error registry binds a stable :class:`~core.errors.ErrorCode` and
 locale message key to the public auth failure surface. Certificate and Cl@ve
 Móvil providers raise these errors with ``translated_message`` keys when a
 provider precondition, verification probe, persisted-session check, or
 configuration guard refuses to continue.
 
 See Also:
-    :mod:`aeat.adapters.outbound.aeat.auth` for the public auth surface,
-    :class:`aeat.adapters.outbound.aeat.auth.AeatSession` for successful live
-    sessions, and :class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`
+    :mod:`adapters.outbound.aeat.auth` for the public auth surface,
+    :class:`adapters.outbound.aeat.auth.AeatSession` for successful live
+    sessions, and :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`
     for verification outcomes that can be returned without raising.
 """
 
@@ -34,7 +34,7 @@ class AuthConfigurationError(AuthError):
 
     This covers provider selection and configuration refusals before browser or
     certificate work begins. Provider-specific subclasses such as
-    :class:`aeat.adapters.outbound.aeat.auth.ClaveMovilConfigurationError` keep
+    :class:`adapters.outbound.aeat.auth.ClaveMovilConfigurationError` keep
     their own public identity while remaining catchable through this shared
     configuration arm.
     """
@@ -55,7 +55,7 @@ class AeatLoginAssertionError(AuthError):
     """Raised when an AEAT login assertion cannot be produced or trusted.
 
     Providers raise this when a structural precondition blocks
-    :class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion` creation, when
+    :class:`adapters.outbound.aeat.auth.AeatLoginAssertion` creation, when
     a fresh login probe is invalid, or when persisted session metadata cannot
     be resumed safely. Call sites preserve ``translated_message`` so CLI and
     locale renderers can surface the specific refusal key without parsing the
@@ -67,7 +67,7 @@ class AeatSessionExpiredError(AuthError):
     """Raised when an authenticated AEAT session is no longer usable.
 
     Conditions feeding this error include an
-    :class:`aeat.adapters.outbound.aeat.auth.AeatSession` idle deadline that
+    :class:`adapters.outbound.aeat.auth.AeatSession` idle deadline that
     has elapsed, a failed single-shot reauthentication attempt, or an HTTP
     401/403 surfaced by a downstream live-read call site. The registered error
     code is retryable so operator flows can prompt for a fresh authentication

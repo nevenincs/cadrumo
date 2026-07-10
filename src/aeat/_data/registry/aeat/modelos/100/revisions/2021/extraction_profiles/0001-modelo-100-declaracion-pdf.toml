@@ -27,6 +27,8 @@ target_casillas = [
     {casilla_id = "0587", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+incrementada\s+total'},
     # 0595 — cuota resultante de la autoliquidación (ley-35-2006:art-79)
     {casilla_id = "0595", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+resultante\s+de\s+la\s+autoliquidaci[oó]n'},
+    # 0604 — pagos fraccionados ingresados por actividades económicas (ley-35-2006:art-99)
+    {casilla_id = "0604", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Pagos\s+fraccionados\s+ingresados\s+por\s+actividades\s+econ[oó]micas'},
     # 0610 — cuota diferencial = 0595 − retenciones (ley-35-2006:art-79)
     # Pattern requires opening bracket to anchor on the formula-bearing body line.
     {casilla_id = "0610", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+diferencial\s*\['},
@@ -94,6 +96,9 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-77",
     "ley-35-2006:art-79",
+    "ley-35-2006:art-99",
     "ley-35-2006:art-103",
+    "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
 ]
 source_refs = ["aeat-dr-100-2021-dictionary", "boe-modelo-100-2021-form", "aeat-modelo-100-procedure"]

@@ -22,6 +22,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.iva import IvaCategory
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -99,7 +100,7 @@ def _txn() -> Transaction:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "iva_category": "domestic_general_21",
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
             "category_id": "material_oficina",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,

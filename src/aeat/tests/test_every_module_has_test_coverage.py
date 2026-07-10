@@ -82,6 +82,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # `python -m` entry point; not pytest-importable surface.
         # locales/__main__ dispatches into locales/scaffold.py.
         "src/aeat/locales/__main__.py",
+        # aeat app diagnostics: same _lazy(...) dispatch as the CLI verb
+        # modules above; only reachable via the dynamically-dispatched
+        # `_app_diagnostics` command module. Each is exercised end-to-end via
+        # the dedicated entrypoints/cli/tests/test_app_diagnostics_*.py suite
+        # driving the real CLI (invoke_cached_cli), not by direct import.
+        "src/aeat/entrypoints/cli/_app_diagnostics.py",
+        "src/aeat/entrypoints/cli/_app_diagnostics_telemetry.py",
+        "src/aeat/entrypoints/cli/_diagnostics_payloads.py",
     },
 )
 

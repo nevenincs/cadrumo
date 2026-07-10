@@ -3,16 +3,16 @@
 This module closes the "review-only *workspace* mode" item left open on
 issue #421 (`2026-07-04-recipient-encryption-adr` and its follow-up slices):
 distinct from the per-package ``review_only`` flag carried by
-:class:`~aeat.application.modelo.RecipientEncryptedPackage` (which only tags
+:class:`~application.modelo.RecipientEncryptedPackage` (which only tags
 the sealed envelope's disposition), this module materialises a recovered
 package into a typed, read-only workspace view and enforces -- structurally,
 not by convention -- that a review-only workspace can never be treated as
 filing authority.
 
 A :class:`ReviewOnlyWorkspace` is opened from a
-:class:`~aeat.application.modelo.RecipientDecryptedPackage` (the output of
-:func:`~aeat.application.modelo.decrypt_review_package_for_recipient`) plus
-the package's recovered :class:`~aeat.application.modelo.ReviewPackageManifest`
+:class:`~application.modelo.RecipientDecryptedPackage` (the output of
+:func:`~application.modelo.decrypt_review_package_for_recipient`) plus
+the package's recovered :class:`~application.modelo.ReviewPackageManifest`
 descriptor. It is the accountant/gestor-side counterpart of
 ``local-filed-observations-are-non-official-evidence``: exactly as a locally
 persisted filed observation must never be mistaken for official AEAT
@@ -31,11 +31,11 @@ flow, a future decrypt-then-file verb) that touches a
 package as filing-grade.
 
 See Also:
-    :mod:`aeat.application.modelo._review_package_recipient_encryption`
-        Produces the :class:`~aeat.application.modelo.RecipientDecryptedPackage`
+    :mod:`~application.modelo._review_package_recipient_encryption`
+        Produces the :class:`~application.modelo.RecipientDecryptedPackage`
         this module wraps, and defines the ``review_only`` disposition flag.
-    :mod:`aeat.application.modelo._review_package`
-        Defines :class:`~aeat.application.modelo.ReviewPackageManifest`, the
+    :mod:`~application.modelo._review_package`
+        Defines :class:`~application.modelo.ReviewPackageManifest`, the
         descriptor recovered alongside the decrypted package bytes.
 """
 
@@ -82,7 +82,7 @@ class ReviewOnlyWorkspace(BaseModel):
     persisted state by itself -- opening a workspace is a pure in-memory
     projection, not a write to any repository; a caller that wants an audit
     trail of the open composes
-    :func:`~aeat.application.modelo.emit_collab_workspace_opened_event`
+    :func:`~application.modelo.emit_collab_workspace_opened_event`
     around this constructor).
     """
 
@@ -114,11 +114,11 @@ def open_review_only_workspace(
     """Materialise a decrypted package into a read-only :class:`ReviewOnlyWorkspace`.
 
     Args:
-        decrypted: The :class:`~aeat.application.modelo.RecipientDecryptedPackage`
-            returned by :func:`~aeat.application.modelo.decrypt_review_package_for_recipient`.
-        manifest: The package's recovered :class:`~aeat.application.modelo.ReviewPackageManifest`
-            descriptor (see :func:`~aeat.application.modelo.verify_review_package`
-            / :func:`~aeat.application.modelo.assert_review_package_verifies`,
+        decrypted: The :class:`~application.modelo.RecipientDecryptedPackage`
+            returned by :func:`~application.modelo.decrypt_review_package_for_recipient`.
+        manifest: The package's recovered :class:`~application.modelo.ReviewPackageManifest`
+            descriptor (see :func:`~application.modelo.verify_review_package`
+            / :func:`~application.modelo.assert_review_package_verifies`,
             which the caller should run against the recovered archive bytes
             before opening a workspace, exactly as any other review-package
             consumer does).

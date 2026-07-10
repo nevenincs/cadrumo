@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Harness userdocs initiative — kickoff brief ("Working with an AI assistant")
 
 **Audience of this brief:** the team/session that will author the user-facing
@@ -6,7 +10,7 @@ the `aeat` CLI on a taxpayer's behalf.
 **Status:** kickoff. Read fully, then **hold for the operator's instruction**
 (final section) before authoring anything.
 **Companion brief:** `docs/USERDOCS-KICKOFF-BRIEF.md` is the kickoff for the
-*existing CLI* userdocs (the human typing `aeat …` themselves). This brief is its
+*existing CLI* userdocs (the human typing `aeat` commands themselves). This brief is its
 sibling for the *harness* (a human letting an LLM assistant drive `aeat` for
 them). The binding principles, gates, and worktree discipline in that brief apply
 here verbatim; this brief adds the harness-specific corpus, reader, and scope.
@@ -105,12 +109,12 @@ surface; **distil, never transcribe** — they are agent instructions, not prose
 
 **Distribution (updated 2026-07-03, `claude-ecosystem-packaging` ADR):** the
 consumer path is the **Claude plugin** — generated from the harness source by
-`aeat app agent --layout plugin`, served from the marketplace tree under
+`aeat app agent --output=<dir> --layout=plugin`, served from the marketplace tree under
 `packaging/marketplace/`, installable one-click across Claude Cowork / Claude
 Code / Claude Desktop. Its `.mcp.json` launches the server via
 `uvx --from "aeat-cli[agent]==<version>" aeat-mcp` from the published PyPI package (slim
 ~39 MB wheel; corpus source binaries ride the two optional `aeat-data-*`
-companions via `aeat[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
+companions via `aeat-cli[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
 a DEMOTED secondary — do not document it as the install path. See RELEASING.md
 for the publish sequencing and `docs/verification/claude-code-install-proof.md`
 for the live install proof and verified support matrix.
@@ -162,14 +166,14 @@ The rules in `docs/USERDOCS-KICKOFF-BRIEF.md §3–§5` are **binding here too**
   runtime locale keys** (`src/aeat/locales/*.yml`) and **do not transcribe the
   agent-facing corpus** — both are different audiences with their own single
   source. Distil into fresh human prose.
-- **Ground against the live surface.** Verify every `aeat …` verb via its live
+- **Ground against the live surface.** Verify every `aeat` verb via its live
   `--help`; verify MCP behaviour by actually running `aeat-mcp` against a client
   (or the serving-path tests under `src/aeat/entrypoints/mcp/tests/`). Never
   invent a tool name, persona, env var, or flow.
 
 **Gates:** the docs conformance gate
 (`src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` / the
-`docs`-marked educational-docs conformance test) checks every cited `aeat …` verb
+`docs`-marked educational-docs conformance test) checks every cited `aeat` verb
 resolves and every relative link is real — run it on every prose change. The
 `-n -W` Sphinx build (`src/aeat/tests/test_docs_build.py`) is the full gate.
 There is also an operator-harness rule-surface gate
@@ -225,7 +229,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
   environment variables; link to the generated CLI/API reference, do not
   re-author it.
 - **Troubleshooting** — the assistant refused / paused / degraded (schedule-only
-  calendar, lexical-only search without the `aeat[search]` extra); how to read a
+  calendar, lexical-only search without the `aeat-cli[search]` extra); how to read a
   `notice`.
 
 ## 8. Known state and constraints
@@ -238,7 +242,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
   `2026-07-03-…-audit` has concrete, quotable real assistant output.
 - **Unsigned `.mcpb`** — document install honestly (unverified-publisher warning);
   the signing mechanism is wired but awaits a release identity.
-- **Semantic search is opt-in** behind the `aeat[search]` extra (a ~0.5 GB model
+- **Semantic search is opt-in** behind the `aeat-cli[search]` extra (a ~0.5 GB model
   download on first use); the default is lexical-only. Set expectations.
 - **Shared multi-agent worktree.** NEVER use destructive git; commit
   explicit-path only; `git diff -- <file>` before editing and abort on

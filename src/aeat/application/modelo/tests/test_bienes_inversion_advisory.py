@@ -9,8 +9,8 @@ stubs. The pure art-109 math itself is proven in
 projection in
 ``application/calculations/tests/test_bienes_inversion_regularizacion.py``; this
 module proves the register is actually READ on the live calculate path, which
-was the gap the first-slice ADR left open (the register and the pure projection
-shipped, but nothing called them from ``_calculation_diagnostics``).
+is the integration point between the persisted register and
+``_calculation_diagnostics``.
 """
 
 from __future__ import annotations
@@ -20,9 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.bienes_inversion import (
-    BienesInversionIvaRegisterRepository,
-)
+from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind
 from ....domain.bienes_inversion import (
     BienInversionDisposal,
@@ -65,9 +63,9 @@ def test_advisory_fires_on_m303_settlement_period_with_in_window_good(tmp_path: 
     """A registered in-window good raises the advisory on the 4T settlement period.
 
     The good is acquired in 2022 (mueble, 4-year window: 2023-2026), so 2024 is
-    in-window. The current-year definitive percentage is the separately-deferred
-    input, so this collector supplies none and the good is reported pending it —
-    the advisory still fires (no-silent-under-declaration).
+    in-window. This collector supplies no current-year definitive percentage, so
+    the good is reported pending it and the advisory still fires
+    (no-silent-under-declaration).
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())

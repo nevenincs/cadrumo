@@ -1,0 +1,65 @@
+[legal."orden-eha-1308-2005:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1308-2005.html#a1"
+document_id = "BOE-A-2005-7775"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775#a1"
+published_at = 2005-05-11
+effective_from = 2005-05-12
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2005-7775 art 1; pending operator re-stamp)"
+notes = "Orden EHA/1308/2005 art 1: aprueba el modelo 380, declaración-liquidación de operaciones asimiladas a las importaciones del IVA. Orden habilitante del modelo 380."
+required_text = [
+    "Se aprueba el modelo 380",
+    "Operaciones asimiladas a las importaciones del Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-eha-1308-2005:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1308-2005.html#a4"
+document_id = "BOE-A-2005-7775"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775#a4"
+published_at = 2005-05-11
+effective_from = 2005-05-12
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2005-7775 art 4; pending operator re-stamp)"
+notes = "Orden EHA/1308/2005 art 4: plazo de presentación del modelo 380. Se presenta en el mismo plazo que la declaración-liquidación ordinaria del IVA correspondiente al periodo de liquidación (plazo DELEGADO en el régimen ordinario del IVA — no una fecha de calendario propia; el plazo concreto depende del régimen del contribuyente, por lo que no se autoría una ventana de calendario fija)."
+required_text = [
+    "se presentará en el mismo plazo que la declaración-liquidación ordinaria del Impuesto sobre el Valor Añadido",
+]
+
+[sources."enrolled-modelo-380-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1308-2005.html"
+sha256 = "f6f51e3b2cec5691de8b8c059f39ff972040e8244ca5878c17abbfe3e36447d1"
+bytes = 1115
+retrieved_at = 2026-07-04
+published_at = 2005-05-11
+applies_from = 2005-05-12
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
+review_status = "reviewed"
+
+# Same bundled orden HTML under layout_authority tier for the per-revision
+# workbook-parity-coverage gate. NOT the authoritative AEAT Diseño de Registros
+# (not bundled); grounds only the static form-approval layout.
+[sources."enrolled-modelo-380-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1308-2005.html"
+sha256 = "f6f51e3b2cec5691de8b8c059f39ff972040e8244ca5878c17abbfe3e36447d1"
+bytes = 1115
+retrieved_at = 2026-07-04
+published_at = 2005-05-11
+applies_from = 2005-05-12
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2005-7775"
+review_status = "reviewed"

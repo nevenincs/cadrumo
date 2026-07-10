@@ -103,6 +103,13 @@ if TYPE_CHECKING:
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
         serialize_profile_bundle,
+        validate_bundle_payload,
+    )
+    from ._bundle_encryption import (
+        EncryptedProfileBundleError,
+        EncryptedProfileBundleExport,
+        decrypt_profile_bundle_with_passphrase,
+        encrypt_profile_bundle_for_passphrase,
     )
     from ._capabilities import (
         CapabilityDecision,
@@ -178,7 +185,7 @@ if TYPE_CHECKING:
         logout_active_profile,
         profile_create_storage_span,
         profile_storage_session,
-        read_active_profile,
+        reactivate_profile_with_lifecycle_span,
         refuse_duplicate_label,
         register_active_profile,
         remove_active_profile,
@@ -311,10 +318,20 @@ def __getattr__(name: str):
         "UnsupportedBundleSchemaVersionError",
         "deserialize_profile_bundle",
         "serialize_profile_bundle",
+        "validate_bundle_payload",
     ):
         from . import _bundle
 
         return getattr(_bundle, name)
+    if name in (
+        "EncryptedProfileBundleError",
+        "EncryptedProfileBundleExport",
+        "decrypt_profile_bundle_with_passphrase",
+        "encrypt_profile_bundle_for_passphrase",
+    ):
+        from . import _bundle_encryption
+
+        return getattr(_bundle_encryption, name)
     if name in (
         "CustodyRecoverResult",
         "CustodyRecoveryEnrollment",
@@ -356,7 +373,6 @@ def __getattr__(name: str):
         "profile_create_storage_span",
         "profile_storage_session",
         "reactivate_profile_with_lifecycle_span",
-        "read_active_profile",
         "refuse_duplicate_label",
         "register_active_profile",
         "remove_active_profile",
@@ -382,10 +398,10 @@ def __getattr__(name: str):
         from . import _repository
 
         return getattr(_repository, name)
-    if name == "ProfileRepository":
-        from ._profile_repository import ProfileRepository
+    if name in ("ProfileRepository", "TAX_ID_FACT_PATH"):
+        from . import _profile_repository
 
-        return ProfileRepository
+        return getattr(_profile_repository, name)
     if name in (
         "CapabilityDecision",
         "CapabilitySource",
@@ -440,6 +456,8 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
+    "EncryptedProfileBundleError",
+    "EncryptedProfileBundleExport",
     "ProfileAlreadyRegisteredError",
     "ProfileId",
     "ProfileImportResult",
@@ -471,8 +489,10 @@ __all__ = [
     "UserProfileStatus",
     "build_lifecycle_service",
     "carried_namespace_definitions",
+    "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
+    "encrypt_profile_bundle_for_passphrase",
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
@@ -485,7 +505,6 @@ __all__ = [
     "profile_storage_session",
     "projection_for_taxpayer",
     "reactivate_profile_with_lifecycle_span",
-    "read_active_profile",
     "record_to_path_values",
     "record_to_values",
     "recover_secret_store",
@@ -509,8 +528,10 @@ __all__ = [
     "set_active_field",
     "set_active_fields",
     "snapshot_to_values",
+    "TAX_ID_FACT_PATH",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
+    "validate_bundle_payload",
     "validate_profile_values",
     "verify_recovery_code",
 ]

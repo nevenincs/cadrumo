@@ -112,6 +112,7 @@ def _gasto_transaction(
     amount: Decimal = Decimal("1000.00"),
     currency: str = "EUR",
     taxable_base: Decimal | None = None,
+    irpf_category: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
@@ -136,6 +137,7 @@ def _gasto_transaction(
             "taxable_base": taxable_base,
             "iva_rate": None,
             "iva_amount": None,
+            "irpf_category": irpf_category,
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
@@ -264,6 +266,58 @@ def test_personal_outgoing_is_skipped_silently() -> None:
     assert _M130_GASTOS_CASILLA not in result.casilla_aggregation.casilla_values
 
 
+def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() -> None:
+    """Explicit actividad-economica category is the M130 gasto eligibility gate.
+
+    Casilla 02 covers fiscalmente deducible gastos imputables to direct-estimation
+    actividades economicas over the same year-to-date window as casilla 01. A row
+    explicitly tagged with ``irpf_category=actividad_economica`` must therefore
+    flow even before the broad business-classification sweep marks it BUSINESS.
+    """
+    actividad_base = Decimal("180.00")
+    tagged = _gasto_transaction(
+        "actividad-tagged",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("217.80"),
+        taxable_base=actividad_base,
+        irpf_category="actividad_economica",
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    untagged = _gasto_transaction(
+        "actividad-untagged",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("217.80"),
+        taxable_base=actividad_base,
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((tagged, untagged))
+
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert {observation.transaction_id for observation in result.observations} == {tagged.transaction_id}
+    assert result.observations[0].deductible_amount == actividad_base
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == actividad_base
+    assert result.issues == ()
+
+
+def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
+    """A final reviewed exclusion cannot re-enter through the actividad category."""
+    tx = _gasto_transaction(
+        "reviewed-excluded",
+        value_date=date(2024, 2, 1),
+        taxable_base=Decimal("125.00"),
+        irpf_category="actividad_economica",
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert result.observations == ()
+    assert result.issues == ()
+    assert _M130_GASTOS_CASILLA not in result.casilla_aggregation.casilla_values
+
+
 def test_incoming_transaction_is_not_a_gasto() -> None:
     """An INCOMING receipt is the income pipeline's concern, never a gasto."""
     tx = _gasto_transaction(
@@ -357,6 +411,13 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
         Decimal("0"),
     )
     assert {o.transaction_id for o in result_q1.observations} == {q1_a.transaction_id, q1_b.transaction_id}
+    # Regression (issue #408): the excluded May row must surface as a visible
+    # compact summary, not silently vanish.
+    assert result_q1.issues == ()
+    assert result_q1.out_of_window_summary is not None
+    assert result_q1.out_of_window_summary.count == 1
+    assert result_q1.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id="test",
@@ -365,7 +426,88 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     )
     # Q2 cumulative window includes all three input bases.
     expected_q2 = sum((q1_a_base, q1_b_base, q2_base), Decimal("0"))
+    assert result_q2.out_of_window_summary is None
     assert result_q2.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == expected_q2
+
+
+def test_repository_backed_aggregation_summarizes_previously_silent_out_of_window_rows(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Out-of-window rows surface as one compact period-exclusion summary.
+
+    A wrong-direction incoming row is ignored before the in-window gasto
+    classifier runs because this aggregation owns outgoing rows. When that row
+    falls outside the requested cumulative window, the repository-backed
+    partition reports its count and date span instead of dropping it before
+    aggregation.
+    """
+    in_window = _gasto_transaction("row-in-window", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
+    wrong_direction_out_of_window = _gasto_transaction(
+        "row-wrong-direction-out-of-window",
+        value_date=date(2024, 5, 10),
+        taxable_base=Decimal("90.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((in_window, wrong_direction_out_of_window)))
+
+    result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2024, 5, 10)
+    assert result.out_of_window_summary.max_filing_date == date(2024, 5, 10)
+
+
+def test_repository_backed_aggregation_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The partitioned result matches the full-scan result for declared values.
+
+    The same multi-period catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and casilla totals/provenance must match; only the
+    out-of-window issue taxonomy can differ.
+    """
+    q1_row = _gasto_transaction("row-q1", value_date=date(2024, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = _gasto_transaction("row-q3", value_date=date(2024, 8, 1), taxable_base=Decimal("70.00"))
+    wrong_direction_q3_row = _gasto_transaction(
+        "row-q3-wrong-direction",
+        value_date=date(2024, 9, 1),
+        taxable_base=Decimal("30.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+    catalogue = TransactionCatalogue.from_transactions((q1_row, q3_row, wrong_direction_q3_row))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(catalogue)
+
+    partitioned = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+    full_scan = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
+    assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
+    assert {o.transaction_id for o in partitioned.observations} == {q1_row.transaction_id}
+
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 2
+    assert partitioned.out_of_window_summary.min_filing_date == date(2024, 8, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2024, 9, 1)
+
+    full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
+    assert full_scan_issue_ids == {q3_row.transaction_id}
+    assert wrong_direction_q3_row.transaction_id not in full_scan_issue_ids
 
 
 def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_binding() -> None:

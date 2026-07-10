@@ -146,6 +146,7 @@ from ._schema_base import (
     SourceCitationText,
     SourceRefs,
 )
+from ._schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
 from ._schema_formula import (
     BracketEntry,
     DatedValue,
@@ -201,148 +202,6 @@ _validate_country_code = _scalars._validate_country_code
 _validate_iban_string = _scalars._validate_iban_string
 _validate_nif_string = _scalars._validate_nif_string
 _validate_period_code = _scalars._validate_period_code
-
-
-class BboxAnchorSpec(RegistryModel):
-    r"""Spatial anchor configuration for the ``bbox_anchored`` extraction strategy.
-
-    The bbox_anchored strategy locates a printed box number in the PDF word
-    stream and resolves the associated monetary value by its positional
-    relationship to that anchor word.
-
-    Attributes:
-        box_number_pattern: Regex matched against each word's text to locate
-            the line-end box number (e.g. ``r"\\b01\\b"`` or a casilla id
-            string).  Only anchor words whose x-coordinate falls within
-            ``[anchor_x_min, anchor_x_max]`` (if set) are considered; when
-            both are ``None`` the full page is searched.  Zero resolved hits
-            produce a ``missing`` error; multiple resolved hits produce an
-            ``ambiguous`` error.
-        value_offset: Direction from the anchor word to the value word.
-            ``"right_of_number"`` selects the closest word to the right on
-            the same y-row (AEAT multi-column tables with values in a
-            right-hand column).  ``"left_of_number"`` and
-            ``"above_number"`` are reserved for future form layouts.
-        anchor_x_min: Optional minimum x0 coordinate (points) for the anchor
-            word search.  Used to restrict the box-number search to a specific
-            column when the same two-digit text appears in multiple columns
-            (e.g. in formula references embedded in label lines).
-        anchor_x_max: Optional maximum x0 coordinate (points) for the anchor
-            word search.  Paired with ``anchor_x_min`` to form an x-range gate.
-        value_x_max: Optional maximum x0 coordinate (points) for the resolved
-            value word.  Used in multi-column layouts to prevent the parser
-            from selecting a word from the next column (e.g. the next box
-            number) when the current cell is empty.  When ``None`` only the
-            general ``_BBOX_X_GAP_TOLERANCE`` limit applies.
-        column_anchor: Optional column-header text for multi-column tables
-            where the same box number may appear in multiple columns.
-            When set, the search is constrained to words whose x-coordinate
-            falls within the column identified by this text.
-    """
-
-    box_number_pattern: str
-    value_offset: Literal["left_of_number", "above_number", "right_of_number"]
-    anchor_x_min: float | None = None
-    anchor_x_max: float | None = None
-    value_x_max: float | None = None
-    column_anchor: str | None = None
-
-
-class ExtractionTargetDefinition(RegistryModel):
-    """Per-target descriptor for a registry extraction profile.
-
-    Each entry in :attr:`ExtractionProfileDefinition.target_casillas` is one
-    of these records, pairing a stable ``casilla_id`` with the matching
-    strategy and value kind the parser uses for that target.
-
-    Attributes:
-        casilla_id: Stable casilla identifier the parser resolves to.
-        match_strategy: How the parser anchors on this target.
-            ``"numeric_casilla"`` anchors on the target casilla's printed
-            ``number`` at line start and emits the canonical ``casilla_id``
-            (numeric forms, e.g. printed ``"01"`` -> id ``"01"`` or
-            ``"01"``).
-            ``"named_label"`` anchors on the human-readable printed label
-            (for text-field modelos where a slug id is never printed).
-            ``"bbox_anchored"`` locates the box number in the PDF word stream
-            by position and reads the adjacent value word; requires
-            ``bbox_anchor`` to be populated.
-        value_kind: The type of value the capture group returns.
-            ``"amount"`` expects a Spanish-formatted decimal amount;
-            ``"text"`` expects the last whitespace-delimited token on the line;
-            ``"enum"`` is a text token from a bounded enumeration.
-        label_pattern: Required regex string anchoring the ``named_label``
-            strategy.  The parser inserts this pattern where the casilla-id
-            literal would appear in the numeric path.  Must be ``None`` for
-            the ``"numeric_casilla"`` strategy.
-        bbox_anchor: Required spatial anchor config for the ``bbox_anchored``
-            strategy.  Must be ``None`` for ``"numeric_casilla"`` and
-            ``"named_label"`` strategies.
-    """
-
-    casilla_id: CasillaId
-    match_strategy: Literal["numeric_casilla", "named_label", "bbox_anchored"]
-    value_kind: Literal["amount", "text", "enum"]
-    label_pattern: str | None = None
-    bbox_anchor: BboxAnchorSpec | None = None
-
-    @model_validator(mode="after")
-    def _field_strategy_consistency(self) -> ExtractionTargetDefinition:
-        if self.match_strategy == "named_label" and not self.label_pattern:
-            raise RegistryValidationError("named_label extraction targets require label_pattern")
-        if self.match_strategy == "numeric_casilla" and self.label_pattern is not None:
-            raise RegistryValidationError("numeric_casilla extraction targets must not define label_pattern")
-        if self.match_strategy == "bbox_anchored" and self.bbox_anchor is None:
-            raise RegistryValidationError("bbox_anchored extraction targets require bbox_anchor")
-        if self.match_strategy != "bbox_anchored" and self.bbox_anchor is not None:
-            raise RegistryValidationError("bbox_anchor must be None for non-bbox_anchored strategies")
-        return self
-
-
-class ExtractionProfileDefinition(RegistryModel):
-    id: ExtractionProfileId
-    surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
-    artefact_kind: str
-    accepted_artefact_kinds: tuple[
-        Literal["submitted_file", "declaration_pdf", "justificante_pdf", "official_workbook"],
-        ...,
-    ] = Field(min_length=1)
-    parser: str
-    target_casillas: tuple[ExtractionTargetDefinition, ...] = Field(min_length=1)
-    confidence: Literal["strict", "review_required"]
-    provisional_pending_specimen: bool = False
-    corpus_round_trip_verified: bool = False
-    verification_source: (
-        Literal[
-            "real_aeat_corpus_pdf",
-            "synthetic_from_aeat_published_text",
-            "historical_suppression",
-            "not_applicable",
-        ]
-        | None
-    ) = None
-    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
-    failure_semantics: Literal["fail_hard"]
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @field_validator("accepted_artefact_kinds")
-    @classmethod
-    def _accepted_artefact_kinds_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("extraction profile accepted_artefact_kinds entries must be unique")
-        return value
-
-    @field_validator("target_casillas")
-    @classmethod
-    def _target_casillas_unique(
-        cls,
-        value: tuple[ExtractionTargetDefinition, ...],
-    ) -> tuple[ExtractionTargetDefinition, ...]:
-        casilla_ids = [t.casilla_id for t in value]
-        if len(set(casilla_ids)) != len(casilla_ids):
-            raise RegistryValidationError("extraction profile target_casillas casilla_id entries must be unique")
-        return value
 
 
 ProfileFactValue = bool | int | str
@@ -810,7 +669,7 @@ class DependencyClassificationDefinition(RegistryModel):
 
 
 def _parse_deadline_window_period(value: object) -> Period:
-    """Hydrate a deadline-window period through :class:`~aeat.core.Period`."""
+    """Hydrate a deadline-window period through :class:`~core.Period`."""
     if isinstance(value, Period):
         return value
     if isinstance(value, Mapping):
@@ -877,25 +736,32 @@ class ModeloScheduleDefinition(RegistryModel):
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: BindingSourceKind
-    selector: BindingSelector
+    # Accepts a raw authoring mapping (the TOML shape, and the shape every
+    # constructor call site in the test suite passes) in addition to an
+    # already-typed selector model: ``_coerce_selector`` (a ``mode="before"``
+    # validator, below) hydrates either into the source-family model at
+    # construction, so the declared input type must cover both.
+    selector: BindingSelector | Mapping[str, object]
     aggregation: BindingAggregation | None = None
     typed_enum: BindingTypedEnumKind | None = None
     """Closed-set enum class name a consumer routes the binding value through.
 
     LIVE field (do NOT remove). Typed as the closed
-    :class:`~aeat.core.aggregation.BindingTypedEnumKind` reference (F8 — was a
+    :class:`~core.aggregation.BindingTypedEnumKind` reference (F8 — was a
     bare ``str``); declared in registry TOML for the bindings that bridge a
     closed-membership substrate axis — ``"censo_event_kind"`` (M036), ``"CCAA"``
     and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"`` (M200) —
     and surfaced by the operator-facing ``bindings list`` CLI table
-    (``_modelo_discovery_cli.py``), the :class:`ModeloBindingQueryRow` query
-    projection, the borrador binding resolver, and the Sheets-pull edit router.
+    (``_modelo_discovery_cli.py``), the
+    :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
+    query projection, the borrador binding resolver, and the Sheets-pull edit router.
     Because a :class:`~enum.StrEnum` serialises to its value, those ``str``
     consumers stay byte-compatible. It is the closed-set *annotation* on the
     binding, distinct from the ``input_channel`` (how a formula consumes the
     value); a binding may carry a ``typed_enum`` yet still be a numeric
     ``decimal`` channel. The loader's raw TOML token is hydrated to its member
-    by :meth:`_coerce_typed_enum` at the boundary (an unknown token raises).
+    by :meth:`~domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`
+    at the boundary (an unknown token raises).
     Gated by
     ``test_schema_hygiene.py::test_renta_typed_binding_candidates_declare_substrate_enum_class``.
     """
@@ -915,13 +781,13 @@ class DataBindingDefinition(RegistryModel):
 
         The authoring tree declares ``source`` as a plain string (``"profile"``,
         ``"ledger_iva_aggregation"``, ...). Under the strict model config a
-        :class:`~aeat.core.BindingSourceKind` field requires the actual member,
+        :class:`~core.BindingSourceKind` field requires the actual member,
         not its value, so the raw string from ``model_validate`` would be
         rejected. Coercing the known closed-set string to its member at the
         boundary keeps the TOML plain while preserving strict rejection of an
-        unknown source (:class:`~aeat.core.BindingSourceKind` raises on an
+        unknown source (:class:`~core.BindingSourceKind` raises on an
         invalid value). This is the source-kind sibling of
-        :meth:`~aeat.core.aggregation.BindingAggregation._coerce_op`.
+        :meth:`~core.aggregation.BindingAggregation._coerce_op`.
         """
         if isinstance(value, str) and not isinstance(value, BindingSourceKind):
             return BindingSourceKind(value)
@@ -981,12 +847,12 @@ class DataBindingDefinition(RegistryModel):
         The authoring tree declares ``typed_enum`` as a plain string (the name
         of the substrate enum class — ``"censo_event_kind"``, ``"CCAA"``,
         ``"EstimacionDirectaModalidad"``, ``"LegalEntityForm"``). Under the
-        strict model config a :class:`~aeat.core.aggregation.BindingTypedEnumKind`
+        strict model config a :class:`~core.aggregation.BindingTypedEnumKind`
         field requires the actual member, not its value, so the raw string from
         ``model_validate`` would be rejected. Coercing the known closed-set token
         to its member at the boundary keeps the TOML plain while preserving
         strict rejection of an unknown annotation
-        (:class:`~aeat.core.aggregation.BindingTypedEnumKind` raises on an invalid
+        (:class:`~core.aggregation.BindingTypedEnumKind` raises on an invalid
         value). This is the ``typed_enum`` sibling of :meth:`_coerce_source`.
         """
         if isinstance(value, str) and not isinstance(value, BindingTypedEnumKind):
@@ -998,12 +864,15 @@ class DataBindingDefinition(RegistryModel):
         """Validate the hydrated selector against its source family's schema at construction.
 
         Dispatches on :attr:`source` through the discriminated-union selector
-        table (``_BINDING_SELECTOR_REGISTRY`` in :mod:`._bindings`, surfaced by
-        :func:`._bindings.selector_model_for_source`): the raw authoring mapping
+        table (``_BINDING_SELECTOR_REGISTRY`` in
+        :mod:`~domain.calculations.registry._bindings`, surfaced by
+        :func:`~domain.calculations.registry._bindings.selector_model_for_source`):
+        the raw authoring mapping
         is hydrated into the per-family model and re-validated the moment the
         binding is constructed, promoting the
         selector-shape half of the former snapshot-build-only gate
-        (:func:`._bindings.validate_binding_selector_shape`) up into the model.
+        (:func:`~domain.calculations.registry._bindings.validate_binding_selector_shape`)
+        up into the model.
 
         This strictly TIGHTENS validation: a misshapen selector (an unknown key,
         a retired key name, an out-of-set ``fact`` literal) now fails at
@@ -1015,11 +884,14 @@ class DataBindingDefinition(RegistryModel):
         A source absent from the selector registry is mesh-only or unregistered
         and is refused as a registry binding source.
 
-        The accessor and validator are imported lazily because :mod:`._bindings`
+        The accessor and validator are imported lazily because
+        :mod:`~domain.calculations.registry._bindings`
         imports :class:`DataBindingDefinition` from this module; the lazy import
         breaks the cycle, matching the snapshot-build validators
         (``_validate_reference_sections``, ``_validate_registry_scope``). The
-        shared :func:`._binding_selector_utils.selector_against_model` runs the
+        shared
+        :func:`~domain.calculations.registry._binding_selector_utils.selector_against_model`
+        runs the
         SAME normalisation and emits the SAME diagnostic the build gate does, so
         a construction-time refusal and a build-time refusal carry identical
         text.

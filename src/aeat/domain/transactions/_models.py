@@ -1,18 +1,7 @@
-"""Strict immutable models for the transaction catalogue.
+"""Strict immutable transaction-catalogue boundary models.
 
-Defines the boundary records that flow through the transaction
-pipeline:
-
-- :class:`Transaction` -- the immutable wrapper that preserves the
-  upstream :class:`domain.transactions._raw_transaction.RawTransaction`
-  verbatim and adds classification metadata.
-- :class:`ClassificationHistoryEntry` -- one frozen record in the
-  per-transaction classification chain.
-- :class:`TransactionCatalogue` -- the immutable mapping keyed by
-  ``transaction_id``.
-
-Every model is strict + frozen + ``extra="forbid"``; no dataclasses;
-no bare ``dict[str, Any]`` at the boundary.
+Defines :class:`Transaction`, :class:`ClassificationHistoryEntry`, and :class:`TransactionCatalogue`.
+Every model is strict + frozen + ``extra="forbid"``; no dataclasses or bare ``dict[str, Any]`` at the boundary.
 """
 
 from __future__ import annotations
@@ -21,24 +10,28 @@ import json
 import re
 import unicodedata
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Literal, Self, override
 
-from pydantic import BaseModel, Field, ValidationError, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
 
+from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import CoreValidationError
-from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
-from ...core.time import now, parse_iso_datetime, validate_utc_aware
+from ...core.parsing import parse_iso8601_date
+from ...core.time import now
 from .._identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
+    InputClassification,
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
 )
@@ -53,6 +46,18 @@ from ._irpf_categories import (
     has_activity_irpf_category,
     has_non_work_irpf_category,
     has_rent_irpf_category,
+)
+from ._model_validation import (
+    _coerce_raw_transaction,
+    _normalize_identifier_tuple,
+    _parse_datetime,
+    _parse_required_aware_datetime,
+    _require_aware_datetime,
+    _trim_lineage_text,
+    _validate_business_pct_coupling,
+    _validate_classified_by_shape,
+    _validate_confidence_range,
+    _validate_non_negative_decimal,
 )
 from ._raw_transaction import RawTransaction
 
@@ -167,243 +172,11 @@ def derive_movement_day_key(raw: RawTransaction) -> str:
     return f"{effective_value_date.isoformat()}:{canonical_decimal_string(raw.amount)}"
 
 
-def _json_default(value: object) -> str:
-    """Serialize strict-python values into JSON-mode inputs for validation."""
-    return str(value)
-
-
-def _parse_datetime(value: str) -> datetime:
-    """Parse an ISO-8601 datetime string into an aware ``datetime``."""
-    return parse_iso_datetime(value)
-
-
-def _coerce_history(raw: object) -> tuple[object, ...]:
-    """Freeze an inbound history sequence into a tuple; leave items for pydantic to validate."""
-    if isinstance(raw, tuple):
-        return raw
-    if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
-        return tuple(raw)
-    raise TransactionValidationError("classification_history must be a sequence of history entries")
-
-
-def _require_aware_datetime(value: datetime) -> datetime:
-    """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
-    try:
-        return validate_utc_aware(value)
-    except CoreValidationError as exc:
-        raise TransactionValidationError(str(exc)) from exc
-
-
-def _validate_classified_by_shape(value: str) -> str:
-    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` / ``derived:<basis>``.
-
-    The ``llm:<model>`` shape lets an LLM classifier emit confidence
-    scores alongside its predictions; the pipeline distinguishes its
-    output from manual and rule-based decisions via this prefix. The
-    ``derived:<basis>`` shape marks a value the system computed from a
-    grounded authority on an operator's instruction — e.g.
-    ``derived:iva-category``, where the operator picks the IVA category
-    and the registry rate plus the gross determine the base and amount —
-    distinct from a ``manual`` value the operator typed by hand.
-    """
-    normalized = value.strip()
-    if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
-        return normalized
-    for prefix in ("rule:", "llm:", "derived:"):
-        if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
-            return normalized
-    raise TransactionValidationError(
-        "classified_by must be 'auto', 'manual', 'rule:<rule-id>', 'llm:<model>', or 'derived:<basis>'",
-    )
-
-
-_CONFIDENCE_MIN = Decimal("0")
-_CONFIDENCE_MAX = Decimal("1")
-
-
-def _validate_confidence_range(value: Decimal | None) -> Decimal | None:
-    """Restrict confidence to the inclusive 0..1 range when not None."""
-    if value is None:
-        return None
-    if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
-        raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
-    return value
-
-
-def _validate_business_pct_coupling(
-    state: BusinessClassification,
-    pct: Decimal | None,
-) -> None:
-    """Enforce the classification/business-percentage coupling rule.
-
-    Raises ``ValueError`` when the pct field is set without ``MIXED``,
-    missing for ``MIXED``, or outside the inclusive 0..1 range.
-    """
-    if state is BusinessClassification.MIXED:
-        if pct is None:
-            raise TransactionValidationError("business_pct is required when classification is MIXED")
-        if not Decimal("0") <= pct <= Decimal("1"):
-            raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
-        return
-    if pct is not None:
-        raise TransactionValidationError("business_pct must be None unless classification is MIXED")
-
-
-def _coerce_identifier_tuple(raw: object) -> tuple[object, ...]:
-    """Freeze inbound identifier sequences while rejecting scalar strings."""
-    if isinstance(raw, tuple):
-        return raw
-    if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
-        return tuple(raw)
-    raise TransactionValidationError("identifier fields must be a sequence")
-
-
-def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
-    """Trim identifier tuples and reject blanks or duplicates."""
-    normalized = tuple(item.strip() for item in value if item.strip())
-    if len(normalized) != len(value):
-        raise TransactionValidationError("identifier fields must not contain blank values")
-    if len(set(normalized)) != len(normalized):
-        raise TransactionValidationError("identifier fields must not contain duplicates")
-    return normalized
-
-
-def _trim_lineage_text(value: str | None) -> str | None:
-    if value is None:
-        return None
-    trimmed = value.strip()
-    if not trimmed:
-        raise TransactionValidationError("lineage text fields must not be blank")
-    return trimmed
-
-
-def _parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
-    if isinstance(value, str):
-        value = _parse_datetime(value)
-    if not isinstance(value, datetime):
-        raise TransactionValidationError(f"{field_name} must be a datetime")
-    return _require_aware_datetime(value)
-
-
-_NON_NEGATIVE_DECIMAL_HINTS = {
-    "taxable_base": (
-        "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
-        "and the income/expense direction is taken from the transaction itself, "
-        "not from the sign of this value"
-    ),
-    "iva_amount": "iva_amount must be non-negative; it is the IVA charged on the row, never a signed delta",
-    "iva_rate": "iva_rate must be non-negative; express the rate as a fraction such as 0.21",
-    "recargo_amount": (
-        "recargo_amount must be non-negative; it is the recargo de equivalencia "
-        "cuota the supplier charged on a repercutido sale to a recargo-regime "
-        "retailer, never a signed delta"
-    ),
-}
-
-
-def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
-    """Reject negative monetary or percentage values when supplied."""
-    if value is not None and value < Decimal("0"):
-        raise TransactionValidationError(
-            _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
-        )
-    return value
-
-
-def _coerce_raw_transaction(raw: object) -> RawTransaction:
-    """Accept a RawTransaction or a mapping/JSON-like and produce the typed record.
-
-    ``strict=False`` is passed explicitly because :class:`RawTransaction`'s own
-    ``model_config`` is ``strict=True`` (see ``STRICT_FROZEN_CONFIG``): under
-    strict mode, ``model_validate`` on a plain dict rejects a string-typed
-    ``datetime``/``date``/enum value outright (it demands the exact Python
-    type), which is exactly the shape every JSON-decoded storage row carries
-    -- so a strict attempt here would fail on *every* load-from-storage call,
-    permanently falling through to the ``json.dumps`` + ``model_validate_json``
-    round-trip below. Overriding to lax mode accepts both a JSON-decoded dict
-    (string dates/enums) and a genuine Python-native dict (manual construction
-    with real ``Decimal``/``date`` objects) in one pass, so the expensive
-    JSON re-encode fallback is reserved for payloads that are not a mapping.
-    """
-    if isinstance(raw, RawTransaction):
-        return raw
-    try:
-        return RawTransaction.model_validate(raw, strict=False)
-    except ValidationError:
-        return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))
-
-
-_TRANSACTION_DECIMAL_KEYS: tuple[str, ...] = (
-    "business_pct",
-    "taxable_base",
-    "iva_rate",
-    "iva_amount",
-    "recargo_amount",
-    "classification_confidence",
-    "fx_rate",
-    "value_in_eur",
-)
-_TRANSACTION_COLLECTION_KEYS: tuple[str, ...] = (
-    "evidence_provenance",
-    "edit_lineage",
-    "lifecycle_lineage",
-)
-
-
-def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
-    """Promote str enum payload values to their declared enum class."""
-    enum_coercers: tuple[tuple[str, type], ...] = (
-        ("direction", TransactionDirection),
-        ("business_classification", BusinessClassification),
-        ("lifecycle_state", TransactionLifecycleState),
-        ("iva_category", IvaCategory),
-        ("exemption_article", IvaExemptionArticle),
-        ("counterparty_eu_member_state", EUMemberState),
-    )
-    for key, enum_cls in enum_coercers:
-        value = payload.get(key)
-        if isinstance(value, str):
-            payload[key] = enum_cls(value)
-
-
-def _coerce_transaction_decimal_fields(payload: dict[str, object]) -> None:
-    """Promote str payload values to Decimal for every decimal-typed key."""
-    for key in _TRANSACTION_DECIMAL_KEYS:
-        value = payload.get(key)
-        if isinstance(value, str):
-            payload[key] = Decimal(value)
-
-
-def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
-    """Parse the str-typed datetime fields via the shared helper."""
-    for key in ("classified_at", "created_at", "modified_at"):
-        value = payload.get(key)
-        if isinstance(value, str):
-            payload[key] = _parse_datetime(value)
-
-
-def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
-    """Trim optional id strings and collapse empty strings to None."""
-    for key in ("import_fingerprint", "purchase_invoice_evidence_id", "group_label"):
-        value = payload.get(key)
-        if not isinstance(value, str):
-            continue
-        if key not in payload:
-            continue
-        normalized = value.strip()
-        payload[key] = normalized or None
-
-
-def _coerce_transaction_collection_fields(payload: dict[str, object]) -> None:
-    """Coerce identifier tuples and history sequences into their canonical shape."""
-    if "attachment_ids" in payload:
-        payload["attachment_ids"] = _coerce_identifier_tuple(payload["attachment_ids"])
-    history = payload.get("classification_history")
-    if history is not None:
-        payload["classification_history"] = _coerce_history(history)
-    for key in _TRANSACTION_COLLECTION_KEYS:
-        if key in payload:
-            payload[key] = _coerce_history(payload[key])
+def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
+    raw = data.get("raw")
+    if not isinstance(raw, RawTransaction):
+        raise TransactionValidationError("raw is required before transaction_id can be derived")
+    return derive_transaction_id(raw)
 
 
 class DecisionProvenance(BaseModel):
@@ -821,6 +594,35 @@ class Transaction(BaseModel):
         irpf_category: Optional IRPF-specific category key.
         usage_ratio_id: Optional proportionality reference.
         prorrata_reference: Optional IVA prorrata substrate reference.
+        art_104_tres_exclusion: Operator-declared LIVA art. 104.Tres
+            denominator-exclusion tag. Set ONLY for the two judgment
+            exclusions the ledger cannot infer -- foreign permanent
+            establishment (1.º) and non-habitual inmobiliario/financiero
+            operations (4.º); the transaction boundary rejects any
+            auto-derived member (art. 7 no-sujeta, art. 9.1.d autoconsumo,
+            bienes-inversión disposal, direct cuotas) since those are
+            recognised from the category / register / structure. When set,
+            the annual prorrata volume rollup excludes this operation from
+            both terms of the art. 104.Dos ratio; the operation's own IVA
+            cuota treatment is unaffected. ``None`` for every operation that
+            is not an art. 104.Tres judgment exclusion.
+        input_classification: Operator-declared LIVA art. 106 prorrata-especial
+            per-input use classification (:class:`~domain.iva.InputClassification`):
+            ``EXCLUSIVELY_DEDUCTIBLE`` (regla 1.ª, deducted in full),
+            ``EXCLUSIVELY_NON_DEDUCTIBLE`` (regla 2.ª, no deduction), or
+            ``COMMON`` (regla 3.ª, deducted at the general percentage). Meaningful
+            only for a purchase row in a bucket whose prorrata register regime is
+            especial; the regime-aware aggregation routes the deducible cuota by
+            this classification. ``None`` for rows that are not under especial or
+            carry no per-input use declaration.
+        prorrata_sector_id: Operator-declared LIVA arts. 9.1.c / 101 differentiated
+            sector this input belongs to. References a ``sector_id`` declared in
+            the bucket's prorrata register sector definitions; the sector-aware
+            aggregation applies THAT sector's provisional percentage to the row's
+            deducible cuota. ``None`` means common-use (usable across sectors),
+            apportioned by the art. 104.Dos common percentage in a sectorized
+            bucket; in a non-sectorized bucket ``None`` is the whole-entity
+            default (today's behaviour), so an unsectored taxpayer is unaffected.
         purchase_invoice_evidence_id: Canonical purchase-invoice evidence
             reference attached to the row.
         attachment_ids: Supplementary attachment references.
@@ -867,6 +669,19 @@ class Transaction(BaseModel):
             when the category is
             :attr:`IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED`.
             ``None`` otherwise.
+        cash_accounting_treatment: Independent criterio-de-caja axis.
+            It never replaces ``iva_category``: the operation remains
+            domestic/export/intracom/etc. and this field only records
+            whether the taxpayer's special regime or a supplier's
+            special regime changes IVA timing.
+        cash_accounting_operation_date: Art. 75 general-devengo
+            operation date for cash-accounting informational reporting.
+            Required whenever ``cash_accounting_treatment`` is not
+            ``NONE`` so the aggregator never silently reuses a bank
+            movement date as the legal devengo projection.
+        cash_accounting_payment_evidence: Total or partial
+            collection/payment events that settle affected base/cuota
+            under LIVA arts. 163 terdecies / quinquiesdecies.
         fx_rate: ECB reference rate applied at import time to convert
             ``raw.amount`` from ``raw.currency`` to EUR.  The rate is
             expressed as a multiplier: ``raw.amount * fx_rate =
@@ -895,8 +710,8 @@ class Transaction(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: TransactionId
     raw: RawTransaction
+    transaction_id: TransactionId = Field(default_factory=_derive_transaction_id_from_validated_data)
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
     business_pct: Decimal | None = None
@@ -909,6 +724,9 @@ class Transaction(BaseModel):
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
+    art_104_tres_exclusion: Art104TresExclusion | None = None
+    input_classification: InputClassification | None = None
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     created_by: str | None = None
@@ -929,6 +747,9 @@ class Transaction(BaseModel):
     iva_category: IvaCategory | None = None
     exemption_article: IvaExemptionArticle | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    cash_accounting_operation_date: date | None = None
+    cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
@@ -956,30 +777,121 @@ class Transaction(BaseModel):
     created_at: datetime = Field(default_factory=now)
     modified_at: datetime = Field(default_factory=now)
 
-    @model_validator(mode="before")
+    @field_validator("raw", mode="before")
     @classmethod
-    def _enforce_derived_transaction_id(cls, data: object) -> object:
-        """Compute or validate ``transaction_id`` from the wrapped raw record."""
-        if isinstance(data, cls):
-            return data
-        if not isinstance(data, Mapping):
-            return data
-        payload = dict(data)
-        if "raw" not in payload:
-            return data
-        raw_transaction = _coerce_raw_transaction(payload["raw"])
-        derived = derive_transaction_id(raw_transaction)
-        existing = payload.get("transaction_id")
-        if existing is not None and str(existing).strip() != derived:
+    def _coerce_raw_field(cls, value: object) -> object:
+        """Accept a ``RawTransaction`` or a JSON-shaped/python-native mapping.
+
+        Delegates to :func:`_coerce_raw_transaction`, which validates through
+        ``RawTransaction``'s own validators -- never ``Transaction``'s -- so
+        this carries no re-entrant recursion risk (unlike a model-level
+        ``Transaction`` before-validator that called back into
+        ``Transaction.model_validate*``, which recurses forever because that
+        re-invokes this exact model-level hook on the still string-shaped
+        JSON-decoded dict).
+        """
+        return _coerce_raw_transaction(value)
+
+    @field_validator(
+        "direction",
+        "business_classification",
+        "lifecycle_state",
+        "iva_category",
+        "exemption_article",
+        "counterparty_eu_member_state",
+        "cash_accounting_treatment",
+        "art_104_tres_exclusion",
+        "input_classification",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_enum_field(cls, value: object, info: core_schema.ValidationInfo) -> object:
+        """Accept a JSON-decoded enum string alongside a real enum instance.
+
+        A field-level ``mode="before"`` coercion inspects only this one
+        field's value and never re-triggers model-level validation, so it
+        carries no re-entrancy risk. No-op for an already-typed enum member
+        or ``None``.
+        """
+        if not isinstance(value, str):
+            return value
+        enum_by_field: dict[str, type] = {
+            "direction": TransactionDirection,
+            "business_classification": BusinessClassification,
+            "lifecycle_state": TransactionLifecycleState,
+            "iva_category": IvaCategory,
+            "exemption_article": IvaExemptionArticle,
+            "counterparty_eu_member_state": EUMemberState,
+            "cash_accounting_treatment": IvaCashAccountingTreatment,
+            "art_104_tres_exclusion": Art104TresExclusion,
+            "input_classification": InputClassification,
+        }
+        return enum_by_field[info.field_name or ""](value)
+
+    @field_validator("cash_accounting_operation_date", mode="before")
+    @classmethod
+    def _parse_cash_accounting_operation_date(cls, value: object) -> object:
+        if isinstance(value, str):
+            return parse_iso8601_date(value)
+        return value
+
+    @field_validator(
+        "business_pct",
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "recargo_amount",
+        "classification_confidence",
+        "fx_rate",
+        "value_in_eur",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_decimal_field(cls, value: object) -> object:
+        """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``."""
+        if isinstance(value, str):
+            return Decimal(value)
+        return value
+
+    @field_validator("classified_at", "created_at", "modified_at", mode="before")
+    @classmethod
+    def _coerce_datetime_field(cls, value: object) -> object:
+        """Accept a JSON-decoded ISO-8601 datetime string alongside a real ``datetime``."""
+        if isinstance(value, str):
+            return _parse_datetime(value)
+        return value
+
+    @field_validator(
+        "attachment_ids",
+        "evidence_provenance",
+        "edit_lineage",
+        "lifecycle_lineage",
+        "classification_history",
+        "cash_accounting_payment_evidence",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_collection_field(cls, value: object) -> object:
+        """Freeze a JSON-decoded list into the declared tuple shape.
+
+        Under strict mode a python-mode ``list`` fails ``tuple_type`` even
+        though a JSON-decoded array is legitimately a list; this makes the
+        JSON-shaped list acceptable without loosening the frozen-tuple
+        contract on the stored value. ``None`` also collapses to the field's
+        empty-tuple default rather than failing ``tuple_type``.
+        """
+        if value is None:
+            return ()
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
+    @model_validator(mode="after")
+    def _enforce_derived_transaction_id(self) -> Self:
+        """Validate ``transaction_id`` against the already-validated raw record."""
+        if self.transaction_id != derive_transaction_id(self.raw):
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
-        payload["raw"] = raw_transaction
-        _coerce_transaction_enum_fields(payload)
-        _coerce_transaction_decimal_fields(payload)
-        _coerce_transaction_temporal_fields(payload)
-        _normalize_transaction_optional_strings(payload)
-        _coerce_transaction_collection_fields(payload)
-        payload["transaction_id"] = derived
-        return payload
+        return self
 
     @field_validator(
         "invoice_id",
@@ -1078,6 +990,77 @@ class Transaction(BaseModel):
             actual = self.iva_category.value if self.iva_category is not None else None
             raise TransactionValidationError(
                 f"exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; got iva_category {actual!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_art_104_tres_exclusion_is_operator_declared(self) -> Self:
+        """Reject an auto-derived art. 104.Tres exclusion as an operator transaction tag.
+
+        Only the two judgment exclusions (foreign PE, non-habitual
+        inmobiliario/financiero) are operator-declared. The other four are
+        recognised structurally, from the IVA category, or from the
+        bienes-inversión register; declaring one on a transaction would
+        double-count or misroute a value the ledger already excludes, so the
+        boundary refuses it loudly rather than silently mis-scoping the
+        prorrata denominator.
+        """
+        if (
+            self.art_104_tres_exclusion is not None
+            and self.art_104_tres_exclusion not in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS
+        ):
+            accepted = ", ".join(sorted(member.value for member in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS))
+            raise TransactionValidationError(
+                "art_104_tres_exclusion is operator-declared only for the two judgment exclusions "
+                f"({accepted}); {self.art_104_tres_exclusion.value!r} is auto-derived and must not be tagged on a "
+                "transaction",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_cash_accounting_axis(self) -> Self:
+        """Keep cash-accounting timing evidence independent and complete."""
+        if self.cash_accounting_treatment is IvaCashAccountingTreatment.NONE:
+            if self.cash_accounting_operation_date is not None or self.cash_accounting_payment_evidence:
+                raise TransactionValidationError(
+                    "cash_accounting_operation_date/payment_evidence require a non-NONE cash_accounting_treatment",
+                )
+            return self
+        if self.cash_accounting_operation_date is None:
+            raise TransactionValidationError(
+                "cash_accounting_operation_date is required when cash_accounting_treatment is not NONE",
+            )
+        if not self.cash_accounting_payment_evidence:
+            raise TransactionValidationError(
+                "cash_accounting_payment_evidence is required for cash-accounting operations; "
+                "wholly unpaid fallback-only operations are not yet represented",
+            )
+        if self.taxable_base is None or self.iva_amount is None:
+            raise TransactionValidationError(
+                "cash-accounting operations require taxable_base and iva_amount facts",
+            )
+        if (
+            self.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+            and self.direction is not TransactionDirection.OUTGOING
+        ):
+            raise TransactionValidationError(
+                "supplier-regime cash-accounting treatment is only valid on received/purchase rows",
+            )
+        fallback_date = date(self.cash_accounting_operation_date.year + 1, 12, 31)
+        total_base = sum((evidence.taxable_base for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
+        total_iva = sum((evidence.iva_amount for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
+        total_recargo = sum(
+            (evidence.recargo_amount for evidence in self.cash_accounting_payment_evidence),
+            Decimal("0"),
+        )
+        recargo_amount = self.recargo_amount or Decimal("0")
+        if total_base > self.taxable_base or total_iva > self.iva_amount or total_recargo > recargo_amount:
+            raise TransactionValidationError(
+                "cash_accounting_payment_evidence totals must not exceed taxable_base, iva_amount, or recargo_amount",
+            )
+        if any(evidence.payment_date > fallback_date for evidence in self.cash_accounting_payment_evidence):
+            raise TransactionValidationError(
+                "cash_accounting_payment_evidence cannot fall after the 31 December statutory fallback date",
             )
         return self
 
@@ -1255,11 +1238,9 @@ class BucketTransactionRef(BaseModel):
 class TransactionCatalogue(BaseModel):
     """Immutable catalogue keyed by ``transaction_id``.
 
-    Attributes:
-        transactions: Frozen :class:`types.MappingProxyType` from
-            stable transaction id to :class:`Transaction`. Built via
-            :meth:`from_transactions` or by passing a mapping / iterable
-            to ``model_validate``.
+    ``transactions`` is a frozen :class:`types.MappingProxyType` from stable
+    transaction id to :class:`Transaction`, built via :meth:`from_transactions`
+    or by passing a mapping / iterable to ``model_validate``.
     """
 
     model_config = _STRICT_FROZEN
@@ -1351,3 +1332,88 @@ class TransactionCatalogue(BaseModel):
     def values(self) -> Iterator[Transaction]:
         """Iterate over catalogue :class:`Transaction` records."""
         return iter(self.transactions.values())
+
+
+class OutOfWindowTransactionStub(BaseModel):
+    """A catalogue transaction outside a requested date window, undecrypted.
+
+    Carries ONLY the two plaintext, non-sensitive facts a period-scoped
+    aggregator needs to report the transaction as excluded --
+    ``transaction_id`` and its ``filing_date`` -- never any decrypted field
+    (amount, category, counterparty, direction, business classification).
+    This is the O2 period-first partition contract
+    (``2026-07-05-ledger-latency-budget-adr``): an out-of-window row is
+    diagnosed from the plaintext date-index fact alone, without paying the
+    decrypt-and-validate cost, and without leaking anything the index itself
+    does not already carry.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1, max_length=128)
+    filing_date: date
+
+
+class OutOfWindowTransactionSummary(BaseModel):
+    """Compact diagnostics-only summary for out-of-window catalogue rows.
+
+    Carries only the facts authorized by the 2026-07-06 diagnostic-summary
+    amendment to the latency ADR: excluded-row count and the filing-date span
+    covered by those rows. It never carries decrypted transaction facts.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    count: int = Field(ge=1)
+    min_filing_date: date
+    max_filing_date: date
+
+    @classmethod
+    def from_stubs(cls, stubs: Iterable[OutOfWindowTransactionStub]) -> Self | None:
+        """Build a summary from row-level plaintext stubs, or ``None`` when empty."""
+        materialized = tuple(stubs)
+        if not materialized:
+            return None
+        filing_dates = tuple(stub.filing_date for stub in materialized)
+        return cls(
+            count=len(materialized),
+            min_filing_date=min(filing_dates),
+            max_filing_date=max(filing_dates),
+        )
+
+    @model_validator(mode="after")
+    def _validate_date_span(self) -> Self:
+        if self.max_filing_date < self.min_filing_date:
+            raise TransactionValidationError("out-of-window summary date span must be ordered")
+        return self
+
+
+class LedgerDatePartition(BaseModel):
+    """A ledger catalogue split into an in-window and an out-of-window half.
+
+    ``in_window`` is a real, fully decrypted :class:`TransactionCatalogue`
+    scoped to ``[start, end]`` -- every regulated classifier gate runs over it
+    unchanged. ``out_of_window`` is the plaintext-only remainder
+    (:class:`OutOfWindowTransactionStub` rows): transactions the catalogue
+    holds outside the window, reported without decryption so a caller can
+    still surface a period-exclusion diagnostic for them.
+
+    ``out_of_window_summary`` is the compact diagnostics-channel replacement:
+    count plus filing-date span, with no decrypted fields and no row-level
+    allocation requirement. During the migration, callers may see either the
+    row-level stubs, the summary, or both.
+
+    ``index_complete`` records whether the partition was served from a
+    complete plaintext date index (``True``) or from a full-scan fallback
+    after a completeness-gate mismatch (``False`` -- see
+    ``ledger-participation-index-is-derived-rebuildable``): both cases return
+    an identical partition shape, so a caller cannot observe which path
+    served it except through this flag and through latency.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    in_window: TransactionCatalogue
+    out_of_window: tuple[OutOfWindowTransactionStub, ...] = ()
+    out_of_window_summary: OutOfWindowTransactionSummary | None = None
+    index_complete: bool

@@ -18,6 +18,7 @@ from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
 from ....domain import ModeloIdentifier
+from ....tests.secure_sql import TestRuntimeProfile
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository
 
@@ -53,14 +54,14 @@ def repo() -> ModeloHistoryRepository:
     return ModeloHistoryRepository()
 
 
-def _database_bytes(tmp_path: Path) -> bytes:
+def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db")
+    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "aeat.db")
 
 
-def _database_payloads(tmp_path: Path) -> tuple[bytes, ...]:
-    db_path = tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db"
+def _database_payloads(storage_root: Path) -> tuple[bytes, ...]:
+    db_path = storage_root / "buckets" / "filing-test" / "db" / "aeat.db"
     with sqlite3.connect(db_path) as connection:
         return tuple(bytes(row[0]) for row in connection.execute("SELECT payload FROM secure_objects"))
 
@@ -111,11 +112,15 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, repo: ModeloHistoryRepository, tmp_path: Path) -> None:
+    def test_database_payload_is_encrypted_audit_data(
+        self,
+        repo: ModeloHistoryRepository,
+        _active_bucket_runtime: TestRuntimeProfile,
+    ) -> None:
         repo.save(_make_history(modelo="130"))
-        raw = _database_bytes(tmp_path)
+        raw = _database_bytes(_active_bucket_runtime.storage_root)
         assert b"secure_objects" in raw
-        payloads = _database_payloads(tmp_path)
+        payloads = _database_payloads(_active_bucket_runtime.storage_root)
         assert payloads
         for payload in payloads:
             assert b"2026Q1" not in payload

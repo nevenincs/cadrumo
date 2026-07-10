@@ -613,6 +613,72 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._m145_communication_records.M145CommunicationServiceError",
+        ErrorCode(
+            code="ERROR_M145_COMMUNICATION_SERVICE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.m145_communication_service",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordNotFoundError",
+        ErrorCode(
+            code="ERROR_M145_COMMUNICATION_RECORD_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.m145_communication_record_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordAmbiguousError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_AMBIGUOUS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.m145_communication_record_ambiguous",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordValidationError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.m145_communication_record_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordExportError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_EXPORT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.m145_communication_record_export",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordTransitionError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_TRANSITION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.m145_communication_record_transition",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",

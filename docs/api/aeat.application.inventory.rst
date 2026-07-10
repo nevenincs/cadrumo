@@ -15,3 +15,4 @@ Submodules
 
    aeat.application.inventory._errors
    aeat.application.inventory._service
+   aeat.application.inventory._source_readiness

@@ -4,8 +4,8 @@ description: Architecture decisions for project-wide run_id propagation, JSONL a
 tags:
   - "#adr"
   - "#run-trace"
-date: 2026-04-14
-modified: '2026-06-13'
+date: '2026-04-14'
+modified: '2026-07-10'
 related:
   - "[[2026-04-14-run-trace-research]]"
   - "[[2026-04-14-run-trace-plan]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-04-12-submission-engine-adr]]"
 ---
 
-# run-trace observability ADR
+# run-trace observability ADR | (**status:** `accepted`)
 
 ## status
 

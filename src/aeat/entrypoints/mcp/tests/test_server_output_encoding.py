@@ -9,9 +9,11 @@ for the LLM client. The live-model persona measurement observed exactly this in 
 ``registry citations view`` error. ``_run_subprocess_tool`` must pin
 ``encoding="utf-8"`` so the relayed text is faithful on every host.
 
-These tests substitute only the OS process boundary (``subprocess.run``) — the
-decode-kwarg wiring and the JSON-envelope round-trip are the real behaviour under
-test.
+The decode contract now lives in the supervised call runtime
+(:func:`~entrypoints.mcp._call_runtime.run_supervised`), which pins
+``encoding="utf-8"``; these tests exercise it against a real child emitting
+UTF-8 Spanish, so the fix is grounded in real platform behaviour rather than an
+injected stub.
 """
 
 from __future__ import annotations
@@ -21,41 +23,22 @@ import sys
 
 import pytest
 
-from .. import _server
-from .._server import _run_subprocess_tool
-from .._tools import build_tool_descriptors
+from .._call_runtime import run_supervised
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-# A JSON envelope carrying accented Spanish — the exact shape that mojibakes when
-# UTF-8 bytes are decoded as cp1252.
-_SPANISH_ENVELOPE = '{"status": "error", "message": "No se encontró ninguna cita del registro."}'
 
-
-def _any_descriptor() -> object:
-    return build_tool_descriptors()[0]
-
-
-def test_subprocess_is_decoded_as_utf8_not_platform_default(monkeypatch: pytest.MonkeyPatch) -> None:
-    captured: dict[str, object] = {}
-
-    def _spy(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
-        captured.update(kwargs)
-        captured["argv0"] = argv[0]
-        return subprocess.CompletedProcess(argv, returncode=1, stdout=_SPANISH_ENVELOPE, stderr="")
-
-    monkeypatch.setattr(_server.subprocess, "run", _spy)
-
-    envelope, is_error = _run_subprocess_tool(_any_descriptor(), {})
-
-    # The decode contract: UTF-8, degrade rather than raise on a stray byte.
-    assert captured["encoding"] == "utf-8"
-    assert captured["errors"] == "replace"
-    assert captured["argv0"] == "aeat"
-    # The accented text round-trips faithfully — no mojibake reaches the client.
-    assert envelope["message"] == "No se encontró ninguna cita del registro."
-    assert "Ã" not in envelope["message"]
-    assert is_error is True
+def test_supervised_run_decodes_utf8_not_the_platform_default() -> None:
+    # A real child writing raw UTF-8 accented bytes; the runtime must decode them
+    # as UTF-8 (not cp1252 on Windows), so no mojibake reaches the LLM client.
+    result = run_supervised(
+        [sys.executable, "-c", "import sys; sys.stdout.buffer.write('No se encontró la cita'.encode('utf-8'))"],
+        timeout_s=30.0,
+        encoding="utf-8",
+    )
+    assert result.timed_out is False
+    assert result.stdout == "No se encontró la cita"
+    assert "Ã" not in result.stdout
 
 
 def test_real_subprocess_run_with_pinned_kwargs_decodes_spanish() -> None:

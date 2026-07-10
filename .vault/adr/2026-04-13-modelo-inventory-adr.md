@@ -6,7 +6,7 @@ tags:
   - "#adr"
   - "#modelo-inventory"
 date: 2026-04-13
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-13-modelo-inventory-research]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
@@ -18,7 +18,7 @@ related:
   - "[[2026-04-12-base-module-structure-adr]]"
 ---
 
-# modelo-inventory adr (#108)
+# modelo-inventory adr (#108) | (**status:** `accepted`)
 
 Date: 2026-04-13
 Branch: `feature/108-modelo-inventory-catalogue`

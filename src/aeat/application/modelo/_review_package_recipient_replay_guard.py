@@ -1,37 +1,39 @@
 """Replay-nonce ledger for recipient-encrypted review packages.
 
-Every :class:`~aeat.application.modelo.RecipientEncryptedPackage` carries a
+Every :class:`~application.modelo.RecipientEncryptedPackage` carries a
 fresh, unique ``envelope_nonce_hex`` minted at encryption time (see
-:mod:`aeat.application.modelo._review_package_recipient_encryption`). This
-module lets the recipient side of :func:`~aeat.application.modelo.decrypt_review_package_for_recipient`
+:mod:`~application.modelo._review_package_recipient_encryption`). This
+module lets the recipient side of :func:`~application.modelo.decrypt_review_package_for_recipient`
 record which nonces have already been successfully decrypted, so a captured
 ciphertext replayed a second time against the same recipient bucket is
 refused rather than silently re-accepted.
 
 The nonce ledger is a bucket-scoped append-only consumption record, following
 the exact governed-repository shape of
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`: one
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`: one
 ``FINANCIAL``-sensitivity secure-object singleton per bucket, an empty ledger
 when absent, and ``mark_consumed`` refuses a nonce already on file. This is
 the ``composition-service-no-parallel-write-path`` companion to that
 registry -- the decrypt primitive itself performs no persistence; a caller
 (the future CLI decrypt verb) composes this ledger's ``check_and_consume``
 around the existing, unmodified
-:func:`~aeat.application.modelo.decrypt_review_package_for_recipient` call.
+:func:`~application.modelo.decrypt_review_package_for_recipient` call.
+The encrypted row's storage policy is governed by
+:class:`~adapters.persistence.storage.SensitivityClass`.
 
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not
 depend on wall-clock ordering the way the paired expiry check does -- see
-:mod:`aeat.application.modelo._review_package_recipient_encryption` for the
+:mod:`~application.modelo._review_package_recipient_encryption` for the
 ``issued_at`` / ``valid_until`` expiry fields, which are a distinct concern
 (a package can be replayed within its validity window, and expiry alone does
 not detect a same-nonce replay before the deadline).
 
 See Also:
-    :mod:`aeat.application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Mints the ``envelope_nonce_hex`` this ledger consumes and defines the
         paired expiry fields.
-    :mod:`aeat.application.modelo._review_package_recipient_registry`
+    :mod:`~application.modelo._review_package_recipient_registry`
         The structural template this repository mirrors.
 """
 
@@ -42,6 +44,14 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    SensitivityClass,
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -87,10 +97,10 @@ class RecipientReplayGuardRepository:
     """Governed repository for the encrypted consumed-nonce ledger.
 
     The singleton row is owned by
-    :data:`adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
     and persisted through
-    :class:`adapters.persistence.storage.SecureObjectRepository`, mirroring
-    :class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`.
     """
 
     def __init__(
@@ -105,15 +115,12 @@ class RecipientReplayGuardRepository:
             bucket_id: Explicit bucket to bind to, resolved through
                 :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
                 Ignored when ``objects`` is supplied.
-            objects: Explicit :class:`SecureObjectRepository` override
+            objects: Explicit
+                :class:`~adapters.persistence.storage.SecureObjectRepository`
+                override
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object store.
         """
-        from ...adapters.persistence.storage import (
-            secure_object_repository_for_active_bucket,
-            secure_object_repository_for_bucket,
-        )
-
         if objects is not None:
             self._objects = objects
         elif bucket_id is not None:
@@ -137,11 +144,6 @@ class RecipientReplayGuardRepository:
                 plausible-looking empty ledger (which would re-open every
                 previously-consumed nonce to replay).
         """
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ...adapters.persistence.storage import SensitivityClass
-
         try:
             record = self._objects.load(
                 _NAMESPACE.namespace,
@@ -173,7 +175,7 @@ class RecipientReplayGuardRepository:
 
         Args:
             nonce_hex: The envelope's ``envelope_nonce_hex`` (see
-                :class:`~aeat.application.modelo.RecipientEncryptedPackage`).
+                :class:`~application.modelo.RecipientEncryptedPackage`).
             consumed_at: Optional override for the record's ``consumed_at``
                 timestamp (tests only); defaults to the current UTC time.
 
@@ -194,11 +196,6 @@ class RecipientReplayGuardRepository:
         return updated
 
     def _save_unlocked(self, ledger: ConsumedNonceLedger) -> None:
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-        from ...adapters.persistence.storage import SensitivityClass
-
         self._objects.save(
             namespace=_NAMESPACE.namespace,
             object_key=self._object_key,
@@ -211,10 +208,6 @@ class RecipientReplayGuardRepository:
 
     @property
     def _object_key(self) -> str:
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
-        )
-
         return _NAMESPACE.require_default_object_key()
 
 

@@ -2,12 +2,12 @@
 
 The operator-facing ``aeat app ledger invoice catalogue create`` verb needs
 a path to mint a **linkable** invoice. The slim
-:class:`~aeat.application.ledger.BusinessOperationInvoice` written by
+:class:`~application.ledger.BusinessOperationInvoice` written by
 ``invoice add`` is an operator-edit record with no ``linked_transaction_ids``
 field, so ``link --invoice-id`` cannot resolve it (the documented sharp edge of
 ``2026-06-10-ledger-invoice-unification-adr``). Only the rich
-:class:`~aeat.domain.invoices.Invoice` in the
-:class:`~aeat.domain.invoices.InvoiceCatalogue` carries
+:class:`~domain.invoices.Invoice` in the
+:class:`~domain.invoices.InvoiceCatalogue` carries
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
 :func:`create_catalogue_invoice` builds a strict :class:`Invoice` from

@@ -2,13 +2,16 @@
 
 The factory is the public construction surface for outbound storage, so
 these tests exercise the real settings and active-profile flows without
-patching imports, environment variables, or provider behavior.
+mutating imports, environment variables, or provider behavior through pytest helpers.
 """
 
 from __future__ import annotations
 
-import ast
 import hashlib
+import json
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -17,6 +20,7 @@ from .....core import GoogleCredentialSourceKind
 from .....core.config import override_settings
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
+from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
 from ...google import (
     GoogleAuthAdcUnavailableError,
@@ -42,20 +46,35 @@ def _hash(payload: bytes) -> str:
 
 
 def test_factory_import_does_not_import_concrete_backends() -> None:
-    tree = ast.parse((Path(__file__).parent.parent / "_factory.py").read_text(encoding="utf-8"))
-    concrete_backend_modules = {
-        "aeat.adapters.outbound.storage._google_drive",
-        "aeat.adapters.outbound.storage._local",
-        "._google_drive",
-        "._local",
-    }
-    top_level_imports = {
-        node.module
-        for node in tree.body
-        if isinstance(node, ast.ImportFrom) and node.module in concrete_backend_modules
-    }
+    probe = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import json
+                import sys
 
-    assert top_level_imports == set()
+                import aeat.adapters.outbound.storage._factory
+
+                watched = (
+                    "aeat.adapters.outbound.storage._google_drive",
+                    "aeat.adapters.outbound.storage._local",
+                )
+                print(json.dumps({name: name in sys.modules for name in watched}, sort_keys=True))
+                """
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert probe.returncode == 0, probe.stderr
+    assert json.loads(probe.stdout) == {
+        "aeat.adapters.outbound.storage._google_drive": False,
+        "aeat.adapters.outbound.storage._local": False,
+    }
 
 
 def test_get_storage_provider_local_uses_active_profile_bucket_root(tmp_path: Path) -> None:
@@ -217,20 +236,18 @@ def test_build_google_credentials_with_oauth_desktop_selection_uses_oauth_path(t
 
 def test_build_google_credentials_with_impersonation_selection_dispatches_to_impersonation_path(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A persisted SERVICE_ACCOUNT_IMPERSONATION selection reaches the real impersonation resolver.
 
-    Proves genuine dispatch (not a stub): pointing
+    Proves genuine dispatch: pointing
     `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent path makes the real,
-    unmocked `google.auth.default()` call inside
+    `google.auth.default()` call inside
     `resolve_impersonated_credentials` raise `GoogleAuthAdcUnavailableError`
     naming the persisted `target_principal` — a failure mode that could
     only be reached if the factory actually dispatched to the
     impersonation resolver rather than the OAuth-Desktop path (which would
     instead raise `google_client_missing`).
     """
-    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
     profile = "factory-dispatch-impersonation"
     selection = GoogleCredentialSourceSelection(
         kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
@@ -238,6 +255,7 @@ def test_build_google_credentials_with_impersonation_selection_dispatches_to_imp
     )
 
     with (
+        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-impersonation"),
         pytest.raises(GoogleAuthAdcUnavailableError) as raised,
     ):
@@ -250,7 +268,6 @@ def test_build_google_credentials_with_impersonation_selection_dispatches_to_imp
 
 def test_get_storage_provider_google_drive_dispatches_impersonation_selection_through_full_factory(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The end-to-end `get_storage_provider` path (not just `build_google_credentials`) dispatches correctly.
 
@@ -259,7 +276,6 @@ def test_get_storage_provider_google_drive_dispatches_impersonation_selection_th
     real CLI/application callers use, not only the narrower unit under
     test above.
     """
-    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json")
     profile = "factory-full-dispatch-impersonation"
     selection = GoogleCredentialSourceSelection(
         kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
@@ -267,6 +283,7 @@ def test_get_storage_provider_google_drive_dispatches_impersonation_selection_th
     )
 
     with (
+        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-full-dispatch-impersonation"),
         override_settings(
             aeat_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,

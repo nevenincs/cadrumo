@@ -2,8 +2,8 @@
 tags:
   - "#adr"
   - "#deadline-engine"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 title: Filing-Deadline Computation Engine
 related:
   - "[[2026-04-12-deadline-engine-research]]"
@@ -13,7 +13,7 @@ related:
 issue: wgergely/aeat#38
 ---
 
-# architecture decision record: filing-deadline computation engine
+# architecture decision record: filing-deadline computation engine | (**status:** `accepted`)
 
 ## context
 

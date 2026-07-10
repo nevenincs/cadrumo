@@ -2,12 +2,12 @@
 tags:
   - "#adr"
   - "#filing-draft-engine"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-filing-draft-engine-research]]"
 ---
-# ADR — Filing draft generation engine (#39)
+# ADR — Filing draft generation engine (#39) | (**status:** `accepted`)
 
 Date: 2026-04-12
 Status: Accepted

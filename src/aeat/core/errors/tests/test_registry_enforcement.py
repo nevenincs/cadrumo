@@ -1,17 +1,30 @@
-"""Static enforcement of the :data:`aeat.core.errors.ERROR_REGISTRY` invariants.
+"""Static enforcement of the :data:`~core.errors.ERROR_REGISTRY` invariants.
 
-Walks every importable module under :mod:`aeat`, discovers each
-:class:`aeat.core.errors.AeatError` subclass, and asserts:
+Walks every importable module under ``aeat``, discovers each
+:class:`~core.errors.AeatError` subclass, and asserts:
 
-* every subclass binds to a registered :class:`aeat.core.errors.ErrorCode`,
+* every subclass binds to a registered :class:`~core.errors.ErrorCode`,
 * each registered code maps to exactly one subclass (no aliasing),
-* every :class:`aeat.core.errors.ErrorCategory` has at least one
+* every :class:`~core.errors.ErrorCategory` has at least one
   registered code, and
-* no production raise site instantiates :class:`aeat.core.errors.AeatError`
+* no production raise site instantiates :class:`~core.errors.AeatError`
   directly or references an unregistered subclass.
 
 Runs at unit-test scope — failures here are CI-blocking so missing
 registrations cannot ship.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory and module-name resolver used by
+        the raise-site scan.
+    :mod:`~core.errors`
+        Public error-registry surface whose declared codes are enforced here.
+    ``.vault/audit/2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit.md``
+        Records the deterministic import and test-only subclass filtering fix
+        for this gate.
+    ``.vault/audit/2026-04-25-error-code-registry-review-audit.md``
+        Reviews the declared-registry contract and strengthened raise-site
+        enforcement.
 """
 
 from __future__ import annotations
@@ -21,10 +34,12 @@ import builtins
 import importlib
 import inspect
 import pkgutil
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
+from ....tests import module_name, production_ast_items, repo_relative
 from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -51,25 +66,14 @@ def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
     return discovered
 
 
-def _iter_raise_targets() -> list[tuple[Path, ast.expr]]:
+def _iter_raise_targets(source_tree_ast: Mapping[Path, ast.AST]) -> list[tuple[Path, ast.expr]]:
     targets: list[tuple[Path, ast.expr]] = []
-    for path in Path("src/aeat").rglob("*.py"):
-        if path.name.startswith("test_") or path.name.startswith("_test_"):
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for path, tree in production_ast_items(source_tree_ast):
         for node in ast.walk(tree):
             if not isinstance(node, ast.Raise) or not isinstance(node.exc, ast.Call):
                 continue
             targets.append((path, node.exc.func))
     return targets
-
-
-def _module_name_for_path(path: Path) -> str:
-    relative = path.with_suffix("").relative_to(Path("src"))
-    parts = list(relative.parts)
-    if parts[-1] == "__init__":
-        parts = parts[:-1]
-    return ".".join(parts)
 
 
 def _resolve_raise_target(module_name: str, node: ast.expr) -> object | None:
@@ -149,7 +153,9 @@ def test_every_category_has_at_least_one_registered_error_code() -> None:
     assert categories == set(ErrorCategory)
 
 
-def test_raise_sites_do_not_use_bare_aeat_error_and_reference_registered_subclasses() -> None:
+def test_raise_sites_do_not_use_bare_aeat_error_and_reference_registered_subclasses(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     _import_all_aeat_modules()
     subclasses = _iter_error_subclasses(AeatError)
     index = {error_type.__name__: error_type for error_type in subclasses}
@@ -157,24 +163,23 @@ def test_raise_sites_do_not_use_bare_aeat_error_and_reference_registered_subclas
 
     direct_base_raises: list[str] = []
     unresolved_targets: list[str] = []
-    for path, target in _iter_raise_targets():
-        module_name = _module_name_for_path(path)
-        resolved = _resolve_raise_target(module_name, target)
+    for path, target in _iter_raise_targets(source_tree_ast):
+        resolved = _resolve_raise_target(module_name(path), target)
         rendered = ast.unparse(target)
         last_token = rendered.rsplit(".", 1)[-1]
         if resolved is None and last_token in index:
             resolved = index[last_token]
         if resolved is AeatError:
-            direct_base_raises.append(f"{path}:{rendered}")
+            direct_base_raises.append(f"{repo_relative(path)}:{rendered}")
             continue
         if isinstance(resolved, type) and issubclass(resolved, AeatError):
             error_type = index.get(resolved.__name__, resolved)
             code = get_registered_error_code(error_type)
             if code.code not in ERROR_REGISTRY:
-                unresolved_targets.append(f"{path}:{rendered}")
+                unresolved_targets.append(f"{repo_relative(path)}:{rendered}")
             continue
         if resolved is None and _looks_like_aeat_error_reference(target, known_names):
-            unresolved_targets.append(f"{path}:{rendered}")
+            unresolved_targets.append(f"{repo_relative(path)}:{rendered}")
 
     assert direct_base_raises == []
     assert unresolved_targets == []

@@ -30,7 +30,10 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import calculate_registry_snapshot
+from ....domain.calculations.registry import (
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -60,8 +63,8 @@ def _calculate_m130(*, ingresos: Decimal, gastos: Decimal):
     return result
 
 
-def _value(result: object, casilla_id: str) -> Decimal:
-    entry = result.values[casilla_id]  # type: ignore[attr-defined]
+def _value(result: RegistryCalculationResult, casilla_id: str) -> Decimal:
+    entry = result.values[casilla_id]
     return Decimal(str(getattr(entry, "value", entry)))
 
 

@@ -174,10 +174,10 @@ class TestClassificationGate:
 
 
 class TestUnsafeCsv:
-    @pytest.mark.parametrize(
-        "bad",
-        ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
-    )
-    def test_unsafe_csv_rejected(self, repo: JustificanteRepository, bad: str) -> None:
-        with pytest.raises(ValueError):
-            repo.envelope_path_for(bad)
+    def test_unsafe_csv_rejected(self, repo: JustificanteRepository) -> None:
+        for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
+            try:
+                repo.envelope_path_for(bad)
+            except ValueError:
+                continue
+            pytest.fail(f"unsafe justificante CSV {bad!r} was accepted")

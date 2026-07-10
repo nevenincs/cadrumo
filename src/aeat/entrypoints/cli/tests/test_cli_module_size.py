@@ -1,13 +1,27 @@
-"""Static size guards for CLI modules and command functions."""
+"""Static size guards for CLI modules and command functions.
+
+See Also:
+    :func:`~tests._inventory.package_python_files`
+        Shared source inventory used to enumerate production CLI modules
+        without bespoke filesystem walking.
+    :mod:`~tests.test_codebase_size_budgets`
+        Codebase-wide sibling ratchet that mirrors the CLI module and callable
+        size ceilings.
+
+CLI modules must stay bounded so they decompose without breaking public
+hexagonal facades.
+"""
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from ....core.paths import PROJECT_ROOT
+from ....tests import ast_for_path, package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -47,7 +61,8 @@ _COMMAND_LINE_LIMIT_OVERRIDES = {
 def _production_cli_modules() -> tuple[Path, ...]:
     return tuple(
         path
-        for path in sorted(_CLI_ROOT.rglob("*.py"))
+        for path in package_python_files()
+        if path.is_relative_to(_CLI_ROOT)
         if not path.name.startswith("test_") and "/test_" not in path.relative_to(_CLI_ROOT).as_posix()
     )
 
@@ -65,12 +80,14 @@ def test_production_cli_modules_do_not_grow_into_new_monoliths() -> None:
     assert offenders == [], "CLI module size budget exceeded:\n  " + "\n  ".join(offenders)
 
 
-def test_cli_command_functions_do_not_grow_past_complexity_budget() -> None:
+def test_cli_command_functions_do_not_grow_past_complexity_budget(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Command and command-registrar bodies have bounded line budgets."""
     offenders: list[str] = []
     for path in _production_cli_modules():
         relative = path.relative_to(_CLI_ROOT).as_posix()
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is None:
+            raise AssertionError(f"unable to parse {relative}")
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef):
                 continue

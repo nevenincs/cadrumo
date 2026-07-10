@@ -67,6 +67,8 @@ def _create_profile() -> None:
             "Operator",
             "--activity",
             "design",
+            "--irpf-income-categories",
+            "actividad_economica",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -367,8 +369,8 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
     assert Decimal(casilla_values["05"]) == Decimal("513.00")
 
 
-def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
-    """Marta's public CLI M100 path carries ledger income through 0171/0180/0224."""
+def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> None:
+    """An operator's public CLI M100 path carries ledger income through 0171/0180/0224."""
     from ....application.user_profile import profile_storage_session
     from ....core import resolve_active_bucket_id
 
@@ -457,8 +459,8 @@ def test_work_calculate_modelo_100_routes_marta_auto_ledger_expenses() -> None:
     assert Decimal(casilla_values["0224"]) == Decimal("9600.00")
 
 
-def test_work_calculate_modelo_100_marta_visible_target_uses_registered_error_boundary() -> None:
-    """Marta's public M100 calculate shape must not degrade into an internal crash."""
+def test_work_calculate_modelo_100_autonoma_visible_target_uses_registered_error_boundary() -> None:
+    """An operator's public M100 calculate shape must not degrade into an internal crash."""
 
     _create_profile()
     work_unit = invoke_cached_cli(
@@ -500,7 +502,7 @@ def test_work_calculate_modelo_100_marta_visible_target_uses_registered_error_bo
             "--casilla",
             "0596=4500.00",
             "--by",
-            "marta",
+            "autonoma",
         ],
     )
 

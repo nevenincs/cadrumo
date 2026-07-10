@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.application.workflow.WorkflowEngine`.
+"""Unit tests for :class:`~application.workflow.WorkflowEngine`.
 
 Every test uses real Protocol-conforming test harness components. No imports from
 ``unittest`` — the project-wide pytest-only mandate applies to this
@@ -9,19 +9,28 @@ The shared :class:`_Fixtures` helper builds a healthy set of components
 and lets individual tests override exactly the knob that should
 provoke a bailout.
 
-The :mod:`aeat.adapters.outbound.aeat.sede` boundary is exercised through the
+The :mod:`~adapters.outbound.aeat.sede` boundary is exercised through the
 :class:`WorkflowEngine` constructor's ``expedientes_source`` and
 ``notifications_source`` seams. Tests inject async callables that
-return real :class:`aeat.adapters.outbound.aeat.sede.Expediente` and
-:class:`aeat.adapters.outbound.aeat.sede.RemoteNotification` records, bypassing the live
-Playwright walkers without falsifying their record shape.
+return real :class:`~adapters.outbound.aeat.sede.Expediente` and
+:class:`~adapters.outbound.aeat.sede.RemoteNotification` records, bypassing the
+live Playwright walkers without falsifying their record shape.
+
+See Also:
+    :mod:`~application.workflow._engine`
+        Linear workflow composition root whose stages and abort matrix are
+        exercised here.
+    :mod:`~application.workflow._protocols`
+        Narrow component contracts implemented by the real-behaviour harness.
+    :func:`~application.state_projection.build_pending_obligations`
+        Projection consumer checked against the engine's shared deadline
+        schedule.
 """
 
 from __future__ import annotations
 
-import ast
+import inspect
 from datetime import date
-from pathlib import Path
 
 import pytest
 
@@ -31,6 +40,7 @@ from ....core.errors import (
     build_error_envelope,
 )
 from .. import WorkflowAbortReason, WorkflowEngine, WorkflowStage
+from .. import _engine as engine_module
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 from ._engine_support import (
     _ConcreteDraft,
@@ -49,15 +59,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
-    tree = ast.parse((Path(__file__).parents[1] / "_engine.py").read_text(encoding="utf-8"))
-    forbidden: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith(("aeat.adapters.outbound.aeat", "adapters.outbound.aeat")):
-                forbidden.append(node.module)
-        elif isinstance(node, ast.Import):
-            forbidden.extend(alias.name for alias in node.names if alias.name.startswith("aeat.adapters.outbound.aeat"))
-    assert forbidden == []
+    bound_outbound_modules = {
+        name: value.__name__
+        for name, value in vars(engine_module).items()
+        if inspect.ismodule(value) and value.__name__.startswith("aeat.adapters.outbound.aeat")
+    }
+
+    assert bound_outbound_modules == {}
 
 
 # ── Happy path ─────────────────────────────────────────────────────────
@@ -106,21 +114,21 @@ class TestHappyPath:
         assert result.final_stage is WorkflowStage.DONE
         assert result.resumed_from == prior_run_id
 
-    def test_run_for_period_rejects_malformed_resumed_from(self) -> None:
+    @pytest.mark.parametrize("bad_resumed_from", ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"))
+    def test_run_for_period_rejects_malformed_resumed_from(self, bad_resumed_from: str) -> None:
         """``run_for_period`` rejects a ``resumed_from`` whose shape is not the
         16-character lowercase hex run id produced by the engine itself."""
 
         fx = _fixtures()
-        for bad in ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"):
-            with pytest.raises(WorkflowInputMismatchError, match="resumed_from"):
-                _run_for_period(
-                    fx.engine(),
-                    fx.profile,
-                    fx.obligation.modelo,
-                    fx.obligation.period,
-                    today=fx.today,
-                    resumed_from=bad,
-                )
+        with pytest.raises(WorkflowInputMismatchError, match="resumed_from"):
+            _run_for_period(
+                fx.engine(),
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                resumed_from=bad_resumed_from,
+            )
 
 
 class TestGateProjectionAgreement:
@@ -292,7 +300,7 @@ class TestGateProjectionAgreement:
 
 class TestUnhandledEnvelope:
     """Every ``except Exception`` catch site in ``_record_unhandled`` must
-    produce a structured :class:`~aeat.core.errors.ErrorEnvelope` with a
+    produce a structured :class:`~core.errors.ErrorEnvelope` with a
     stable ``INTERNAL_WORKFLOW_UNHANDLED`` code.
 
     Each test triggers one real catch path with a real exception class and
@@ -315,18 +323,21 @@ class TestUnhandledEnvelope:
         synthetic.__cause__ = exc
         return build_error_envelope(synthetic)
 
-    def test_envelope_code_for_common_exceptions(self) -> None:
-        for exc in (
+    @pytest.mark.parametrize(
+        "exc",
+        (
             ValueError("bad value"),
             TypeError("wrong type"),
             KeyError("missing"),
             RuntimeError("boom"),
             AttributeError("no attr"),
-        ):
-            env = self._envelope_for_unhandled(exc)
-            assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-            assert env.category == ErrorCategory.INTERNAL.value
-            assert env.retryable is False
+        ),
+    )
+    def test_envelope_code_for_common_exceptions(self, exc: BaseException) -> None:
+        env = self._envelope_for_unhandled(exc)
+        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
+        assert env.category == ErrorCategory.INTERNAL.value
+        assert env.retryable is False
 
     def test_envelope_context_carries_stage_and_error_type(self) -> None:
         """The envelope context must surface the stage and error_type
@@ -364,8 +375,9 @@ class TestUnhandledEnvelope:
         else:
             raise AssertionError(f"unknown unhandled workflow source: {source}")
 
-    def test_real_engine_unhandled_paths_emit_envelope_code(self) -> None:
-        cases = (
+    @pytest.mark.parametrize(
+        ("source", "exc", "expected_stage"),
+        (
             (
                 "deadline",
                 ValueError("registry unavailable"),
@@ -396,11 +408,16 @@ class TestUnhandledEnvelope:
                 OSError("network error"),
                 WorkflowStage.RUNNING_PREFLIGHT,
             ),
-        )
-
-        for source, exc, expected_stage in cases:
-            fx = _fixtures()
-            self._arm_unhandled_case(fx, source, exc)
-            result = _run_next(fx)
-            assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-            assert result.steps[-1].stage is expected_stage
+        ),
+    )
+    def test_real_engine_unhandled_paths_emit_envelope_code(
+        self,
+        source: str,
+        exc: BaseException,
+        expected_stage: WorkflowStage,
+    ) -> None:
+        fx = _fixtures()
+        self._arm_unhandled_case(fx, source, exc)
+        result = _run_next(fx)
+        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
+        assert result.steps[-1].stage is expected_stage

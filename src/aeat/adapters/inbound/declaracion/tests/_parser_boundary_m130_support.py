@@ -1,4 +1,15 @@
-"""Shared Modelo 130 parser boundary corpus expectations."""
+"""Shared Modelo 130 parser boundary corpus expectations.
+
+See Also:
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m130_corpus`
+        Parser round-trip coverage that consumes this corpus parameter and
+        ground-truth table.
+    :mod:`~adapters.inbound.declaracion.tests.test_verification_chain_m130`
+        Verification-chain coverage that reuses the same corpus specimens after
+        parsing.
+    :class:`~domain.calculations.registry.CasillaId`
+        Typed casilla key used for the expected extracted values.
+"""
 
 from __future__ import annotations
 

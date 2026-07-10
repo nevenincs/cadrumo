@@ -8,7 +8,7 @@ empresarial (casilla 0427), and no autónomo/empresario-individual aportación
 (casilla 0499) backing an art. 52.1 increment — is bound by the lower EUR 1.500
 general limit, not a higher combined ceiling. This module implements the ADR's
 Phase-1 choice: emit a non-blocking
-:class:`~aeat.domain.modelos.ModeloVerificationFinding` when the granted reducción
+:class:`~domain.modelos.ModeloVerificationFinding` when the granted reducción
 exceeds the individual sub-limit with no backing casilla declared, but do not
 block a legitimate employer-backed, plan-de-empleo-backed, or autónomo-backed
 reducción above EUR 1.500.
@@ -21,12 +21,12 @@ individual/1º/2º sub-limits, and the resolved reducción can never exceed what
 declared backing casillas legitimately unlock.
 
 See Also:
-    :func:`aeat.application.modelo._verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the art. 20 and
         DT 12ª advisories.
-    :func:`aeat.application.modelo._art20_advisory._art20_reduccion_advisory_finding`
+    :func:`~application.modelo._art20_advisory._art20_reduccion_advisory_finding`
         Sibling advisory using the same semantic-role resolution mechanism.
-    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
+    :func:`~application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
         Structural revision semantic-role lookup used to find the reducción and
         contribution casillas without hard-coding numbers.
 """
@@ -65,7 +65,7 @@ def _art52_reduccion_advisory_finding(
     """Warn when the previsión-social reducción exceeds the individual sub-limit.
 
     A taxpayer whose reducción (role ``irpf_reduccion_prevision_social_total``)
-    exceeds :data:`~aeat.core.external_constants.MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR`
+    exceeds :data:`~core.external_constants.MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR`
     while the plan-de-empleo worker contribution (role
     ``irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial``),
     the contribución empresarial (role
@@ -84,7 +84,7 @@ def _art52_reduccion_advisory_finding(
     remain permissible (``no-silent-under-declaration``).
 
     The ``revision`` is a structural registry revision compatible with
-    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
+    :func:`~application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
     A matching case returns a :class:`ModeloVerificationFinding` with
     ``ley-35-2006:art-52`` grounding; absent roles or in-limit/backed values return
     ``None``.

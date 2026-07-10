@@ -5,6 +5,12 @@ exposes a bare ``dict`` for a chunk, a search hit, or a citation
 resolution: the console grounds an operator against verbatim legal text,
 so the provenance carried alongside each result (corpus_ref, source
 path, document id, permalink) is contract, not decoration.
+
+See Also:
+    :func:`~application.corpus_search.search_corpus`
+        Runtime service that returns :class:`~application.corpus_search.RetrievalResponse`.
+    :func:`~entrypoints.mcp._corpus_tools.corpus_search_payload_from_response`
+        MCP transport mapper that preserves the typed retrieval provenance.
 """
 
 from __future__ import annotations

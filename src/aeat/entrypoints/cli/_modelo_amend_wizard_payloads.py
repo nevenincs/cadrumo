@@ -2,10 +2,10 @@
 
 The amendment wizard walks an operator through correcting an already-filed
 return in plain language, then calls the same
-:func:`~aeat.application.modelo.amend_modelo_revision` composition path
-:mod:`_modelo.py`'s ``work amend`` verb uses. This module documents the JSON
+:func:`~application.modelo.amend_modelo_revision` composition path
+:mod:`~entrypoints.cli._modelo`'s ``work amend`` verb uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and amendment
-delegation live in :mod:`_modelo_amend_wizard_cli`. Every payload here is an
+delegation live in :mod:`~entrypoints.cli._modelo_amend_wizard_cli`. Every payload here is an
 :class:`OutputSchema` subclass registered on the JSON-contract surface.
 """
 
@@ -42,7 +42,7 @@ class WorkAmendWizardResult(OutputSchema):
     """Successful ``aeat app modelo work amend-wizard`` result payload.
 
     Mirrors the shape of ``WorkAmendResult`` (the wizard composes the exact
-    same :func:`~aeat.application.modelo.amend_modelo_revision` path) plus the
+    same :func:`~application.modelo.amend_modelo_revision` path) plus the
     ``corrected_casillas`` audit trail of what the wizard asked and what the
     operator (or the scripted answer queue) supplied, and an
     ``export_next_action`` pointer to the existing ``modelo export`` verb —

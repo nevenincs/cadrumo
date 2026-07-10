@@ -2,13 +2,13 @@
 
 The :class:`RecordFieldSpec` and :class:`SegmentSpec` records describe a
 small adapter-local fixed-width layout that can be passed to
-:func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`
-or :func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise`.
+:func:`adapters.outbound.aeat.export._formats._serialise.serialise`
+or :func:`adapters.outbound.aeat.export._formats._deserialise.deserialise`.
 The canonical product export path is registry-backed:
-:class:`aeat.domain.calculations.registry.ExportLayoutDefinition` and
-:class:`aeat.domain.calculations.registry.ExportRecordDefinition` drive
-:func:`aeat.application.filing.export_draft` and
-:func:`aeat.domain.calculations.registry.parse_export_payload`.
+:class:`domain.calculations.registry.ExportLayoutDefinition` and
+:class:`domain.calculations.registry.ExportRecordDefinition` drive
+:func:`application.filing.export_draft` and
+:func:`domain.calculations.registry.parse_export_payload`.
 
 Primitive-safety contract:
 
@@ -26,9 +26,9 @@ Explicit-spec callers pin the concrete wire encoding via the
 :data:`FicheroBoeEncoding` literal.
 
 See Also:
-    :class:`aeat.domain.calculations.registry.ExportFieldDefinition`
+    :class:`domain.calculations.registry.ExportFieldDefinition`
         Canonical registry field declaration for modelo export layouts.
-    :class:`aeat.adapters.outbound.aeat.export.AeatExportFormatError`
+    :class:`adapters.outbound.aeat.export.AeatExportFormatError`
         Error raised when an explicit fixed-width spec or encoded value
         violates the adapter contract.
 """
@@ -64,7 +64,7 @@ class FieldKind(StrEnum):
 
     Determines the pad-character and justification defaults plus the
     encoder routing performed in
-    :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
+    :func:`adapters.outbound.aeat.export._formats._serialise.serialise`.
 
     Attributes:
         ALPHANUMERIC: Free-form text fields; left-justified, space-padded
@@ -164,7 +164,7 @@ class RecordFieldSpec(BaseModel):
             non-CURRENCY kinds.
 
     See Also:
-        :class:`aeat.domain.calculations.registry.ExportFieldDefinition`
+        :class:`domain.calculations.registry.ExportFieldDefinition`
             Registry-backed declaration used by the application export
             renderer.
         :func:`record_field`
@@ -451,10 +451,10 @@ class SegmentSpec(BaseModel):
             any CRLF terminator.
 
     See Also:
-        :class:`aeat.domain.calculations.registry.ExportRecordDefinition`
+        :class:`domain.calculations.registry.ExportRecordDefinition`
             Registry-backed record declaration for the active modelo export
             renderer.
-        :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise_envelope`
+        :func:`adapters.outbound.aeat.export._formats._serialise.serialise_envelope`
             Explicit-spec envelope serialiser that consumes segments.
     """
 

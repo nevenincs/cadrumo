@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-compensation-override-cli'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
   - '[[2026-06-19-iva-compensation-override-cli-P01-S01]]'
   - '[[2026-06-19-iva-compensation-override-cli-P01-S02]]'
@@ -12,6 +12,7 @@ related:
   - '[[2026-06-19-iva-compensation-override-cli-P01-S08]]'
   - '[[2026-06-19-iva-compensation-override-cli-P02-S04]]'
   - '[[2026-06-19-iva-compensation-override-cli-P02-S05]]'
+  - '[[2026-06-19-iva-compensation-override-cli-P02-S06]]'
   - '[[2026-06-19-iva-compensation-override-cli-P02-S07]]'
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
   - '[[2026-06-19-iva-compensation-override-cli-audit]]'
@@ -40,6 +41,7 @@ Auto-generated index of all documents tagged with `#iva-compensation-override-cl
 - `2026-06-19-iva-compensation-override-cli-P01-S08` - Precondition: promote IvaCompensationOverride to the domain.iva_compensation package __all__ re-export so the application recorder consumes it via the top-level facade, not the private submodule
 - `2026-06-19-iva-compensation-override-cli-P02-S04` - Register the iva-wallet override Typer verb with --filing-year --period --amount --reason --evidence-locator and mandatory default-off --confirm, refusing to overrule a fresh AEAT wallet decision
 - `2026-06-19-iva-compensation-override-cli-P02-S05` - Add the IvaWalletOverrideResult output schema and register it for JSON-schema conformance
+- `2026-06-19-iva-compensation-override-cli-P02-S06` - Author override help/confirm/error locale leaves for en es ca hu via python -m aeat.locales set, then scaffold --check clean
 - `2026-06-19-iva-compensation-override-cli-P02-S07` - Add a CLI conformance test exercising the override verb end to end and run the documented-command conformance gate
 
 ### plan

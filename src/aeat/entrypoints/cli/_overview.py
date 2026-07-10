@@ -31,9 +31,6 @@ import typer
 
 from ...application import overview as _overview_application
 from ...application.overview import (
-    DataPrepStepState as _DataPrepStepState,
-)
-from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarEvent,
     OverviewCalendarFilingEvidence,
@@ -63,20 +60,22 @@ from ._common import (
     activate_subcommand_output_language,
 )
 from ._overview_payloads import (
-    OverviewAgendaResult,
-    OverviewBacklogResult,
     OverviewCalendarResult,
-    OverviewExplainResult,
-    OverviewPipelineModeloPayload,
-    OverviewPipelineResult,
-    OverviewPrepareResult,
-    OverviewPrepareStepPayload,
     OverviewStatusResult,
 )
 from ._overview_rendering import (
+    _calendar_shift_reason_text as _calendar_shift_reason_text,
+)
+from ._overview_rendering import (
+    overview_agenda_output,
+    overview_backlog_output,
+    overview_calendar_output,
+    overview_calendar_profile_output,
     overview_coverage_notices,
+    overview_explain_output,
     overview_next_step_notices,
-    overview_post_filing_event_notices,
+    overview_pipeline_output,
+    overview_prepare_output,
     render_cli_overview_status_lines,
 )
 
@@ -328,92 +327,6 @@ def _local_calendar_filing_evidence(
         expected_tax_id=expected_tax_id,
     )
     return evidence, None
-
-
-def _calendar_filing_evidence_text_fields(filing_evidence) -> str:
-    """Return stable text metrics for one calendar row's filing evidence."""
-    fields = [
-        f"local={filing_evidence.local_filing_state.value}",
-        f"aeat={filing_evidence.aeat_submission_state.value}",
-        f"justificante={str(filing_evidence.justificante_verified).lower()}",
-    ]
-    if filing_evidence.local_filing_record_id:
-        fields.append(f"local_record={filing_evidence.local_filing_record_id}")
-    if filing_evidence.aeat_reference_id:
-        fields.append(f"aeat_ref={filing_evidence.aeat_reference_id}")
-    if filing_evidence.aeat_submitted_at:
-        fields.append(f"aeat_submitted_at={filing_evidence.aeat_submitted_at.isoformat()}")
-    if filing_evidence.aeat_evidence_kind:
-        fields.append(f"aeat_kind={filing_evidence.aeat_evidence_kind}")
-    if filing_evidence.aeat_evidence_conflict_reference_ids:
-        fields.append("aeat_conflict_refs=" + ",".join(filing_evidence.aeat_evidence_conflict_reference_ids))
-    if filing_evidence.verified_justificante_csv:
-        fields.append(f"verified_justificante_csv={filing_evidence.verified_justificante_csv}")
-    if filing_evidence.evidence_source:
-        fields.append(f"evidence_source={filing_evidence.evidence_source}")
-    return "\t".join(fields)
-
-
-def _calendar_entry_work_unit_text_fields(entry) -> str:
-    fields = [f"source={entry.source.value}"]
-    if entry.local_work_unit_id:
-        fields.append(f"work_unit={entry.local_work_unit_id}")
-    if entry.local_work_unit_name:
-        fields.append(f"work_name={entry.local_work_unit_name}")
-    if entry.local_work_unit_revision_id:
-        fields.append(f"work_revision={entry.local_work_unit_revision_id}")
-    return "\t".join(fields)
-
-
-def _calendar_shift_reason_part_text(part: str) -> str:
-    """Return the localized text label for one shift-reason token."""
-    if part == "business_day":
-        return tr("cli.overview.calendar.shift.business_day", default="Business day")
-    if part == "calendar_unavailable":
-        return tr("cli.overview.calendar.shift.calendar_unavailable", default="Calendar unavailable")
-    if part == "domingo":
-        return tr("cli.overview.calendar.shift.domingo", default="Sunday")
-    if part == "modelo_exception":
-        return tr("cli.overview.calendar.shift.modelo_exception", default="Modelo exception")
-    if part == "sabado":
-        return tr("cli.overview.calendar.shift.sabado", default="Saturday")
-    return part
-
-
-def _calendar_shift_reason_text(shift_reason: str) -> str:
-    """Return the localized operator label for a calendar shift reason."""
-    return " + ".join(_calendar_shift_reason_part_text(part) for part in shift_reason.split(" + "))
-
-
-def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
-    """Return the stable text line for one calendar event."""
-    parts = [
-        "event",
-        event.event_type.value,
-        event.event_date.isoformat(),
-        event.source,
-        event.reference_id,
-        event.summary,
-    ]
-    if event.post_filing_kind is not None:
-        parts.append(f"kind={event.post_filing_kind.value}")
-    if event.modelo:
-        parts.append(f"modelo={event.modelo}")
-    if event.filing_year is not None:
-        parts.append(f"year={event.filing_year}")
-    if event.period:
-        parts.append(f"period={event.period}")
-    if event.status:
-        parts.append(f"status={event.status}")
-    if event.aeat_submission_state:
-        parts.append(f"aeat={event.aeat_submission_state.value}")
-    if event.aeat_submitted_at:
-        parts.append(f"aeat_submitted_at={event.aeat_submitted_at.isoformat()}")
-    if event.justificante_verified is not None:
-        parts.append(f"justificante={str(event.justificante_verified).lower()}")
-    if event.verified_justificante_csv:
-        parts.append(f"verified_justificante_csv={event.verified_justificante_csv}")
-    return "\t".join(parts)
 
 
 def _calendar_verified_filed_declaration_observations(
@@ -735,53 +648,11 @@ def overview_calendar(
         raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if cal.warnings and not allow_incomplete:
         _refuse_calendar_warnings(cal)
-    # ``coverage`` is surfaced through the typed ``Notice`` channel (the
-    # canonical diagnostic surface), not as a bespoke payload field, so it is
-    # excluded from the result dump the payload schema validates.
-    cal_dump = cal.model_dump(mode="json", exclude={"coverage"})
-    typed_cal = OverviewCalendarResult.model_validate(cal_dump)
-    lines: list[str] = [
-        f"from\t{rng.from_date.isoformat()}",
-        f"to\t{rng.to_date.isoformat()}",
-        f"entries\t{len(cal.entries)}",
-        f"events\t{len(cal.events)}",
-    ]
-    for entry in cal.entries:
-        lines.append(
-            f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
-            f"\topens={entry.opens_on.isoformat()}"
-            f"\tcloses={entry.closes_on.isoformat()}"
-            f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-            f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
-            f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
-            f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
-            f"\t{_calendar_entry_work_unit_text_fields(entry)}",
-        )
-    for warning in cal.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    for event in cal.events:
-        lines.append(_calendar_event_text_line(event))
-    if cal.completeness.computable_modelos:
-        lines.append(
-            f"computable\t{len(cal.completeness.computable_modelos)}"
-            f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}",
-        )
-    for suppressed in cal.suppressed_entries:
-        lines.append(
-            f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
-            f"\tverdict={suppressed.verdict.value}"
-            f"\treason={suppressed.reason[:80]}",
-        )
-    coverage_notices = overview_coverage_notices(cal.coverage)
-    for notice in coverage_notices:
-        lines.append(f"coverage_advised\t{len(cal.coverage.advised)}\t{notice.message}")
-    post_filing_notices = overview_post_filing_event_notices(cal.events)
-    for notice in post_filing_notices:
-        lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
-    calendar_notices = [*coverage_notices, *post_filing_notices]
-    for notice in evidence_notices:
-        lines.append(f"{notice.code}\t{notice.message}")
-        calendar_notices.append(notice)
+    typed_cal, lines, calendar_notices = overview_calendar_output(
+        cal,
+        rng,
+        evidence_notices=evidence_notices,
+    )
     _emit_envelope(
         ctx,
         command="overview.calendar",
@@ -877,55 +748,16 @@ def _overview_calendar_all_profiles(
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
         )
 
-        all_lines.append(f"profile\t{bucket_id}\t{pointer.label}")
-        all_lines.append(f"entries\t{len(cal.entries)}")
-        all_lines.append(f"events\t{len(cal.events)}")
-        for entry in cal.entries:
-            all_lines.append(
-                f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
-                f"\topens={entry.opens_on.isoformat()}"
-                f"\tcloses={entry.closes_on.isoformat()}"
-                f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-                f"\tshift={_calendar_shift_reason_text(entry.shift_reason)}"
-                f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
-                f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
-                f"\t{_calendar_entry_work_unit_text_fields(entry)}",
-            )
-        if not cal.taxpayer_model_declared:
-            all_lines.append(
-                f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
-                f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}",
-            )
         if cal.warnings and not allow_incomplete:
             _refuse_calendar_warnings(cal)
-        for warning in cal.warnings:
-            all_lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-        for event in cal.events:
-            all_lines.append(_calendar_event_text_line(event))
-        for suppressed in cal.suppressed_entries:
-            all_lines.append(
-                f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
-                f"\tverdict={suppressed.verdict.value}"
-                f"\treason={suppressed.reason[:80]}",
-            )
-        for notice in overview_coverage_notices(cal.coverage):
-            # Attribute the advisory to its profile so the multi-profile
-            # envelope keeps each profile's coverage gap distinguishable.
-            tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": pointer.label}})
-            all_coverage_notices.append(tagged)
-            all_lines.append(f"coverage_advised\t{pointer.label}\t{len(cal.coverage.advised)}\t{notice.message}")
-        for notice in overview_post_filing_event_notices(cal.events):
-            tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": pointer.label}})
-            all_coverage_notices.append(tagged)
-            all_lines.append(f"post_filing_pending\t{pointer.label}\t{len(notice.context or {})}\t{notice.message}")
-
-        all_calendars.append(
-            {
-                "profile_id": bucket_id,
-                "label": pointer.label,
-                "calendar": cal.model_dump(mode="json", exclude={"coverage"}),
-            },
+        profile_payload, profile_lines, profile_notices = overview_calendar_profile_output(
+            bucket_id=bucket_id,
+            label=pointer.label,
+            cal=cal,
         )
+        all_lines.extend(profile_lines)
+        all_coverage_notices.extend(profile_notices)
+        all_calendars.append(profile_payload)
 
     typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
     _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines, notices=all_coverage_notices)
@@ -1006,32 +838,7 @@ def overview_agenda(
             ),
         )
 
-    typed_agenda = OverviewAgendaResult.model_validate(agenda.model_dump(mode="json", exclude={"coverage"}))
-    lines: list[str] = [
-        f"as_of\t{agenda.as_of.isoformat()}",
-        f"horizon_days\t{agenda.horizon_days}",
-    ]
-    if agenda.next_due is not None:
-        lines.append(
-            f"next_due\t{agenda.next_due.modelo}\t{agenda.next_due.period}"
-            f"\tcloses={agenda.next_due.adjusted_closes_on.isoformat()}",
-        )
-    else:
-        lines.append("next_due\t(none)")
-    lines.append(f"due_today\t{len(agenda.due_today)}")
-    for entry in agenda.due_today:
-        lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
-    lines.append(f"due_soon\t{len(agenda.due_soon)}")
-    for entry in agenda.due_soon:
-        lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
-    lines.append(f"overdue\t{len(agenda.overdue)}")
-    for entry in agenda.overdue:
-        lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
-    for warning in agenda.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    coverage_notices = overview_coverage_notices(agenda.coverage)
-    for notice in coverage_notices:
-        lines.append(f"coverage_advised\t{len(agenda.coverage.advised)}\t{notice.message}")
+    typed_agenda, lines, coverage_notices = overview_agenda_output(agenda)
     _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
 
 
@@ -1108,27 +915,10 @@ def overview_backlog(
             ),
         )
 
-    typed_backlog = OverviewBacklogResult.model_validate(backlog.model_dump(mode="json", exclude={"coverage"}))
-    lines: list[str] = [
-        f"from\t{backlog.range.from_date.isoformat()}",
-        f"to\t{backlog.range.to_date.isoformat()}",
-        f"as_of\t{backlog.as_of.isoformat()}",
-        f"late_count\t{backlog.late_count}",
-    ]
-    for entry in backlog.items:
-        lines.append(
-            f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}"
-            f"\t{_calendar_entry_work_unit_text_fields(entry)}",
-        )
-    for warning in backlog.warnings:
-        lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    coverage_notices = overview_coverage_notices(backlog.coverage)
-    for notice in coverage_notices:
-        lines.append(f"coverage_advised\t{len(backlog.coverage.advised)}\t{notice.message}")
-    backlog_notices = [*coverage_notices]
-    if work_units_notice is not None:
-        lines.append(f"work_units_degraded\t{work_units_notice.message}")
-        backlog_notices.append(work_units_notice)
+    typed_backlog, lines, backlog_notices = overview_backlog_output(
+        backlog,
+        work_units_notice=work_units_notice,
+    )
     _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=backlog_notices)
 
 
@@ -1177,19 +967,7 @@ def overview_explain(
         )
     except OverviewExplainError as exc:
         raise _bad(str(exc)) from exc
-    typed_explain = OverviewExplainResult.model_validate(result.model_dump(mode="json"))
-    lines: list[str] = [
-        f"modelo\t{result.modelo}",
-        f"year\t{result.year}",
-        f"applicable\t{str(result.applicable).lower()}",
-        f"verdict\t{result.verdict.value}",
-        f"rationale\t{result.rationale}",
-        f"legal_refs\t{', '.join(result.legal_refs)}",
-    ]
-    if result.scheduling_rationale is not None:
-        lines.append(f"scheduling_rationale\t{result.scheduling_rationale}")
-    for fact_name, fact_value in sorted(result.profile_facts.items()):
-        lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
+    typed_explain, lines = overview_explain_output(result)
     _emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
 
 
@@ -1290,41 +1068,7 @@ def overview_prepare(
         work_units=work_units,
     )
 
-    typed_result = OverviewPrepareResult(
-        modelo=walkthrough.modelo,
-        filing_year=walkthrough.filing_year,
-        period=walkthrough.period,
-        steps=[
-            OverviewPrepareStepPayload(
-                step_id=step.step_id.value,
-                state=step.state.value,
-                summary=step.summary,
-                next_command=step.next_command,
-            )
-            for step in walkthrough.steps
-        ],
-        ready_for_calculation=walkthrough.ready_for_calculation,
-    )
-    lines: list[str] = [
-        f"modelo\t{walkthrough.modelo}",
-        f"period\t{walkthrough.period} {walkthrough.filing_year}",
-        f"ready_for_calculation\t{str(walkthrough.ready_for_calculation).lower()}",
-        "",
-    ]
-    notices: list[Notice] = []
-    for index, step in enumerate(walkthrough.steps, start=1):
-        lines.append(f"{index}. [{step.state.value}] {step.summary}")
-        lines.append(f"   next: {step.next_command}")
-        if step.state is not _DataPrepStepState.DONE:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code=f"overview.prepare.next_step.{step.step_id.value}",
-                    message=step.summary,
-                    suggestion=step.next_command,
-                    context={"state": step.state.value},
-                ),
-            )
+    typed_result, lines, notices = overview_prepare_output(walkthrough)
     _emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)
 
 
@@ -1374,7 +1118,7 @@ def overview_pipeline(
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger import summarize_manual_transactions
     from ...application.modelo import get_calculation_revision, list_verification_reports, list_work_units
-    from ...application.overview import ModeloReadinessState, build_pipeline_health_report
+    from ...application.overview import build_pipeline_health_report
     from ...domain.modelos import CalculationRevision, VerificationReport
     from ._ledger_payloads import LedgerStatusResult
 
@@ -1430,65 +1174,8 @@ def overview_pipeline(
         reports_by_revision_id=reports_by_revision_id,
     )
 
-    typed_result = OverviewPipelineResult(
-        filing_year=report.filing_year,
-        period=report.period,
+    typed_result, lines, notices = overview_pipeline_output(
+        report,
         ledger=LedgerStatusResult.model_validate(report.ledger.model_dump(mode="json")),
-        modelos=[
-            OverviewPipelineModeloPayload(
-                modelo=row.modelo,
-                work_unit_id=row.work_unit_id,
-                state=row.state.value,
-                blocking_finding_count=row.blocking_finding_count,
-                warning_finding_count=row.warning_finding_count,
-                summary=row.summary,
-                next_command=row.next_command,
-            )
-            for row in report.modelos
-        ],
-        total_blocking_findings=report.total_blocking_findings,
-        total_warning_findings=report.total_warning_findings,
-        ready=report.ready,
     )
-
-    lines: list[str] = [
-        f"{tr('cli.overview.labels.period', default='Period')}\t{report.period} {report.filing_year}",
-        f"{tr('cli.overview.pipeline.labels.ready', default='ready')}\t{str(report.ready).lower()}",
-        "",
-        tr("cli.overview.pipeline.labels.ledger_section", default="Ledger:"),
-        f"  {tr('cli.ledger.labels.rows')}\t{report.ledger.total_count}",
-        f"  {tr('cli.ledger.labels.pending')}\t{report.ledger.pending_review_count}",
-        f"  {tr('cli.ledger.labels.reviewed')}\t{report.ledger.reviewed_count}",
-        f"  {tr('cli.ledger.labels.skipped')}\t{report.ledger.skipped_count}",
-        f"  {tr('cli.ledger.labels.readiness_issues')}\t{report.ledger.readiness_issue_count}",
-        "",
-        tr("cli.overview.pipeline.labels.modelos_section", default="Modelos:"),
-    ]
-    notices: list[Notice] = []
-    if not report.modelos:
-        no_units_message = tr(
-            "cli.overview.pipeline.no_work_units",
-            default="No modelo work units for this period yet.",
-        )
-        lines.append(f"  {no_units_message}")
-    for row in report.modelos:
-        lines.append(f"  [{row.state.value}] Modelo {row.modelo}: {row.summary}")
-        lines.append(f"    next: {row.next_command}")
-        if row.state is not ModeloReadinessState.FILED:
-            severity = NoticeSeverity.WARNING if row.state is ModeloReadinessState.BLOCKED else NoticeSeverity.INFO
-            notices.append(
-                Notice(
-                    severity=severity,
-                    code=f"overview.pipeline.modelo.{row.state.value}",
-                    message=row.summary,
-                    suggestion=row.next_command,
-                    context={"modelo": row.modelo, "state": row.state.value},
-                ),
-            )
-    lines.append("")
-    lines.append(
-        f"{tr('cli.overview.pipeline.labels.findings_section', default='Findings:')} "
-        f"{report.total_blocking_findings} blocking, {report.total_warning_findings} warning",
-    )
-
     _emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)

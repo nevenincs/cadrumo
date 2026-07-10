@@ -1,0 +1,17 @@
+[modelo]
+id = "122"
+title = "IRPF regularización de la deducción por familia numerosa / discapacidad"
+official_name = "Modelo 122. Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa o por personas con discapacidad a cargo. Regularización del derecho a la deducción por contribuyentes no obligados a presentar declaración."
+tax_domain = "irpf"
+cadence = "profile_based"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hfp-105-2017:art-5",
+    "orden-hfp-105-2017:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-122-procedure",
+    "enrolled-modelo-122-layout",
+]

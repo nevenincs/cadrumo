@@ -1,18 +1,18 @@
 """Typer registration for the guided ``aeat app modelo work amend-wizard`` command.
 
-Kent discovers a mistake in an already-filed return and knows "casilla 01 was
+An operator discovers a mistake in an already-filed return and knows "casilla 01 was
 wrong, it should have been 1100" in plain language, not the raw
 ``--from-filing-record ... --kind ... --reason ... --set 01=1100`` flag
 grammar ``work amend`` demands. The wizard resolves the work unit's current
 AEAT-attested filing record, shows every one of its casilla values, asks which
 casillas changed and what the corrected value is for each, confirms the legal
 amendment kind and a free-text reason, then calls the exact same
-:func:`~aeat.application.modelo.amend_modelo_revision` composition path
+:func:`~application.modelo.amend_modelo_revision` composition path
 ``work amend`` uses. The wizard is a guided front end over that one write
 path, not a second one (``composition-service-no-parallel-write-path``).
 
 The baseline casilla values the wizard displays are read from the filing
-record's :class:`~aeat.domain.modelos.CalculationRevision`, so the operator
+record's :class:`~domain.modelos.CalculationRevision`, so the operator
 edits the exact attested figures rather than a re-computed draft.
 
 Once the amendment is filed, the wizard points the operator at the existing
@@ -154,12 +154,12 @@ def register_amend_wizard_commands(
 
         Resolves (or reuses) a work unit exactly as ``work create`` /
         ``work wizard`` do, loads its current filing record (the same
-        :class:`~aeat.domain.modelos.ModeloRecord` ``work amend``
+        :class:`~domain.modelos.ModeloRecord` ``work amend``
         requires — it must carry
-        :class:`~aeat.domain.modelos.ExternalEvidence`), shows every
+        :class:`~domain.modelos.ExternalEvidence`), shows every
         baseline casilla value, prompts which casillas changed and their
         corrected values, confirms the amendment kind and reason, then
-        calls :func:`~aeat.application.modelo.amend_modelo_revision`
+        calls :func:`~application.modelo.amend_modelo_revision`
         through the identical inputs ``work amend`` builds.
         """
         run_modelo_work_amend_wizard(
@@ -303,9 +303,9 @@ def _prompt_corrections(
     corrected decimal value of each selected casilla in turn, showing its
     current (baseline) value for context.
     """
-    from ...application.modelo import get_calculation_revision
+    from ._modelo_cli_support import load_calculation_revision
 
-    baseline_revision: CalculationRevision = get_calculation_revision(baseline.calculation_revision_id)
+    baseline_revision: CalculationRevision = load_calculation_revision(baseline.calculation_revision_id)
     lang = output_language()
     rows_by_id = {row.casilla_id: row for row in casilla_rows}
     rows_by_number = {row.number: row for row in casilla_rows}
@@ -395,7 +395,7 @@ def _prompt_amendment_kind(
 ) -> CalculationRevisionAmendmentKind:
     """Prompt for the amendment kind, restricted to what the period legally permits.
 
-    Reads the codified :func:`~aeat.core.resolve_amendment_kind_regime` for
+    Reads the codified :func:`~core.resolve_amendment_kind_regime` for
     ``modelo`` and ``period`` so the wizard only offers (and only accepts) the
     kinds legally available for this filing — e.g. it never offers
     ``rectificativa`` for a pre-adoption period. ``amend_modelo_revision``

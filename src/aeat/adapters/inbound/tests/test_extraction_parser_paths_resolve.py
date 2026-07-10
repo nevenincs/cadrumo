@@ -2,17 +2,29 @@
 
 The domain registry validator (:func:`validate_dotted_callable`) checks only the
 STRUCTURAL shape of a ``parser =`` dotted path, so the domain registry validation
-stays free of any ``adapters`` coupling (the ports-inversion seam — the domain
+stays free of any ``adapters`` coupling (the ports-inversion boundary: the domain
 must not name or import a parser module, even by string). This gate enforces the
-other half — that every ``parser =`` path declared anywhere in the bundled
+other half: every ``parser =`` path declared anywhere in the bundled
 registry resolves to a real callable under a sanctioned parser authority — from
 the adapter layer, where importing ``aeat.adapters.inbound`` parsers is legal.
 
 The registry is bundled, shipped data, so a CI gate is the authoritative
 resolution check: a ``parser =`` path that is structurally valid but names a
 non-existent / non-callable target, or a target outside the sanctioned parser
-authorities, fails here. This is the adapter-owned complement the ports-inversion
-ADR's post-close honesty-review note (finding F1) calls for.
+authorities, fails here. This is the adapter-owned complement to the
+ports-inversion boundary.
+
+See Also:
+    :func:`~domain.calculations.registry._validate_extraction_profiles.validate_dotted_callable`
+        Domain-side structural validator that deliberately avoids importing
+        adapter parser modules.
+    :func:`~adapters.inbound.declaracion.parse_declaracion`
+        Registry-profile-driven declaración parser facade referenced by
+        shipped extraction profiles.
+    :func:`~adapters.inbound.borrador.parse_borrador`
+        Borrador parser facade allowed as a sanctioned parser authority.
+    :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`
+        Domain-layer regression proving only dotted-callable shape is checked.
 """
 
 from __future__ import annotations
@@ -58,14 +70,22 @@ def test_bundled_registry_declares_parser_paths() -> None:
     )
 
 
-@pytest.mark.parametrize("dotted_path", _declared_parser_paths())
-def test_extraction_parser_paths_resolve(dotted_path: str) -> None:
+def test_extraction_parser_paths_resolve() -> None:
     """Each registry ``parser =`` path resolves to a callable under a sanctioned authority."""
-    module_name, separator, attribute = dotted_path.rpartition(".")
-    assert separator and module_name and attribute, f"parser {dotted_path!r} is not a dotted callable path"
-    assert module_name.startswith(_ALLOWED_PARSER_AUTHORITY_PREFIXES), (
-        f"parser {dotted_path!r} must resolve under one of {sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}"
-    )
-    module = import_module(module_name)
-    resolved = getattr(module, attribute, None)
-    assert callable(resolved), f"parser {dotted_path!r} does not resolve to a callable"
+    failures: list[str] = []
+    for dotted_path in _declared_parser_paths():
+        module_name, separator, attribute = dotted_path.rpartition(".")
+        if not separator or not module_name or not attribute:
+            failures.append(f"parser {dotted_path!r} is not a dotted callable path")
+            continue
+        if not module_name.startswith(_ALLOWED_PARSER_AUTHORITY_PREFIXES):
+            failures.append(
+                f"parser {dotted_path!r} must resolve under one of {sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}",
+            )
+            continue
+        module = import_module(module_name)
+        resolved = getattr(module, attribute, None)
+        if not callable(resolved):
+            failures.append(f"parser {dotted_path!r} does not resolve to a callable")
+
+    assert not failures, "\n".join(failures)

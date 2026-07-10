@@ -10,11 +10,10 @@ chain — no mocks, no monkeypatching of the unit under test. The
 deterministically, and env-provided base directories use the host-absolute
 ``tmp_path`` fixture so the foreign-platform branches resolve on any host.
 
-This module carries two Step surfaces: the derived-substrate cascade
-(``W01.P01.S03`` — the token, log, secret, blob and audit roots follow the
-installed base through the existing state-root validators) and the fresh-install
-roundtrip proof (``W01.P01.S04`` — installed storage resolves off the platform
-directory and never off ``PROJECT_ROOT``, checkout unchanged).
+The tests cover both the derived-substrate cascade and the fresh-install
+roundtrip: token, log, secret, blob, and audit roots follow the installed base,
+installed storage resolves off the platform directory, and checkout storage
+remains under ``PROJECT_ROOT``.
 """
 
 from __future__ import annotations
@@ -90,6 +89,12 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
         settings.aeat_blob_store_dir,
         settings.aeat_audit_dir,
     ):
+        # aeat_log_dir is declared Optional (an explicit AEAT_LOG_DIR override
+        # could stay None), but this construction leaves it unset, so the
+        # `_resolve_log_dir_under_storage_root` validator always roots it - the
+        # assertion below is real test coverage of that resolution, not just a
+        # narrowing hack.
+        assert derived is not None
         assert root in derived.parents
         assert PROJECT_ROOT not in derived.parents
 
@@ -153,8 +158,7 @@ def test_checkout_markers_beat_a_present_platform_env(tmp_path: Path) -> None:
     assert platform_user_data_root(inputs) not in resolution.storage_root.parents
 
 
-@pytest.mark.parametrize("platform", ["win32", "linux", "darwin"])
-def test_installed_resolution_lands_off_project_root(tmp_path: Path, platform: str) -> None:
+def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
     """Every platform's installed run resolves under ``<base>/aeat/storage``.
 
     A marker-free candidate under a fake ``site-packages`` classifies installed
@@ -162,14 +166,22 @@ def test_installed_resolution_lands_off_project_root(tmp_path: Path, platform: s
     the project-root candidate it was detected from and never under the repo
     ``PROJECT_ROOT``.
     """
-    inputs = _installed_inputs_under(tmp_path, platform=platform)
-    resolution = resolve_state_root(inputs)
+    failures: list[str] = []
+    for platform in ("win32", "linux", "darwin"):
+        inputs = _installed_inputs_under(tmp_path / platform, platform=platform)
+        resolution = resolve_state_root(inputs)
+        if resolution.run_mode is not RunMode.INSTALLED:
+            failures.append(f"{platform}: run_mode={resolution.run_mode!r}")
+        if resolution.platform_user_data_root.name != "aeat":
+            failures.append(f"{platform}: user_data_root={resolution.platform_user_data_root}")
+        if resolution.storage_root != resolution.platform_user_data_root / "storage":
+            failures.append(f"{platform}: storage_root={resolution.storage_root}")
+        if PROJECT_ROOT in resolution.storage_root.parents:
+            failures.append(f"{platform}: storage root landed under PROJECT_ROOT")
+        if inputs.project_root_candidate in resolution.storage_root.parents:
+            failures.append(f"{platform}: storage root landed under detected project candidate")
 
-    assert resolution.run_mode is RunMode.INSTALLED
-    assert resolution.platform_user_data_root.name == "aeat"
-    assert resolution.storage_root == resolution.platform_user_data_root / "storage"
-    assert PROJECT_ROOT not in resolution.storage_root.parents
-    assert inputs.project_root_candidate not in resolution.storage_root.parents
+    assert not failures, "\n".join(failures)
 
 
 def test_windows_localappdata_falls_back_to_appdata_local_when_unset(tmp_path: Path) -> None:
@@ -226,6 +238,10 @@ def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Pa
         settings.aeat_audit_dir,
     )
     for path in state_tree:
+        # aeat_log_dir is declared Optional, but this construction leaves it
+        # unset, so the resolution validator always roots it - see the same
+        # note in test_installed_storage_root_derives_every_substrate_dir above.
+        assert path is not None
         assert resolution.platform_user_data_root in path.parents or path == resolution.storage_root
         assert PROJECT_ROOT not in path.parents
         assert path != PROJECT_ROOT / "var" / "storage"

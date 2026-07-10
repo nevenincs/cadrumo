@@ -30,6 +30,8 @@ Batch 2 (2026-07-04): six M182-template informativas (165, 233, 156, 038, 185, 1
 
 Batch 3 (2026-07-04): five further informativas (179, 181, 270, 234, 238) are PROMOTED, dropping the residual 17 -> 12 and growing `CANONICAL_MODELO_FLEET` 55 -> 60. See the "Batch 3" section below.
 
+Final tail (2026-07-04): the remaining 12 recognized-unmodeled obligations are PROMOTED, dropping the residual 12 -> 0 and growing `CANONICAL_MODELO_FLEET` 60 -> 72. The ratchet is now COMPLETE: `UNMODELED_OBLIGATIONS` is EMPTY. See the "Final tail" section below.
+
 The corpus gap that blocked the prior pass is now closed. The binding deadline provision (Orden EHA/3290/2008 art 4) was fetched verbatim from the BOE consolidated text (BOE-A-2008-18497) and added to the bundled corpus, so the deadline window is grounded in the establishing provision rather than in guidance-tier instructions.
 
 Corpus and legal catalogue authored:
@@ -135,9 +137,30 @@ Batch 3 gate evidence:
 - Committed atomically (all five together) — same parity-gate reasoning as Batch 2.
 - RAG grounding queries this batch: `vaultspec-rag` code "informativa registry modelo event-driven deadline window RGAT 30 días" and "registry validator revision requires deadline windows or casilla workbook parity"; then grep-confirmed the bundled RGAT article set (arts 46/54.6 absent), the validator's per-revision requirements (`_validate_revision_sections.py`, `_validate_application_links.py`), and read all five bundled corpus files verbatim.
 
+## Final tail (2026-07-04): remaining 12 obligations -> residual 0
+
+The last 12 recognized-unmodeled obligations were PROMOTED across four atomic commits, closing the ratchet. `UNMODELED_OBLIGATIONS` is now EMPTY (residual 0) and `CANONICAL_MODELO_FLEET` / `FLEET_SIZE` reached 72. Every promotion followed the established grounded-registry-definition pattern (approval + plazo legal-catalogue entries with corpus_ref + required_text, a registry tree, deadline windows only where the bundled corpus states them verbatim); nothing was fabricated, and deadline-shape decisions (windowless where the establishing provision was ungroundable from the bundled corpus) were preserved.
+
+Commits:
+
+- `ab78e1ee73` — promote M848 and land the grounder's M341/M380 out of `UNMODELED_OBLIGATIONS` (25 files, grounder WIP preserved).
+- `774a35ac3b` — promote M140 + M143 (IRPF solicitudes de abono anticipado).
+- `7f9668cbaf` — promote M490 / M604 / M763 (new-tax autoliquidaciones) and extend `TaxDomain` for the new tax families.
+- `119898311a` — promote the final tail M592 / M576 / M121 / M122; residual `UNMODELED_OBLIGATIONS` now 0.
+- `ddc5508d89` — ratchet the canonical fleet-count authorization gate 62 -> 72 after the final grounding.
+
+Final tail gate evidence (re-verified at HEAD this pass):
+
+- `UNMODELED_OBLIGATIONS` residual is 0 (`len(UNMODELED_OBLIGATIONS) == 0`).
+- `bundled_authority().validate_registry()` passes with all 72 modelos present (full-registry validation incl. the legal-catalogue required_text cross-checks and source sha256 matches for every promoted form).
+- `FLEET_SIZE == 72` (derived from `CANONICAL_MODELO_FLEET`).
+- `test_obligation_coverage.py` — 10 passed (the coverage report partitions the full AEAT universe into disjoint buckets with an empty recognized-unmodeled residual).
+- `access_gate` authorization suite — 10 passed at fleet 72.
+
 ## Notes
 
-- Ratchet remains OPEN: after Batch 3, 12 recognized-unmodeled obligations remain; S13 stays unchecked as a recurring ratchet step.
+- Ratchet CLOSED: `UNMODELED_OBLIGATIONS` is empty (residual 0), so every recognized AEAT obligation is now a grounded registry definition. S13 is closed. Any future AEAT-published form re-opens the ratchet as a fresh promotion, but no residual remains to carry.
+- Historical (superseded): earlier passes of this record noted the ratchet OPEN after Batches 1-3 (residual 12). That is now resolved by the Final tail above.
 - Locale leaves DEFERRED: the four locale catalogues (`ca.yml`, `en.yml`, `es.yml`, `hu.yml`) are peer-staged (`MM`) in the shared index, so the M216 locale labels were not authored this pass to avoid clobbering peer WIP. Follow-up: `python -m aeat.locales modelo scaffold <locale> 216 2024-y-siguientes` once the locale WIP lands.
 - Out-of-scope pre-existing failure observed and NOT owned by this surface: `test_catalogue_verification_normatives.py::test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus` asserts a stale sha256 for the `orden-hac-242-2025` corpus (committed-HEAD drift last touched by peer commit `2479085a8e`, unrelated to M216).
 - RAG grounding queries this pass: code search "M210 IRNR registry modelo definition deadline window"; "legal catalogue corpus_ref required_text evidence gate legal grounding"; "deadline window trimestral quarterly opens closes first twenty natural days"; followed by targeted grep confirmation of the M296 IRNR sibling structure, the deadline-window source-tier gate, the `cuota_a_ingresar` canonical role, and the existing M216 source_refs.

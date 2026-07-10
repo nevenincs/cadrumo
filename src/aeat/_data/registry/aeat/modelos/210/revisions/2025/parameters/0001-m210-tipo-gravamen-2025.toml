@@ -33,6 +33,17 @@
 #                                  (25.1.f.3º). Verified vs BOE RDLeg 5/2004
 #                                  art.25.1.f (2026-07-04 grounding pass,
 #                                  closing the missing 25.1.f.1º category).)
+# - canones                 → 24% (TRLIRNR Art 25.1.a: los cánones (royalties)
+#                                  no tienen letra específica en el art 25.1
+#                                  consolidado, por lo que tributan al tipo
+#                                  general de rendimientos, el 24% "con carácter
+#                                  general". La reducción al 19% para residentes
+#                                  UE/EEE del art 25.1.a se alcanza por el
+#                                  concepto `ue_residente`; los convenios de
+#                                  doble imposición (art 12 del CDI) rebajan o
+#                                  eximen habitualmente el tipo en fuente muy por
+#                                  debajo de ambos, y el ceiling min(doméstico,
+#                                  convenio) computa el resultado más favorable.)
 #
 # Pension is intentionally absent from this flat-rate table because
 # TRLIRNR Art 25.1.b is a progressive bracket tariff. The live branch
@@ -93,3 +104,10 @@ key = "dividend"
 value = "0.19"
 valid_from = 2025-01-01
 # valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "canones"
+value = "0.24"
+valid_from = 2025-01-01
+# valid_to open: TRLIRNR Art 25.1.a general rate (cánones has no specific letter in
+# the consolidated Art 25.1; the UE/EEE 19% reduction is the `ue_residente` concept).

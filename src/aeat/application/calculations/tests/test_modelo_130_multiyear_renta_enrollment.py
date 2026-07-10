@@ -49,6 +49,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -141,7 +142,7 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
-def _seed_ready_profile(objects: object) -> None:
+def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_PROFILE_ID,

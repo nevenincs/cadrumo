@@ -3,14 +3,14 @@ tags:
   - "#adr"
   - "#cert-auth"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-10'
 title: "AEAT PKCS#12 Certificate Authentication"
 related:
   - "[[2026-04-12-cert-auth-research]]"
   - "[[2026-04-12-playwright-anti-bot-adr]]"
 ---
 
-# ADR: PKCS#12 Certificate Authentication for AEAT Sede Electrónica
+# ADR: PKCS#12 Certificate Authentication for AEAT Sede Electrónica | (**status:** `accepted`)
 
 ## Status
 Accepted — 2026-04-12.

@@ -4,14 +4,17 @@ The console's R3 grounding surface: a licence-clean, on-host retrieval
 stack over the bundled BOE/AEAT corpus, built from the already-shipped
 ``*.extracted`` triples. Three cooperating pieces live here:
 
-* the FTS5 lexical index (:mod:`._lexical_index`) — standard-library
+* the FTS5 lexical index
+  (:mod:`~application.corpus_search._lexical_index`) — standard-library
   SQLite plus a Spanish Snowball stemmed column, always importable;
-* the structured citation lookup (:mod:`._citation_lookup`) — an exact
+* the structured citation lookup
+  (:mod:`~application.corpus_search._citation_lookup`) — an exact
   ``legal_refs`` id resolver over the registry legal catalogue that
   returns verbatim authoritative text;
-* the build-time embedding precompute (:mod:`._embed_build`) — the
-  semantic half, gated behind the ``aeat[search]`` extra, that ships its
-  corpus vectors as plain data.
+* the build-time embedding precompute
+  (:mod:`~application.corpus_search._embed_build`) — the semantic half,
+  gated behind the ``aeat-cli[search]`` extra, that ships its corpus vectors
+  as plain data.
 
 The lexical index and the citation lookup carry the degraded, no-download
 mode: they refuse nothing for want of a model. Only the embedding

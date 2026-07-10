@@ -25,6 +25,7 @@ from ...domain.calculations.registry.applicability import PayerFact as _PayerFac
 from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
+from ...domain.deadlines import IVARegime as _IVARegime
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
 from ._calendar_models import (
     CalendarCompleteness,
@@ -208,6 +209,9 @@ _JUSTIFICANTE_UNVERIFIED_FIX_COMMAND = "aeat app live filed pull --modelo MODELO
 _AEAT_EVIDENCE_CONFLICT_WARNING_CODE = "filing.aeat_evidence_conflict"
 _AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_conflict"
 _AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
+_M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
+_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
+_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND = "aeat app modelo describe 303"
 
 
 def calendar_censo_enrolment_profile_keys() -> tuple[str, ...]:
@@ -377,6 +381,26 @@ def _calendar_aeat_evidence_conflict_warnings(
     )
 
 
+def _calendar_regime_incompatibility_warnings(
+    *,
+    iva_regime: _IVARegime | None,
+    entries: tuple[OverviewCalendarEntry, ...],
+) -> tuple[CalendarWarning, ...]:
+    """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
+    if iva_regime is not _IVARegime.SIMPLIFICADO:
+        return ()
+    if not any(entry.modelo == _Modelo.M303.value for entry in entries):
+        return ()
+    return (
+        CalendarWarning(
+            code=_M303_SIMPLIFICADO_FORFAIT_WARNING_CODE,
+            message=_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY,
+            fix_command=_M303_SIMPLIFICADO_FORFAIT_FIX_COMMAND,
+            affected_modelos=(_Modelo.M303.value,),
+        ),
+    )
+
+
 def _filed_pull_command(
     *,
     modelo: str,
@@ -444,6 +468,7 @@ __all__ = [
     "_calendar_aeat_evidence_conflict_warnings",
     "_calendar_censo_enrolment_state",
     "_calendar_censo_reconciliation_warnings",
+    "_calendar_regime_incompatibility_warnings",
     "_calendar_unverified_justificante_warnings",
     "calendar_applicability_profile_keys_for_modelo",
     "calendar_censo_enrolment_profile_keys",

@@ -4,15 +4,15 @@ description: Architecture decision for issue #14 — synthetic filing history co
 tags:
   - "#adr"
   - "#synthetic-filing-fixtures"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-synthetic-filing-fixtures-research]]"
   - "[[2026-04-12-synthetic-filing-fixtures-plan]]"
   - "[[2026-04-12-filing-draft-engine-adr]]"
 ---
 
-# adr — synthetic-filing-fixtures
+# adr — synthetic-filing-fixtures | (**status:** `accepted`)
 
 Status: **Accepted**
 Branch: `feature/14-synthetic-filing-fixtures`

@@ -13,6 +13,15 @@ The verbatim text is read from the bundled ``*.extracted.json`` sidecar
 (the clean, structured extraction the corpus ships) rather than the raw
 HTML, and sliced to the unit the citation's anchor names when the source
 file carries multiple units.
+
+See Also:
+    :class:`~application.corpus_search.CitationResolution`
+        Typed result carrying catalogue metadata and verbatim text.
+    :func:`~application.corpus_search.search_corpus`
+        Exact citation ids short-circuit through this lookup before ranking.
+    :func:`~entrypoints.mcp._resources._read_corpus_resource`
+        ``aeat://corpus`` resource reader that accepts citation ids and
+        retrieval ``corpus_ref`` values.
 """
 
 from __future__ import annotations

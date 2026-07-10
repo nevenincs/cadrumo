@@ -4,61 +4,84 @@
 for the transaction catalogue. It stores **one encrypted secure-object row per
 transaction** — keyed ``transaction:{bucket_id}:{transaction_id}`` inside the
 ``aeat.domain.transactions.bucket`` namespace at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` — so a
+:class:`~adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` — so a
 single-transaction mutation rewrites only that row instead of re-encrypting the
 whole catalogue (the prior single-blob shape was O(n) write amplification per
 ledger edit). Each row wraps its
-:class:`~aeat.domain.transactions.Transaction` in an
-:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation; no
+:class:`~domain.transactions.Transaction` in an
+:class:`~adapters.persistence.storage.Envelope` before serialisation; no
 plaintext transaction row, JSON catalogue, or envelope file lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~aeat.domain.transactions.TransactionCatalogueRepositoryProtocol`. It
-lives in the persistence adapter (not in :mod:`aeat.domain.transactions`) because
+:class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`. It
+lives in the persistence adapter (not in :mod:`~domain.transactions`) because
 its secure-object coupling is SQL/crypto-bound; the domain package owns only the
-pure surface — the :class:`~aeat.domain.transactions.ImportSummary` record, the
-:func:`~aeat.domain.transactions.transaction_object_key` /
+pure surface — the :class:`~domain.transactions.ImportSummary` record, the
+:func:`~domain.transactions.transaction_object_key` /
 :func:`transaction_index_object_key` key-derivation helpers, and the
-:data:`~aeat.domain.transactions.TX_BUCKET_NAMESPACE` /
+:data:`~domain.transactions.TX_BUCKET_NAMESPACE` /
 schema-version constants that name the persisted envelope contract. The
 namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning stored envelopes.
 
 Writes go through the
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` atomic
+:class:`~adapters.persistence.storage.SecureObjectRepository` atomic
 upsert+delete batch
-(:meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.apply_batch`)
+(:meth:`~adapters.persistence.storage.SecureObjectRepository.apply_batch`)
 so a multi-transaction mutation — and any sibling-catalogue co-writes
 (bucket-event history, invoices) passed to ``save_with_secure_object_writes`` —
 commit all-or-nothing, preserving the co-write atomicity the single-blob
 ``save`` had. The diff that decides which rows to write or delete is driven by a
 decryption-free
-:meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+:meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
 scan, so an unchanged transaction is never rewritten.
+
+See Also:
+    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :class:`~domain.transactions.Transaction`
+        Domain transaction payload stored one encrypted row at a time.
+    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and object-key contract
+        for transaction secure objects.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
+        Runtime-created encrypted storage boundary used for atomic batches.
+    :mod:`~application.ledger`
+        Application ledger workflows that consume this repository through the
+        transaction catalogue boundary.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import datetime
+import weakref
+from collections.abc import Iterable
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
+from sqlalchemy import delete, select, update
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now, validate_utc_aware
 from ....domain.transactions import (
+    LedgerDatePartition,
     LedgerStorageError,
+    OutOfWindowTransactionStub,
+    OutOfWindowTransactionSummary,
     StoredTransactionDriftError,
     Transaction,
     TransactionCatalogue,
     transaction_index_object_key,
     transaction_object_key,
 )
+from ..storage.sql import _orm
+from ..storage.sql.session import session_scope
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import (
@@ -126,10 +149,21 @@ def _decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | Non
     ``application/aggregation/tests/test_ledger_scale_benchmark.py``).
     """
     try:
-        decoded = json.loads(payload.decode("utf-8"))
+        decoded = json.loads(payload.decode(UTF_8_ENCODING))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
     return decoded if isinstance(decoded, dict) else None
+
+
+def _filing_date(transaction: Transaction) -> date:
+    """Return the date every ledger aggregator filters on: ``value_date`` or ``booked_date``.
+
+    Mirrors the convention already applied independently by every
+    period-scoped ledger aggregator (:mod:`~application.aggregation`), so the
+    plaintext date index keys on the SAME date the encrypted-scan aggregation
+    path would have filtered on.
+    """
+    return transaction.raw.value_date or transaction.raw.booked_date
 
 
 def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
@@ -153,16 +187,40 @@ class TransactionCatalogueRepository:
     Every instance is bound to one profile bucket via ``bucket_id``. The
     catalogue is stored as one secure-object row per transaction (keyed
     ``transaction:{bucket_id}:{transaction_id}``) inside the
-    :data:`aeat.adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
     namespace, so two operator profiles never share transaction storage and a
     single-transaction mutation touches a single row. Each
-    :class:`~aeat.domain.transactions.Transaction` payload and the bucket
+    :class:`~domain.transactions.Transaction` payload and the bucket
     membership index are wrapped in
-    :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.Envelope` before
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     persists them. The class exposes the concrete load/save implementation
     behind
-    :class:`~aeat.domain.transactions.TransactionCatalogueRepositoryProtocol`.
+    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`.
+
+    ``_serialized_hash_cache`` is the O3 write-path lever
+    (``2026-07-06-ledger-perf-optimization-adr``): memoizes the stored-envelope
+    SHA-256 of each loaded frozen :class:`~domain.transactions.Transaction`
+    instance, populated once per row at :meth:`load` and consulted by
+    :meth:`_reconcile` before re-serializing an untouched row.
+
+    Keying is identity-based (``id(transaction)``), not value-based:
+    ``Transaction``'s pydantic-generated ``__hash__`` is unusable as a dict key
+    because :attr:`~domain.transactions.RawTransaction.raw_fields` is stored as
+    a ``mappingproxy`` (unhashable), which rules out a plain
+    :class:`~weakref.WeakKeyDictionary` (it hashes the key object itself). A
+    bare ``id()`` integer key alone would risk the GC-recycle hazard the ADR
+    warns against -- a collected instance's address could be reused by an
+    unrelated object -- so each cache entry is paired with a
+    :class:`~weakref.finalize` callback that evicts the ``id()`` entry the
+    INSTANT its ``Transaction`` is garbage-collected, before the address could
+    be recycled for a different object. ``Transaction`` is strict-frozen, so a
+    content edit always produces a NEW instance rather than mutating the
+    loaded one; the edited instance's ``id()`` is simply absent from the cache
+    (a miss, correctly falling through to fresh serialize-and-hash). The cache
+    never substitutes for the save-time ``namespace_payload_hashes`` store-side
+    scan; it only skips re-deriving the FRESH-SERIALIZATION side of that
+    comparison for rows the same process already loaded unchanged.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
@@ -174,6 +232,7 @@ class TransactionCatalogueRepository:
                 context={"repository": "transaction_catalogue", "operation": "object_key"},
             )
         self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
+        self._serialized_hash_cache: dict[int, str] = {}
 
     @property
     def bucket_id(self) -> str:
@@ -196,10 +255,10 @@ class TransactionCatalogueRepository:
             instance when this bucket has no transactions.
 
         Raises:
-            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+            :class:`~adapters.persistence.storage.ClassificationError`:
                 If a row's inner envelope class is not
                 ``SensitivityClass.FINANCIAL``.
-            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+            :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If a row's inner envelope schema version is higher than the
                 consumer supports.
             StoredTransactionDriftError: If a row payload fails pydantic schema
@@ -266,7 +325,14 @@ class TransactionCatalogueRepository:
                     },
                     translated_message="errors.integrity.integrity_storage_envelope_version",
                 )
-            transactions.append(envelope.payload)
+            transaction = envelope.payload
+            # O3 write-path cache (2026-07-06-ledger-perf-optimization-adr):
+            # memoize the stored envelope's payload hash against this exact
+            # loaded instance. An untouched row at save time is the SAME
+            # object (frozen models never mutate in place), so ``_reconcile``
+            # can reuse this hash instead of re-serializing the row.
+            self._cache_serialized_hash(transaction, sha256_hex(record.payload))
+            transactions.append(transaction)
         _log.debug(
             "loaded transaction catalogue bucket_id=%s entries=%d",
             self._bucket_id,
@@ -285,6 +351,7 @@ class TransactionCatalogueRepository:
         """
         writes, deletions = self._reconcile(catalogue)
         self._objects.apply_batch(writes, deletions)
+        self._sync_date_index(catalogue)
         _log.info(
             "saved transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d",
             self._bucket_id,
@@ -310,6 +377,7 @@ class TransactionCatalogueRepository:
         """
         writes, deletions = self._reconcile(catalogue)
         self._objects.apply_batch((*writes, *extra_writes), deletions)
+        self._sync_date_index(catalogue)
         _log.info(
             "saved transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d extra_writes=%d",
             self._bucket_id,
@@ -319,6 +387,320 @@ class TransactionCatalogueRepository:
             len(extra_writes),
         )
 
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        """Return the persisted catalogue filtered to ``[start, end]`` inclusive.
+
+        Reads the plaintext, non-sensitive :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
+        routing rows for this bucket to select the candidate transaction ids
+        whose filing date (``value_date`` or ``booked_date``) falls in the
+        window, then decrypts only those rows via one targeted batch
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many` --
+        never a full-namespace scan-and-decrypt of every row in the bucket.
+
+        The index is a derived, rebuildable cache: correctness never depends
+        on it being present or complete. When the index has no rows for this
+        bucket, or its row count for this bucket diverges from the encrypted
+        membership index (a staleness signal -- e.g. a row written before this
+        index existed, or a prior crash between the two writes), this method
+        transparently falls back to a full :meth:`load` and filters in memory,
+        exactly reproducing the pre-index result.
+
+        Args:
+            start: Inclusive lower bound of the filing-date window.
+            end: Inclusive upper bound of the filing-date window.
+
+        Returns:
+            The :class:`TransactionCatalogue` containing only transactions
+            whose filing date falls within ``[start, end]``.
+        """
+        index_ids = self._load_index_ids()
+        if not index_ids:
+            return TransactionCatalogue.from_transactions([])
+
+        candidate_ids = self._date_index_candidate_ids(start, end)
+        if candidate_ids is None or not candidate_ids <= index_ids:
+            # Missing, empty-for-a-nonempty-bucket, or drifted relative to the
+            # authoritative membership index: fall back to the full encrypted
+            # scan and filter in memory so correctness never depends on the
+            # plaintext index being present or fresh.
+            full_catalogue = self.load()
+            return TransactionCatalogue.from_transactions(
+                transaction for transaction in full_catalogue.values() if start <= _filing_date(transaction) <= end
+            )
+
+        transactions = self._load_transactions_by_ids(candidate_ids, read_context="date-range read")
+        _log.debug(
+            "loaded transaction catalogue via date index bucket_id=%s window=%s..%s entries=%d",
+            self._bucket_id,
+            start.isoformat(),
+            end.isoformat(),
+            len(transactions),
+        )
+        return TransactionCatalogue.from_transactions(transactions)
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
+
+        The O2 period-first partition (``2026-07-05-ledger-latency-budget-adr``):
+        runs a completeness gate against the plaintext
+        :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
+        rows for this bucket -- the index row count and id set must exactly
+        match the encrypted membership index -- before trusting the index for
+        a partition. On a completeness match, only the in-window transaction
+        ids are decrypted through one targeted batch
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many`;
+        out-of-window ids are reported as plaintext
+        :class:`~domain.transactions.OutOfWindowTransactionStub` rows (id +
+        filing date only, never decrypted). On a completeness MISMATCH -- a
+        stale or partially-synced index -- this falls back to a full
+        :meth:`load` and partitions the result in memory, so correctness never
+        depends on the index being present or fresh
+        (``ledger-participation-index-is-derived-rebuildable``): a stale index
+        costs a slower read, never a silent drop from either half.
+
+        Both paths return the identical :class:`~domain.transactions.LedgerDatePartition`
+        shape; ``index_complete`` records which path served the read.
+
+        Args:
+            start: Inclusive lower bound of the filing-date window.
+            end: Inclusive upper bound of the filing-date window.
+
+        Returns:
+            The :class:`~domain.transactions.LedgerDatePartition` for ``[start, end]``.
+        """
+        index_ids = self._load_index_ids()
+        if not index_ids:
+            return LedgerDatePartition(
+                in_window=TransactionCatalogue.from_transactions([]),
+                out_of_window=(),
+                index_complete=True,
+            )
+
+        index_rows = self._all_date_index_rows()
+        index_row_ids = set(index_rows)
+        if index_row_ids != index_ids:
+            # Stale, partially-synced, or missing index rows for this bucket:
+            # fall back to a full decrypt scan and partition in memory so
+            # correctness never depends on index freshness.
+            full_catalogue = self.load()
+            in_window: list[Transaction] = []
+            out_of_window: list[OutOfWindowTransactionStub] = []
+            for transaction in full_catalogue.values():
+                filing_date = _filing_date(transaction)
+                if start <= filing_date <= end:
+                    in_window.append(transaction)
+                else:
+                    out_of_window.append(
+                        OutOfWindowTransactionStub(
+                            transaction_id=transaction.transaction_id,
+                            filing_date=filing_date,
+                        ),
+                    )
+            _log.debug(
+                "partitioned transaction catalogue via full-scan fallback bucket_id=%s window=%s..%s "
+                "in_window=%d out_of_window=%d",
+                self._bucket_id,
+                start.isoformat(),
+                end.isoformat(),
+                len(in_window),
+                len(out_of_window),
+            )
+            return LedgerDatePartition(
+                in_window=TransactionCatalogue.from_transactions(in_window),
+                out_of_window=tuple(out_of_window),
+                out_of_window_summary=OutOfWindowTransactionSummary.from_stubs(out_of_window),
+                index_complete=False,
+            )
+
+        in_window_ids = {
+            transaction_id for transaction_id, filing_date in index_rows.items() if start <= filing_date <= end
+        }
+        transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
+
+        out_of_window_stubs = tuple(
+            OutOfWindowTransactionStub(transaction_id=transaction_id, filing_date=filing_date)
+            for transaction_id, filing_date in sorted(index_rows.items())
+            if transaction_id not in in_window_ids
+        )
+        _log.debug(
+            "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d out_of_window=%d",
+            self._bucket_id,
+            start.isoformat(),
+            end.isoformat(),
+            len(transactions),
+            len(out_of_window_stubs),
+        )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(transactions),
+            out_of_window=out_of_window_stubs,
+            out_of_window_summary=OutOfWindowTransactionSummary.from_stubs(out_of_window_stubs),
+            index_complete=True,
+        )
+
+    def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
+        """Load selected transaction rows through one targeted secure-object batch."""
+        from ..storage import Envelope
+        from ..storage.crypto import secure_object_key_digest
+
+        selected_ids = tuple(sorted(transaction_ids))
+        if not selected_ids:
+            return []
+
+        transaction_id_by_digest = {
+            secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)): transaction_id
+            for transaction_id in selected_ids
+        }
+        transactions_by_id: dict[str, Transaction] = {}
+        records = self._objects.load_many(
+            TX_BUCKET_NAMESPACE,
+            (transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids),
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        for record in records:
+            transaction_id = transaction_id_by_digest.get(bytes(record.object_key))
+            if transaction_id is None:
+                continue
+            try:
+                envelope = Envelope[Transaction].model_validate_json(record.payload)
+            except ValidationError as exc:
+                _log.error(
+                    "transaction row schema drift bucket_id=%s (%s)",
+                    self._bucket_id,
+                    read_context,
+                    exc_info=True,
+                )
+                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+            transactions_by_id[transaction_id] = envelope.payload
+        return [
+            transactions_by_id[transaction_id]
+            for transaction_id in selected_ids
+            if transaction_id in transactions_by_id
+        ]
+
+    def _all_date_index_rows(self) -> dict[str, date]:
+        """Return every ``{transaction_id: filing_date}`` this bucket's date index records."""
+        with session_scope(self._objects.engine) as session:
+            rows = session.execute(
+                select(
+                    _orm.TransactionDateIndexRow.transaction_id,
+                    _orm.TransactionDateIndexRow.filing_date,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
+            ).all()
+            return dict(rows)
+
+    def rebuild_date_index(self) -> int:
+        """Rebuild this bucket's plaintext date index from the encrypted catalogue.
+
+        The index is derived and rebuildable
+        (``ledger-participation-index-is-derived-rebuildable``): correctness
+        never depends on it, so this is an explicit maintenance/recovery
+        operation, not something callers need on the normal read/write path.
+        Performs a full :meth:`load` (decrypting every row once) and rewrites
+        the index rows for this bucket to exactly match it.
+
+        Returns:
+            The number of index rows written for this bucket.
+        """
+        catalogue = self.load()
+        self._sync_date_index(catalogue)
+        return len(catalogue.transactions)
+
+    def _date_index_candidate_ids(self, start: date, end: date) -> set[str] | None:
+        """Return the candidate transaction ids in ``[start, end]`` per the plaintext index.
+
+        Returns ``None`` when this bucket has no rows in the index at all
+        (distinguishing "index absent" from "index present but window empty",
+        so :meth:`load_for_date_range` can tell a genuinely stale/missing
+        index apart from a real empty result).
+        """
+        with session_scope(self._objects.engine) as session:
+            any_row = session.execute(
+                select(_orm.TransactionDateIndexRow.id)
+                .where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id)
+                .limit(1),
+            ).first()
+            if any_row is None:
+                return None
+            rows = session.execute(
+                select(_orm.TransactionDateIndexRow.transaction_id).where(
+                    _orm.TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    _orm.TransactionDateIndexRow.filing_date >= start,
+                    _orm.TransactionDateIndexRow.filing_date <= end,
+                ),
+            ).scalars()
+            return set(rows)
+
+    def _sync_date_index(self, catalogue: TransactionCatalogue) -> None:
+        """Diff this bucket's plaintext date-index rows against ``catalogue``.
+
+        Runs as a SEPARATE transaction immediately after the encrypted write
+        commits. Only transactions that are new, removed, or whose filing
+        date changed are written -- an unchanged transaction's index row is
+        left untouched, mirroring the diff-based write the encrypted rows
+        already use (see the module docstring: a full-rewrite-per-save would
+        reintroduce the O(n) write-amplification the encrypted per-row store
+        was built to eliminate).
+
+        The index is a derived, rebuildable cache
+        (``ledger-participation-index-is-derived-rebuildable``): a crash
+        between the two writes leaves the index one write behind, which
+        :meth:`load_for_date_range` detects via the membership-index subset
+        check and safely falls back to a full scan for -- never a correctness
+        hazard, only a lost optimisation until the next save re-syncs it.
+
+        Carries ONLY non-sensitive routing keys (bucket id, transaction id,
+        filing date, filing year) -- never an amount, counterparty,
+        description, or any other financial content.
+        """
+        incoming: dict[str, date] = {
+            transaction_id: _filing_date(transaction) for transaction_id, transaction in catalogue.transactions.items()
+        }
+
+        with session_scope(self._objects.engine) as session:
+            existing_rows = session.execute(
+                select(
+                    _orm.TransactionDateIndexRow.id,
+                    _orm.TransactionDateIndexRow.transaction_id,
+                    _orm.TransactionDateIndexRow.filing_date,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
+            ).all()
+            existing: dict[str, tuple[int, date]] = {
+                transaction_id: (row_id, filing_date) for row_id, transaction_id, filing_date in existing_rows
+            }
+
+            stale_ids = set(existing) - set(incoming)
+            if stale_ids:
+                session.execute(
+                    delete(_orm.TransactionDateIndexRow).where(
+                        _orm.TransactionDateIndexRow.bucket_id == self._bucket_id,
+                        _orm.TransactionDateIndexRow.transaction_id.in_(stale_ids),
+                    ),
+                )
+
+            new_rows: list[_orm.TransactionDateIndexRow] = []
+            for transaction_id, filing_date in incoming.items():
+                current = existing.get(transaction_id)
+                if current is not None and current[1] == filing_date:
+                    continue  # unchanged: leave the existing row untouched
+                if current is not None:
+                    session.execute(
+                        update(_orm.TransactionDateIndexRow)
+                        .where(_orm.TransactionDateIndexRow.id == current[0])
+                        .values(filing_date=filing_date, filing_year=filing_date.year),
+                    )
+                    continue
+                new_rows.append(
+                    _orm.TransactionDateIndexRow(
+                        bucket_id=self._bucket_id,
+                        transaction_id=transaction_id,
+                        filing_date=filing_date,
+                        filing_year=filing_date.year,
+                    ),
+                )
+            if new_rows:
+                session.add_all(new_rows)
+
     def _reconcile(
         self,
         catalogue: TransactionCatalogue,
@@ -327,13 +709,21 @@ class TransactionCatalogueRepository:
 
         Returns ``(changed writes, deletions)``. Changed-row detection is a
         decryption-free
-        :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
         lookup keyed by the bucket-qualified HMAC digest (so it is correct even
         when several buckets share one store): an incoming transaction whose
         freshly-serialised payload hash matches the stored one is left
         untouched. Deletions and the membership index are bounded to *this*
         bucket via the per-bucket index, so a reconciliation can never touch
         another bucket's rows.
+
+        An incoming transaction that IS (object identity) an instance this
+        same repository loaded reuses the memoized
+        ``_serialized_hash_cache`` entry instead of re-serializing and
+        re-hashing the row (O3,
+        ``2026-07-06-ledger-perf-optimization-adr``). The store-side
+        comparison (``stored_hashes``) is always fresh; only the
+        fresh-serialization side of the diff is skipped for a cache hit.
         """
         from ..storage import SecureObjectDeletion, SecureObjectWrite
         from ..storage.crypto import secure_object_key_digest
@@ -346,8 +736,11 @@ class TransactionCatalogueRepository:
         for transaction_id, transaction in catalogue.transactions.items():
             object_key = transaction_object_key(self._bucket_id, transaction_id)
             digest = secure_object_key_digest(object_key)
+            cached_hash = self._serialized_hash_cache.get(id(transaction))
+            if cached_hash is not None and stored_hashes.get(digest) == cached_hash:
+                continue
             payload = self._serialise_transaction(transaction)
-            if stored_hashes.get(digest) == sha256_hex(payload):
+            if cached_hash is None and stored_hashes.get(digest) == sha256_hex(payload):
                 continue
             writes.append(
                 SecureObjectWrite(
@@ -381,6 +774,21 @@ class TransactionCatalogueRepository:
         )
         return tuple(writes), deletions
 
+    def _cache_serialized_hash(self, transaction: Transaction, payload_hash: str) -> None:
+        """Memoize ``payload_hash`` against ``transaction``'s identity.
+
+        Keyed by ``id(transaction)`` rather than the object itself (see the
+        class docstring for why a plain hash-keyed cache is unsafe here). A
+        :class:`~weakref.finalize` callback evicts the entry the instant this
+        exact ``transaction`` instance is garbage-collected, so a later,
+        unrelated object cannot inherit a stale cache hit at a recycled
+        address.
+        """
+        key = id(transaction)
+        cache = self._serialized_hash_cache
+        weakref.finalize(transaction, cache.pop, key, None)
+        cache[key] = payload_hash
+
     def _load_index_ids(self) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""
         from ..storage import Envelope
@@ -409,7 +817,7 @@ class TransactionCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=_TransactionIndex(transaction_ids=tuple(sorted(transaction_ids))),
         )
-        return envelope.model_dump_json().encode("utf-8")
+        return envelope.model_dump_json().encode(UTF_8_ENCODING)
 
     def _serialise_transaction(self, transaction: Transaction) -> bytes:
         """Serialise one transaction into stable encrypted-row envelope bytes.
@@ -426,7 +834,7 @@ class TransactionCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=transaction,
         )
-        return envelope.model_dump_json().encode("utf-8")
+        return envelope.model_dump_json().encode(UTF_8_ENCODING)
 
 
 __all__ = [

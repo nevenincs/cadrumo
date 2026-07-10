@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-censo-calendar-reconciliation'
 date: '2026-06-05'
-modified: '2026-06-30'
+modified: '2026-07-04'
 tier: L3
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-research]]'
@@ -12,6 +12,16 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `live-censo-calendar-reconciliation` `implementation` plan
 
@@ -46,8 +56,8 @@ Make the unresolved live acceptance gap explicit: pull Modelo 036/censo informat
 Verify that authenticated live censo evidence is the source of profile enrolment facts, that derived Modelo obligations are enumerated from the reconciled legal situation, and that calendar evidence distinguishes local ready-to-file state from AEAT submitted and justificante-verified state.
 
 - [x] `W03.P03.S05` - Run live Modelo 036 censo refresh and capture exact authenticated result or external blocker; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
-- [ ] `W03.P03.S06` - Reconcile live censo snapshot into profile-derived taxpayer model and obligation enrolment facts; `src/aeat/application/user_profile/_censo_sync.py`.
-- [ ] `W03.P03.S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates; `src/aeat/application/overview/__init__.py`.
+- [x] `W03.P03.S06` - Reconcile live censo snapshot into profile-derived taxpayer model and obligation enrolment facts; `src/aeat/application/user_profile/_censo_sync.py`.
+- [x] `W03.P03.S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates; `src/aeat/application/overview/__init__.py`.
 - [x] `W03.P03.S08` - Verify calendar evidence includes live-backed filings messages and justificante states without conflating local filing readiness; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W03.P03.S28` - Expose censo-apply calendar obligation rows with concrete filing dates after taxpayer-model reconciliation; `src/aeat/entrypoints/cli/_config/_profile_censo.py, src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py, src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py, src/aeat/application/user_profile/tests/test_censo_sync.py`.
 - [x] `W03.P03.S31` - Expose censo-derived taxpayer-model provenance on censo-apply calendar obligation rows; `src/aeat/entrypoints/cli/_config/_profile_censo.py, src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py, src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`.

@@ -12,8 +12,8 @@ and tries both ``DOMAIN\\user`` and ``user`` candidate names so it works
 on standalone machines and domain-joined hosts.
 
 The helper is shared between
-:mod:`adapters.outbound.aeat.auth._authenticator` and
-:mod:`adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
+:mod:`~adapters.outbound.aeat.auth._authenticator` and
+:mod:`~adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
 discipline cannot diverge between the two session writers.
 
 This module is a compatibility/public hardening primitive for plaintext files;
@@ -25,6 +25,17 @@ permission tightening an authorization decision.
 The public :func:`restrict_file_permissions` entry point accepts a
 :class:`~pathlib.Path` target and deliberately returns ``None`` even when the
 best-effort hardening step cannot be applied.
+
+See Also:
+    :func:`~core.file_permissions.restrict_file_permissions`
+        Public entry point used by legacy/plaintext session writers.
+    :mod:`~adapters.outbound.aeat.auth._authenticator`
+        FNMT-backed browser-session writer that shares this hardening helper.
+    :mod:`~adapters.outbound.aeat.auth._clave_movil`
+        Cl@ve Móvil provider whose active session persistence now uses secure
+        objects instead of plaintext storage-state files.
+    ``2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit``
+        Review that fixed silent POSIX failure swallowing and bounded ACL calls.
 """
 
 from __future__ import annotations
@@ -32,6 +43,7 @@ from __future__ import annotations
 import getpass
 import os
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
@@ -47,10 +59,31 @@ _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
 _ICACLS_TIMEOUT_SECONDS: Final[float] = 10.0
 
 
+def _run_permission_command(
+    args: Sequence[str],
+    *,
+    timeout: float = _ICACLS_TIMEOUT_SECONDS,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        list(args),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=timeout,
+    )
+
+
+def _restrict_posix_file_permissions(path: Path) -> None:
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        _log.debug("restrict_file_permissions: chmod failed on %s", path, exc_info=True)
+
+
 def restrict_file_permissions(path: Path) -> None:
     r"""Best-effort restrict ``path`` to the operator's user account.
 
-    POSIX: calls :func:`os.chmod` with mode ``0o600``.
+    POSIX: calls :func:`~os.chmod` with mode ``0o600``.
 
     Windows: shells out to ``icacls.exe`` to strip inherited ACLs and
     grant ``F`` (Full control) to the operator's account only. Tries
@@ -90,18 +123,14 @@ def restrict_file_permissions(path: Path) -> None:
                 candidates.insert(0, f"{userdomain}\\{username}")
             result: subprocess.CompletedProcess[str] | None = None
             for candidate in candidates:
-                result = subprocess.run(
+                result = _run_permission_command(
                     [
                         str(icacls_path),
                         str(path),
                         "/inheritance:r",
                         "/grant:r",
                         f"{candidate}:(F)",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                    timeout=_ICACLS_TIMEOUT_SECONDS,
+                    ]
                 )
                 if result.returncode == 0:
                     return
@@ -130,10 +159,7 @@ def restrict_file_permissions(path: Path) -> None:
         return
     if os.name != "posix":
         return
-    try:
-        os.chmod(path, 0o600)
-    except OSError:
-        _log.debug("restrict_file_permissions: chmod failed on %s", path, exc_info=True)
+    _restrict_posix_file_permissions(path)
 
 
 __all__ = ["restrict_file_permissions"]

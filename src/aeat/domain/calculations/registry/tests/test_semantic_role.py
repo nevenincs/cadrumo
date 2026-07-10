@@ -17,7 +17,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Iterable
 from datetime import date
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -133,33 +133,51 @@ class TestSemanticRoleFieldShape:
         assert rebuilt.semantic_role == "taxpayer_nif"
         assert rebuilt == c
 
-    @pytest.mark.parametrize(
-        "updates",
-        (
-            {"semantic_role": ""},
-            {
-                "semantic_role_cardinality": "intentional_singleton",
-                "semantic_role_cardinality_reason": "2025-only legal slot",
-            },
-            {
-                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
-                "semantic_role_cardinality": "intentional_singleton",
-            },
-            {
-                "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
-                "semantic_role_cardinality_reason": "2025-only legal slot",
-            },
-        ),
-        ids=(
-            "empty-role",
-            "singleton-without-role",
-            "singleton-without-reason",
-            "reason-without-singleton",
-        ),
-    )
-    def test_invalid_semantic_role_shape_rejected(self, updates: _PartialCasillaUpdate) -> None:
-        with pytest.raises(ValidationError):
-            _casilla(**updates)
+    def test_invalid_semantic_role_shape_rejected(self) -> None:
+        cases: tuple[
+            tuple[
+                str,
+                dict[
+                    Literal[
+                        "semantic_role",
+                        "semantic_role_cardinality",
+                        "semantic_role_cardinality_reason",
+                    ],
+                    str,
+                ],
+            ],
+            ...,
+        ] = (
+            ("empty-role", {"semantic_role": ""}),
+            (
+                "singleton-without-role",
+                {
+                    "semantic_role_cardinality": "intentional_singleton",
+                    "semantic_role_cardinality_reason": "2025-only legal slot",
+                },
+            ),
+            (
+                "singleton-without-reason",
+                {
+                    "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                    "semantic_role_cardinality": "intentional_singleton",
+                },
+            ),
+            (
+                "reason-without-singleton",
+                {
+                    "semantic_role": "is_pf_mod_40_3_b2_base_tipo_3",
+                    "semantic_role_cardinality_reason": "2025-only legal slot",
+                },
+            ),
+        )
+
+        for case_id, updates in cases:
+            try:
+                _casilla(**updates)
+            except ValidationError:
+                continue
+            raise AssertionError(f"{case_id} accepted an invalid semantic-role shape")
 
     def test_blank_primary_label_rejected(self) -> None:
         with pytest.raises(ValidationError, match="official Spanish text"):
@@ -826,112 +844,111 @@ class TestTypoTwinWarning:
             _emit_semantic_role_typo_twin_warnings([m])
         assert any("permanent_aumento" in str(w.message) for w in captured)
 
-    @pytest.mark.parametrize(
-        ("left", "right"),
-        (
-            pytest.param("tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave", id="renta-attribuida"),
-            pytest.param("total_percepciones_count", "total_percepciones_amount", id="percepciones-total"),
-            pytest.param(
+    def test_non_axis_token_pairs_are_not_axis_siblings(self) -> None:
+        cases = (
+            ("renta-attribuida", "tipo_renta_atribuida_clave", "tipo_renta_atribuida_subclave"),
+            ("percepciones-total", "total_percepciones_count", "total_percepciones_amount"),
+            (
+                "iva-compensacion-temporal",
                 "iva_compensacion_pendiente_anteriores",
                 "iva_compensacion_pendiente_posteriores",
-                id="iva-compensacion-temporal",
             ),
-            pytest.param(
+            (
+                "ganancia-valor-kind",
                 "irpf_ganancia_valor_transmision",
                 "irpf_ganancia_valor_adquisicion",
-                id="ganancia-valor-kind",
             ),
-            pytest.param("irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe", id="anexo-b-letter"),
-            pytest.param(
+            ("anexo-b-letter", "irpf_anexo_b_ab_importe", "irpf_anexo_b_c_importe"),
+            (
+                "sin-maintenance",
                 "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_aumento",
                 "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento",
-                id="sin-maintenance",
             ),
-            pytest.param(
+            (
+                "legal-reference",
                 "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
                 "is_correccion_operaciones_a_plazos_dt1_permanente_aumento",
-                id="legal-reference",
             ),
-            pytest.param(
+            (
+                "legal-regime",
                 "is_deduccion_di_internacional_rdleg_pendiente",
                 "is_deduccion_di_internacional_pendiente",
-                id="legal-regime",
             ),
-            pytest.param(
+            (
+                "numeric-window",
                 "irpf_red_prevision_social_exceso_2015_2019",
                 "irpf_red_prevision_social_exceso_2016_2020",
-                id="numeric-window",
             ),
-            pytest.param(
+            (
+                "period-applied",
                 "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo",
                 "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado",
-                id="period-applied",
             ),
-            pytest.param(
+            (
+                "internal-international",
                 "is_deduccion_di_interna_rdleg_pendiente",
                 "is_deduccion_di_internacional_rdleg_pendiente",
-                id="internal-international",
             ),
-            pytest.param(
+            (
+                "detail-other",
                 "is_correccion_detalle_correcciones_resultado_permanente_disminucion",
                 "is_correccion_otras_correcciones_resultado_permanente_disminucion",
-                id="detail-other",
             ),
-            pytest.param("is_liquidacion_i_importe", "is_liquidacion_ii_importe", id="roman-liquidation"),
-            pytest.param(
+            ("roman-liquidation", "is_liquidacion_i_importe", "is_liquidacion_ii_importe"),
+            (
+                "birth-death",
                 "irpf_descendiente_fecha_nacimiento",
                 "irpf_descendiente_fecha_fallecimiento",
-                id="birth-death",
             ),
-            pytest.param(
+            (
+                "relationship",
                 "irpf_descendiente_apellidos_nombre",
                 "irpf_ascendiente_apellidos_nombre",
-                id="relationship",
             ),
-            pytest.param(
+            (
+                "anexo-b-aav-marker",
                 "irpf_anexo_b_aav_importe_satisfecho",
                 "irpf_anexo_b_importe_satisfecho",
-                id="anexo-b-aav-marker",
             ),
-            pytest.param(
+            (
+                "public-source",
                 "irpf_ganancia_premios_juegos_pub_valoracion",
                 "irpf_ganancia_premios_juegos_valoracion",
-                id="public-source",
             ),
-            pytest.param(
+            (
+                "agricultural-objective-estimation",
                 "irpf_eo_agr_reintegro_subvenciones",
                 "irpf_eo_reintegro_subvenciones",
-                id="agricultural-objective-estimation",
             ),
-            pytest.param(
+            (
+                "numeric-line",
                 "irpf_deduccion_cantabria_obras_mejora_pendiente_1",
                 "irpf_deduccion_cantabria_obras_mejora_pendiente_2",
-                id="numeric-line",
             ),
-            pytest.param(
+            (
+                "ccaa",
                 "irpf_deduccion_murcia_vehiculo_importe",
                 "irpf_deduccion_asturias_vehiculo_importe",
-                id="ccaa",
             ),
-            pytest.param(
+            (
+                "field-detail-year",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo_anio",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo",
-                id="field-detail-year",
             ),
-            pytest.param(
+            (
+                "field-detail-price",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo_precio",
                 "irpf_deduccion_madrid_vivienda_municipio_riesgo",
-                id="field-detail-price",
             ),
-            pytest.param(
+            (
+                "cadastral-anexo-c1",
                 "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4",
                 "irpf_ganancia_inmueble_referencia_catastral_4",
-                id="cadastral-anexo-c1",
             ),
-        ),
-    )
-    def test_non_axis_token_pairs_are_not_axis_siblings(self, left: str, right: str) -> None:
-        assert semantic_roles_are_axis_siblings(left, right) is False
+        )
+
+        for case_id, left, right in cases:
+            assert semantic_roles_are_axis_siblings(left, right) is False, case_id
 
     def test_related_party_row_slot_roles_do_not_warn_as_typos(self) -> None:
         first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
@@ -966,36 +983,34 @@ class TestSemanticRoleTypoTwinHelpers:
     def _index(*known_roles: str) -> _SemanticRoleTypoIndex:
         return _build_semantic_role_typo_index(known_roles)
 
-    @pytest.mark.parametrize(
-        ("role", "known", "expected"),
-        (
-            ("taxpayer_nif", "taxpayer_nif", False),
-            ("taxpayer_niff", "taxpayer_nif", True),
-            ("irpf_ascendiente_fecha_nacimiento", "irpf_descendiente_fecha_nacimiento", True),
-        ),
-        ids=("identity", "single-char-substitution", "relationship-not-axis-exempt"),
-    )
-    def test_candidate_typo_twin_cases(self, role: str, known: str, expected: bool) -> None:
-        index = self._index(known)
-        max_diff = max(1, int(0.08 * (len(role) + len(known))))
-        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is expected
+    def test_candidate_typo_twin_cases(self) -> None:
+        cases = (
+            ("identity", "taxpayer_nif", "taxpayer_nif", False),
+            ("single-char-substitution", "taxpayer_niff", "taxpayer_nif", True),
+            (
+                "relationship-not-axis-exempt",
+                "irpf_ascendiente_fecha_nacimiento",
+                "irpf_descendiente_fecha_nacimiento",
+                True,
+            ),
+        )
 
-    @pytest.mark.parametrize(
-        ("candidate", "known_roles", "expected"),
-        (
-            ("taxpayer_niff", ("taxpayer_nif", "unrelated_role_value"), True),
-            ("completely_distinct_role", ("taxpayer_nif", "counterparty_amount"), False),
-        ),
-        ids=("near-duplicate", "distinct"),
-    )
-    def test_scan_length_buckets_for_typo_twin_cases(
-        self,
-        candidate: str,
-        known_roles: tuple[str, ...],
-        expected: bool,
-    ) -> None:
-        index = self._index(*known_roles)
-        assert _scan_length_buckets_for_typo_twin(candidate, index) is expected
+        for case_id, role, known, expected in cases:
+            index = self._index(known)
+            max_diff = max(1, int(0.08 * (len(role) + len(known))))
+            assert (
+                _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is expected
+            ), case_id
+
+    def test_scan_length_buckets_for_typo_twin_cases(self) -> None:
+        cases = (
+            ("near-duplicate", "taxpayer_niff", ("taxpayer_nif", "unrelated_role_value"), True),
+            ("distinct", "completely_distinct_role", ("taxpayer_nif", "counterparty_amount"), False),
+        )
+
+        for case_id, candidate, known_roles, expected in cases:
+            index = self._index(*known_roles)
+            assert _scan_length_buckets_for_typo_twin(candidate, index) is expected, case_id
 
 
 class TestSignedCuotaResultadoRoles:

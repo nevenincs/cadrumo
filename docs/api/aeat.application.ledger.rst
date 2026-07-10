@@ -31,6 +31,7 @@ Submodules
    aeat.application.ledger._id_resolution
    aeat.application.ledger._llm_classification
    aeat.application.ledger._llm_diagnostics
+   aeat.application.ledger._llm_suggestions
    aeat.application.ledger._models
    aeat.application.ledger._participation_read
    aeat.application.ledger._preflight

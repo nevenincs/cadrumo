@@ -11,17 +11,27 @@ and even then only when the consent gate permits AND an endpoint is
 configured; otherwise it remains a safe no-op.
 
 Every field this module can ever surface as "would be sent" is drawn from
-:class:`~aeat.core.telemetry.TelemetryEventPayload`, the closed allowlisted
+:class:`~core.telemetry.TelemetryEventPayload`, the closed allowlisted
 payload shape -- there is no other data source, so this transport module
 cannot itself widen what telemetry carries.
 
 This module is the transport adapter over
-:func:`~aeat.application.diagnostics_telemetry.build_telemetry_status_report`,
-:func:`~aeat.application.diagnostics_telemetry.build_telemetry_flush_preview`,
-and :func:`~aeat.application.diagnostics_telemetry.flush_telemetry`. It emits
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
-:class:`~aeat.entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
-through :func:`_emit_envelope`.
+:func:`~application.diagnostics_telemetry.build_telemetry_status_report`,
+:func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`,
+and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
+:class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
+:class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
+through :func:`~entrypoints.cli._common._emit_envelope`.
+
+See Also:
+    :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
+        Read-only application service backing ``status``.
+    :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
+        Dry-run payload builder backing the default ``flush`` mode.
+    :func:`~application.diagnostics_telemetry.flush_telemetry`
+        Non-dry-run application service that still honours the consent gate.
+    :class:`~core.telemetry.TelemetryEventPayload`
+        Closed payload shape surfaced in the flush preview result.
 """
 
 from __future__ import annotations
@@ -323,7 +333,6 @@ def _parse_tier(value: str) -> TelemetryTier:
         raise _bad(
             tr(
                 "cli.diagnostics.telemetry.bad_tier",
-                option="--tier",
                 value=value,
                 accepted=accepted,
                 default=f"--tier must be one of: {accepted}; got {value!r}.",

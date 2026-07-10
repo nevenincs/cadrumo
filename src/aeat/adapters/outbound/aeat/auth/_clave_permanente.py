@@ -1,21 +1,22 @@
 """Cl@ve Permanente auth provider for AEAT Sede Electrónica.
 
-Implements the :class:`AuthProvider` protocol for the DNI/NIE + password
-Cl@ve Permanente flow against the live portal. Unlike Cl@ve Móvil, routine
-Cl@ve Permanente login for AEAT *read paths* is fully headless-automatable:
-the operator supplies a DNI/NIE and password, the provider submits AEAT's
-auth-method selector page and the Cl@ve IdP login form, and no phone
-approval, push notification, or QR scan is required. AEAT's SMS-OTP
-elevation only applies to account activation, password recovery, and
-"top-level services" (elevated write operations) — none of which this
-project's permanently-read-only scope reaches.
+Implements the :class:`~adapters.outbound.aeat.auth.AuthProvider` protocol for
+the DNI/NIE + password Cl@ve Permanente flow against the live portal. Unlike
+Cl@ve Móvil, routine Cl@ve Permanente login for AEAT *read paths* is fully
+headless-automatable: the operator supplies a DNI/NIE and password, the
+provider submits AEAT's auth-method selector page and the Cl@ve IdP login form,
+and no phone approval, push notification, or QR scan is required. AEAT's
+SMS-OTP elevation only applies to account activation, password recovery, and
+"top-level services" (elevated write operations) — none of which this project's
+permanently-read-only scope reaches.
 
-The provider returns :class:`AeatSession` and :class:`AeatLoginAssertion`
-records with Cl@ve Permanente-specific detail payloads. Fresh logins persist
-:class:`ClavePermanenteSessionMetadata` next to encrypted Playwright storage
-state; resume and diagnostic probes rebuild
-:class:`ClavePermanenteSessionDetail` from that metadata without carrying
-credential material in the session record.
+The provider returns :class:`~adapters.outbound.aeat.auth.AeatSession` and
+:class:`~adapters.outbound.aeat.auth.AeatLoginAssertion` records with Cl@ve
+Permanente-specific detail payloads. Fresh logins persist
+:class:`~adapters.outbound.aeat.auth._clave_permanente_metadata.ClavePermanenteSessionMetadata`
+next to encrypted Playwright storage state; resume and diagnostic probes
+rebuild :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail` from
+that metadata without carrying credential material in the session record.
 
 Design summary:
 
@@ -28,14 +29,17 @@ Design summary:
   certificate and Cl@ve Móvil sessions.
 * AEAT/Cl@ve IdP form selectors are the least stable part of this surface —
   they track the Cl@ve frontend rather than a published AEAT contract — and
-  are declared centrally in :class:`aeat.core.external_constants.AeatClavePermanenteSurface`
-  so a frontend change is a one-file update.
+  are declared centrally in
+  :class:`~core.external_constants.AeatClavePermanenteSurface` so a frontend
+  change is a one-file update.
 
 See Also:
-    :class:`ClavePermanenteSessionMetadata` for the encrypted persistence
-    contract, :class:`ClavePermanenteSessionDetail` for the public session
-    payload, and :func:`aeat.adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_login_error`
-    for operator-reportable live-flow failures.
+    :class:`~adapters.outbound.aeat.auth._clave_permanente_metadata.ClavePermanenteSessionMetadata`
+        Provider-owned encrypted persistence contract.
+    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+        Public session detail projected from persisted metadata.
+    :func:`~adapters.outbound.aeat.auth._clave_permanente_support.clave_permanente_login_error`
+        Builder for operator-reportable live-flow failures.
 """
 
 from __future__ import annotations
@@ -51,6 +55,8 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
+from .....core import require_active_bucket_id
+from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.logging import get_logger
@@ -93,9 +99,9 @@ _CLAVE_PERMANENTE_PASSWORD_ENV: Final[str] = "AEAT_CLAVE_PERMANENTE_PASSWORD"
 
 
 class ClavePermanenteAuthProvider:
-    """Cl@ve Permanente implementation of the :class:`AuthProvider` protocol.
+    """Cl@ve Permanente implementation of the :class:`~adapters.outbound.aeat.auth.AuthProvider` protocol.
 
-    Constructed by :func:`aeat.adapters.outbound.aeat.auth.select_provider`
+    Constructed by :func:`~adapters.outbound.aeat.auth.select_provider`
     when ``kind == AuthProviderKind.CLAVE_PERMANENTE``. Both fresh login and
     resume run headlessly: the DNI/NIE + password form requires no
     operator-mediated approval step for AEAT read paths.
@@ -126,12 +132,14 @@ class ClavePermanenteAuthProvider:
         browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
-        """Run the Cl@ve Permanente login flow and return an :class:`AeatSession`.
+        """Run the Cl@ve Permanente login flow and return an :class:`~adapters.outbound.aeat.auth.AeatSession`.
 
         Attempts to resume a cached session first. Falls back to a fresh
         DNI/NIE + password form submission against the Cl@ve IdP. Fresh
-        success writes :class:`ClavePermanenteSessionMetadata` and returns a
-        session whose provider detail is :class:`ClavePermanenteSessionDetail`.
+        success writes
+        :class:`~adapters.outbound.aeat.auth._clave_permanente_metadata.ClavePermanenteSessionMetadata`
+        and returns a session whose provider detail is
+        :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`.
         """
         async with self._lock:
             if self._active_session is not None:
@@ -177,7 +185,8 @@ class ClavePermanenteAuthProvider:
         concrete post-auth landing URL, the probe navigates there directly.
 
         Returns:
-            An :class:`AeatLoginAssertion` describing the probe outcome.
+            An :class:`~adapters.outbound.aeat.auth.AeatLoginAssertion`
+            describing the probe outcome.
         """
         context = self._context
         if context is None:
@@ -255,7 +264,7 @@ class ClavePermanenteAuthProvider:
         )
 
     def describe(self) -> AuthProviderDescription:
-        """Return an :class:`AuthProviderDescription` for the Cl@ve Permanente provider state.
+        """Return an :class:`~adapters.outbound.aeat.auth._providers.AuthProviderDescription`.
 
         A missing identity or missing password is an undeclared state
         (``info``), a malformed identity is a real configuration fault
@@ -297,7 +306,7 @@ class ClavePermanenteAuthProvider:
         )
 
     async def close(self) -> None:
-        """Tear down any retained :class:`BrowserContextLike` and browser session."""
+        """Tear down any retained :class:`~adapters.outbound.aeat.auth.BrowserContextLike` and browser session."""
         async with self._lock:
             await self._drop_context()
             await self._close_browser_session(self._browser_session)
@@ -460,9 +469,6 @@ class ClavePermanenteAuthProvider:
     # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
-        from .....core import require_active_bucket_id
-        from .....core.auth_session_keys import aeat_auth_session_storage_state_path
-
         profile = require_active_bucket_id()
         return aeat_auth_session_storage_state_path(profile, "clave-permanente-storage")
 
@@ -536,9 +542,10 @@ class ClavePermanenteAuthProvider:
 
         Detects the closed error-marker taxonomy (invalid credentials,
         locked account, expired password, SMS-OTP elevation) against the
-        page's rendered text and raises :class:`ClavePermanenteLoginError`
-        with the matching :class:`ClavePermanenteFailureMode` before
-        returning control for the post-auth landing wait.
+        page's rendered text and raises a registered
+        :class:`~adapters.outbound.aeat.auth.AuthError` with the matching
+        :class:`~adapters.outbound.aeat.auth.ClavePermanenteFailureMode`
+        before returning control for the post-auth landing wait.
         """
         surface = self._clave_surface()
         fill = getattr(page, "fill", None)

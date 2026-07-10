@@ -1,4 +1,20 @@
-"""Unit tests for :mod:`aeat.domain.portals._registry`."""
+"""Unit tests for :mod:`~domain.portals._registry`.
+
+The suite pins :data:`~domain.portals.PORTAL_REGISTRY` as the frozen
+``Portal`` → :class:`~domain.portals.PortalMetadata` authority, checks lookup
+helpers such as :func:`~domain.portals.get_portal` and
+:func:`~domain.portals.portals_for_modelo`, and verifies registry finalisation
+reports through logging rather than process stdio.
+
+See Also:
+    :mod:`~domain.portals._registry`
+        Registry assembly and invariant enforcement under test.
+    :class:`~domain.portals.Portal`
+        Closed portal identifier enum that defines registry closure.
+    :class:`~domain.portals.PortalCategory`
+        Category axis used by ``portals_for_modelo`` and
+        ``portals_by_category``.
+"""
 
 from __future__ import annotations
 
@@ -171,18 +187,12 @@ def test_finalise_registry_logs_info_on_success(
     assert "loaded 42 portal entries" in debug_records[0].getMessage()
 
 
-def test_registry_module_has_no_print_calls() -> None:
-    """The registry module uses ``aeat.core.logging`` only — no ``print`` calls.
+def test_registry_finalisation_does_not_write_to_stdio(capsys: pytest.CaptureFixture[str]) -> None:
+    """The registry module reports through logging, not process stdio."""
 
-    Parses the source as an AST and walks every ``Call`` node, asserting
-    that no direct ``print(...)`` is invoked. This is stricter than a
-    substring match (which would flag ``sprint(`` or quoted ``"print("``).
-    """
-    import ast
-    from pathlib import Path
+    mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
+    captured = capsys.readouterr()
 
-    source = Path(__file__).resolve().parent.parent.joinpath("_registry.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            assert node.func.id != "print", f"print() call at line {node.lineno}"
+    assert len(mapping) == 42
+    assert captured.out == ""
+    assert captured.err == ""

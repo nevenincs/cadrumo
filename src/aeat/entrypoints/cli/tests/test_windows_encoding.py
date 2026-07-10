@@ -39,26 +39,24 @@ def _output_language(language: str):
     return override_settings(aeat_output_language=language)
 
 
-@pytest.mark.parametrize(
-    ("language", "expected_fragment"),
-    [
-        ("es", "envío"),
-        ("hu", "élő"),
-    ],
-)
-def test_cp1252_stderr_path_does_not_raise_on_non_ascii_output(
-    language: str,
-    expected_fragment: str,
-) -> None:
+_NON_ASCII_ERROR_CASES = (("es", "envío"), ("hu", "élő"))
+
+
+def test_cp1252_stderr_path_does_not_raise_on_non_ascii_output() -> None:
     """``write_stderr`` survives a ``cp1252`` stream when emitting non-ASCII glyphs."""
-    buffer = io.BytesIO()
-    stream = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
+    failures: list[str] = []
+    for language, expected_fragment in _NON_ASCII_ERROR_CASES:
+        buffer = io.BytesIO()
+        stream = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
 
-    with _output_language(language):
-        write_stderr(render_error_text(LiveSubmitForbiddenError()), stream=stream)
+        with _output_language(language):
+            write_stderr(render_error_text(LiveSubmitForbiddenError()), stream=stream)
 
-    rendered = buffer.getvalue().decode("utf-8")
-    assert expected_fragment in rendered
+        rendered = buffer.getvalue().decode("utf-8")
+        if expected_fragment not in rendered:
+            failures.append(f"{language}: missing {expected_fragment!r} in {rendered!r}")
+
+    assert not failures, "\n".join(failures)
 
 
 def test_write_stderr_redacts_sensitive_canaries() -> None:

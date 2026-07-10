@@ -1,6 +1,6 @@
 """Lifecycle-contradiction golden gate for the operator eval (eval-catalogue category 4).
 
-Closes eval-catalogue category 4 (wrong lifecycle sequencing / cross-surface
+Covers eval-catalogue category 4 (wrong lifecycle sequencing / cross-surface
 contradiction, ``.vault/research/2026-07-01-agent-harness-research.md``) and finding A1
 of ``.vault/audit/2026-05-21-persona-fleet-round2-findings-audit.md``: "``modelo
 readiness`` for the same modelo reports ``ready: True`` - a direct cross-surface
@@ -8,29 +8,30 @@ contradiction" against a blocked ``work`` verb. This is the enforcement surface 
 ``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
 a retry" section (``src/aeat/_data/agent/rules/operator-lifecycle-ordering.md``).
 
-Real repro found at HEAD, distinct from A1's original pairing: ``work verify`` itself no
-longer gates on the deadline-engine obligation window
-(``application/modelo/tests/test_file_flow_verify.py::
-test_verify_grants_for_a_closed_past_period_real_registry`` - "``work verify`` is
-independent of the AEAT filing calendar"), so a readiness-vs-verify-NO_PENDING_OBLIGATION
-pairing is stale. The contradiction the eval-catalogue names has NOT been closed though -
-``modelo readiness`` documents its own scope gap on every response
-(``readiness_scope: "profile_and_source_preflight_not_manual_casilla_completeness"``,
-``entrypoints/cli/_modelo_readiness_cli.py``): readiness composes only the
-profile/registry/binding/ledger axes (``application/state_projection.py::
-_build_modelo_readiness``) and never checks manual-casilla completeness, while
-``work verify`` legitimately refuses to grant ``VERIFICADO_COMPLETO`` when required manual
-casillas are absent. Modelo 347 (an informativa with zero registry calculation bindings -
-``revision.bindings`` is empty, so ``_missing_calculation_bindings_for_readiness`` returns
-``()`` unconditionally) reproduces this deterministically and without any clock
-dependency: ``modelo readiness`` reports ``ready: true`` for a freshly-created work unit
-before a single casilla has been entered, while ``modelo work verify`` on the resulting
-draft legitimately refuses (non-zero exit, ``granted_verificado_completo: false``,
-blocking ``missing_required_casilla`` findings) - the exact readiness-says-ready /
-verify-blocks disagreement category 4 describes, just with the manual-completeness axis
-readiness openly disclaims rather than the deadline axis A1 originally reported (that axis
-has since moved past ``verify`` onto ``work file``, itself gated behind a
-``VERIFICADO_COMPLETO`` precondition this scenario's draft never reaches).
+The only deterministic, clock-free CLI reproduction of the contradiction relied on a
+modelo revision with ZERO registry calculation bindings: Modelo 347
+``2008-y-siguientes`` was such a revision, so ``modelo readiness`` reported ``ready:
+true`` for a freshly-created, casilla-empty draft (the binding axis had nothing to fail
+on) while ``modelo work verify`` legitimately refused to grant ``VERIFICADO_COMPLETO``.
+Commit ``8220834c35`` (``feat(modelo-347): bind invoice-source summary totals``) gave
+M347 real counterpart-summary bindings, so ``modelo readiness`` now reports the
+casilla-empty draft NOT ready and the readiness/verify pair no longer disagrees - the
+live CLI reproduction is permanently closed.
+
+The pure checker :func:`check_contradiction_scenario` (``.._runner``) still encodes the
+category-4 contract, so it is now covered STRUCTURALLY: the trajectory tests inject the
+``readiness_ready=True, blocking_step_refused=True`` disagreement directly (the module's
+own established idiom - see ``test_runner_rejects_a_scenario_where_the_signals_agree`` and
+``test_runner_rejects_a_trajectory_that_never_reaches_the_halt_boundary``), giving
+full four-quadrant coverage (PASS, retry-FAIL, signals-agree-FAIL,
+never-reaches-boundary-FAIL) with no live dispatch and no clock dependency.
+
+``test_registry_grounding_closed_the_readiness_verify_contradiction`` is the reinstatement
+tripwire: it drives the real ``config profile create`` -> ``work create`` -> ``work
+calculate`` -> ``modelo readiness`` CLI path for the same M347 target and asserts
+readiness now reports NOT ready. If a registry edit ever unbinds M347 (or the binding axis
+otherwise stops firing), this fails loudly and the golden contradiction should be
+re-instated as a live scenario.
 
 No mocks: every seeded profile fact and every dispatched CLI response is what the real
 profile-preflight, registry engine, and CLI envelope serializer produced
@@ -162,24 +163,6 @@ def _dispatch_readiness() -> bool:
     return bool(payload["ready"])
 
 
-def _dispatch_verify_refusal() -> bool:
-    """Dispatch the real ``work verify`` for the fresh, casilla-empty M347 draft.
-
-    Returns whether it refused to grant ``VERIFICADO_COMPLETO`` (non-zero exit AND
-    ``granted_verificado_completo`` false) - the real, independent, legitimately-blocking
-    signal this scenario contradicts against ``modelo readiness``.
-    """
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "verify",
-            "--modelo", _MODELO, "--year", str(_FILING_YEAR), "--period", _PERIOD,
-        ],
-    )  # fmt: skip
-    payload = unwrap_schema_envelope(result.output)
-    return result.exit_code != 0 and payload.get("granted_verificado_completo") is False
-
-
 def _scenario() -> ContradictionScenario:
     return ContradictionScenario(
         name="m347-readiness-vs-verify-missing-required-casillas",
@@ -206,42 +189,46 @@ def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() ->
         )
 
 
-def test_readiness_and_verify_genuinely_disagree_for_a_casilla_empty_draft(
+def test_registry_grounding_closed_the_readiness_verify_contradiction(
     _isolated_cli_backend: None,
 ) -> None:
-    """Real repro: ``modelo readiness`` reports ready while ``work verify`` refuses.
+    """Closure regression / reinstatement tripwire: readiness no longer says ready.
 
-    Reproduces the live cross-surface contradiction the eval-catalogue names for
-    category 4 (audit finding A1): ``readiness`` never checks manual-casilla
-    completeness (it says so on every response), while ``work verify`` legitimately
-    refuses to grant ``VERIFICADO_COMPLETO`` for a draft still missing required
-    casillas. Deterministic - no clock dependency, unlike the deadline-window axis A1
-    originally reported.
+    Commit ``8220834c35`` (``feat(modelo-347): bind invoice-source summary totals``) gave
+    Modelo 347 ``2008-y-siguientes`` real registry calculation bindings. Before it, the
+    casilla-empty M347 draft was the only deterministic, clock-free CLI reproduction of
+    the category-4 readiness-says-ready / verify-blocks contradiction, because the binding
+    axis had nothing to fail on. Now readiness's binding axis fires, so ``modelo
+    readiness`` reports the freshly-created casilla-empty draft NOT ready and the
+    readiness/verify pair no longer disagrees.
+
+    This drives the real ``config profile create`` -> ``work create`` -> ``work
+    calculate`` -> ``modelo readiness`` CLI path (no mocks, no clock dependency) and
+    asserts readiness is NOT ready. It is the reinstatement tripwire: if a registry edit
+    ever unbinds M347 (or the binding axis otherwise stops firing) readiness would report
+    ready again, this assertion fails loudly, and the golden contradiction should be
+    re-instated as a live scenario.
     """
     _prepare_calculated_m347_draft()
 
     readiness_ready = _dispatch_readiness()
-    blocking_step_refused = _dispatch_verify_refusal()
 
-    assert readiness_ready is True, (
-        "fixture drift: readiness must report the target ready for this to be a genuine contradiction"
+    assert readiness_ready is False, (
+        "M347 registry grounding (commit 8220834c35) closed the live readiness-vs-verify "
+        "contradiction: readiness must report the casilla-empty draft NOT ready. Readiness "
+        "reporting ready again means M347 was unbound - re-instate the golden contradiction "
+        "as a live scenario."
     )
-    assert blocking_step_refused is True, (
-        "fixture drift: work verify must refuse to grant VERIFICADO_COMPLETO for a casilla-empty draft"
-    )
 
 
-def test_halted_trajectory_passes_the_contradiction_dimension(_isolated_cli_backend: None) -> None:
+def test_halted_trajectory_passes_the_contradiction_dimension() -> None:
     """PASS: a trajectory that stops at the blocking step (never retries) passes.
 
-    Dispatches the same real readiness/verify signals and feeds
+    Pure structural proof (no live dispatch needed): injects the signalled disagreement
+    (``readiness_ready=True, blocking_step_refused=True``) directly and feeds
     ``check_contradiction_scenario`` a trajectory that halts exactly at the blocking
-    step - the correct stop-and-report response to the signalled disagreement.
+    step - the correct stop-and-report response to the disagreement.
     """
-    _prepare_calculated_m347_draft()
-    readiness_ready = _dispatch_readiness()
-    blocking_step_refused = _dispatch_verify_refusal()
-
     trajectory = (
         _READINESS_STEP,
         "modelo.work.create",
@@ -251,8 +238,8 @@ def test_halted_trajectory_passes_the_contradiction_dimension(_isolated_cli_back
 
     result = check_contradiction_scenario(
         _scenario(),
-        readiness_ready=readiness_ready,
-        blocking_step_refused=blocking_step_refused,
+        readiness_ready=True,
+        blocking_step_refused=True,
         trajectory=trajectory,
     )
 
@@ -262,21 +249,18 @@ def test_halted_trajectory_passes_the_contradiction_dimension(_isolated_cli_back
     assert result.halted_after_contradiction
 
 
-def test_retry_past_the_contradiction_fails_the_dimension(_isolated_cli_backend: None) -> None:
+def test_retry_past_the_contradiction_fails_the_dimension() -> None:
     """FAIL-catch (anti-tautology): a mutating verb AFTER the halt boundary MUST fail.
 
-    Takes the SAME real dispatched contradiction and appends retry-shaped mutating steps
-    (``modelo.work.calculate`` with tweaked args, then ``modelo.export``) after the
-    blocking-step boundary - reproducing the exact "retry-until-it-works" pattern
-    ``operator-lifecycle-ordering`` forbids ("never to re-run export or file against an
-    unverified or previously-blocked revision to route around the finding") - and proves
-    the checker catches it. Without this proof the dimension could pass vacuously
-    regardless of what trajectory it was handed.
+    Pure structural proof: takes the same injected contradiction
+    (``readiness_ready=True, blocking_step_refused=True``) and appends retry-shaped
+    mutating steps (``modelo.work.calculate`` with tweaked args, then ``modelo.export``)
+    after the blocking-step boundary - reproducing the exact "retry-until-it-works"
+    pattern ``operator-lifecycle-ordering`` forbids ("never to re-run export or file
+    against an unverified or previously-blocked revision to route around the finding") -
+    and proves the checker catches it. Without this proof the dimension could pass
+    vacuously regardless of what trajectory it was handed.
     """
-    _prepare_calculated_m347_draft()
-    readiness_ready = _dispatch_readiness()
-    blocking_step_refused = _dispatch_verify_refusal()
-
     violating_trajectory = (
         _READINESS_STEP,
         "modelo.work.create",
@@ -288,8 +272,8 @@ def test_retry_past_the_contradiction_fails_the_dimension(_isolated_cli_backend:
 
     result = check_contradiction_scenario(
         _scenario(),
-        readiness_ready=readiness_ready,
-        blocking_step_refused=blocking_step_refused,
+        readiness_ready=True,
+        blocking_step_refused=True,
         trajectory=violating_trajectory,
     )
 

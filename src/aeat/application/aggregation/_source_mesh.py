@@ -9,9 +9,9 @@ relation prefill, and other registry-declared sources. A
 members and returns a :class:`CalculationSourceResolution`.
 
 ``CalculationSourceResolution`` is the single resolved-source carrier consumed
-by modelo calculation. It carries decimal, enum, date, relation, bound-casilla,
-detail-row, transaction-id, diagnostic, and provenance channels. Exclusive
-merges use :func:`merge_source_resolutions`; precedence overlays use
+by modelo calculation. It carries decimal, enum, date, row-indexed binding,
+relation, bound-casilla, detail-row, transaction-id, diagnostic, and provenance
+channels. Exclusive merges use :func:`merge_source_resolutions`; precedence overlays use
 :func:`merge_source_resolutions_by_precedence`; and
 :func:`collect_unhandled_source_diagnostics` is the no-silent-blank safety net
 for declared binding sources without an enrolled resolver.
@@ -24,12 +24,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal, NamedTuple, Protocol, runtime_checkable
+from typing import Literal, NamedTuple, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Period
+from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -45,6 +46,9 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import ModeloDetailRow
 from ._errors import AggregationValidationError, t
+
+RowBindingKey = tuple[BindingId, int]
+RowBindingValue = str | Decimal
 
 
 class SourceMeshError(CoreValidationError):
@@ -71,6 +75,7 @@ CalculationSourceDiagnosticReason = Literal[
     "source_issue",
     "unresolved_binding",
     "storage_degraded",
+    "source_domain_not_ready",
     "unhandled_binding_source",
     "unrouted_observation",
     "oss_no_live_source",
@@ -80,6 +85,8 @@ CalculationSourceDiagnosticReason = Literal[
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
     "settlement_not_computed",
+    "prorrata_especial_obligatoria",
+    "prorrata_especial_check_unavailable",
     "dt12_regime_window_closed",
     "dt12_regime_window_unverified",
     "dt12_parcial_rescate_guidance",
@@ -167,24 +174,10 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
         # re-ratified with no promotion date; the review trigger is the modelo's
         # next hardening campaign or an operator filing need, whichever comes
         # first, and promotion requires its own grounded design ADR.
-        BindingSourceKind.ATRIBUCION_MEMBER: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M184's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
         BindingSourceKind.RELATED_PARTY_OPERATION: DeferredSourceTarget(
             owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
             trigger=(
                 "No promotion date. Review at M232's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
-        BindingSourceKind.FOREIGN_ASSET: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M720's next hardening campaign or an operator filing need; "
                 "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
             ),
         ),
@@ -200,29 +193,6 @@ DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] =
             trigger=(
                 "No promotion date. Review at M182's next hardening campaign or an operator filing need; "
                 "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
-        # IVA regularización kinds: dependency-triggered, not dateless. LIVA
-        # arts. 107-110 capital-goods regularización (casilla 43) promotes once
-        # the prorrata regularización source lands, consuming the same definitive
-        # percentage.
-        BindingSourceKind.BIENES_INVERSION_REGULARIZACION: DeferredSourceTarget(
-            owning_adr="2026-07-01-iva-bienes-inversion-regularizacion-adr",
-            trigger=(
-                "Promote once the prorrata-definitiva source lands; it consumes the same annual definitive "
-                "percentage as prorrata regularización (LIVA arts. 107-110, casilla 43)."
-            ),
-            promotion_depends_on=BindingSourceKind.PRORRATA_REGULARIZACION,
-        ),
-        # LIVA arts. 104-105 annual prorrata-general regularización por porcentaje
-        # definitivo (casilla 44) stays operator-confirmable until the
-        # provisional-carry store is wired and the source is promoted to a live
-        # mesh binding on the iva_compensation_annual_partition precedent.
-        BindingSourceKind.PRORRATA_REGULARIZACION: DeferredSourceTarget(
-            owning_adr="2026-07-01-iva-complexity-hardening-scope-adr",
-            trigger=(
-                "Promote to a live mesh binding on the iva_compensation_annual_partition precedent once the "
-                "provisional-carry store plus Q4 regularisation is proven end to end (LIVA arts. 104-105, casilla 44)."
             ),
         ),
     },
@@ -254,8 +224,9 @@ class CallerOverrideDisposition(StrEnum):
         LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
             the invoice families). A caller override is REJECTED so the persisted
             revision faithfully reflects the sources it aggregates.
-        CARRY: Carry-style sources (previous_filing, relation_prefill, and the
-            IVA-compensation annual partition). A caller override of an
+        CARRY: Carry-style sources (previous_filing, relation_prefill, the
+            IVA-compensation annual partition, and prorrata regularizacion).
+            A caller override of an
             automatically-carried prior value is legitimate and must reach the
             engine, so these are EXCLUDED from the post-merge caller-override
             guard.
@@ -311,6 +282,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.PREVIOUS_FILING,
                 BindingSourceKind.RELATION_PREFILL,
                 BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+                BindingSourceKind.PRORRATA_REGULARIZACION,
             },
         ),
         disposition=CallerOverrideDisposition.CARRY,
@@ -419,11 +391,67 @@ class CalculationSourceDiagnostic(BaseModel):
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     casilla_id: CasillaId | None = None
+    out_of_window_count: int | None = Field(default=None, ge=1)
+    out_of_window_min_filing_date: date | None = None
+    out_of_window_max_filing_date: date | None = None
 
     @model_validator(mode="before")
     @classmethod
     def _set_binding_source(cls, value: object) -> object:
         return _infer_binding_source(value)
+
+    @model_validator(mode="after")
+    def _validate_out_of_window_summary(self) -> Self:
+        summary_fields = (
+            self.out_of_window_count,
+            self.out_of_window_min_filing_date,
+            self.out_of_window_max_filing_date,
+        )
+        if all(value is None for value in summary_fields):
+            return self
+        if any(value is None for value in summary_fields):
+            raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_incomplete")
+        if self.out_of_window_max_filing_date < self.out_of_window_min_filing_date:
+            raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid")
+        return self
+
+
+def out_of_window_summary_message(
+    *,
+    count: int,
+    min_filing_date: date,
+    max_filing_date: date,
+) -> str:
+    """Return the standard source-diagnostic message for summarized period exclusions."""
+    return (
+        f"{count} ledger transaction(s) have filing dates outside the requested period "
+        f"({min_filing_date.isoformat()}..{max_filing_date.isoformat()}); "
+        "excluded by period before classification"
+    )
+
+
+def out_of_window_summary_source_diagnostic(
+    *,
+    source_kind: str,
+    resolver_id: str,
+    count: int,
+    min_filing_date: date,
+    max_filing_date: date,
+) -> CalculationSourceDiagnostic:
+    """Build one structured source diagnostic for summarized ``OUTSIDE_PERIOD`` rows."""
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=source_kind,
+        resolver_id=resolver_id,
+        message=out_of_window_summary_message(
+            count=count,
+            min_filing_date=min_filing_date,
+            max_filing_date=max_filing_date,
+        ),
+        out_of_window_count=count,
+        out_of_window_min_filing_date=min_filing_date,
+        out_of_window_max_filing_date=max_filing_date,
+    )
 
 
 class CalculationSourceProvenance(BaseModel):
@@ -495,6 +523,7 @@ class CalculationSourceResolution(BaseModel):
     binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
+    row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=dict)
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -571,6 +600,36 @@ class CalculationSourceResolution(BaseModel):
     def _freeze_date_binding_values(cls, value: Mapping[BindingId, date]) -> Mapping[BindingId, date]:
         return MappingProxyType(dict(sorted(value.items())))
 
+    @field_validator("row_binding_values", mode="before")
+    @classmethod
+    def _coerce_row_binding_values(cls, value: object) -> object:
+        if isinstance(value, Mapping) or not isinstance(value, (list, tuple)):
+            return value
+        normalized: dict[tuple[object, object], object] = {}
+        for item in value:
+            if not isinstance(item, Mapping):
+                return value
+            row_value = item.get("value")
+            if item.get("value_kind") == "decimal":
+                row_value = coerce_decimal(row_value)
+                if row_value is None:
+                    raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
+            normalized[(item.get("binding_id"), item.get("row_index"))] = row_value
+        return normalized
+
+    @field_validator("row_binding_values")
+    @classmethod
+    def _freeze_row_binding_values(
+        cls,
+        value: Mapping[RowBindingKey, RowBindingValue],
+    ) -> Mapping[RowBindingKey, RowBindingValue]:
+        normalized: dict[RowBindingKey, RowBindingValue] = {}
+        for (binding_id, row_index), row_value in value.items():
+            if row_index < 1:
+                raise SourceMeshError("aggregation.source_mesh.errors.row_binding_index_invalid")
+            normalized[(binding_id, row_index)] = row_value
+        return MappingProxyType(dict(sorted(normalized.items(), key=lambda item: (item[0][0], item[0][1]))))
+
     @field_validator("relation_values")
     @classmethod
     def _freeze_relation_values(cls, value: Mapping[RelationId, Decimal]) -> Mapping[RelationId, Decimal]:
@@ -622,6 +681,21 @@ class CalculationSourceResolution(BaseModel):
     @field_serializer("date_binding_values")
     def _serialize_date_binding_values(self, value: Mapping[BindingId, date]) -> dict[BindingId, date]:
         return dict(value)
+
+    @field_serializer("row_binding_values")
+    def _serialize_row_binding_values(
+        self,
+        value: Mapping[RowBindingKey, RowBindingValue],
+    ) -> tuple[dict[str, object], ...]:
+        return tuple(
+            {
+                "binding_id": binding_id,
+                "row_index": row_index,
+                "value": row_value,
+                "value_kind": "decimal" if isinstance(row_value, Decimal) else "text",
+            }
+            for (binding_id, row_index), row_value in value.items()
+        )
 
     @field_serializer("relation_values")
     def _serialize_relation_values(self, value: Mapping[RelationId, Decimal]) -> dict[RelationId, Decimal]:
@@ -679,6 +753,7 @@ def merge_source_resolutions(
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     date_binding_values: dict[BindingId, date] = {}
+    row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
@@ -689,6 +764,7 @@ def merge_source_resolutions(
     provenance: list[CalculationSourceProvenance] = []
     owned_sources: set[BindingSourceKind] = set()
     binding_owners: dict[BindingId, str] = {}
+    row_binding_owners: dict[RowBindingKey, str] = {}
     relation_owners: dict[RelationId, str] = {}
     casilla_owners: dict[CasillaId, str] = {}
     # The borrador resolution is the sole contributor of the typed borrador
@@ -719,6 +795,10 @@ def merge_source_resolutions(
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             date_binding_values[binding_id] = value
             unresolved_binding_ids.discard(binding_id)
+        for row_binding_key, value in resolution.row_binding_values.items():
+            _claim_row_binding(row_binding_owners, row_binding_key, resolution.resolver_id)
+            row_binding_values[row_binding_key] = value
+            unresolved_binding_ids.discard(row_binding_key[0])
         for relation_id, value in resolution.relation_values.items():
             _claim_relation(relation_owners, relation_id, resolution.resolver_id)
             relation_values[relation_id] = value
@@ -733,11 +813,17 @@ def merge_source_resolutions(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         date_binding_values=date_binding_values,
+        row_binding_values=row_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         unresolved_binding_ids=tuple(
             sorted(
-                unresolved_binding_ids.difference(binding_values, enum_binding_values, date_binding_values),
+                unresolved_binding_ids.difference(
+                    binding_values,
+                    enum_binding_values,
+                    date_binding_values,
+                    {binding_id for binding_id, _row_index in row_binding_values},
+                ),
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
@@ -774,6 +860,7 @@ def merge_source_resolutions_by_precedence(
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     date_binding_values: dict[BindingId, date] = {}
+    row_binding_values: dict[RowBindingKey, RowBindingValue] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
@@ -799,6 +886,9 @@ def merge_source_resolutions_by_precedence(
         binding_values.update(tier.binding_values)
         enum_binding_values.update(tier.enum_binding_values)
         date_binding_values.update(tier.date_binding_values)
+        row_binding_values.update(tier.row_binding_values)
+        for binding_id, _row_index in tier.row_binding_values:
+            unresolved_binding_ids.discard(binding_id)
         bound_inputs_by_casilla_id.update(tier.bound_inputs_by_casilla_id)
         for relation_id, value in tier.relation_values.items():
             relation_values[relation_id] = value
@@ -810,11 +900,17 @@ def merge_source_resolutions_by_precedence(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         date_binding_values=date_binding_values,
+        row_binding_values=row_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         unresolved_binding_ids=tuple(
             sorted(
-                unresolved_binding_ids.difference(binding_values, enum_binding_values, date_binding_values),
+                unresolved_binding_ids.difference(
+                    binding_values,
+                    enum_binding_values,
+                    date_binding_values,
+                    {binding_id for binding_id, _row_index in row_binding_values},
+                ),
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
@@ -897,6 +993,23 @@ def _claim_binding(owners: dict[BindingId, str], binding_id: BindingId, resolver
     )
 
 
+def _claim_row_binding(owners: dict[RowBindingKey, str], row_binding_key: RowBindingKey, resolver_id: str) -> None:
+    existing = owners.get(row_binding_key)
+    if existing is None:
+        owners[row_binding_key] = resolver_id
+        return
+    binding_id, row_index = row_binding_key
+    raise AggregationValidationError(
+        t("aggregation.source_mesh.errors.duplicate_row_binding_owner"),
+        context={
+            "binding_id": binding_id,
+            "row_index": row_index,
+            "first_resolver": existing,
+            "second_resolver": resolver_id,
+        },
+    )
+
+
 def _claim_bound_casilla(owners: dict[CasillaId, str], casilla_id: CasillaId, resolver_id: str) -> None:
     existing = owners.get(casilla_id)
     if existing is None:
@@ -935,10 +1048,14 @@ __all__ = [
     "CallerOverridePrecedenceTier",
     "DeferredSourceTarget",
     "ModeloSourceResolver",
+    "RowBindingKey",
+    "RowBindingValue",
     "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
+    "out_of_window_summary_message",
+    "out_of_window_summary_source_diagnostic",
     "precedence_ladder_sources",
     "storage_degradation_resolution",
 ]

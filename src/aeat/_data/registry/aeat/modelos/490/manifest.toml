@@ -1,0 +1,17 @@
+[modelo]
+id = "490"
+title = "Impuesto sobre Determinados Servicios Digitales — autoliquidación"
+official_name = "Modelo 490. Impuesto sobre Determinados Servicios Digitales. Autoliquidación."
+tax_domain = "idsd"
+cadence = "profile_based"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-590-2021:art-1",
+    "orden-hac-590-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-490-procedure",
+    "enrolled-modelo-490-layout",
+]

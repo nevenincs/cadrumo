@@ -10,10 +10,20 @@ disk-envelope-accounting slice.
 
 Authority: ``composition-service-no-parallel-write-path`` (the service reads
 filesystem metadata through the existing
-:func:`~aeat.adapters.persistence.storage.bucket.bucket_paths` layout
+:func:`~adapters.persistence.storage.bucket.bucket_paths` layout
 resolver rather than inventing a parallel storage-accounting path);
 ``sensitive-financial-data-secure-storage-only`` (the measurement never
 opens or decrypts a secure-object payload — only ``os.stat`` sizes).
+
+See Also:
+    :class:`~application.bucket_maintenance.BucketMaintenanceService`
+        Application facade whose disk-usage service contract is exercised here.
+    :class:`~application.bucket_maintenance.DiskUsageBucketCommand`
+        Typed command carrying the measured bucket id.
+    :class:`~application.bucket_maintenance.DiskUsageBucketResult`
+        Result payload whose totals and per-subdir rows are asserted.
+    :mod:`~entrypoints.cli._config._sandbox`
+        CLI sandbox usage surface that consumes the same service report.
 """
 
 from __future__ import annotations
@@ -23,6 +33,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path, provision_bucket_directory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import BucketMaintenanceService, DiskUsageBucketCommand
 
@@ -52,8 +63,6 @@ def test_disk_usage_reports_three_fixed_subdir_rows(runtime: TestRuntimeProfile)
 
 def test_disk_usage_db_row_reflects_the_real_sqlite_file_and_manifest(runtime: TestRuntimeProfile) -> None:
     """The ``db`` row's byte total matches the real on-disk database file plus the manifest."""
-    from ....adapters.persistence.storage.bucket import manifest_path
-
     db_files = list(runtime.paths.db_dir.rglob("*"))
     db_file_bytes = sum(f.stat().st_size for f in db_files if f.is_file())
     manifest_bytes = manifest_path(runtime.paths).stat().st_size
@@ -111,8 +120,6 @@ def test_disk_usage_measures_a_non_active_bucket_without_opening_a_session(
     exactly like ``preview_discard_sandbox`` already relies on for a
     non-active sandbox.
     """
-    from ....adapters.persistence.storage.bucket import bucket_paths, provision_bucket_directory
-
     other_bucket_id = "bucket-maintenance-disk-usage-other"
     other_paths = provision_bucket_directory(runtime.settings.aeat_local_storage_root, other_bucket_id)
     (other_paths.blobs_dir / "other-artefact.bin").write_bytes(b"\x01" * 512)

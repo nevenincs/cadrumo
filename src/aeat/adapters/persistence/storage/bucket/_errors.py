@@ -3,9 +3,9 @@
 Each class carries a structured payload (active bucket id, holding PID,
 conflicting bucket id, recovery context) so callers can render typed
 diagnostics without re-parsing the message string. Every class inherits
-from :class:`aeat.core.errors.AeatError`; the project error registry's
+from :class:`core.errors.AeatError`; the project error registry's
 ``__init_subclass__`` hook binds each subclass to its declared
-:class:`aeat.core.errors.ErrorCode` row at import time.
+:class:`core.errors.ErrorCode` row at import time.
 """
 
 from __future__ import annotations
@@ -82,7 +82,7 @@ class BucketPathTooLongError(BucketError):
     """Raised when provisioning a bucket directory exceeds the Windows ``MAX_PATH`` ceiling.
 
     Classified via
-    :func:`aeat.core.paths.is_windows_long_path_error` from a caught
+    :func:`core.paths.is_windows_long_path_error` from a caught
     ``WinError 3`` / ``WinError 206`` on legacy (non long-path-aware)
     Windows workstations. Distinct from :class:`BucketValidationError` so
     the CLI names the actual cause (the resolved bucket directory tree is

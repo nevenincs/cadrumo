@@ -1,15 +1,32 @@
-"""Tests for the external-constants registry and tunable-Settings split."""
+"""Tests for the external-constants registry and tunable-Settings split.
+
+See Also:
+    :func:`~core.external_constants.load_external_constants`
+        Runtime loader for the packaged TOML registry validated by this test
+        module.
+    :class:`~core.external_constants.ExternalConstants`
+        Typed, frozen registry root that keeps remote-mirror constants
+        schema-owned.
+    :class:`~core.config.Settings`
+        Tunable configuration surface that must consume registry defaults
+        without becoming a second authority for external constants.
+    :mod:`~domain.portals`
+        Portal catalogue whose host and route keys resolve through the AEAT
+        registry surfaces checked here.
+"""
 
 from __future__ import annotations
 
 import ast
 import re
 import tomllib
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ...tests import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
 from ...tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LITERAL_SCAN_TOKENS,
@@ -52,6 +69,40 @@ def _is_docstring_node(node: ast.Module | ast.ClassDef | ast.AsyncFunctionDef | 
         and isinstance(node.body[0].value, ast.Constant)
         and isinstance(node.body[0].value.value, str)
     )
+
+
+def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
+    tree = ast_for_path(path, source_tree_ast)
+    if tree is None:
+        raise AssertionError(f"unable to parse {repo_relative(path)}")
+    return tree
+
+
+def _docstring_constant_ids(tree: ast.AST) -> set[int]:
+    return {
+        id(node.body[0].value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
+        and _is_docstring_node(node)
+    }
+
+
+def _token_literal_offenders(
+    *,
+    files: Iterable[tuple[Path, ast.AST]],
+    volatile_tokens: tuple[str, ...],
+) -> list[str]:
+    offenders: list[str] = []
+    for path, tree in files:
+        docstring_ids = _docstring_constant_ids(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if id(node) in docstring_ids:
+                continue
+            if any(token in node.value for token in volatile_tokens):
+                offenders.append(f"{repo_relative(path)}:{node.lineno}: {node.value!r}")
+    return offenders
 
 
 def test_load_external_constants_returns_cached_model_used_by_settings_facade() -> None:
@@ -278,39 +329,25 @@ def test_sede_parser_route_shapes_are_centralized() -> None:
     assert paths.cotejo_document == registry_paths["cotejo_document"]
 
 
-def test_live_sede_executable_route_literals_stay_centralized() -> None:
+def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Live AEAT executable code must read volatile routes from the registry."""
 
-    repo_root = Path(__file__).parents[4]
     checked_paths = (
-        repo_root / "src/aeat/core/config.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/auth/_clave_movil.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/sede/_groi_check.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/sede/_parse.py",
-        repo_root / "src/aeat/adapters/outbound/aeat/verify/__init__.py",
-        repo_root / "src/aeat/domain/manuals/_fetch.py",
+        repo_path("src/aeat/core/config.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/auth/_clave_movil.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/sede/_groi_check.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/sede/_declarations.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/sede/_parse.py"),
+        repo_path("src/aeat/adapters/outbound/aeat/verify/__init__.py"),
+        repo_path("src/aeat/domain/manuals/_fetch.py"),
     )
-    volatile_tokens = AEAT_LITERAL_SCAN_TOKENS
 
-    offenders: list[str] = []
-    for path in checked_paths:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        docstring_nodes = {
-            doc_node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
-            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
-        }
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-                continue
-            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
-                continue
-            if any(token in node.value for token in volatile_tokens):
-                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {node.value!r}")
+    offenders = _token_literal_offenders(
+        files=((path, _tree_for_path(path, source_tree_ast)) for path in checked_paths),
+        volatile_tokens=AEAT_LITERAL_SCAN_TOKENS,
+    )
 
     assert offenders == []
 
@@ -358,79 +395,58 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
         assert portal_path(Portal(portal_id)) == path
 
 
-def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals() -> None:
+def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
 
-    repo_root = Path(__file__).parents[4]
-    portal_root = repo_root / "src/aeat/domain/portals"
     volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS
-    allowed_files = {
-        portal_root / "_hosts.py",
-    }
+    allowed_files = {"src/aeat/domain/portals/_hosts.py"}
 
     offenders: list[str] = []
-    for path in sorted(portal_root.rglob("*.py")):
-        if path.name.startswith("test_") or path in allowed_files:
+    for path, tree in package_ast_items(source_tree_ast):
+        relative_path = repo_relative(path)
+        if not relative_path.startswith("src/aeat/domain/portals/"):
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        docstring_nodes = {
-            doc_node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
-            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
-        }
+        if "/tests/" in relative_path or relative_path in allowed_files:
+            continue
+        docstring_ids = _docstring_constant_ids(tree)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
                 continue
-            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
+            if id(node) in docstring_ids:
                 continue
             value = node.value
             is_entry_root_path = path.parent.name == "_entries" and path.name != "_common.py" and value == "/"
             if is_entry_root_path or any(token in value for token in volatile_tokens):
-                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {value!r}")
+                offenders.append(f"{relative_path}:{node.lineno}: {value!r}")
 
     assert offenders == []
 
 
-def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures() -> None:
+def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Remote guard/parity/oracle tests must import configured URLs or declared canaries."""
 
-    repo_root = Path(__file__).parents[4]
     checked_paths = (
-        repo_root / "src/aeat/domain/calculations/registry/tests/test_remote_state_guard.py",
-        repo_root / "src/aeat/domain/calculations/registry/tests/test_live_parity.py",
-        repo_root / "src/aeat/domain/calculations/registry/tests/test_groi_oracle.py",
-        repo_root / "src/aeat/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py",
+        repo_path("src/aeat/domain/calculations/registry/tests/test_remote_state_guard.py"),
+        repo_path("src/aeat/domain/calculations/registry/tests/test_live_parity.py"),
+        repo_path("src/aeat/domain/calculations/registry/tests/test_groi_oracle.py"),
+        repo_path("src/aeat/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py"),
     )
-    volatile_tokens = REMOTE_GUARD_LITERAL_SCAN_TOKENS
-    offenders: list[str] = []
-    for path in checked_paths:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        docstring_nodes = {
-            doc_node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
-            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
-        }
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-                continue
-            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
-                continue
-            if any(token in node.value for token in volatile_tokens):
-                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {node.value!r}")
+    offenders = _token_literal_offenders(
+        files=((path, _tree_for_path(path, source_tree_ast)) for path in checked_paths),
+        volatile_tokens=REMOTE_GUARD_LITERAL_SCAN_TOKENS,
+    )
 
     assert offenders == []
 
 
-def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
+def test_test_suite_aeat_route_literals_are_centralized_or_declared(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Test modules must not own executable AEAT/Sede host or route literals."""
 
-    repo_root = Path(__file__).parents[4]
-    aeat_root = repo_root / "src/aeat"
     allowed_files = {
-        Path(__file__),
-        repo_root / "src/aeat/tests/aeat_literal_fixtures.py",
+        repo_relative(Path(__file__).resolve()),
+        "src/aeat/tests/aeat_literal_fixtures.py",
     }
     volatile_tokens = tuple(
         dict.fromkeys(
@@ -442,31 +458,12 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
         ),
     )
 
-    checked_paths = sorted(
-        {
-            *aeat_root.rglob("test_*.py"),
-            *aeat_root.rglob("*_test.py"),
-            *aeat_root.rglob("conftest.py"),
-        },
+    checked_files = (
+        (path, _tree_for_path(path, source_tree_ast))
+        for path in discover_test_control_modules()
+        if repo_relative(path) not in allowed_files
     )
-    offenders: list[str] = []
-    for path in checked_paths:
-        if path in allowed_files:
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        docstring_nodes = {
-            doc_node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
-            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
-        }
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-                continue
-            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
-                continue
-            if any(token in node.value for token in volatile_tokens):
-                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {node.value!r}")
+    offenders = _token_literal_offenders(files=checked_files, volatile_tokens=volatile_tokens)
 
     assert offenders == []
 

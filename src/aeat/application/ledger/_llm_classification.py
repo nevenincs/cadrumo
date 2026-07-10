@@ -1,26 +1,29 @@
 """LLM-assisted ledger classification: suggest / apply / provider availability.
 
-Wires the existing :class:`aeat.domain.transactions.LLMClassifier` engine into
+Wires the existing :class:`~domain.transactions.LLMClassifier` engine into
 the operator suggest -> review -> confirm / override / reject loop without
 rebuilding the classifier. The contract is deliberately thin:
 
 * :func:`suggest_llm_classification` loads one transaction, runs the
   (injected, default-resolved) classifier with the category-enabled prompt
-  spec, and returns a typed :class:`LLMClassificationSuggestion` **without
-  persisting anything**. Rejecting a suggestion is simply not applying it.
+  spec, and returns a typed
+  :class:`~application.ledger._llm_suggestions.LLMClassificationSuggestion`
+  **without persisting anything**. Rejecting a suggestion is simply not
+  applying it.
 * :func:`apply_llm_classification` persists an accepted suggestion through the
-  established classification write (:func:`aeat.domain.transactions.set_classification`),
+  established classification write (:func:`~domain.transactions.set_classification`),
   stamping ``classified_by`` with the classifier's ``decided_by`` (``llm:<model>``
   provenance, distinct from manual / ``rule:``) and recording the model's
   ``confidence`` and ``reason``. The accepted decision is appended to the
-  profile audit trail through a :class:`BucketEventHistoryRepository` as a
+  profile audit trail through a
+  :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository` as a
   ``ledger.transaction.classified`` event.
 * :func:`available_llm_providers` reports which subprocess providers have a
   usable CLI on ``PATH`` so the CLI can refuse instructively rather than crash.
 
 Hallucination containment stays inside the engine: the classifier's
 ``classify`` runs the allow-list-guarded
-:func:`aeat.domain.transactions.parse_response`, so an out-of-allow-list
+:func:`~domain.transactions.parse_response`, so an out-of-allow-list
 value is rejected before it ever reaches this module.
 
 **Stage-1 constraint.** :func:`suggest_llm_classification` /
@@ -45,15 +48,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from enum import StrEnum
 from uuid import uuid4
-
-from pydantic import BaseModel, Field
 
 from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
@@ -95,26 +94,23 @@ from ._evidence_input import (
 )
 from ._evidence_split import derive_child_amounts
 from ._evidence_textlayer import extract_evidence_text
+from ._llm_suggestions import (
+    LLMClassificationSuggestion,
+    LLMProvider,
+    LLMProviderAvailability,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+)
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
 from ._vision_classifier import LocalVisionLLMClassifier
 
 _logger = get_logger(__name__)
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
-
-
-class LLMProvider(StrEnum):
-    """Subprocess LLM provider names accepted by the classify surface.
-
-    Each value names a local CLI (``claude`` / ``antigravity`` / ``codex``) the
-    :class:`aeat.domain.transactions.SubprocessLLMClassifier` shells out to.
-    ``antigravity`` shells to ``agy``, Google's agentic CLI and the supported
-    successor to the retired standalone ``gemini`` CLI.
-    """
-
-    CLAUDE = "claude"
-    ANTIGRAVITY = "antigravity"
-    CODEX = "codex"
 
 
 # The CLI binary each subprocess provider shells out to. Used by
@@ -127,56 +123,16 @@ _PROVIDER_CLI_BINARY: dict[LLMProvider, str] = {
 }
 
 
-class LLMClassificationSuggestion(BaseModel):
-    """One LLM classification suggestion for a transaction, not yet persisted.
-
-    Carries the decision the model proposed plus the provenance string that
-    will be stamped as ``classified_by`` if the operator applies it. Produced
-    by :func:`suggest_llm_classification`; consumed for review and, on accept,
-    by :func:`apply_llm_classification`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    provider: LLMProvider | None = None
-    provenance: str = Field(min_length=1)
-    classification: BusinessClassification
-    category: SpendingCategory | None = None
-    confidence: Decimal
-    reason: str = Field(min_length=1)
-    evidence_id: str | None = None
-    multiple_components: bool | None = None
-    """Carried from the evidence read: True when the model judged the invoice to
-    carry multiple distinct rate/category lines warranting a split. Drives the
-    non-blocking split recommendation on the CLI; ``None`` when no evidence was read."""
-
-    @property
-    def recommends_split(self) -> bool:
-        """True when the evidence read flagged the invoice as multi-component."""
-        return self.multiple_components is True
-
-
-class LLMProviderAvailability(BaseModel):
-    """Whether one subprocess LLM provider has a usable CLI on ``PATH``."""
-
-    model_config = _STRICT_FROZEN
-
-    provider: LLMProvider
-    cli_binary: str = Field(min_length=1)
-    available: bool
-    resolved_path: str | None = None
-
-
 def available_llm_providers() -> tuple[LLMProviderAvailability, ...]:
     """Report which subprocess LLM providers are usable on this host.
 
-    Probes ``PATH`` for each provider's CLI binary with :func:`shutil.which`
+    Probes ``PATH`` for each provider's CLI binary with ``shutil.which``
     (no process is spawned). The CLI surfaces this so an operator can discover
     which providers are installed before classifying.
 
     Returns:
-        One :class:`LLMProviderAvailability` per :class:`LLMProvider`, ordered
+        One :class:`~application.ledger._llm_suggestions.LLMProviderAvailability`
+        per :class:`~application.ledger._llm_suggestions.LLMProvider`, ordered
         by enum declaration.
     """
     listings: list[LLMProviderAvailability] = []
@@ -203,8 +159,9 @@ def _resolve_default_classifier(provider: LLMProvider) -> LLMClassifier:
     """Resolve the production classifier for ``provider`` with the category prompt.
 
     Builds the classifier with
-    :func:`aeat.domain.transactions.prompt_spec_with_every_spending_category`
-    so the model also suggests an expense :class:`SpendingCategory`, and keeps
+    :func:`~domain.transactions.prompt_spec_with_every_spending_category`
+    so the model also suggests an expense
+    :class:`~domain.categories.SpendingCategory`, and keeps
     the allow-list-guarded ``parse_response`` path intact.
     """
     return resolve_classifier(provider.value, spec=prompt_spec_with_every_spending_category())
@@ -336,18 +293,17 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
 def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
     """Run a subprocess CLI classify/split call, recording local run-timing telemetry.
 
-    Wraps :class:`aeat.domain.transactions.SubprocessLLMClassifier` calls (which
+    Wraps :class:`~domain.transactions.SubprocessLLMClassifier` calls (which
     stay pure and time-unaware, per hexagonal layering -- the domain layer must
     not import the storage-touching recorder). Records duration and outcome via
-    :class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
-    recording :class:`~aeat.adapters.outbound.llm.LLMClient.complete` performs
+    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
+    recording :class:`~adapters.outbound.llm.LLMClient.complete` performs
     for the on-host vision transport. A run-telemetry write failure never masks
     the real classification result or a real classifier error.
     """
     import time
 
     from ...adapters.outbound.llm import LLMCacheError, LLMRunRecord, LLMRunTelemetryRecorder
-    from ...core.time import now
 
     started_at = now()
     clock_start = time.monotonic()
@@ -505,7 +461,7 @@ def suggest_llm_classification(
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
-        A :class:`LLMClassificationSuggestion`.
+        A :class:`~application.ledger._llm_suggestions.LLMClassificationSuggestion`.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -515,7 +471,10 @@ def suggest_llm_classification(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     resolved_settings = settings if settings is not None else load_settings()
     resolved_classifier = (
         classifier
@@ -574,11 +533,12 @@ def apply_llm_classification(
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted LLM suggestion with ``llm:`` provenance.
 
-    Writes the decision through :func:`aeat.domain.transactions.set_classification`,
+    Writes the decision through :func:`~domain.transactions.set_classification`,
     stamping ``classified_by`` with the suggestion's ``provenance`` (the
     classifier's ``decided_by``, e.g. ``llm:<model>``) and recording the
     model's ``confidence`` and ``reason``. Persists the catalogue and emits a
-    :attr:`BucketEventType.LEDGER_TRANSACTION_CLASSIFIED` event atomically.
+    :attr:`~domain.buckets.BucketEventType.LEDGER_TRANSACTION_CLASSIFIED`
+    event atomically.
 
     The MVP persists only the non-regulated ``business_classification`` and
     optional expense ``category``. It never sets a regulated tax value.
@@ -589,7 +549,8 @@ def apply_llm_classification(
     classifications.
 
     Args:
-        suggestion: The accepted :class:`LLMClassificationSuggestion`.
+        suggestion: The accepted
+            :class:`~application.ledger._llm_suggestions.LLMClassificationSuggestion`.
         bucket_id: Active profile bucket id.
         business_pct: Required when ``suggestion.classification`` is ``MIXED``.
         actor: Operator identity for the audit event.
@@ -599,7 +560,8 @@ def apply_llm_classification(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        A :class:`ManualLedgerTransactionResult` reflecting the persisted decision.
+        A :class:`~application.ledger._models.ManualLedgerTransactionResult`
+        reflecting the persisted decision.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -629,7 +591,10 @@ def apply_llm_classification(
     catalogue = repository.load()
     current = catalogue.get(suggestion.transaction_id)
     if current is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can be classified; archived, stashed, and split-parent rows are immutable",
@@ -688,62 +653,13 @@ def apply_llm_classification(
 # ── stage-2 saturation: grounded rich tax metadata ────────────────
 
 
-class LLMSaturatedSuggestion(BaseModel):
-    """A saturated LLM suggestion: business decision + grounded tax substrate.
-
-    Extends the stage-1 decision (classification, expense category) with the
-    IVA situation the model SELECTED and the regulated euro figures the system
-    DERIVED from the registry rate — never numbers the model emitted. Each
-    field carries its origin so the operator reviewing the preview can see
-    which values are model selections (``llm:``) and which are system
-    derivations (``derived:``).
-
-    When the selected :attr:`iva_category` has no simple derivable Spanish
-    domestic rate (intra-community, reverse-charge, export, import, recargo,
-    régimen simplificado, not-subject) the numbers are left unset and
-    :attr:`derivation_note` states why the operator must complete them — the
-    system never guesses.
-
-    Produced by :func:`saturate_llm_classification`; consumed for review and,
-    on accept, by :func:`apply_saturated_llm_classification`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    provider: LLMProvider | None = None
-    provenance: str = Field(min_length=1)
-    classification: BusinessClassification
-    category: SpendingCategory | None = None
-    confidence: Decimal
-    reason: str = Field(min_length=1)
-    iva_category: IvaCategory | None = None
-    business_pct: Decimal | None = None
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    rate_derivable: bool = False
-    derivation_note: str = ""
-    evidence_id: str | None = None
-    evidence_advisory: str = ""
-    multiple_components: bool | None = None
-    """Carried from the evidence read: True when the model judged the invoice
-    multi-component (multiple distinct rate/category lines). Drives the non-blocking
-    split recommendation; ``None`` when no evidence was read."""
-
-    @property
-    def recommends_split(self) -> bool:
-        """True when the evidence read flagged the invoice as multi-component."""
-        return self.multiple_components is True
-
-
 def _resolve_saturation_classifier(provider: LLMProvider) -> LLMClassifier:
     """Resolve the production classifier for ``provider`` with the saturation prompt.
 
     Builds the classifier with
-    :func:`aeat.domain.transactions.prompt_spec_with_saturation_fields` so the
-    model also selects an expense :class:`SpendingCategory` and an
-    :class:`aeat.domain.iva.IvaCategory` from the registry-grounded allow-list,
+    :func:`~domain.transactions.prompt_spec_with_saturation_fields` so the
+    model also selects an expense :class:`~domain.categories.SpendingCategory`
+    and an :class:`~domain.iva.IvaCategory` from the registry-grounded allow-list,
     keeping the allow-list-guarded ``parse_response`` path intact.
     """
     return resolve_classifier(provider.value, spec=prompt_spec_with_saturation_fields())
@@ -758,9 +674,9 @@ def _derive_iva_substrate(
     """Derive ``(iva_rate, taxable_base, iva_amount, derivable, note)`` for a category.
 
     Resolves the registry rate for ``iva_category`` via
-    :func:`aeat.domain.iva.resolve_category_rate` and, when derivable, splits
+    :func:`~domain.iva.resolve_category_rate` and, when derivable, splits
     the absolute ``gross`` at that rate with
-    :func:`aeat.domain.iva.split_gross_at_rate`. The model never supplies these
+    :func:`~domain.iva.split_gross_at_rate`. The model never supplies these
     numbers; they trace to the registry rate and a deterministic inverse split.
 
     Returns the derived rate/base/amount (or ``None`` for each when the
@@ -793,7 +709,7 @@ def saturate_llm_classification(
 
     Loads the transaction, runs the injected classifier (default-resolved from
     ``provider`` with the saturation prompt spec), then DERIVES the regulated
-    tax substrate from the model's selected :class:`aeat.domain.iva.IvaCategory`
+    tax substrate from the model's selected :class:`~domain.iva.IvaCategory`
     using the registry rate and a deterministic inverse split. **Persists
     nothing** — this is the suggest step; rejecting a suggestion is simply not
     applying it.
@@ -820,8 +736,8 @@ def saturate_llm_classification(
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
-        A :class:`LLMSaturatedSuggestion` carrying the model's selections and
-        the system-derived euro substrate.
+        A :class:`~application.ledger._llm_suggestions.LLMSaturatedSuggestion`
+        carrying the model's selections and the system-derived euro substrate.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -831,7 +747,10 @@ def saturate_llm_classification(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     resolved_settings = settings if settings is not None else load_settings()
     resolved_classifier = (
         classifier
@@ -930,7 +849,8 @@ def apply_saturated_llm_classification(
     instructively when neither is present.
 
     Args:
-        suggestion: The accepted :class:`LLMSaturatedSuggestion`.
+        suggestion: The accepted
+            :class:`~application.ledger._llm_suggestions.LLMSaturatedSuggestion`.
         bucket_id: Active profile bucket id.
         business_pct: Operator override for the MIXED business percentage;
             falls back to the model's proposed ``business_pct``.
@@ -941,7 +861,8 @@ def apply_saturated_llm_classification(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        A :class:`ManualLedgerTransactionResult` reflecting the persisted state.
+        A :class:`~application.ledger._models.ManualLedgerTransactionResult`
+        reflecting the persisted state.
 
     Raises:
         TransactionValidationError: When a ``MIXED`` suggestion is applied with
@@ -1000,29 +921,6 @@ def apply_saturated_llm_classification(
 # ── operator-initiated derivation (no LLM) ────────────────────────
 
 
-class OperatorIvaDerivationResult(BaseModel):
-    """Result of an operator-initiated IVA derivation for one transaction.
-
-    The operator selects the :class:`aeat.domain.iva.IvaCategory`; the system
-    resolves the registry rate and derives the taxable base and IVA amount with
-    a deterministic inverse split — never a guessed number, exactly as the
-    saturating LLM path does, but without the model. ``derivable`` is False for
-    a category with no simple Spanish domestic rate, in which case nothing is
-    persisted and ``note`` explains why the operator must complete the figures.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str
-    iva_category: IvaCategory
-    derivable: bool
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    note: str = ""
-    result: ManualLedgerTransactionResult | None = None
-
-
 def derive_operator_iva_substrate(
     *,
     bucket_id: str,
@@ -1038,20 +936,22 @@ def derive_operator_iva_substrate(
     """Derive and persist the IVA substrate for an OPERATOR-chosen category.
 
     The same grounded derivation the saturating LLM path uses
-    (:func:`aeat.domain.iva.resolve_category_rate` +
-    :func:`aeat.domain.iva.split_gross_at_rate`), but initiated by the operator
+    (:func:`~domain.iva.resolve_category_rate` +
+    :func:`~domain.iva.split_gross_at_rate`), but initiated by the operator
     rather than the model — the fallback for when the model declines (returns
     ``unknown``) or the operator simply knows the category. Given a transaction
     already classified BUSINESS or MIXED and the selected
-    :class:`aeat.domain.iva.IvaCategory`, it resolves the registry rate, splits
+    :class:`~domain.iva.IvaCategory`, it resolves the registry rate, splits
     the gross into taxable base and IVA amount, and persists them through the
     manual write with ``derived:`` provenance. Only the IVA substrate is
     touched; the business classification stays as-is. A non-derivable category
     persists nothing and returns an explanatory note.
 
     Returns:
-        The :class:`OperatorIvaDerivationResult` recording the persisted IVA
-        substrate, or an explanatory note when the category is non-derivable.
+        The
+        :class:`~application.ledger._llm_suggestions.OperatorIvaDerivationResult`
+        recording the persisted IVA substrate, or an explanatory note when the
+        category is non-derivable.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -1061,7 +961,10 @@ def derive_operator_iva_substrate(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     if transaction.business_classification not in {
         BusinessClassification.BUSINESS,
         BusinessClassification.MIXED,
@@ -1125,79 +1028,10 @@ def derive_operator_iva_substrate(
 # ── stage-3b: evidence-driven N-way split ─────────────────────────
 
 
-class LLMSplitChildSuggestion(BaseModel):
-    """One reviewed child of an evidence-driven split, with derived numbers.
-
-    The model proposed a *proportion* of the parent and selected the child's
-    expense :class:`SpendingCategory` and :class:`aeat.domain.iva.IvaCategory`;
-    this record carries the system-DERIVED euro ``amount`` (from the parent gross
-    and the proportion) and the system-DERIVED regulated substrate
-    (``iva_rate`` / ``taxable_base`` / ``iva_amount``) looked up from the registry.
-    The model never emits a euro amount or a regulated number
-    (``llm-selects-system-derives-tax-numbers``).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    proportion: Decimal
-    amount: Decimal
-    description: str = Field(min_length=1)
-    category: SpendingCategory | None = None
-    iva_category: IvaCategory | None = None
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    rate_derivable: bool = False
-    derivation_note: str = ""
-    evidence_citation: str = ""
-
-
-class LLMSplitSuggestion(BaseModel):
-    """An evidence-driven N-way split proposal with derived child amounts.
-
-    Produced by :func:`suggest_evidence_split` (persists nothing); consumed for
-    review and, on accept, by :func:`apply_evidence_split`. The child amounts sum
-    exactly to ``parent_amount`` to the cent.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: str = Field(min_length=1)
-    provider: LLMProvider | None = None
-    provenance: str = Field(min_length=1)
-    reason: str = Field(min_length=1)
-    parent_amount: Decimal
-    children: tuple[LLMSplitChildSuggestion, ...]
-    evidence_id: str | None = None
-
-    @property
-    def recommends_split(self) -> bool:
-        """True when the model proposed more than one child (a genuine split).
-
-        A single-child proposal is the "no split warranted" verdict — the model
-        read the invoice and judged it a single line/rate. The CLI surfaces that
-        verdict for review and never drives :func:`apply_evidence_split` with it.
-        """
-        return len(self.children) > 1
-
-
-class LLMSplitApplyResult(BaseModel):
-    """Outcome of applying a reviewed evidence-driven split."""
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: str = Field(min_length=1)
-    parent_transaction_id: str = Field(min_length=1)
-    split_group_id: str = Field(min_length=1)
-    child_transaction_ids: tuple[str, ...]
-    provenance: str = Field(min_length=1)
-    classified_child_count: int
-
-
 def _resolve_default_split_proposer(provider: LLMProvider) -> LLMSplitProposer:
     """Resolve the production split proposer for ``provider`` with the saturation prompt.
 
-    Uses :func:`aeat.domain.transactions.prompt_spec_with_saturation_fields` so each
+    Uses :func:`~domain.transactions.prompt_spec_with_saturation_fields` so each
     proposed child carries the same allow-list-guarded expense-category and
     IVA-category selections the saturate path uses.
     """
@@ -1261,7 +1095,8 @@ def suggest_evidence_split(
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
-        A :class:`LLMSplitSuggestion` whose child amounts sum exactly to the parent.
+        A :class:`~application.ledger._llm_suggestions.LLMSplitSuggestion`
+        whose child amounts sum exactly to the parent.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -1271,7 +1106,10 @@ def suggest_evidence_split(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
     resolved_settings = settings if settings is not None else load_settings()
     resolved_proposer = (
         proposer
@@ -1372,7 +1210,8 @@ def apply_evidence_split(
     persisted euro amount or regulated number.
 
     Args:
-        suggestion: The accepted :class:`LLMSplitSuggestion`.
+        suggestion: The accepted
+            :class:`~application.ledger._llm_suggestions.LLMSplitSuggestion`.
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit events.
         source_command: Source-command label recording the operator's verb.
@@ -1381,7 +1220,8 @@ def apply_evidence_split(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        An :class:`LLMSplitApplyResult` naming the split group and its children.
+        An :class:`~application.ledger._llm_suggestions.LLMSplitApplyResult`
+        naming the split group and its children.
 
     Raises:
         TransactionNotFoundError: When the parent transaction id is unknown.
@@ -1398,7 +1238,10 @@ def apply_evidence_split(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
 
     commands = tuple(
         SplitChildCommand(amount=child.amount, description=child.description) for child in suggestion.children
@@ -1490,7 +1333,9 @@ def apply_evidence_classification(
     euro amount or regulated number (``llm-selects-system-derives-tax-numbers``).
 
     Args:
-        suggestion: A no-split :class:`LLMSplitSuggestion` (exactly one child).
+        suggestion: A no-split
+            :class:`~application.ledger._llm_suggestions.LLMSplitSuggestion`
+            (exactly one child).
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit event.
         source_command: Source-command label recording the operator's verb.
@@ -1499,7 +1344,8 @@ def apply_evidence_classification(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        The :class:`ManualLedgerTransactionResult` for the in-place classification.
+        The :class:`~application.ledger._models.ManualLedgerTransactionResult`
+        for the in-place classification.
 
     Raises:
         TransactionValidationError: When the suggestion recommends a split (use
@@ -1514,7 +1360,10 @@ def apply_evidence_classification(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     child = suggestion.children[0]
     patch_fields: dict[str, object] = {"business_classification": BusinessClassification.BUSINESS}
     if parent.purchase_invoice_evidence_id is not None:
@@ -1554,25 +1403,6 @@ def apply_evidence_classification(
 # ── reject: the fourth decision terminal (audit-trailed) ──────────
 
 
-class LLMSuggestionRejectionResult(BaseModel):
-    """Outcome of explicitly rejecting an LLM suggestion (an audit event only).
-
-    A rejection records the operator's judgement that the model's proposal was
-    wrong; it mutates nothing. The transaction stays unclassified (review status
-    ``pending``) and the rejection rides the bucket-event history as a
-    ``ledger.transaction.llm_suggestion.rejected`` event.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=1)
-    bucket_event_id: str = Field(min_length=1)
-    suggestion_kind: str = Field(min_length=1)
-    provenance: str = Field(min_length=1)
-    operator_reason: str = ""
-
-
 def reject_llm_suggestion(
     suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion,
     *,
@@ -1606,7 +1436,9 @@ def reject_llm_suggestion(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        An :class:`LLMSuggestionRejectionResult` naming the recorded event.
+        An
+        :class:`~application.ledger._llm_suggestions.LLMSuggestionRejectionResult`
+        naming the recorded event.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -1616,7 +1448,10 @@ def reject_llm_suggestion(
     catalogue = repository.load()
     transaction = catalogue.get(suggestion.transaction_id)
     if transaction is None:
-        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can carry an LLM rejection record",

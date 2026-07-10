@@ -30,12 +30,14 @@ from ...application.modelo import (
     registry_formulas_for_registry_scope,
     registry_list_modelos,
     registry_modelo_codes,
+    registry_support_matrix,
 )
 from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain, resolve_active_bucket_id
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import (
     InputKind,
+    ModeloEntry,
     ModeloListRow,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -55,8 +57,13 @@ from ._modelo_payloads import (
     ModeloCasillasResult,
     ModeloDescribeResult,
     ModeloListResult,
+    ModeloPortalCompatibilityRefPayload,
+    ModeloRenamePayload,
     ModeloRequiresResult,
     ModeloRowPayload,
+    ModeloSupportMatrixEntryPayload,
+    ModeloSupportMatrixResult,
+    ModeloSupportRemovalPayload,
 )
 from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 
@@ -105,6 +112,7 @@ def register_discovery_commands(
     _register_bindings_list_command(bindings_app, deps)
     _register_bindings_resolve_command(bindings_app, deps)
     _register_formulas_command(app, deps)
+    _register_support_matrix_command(app)
 
 
 # The accepted-code set for the ``--modelo`` option is derived from the closed
@@ -639,7 +647,7 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                     ),
                     missing=missing,
                 ),
-                suggestion="aeat config profile ratios",
+                suggestion="aeat app ledger ratios set",
                 context={"modelo": str(checklist.modelo), "missing_bindings": missing},
             ),
         )
@@ -1114,6 +1122,85 @@ def _formula_lines(report, *, explain: bool) -> list[str]:
             for row in report.rows
         ],
     ]
+
+
+def _mark(value: bool) -> str:
+    return "Y" if value else "-"
+
+
+def _support_matrix_entry_payload(entry: ModeloEntry) -> ModeloSupportMatrixEntryPayload:
+    return ModeloSupportMatrixEntryPayload(
+        modelo_id=entry.modelo_id,
+        title=entry.title,
+        calculation_class=entry.calculation_class,
+        revision_count=entry.revision_count,
+        latest_revision_id=entry.latest_revision_id,
+        latest_revision_valid_from=entry.latest_revision_valid_from.isoformat(),
+        supported_revision_ids=list(entry.supported_revision_ids),
+        calc_grade=entry.calc_grade,
+        has_completeness_manifest=entry.has_completeness_manifest,
+        has_fixed_width_export=entry.has_fixed_width_export,
+        has_xml_dictionary_export=entry.has_xml_dictionary_export,
+        has_extractor=entry.has_extractor,
+        extraction_profile_count=entry.extraction_profile_count,
+        renames=[
+            ModeloRenamePayload(
+                continuidad_id=rename.continuidad_id,
+                from_revision=rename.from_revision,
+                to_revision=rename.to_revision,
+                evolution_kind=rename.evolution_kind,
+            )
+            for rename in entry.renames
+        ],
+        deprecations=[
+            ModeloSupportRemovalPayload(
+                subject_type=deprecation.subject_type,
+                subject_id=deprecation.subject_id,
+                reason=deprecation.reason,
+                evidence_note=deprecation.evidence_note,
+            )
+            for deprecation in entry.deprecations
+        ],
+        portal_compatibility_refs=[
+            ModeloPortalCompatibilityRefPayload(
+                id=ref.id,
+                surface=ref.surface,
+                evidence_tier=ref.evidence_tier,
+            )
+            for ref in entry.portal_compatibility_refs
+        ],
+        is_deprecated=entry.is_deprecated,
+    )
+
+
+def _register_support_matrix_command(app: typer.Typer) -> None:
+    @app.command(
+        "support-matrix",
+        help=tr(
+            "cli.app.modelo.support_matrix.help",
+            default=(
+                "Show the registry-wide per-modelo support matrix: calc-grade, "
+                "completeness manifest, export formats, extractor coverage, declared "
+                "casilla renames, deprecation decisions, and AEAT-portal cross-references."
+            ),
+        ),
+    )
+    def support_matrix(ctx: typer.Context) -> None:
+        report = registry_support_matrix()
+        entries = [_support_matrix_entry_payload(entry) for entry in report.entries]
+        result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
+        lines = [
+            f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  "
+            f"{'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}  {'deprecated':>10}",
+        ]
+        for entry in entries:
+            lines.append(
+                f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
+                f"{_mark(entry.calc_grade):>4}  {_mark(entry.has_completeness_manifest):>8}  "
+                f"{_mark(entry.has_fixed_width_export):>3}  {_mark(entry.has_xml_dictionary_export):>3}  "
+                f"{_mark(entry.has_extractor):>9}  {len(entry.renames):>7}  {_mark(entry.is_deprecated):>10}",
+            )
+        _emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
 
 
 __all__ = ["register_discovery_commands"]

@@ -7,10 +7,14 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import (
+    CasillaId,
+    validated_casilla_id,
+)
 from .....core.resources import bundled_path
 from .._formula_runtime import calculate_registry_snapshot
-from .._ids import CasillaId, validated_casilla_id
 from .._legal import verify_legal_catalogue
+from .._relations import relation_source_requirements
 from .._schema import CasillaDefinition, ModeloDefinition, RegistryCatalogues
 from .._schema_input_kind import InputKind
 from .._snapshot import build_snapshot
@@ -35,9 +39,41 @@ _PATRIMONIO_REDUCCION_LIMITE_80_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.reduccion-limite-80",
     surface="_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA",
 )
+_PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.irpf-bases-imponibles",
+    surface="_PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA",
+)
+_PATRIMONIO_DIVIDENDOS_NO_IRPF_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.dividendos-no-irpf",
+    surface="_PATRIMONIO_DIVIDENDOS_NO_IRPF_CASILLA",
+)
+_PATRIMONIO_BASE_AHORRO_EXCLUIDA_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.base-ahorro-excluida",
+    surface="_PATRIMONIO_BASE_AHORRO_EXCLUIDA_CASILLA",
+)
 _PATRIMONIO_LIMITE_CONJUNTO_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.limite-conjunto",
     surface="_PATRIMONIO_LIMITE_CONJUNTO_CASILLA",
+)
+_PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.irpf-cuotas-integras",
+    surface="_PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA",
+)
+_PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.irpf-cuotas-excluidas-base-ahorro",
+    surface="_PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO_CASILLA",
+)
+_PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.cuota-integra-susceptible-limitacion",
+    surface="_PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION_CASILLA",
+)
+_PATRIMONIO_SUMA_CUOTAS_LIMITE_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.suma-cuotas-limite",
+    surface="_PATRIMONIO_SUMA_CUOTAS_LIMITE_CASILLA",
+)
+_PATRIMONIO_EXCESO_LIMITE_CONJUNTO_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.exceso-limite-conjunto",
+    surface="_PATRIMONIO_EXCESO_LIMITE_CONJUNTO_CASILLA",
 )
 _PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.total-cuota-integra",
@@ -51,15 +87,30 @@ _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.cuota-a-ingresar",
     surface="_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA",
 )
-_PATRIMONIO_ART31_UNGROUNDED_TAIL = (
-    _PATRIMONIO_LIMITE_CONJUNTO_CASILLA,
-    _PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA,
+_M714_REL_100_BASE_IMPONIBLE_GENERAL = "m714-rel-100-base-imponible-general"
+_M714_REL_100_BASE_IMPONIBLE_AHORRO = "m714-rel-100-base-imponible-ahorro"
+_M714_REL_100_CUOTA_INTEGRA_ESTATAL = "m714-rel-100-cuota-integra-estatal"
+_M714_REL_100_CUOTA_INTEGRA_AUTONOMICA = "m714-rel-100-cuota-integra-autonomica"
+
+_PATRIMONIO_ART31_MANUAL_INPUTS = (
+    _PATRIMONIO_DIVIDENDOS_NO_IRPF_CASILLA,
+    _PATRIMONIO_BASE_AHORRO_EXCLUIDA_CASILLA,
+    _PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO_CASILLA,
+    _PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION_CASILLA,
+)
+_PATRIMONIO_RESIDUAL_MANUAL_RESULT_INPUTS = (
     _PATRIMONIO_CUOTA_MINORADA_CASILLA,
     _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA,
 )
-_PATRIMONIO_COMPUTED_SAFE_TARGETS = (
+_PATRIMONIO_COMPUTED_TARGETS = (
     _PATRIMONIO_CUOTA_INTEGRA_CASILLA,
+    _PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA,
+    _PATRIMONIO_LIMITE_CONJUNTO_CASILLA,
+    _PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA,
+    _PATRIMONIO_SUMA_CUOTAS_LIMITE_CASILLA,
+    _PATRIMONIO_EXCESO_LIMITE_CONJUNTO_CASILLA,
     _PATRIMONIO_REDUCCION_LIMITE_80_CASILLA,
+    _PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA,
 )
 _PATRIMONIO_LEGAL_REFS = (
     "ley-19-1991:art-4-9",
@@ -72,6 +123,25 @@ _PATRIMONIO_FORM_ORDER_REF = "orden-hac-1023-2021:modelo-714"
 
 def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("714")
+
+
+def _zero_art31_inputs(base_liquidable: Decimal) -> dict[CasillaId, Decimal]:
+    return {
+        _PATRIMONIO_BASE_LIQUIDABLE_CASILLA: base_liquidable,
+        _PATRIMONIO_DIVIDENDOS_NO_IRPF_CASILLA: Decimal("0"),
+        _PATRIMONIO_BASE_AHORRO_EXCLUIDA_CASILLA: Decimal("0"),
+        _PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO_CASILLA: Decimal("0"),
+        _PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION_CASILLA: Decimal("0"),
+    }
+
+
+def _zero_m100_relation_values() -> dict[str, Decimal]:
+    return {
+        _M714_REL_100_BASE_IMPONIBLE_GENERAL: Decimal("0"),
+        _M714_REL_100_BASE_IMPONIBLE_AHORRO: Decimal("0"),
+        _M714_REL_100_CUOTA_INTEGRA_ESTATAL: Decimal("0"),
+        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: Decimal("0"),
+    }
 
 
 @pytest.mark.parametrize(
@@ -98,8 +168,9 @@ def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str,
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: Decimal(base_liquidable)},
+        inputs=_zero_art31_inputs(Decimal(base_liquidable)),
         date_context={"filing_period": date(2024, 12, 31)},
+        relation_values=_zero_m100_relation_values(),
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
 
@@ -174,10 +245,9 @@ def test_modelo_714_revision_2021_declares_constructs() -> None:
 def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -> None:
     """Cuota íntegra (29) is computed from the Ley 19/1991 art. 30 escala.
 
-    The downstream chain (base imponible, base liquidable, and the post-cuota
-    casillas) stays a manual foundation pending its own official formula
-    evidence; only the escala step — grounded verbatim in the bundled
-    authoritative corpus — is computed. No ungrounded placeholder formula is declared.
+    Base imponible and base liquidable stay manual. The downstream art.31 joint
+    limit is computed only where it is backed by same-year M100 relation values
+    plus explicit M714 exclusion inputs.
     """
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
@@ -189,27 +259,116 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     # The escala output casilla is computed via that formula.
     assert casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].input_kind is InputKind.COMPUTED
     assert casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].formula == "patrimonio-cuota-integra-escala-estatal"
-    # The manual foundation (inputs + not-yet-modelled downstream) is unchanged.
+    # The base inputs and later deduction/bonification result remain manual.
     for casilla_id in (
         _PATRIMONIO_BASE_IMPONIBLE_CASILLA,
         _PATRIMONIO_BASE_LIQUIDABLE_CASILLA,
+        _PATRIMONIO_CUOTA_MINORADA_CASILLA,
         _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA,
     ):
         assert casillas[casilla_id].input_kind is InputKind.MANUAL
 
 
-def test_modelo_714_art31_tail_has_no_partial_m100_formula_or_relation() -> None:
+def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
-    assert {formula.target_casilla_id for formula in revision.formulas} == set(_PATRIMONIO_COMPUTED_SAFE_TARGETS)
-    assert not revision.relations
-    for casilla_id in _PATRIMONIO_ART31_UNGROUNDED_TAIL:
+    assert revision.period_selector.year_from == 2021
+    assert revision.period_selector.year_to == 2025
+    assert {formula.target_casilla_id for formula in revision.formulas} == set(_PATRIMONIO_COMPUTED_TARGETS)
+
+    relations = {relation.id: relation for relation in revision.relations}
+    assert set(relations) == {
+        _M714_REL_100_BASE_IMPONIBLE_GENERAL,
+        _M714_REL_100_BASE_IMPONIBLE_AHORRO,
+        _M714_REL_100_CUOTA_INTEGRA_ESTATAL,
+        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA,
+    }
+    expected_source_casillas = {
+        _M714_REL_100_BASE_IMPONIBLE_GENERAL: "0435",
+        _M714_REL_100_BASE_IMPONIBLE_AHORRO: "0460",
+        _M714_REL_100_CUOTA_INTEGRA_ESTATAL: "0545",
+        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: "0546",
+    }
+    for relation_id, source_casilla_id in expected_source_casillas.items():
+        relation = relations[relation_id]
+        assert relation.kind == "cross_model_output"
+        assert relation.dependency_role == "direct_calculation"
+        assert relation.source_modelo == "100"
+        assert relation.source_casilla_id == source_casilla_id
+        assert relation.source_revision_selector.year_from == 2021
+        assert relation.source_revision_selector.year_to == 2025
+        assert relation.source_revision_selector.filing_year_delta is None
+        assert relation.period_alignment.source_period == "0A"
+        assert relation.period_alignment.target_period == "0A"
+        assert relation.period_alignment.filing_year_delta == 0
+        assert relation.source_periods == ("0A",)
+        assert relation.target_periods == ("0A",)
+
+    requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
+    assert {requirement.relation_ids[0]: requirement.filing_year for requirement in requirements} == {
+        _M714_REL_100_BASE_IMPONIBLE_GENERAL: 2024,
+        _M714_REL_100_BASE_IMPONIBLE_AHORRO: 2024,
+        _M714_REL_100_CUOTA_INTEGRA_ESTATAL: 2024,
+        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: 2024,
+    }
+
+    for casilla_id in _PATRIMONIO_COMPUTED_TARGETS:
+        assert casillas[casilla_id].input_kind is InputKind.COMPUTED
+        assert casillas[casilla_id].formula is not None
+    for casilla_id in _PATRIMONIO_ART31_MANUAL_INPUTS + _PATRIMONIO_RESIDUAL_MANUAL_RESULT_INPUTS:
         casilla = casillas[casilla_id]
         assert casilla.input_kind is InputKind.MANUAL
         assert casilla.formula is None
         assert casilla.binding is None
+
+
+def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations() -> None:
+    """The Ley 19/1991 art.31 chain computes casilla 40 from M100 and M714 inputs."""
+    modelo, catalogues = _load_modelo_714()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            _PATRIMONIO_BASE_LIQUIDABLE_CASILLA: Decimal("1000000.00"),
+            _PATRIMONIO_DIVIDENDOS_NO_IRPF_CASILLA: Decimal("0.00"),
+            _PATRIMONIO_BASE_AHORRO_EXCLUIDA_CASILLA: Decimal("15000.00"),
+            _PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO_CASILLA: Decimal("2000.00"),
+            _PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION_CASILLA: Decimal("5490.36"),
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        relation_values={
+            _M714_REL_100_BASE_IMPONIBLE_GENERAL: Decimal("10000.00"),
+            _M714_REL_100_BASE_IMPONIBLE_AHORRO: Decimal("20000.00"),
+            _M714_REL_100_CUOTA_INTEGRA_ESTATAL: Decimal("3000.00"),
+            _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: Decimal("4000.00"),
+        },
+    )
+
+    assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal("5490.36")
+    assert result.values[_PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA] == Decimal("30000.00")
+    assert result.values[_PATRIMONIO_LIMITE_CONJUNTO_CASILLA] == Decimal("9000.00")
+    assert result.values[_PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA] == Decimal("7000.00")
+    assert result.values[_PATRIMONIO_SUMA_CUOTAS_LIMITE_CASILLA] == Decimal("10490.36")
+    assert result.values[_PATRIMONIO_EXCESO_LIMITE_CONJUNTO_CASILLA] == Decimal("1490.36")
+    assert result.values[_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA] == Decimal("4392.29")
+    assert result.values[_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA] == Decimal("4000.00")
+
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
+    assert _M714_REL_100_BASE_IMPONIBLE_GENERAL in entries_by_target[
+        _PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA
+    ].operand_refs
+    assert _M714_REL_100_BASE_IMPONIBLE_AHORRO in entries_by_target[
+        _PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA
+    ].operand_refs
+    assert _M714_REL_100_CUOTA_INTEGRA_ESTATAL in entries_by_target[
+        _PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA
+    ].operand_refs
+    assert _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA in entries_by_target[
+        _PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA
+    ].operand_refs
 
 
 def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:
@@ -243,33 +402,19 @@ def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: Decimal(base_liquidable)},
+        inputs=_zero_art31_inputs(Decimal(base_liquidable)),
         date_context={"filing_period": date(2024, 12, 31)},
+        relation_values=_zero_m100_relation_values(),
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
     assert result.values[_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA] == Decimal(expected_suelo_80)
 
 
 _M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID = "modelo-714-cuota-integra-implica-total-cuota-integra"
-_M714_CUOTA_INTEGRA_ADVISORY_EXPRESSION = (
-    'implies_nonzero(["patrimonio.cuota-integra", "patrimonio.total-cuota-integra"])'
-)
 
 
-def test_modelo_714_carries_cuota_integra_under_declaration_advisory() -> None:
-    """The 2021-y-siguientes revision guards the casilla-29-to-casilla-40 manual handoff.
-
-    Casilla 29 (``patrimonio.cuota-integra``) is formula-computed from the base
-    liquidable via the art. 30 escala; casilla 40
-    (``patrimonio.total-cuota-integra``) is a manual transcription of the
-    official Diseno de Registro total with no formula linkage from 29. A
-    positive cuota integra with a silently-zero total is the
-    operator-skippable shape ``no-silent-under-declaration`` requires a guard
-    for; this predicate must stay ADVISORY (non-blocking) -- the other two
-    M714 candidate edges (base-imponible to base-liquidable,
-    total-cuota-integra to cuota-a-ingresar) are deliberately NOT guarded here,
-    per the sibling tests below.
-    """
+def test_modelo_714_no_longer_carries_cuota_integra_manual_handoff_advisory() -> None:
+    """Casilla 40 is formula-computed, so the old 29 -> 40 manual guard is gone."""
     modelo, catalogues = _load_modelo_714()
     snapshot = build_snapshot(
         modelo,
@@ -280,16 +425,11 @@ def test_modelo_714_carries_cuota_integra_under_declaration_advisory() -> None:
     )
 
     predicates = {p.predicate_id: p for p in snapshot.revision.verification_predicates}
-    guard = predicates.get(_M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID)
-    assert guard is not None, (
-        f"M714 2021-y-siguientes must guard the casilla-29-to-casilla-40 handoff via "
-        f"{_M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID!r} (no-silent-under-declaration)"
-    )
-    assert guard.expression == _M714_CUOTA_INTEGRA_ADVISORY_EXPRESSION
-    assert guard.finding_kind == "ADVISORY", (
-        "a legitimately zero total cuota integra transcription must not refuse the draft"
-    )
-    assert "ley-19-1991:art-30" in {str(ref) for ref in guard.legal_refs}
+    casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+
+    assert _M714_CUOTA_INTEGRA_ADVISORY_PREDICATE_ID not in predicates
+    assert casillas[_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA].input_kind is InputKind.COMPUTED
+    assert casillas[_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA].formula == "patrimonio-total-cuota-integra-art31"
 
 
 def _load_714_snapshot_and_casillas() -> tuple[frozenset[str], dict[CasillaId, CasillaDefinition]]:
@@ -347,16 +487,19 @@ def test_modelo_714_cuota_a_ingresar_edge_remains_unguarded() -> None:
     not an edge, so ``implies_nonzero(["patrimonio.total-cuota-integra",
     "patrimonio.cuota-a-ingresar"])`` would fire on the most common case and be
     actively miseducating (the `ledger-iva-advisory-only-on-cuota-bearing-
-    categories` antipattern). This is the lowest-value of the three residual
-    edges to ever guard: both casillas are manual, and even a full
-    deduccion/bonificacion derivation would only make the zero a legitimate
-    computed consequence. Keep deferred until then.
+    categories` antipattern). Casilla 40 is now computed, but casilla 45 and
+    casilla 55 remain explicit manual result inputs until the deduction and
+    bonification chain is grounded.
     """
     predicate_ids, casillas_by_id = _load_714_snapshot_and_casillas()
 
     assert "modelo-714-total-cuota-integra-implica-cuota-a-ingresar" not in predicate_ids
 
-    for casilla_id in (_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA, _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA):
+    total_cuota = casillas_by_id[_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA]
+    assert total_cuota.input_kind is InputKind.COMPUTED
+    assert total_cuota.formula == "patrimonio-total-cuota-integra-art31"
+
+    for casilla_id in _PATRIMONIO_RESIDUAL_MANUAL_RESULT_INPUTS:
         casilla = casillas_by_id[casilla_id]
         assert casilla.input_kind is InputKind.MANUAL
         assert casilla.formula is None

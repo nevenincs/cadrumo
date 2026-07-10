@@ -129,9 +129,9 @@ class CatalogueInvoiceImportResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice catalogue import``.
 
     Mirrors the application-layer
-    :class:`~aeat.application.invoices.BulkInvoiceImportResult`: ``created``
+    :class:`~application.invoices.BulkInvoiceImportResult`: ``created``
     rows were persisted through
-    :func:`~aeat.application.invoices.create_catalogue_invoice`;
+    :func:`~application.invoices.create_catalogue_invoice`;
     ``skipped_duplicate`` rows already existed under an identical
     content-derived identity (a guarded idempotent re-import no-op); ``refused``
     rows failed validation and were not persisted.

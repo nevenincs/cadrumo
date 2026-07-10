@@ -47,6 +47,7 @@ from ...core import Modelo, Period, PeriodKind
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
+    OutOfWindowTransactionSummary,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -122,7 +123,12 @@ class RentaIncomeObservation(BaseModel):
 
 
 class RentaIncomeLedgerAggregation(BaseModel):
-    """Cumulative income observations for one M130 quarter window."""
+    """Cumulative income observations for one M130 quarter window.
+
+    ``out_of_window_summary`` is populated by repository-backed date partitions.
+    Full-catalogue aggregation keeps row-level issues because every transaction
+    is already loaded for classification.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -130,6 +136,7 @@ class RentaIncomeLedgerAggregation(BaseModel):
     period: Period
     observations: Sequence[RentaIncomeObservation] = Field(default_factory=tuple)
     issues: Sequence[RentaIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
+    out_of_window_summary: OutOfWindowTransactionSummary | None = None
     casilla_aggregation: CasillaAggregation
 
     @field_validator("observations")
@@ -187,8 +194,20 @@ def aggregate_renta_income_ledger_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    transactions = repository.load()
-    return aggregate_renta_income_ledger(transactions, bucket_id=bucket_id, period=period)
+    # Only the cumulative in-window subset is decrypted and classified. The
+    # out-of-window remainder comes from the plaintext date index and is
+    # reported uniformly as ``OUTSIDE_PERIOD``.
+    resolved_period = _resolve_quarterly_period(period)
+    cumulative_start = date(resolved_period.year, 1, 1)
+    cumulative_end = resolved_period.end_date
+    partition = repository.partition_by_date_range(cumulative_start, cumulative_end)
+    result = aggregate_renta_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
+        partition.out_of_window,
+    )
+    return result.model_copy(
+        update={"out_of_window_summary": out_of_window_summary},
+    )
 
 
 def aggregate_renta_income_ledger(
@@ -274,8 +293,21 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    transactions = repository.load()
-    return aggregate_renta_m100_income_ledger(transactions, bucket_id=bucket_id, period=period)
+    # Only the in-window ejercicio subset is decrypted and classified. The
+    # out-of-window remainder comes from the plaintext date index and is
+    # reported uniformly as ``OUTSIDE_PERIOD``. Non-annual periods fall back to
+    # the unfiltered load so the aggregation's own period validation still
+    # raises the same error.
+    if period.kind is not PeriodKind.ANNUAL:
+        return aggregate_renta_m100_income_ledger(repository.load(), bucket_id=bucket_id, period=period)
+    partition = repository.partition_by_date_range(period.start_date, period.end_date)
+    result = aggregate_renta_m100_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
+        partition.out_of_window,
+    )
+    return result.model_copy(
+        update={"out_of_window_summary": out_of_window_summary},
+    )
 
 
 def aggregate_renta_m100_income_ledger(

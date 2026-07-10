@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
@@ -13,6 +14,7 @@ from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from .. import (
     CasillaFieldKind,
     InputKind,
+    RegistrySnapshot,
     RegistryValidator,
     build_snapshot,
     parse_export_payload,
@@ -54,6 +56,18 @@ from ._modelo_349_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
+def _snapshot_349(filing_year: int, period: str) -> RegistrySnapshot:
+    modelo, catalogues = _load_modelo_349()
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+    )
+
+
 def test_committed_modelo_349_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_349()
 
@@ -63,8 +77,6 @@ def test_committed_modelo_349_validates_against_catalogues() -> None:
 
 
 def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_periods() -> None:
-    modelo, catalogues = _load_modelo_349()
-
     for filing_year, period, expected_revision in (
         (2020, "1T", "2020-y-siguientes"),
         (2024, "05", "2020-y-siguientes"),
@@ -73,13 +85,7 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
         (2026, "1T", "2020-y-siguientes"),
         (2026, "4T", "2020-y-siguientes"),
     ):
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=filing_year,
-            period=period,
-        )
+        snapshot = _snapshot_349(filing_year, period)
 
         assert snapshot.revision.id == expected_revision, (filing_year, period)
         assert snapshot.revision.orden_aplicabilidad == (
@@ -89,17 +95,18 @@ def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_period
 
 
 def test_committed_modelo_349_is_informative_static_documentation_only() -> None:
-    modelo, catalogues = _load_modelo_349()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="01",
-    )
+    modelo, _ = _load_modelo_349()
+    snapshot = _snapshot_349(2026, "01")
     decision = snapshot.live_cross_references["modelo-349-static-documentation"]
     construct = snapshot.constructs["modelo-349-informative"]
 
+    # Modelo 349 must NOT be reclassified to calculation_class="informative": its
+    # declarante summary totals (numero-operadores / importe-operaciones / ...) are
+    # ledger-derived BOUND casillas, and the informative-class invariant
+    # (validate_informative_class_invariant) forbids any input_kind outside
+    # {INFORMATIONAL, MANUAL} for an informative modelo. Reclassifying would be
+    # rejected at registry-build time; the schema default ("filing") is correct here.
+    assert modelo.calculation_class == "filing"
     assert snapshot.revision.formulas == ()
     assert snapshot.revision.relations == ()
     assert {casilla.input_kind for casilla in snapshot.revision.casillas} == {InputKind.MANUAL, InputKind.BOUND}
@@ -190,7 +197,7 @@ def test_committed_modelo_349_casilla_widths_match_official_record_design() -> N
         )
 
 
-def test_committed_modelo_349_authenticated_read_surface_allows_read_only_methods_only() -> None:
+def test_committed_modelo_349_authenticated_read_surface_contract() -> None:
     revision = _modelo_349_revision()
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
@@ -199,12 +206,6 @@ def test_committed_modelo_349_authenticated_read_surface_allows_read_only_method
     assert auth_surface.requires_authentication is True
     assert auth_surface.requires_aeat_authorization is True
     assert auth_surface.synthetic_data_allowed is False
-
-
-def test_committed_modelo_349_authenticated_read_surface_forbids_aeat_state_mutations() -> None:
-    revision = _modelo_349_revision()
-    auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
-
     forbidden = set(auth_surface.forbidden_actions)
     assert {
         "server-side-save",
@@ -216,12 +217,6 @@ def test_committed_modelo_349_authenticated_read_surface_forbids_aeat_state_muta
         "document-submission",
         "declaration-submission",
     } <= forbidden, "missing forbidden actions: required - forbidden"
-
-
-def test_committed_modelo_349_authenticated_read_surface_pins_aeat_hosts() -> None:
-    revision = _modelo_349_revision()
-    auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
-
     assert _WWW6_HOST in auth_surface.allowed_hosts
     for host in auth_surface.allowed_hosts:
         assert host.endswith(AEAT_HOST_SUFFIX_EXPECTED), f"non-AEAT host allowed: {host!r}"
@@ -253,8 +248,8 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
     assert layout_source.evidence_tier == "layout_authority"
     assert source.kind == "instructions"
     assert source.corpus_path == "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
-    assert source.sha256 == "da88207bffeb21d0ea94a28229f8657cec0d88769d132d10ecdb74b66ce9e5e8"
-    assert source.bytes == 70701
+    assert source.sha256 == "735dc0b1be1bed8997bd77a97fb0cb54e54d77a083082f5b72cf6aa236717adf"
+    assert source.bytes == 69284
     assert source.source_url.endswith("/GI28/instr_mod_349.pdf")
     verify_source_file(PROJECT_ROOT, source)
 
@@ -405,35 +400,25 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
         assert record.line_ending == "none"
 
 
-def test_committed_modelo_349_export_records_open_with_official_record_type_literal() -> None:
+def test_committed_modelo_349_export_records_match_fixed_width_contract() -> None:
     revision = _modelo_349_revision()
     layout = revision.export_layouts[0]
+    casilla_ids = {casilla.id for casilla in revision.casillas}
+    expected_record_type_literals = {
+        "declarante": "1",
+        "operador": "2",
+        "rectificacion": "2",
+    }
 
-    for record_type, expected_record_type_literal in (
-        ("declarante", "1"),
-        ("operador", "2"),
-        ("rectificacion", "2"),
-    ):
-        record = next(item for item in layout.records if item.record_type == record_type)
+    for record in layout.records:
+        record_type = record.record_type
         first_field = record.fields[0]
         assert first_field.offset == 1, record_type
         assert first_field.length == 1, record_type
         assert first_field.kind is CasillaFieldKind.LITERAL, record_type
-        assert first_field.literal == expected_record_type_literal, record_type
-
-
-def test_committed_modelo_349_export_records_total_five_hundred_bytes_each() -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    for record in layout.records:
+        assert first_field.literal == expected_record_type_literals[record_type], record_type
         total = sum(field.length or 0 for field in record.fields)
         assert total == 500, f"record {record.record_type!r} totals {total} bytes; expected 500"
-
-
-def test_committed_modelo_349_export_records_have_contiguous_non_overlapping_fields() -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    for record in layout.records:
         cursor = 1
         for field in record.fields:
             assert field.offset == cursor, (
@@ -441,21 +426,12 @@ def test_committed_modelo_349_export_records_have_contiguous_non_overlapping_fie
                 f"breaks contiguity (expected {cursor})"
             )
             assert field.length is not None
+            if field.kind is CasillaFieldKind.CASILLA:
+                assert field.casilla_id in casilla_ids, (
+                    f"export field {field.id!r} references unknown casilla {field.casilla_id!r}"
+                )
             cursor += field.length
         assert cursor == 501, f"record {record.record_type!r} last field ends at {cursor - 1}; expected 500"
-
-
-def test_committed_modelo_349_export_casilla_fields_resolve_to_revision_casillas() -> None:
-    revision = _modelo_349_revision()
-    layout = revision.export_layouts[0]
-    casilla_ids = {casilla.id for casilla in revision.casillas}
-    for record in layout.records:
-        for field in record.fields:
-            if field.kind is not CasillaFieldKind.CASILLA:
-                continue
-            assert field.casilla_id in casilla_ids, (
-                f"export field {field.id!r} references unknown casilla {field.casilla_id!r}"
-            )
 
 
 def test_committed_modelo_349_export_app_link_is_registered() -> None:
@@ -507,14 +483,7 @@ def test_committed_modelo_349_construct_includes_extraction_profiles() -> None:
 
 
 def test_committed_modelo_349_record_design_round_trips_declarante_operador_rectificacion() -> None:
-    modelo, catalogues = _load_modelo_349()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="1T",
-    )
+    snapshot = _snapshot_349(2026, "1T")
     layout = resolve_export_layout(snapshot).layout
 
     declarante = _fixed_width_record(

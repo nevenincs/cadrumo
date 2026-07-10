@@ -21,12 +21,9 @@ import pytest
 
 from .....core.resources import bundled_path
 from .._loader import load_registry_tree
+from .._schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
-
-
-def _as_list(value: object) -> list:
-    return list(value.values()) if isinstance(value, dict) else list(value)
 
 
 def test_every_computed_casilla_is_enrolled_in_a_verification_contract() -> None:
@@ -34,15 +31,14 @@ def test_every_computed_casilla_is_enrolled_in_a_verification_contract() -> None
     holes: list[str] = []
     checked = 0
     for modelo in modelos:
-        for revision in _as_list(modelo.revisions):
-            casillas = _as_list(revision.casillas)
-            computed = {c.id for c in casillas if getattr(c, "input_kind", None) == "computed"}
+        for revision in modelo.revisions.values():
+            computed = {c.id for c in revision.casillas if c.input_kind == InputKind.COMPUTED}
             if not computed:
                 continue
             enrolled: set[str] = set()
-            for expectation in _as_list(revision.verification_expectations):
+            for expectation in revision.verification_expectations:
                 enrolled |= set(expectation.computed_casilla_ids)
-                enrolled |= set(getattr(expectation, "reconcile_when_present_casilla_ids", ()))
+                enrolled |= set(expectation.reconcile_when_present_casilla_ids)
             missing = sorted(computed - enrolled)
             checked += len(computed)
             if missing:

@@ -12,6 +12,7 @@ _M100_EXPECTED_CASILLAS: frozenset[str] = frozenset(
         "0586",
         "0587",
         "0595",
+        "0604",
         "0610",
         "0670",
         # Second chunk: apartado-summary bases.

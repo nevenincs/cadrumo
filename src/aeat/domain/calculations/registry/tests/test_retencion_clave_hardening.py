@@ -32,14 +32,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _M190_DR_CLAVES = frozenset("ABCDEFGHIJKL")
 
 
-def _observation(*, clave: str, subclave: str = "") -> WithholdingObservation:
-    return WithholdingObservation(
-        source_id="row-1",
-        perceptor_tax_id="11111111H",
-        transaction_date=date(2024, 3, 15),
-        clave=clave,  # pydantic mode="before" validator coerces str → RetencionClave
-        subclave=subclave,
-        percibido_dinerario=Decimal("1000"),
+def _observation(*, clave: RetencionClave | str, subclave: str = "") -> WithholdingObservation:
+    return WithholdingObservation.model_validate(
+        {
+            "source_id": "row-1",
+            "perceptor_tax_id": "11111111H",
+            "transaction_date": date(2024, 3, 15),
+            "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
+            "subclave": subclave,
+            "percibido_dinerario": Decimal("1000"),
+        }
     )
 
 
@@ -88,7 +90,7 @@ def test_withholding_observation_refuses_non_numeric_or_overlong_subclave() -> N
 
 def test_withholding_requirement_claves_are_typed() -> None:
     """WithholdingObservationRequirement.claves hydrates raw tokens to typed members."""
-    requirement = WithholdingObservationRequirement(binding_ids=("b1",), claves=("A", "G"))
+    requirement = WithholdingObservationRequirement.model_validate({"binding_ids": ("b1",), "claves": ("A", "G")})
     assert requirement.claves == (RetencionClave.A, RetencionClave.G)
     with pytest.raises(ValidationError):
-        WithholdingObservationRequirement(binding_ids=("b1",), claves=("A", "ZZ"))
+        WithholdingObservationRequirement.model_validate({"binding_ids": ("b1",), "claves": ("A", "ZZ")})

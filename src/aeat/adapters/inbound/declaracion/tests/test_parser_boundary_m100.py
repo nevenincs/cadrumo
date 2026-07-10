@@ -21,10 +21,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
     ids=_M100_CORPUS_IDS,
 )
 def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
-    """Round-trip: parse M100 IRPF annual corpus PDFs and verify all 20 covered casillas.
+    """Round-trip: parse M100 IRPF annual corpus PDFs and verify all 21 covered casillas.
 
     Four delivery chunks:
-    - Chunk 1 (9 casillas): cuota-chain closure -- 0545/0546/0505/0585/0586/0587/0595/0610/0670.
+    - Chunk 1 (10 casillas): cuota-chain closure -- 0545/0546/0505/0585/0586/0587/0595/0604/0610/0670.
     - Chunk 2 (4 casillas): apartado-summary bases -- 0235/0432/0500/0510.
     - Chunk 3 (6 casillas): actividades-economicas ED detail -- 0180/0218/0223/0224/0226/0231.
     - Chunk 4 (1 casilla): ED leaf input -- 0171 (ingresos de explotacion).
@@ -59,7 +59,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 20 covered casillas must be present: 9 cuota-chain closure casillas (first chunk),
+    # All 21 covered casillas must be present: 10 cuota-chain closure casillas (first chunk),
     # 4 apartado-summary casillas (second chunk), 6 actividades-economicas ED detail (third chunk),
     # 1 ED leaf input (fourth chunk).
     # 0435 (base imponible general) is deferred: the IRPF form prints the line twice

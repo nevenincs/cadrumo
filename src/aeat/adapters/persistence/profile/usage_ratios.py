@@ -1,12 +1,12 @@
 """Encrypted secure-object persistence for :class:`UsageRatioProfile`.
 
 These load / save helpers are the persistence adapter behind the pure
-:mod:`domain.usage_ratios` register. A usage-ratio profile is stored
+:mod:`~domain.usage_ratios` register. A usage-ratio profile is stored
 as an :class:`Envelope`-wrapped encrypted byte object via
 :class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL; no
 plaintext profile JSON or envelope file lands on disk.
 
-Living in the persistence adapter (not in :mod:`domain.usage_ratios`)
+Living in the persistence adapter (not in :mod:`~domain.usage_ratios`)
 keeps the :class:`SecureObjectRepository` / :class:`Envelope` coupling out
 of the domain layer: the domain package owns only the pure
 :class:`UsageRatioProfile` model, the censo derivation, and the

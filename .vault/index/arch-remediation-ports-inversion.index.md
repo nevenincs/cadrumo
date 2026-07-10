@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-ports-inversion'
-date: '2026-07-03'
-modified: '2026-07-03'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P01-S01]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S02]]'
@@ -29,6 +29,7 @@ related:
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
   - '[[2026-07-03-arch-remediation-ports-inversion-audit]]'
+  - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
 ---
 
 # `arch-remediation-ports-inversion` feature index
@@ -71,3 +72,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 ### plan
 
 - `2026-07-02-arch-remediation-ports-inversion-plan` - `arch-remediation-ports-inversion` plan
+
+### research
+
+- `2026-07-06-arch-remediation-ports-inversion-research` - `arch-remediation-ports-inversion` research: `program-track decision research bridge`

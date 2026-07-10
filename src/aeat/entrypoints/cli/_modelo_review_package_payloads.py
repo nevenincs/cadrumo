@@ -1,10 +1,27 @@
 """Review-package build/verify CLI payload schemas.
 
-Strict :class:`OutputSchema` subclasses registered through
-:func:`register_schema` for the ``aeat app modelo review-package build`` and
-``aeat app modelo review-package verify`` verbs. Kept in its own module
-(mirroring the ``_modelo_aux_payloads`` split for the evidence-bundle audit
-payloads) so the review-package CLI surface has one dedicated payload home.
+Strict :class:`~entrypoints.cli._schemas.OutputSchema` subclasses registered
+through :func:`~entrypoints.cli._schemas.register_schema` for the ``aeat app
+modelo review-package build`` and ``aeat app modelo review-package verify``
+verbs. Kept in its own module (mirroring the ``_modelo_aux_payloads`` split
+for the evidence-bundle audit payloads) so the review-package CLI surface has
+one dedicated payload home.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_review_package_cli`
+        CLI transport that populates these result payloads.
+    :func:`~application.modelo.build_review_package`
+        Application build primitive represented by
+        :class:`ModeloReviewPackageBuildResult`.
+    :func:`~application.modelo.sign_review_package`
+        Application signing primitive represented by
+        :class:`ModeloReviewPackageSignResult`.
+    :func:`~application.modelo.encrypt_review_package_for_recipient`
+        Recipient-sealing primitive represented by
+        :class:`ModeloReviewPackageEncryptForRecipientResult`.
+    :func:`~application.modelo.import_feedback_package`
+        Feedback-import primitive represented by
+        :class:`ModeloReviewPackageImportFeedbackResult`.
 """
 
 from __future__ import annotations
@@ -68,7 +85,7 @@ class ModeloReviewPackageSignResult(OutputSchema):
     Carries only the exportable public half of the signer's keypair and the
     path to the written signature envelope — the private key never appears
     in this payload (it stays inside the encrypted per-bucket keystore; see
-    :func:`~aeat.application.modelo.ensure_review_package_signing_keypair`).
+    :func:`~application.modelo.ensure_review_package_signing_keypair`).
     """
 
     operation: str = "modelo.review_package.sign"
@@ -129,7 +146,7 @@ class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
 
     The private ephemeral sender key never appears in this payload (it exists
     only transiently in process memory for the duration of the call, per
-    :func:`~aeat.application.modelo.encrypt_review_package_for_recipient`).
+    :func:`~application.modelo.encrypt_review_package_for_recipient`).
     ``valid_until`` is ``None`` when the sealed package never expires.
     """
 
@@ -150,9 +167,9 @@ class ModeloReviewPackageDecryptResult(OutputSchema):
     The recipient's own private key never appears in this payload (it is
     minted-or-loaded from encrypted secure storage and used only transiently
     to decrypt, per
-    :func:`~aeat.application.modelo.ensure_recipient_encryption_keypair`).
+    :func:`~application.modelo.ensure_recipient_encryption_keypair`).
     ``review_only`` asserts the recovered package carries no filing authority
-    -- see :func:`~aeat.application.modelo.decrypt_review_package_for_recipient`.
+    -- see :func:`~application.modelo.decrypt_review_package_for_recipient`.
     """
 
     operation: str = "modelo.review_package.decrypt"
@@ -169,7 +186,7 @@ class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
     The recipient (accountant/gestor) seals structured feedback back to the
     originator (taxpayer) so only the originator's private key can open it,
     reusing the same X25519 ECIES construction as the forward direction (see
-    :func:`~aeat.application.modelo.encrypt_feedback_package_for_originator`).
+    :func:`~application.modelo.encrypt_feedback_package_for_originator`).
     Only the exportable originator public key appears here; no private key of
     either party is ever surfaced. ``has_counter_sign`` reports whether a
     counter-signed receipt was bundled with the note.
@@ -195,8 +212,8 @@ class ModeloReviewPackageImportFeedbackResult(OutputSchema):
     receipt -- re-verifies BOTH signature layers against their locally-held
     review-package archive before accepting it and attaching the verified
     countersignature to their own approval journal
-    (:func:`~aeat.application.modelo.import_feedback_package`,
-    :func:`~aeat.application.modelo.emit_collab_feedback_countersign_attached_event`).
+    (:func:`~application.modelo.import_feedback_package`,
+    :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`).
     No private key of either party appears in this payload.
     ``counter_signature_verified`` is ``None`` when the feedback carried no
     formal sign-off, ``True`` when a bundled receipt verified clean.

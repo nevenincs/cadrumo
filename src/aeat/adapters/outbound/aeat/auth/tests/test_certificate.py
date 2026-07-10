@@ -20,7 +20,7 @@ from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
 from ......core.config import CertificateBackend, Settings
-from ......tests.env_scope import isolated_aeat_env
+from ......tests.env_scope import isolated_aeat_env, settings_without_env_file
 from .. import (
     CERTIFICATE_CONTEXT_MARKER,
     CertificateBundle,
@@ -350,13 +350,6 @@ def test_httpx_fallback_preload_rejects_browser_path(tmp_path: Path) -> None:
 
 
 def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
-    from pydantic_settings import SettingsConfigDict
-
-    from ......core.config import Settings
-
-    class IsolatedSettings(Settings):
-        model_config = SettingsConfigDict(env_file=None)
-
     placeholder_p12 = tmp_path / "op.p12"
     placeholder_p12.write_bytes(b"placeholder")
     with isolated_aeat_env(
@@ -366,7 +359,7 @@ def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
         AEAT_CERTIFICATE_BACKEND="httpx_fallback",
         AEAT_CERTIFICATE_VERIFY_URL="https://example.test/",
     ):
-        settings = IsolatedSettings()
+        settings = settings_without_env_file()
     assert settings.aeat_certificate_path == placeholder_p12
     assert settings.aeat_certificate_password_secret is not None
     assert settings.aeat_certificate_password_secret.get_secret_value() == SECRET_PASSPHRASE
@@ -420,13 +413,7 @@ def test_load_certificate_not_after_is_utc_aware(tmp_path: Path) -> None:
 
 def test_settings_rejects_removed_certificate_backends() -> None:
     import pydantic
-    from pydantic_settings import SettingsConfigDict
-
-    from ......core.config import Settings
-
-    class IsolatedSettings(Settings):
-        model_config = SettingsConfigDict(env_file=None)
 
     with isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="MTLS_PROXY"):
         with pytest.raises(pydantic.ValidationError, match=r"aeat_certificate_backend|MTLS_PROXY|Input should be"):
-            IsolatedSettings()
+            settings_without_env_file()

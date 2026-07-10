@@ -1,13 +1,12 @@
-"""Conformance gate: no operator-facing result schema ever emits raw bytes.
+"""Conformance gate: no operator-facing result schema emits raw bytes.
 
-R9 of the ``2026-07-02-agent-harness-refoundation-adr`` guarantees that a
-taxpayer's source documents (invoice/statement bytes, decrypted evidence) never
+Taxpayer source documents (invoice/statement bytes, decrypted evidence) must not
 leave the host: they live only in the encrypted secure-storage backend
 (``sensitive-financial-data-secure-storage-only``), and the MCP serving path
-relays the CLI's ``--json`` envelope VERBATIM. That guarantee therefore rests on
-a single structural fact — the CLI contract never renders evidence bytes into an
+relays the CLI's ``--json`` envelope verbatim. That guarantee therefore rests on
+a single structural fact: the CLI contract never renders evidence bytes into an
 envelope; the amount-bearing and evidence-referencing verbs emit attachment
-IDs, content hashes, and amounts (strings/decimals), not the bytes themselves.
+IDs, content hashes, and amounts, not the bytes themselves.
 
 This gate makes that fact enforceable rather than incidental. It walks every
 registered ``--json`` result schema (the exact set the serving path can relay)
@@ -30,7 +29,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.json_contract import SCHEMA_REGISTRY
-from ...cli._app_contract import _ensure_result_schemas_registered
+from ...cli import command_schema_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -80,7 +79,7 @@ def _resolved_hints(model: type[BaseModel]) -> dict[str, object]:
 
 
 def _all_registered_schemas() -> dict[str, type[BaseModel]]:
-    _ensure_result_schemas_registered()
+    command_schema_refs()
     return dict(SCHEMA_REGISTRY)
 
 

@@ -14,7 +14,7 @@ related:
   - '[[2026-04-28-ccaa-in-profile-adr]]'
 ---
 
-# `renta-region-deductibility` adr: `region-scoped renta expense deductibility` | (**status:** `proposed`)
+# `renta-region-deductibility` adr: `region-scoped renta expense deductibility` | (**status:** `accepted`)
 
 ## Problem Statement
 

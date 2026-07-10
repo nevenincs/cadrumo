@@ -83,7 +83,7 @@ from ...domain.user_profile import (
     UserProfileValidationError,
     new_profile_id,
 )
-from . import RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
+from . import ReactivateProfileCommand, RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
@@ -93,7 +93,7 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-_TAX_ID_FACT_PATH = "identity.tax_id"
+TAX_ID_FACT_PATH = "identity.tax_id"
 """Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
 
 
@@ -104,7 +104,7 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
     it carries no value, so a profile without a tax id never collides.
     """
     for fact in facts:
-        if fact.path == _TAX_ID_FACT_PATH and fact.value is not None:
+        if fact.path == TAX_ID_FACT_PATH and fact.value is not None:
             text = str(fact.value).strip().upper()
             if text:
                 return text
@@ -608,8 +608,6 @@ class ProfileRepository:
             ProfileNotFoundError: If the profile is not currently tombstoned,
                 or if the bucket directory or manifest is absent.
         """
-        from ._commands import ReactivateProfileCommand
-
         aggregate = self.load(profile_id)
         # Step 1: reactivate the encrypted record first (mirrors delete's
         # step ordering in reverse).

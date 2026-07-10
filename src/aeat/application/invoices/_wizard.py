@@ -1,25 +1,37 @@
-"""Guided, non-blocking manual-entry path for one catalogue :class:`Invoice`.
+"""Guided, non-blocking manual-entry path for one catalogue :class:`~domain.invoices.Invoice`.
 
 ``aeat app ledger invoice catalogue wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
 unavailable or insufficient: the operator (an autonomous LLM agent that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in
 one call. This module validates each field independently -- reusing the same
-grounded heuristics :func:`aeat.core.identity.validate_spanish_tax_id` and the
+grounded heuristics :func:`~core.identity.validate_spanish_tax_id` and the
 ISO-8601 / canonical-decimal parsers already enforce on the extract/confirm
 path -- and accumulates every failing field into one refusal
 (``no-silent-under-declaration``: a malformed field is named, never silently
 dropped or reported one-at-a-time when several are wrong).
 
-The write itself delegates to :func:`aeat.application.invoices.create_catalogue_invoice`
--- the sole sanctioned :class:`Invoice` writer
+The write itself delegates to :func:`~application.invoices.create_catalogue_invoice`
+-- the sole sanctioned :class:`~domain.invoices.Invoice` writer
 (``composition-service-no-parallel-write-path``); this module never persists a
-row itself. Because :class:`~aeat.domain.invoices.Invoice` identity is a
+row itself. Because :class:`~domain.invoices.Invoice` identity is a
 content-derived hash, a retry that resolves to an already-catalogued identity
 is a guarded no-op (``single-subject-mutation-is-idempotent-guarded``): the
 existing record is returned, not re-written or raised as an error, mirroring
-the re-import-of-an-unchanged-file semantics :func:`import_invoices_from_rows`
-already implements for the bulk path.
+the re-import-of-an-unchanged-file semantics
+:func:`~application.invoices.import_invoices_from_rows` already implements for
+the bulk path.
+
+See Also:
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Public application facade for this guided manual-entry path.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Single catalogue writer used after field validation succeeds.
+    :func:`~application.invoices.import_invoices_from_rows`
+        Spreadsheet-oriented sibling path with matching idempotency semantics.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        Automated evidence extraction path this non-interactive wizard
+        complements when OCR is unavailable or insufficient.
 """
 
 from __future__ import annotations
@@ -30,9 +42,11 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...core.errors import CoreValidationError
 from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,
@@ -53,7 +67,7 @@ __all__ = [
 class InvoiceWizardFieldError(BaseModel):
     """One field that failed the wizard's guided validation.
 
-    Mirrors :class:`~aeat.application.invoices.BulkInvoiceImportRowFailure`'s
+    Mirrors :class:`~application.invoices.BulkInvoiceImportRowFailure`'s
     ``field``/``reason`` shape so a manual-entry refusal reads consistently
     with the bulk-import refusal surface, minus the row number a single-invoice
     wizard has no use for.
@@ -116,12 +130,18 @@ def _validate_invoice_number(raw: str) -> str:
 
 def _validate_invoice_date(raw: str) -> date:
     try:
-        return date.fromisoformat(raw.strip())
+        value = parse_iso8601_date(raw)
     except ValueError as exc:
         raise _WizardFieldError(
             field="invoice_date",
             reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
         ) from exc
+    if value is None:
+        raise _WizardFieldError(
+            field="invoice_date",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        )
+    return value
 
 
 def _validate_taxable_base(raw: str) -> Decimal:
@@ -287,8 +307,6 @@ def create_invoice_via_wizard(
 
     assert resolved_date is not None
     assert resolved_base is not None
-
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
 

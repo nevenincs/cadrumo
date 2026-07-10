@@ -1,19 +1,19 @@
 """Runtime-backed repository helpers for filing application persistence.
 
 Constructs a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` scoped to
+:class:`~adapters.persistence.storage.SecureObjectRepository` scoped to
 the active filing bucket on demand. The concrete adapter import is deferred so
 the application filing module graph does not acquire an adapters-layer edge at
 import time; only callers that actually need runtime storage cross that
 boundary.
 
 See Also:
-    :class:`aeat.application.filing.ModeloHistoryRepository`
+    :class:`application.filing.ModeloHistoryRepository`
         Application repository that consumes these helpers to persist
         filing-history payloads.
-    :func:`aeat.adapters.persistence.storage.secure_object_repository_for_bucket`
+    :func:`adapters.persistence.storage.secure_object_repository_for_bucket`
         Storage-runtime factory used after the filing bucket id is resolved.
-    :mod:`aeat.adapters.persistence.profile._filing_runtime`
+    :mod:`adapters.persistence.profile._filing_runtime`
         Parallel persistence-adapter helper used by the governed draft and
         amendment repositories.
 """
@@ -55,7 +55,7 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
     the runtime dependency remains transparent.
 
     Returns:
-        A :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        A :class:`~adapters.persistence.storage.SecureObjectRepository`
         scoped to ``bucket_id``.
     """
     from ...adapters.persistence.storage import (

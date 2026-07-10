@@ -34,6 +34,7 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
             "config", "profile", "create", profile_name,
             "--quiet", "--accept-defaults",
             "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
             "--tax-id", "12345678Z",
             "--name", "Lucia",
             "--surnames", "Navarro",
@@ -90,7 +91,7 @@ def test_profile_preflight_names_profile_only_scope_for_m100() -> None:
     ("profile_name", "modelo", "filing_year", "period", "revision_id"),
     (
         ("lucia_defaults_broken", "303", "2024", "1T", "2023-y-siguientes"),
-        ("marta_defaults_broken", "100", "2025", "0A", "2025"),
+        ("ana_defaults_broken", "100", "2025", "0A", "2025"),
     ),
     ids=("m303-defaulted-profile", "m100-defaulted-profile"),
 )

@@ -1,14 +1,14 @@
 """Counter-signed accountant receipt roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_counter_sign` end to
+Exercises :mod:`~application.modelo._review_package_counter_sign` end to
 end against a REAL built-and-checksummed review package
-(:func:`~aeat.application.modelo.build_review_package`), a REAL operator
-signature (:func:`~aeat.application.modelo.sign_review_package`), and a REAL
+(:func:`~application.modelo.build_review_package`), a REAL operator
+signature (:func:`~application.modelo.sign_review_package`), and a REAL
 accountant counter-signature over that signature -- both parties' keypairs
 minted and persisted through REAL encrypted
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` instances
+:class:`~adapters.persistence.storage.SecureObjectRepository` instances
 scoped to two distinct genuine ``BUCKET_DEK_V1`` buckets
-(:func:`~aeat.tests.secure_sql.isolated_two_bucket_runtime`, no mocks or
+(:func:`~tests.secure_sql.isolated_two_bucket_runtime`, no mocks or
 fakes): operator signs, accountant counter-signs, both-layer verify passes;
 tamper the archive, the note, the counter-signature, or swap either party's
 public key, and verification fails.
@@ -16,6 +16,21 @@ public key, and verification fails.
 Mirrors the anti-tautology discipline established in
 ``test_review_package_signing.py``: every negative-path test names the exact
 way the system deviates from "clean" before asserting the refusal.
+
+See Also:
+    :mod:`~application.modelo._review_package_counter_sign`
+        Counter-sign receipt implementation exercised by the roundtrip and
+        tamper cases.
+    :mod:`~application.modelo._review_package_signing`
+        Operator Ed25519 signing layer that the accountant receipt signs over.
+    :mod:`~application.modelo._review_package`
+        Checksum-manifest package builder re-verified before signature checks.
+    :mod:`~application.modelo._review_package_feedback`
+        Follow-on encrypted feedback-package round trip that can carry a
+        counter-signed receipt back to the originator.
+    :mod:`~application.modelo.tests.test_review_package_signing`
+        Baseline anti-tautology signing tests mirrored by this counter-sign
+        slice.
 """
 
 from __future__ import annotations
@@ -38,6 +53,11 @@ from ....domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
+)
+from ....tests.review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
+    SecureObjectRow,
+    session_scope,
 )
 from ....tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
 from .._review_package import build_review_package
@@ -323,10 +343,6 @@ def test_counter_signer_keys_never_stored_as_plaintext(tmp_path: Path) -> None:
     counter-signer's keypair is scoped to.
     """
     from sqlalchemy import select
-
-    from ....adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
-    from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
 
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         accountant_keypair = _mint_accountant_keypair(runtime)

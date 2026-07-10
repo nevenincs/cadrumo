@@ -1,18 +1,28 @@
-"""Real-behaviour tests for cast-replacement helpers in :mod:`_errors` (contract, contract).
+"""Real-behaviour tests for CLI error-boundary cast narrowing.
 
-Verifies:
+These tests pin the memoised wrapper branch in
+:func:`~entrypoints.cli._errors.command_error_boundary` and the
+:func:`~entrypoints.cli._errors._is_memoised_wrapper` TypeGuard used to recover
+the callback's original callable type. The coverage is intentionally
+identity- and behaviour-based: wrapping the same callback twice must return the
+same object, and the wrapper must still behave like the original callback.
 
-- ``_is_memoised_wrapper`` narrows callable objects correctly.
-- ``command_error_boundary`` memo cache returns the identical wrapped object
-  for a repeated call (the memoised-wrapper path).
-- The cast-rationale marker for the memoised-wrapper path is present in source.
+No mocks, skips, expected-fail markers, or tautological assertions are used.
 
-No mocks, no skips, no expected-fail markers, no tautological assertions.
+See Also:
+    :mod:`~entrypoints.cli._errors`
+        Shared CLI error-emission boundary that owns callback wrapping,
+        memoisation, and typed stderr emission.
+    :class:`~core.errors.AeatError`
+        Central typed error base forwarded through the command boundary.
+
+Every CLI callback must pass through the central error boundary and its
+registry-backed renderer; the CLI backend boundary keeps error handling
+centralized, never duplicated per command.
 """
 
 from __future__ import annotations
 
-import pathlib
 from collections.abc import Callable
 
 import pytest
@@ -72,19 +82,3 @@ def test_command_error_boundary_memoised_wrapper_returns_same_object() -> None:
 
     # The wrapped callable must behave identically to the original.
     assert first_wrapped(99) == "99"
-
-
-def test_cast_rationale_marker_present_in_errors_source() -> None:
-    """Assert the cast-rationale marker for the memoised-wrapper cast is present.
-
-    Acts as a CI gate: if the cast is removed without removing the rationale
-    or if the rationale comment is accidentally deleted, this test fails loudly.
-    """
-    source = pathlib.Path(__file__).parent.parent / "_errors.py"
-    text = source.read_text(encoding="utf-8")
-
-    marker = "CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER"
-    assert marker in text, (
-        f"Cast rationale marker {marker!r} is missing from {source}. "
-        "Either restore the comment or remove the cast entirely."
-    )

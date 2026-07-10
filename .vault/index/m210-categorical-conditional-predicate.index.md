@@ -3,10 +3,11 @@ generated: true
 tags:
   - '#index'
   - '#m210-categorical-conditional-predicate'
-date: '2026-06-30'
-modified: '2026-06-30'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-06-30-m210-categorical-conditional-predicate-adr]]'
+  - '[[2026-07-06-m210-categorical-conditional-predicate-research]]'
 ---
 
 # `m210-categorical-conditional-predicate` feature index
@@ -18,3 +19,7 @@ Auto-generated index of all documents tagged with `#m210-categorical-conditional
 ### adr
 
 - `2026-06-30-m210-categorical-conditional-predicate-adr` - `m210-categorical-conditional-predicate` adr: `Categorical-conditional verification predicate for the M210 inmobiliaria branch` | (**status:** `accepted`)
+
+### research
+
+- `2026-07-06-m210-categorical-conditional-predicate-research` - `m210-categorical-conditional-predicate` research: `M210 inmobiliaria text-casilla advisory grounding`

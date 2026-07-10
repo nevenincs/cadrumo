@@ -7,11 +7,11 @@ ledger preflight through a :class:`TransactionCatalogueRepository` before
 calculation proceeds.
 
 See Also:
-    :func:`~aeat.application.modelo._calculation_actions.calculate_modelo_revision`:
+    :func:`~application.modelo._calculation_actions.calculate_modelo_revision`:
         Consumes the prepared bundle before persisting a draft revision.
-    :func:`~aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+    :func:`~application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, enum, and date binding channels.
-    :mod:`~aeat.application.modelo._iva_wallet_gate`:
+    :mod:`~application.modelo._iva_wallet_gate`:
         Applies the persisted Modelo 303 IVA-wallet authority during preparation.
 """
 
@@ -25,7 +25,7 @@ from decimal import Decimal
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
-from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
+from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RegistrySnapshot, RelationId
 from ...domain.deadlines import IVARegime
 from ...domain.modelos import (
     WorkUnit,
@@ -68,7 +68,7 @@ class PreparedCalculation:
 
     work_units: WorkUnitCatalogue
     work_unit: WorkUnit
-    snapshot: object
+    snapshot: RegistrySnapshot
     casilla_inputs: Mapping[CasillaId, Decimal]
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None
     period_date: date
@@ -99,9 +99,9 @@ def prepare_calculation(
     requirements. ``ledger_preflight_transaction_repository`` may provide a
     :class:`TransactionCatalogueRepository` for the ledger-tax readiness check.
     ``iva_compensation_decision_repository`` may provide the matching
-    :class:`~aeat.application.calculations.IvaWalletDecisionRepository` for the
+    :class:`~application.calculations.IvaWalletDecisionRepository` for the
     Modelo 303 wallet authority, while
-    :class:`~aeat.application.live.Borrador100SnapshotRepository` supplies the
+    :class:`~application.live.Borrador100SnapshotRepository` supplies the
     optional Modelo 100 borrador tier.
 
     Returns:

@@ -4,11 +4,12 @@ This package mirrors the application auth contract from
 :mod:`application.auth` by re-exporting
 :class:`application.auth.AuthProvider` and
 :class:`application.auth.AuthProviderKind` alongside the concrete
-certificate and Cl@ve Móvil providers. Use
+certificate, Cl@ve Móvil, and Cl@ve Permanente providers. Use
 :func:`select_provider` to resolve
 ``CERTIFICATE`` to :class:`AeatAuthenticator`
 and ``CLAVE_MOVIL`` to
-:class:`ClaveMovilAuthProvider`;
+:class:`ClaveMovilAuthProvider`, or ``CLAVE_PERMANENTE`` to
+:class:`ClavePermanenteAuthProvider`;
 unsupported kinds raise
 :exc:`AuthConfigurationError`.
 
@@ -201,10 +202,11 @@ def select_provider(
     """Return the concrete outbound :class:`AuthProvider` for ``kind``.
 
     ``AuthProviderKind.CERTIFICATE`` builds an :class:`AeatAuthenticator`;
-    ``AuthProviderKind.CLAVE_MOVIL`` builds a :class:`ClaveMovilAuthProvider`.
-    The optional browser session factory is forwarded to either provider so
-    application code can share Playwright sessions without depending on
-    adapter internals.
+    ``AuthProviderKind.CLAVE_MOVIL`` builds a
+    :class:`ClaveMovilAuthProvider`; ``AuthProviderKind.CLAVE_PERMANENTE``
+    builds a :class:`ClavePermanenteAuthProvider`. The optional browser session
+    factory is forwarded to browser-backed providers so application code can
+    share Playwright sessions without depending on adapter internals.
 
     Raises:
         AuthConfigurationError: If ``kind`` is outside the supported

@@ -40,6 +40,7 @@ Submodules
    aeat.core._bucket_pointer_io
    aeat.core._capabilities
    aeat.core._casilla_id
+   aeat.core._config_integration_fields
    aeat.core._config_live_tests
    aeat.core._config_runtime_fields
    aeat.core._config_state_root
@@ -56,6 +57,8 @@ Submodules
    aeat.core._optional_extras
    aeat.core._period
    aeat.core._post_filing_event
+   aeat.core._prorrata_exclusions
+   aeat.core._prorrata_register
    aeat.core._refund_election
    aeat.core._rescate_type
    aeat.core._result_disposition
@@ -64,6 +67,7 @@ Submodules
    aeat.core.aggregation
    aeat.core.auth_session_keys
    aeat.core.click_context
+   aeat.core.compatibility_lifecycle
    aeat.core.config
    aeat.core.env_io
    aeat.core.external_constants

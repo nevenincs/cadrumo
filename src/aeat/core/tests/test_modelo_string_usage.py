@@ -32,16 +32,17 @@ and the registry-parity gate in ``test_modelo.py``.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
+from ...tests import aeat_relative, production_ast_items
 from .. import Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: Repo-relative ``src/aeat`` root and the canonical modelo-code value set.
-_AEAT_ROOT = Path(__file__).parents[2]
+#: Canonical modelo-code value set.
 _CODES: frozenset[str] = frozenset(m.value for m in Modelo)
 
 #: Production modules that own a bare code string for a documented reason.
@@ -123,27 +124,22 @@ def _literal_ids(tree: ast.Module) -> set[int]:
     return ids
 
 
-def _is_test_path(path: Path) -> bool:
-    return "tests" in path.parts or path.name.startswith("test_") or path.name.endswith("_test.py")
-
-
-def test_no_bare_modelo_code_strings_in_production_identifiers() -> None:
+def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No production module carries a bare modelo-code string where ``Modelo`` belongs.
 
     Self-verifying: the code set is recomputed from the live :class:`Modelo` enum
     and the worklist is recomputed from each module's AST on every run, so the
     gate ratchets — it cannot pass with a stale baseline.
     """
-    skip_files = {_AEAT_ROOT / "core" / "_modelo.py"}
+    skip_files = {"core/_modelo.py"}
     offenders: list[str] = []
     stale_allowlist: set[tuple[str, str]] = set(_ALLOWLIST)
 
-    for path in sorted(_AEAT_ROOT.rglob("*.py")):
-        if _is_test_path(path) or path in skip_files:
+    for path, tree in production_ast_items(source_tree_ast):
+        rel = aeat_relative(path)
+        if rel in skip_files:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         excluded = _docstring_const_ids(tree) | _decimal_arg_ids(tree) | _literal_ids(tree)
-        rel = path.relative_to(_AEAT_ROOT).as_posix()
         for node in ast.walk(tree):
             if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
                 continue

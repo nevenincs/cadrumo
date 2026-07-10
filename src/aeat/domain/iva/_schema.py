@@ -27,11 +27,14 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    field_serializer,
+    field_validator,
     model_validator,
 )
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
+from ...core.parsing import parse_iso8601_date
 from ._errors import IvaValidationError
 
 
@@ -62,6 +65,74 @@ class IvaCategory(StrEnum):
     OPERACION_NO_SUJETA = "operacion_no_sujeta"
     ERRONEOUS_INVOICE = "erroneous_invoice"
     UNKNOWN = "unknown"
+
+
+class IvaCashAccountingTreatment(StrEnum):
+    """Independent cash-accounting treatment axis for IVA observations.
+
+    Cash accounting is a settlement-timing and informational-reporting regime,
+    not an operation category. The values here deliberately do not overlap with
+    :class:`IvaCategory`: a row keeps its domestic/export/intracom/etc.
+    category and separately declares whether cash-accounting timing applies.
+    """
+
+    NONE = "none"
+    TAXPAYER_REGIME = "taxpayer_regime"
+    SUPPLIER_REGIME = "supplier_regime"
+
+
+class IvaCashAccountingPaymentEvidence(BaseModel):
+    """Collection/payment evidence for an operation affected by criterio de caja.
+
+    The amounts are the IVA substrate settled by the collection/payment event,
+    not a gross bank amount that downstream code must reinterpret. Partial
+    evidence therefore remains explicit and auditable.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    payment_date: date
+    taxable_base: Decimal = Field(..., ge=Decimal("0"))
+    iva_amount: Decimal = Field(..., ge=Decimal("0"))
+    recargo_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+
+    @field_validator("payment_date", mode="before")
+    @classmethod
+    def _parse_payment_date(cls, value: object) -> object:
+        if isinstance(value, str):
+            return parse_iso8601_date(value)
+        return value
+
+    @field_validator("taxable_base", "iva_amount", "recargo_amount", mode="before")
+    @classmethod
+    def _coerce_decimal_field(cls, value: object) -> object:
+        """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``.
+
+        Without this, a ``Transaction`` carrying a populated
+        ``cash_accounting_payment_evidence`` tuple cannot round-trip through
+        ``Envelope[Transaction].model_validate_json`` at all: pydantic-core
+        strict mode rejects the JSON-decoded string for these fields even
+        though ``payment_date`` was already coerced above.
+        """
+        if isinstance(value, str):
+            return Decimal(value)
+        return value
+
+    @model_validator(mode="after")
+    def _require_settlement_amount(self) -> IvaCashAccountingPaymentEvidence:
+        if (
+            self.taxable_base == Decimal("0")
+            and self.iva_amount == Decimal("0")
+            and self.recargo_amount == Decimal("0")
+        ):
+            raise IvaValidationError(
+                "cash-accounting payment evidence must carry a non-zero base, IVA, or recargo amount",
+            )
+        return self
+
+    @field_serializer("taxable_base", "iva_amount", "recargo_amount", when_used="json")
+    def _serialize_decimal(self, value: Decimal) -> str:
+        return str(value)
 
 
 # IVA categories that legitimately bear no Modelo 303 cuota by law, so a

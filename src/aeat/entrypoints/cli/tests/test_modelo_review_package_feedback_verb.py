@@ -13,6 +13,26 @@ encrypt -> import -> verify -> journal-attach chain independently. Also proves
 the feedback envelope on disk never carries a private key, and that a feedback
 package with no counter-signed receipt imports as unstructured feedback with no
 journal attach.
+
+See Also:
+    :func:`~application.modelo.import_feedback_package`
+        Application import primitive that decrypts and verifies feedback envelopes.
+    :func:`~application.modelo.encrypt_feedback_package_for_originator`
+        Application primitive behind the CLI ``encrypt-feedback`` verb.
+    :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`
+        Journal hook asserted after verified countersignature import.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Encrypted recipient public-key registry used to address the originator.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_encrypt_feedback`
+        CLI verb that seals feedback for the originator.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_import_feedback`
+        CLI verb that opens feedback and attaches verified countersignatures.
+    :class:`~domain.buckets.BucketEventType`
+        Bucket-event enum whose collaboration event is asserted here.
+    :class:`CasillaId`
+        Typed casilla ids used to seed the exportable Modelo 111 revision.
+    :class:`Period`
+        Typed filing period used to resolve the review-package work target.
 """
 
 from __future__ import annotations
@@ -50,10 +70,10 @@ from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
+    derive_work_unit_id,
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.modelos._work_unit import derive_work_unit_id
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -241,7 +261,7 @@ def _counter_sign(tmp_path: Path, package_path: Path, signature_path: Path) -> t
 
 def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(tmp_path: Path) -> None:
     package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
-    originator_public_key_hex = _register_originator("kents-client")
+    originator_public_key_hex = _register_originator("my-client")
     signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
     receipt_path, counter_signer_public_key_hex = _counter_sign(tmp_path, package_path, signature_path)
 
@@ -255,13 +275,13 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
             "review-package",
             "encrypt-feedback",
             "--originator",
-            "kents-client",
+            "my-client",
             "--work-unit-id",
             work_unit_id,
             "--calculation-revision-id",
             calculation_revision_id,
             "--by",
-            "kents-accountant",
+            "my-accountant",
             "--note",
             "all clear",
             "--receipt",
@@ -302,7 +322,7 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
     assert import_payload["counter_signature_verified"] is True
     assert import_payload["attached_to_journal"] is True
     assert import_payload["note"] == "all clear"
-    assert import_payload["submitted_by"] == "kents-accountant"
+    assert import_payload["submitted_by"] == "my-accountant"
     assert "private_key" not in import_result.output
 
     # Countersign-attach-to-journal: the originator's own bucket-event history
@@ -319,7 +339,7 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
 
 def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_path: Path) -> None:
     package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
-    _register_originator("kents-client")
+    _register_originator("my-client")
     _signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
 
     feedback_envelope_path = tmp_path / "feedback-envelope.json"
@@ -332,13 +352,13 @@ def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_p
             "review-package",
             "encrypt-feedback",
             "--originator",
-            "kents-client",
+            "my-client",
             "--work-unit-id",
             work_unit_id,
             "--calculation-revision-id",
             calculation_revision_id,
             "--by",
-            "kents-accountant",
+            "my-accountant",
             "--note",
             "see attached corrections, no formal sign-off yet",
             "--output",
@@ -372,7 +392,7 @@ def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_p
 
 def test_import_feedback_refuses_tampered_feedback_envelope(tmp_path: Path) -> None:
     package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
-    _register_originator("kents-client")
+    _register_originator("my-client")
     _signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
 
     feedback_envelope_path = tmp_path / "feedback-envelope.json"
@@ -385,13 +405,13 @@ def test_import_feedback_refuses_tampered_feedback_envelope(tmp_path: Path) -> N
             "review-package",
             "encrypt-feedback",
             "--originator",
-            "kents-client",
+            "my-client",
             "--work-unit-id",
             work_unit_id,
             "--calculation-revision-id",
             calculation_revision_id,
             "--by",
-            "kents-accountant",
+            "my-accountant",
             "--note",
             "all clear",
             "--output",

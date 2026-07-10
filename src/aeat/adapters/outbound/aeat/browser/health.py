@@ -2,10 +2,10 @@
 
 The health check constructs the production
 :func:`default_browser_session_factory`, opens a browser context, and navigates
-through :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate`.
+through :meth:`adapters.outbound.aeat.browser.BrowserSession.navigate`.
 It verifies the local Playwright/browser installation path rather than the AEAT
 site-health parser corpus; parser classifications are represented separately by
-:class:`aeat.adapters.outbound.aeat.browser.SiteHealthStatus`.
+:class:`adapters.outbound.aeat.browser.SiteHealthStatus`.
 """
 
 from __future__ import annotations

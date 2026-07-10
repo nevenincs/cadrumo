@@ -76,31 +76,32 @@ legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4", "orden-hac-1347
 #   "Cuando resulte aplicable el índice corrector para empresas de pequeña
 #   dimensión (b.1) no se aplicará el índice corrector de exceso (b.3)."
 #
-# The m131_resolve_modulos_indice_exceso op (Fase 3ª,
-# 0003-modulos-engine.toml) applies the índice de exceso (b.3) unconditionally
-# for every tabled epígrafe in m131-modulos-cuantia-exceso-2025, without
-# cross-checking either the b.1/b.3 exclusivity above or the fact that two of
-# the tabled epígrafes carry a documented índice corrector especial: "721.2"
-# (transporte por autotaxis, letra a.2) and "722" (transporte de mercancías
-# por carretera / servicios de mudanzas, letra a.4). The engine does not model
-# b.1 (pequeña dimensión) or a.2/a.4 at all (Phase 2/3 scope per the ADR), so
-# it cannot itself decide whether b.3 was the correct índice to apply for
-# these two epígrafes — an operator whose actividad carries the especial
-# índice should confirm the computed reference figure (Fase 3ª/4ª) is not
-# overstated before relying on it. ADVISORY (non-blocking): the índice-exceso
-# chain feeds only the internal-only "modulos-rendimiento-neto-actividad"
-# reference casilla (never the filed casilla 01), so this is a prompt to
-# verify a REFERENCE figure, not a filed-value gate.
+# The 2025 engine (Fase 3ª, m131_resolve_modulos_indices_generales,
+# 0003-modulos-engine.toml) applies the full b.1 -> b.2 -> b.3 -> b.4 cascade
+# in the Orden's own literal enumeration order and already MODELS both
+# incompatibilities structurally: a declared índice de pequeña dimensión
+# (b.1) is IGNORED (never applied) for the two tabled epígrafes carrying a
+# documented índice especial ("721.2" transporte por autotaxis, letra a.2;
+# "722" transporte de mercancías por carretera / servicios de mudanzas, letra
+# a.4 — see the "modelo-131-2025-modulos-pequena-dimension-ignorado-especial"
+# ADVISORY below), and when a (non-ignored) b.1 índice applies, b.3 is skipped
+# outright for that activity. This pair of predicates is therefore
+# defence-in-depth confirmation, not a gap-filler for an unmodelled
+# incompatibility: they surface a residual divergence between the declared
+# epígrafe (721.2 / 722) and the computed reference figure so an operator can
+# confirm the engine's structural handling matches their own reading of the
+# Orden, even though the engine already applies the correct índice.
 #
 # Fires iff the índice-exceso path activated (módulos differs from minorado
-# by more than a cent — the índice 1,30 only applies when minorado exceeds
-# the tabled cuantía) AND the declared epígrafe is one of the two tabled
-# activities carrying a documented índice especial. "757" (servicios de
-# mudanzas, also letra a.4) is excluded: it has no cuantía row in
-# m131-modulos-cuantia-exceso-2025, so the índice-exceso path can never
-# activate for it (see 0002-modulos-coeficientes.toml) — a
-# ["modulos-epigrafe", "757", ...] predicate would be silently dead, which
-# no-silent-under-declaration itself forbids.
+# by more than a cent — the índice 1,30 only applies when the rendimiento
+# (rectificado by b.1/b.2, if declared) exceeds the tabled cuantía) AND the
+# declared epígrafe is one of the two tabled activities carrying a documented
+# índice especial. "757" (servicios de mudanzas, also letra a.4) is excluded:
+# it has no cuantía row in m131-modulos-cuantia-exceso-2025, so the
+# índice-exceso path can never activate for it (see
+# 0002-modulos-coeficientes.toml) — a ["modulos-epigrafe", "757", ...]
+# predicate would be silently dead, which no-silent-under-declaration itself
+# forbids.
 [[revisions."2025".verification_predicates]]
 predicate_id = "modelo-131-2025-modulos-indice-exceso-incompatible-autotaxi"
 expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "721.2", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
@@ -110,5 +111,30 @@ legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
 [[revisions."2025".verification_predicates]]
 predicate_id = "modelo-131-2025-modulos-indice-exceso-incompatible-mercancias"
 expression = 'casilla_equals_implies_diverges(["modulos-epigrafe", "722", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+# Índices correctores generales incompatibility ADVISORY guards
+# (Fase 3ª, m131_resolve_modulos_indices_generales,
+# 0003-modulos-engine.toml). Orden HAC/1347/2024 Anexo II, instrucción 2.3
+# declares two further binding exclusivity rules the cascade formula
+# structurally enforces (never silently applies both sides): the índice de
+# pequeña dimensión (b.1) is IGNORED for the two tabled epígrafes carrying a
+# documented índice especial (721.2, 722), and the índice de temporada (b.2)
+# and el índice de inicio de nuevas actividades (b.4) are mutually exclusive
+# (temporada wins per the Orden's own enumeration order). Both non-blocking
+# ADVISORY findings surface the ignored declaration to the operator — the
+# engine already applies the correct (non-ignored) índice, so these are
+# review prompts confirming the operator's declaration was not silently
+# dropped, per no-silent-under-declaration.
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-131-2025-modulos-pequena-dimension-ignorado-especial"
+expression = 'advisory_when_positive(["modulos-pequena-dimension-ignorado-flag"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-131-2025-modulos-temporada-inicio-actividad-incompatibles"
+expression = 'advisory_when_positive(["modulos-temporada-inicio-actividad-conflicto-flag"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]

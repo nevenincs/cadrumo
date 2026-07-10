@@ -2,16 +2,16 @@
 tags:
   - "#adr"
   - "#notifications-inbox"
-date: 2026-04-12
-modified: '2026-06-13'
-title: AEAT notifications inbox — ADR
+date: '2026-04-12'
 related:
   - "[[2026-04-12-notifications-inbox-research]]"
   - "[[2026-04-12-submission-engine-adr]]"
+superseded_by: '2026-06-12-live-pull-verification-sweep-adr'
+modified: '2026-07-10'
+title: AEAT notifications inbox — ADR
 issue: wgergely/aeat#46
 ---
-
-# adr: aeat notifications inbox
+# adr: aeat notifications inbox | (**status:** `superseded`)
 
 ## context
 

@@ -2,8 +2,8 @@
 
 Each operator-callable registry command key resolves to exactly one leaf in the
 ``aeat`` Typer/click command tree. This module walks that tree once, reads each
-command's declared parameters (positional :class:`click.Argument`s and
-``--option`` :class:`click.Option`s), and projects them into a strict, typed
+command's declared parameters (positional :class:`~click.Argument`s and
+``--option`` :class:`~click.Option`s), and projects them into a strict, typed
 :class:`VerbInputSchema`: the ordered parameter list, each parameter's JSON type,
 requiredness, enum choices, multiplicity, and flag shape, plus the *resolved* CLI
 path tokens.
@@ -23,7 +23,9 @@ SDK-independent pydantic records, so it is unit-tested directly.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -61,11 +63,15 @@ class VerbParameter(BaseModel):
     """One CLI parameter projected into a JSON-schema property.
 
     ``name`` is the click parameter name (the JSON property key). For an
-    :attr:`VerbParamKind.OPTION` the ``cli_flag`` is the long option token
-    (``--file``); for an :attr:`VerbParamKind.ARGUMENT` it is empty and the value
-    is a bare positional. ``multiple`` renders the property as a JSON array and
-    repeats the token per element; ``is_flag`` is a bare boolean switch that
-    emits only its flag when truthy.
+    :attr:`~entrypoints.mcp._input_schema.VerbParamKind.OPTION` the
+    ``cli_flag`` is the long option token (``--file``); for an
+    :attr:`~entrypoints.mcp._input_schema.VerbParamKind.ARGUMENT` it is empty
+    and the value is a bare positional. ``multiple`` renders the property as a
+    JSON array and repeats the token per element; ``is_flag`` is a bare boolean
+    switch that emits its ``cli_flag`` when truthy and, for a ``--flag/--no-flag``
+    pair, its ``off_flag`` (the secondary ``--no-`` token) when explicitly false.
+    ``default`` carries the parameter's click default rendered JSON-safely, so a
+    client can see the real default (including a default-on flag it may disable).
     """
 
     model_config = _STRICT_FROZEN
@@ -73,12 +79,13 @@ class VerbParameter(BaseModel):
     name: str = Field(min_length=1)
     kind: VerbParamKind
     cli_flag: str = ""
+    off_flag: str = ""
     json_type: JsonType
     required: bool
     is_flag: bool
     multiple: bool
     choices: tuple[str, ...] = ()
-    default: bool | int | float | str | None = None
+    default: bool | int | float | str | list[Any] | None = None
     help: str = ""
 
     def _scalar_schema(self) -> dict[str, Any]:
@@ -91,9 +98,12 @@ class VerbParameter(BaseModel):
 
     def property_schema(self) -> dict[str, Any]:
         """Return the JSON-schema fragment for this parameter's property."""
-        if self.multiple:
-            return {"type": "array", "items": self._scalar_schema()}
-        return self._scalar_schema()
+        schema = {"type": "array", "items": self._scalar_schema()} if self.multiple else self._scalar_schema()
+        if self.default is not None:
+            # The default is already JSON-safe (see ``_json_safe_default``); surface
+            # it so a client renders the real default rather than a blank field.
+            schema["default"] = self.default
+        return schema
 
 
 class VerbInputSchema(BaseModel):
@@ -110,6 +120,10 @@ class VerbInputSchema(BaseModel):
     command_key: str = Field(min_length=1)
     cli_path: tuple[str, ...] = Field(min_length=1)
     parameters: tuple[VerbParameter, ...] = ()
+    #: The command's own one-line help (its click ``short_help`` / first help
+    #: line), so the MCP tool description can be verb-specific rather than the
+    #: shared family intent (ADR mcp-progressive-discovery P2/S05).
+    help: str = ""
 
     def json_schema(self) -> dict[str, Any]:
         """Project the parameters into a JSON Schema object for the tool.
@@ -155,10 +169,31 @@ def _option_flag(parameter: ClickParameter) -> str:
     return next((opt for opt in opts if opt.startswith("--")), opts[0] if opts else "")
 
 
-def _json_safe_default(value: object) -> bool | int | float | str | None:
-    """Coerce a click default to a JSON-safe scalar, dropping complex defaults."""
+def _secondary_flag(parameter: ClickParameter) -> str:
+    """Return the long ``--no-`` off-token of a boolean flag pair, or ``""``.
+
+    A click boolean option declared as ``--flag/--no-flag`` records the negative
+    token in ``secondary_opts``; a bare ``--flag`` switch has none. The off-token
+    is what lets a client turn a default-on flag OFF through the MCP surface.
+    """
+    secondary = tuple(getattr(parameter, "secondary_opts", ()) or ())
+    return next((opt for opt in secondary if opt.startswith("--")), "")
+
+
+def _json_safe_default(value: object) -> bool | int | float | str | list[Any] | None:
+    """Render a click default JSON-safely, or ``None`` when unserialisable.
+
+    Scalars pass through unchanged; a :class:`~pathlib.Path` renders as its
+    string form; a tuple or list renders as a JSON array of its recursively
+    json-safe items. Only a genuinely unserialisable object falls back to
+    ``None`` (rather than every non-scalar default silently becoming null).
+    """
     if isinstance(value, bool | int | float | str):
         return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, tuple | list):
+        return [_json_safe_default(item) for item in value]
     return None
 
 
@@ -177,11 +212,24 @@ def _parameter_from_click(parameter: ClickParameter) -> VerbParameter | None:
     is_argument = getattr(parameter, "param_type_name", "") == "argument"
     is_flag = bool(getattr(parameter, "is_flag", False))
     raw_choices = getattr(parameter.type, "choices", None)
+    if raw_choices is None:
+        # A ``click_type=click.Choice(...)`` passed to ``typer.Option`` is wrapped
+        # in Typer's ``FuncParamType`` whose own ``.choices`` is ``None``; the
+        # original ``click.Choice`` (and its closed value set) survives on
+        # ``.func``. Without this unwrap the enum axis renders as a bare string in
+        # the MCP input schema (``aeat-architecture-boundaries``: a closed value
+        # set must surface its accepted values). Typing the option as an enum is
+        # the preferred form, but for options whose enum values differ in case
+        # from the CLI tokens (e.g. ``config reset --scope``) the ``click_type``
+        # Choice is the only way to keep the lowercase tokens, so the schema must
+        # read through the wrapper.
+        raw_choices = getattr(getattr(parameter.type, "func", None), "choices", None)
     choices = tuple(str(choice) for choice in raw_choices) if raw_choices else ()
     return VerbParameter(
         name=name,
         kind=VerbParamKind.ARGUMENT if is_argument else VerbParamKind.OPTION,
         cli_flag="" if is_argument else _option_flag(parameter),
+        off_flag="" if is_argument else _secondary_flag(parameter),
         json_type=_json_type_for(parameter, is_flag=is_flag, choices=choices),
         required=bool(getattr(parameter, "required", False)),
         is_flag=is_flag,
@@ -208,14 +256,19 @@ def _naive_cli_path(command_key: str) -> tuple[str, ...]:
 def _resolve_command(
     root: ClickCommand,
     command_key: str,
-) -> tuple[ClickCommand | None, tuple[str, ...]]:
+) -> tuple[ClickCommand | None, tuple[str, ...], str | None]:
     """Walk the CLI tree to the leaf command for ``command_key``.
 
-    Threads a fresh child :class:`click.Context` at each level so lazily-loaded
+    Threads a fresh child :class:`~click.Context` at each level so lazily-loaded
     subcommand modules materialise exactly as they do under real dispatch. A key
     segment is matched against the underscored token first, then the hyphenated
-    form, so ``iva_wallet`` resolves to the ``iva-wallet`` command. Returns the
-    resolved command (or ``None``) and the command names as click knows them.
+    form, so ``iva_wallet`` resolves to the ``iva-wallet`` command.
+
+    Returns the resolved command (or ``None``), the command names as click knows
+    them, and a failure reason. The reason is ``None`` for a clean resolution
+    AND for a genuine not-found (a stale key whose segment simply does not
+    exist); it is a message string ONLY when materialising a lazily-loaded
+    subtree RAISED — the case that must not silently degrade to an empty schema.
     """
     command: ClickCommand | None = root
     context = ClickContext(root, info_name=str(root.name))
@@ -223,22 +276,85 @@ def _resolve_command(
     for token in _naive_cli_path(command_key):
         getter = getattr(command, "get_command", None)
         if getter is None:
-            return None, tuple(resolved)
+            return None, tuple(resolved), None
         try:
             child = getter(context, token) or getter(context, token.replace("_", "-"))
-        except Exception:
+        except Exception as exc:
             # Materialising a lazily-loaded subtree can raise when a command in it
-            # declares a parameter type Typer cannot convert to click. Degrade to an
-            # unresolved command so only that subtree's keys fall back to an
-            # argument-free schema, rather than letting one hostile parameter brick
-            # the entire tool surface.
-            return None, tuple(resolved)
+            # declares a parameter type Typer cannot convert to click. Signal the
+            # failure so the coverage gate can name the verb rather than letting one
+            # hostile parameter silently ship as an argument-free schema.
+            return None, tuple(resolved), f"resolving {token!r}: {type(exc).__name__}: {exc}"
         if child is None:
-            return None, tuple(resolved)
+            return None, tuple(resolved), None
         resolved.append(str(child.name))
         context = ClickContext(child, parent=context, info_name=str(child.name))
         command = child
-    return command, tuple(resolved)
+    return command, tuple(resolved), None
+
+
+class SchemaResolutionError(RuntimeError):
+    """A command key's CLI subtree failed to materialise during schema build.
+
+    Raised by :func:`assert_schema_coverage` when the tree walk RAISED while
+    materialising a lazily-loaded subcommand. Such a failure would otherwise
+    degrade silently to an argument-free schema (research finding F2), shipping a
+    verb whose parameters vanished because of a Typer declaration bug; this error
+    turns that silent degradation into a loud, verb-named build-time failure.
+    """
+
+
+def assert_schema_coverage(resolution_errors: Mapping[str, str]) -> None:
+    """Fail the build when any command key's subtree failed to materialise.
+
+    ``resolution_errors`` maps a command key to the reason its lazily-loaded
+    subtree raised during the tree walk. An empty mapping is the healthy state
+    (a genuine no-arg command or a stale not-found key never appears here — only
+    a resolution FAILURE does). Any entry names a verb that would silently ship
+    an argument-free schema and raises :class:`SchemaResolutionError`.
+    """
+    if not resolution_errors:
+        return
+    detail = "; ".join(f"{key} ({reason})" for key, reason in sorted(resolution_errors.items()))
+    raise SchemaResolutionError(
+        f"MCP input-schema build could not resolve {len(resolution_errors)} command "
+        f"subtree(s), which would silently ship an argument-free schema: {detail}",
+    )
+
+
+def _schema_from_resolution(
+    command_key: str,
+    command: ClickCommand | None,
+    resolved: tuple[str, ...],
+) -> VerbInputSchema:
+    """Project a resolved command into its strict :class:`VerbInputSchema`.
+
+    An unresolved command (``None``) yields an empty parameter set over the naive
+    path — a valid argument-free descriptor. The build-time coverage gate, not
+    this projection, is what distinguishes a genuine no-arg/stale key from a
+    resolution failure.
+    """
+    if command is None:
+        return VerbInputSchema(command_key=command_key, cli_path=_naive_cli_path(command_key), parameters=())
+    parameters = tuple(
+        projected for parameter in command.params if (projected := _parameter_from_click(parameter)) is not None
+    )
+    cli_path = resolved or _naive_cli_path(command_key)
+    return VerbInputSchema(
+        command_key=command_key,
+        cli_path=cli_path,
+        parameters=parameters,
+        help=_command_help(command),
+    )
+
+
+def _command_help(command: ClickCommand) -> str:
+    """Return the command's one-line help (its ``short_help`` or first help line)."""
+    short = str(getattr(command, "short_help", "") or "").strip()
+    if short:
+        return short
+    full = str(getattr(command, "help", "") or "").strip()
+    return full.splitlines()[0].strip() if full else ""
 
 
 def build_verb_input_schema(root: ClickCommand, command_key: str) -> VerbInputSchema:
@@ -249,19 +365,15 @@ def build_verb_input_schema(root: ClickCommand, command_key: str) -> VerbInputSc
     key, or one whose subtree cannot be introspected because a command in it
     declares a Typer-unconvertible parameter type - falls back to an empty
     parameter set over the naive path, yielding a valid (argument-free) descriptor
-    rather than crashing the whole tool-surface build.
+    rather than crashing this single-key build. The batch entry point
+    :func:`build_verb_input_schemas` runs the coverage gate that turns a
+    resolution FAILURE into a loud build error.
 
     Returns:
         The strict :class:`VerbInputSchema` for the command.
     """
-    command, resolved = _resolve_command(root, command_key)
-    if command is None:
-        return VerbInputSchema(command_key=command_key, cli_path=_naive_cli_path(command_key), parameters=())
-    parameters = tuple(
-        projected for parameter in command.params if (projected := _parameter_from_click(parameter)) is not None
-    )
-    cli_path = resolved or _naive_cli_path(command_key)
-    return VerbInputSchema(command_key=command_key, cli_path=cli_path, parameters=parameters)
+    command, resolved, _error = _resolve_command(root, command_key)
+    return _schema_from_resolution(command_key, command, resolved)
 
 
 def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
@@ -269,7 +381,10 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
 
     Materialises the ``aeat`` click command once and walks it per key. The walk
     imports each lazily-loaded command subtree exactly as real dispatch does, so
-    the schemas reflect the live CLI surface.
+    the schemas reflect the live CLI surface. Any subtree whose materialisation
+    RAISES fails the coverage gate (:func:`assert_schema_coverage`) with the
+    offending verb named, rather than silently degrading to an argument-free
+    schema.
 
     Returns:
         A mapping of command key to its :class:`VerbInputSchema`.
@@ -277,7 +392,15 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
     from ..cli import app as cli_app
 
     root = _typer_get_command(cli_app)
-    return {key: build_verb_input_schema(root, key) for key in command_keys}
+    schemas: dict[str, VerbInputSchema] = {}
+    resolution_errors: dict[str, str] = {}
+    for key in command_keys:
+        command, resolved, error = _resolve_command(root, key)
+        if error is not None:
+            resolution_errors[key] = error
+        schemas[key] = _schema_from_resolution(key, command, resolved)
+    assert_schema_coverage(resolution_errors)
+    return schemas
 
 
 def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[str]:
@@ -285,8 +408,11 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
 
     Positional arguments are emitted in their CLI declaration order and precede
     every option; a multiple argument or option repeats per element; a boolean
-    flag emits only its token when truthy. ``--format json`` leads the tail so the
-    machine envelope is always requested, followed by the resolved command path.
+    flag emits its on-token when truthy and, for a ``--flag/--no-flag`` pair, its
+    ``off_flag`` (``--no-flag``) when explicitly false — so a default-on flag can
+    be turned off through the surface. A bare switch (no off-token) emits nothing
+    when false. ``--format json`` leads the tail so the machine envelope is always
+    requested, followed by the resolved command path.
 
     Returns:
         The argv tokens that follow the ``aeat`` executable.
@@ -306,6 +432,8 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
         if parameter.is_flag:
             if value:
                 options.append(parameter.cli_flag)
+            elif parameter.off_flag:
+                options.append(parameter.off_flag)
         elif parameter.multiple and isinstance(value, list | tuple):
             for item in value:
                 options.extend((parameter.cli_flag, str(item)))

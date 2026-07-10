@@ -10,27 +10,36 @@ This gate walks the production source tree (tests excluded) and refuses any
 ``*Observation`` class name that is defined in more than one module. A future
 homonym fails here loudly instead of silently overloading the vocabulary a
 semantic search relies on.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory used by this cohesion gate.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`
+        Canonical registry observation carrier protected from generic
+        ``Observation`` homonyms by the binding vocabulary pass.
+
+Every binding and observation name must stay domain-qualified so a reader (or
+a semantic search) can trust the name without cross-checking the module.
 """
 
 from __future__ import annotations
 
 import ast
 from collections import defaultdict
+from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
-from ._inventory import ast_for_path, module_name, production_python_files
+from ._inventory import module_name, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _observation_class_definitions() -> dict[str, set[str]]:
+def _observation_class_definitions(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> dict[str, set[str]]:
     """Map each ``*Observation`` class name to the set of modules defining it."""
     definitions: dict[str, set[str]] = defaultdict(set)
-    for path in production_python_files():
-        tree = ast_for_path(path)
-        if tree is None:
-            continue
+    for path, tree in production_ast_items(source_tree_ast):
         module = module_name(path)
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and node.name.endswith("Observation"):
@@ -39,9 +48,9 @@ def _observation_class_definitions() -> dict[str, set[str]]:
 
 
 @pytest.fixture(scope="module")
-def observation_class_definitions() -> dict[str, set[str]]:
+def observation_class_definitions(source_tree_ast: Mapping[Path, ast.AST]) -> dict[str, set[str]]:
     """Return the production ``*Observation`` class inventory once for this module."""
-    return _observation_class_definitions()
+    return _observation_class_definitions(source_tree_ast)
 
 
 def test_observation_names_have_no_cross_module_homonyms(

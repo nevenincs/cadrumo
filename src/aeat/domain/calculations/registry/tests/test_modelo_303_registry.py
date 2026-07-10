@@ -7,17 +7,23 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
     CasillaId,
+    InputKind,
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidator,
+    binding_aggregation_op,
     build_snapshot,
+    expression_casilla_refs,
+    selector_as_dict,
     validated_casilla_id,
 )
+from .._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,7 +49,21 @@ _M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-f
 _M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.base")
 _M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.cuota")
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-con-derecho")
+_M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-total")
 _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
+_M303_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = _casilla_id("43")
+_M303_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-303-bienes-inversion-regularizacion-casilla-43"
+_M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = _casilla_id("44")
+_M303_PRORRATA_REGULARIZACION_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
+_M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
+    _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
+    _M303_PRORRATA_PORCENTAJE_CASILLA,
+)
+_M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
 _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     "2009-y-siguientes": frozenset(
         {
@@ -168,26 +188,22 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
     assert "boe-modelo-303-2008-form" in snapshot.sources
 
 
-@pytest.mark.parametrize(
-    ("revision_id", "expected_refs"),
-    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items(),
-)
-def test_modelo_303_extraction_profile_legal_refs_match_target_casillas(
-    revision_id: str,
-    expected_refs: frozenset[str],
-) -> None:
+def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions[revision_id]
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    for revision_id, expected_refs in _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items():
+        revision = modelo.revisions[revision_id]
+        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
-    assert revision.extraction_profiles, revision_id
-    profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
-    target_refs = frozenset(
-        legal_ref for target in profile.target_casillas for legal_ref in casillas_by_id[target.casilla_id].legal_refs
-    )
+        assert revision.extraction_profiles, revision_id
+        profile = next(item for item in revision.extraction_profiles if item.id == "modelo-303-declaracion-pdf")
+        target_refs = frozenset(
+            legal_ref
+            for target in profile.target_casillas
+            for legal_ref in casillas_by_id[target.casilla_id].legal_refs
+        )
 
-    assert target_refs == expected_refs
-    assert set(profile.legal_refs) == expected_refs
+        assert target_refs == expected_refs
+        assert set(profile.legal_refs) == expected_refs
 
 
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
@@ -399,6 +415,13 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # set, so both interior reverse-charge bindings resolve to zero.
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0"),
+        # No criterio-de-caja rows in this observation set (every observation
+        # carries the default NONE treatment), so the art. 163 decies
+        # informational bindings for casillas 62/63/74/75 resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
 
 
@@ -413,6 +436,95 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-repercutido-super-reducido-cuota" in construct.bindings
     assert "modelo-303-iva-soportado-interiores-cuota" in construct.bindings
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
+
+
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
+def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_casilla_43_stays_manual(
+    revision_id: str,
+) -> None:
+    """The live capital-goods resolver owns a binding slot; the official box remains operator-visible."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    bindings = {binding.id: binding for binding in revision.bindings}
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+
+    binding = bindings[_M303_BIENES_INVERSION_REGULARIZACION_BINDING]
+    assert binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "regularizacion_output": "modelo_303_casilla_43",
+    }
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == ()
+
+    casilla_43 = casillas[_M303_BIENES_INVERSION_REGULARIZACION_CASILLA]
+    assert casilla_43.input_kind is InputKind.MANUAL
+    assert casilla_43.binding is None
+
+
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
+def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44_stays_manual(
+    revision_id: str,
+) -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    casilla = {item.id: item for item in revision.casillas}[_M303_PRORRATA_REGULARIZACION_CASILLA]
+    binding = {item.id: item for item in revision.bindings}[_M303_PRORRATA_REGULARIZACION_BINDING]
+
+    assert casilla.input_kind is InputKind.MANUAL
+    assert casilla.binding is None
+    assert binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+    assert binding_source_modelo(binding) == "303"
+    assert binding_source_casilla_ids(binding) == _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS
+    assert selector_as_dict(binding) == {
+        "source_modelo": "303",
+        "source_casilla_ids": _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
+        "source_periods": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS,
+        "regularizacion_output": "modelo_303_casilla_44",
+    }
+    assert binding_aggregation_op(binding) is BindingAggregationOp.SUM
+    assert {"ley-37-1992:art-104", "ley-37-1992:art-105"}.issubset(binding.legal_refs)
+    assert {"aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"}.issubset(binding.source_refs)
+    citations_by_source = {citation.source_ref: citation for citation in binding.source_citations}
+    assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
+
+
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
+def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_id: str) -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    construct = next(item for item in revision.constructs if item.id == "modelo-303-iva-autoliquidacion")
+
+    assert _M303_PRORRATA_REGULARIZACION_CASILLA in construct.casilla_ids
+    assert _M303_PRORRATA_REGULARIZACION_BINDING in construct.bindings
+    assert "ley-37-1992:art-105" in construct.legal_refs
+
+
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
+def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions[revision_id]
+    refs_by_formula_id = {formula.id: set(expression_casilla_refs(formula.expression)) for formula in revision.formulas}
+
+    assert all(formula.target_casilla_id != _M303_PRORRATA_REGULARIZACION_CASILLA for formula in revision.formulas)
+    assert all(
+        formula.target_casilla_id != _M303_BIENES_INVERSION_REGULARIZACION_CASILLA for formula in revision.formulas
+    )
+
+    cuota_deducible_total = next(
+        formula for formula in revision.formulas if formula.target_casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
+    )
+    refs = set(expression_casilla_refs(cuota_deducible_total.expression))
+    assert _M303_BIENES_INVERSION_REGULARIZACION_CASILLA in refs
+    assert _M303_PRORRATA_REGULARIZACION_CASILLA in refs
+    assert refs_by_formula_id["modelo-303-iva-resultado-regimen-general"] == {
+        _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+        _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    }
+
+    if revision_id == "2023-y-siguientes":
+        projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")
+        assert projection.expression.casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
 
 
 def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> None:
@@ -559,6 +671,12 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         # No autoconsumo promotor in this period; zero disables the formula path.
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
     bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -713,6 +831,12 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
     bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -770,6 +894,12 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
 
     def _run(base: Decimal) -> Decimal:
@@ -838,6 +968,12 @@ def test_modelo_303_prorrata_defaults_to_100_when_no_volume_data() -> None:
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0"),
+        # No criterio-de-caja operations in this fixture, so the art. 163
+        # decies informational bindings (casillas 62/63/74/75) resolve to zero.
+        "modelo-303-criterio-caja-entregas-art75-base": Decimal("0"),
+        "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
+        "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
     bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, zero_bindings)
     result = calculate_registry_snapshot(

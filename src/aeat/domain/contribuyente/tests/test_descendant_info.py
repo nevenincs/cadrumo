@@ -41,6 +41,63 @@ _MINIMO_3 = Decimal("4000")
 _MINIMO_4PLUS = Decimal("4500")
 _MENOR_TRES = Decimal("2800")
 
+_ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...] = (
+    (
+        "one-descendant-born-2023-jan-15",
+        (DescendantInfo(birth_date=date(2023, 1, 15)),),
+        Decimal("5200"),
+    ),
+    (
+        "two-descendants-both-born-pre-2024",
+        (DescendantInfo(birth_date=date(2018, 5, 1)), DescendantInfo(birth_date=date(2020, 8, 10))),
+        _MINIMO_1 + _MINIMO_2,
+    ),
+    (
+        "ines-shape-adopted-2024-05-12",
+        (DescendantInfo(birth_date=date(2022, 3, 1), adoption_date=date(2024, 5, 12)),),
+        Decimal("5200"),
+    ),
+    (
+        "late-year-birth-full-annual-amount",
+        (DescendantInfo(birth_date=date(2024, 7, 1)),),
+        _MINIMO_1 + _MENOR_TRES,
+    ),
+    (
+        "birth-order-ranks-by-birth-date",
+        (DescendantInfo(birth_date=date(2020, 1, 1)), DescendantInfo(birth_date=date(2010, 1, 1))),
+        _MINIMO_1 + _MINIMO_2,
+    ),
+    (
+        "four-descendants-uses-cuarto-y-siguientes",
+        tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014)),
+        _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS,
+    ),
+    (
+        "fifth-descendant-repeats-cuarto-y-siguientes",
+        tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014, 2016)),
+        _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS + _MINIMO_4PLUS,
+    ),
+    ("no-eligible-descendant-is-zero", (), Decimal("0")),
+    (
+        "custodia-compartida-halves-descendant-contribution",
+        (DescendantInfo(birth_date=date(2015, 1, 1), custodia_compartida=True),),
+        _MINIMO_1 * Decimal("0.5"),
+    ),
+    (
+        "custodia-compartida-after-menor-tres-stacking",
+        (DescendantInfo(birth_date=date(2023, 1, 15), custodia_compartida=True),),
+        (_MINIMO_1 + _MENOR_TRES) * Decimal("0.5"),
+    ),
+)
+
+
+def _minimo_descendientes_estatal(profile: RentaFamilyProfile) -> Decimal:
+    return profile.minimo_descendientes_estatal(
+        2024,
+        birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
+        menor_tres_supplement=_MENOR_TRES,
+    )
+
 
 # ---------------------------------------------------------------------------
 # DescendantInfo model validation
@@ -115,16 +172,11 @@ class TestDescendantInfoAgeCalculation:
         d = DescendantInfo(birth_date=date(2024, 6, 15))
         assert d.age_at_year_end(2024) == 0
 
-    @pytest.mark.parametrize(
-        ("birth_date", "expected"),
-        (
-            pytest.param(date(2000, 1, 1), True, id="age-24"),
-            pytest.param(date(1999, 1, 1), False, id="age-25"),
-        ),
-    )
-    def test_is_eligible_ordinary_age_boundary(self, birth_date: date, expected: bool) -> None:
-        d = DescendantInfo(birth_date=birth_date)
-        assert d.is_eligible_ordinary(2024) is expected
+    def test_is_eligible_ordinary_age_boundary(self) -> None:
+        cases = ((date(2000, 1, 1), True), (date(1999, 1, 1), False))
+        for birth_date, expected in cases:
+            d = DescendantInfo(birth_date=birth_date)
+            assert d.is_eligible_ordinary(2024) is expected, birth_date
 
     def test_is_eligible_ordinary_over_25_with_discapacidad_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33)
@@ -198,141 +250,15 @@ class TestRentaFamilyProfileDerivedProperties:
 
 
 class TestArt58MinimoDescendientesEstatalOracleCases:
-    def test_oracle_1_descendiente_born_2023_jan_15(self) -> None:
-        """1 descendiente born 2023-01-15 (age 1 at 2024 year-end).
+    def test_oracle_cases(self) -> None:
+        failures: list[str] = []
+        for case_id, descendientes, expected in _ART58_ORACLE_CASES:
+            profile = RentaFamilyProfile(descendientes=descendientes)
+            total = _minimo_descendientes_estatal(profile)
+            if total != expected:
+                failures.append(f"{case_id}: expected {expected}, got {total}")
 
-        Registry amounts: mínimo 1er hijo €2,400 + menor-3-años €2,800 = €5,200.
-        """
-        p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2023, 1, 15)),))
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == Decimal("5200")
-
-    def test_oracle_2_descendientes_both_born_pre_2024(self) -> None:
-        """2 descendientes, both born before 2024, neither menor-3.
-
-        Registry amounts: €2,400 + €2,700 = €5,100 total mínimo estatal.
-        """
-        p = RentaFamilyProfile(
-            descendientes=(
-                DescendantInfo(birth_date=date(2018, 5, 1)),
-                DescendantInfo(birth_date=date(2020, 8, 10)),
-            ),
-        )
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == _MINIMO_1 + _MINIMO_2  # €5,100
-
-    def test_oracle_ines_shape_adopted_2024_05_12(self) -> None:
-        """Inés shape: 1 descendant adopted 2024-05-12 (age 2 at year-end, menor-3 eligible).
-
-        No temporal prorrateo applies (Art. 58.4 grounding resolved: the
-        mechanism does not exist). Registry amounts: mínimo 1er hijo €2,400
-        (full annual figure) + menor-3 €2,800 = €5,200.
-        """
-        p = RentaFamilyProfile(
-            descendientes=(DescendantInfo(birth_date=date(2022, 3, 1), adoption_date=date(2024, 5, 12)),),
-        )
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == Decimal("5200")
-
-    def test_oracle_late_year_birth_gets_full_annual_amount(self) -> None:
-        """Descendant born 2024-07-01 (late in the ejercicio) gets the FULL annual amount.
-
-        Confirms the grounding resolution: Art. 58 declares no
-        within-year birth-date cutoff, so a late-year birth is not halved.
-        Age 0 at year-end is also menor-3 eligible, so the total stacks the
-        1er-hijo tranche with the menor-3 supplement, both at full value.
-        """
-        p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2024, 7, 1)),))
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == _MINIMO_1 + _MENOR_TRES  # full €2,400 + €2,800, neither halved
-
-    def test_oracle_birth_order_ranks_by_birth_date_not_declaration_order(self) -> None:
-        """Ranking is by birth_date ascending, independent of tuple insertion order."""
-        younger = DescendantInfo(birth_date=date(2020, 1, 1))
-        older = DescendantInfo(birth_date=date(2010, 1, 1))
-        # Declared younger-first; the eldest must still be ranked "el primero".
-        p = RentaFamilyProfile(descendientes=(younger, older))
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == _MINIMO_1 + _MINIMO_2
-
-    def test_oracle_four_descendientes_uses_cuarto_y_siguientes_tranche(self) -> None:
-        """4 eligible descendientes: 2.400 + 2.700 + 4.000 + 4.500 = 13.600."""
-        p = RentaFamilyProfile(
-            descendientes=tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014)),
-        )
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS
-
-    def test_oracle_fifth_descendiente_repeats_cuarto_y_siguientes_tranche(self) -> None:
-        """A 5th eligible descendant also draws the "cuarto y siguientes" 4.500 tranche."""
-        p = RentaFamilyProfile(
-            descendientes=tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014, 2016)),
-        )
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS + _MINIMO_4PLUS
-
-    def test_oracle_no_eligible_descendant_is_zero(self) -> None:
-        """No Art. 58.1-eligible descendant (empty profile) -> legally correct zero."""
-        p = RentaFamilyProfile()
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == Decimal("0")
-
-    def test_oracle_custodia_compartida_halves_the_descendants_contribution(self) -> None:
-        """Art. 61.1a prorrata: a custodia-compartida descendant contributes at 50%."""
-        p = RentaFamilyProfile(
-            descendientes=(DescendantInfo(birth_date=date(2015, 1, 1), custodia_compartida=True),),
-        )
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        assert total == _MINIMO_1 * Decimal("0.5")  # €1,200
-
-    def test_oracle_custodia_compartida_applies_after_menor_tres_stacking(self) -> None:
-        """Custodia-compartida halves the STACKED (tranche + menor-3) amount."""
-        p = RentaFamilyProfile(
-            descendientes=(DescendantInfo(birth_date=date(2023, 1, 15), custodia_compartida=True),),
-        )
-        total = p.minimo_descendientes_estatal(
-            2024,
-            birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
-            menor_tres_supplement=_MENOR_TRES,
-        )
-        # (2400 + 2800) * 0.5 = 2600
-        assert total == (_MINIMO_1 + _MENOR_TRES) * Decimal("0.5")
+        assert not failures, "\n".join(failures)
 
     def test_empty_birth_order_amounts_is_rejected(self) -> None:
         p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2015, 1, 1)),))

@@ -1,23 +1,23 @@
 """Year-to-year registry revision diff for one modelo.
 
 Surfaces what changed in the AEAT filing rulebook between two
-:class:`~aeat.domain.calculations.registry.ModeloRevision` instances of the
+:class:`~domain.calculations.registry.ModeloRevision` instances of the
 same modelo: added/removed/renumbered casillas, changed formulas, changed
 ``legal_refs``, changed parameters (rates/thresholds), and added/removed
 bindings.
 
 Revision resolution reuses the same ``period_selector.includes_year`` primitive
-:class:`~aeat.domain.calculations.registry.RegistryQueryService.bindings_for_year`
-already uses (see :mod:`aeat.application.modelo._registry_discovery`): given a
+:meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`
+already uses (see :mod:`~application.modelo._registry_discovery`): given a
 bare filing year, exactly one revision must cover it, or the request is
 refused naming the modelo's declared revisions.
 
 See Also:
-    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`
-        Loads and validates the :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+        Loads and validates the :class:`~domain.calculations.registry.ModeloDefinition`
         this module diffs two revisions from.
-    :class:`aeat.domain.calculations.registry.ModeloRevision`
-        The versioned ruleset compared by :func:`diff_registry_revisions`.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        The versioned ruleset compared by :func:`~application.registry.diff_registry_revisions`.
 """
 
 from __future__ import annotations
@@ -158,7 +158,7 @@ def _revision_for_year(
 ) -> _ModeloRevision:
     """Resolve the one revision covering ``filing_year``.
 
-    Mirrors :meth:`~aeat.domain.calculations.registry.RegistryQueryService.bindings_for_year`:
+    Mirrors :meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`:
     a bare filing year must resolve to exactly one revision via
     ``period_selector.includes_year``, independent of any particular filing
     period. Refuses with the modelo's declared revision ids when no revision
@@ -344,14 +344,14 @@ def diff_registry_revisions(
     """Diff the two registry revisions covering ``from_year`` and ``to_year``.
 
     Each bare filing year resolves to exactly one covering
-    :class:`~aeat.domain.calculations.registry.ModeloRevision` via
+    :class:`~domain.calculations.registry.ModeloRevision` via
     ``period_selector.includes_year`` (the same primitive
-    :class:`~aeat.domain.calculations.registry.RegistryQueryService.bindings_for_year`
+    :meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`
     uses); a year with no covering revision, or with more than one, is refused
     naming the modelo's declared revision ids.
 
     Returns:
-        A :class:`RegistryRevisionDiffReport` enumerating casilla adds,
+        A :class:`~application.registry.RegistryRevisionDiffReport` enumerating casilla adds,
         removes, and continuidad-tracked renumbers; formula, parameter, and
         binding adds/removes/changes; and revision-level ``legal_refs``
         deltas. Diffing a modelo against itself for two years that resolve to

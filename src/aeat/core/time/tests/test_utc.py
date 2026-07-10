@@ -1,4 +1,18 @@
-"""Real-behavior tests for :mod:`aeat.core.time._utc`."""
+"""Real-behavior tests for :mod:`~core.time._utc`.
+
+These cases pin the two explicit UTC policies exported by
+:mod:`~core.time`: :func:`~core.time.coerce_utc_aware` may normalise naive or
+offset-aware datetimes to UTC, while :func:`~core.time.validate_utc_aware`
+refuses naive or non-UTC values with :class:`~core.errors.CoreValidationError`.
+
+See Also:
+    :mod:`~core.time._utc`
+        Canonical UTC helper implementation under test.
+    :mod:`~core.time._clock`
+        Adjacent wall-clock seam that produces UTC-aware ``now`` values.
+    :class:`~datetime.datetime`
+        Runtime value type whose ``tzinfo`` and offset semantics are exercised.
+"""
 
 from __future__ import annotations
 
@@ -20,30 +34,42 @@ _PLUS2_AWARE = datetime(2024, 6, 15, 14, 0, 0, tzinfo=_TZ_PLUS2)
 _MINUS5_AWARE = datetime(2024, 6, 15, 7, 0, 0, tzinfo=_TZ_MINUS5)
 
 
-def test_utc_helpers_coerce_or_validate_utc_aware_datetime_inputs() -> None:
-    cases = (
-        ("naive", _NAIVE, _UTC_AWARE),
-        ("utc-aware", _UTC_AWARE, _UTC_AWARE),
-        ("plus-two", _PLUS2_AWARE, _UTC_AWARE),
-        ("minus-five", _MINUS5_AWARE, _UTC_AWARE),
-    )
+@pytest.mark.parametrize(
+    ("value", "expected_utc"),
+    (
+        pytest.param(_NAIVE, _UTC_AWARE, id="naive"),
+        pytest.param(_UTC_AWARE, _UTC_AWARE, id="utc-aware"),
+        pytest.param(_PLUS2_AWARE, _UTC_AWARE, id="plus-two"),
+        pytest.param(_MINUS5_AWARE, _UTC_AWARE, id="minus-five"),
+    ),
+)
+def test_coerce_utc_aware_datetime_inputs(value: datetime, expected_utc: datetime) -> None:
+    result = coerce_utc_aware(value)
 
-    for label, value, expected_utc in cases:
-        result = coerce_utc_aware(value)
-        assert isinstance(result, datetime), label
-        assert result == expected_utc, label
-        assert result.tzinfo is UTC, label
+    assert isinstance(result, datetime)
+    assert result == expected_utc
+    assert result.tzinfo is UTC
 
+
+def test_validate_utc_aware_accepts_utc_datetime() -> None:
     accepted = validate_utc_aware(_UTC_AWARE)
+
     assert accepted is _UTC_AWARE
 
-    invalid_cases = (
-        ("naive", _NAIVE, "timezone-aware"),
-        ("plus-two", _PLUS2_AWARE, "UTC"),
-        ("minus-five", _MINUS5_AWARE, "UTC"),
-    )
 
-    for label, value, expected_match in invalid_cases:
-        with pytest.raises(CoreValidationError, match=expected_match) as exc_info:
-            validate_utc_aware(value)
-        assert isinstance(exc_info.value, ValueError), label
+@pytest.mark.parametrize(
+    ("value", "expected_match"),
+    (
+        pytest.param(_NAIVE, "timezone-aware", id="naive"),
+        pytest.param(_PLUS2_AWARE, "UTC", id="plus-two"),
+        pytest.param(_MINUS5_AWARE, "UTC", id="minus-five"),
+    ),
+)
+def test_validate_utc_aware_rejects_non_utc_or_naive(
+    value: datetime,
+    expected_match: str,
+) -> None:
+    with pytest.raises(CoreValidationError, match=expected_match) as exc_info:
+        validate_utc_aware(value)
+
+    assert isinstance(exc_info.value, ValueError)

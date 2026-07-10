@@ -12,16 +12,23 @@ enforces.
 Like ``_corpus_tools`` / ``_harness_tools``, this module is SDK-independent pure
 functions over typed models; :func:`build_terminology_search_tool` lazily adapts
 onto the MCP SDK's ``Tool`` type so the module imports (and the server refuses
-gracefully) without the ``aeat[agent]`` extra. The search itself is owned by the
+gracefully) without the ``aeat-cli[agent]`` extra. The search itself is owned by the
 application service (:func:`~application.corpus_search.search_terminology`),
 consumed through the package facade per ``service-imports-via-top-level-reexports``.
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.corpus_search import TerminologyHit, search_terminology
+
+if TYPE_CHECKING:
+    # Typing-only: the MCP SDK is an optional runtime dependency (``aeat-cli[agent]``);
+    # the real import stays deferred to inside the function body below.
+    from mcp.types import Tool
 
 #: The terminology tool's MCP name (the ``terminology.search`` verb).
 TERMINOLOGY_SEARCH_TOOL = "aeat_terminology_search"
@@ -97,14 +104,14 @@ def render_terminology_search_text(payload: TerminologySearchPayload) -> str:
     return "\n".join(lines)
 
 
-def build_terminology_search_tool() -> object:
+def build_terminology_search_tool() -> Tool:
     """Build the SDK ``Tool`` for the terminology search tool.
 
     Lazily imports the SDK types so the module imports without the
-    ``aeat[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``.
+    ``aeat-cli[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``.
 
     Returns:
-        The ``aeat_terminology_search`` :class:`mcp.types.Tool` object.
+        The ``aeat_terminology_search`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 

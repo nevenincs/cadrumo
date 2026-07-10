@@ -34,13 +34,14 @@ from ...application.ledger import (
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
 )
-from ...core import resolve_active_bucket_id
+from ...core import Art104TresExclusion, ProrrataRegisterRegime, resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.iva import (
     EUMemberState,
+    InputClassification,
     IvaCategory,
 )
 from ...domain.transactions import (
@@ -104,6 +105,7 @@ from ._ledger_support import (
     _validate_business_pct_range,
     _validate_category_id,
 )
+from ._prorrata_register_cli import register_prorrata_register_commands
 from ._schemas import OutputSchema
 
 _log = get_logger(__name__)
@@ -198,6 +200,98 @@ def _emit_update_result(
     )
 
 
+def _prorrata_especial_inert_notice(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    input_classification: InputClassification | None,
+    sector_id: str | None,
+) -> Notice | None:
+    """Warn when --input-classification is set but no especial election applies.
+
+    LIVA art. 106 per-input routing fires only when the ``(ejercicio, sector)``
+    prorrata register entry regime is especial. Absent that election the
+    classification is inert: the input deducts under the general / whole-entity
+    percentage. Surface a non-blocking advisory so the operator is not falsely
+    signalled that art. 106 routing applies, rather than silently ignoring the
+    flag (no-silent-under-declaration).
+    """
+    if input_classification is None:
+        return None
+    from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ...application.prorrata_register import ProrrataRegisterService
+
+    service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
+    entry = service.get(ejercicio, sector_id=sector_id)
+    if entry is not None and entry.regime is ProrrataRegisterRegime.ESPECIAL:
+        return None
+    message = tr(
+        "cli.ledger.add.input_classification_inert",
+        ejercicio=ejercicio,
+        default=(
+            f"--input-classification is inert for ejercicio {ejercicio}: no prorrata especial "
+            f"election applies, so the input deducts under the general percentage. Classifying every "
+            f"input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial "
+            f"check on a general bucket. Run 'app ledger prorrata elect-especial --ejercicio {ejercicio}' "
+            f"to route it by LIVA art. 106."
+        ),
+    )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="ledger.add.input_classification_inert",
+        message=message,
+        context={
+            "ejercicio": str(ejercicio),
+            "input_classification": input_classification.value,
+            "sector_id": sector_id or "",
+        },
+    )
+
+
+def _prorrata_sector_unmatched_notice(
+    *,
+    bucket_id: str,
+    sector_id: str | None,
+) -> Notice | None:
+    """Warn when --sector names a sector absent from the declared partition.
+
+    Sectores diferenciados (LIVA arts. 9.1.c / 101) are operator-declared: the
+    per-sector apportionment routing keys on ``sector_id`` and applies the
+    sector's own percentage only when the tag matches a declared
+    :class:`SectorDefinition`. An unmatched tag — a typo, or a sector not yet
+    declared — is not rejected (declare-order is intentionally free, so a
+    not-yet-declared sector is legitimate), but it falls through to the
+    common-use / whole-entity apportionment at aggregation. Surface a
+    non-blocking advisory naming the sector and the ``declare-sector`` route,
+    so the operator is not silently deducting at the common percentage under a
+    mistyped tag (no-silent-under-declaration), rather than accepting the tag
+    without any signal.
+    """
+    if sector_id is None:
+        return None
+    from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ...application.prorrata_register import ProrrataRegisterService
+
+    service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
+    if service.list_all().sector_definition_for(sector_id) is not None:
+        return None
+    message = tr(
+        "cli.ledger.add.sector_unmatched",
+        sector_id=sector_id,
+        default=(
+            f"--sector '{sector_id}' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), "
+            f"so this input deducts under the common-use percentage rather than the sector's own. Run "
+            f"'app ledger prorrata declare-sector --sector-id {sector_id} ...' to route it, or correct the tag."
+        ),
+    )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="ledger.add.sector_unmatched",
+        message=message,
+        context={"sector_id": sector_id},
+    )
+
+
 @app.command("add", help=tr("cli.ledger.add.help"))
 def ledger_add(
     ctx: typer.Context,
@@ -235,6 +329,27 @@ def ledger_add(
         None,
         "--prorrata-reference",
         help=tr("cli.ledger.add.prorrata_reference_help"),
+    ),
+    art_104_tres_exclusion: Art104TresExclusion | None = typer.Option(
+        None,
+        "--art-104-tres-exclusion",
+        help=tr("cli.ledger.add.art_104_tres_exclusion_help"),
+    ),
+    input_classification: InputClassification | None = typer.Option(
+        None,
+        "--input-classification",
+        help=tr("cli.ledger.add.input_classification_help"),
+    ),
+    prorrata_sector: str | None = typer.Option(
+        None,
+        "--sector",
+        help=tr(
+            "cli.ledger.add.prorrata_sector_help",
+            default=(
+                "Differentiated-sector id (LIVA arts. 9.1.c / 101) this input belongs to; "
+                "must match a sector declared via 'app ledger prorrata declare-sector'."
+            ),
+        ),
     ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
@@ -316,6 +431,9 @@ def ledger_add(
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
+            art_104_tres_exclusion=art_104_tres_exclusion,
+            input_classification=input_classification,
+            prorrata_sector_id=prorrata_sector,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             attachment_ids=tuple(attachment_ids),
             notes=notes,
@@ -383,6 +501,22 @@ def ledger_add(
             )
         )
         noop_lines.append(noop_message)
+    especial_notice = _prorrata_especial_inert_notice(
+        bucket_id=result.ref.bucket_id,
+        ejercicio=command.booked_date.year,
+        input_classification=command.input_classification,
+        sector_id=command.prorrata_sector_id,
+    )
+    if especial_notice is not None:
+        notices.append(especial_notice)
+        noop_lines.append(especial_notice.message)
+    sector_notice = _prorrata_sector_unmatched_notice(
+        bucket_id=result.ref.bucket_id,
+        sector_id=command.prorrata_sector_id,
+    )
+    if sector_notice is not None:
+        notices.append(sector_notice)
+        noop_lines.append(sector_notice.message)
     _emit_envelope(
         ctx,
         command="ledger.add",
@@ -941,6 +1075,9 @@ register_inventory_commands(app)
 
 
 register_bienes_inversion_commands(app)
+
+
+register_prorrata_register_commands(app)
 
 
 register_evidence_commands(app)

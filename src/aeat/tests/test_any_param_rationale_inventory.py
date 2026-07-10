@@ -28,6 +28,16 @@ Exclusions
 - Files whose name starts with ``test_`` or ends with ``_test.py``.
 - Lambda nodes (no function-level marker convention applies; the body is
   usually on one line and the annotation is almost never ``Any``).
+
+See Also:
+    :func:`~tests._inventory.production_ast_items`
+        Shared AST inventory used to scan production functions for parameter
+        ``Any`` annotations.
+    :mod:`~tests.test_type_ignore_rationale_inventory`
+        Companion suppression ratchet that mirrors this marker-enrollment
+        pattern for ``# type: ignore`` sites.
+    :mod:`~tests.test_cast_rationale_inventory`
+        Typed-boundary escape-hatch guard for runtime ``cast()`` calls.
 """
 
 from __future__ import annotations

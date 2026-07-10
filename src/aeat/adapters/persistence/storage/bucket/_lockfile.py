@@ -4,7 +4,7 @@ Each bucket carries a single PID-stamped lockfile at ``<bucket-dir>/.lock``
 created via ``os.open`` with ``O_CREAT | O_EXCL | O_WRONLY``; the
 ``O_EXCL`` flag is atomic on every POSIX kernel and on Windows NTFS, so a
 second-process unlock against a held bucket fails fast with
-:class:`aeat.adapters.persistence.storage.bucket.BucketBusyError` per
+:class:`adapters.persistence.storage.bucket.BucketBusyError` per
 the substrate locking contract.
 
 The lockfile carries the holder's PID. A stale lock (PID is no longer a

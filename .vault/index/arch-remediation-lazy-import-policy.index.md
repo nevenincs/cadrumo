@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-lazy-import-policy'
-date: '2026-07-02'
-modified: '2026-07-02'
+date: '2026-07-06'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P01-S01]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P01-S02]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P03-S06]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-adr]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-plan]]'
+  - '[[2026-07-06-arch-remediation-lazy-import-policy-research]]'
 ---
 
 # `arch-remediation-lazy-import-policy` feature index
@@ -38,3 +39,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-lazy-import
 ### plan
 
 - `2026-07-02-arch-remediation-lazy-import-policy-plan` - `arch-remediation-lazy-import-policy` plan
+
+### research
+
+- `2026-07-06-arch-remediation-lazy-import-policy-research` - `arch-remediation-lazy-import-policy` research: `program-track decision research bridge`

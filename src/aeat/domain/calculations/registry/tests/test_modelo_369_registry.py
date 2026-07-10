@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import warnings
 from datetime import date
+from functools import lru_cache
 
 import pytest
 
@@ -17,12 +18,11 @@ from .. import (
     OssIossLedgerObservation,
     RegistryCatalogues,
     RegistryValidator,
-    build_snapshot,
     extract_record_design,
     resolve_ledger_oss_aggregation_binding_values,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -70,6 +70,89 @@ _M369_SCHEME_LEGAL_REFS_BY_REVISION = {
     "esquema-union": _M369_UNION_SCHEME_LEGAL_REFS,
     "esquema-importacion": _M369_IMPORTACION_SCHEME_LEGAL_REFS,
 }
+_M369_SCHEME_CASES = (
+    ("EXT-1T", "esquema-exterior", _M369_EXTERIOR_SCHEME_LEGAL_REFS),
+    ("1T", "esquema-union", _M369_UNION_SCHEME_LEGAL_REFS),
+    ("01", "esquema-importacion", _M369_IMPORTACION_SCHEME_LEGAL_REFS),
+)
+_M369_DEADLINE_WINDOW_CASES = (
+    (
+        "esquema-exterior",
+        "modelo-369-exterior-2025-ext-1t",
+        Period.from_year_and_code(2025, "EXT-1T"),
+        date(2025, 4, 1),
+        date(2025, 4, 30),
+    ),
+    (
+        "esquema-exterior",
+        "modelo-369-exterior-2025-ext-4t",
+        Period.from_year_and_code(2025, "EXT-4T"),
+        date(2026, 1, 1),
+        date(2026, 1, 31),
+    ),
+    (
+        "esquema-union",
+        "modelo-369-union-2025-1t",
+        Period.from_year_and_code(2025, "1T"),
+        date(2025, 4, 1),
+        date(2025, 4, 30),
+    ),
+    (
+        "esquema-union",
+        "modelo-369-union-2025-4t",
+        Period.from_year_and_code(2025, "4T"),
+        date(2026, 1, 1),
+        date(2026, 1, 31),
+    ),
+    (
+        "esquema-importacion",
+        "modelo-369-importacion-2025-01",
+        Period.from_year_and_code(2025, "01"),
+        date(2025, 2, 1),
+        date(2025, 2, 28),
+    ),
+    (
+        "esquema-importacion",
+        "modelo-369-importacion-2025-12",
+        Period.from_year_and_code(2025, "12"),
+        date(2026, 1, 1),
+        date(2026, 1, 31),
+    ),
+    (
+        "esquema-importacion",
+        "modelo-369-importacion-2026-01",
+        Period.from_year_and_code(2026, "01"),
+        date(2026, 2, 1),
+        date(2026, 2, 28),
+    ),
+)
+_M369_RESULT_CASILLA_CASES = (
+    (
+        "esquema-exterior",
+        (_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA,),
+        _M369_EXTERIOR_CUOTA_TOTAL_CASILLA,
+        "modelo-369-exterior-cuota-total",
+        "modelo-369-exterior-calculation",
+    ),
+    (
+        "esquema-union",
+        (
+            _M369_UNION_DE_SERVICES_CUOTA_CASILLA,
+            _M369_UNION_FR_SERVICES_CUOTA_CASILLA,
+            _M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA,
+        ),
+        _M369_UNION_CUOTA_TOTAL_CASILLA,
+        "modelo-369-union-cuota-total",
+        "modelo-369-union-calculation",
+    ),
+    (
+        "esquema-importacion",
+        (_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA,),
+        _M369_IMPORTACION_CUOTA_TOTAL_CASILLA,
+        "modelo-369-importacion-cuota-total",
+        "modelo-369-importacion-calculation",
+    ),
+)
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
@@ -86,6 +169,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 )
 
 
+@lru_cache
 def _load_modelo_369() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("369")
 
@@ -146,62 +230,23 @@ def test_modelo_369_revisions_split_exterior_union_importacion_periods() -> None
     )
 
 
-@pytest.mark.parametrize(
-    ("period", "expected_revision"),
-    [
-        ("EXT-1T", "esquema-exterior"),
-        ("1T", "esquema-union"),
-        ("01", "esquema-importacion"),
-    ],
-)
-def test_modelo_369_snapshot_selects_scheme_by_period(period: str, expected_revision: str) -> None:
-    modelo, catalogues = _load_modelo_369()
+def test_modelo_369_snapshots_select_scheme_and_carry_authority() -> None:
+    _, catalogues = _load_modelo_369()
 
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period=period,
-    )
+    for period, revision_id, expected_legal_refs in _M369_SCHEME_CASES:
+        snapshot = _committed_snapshot("369", 2025, period)
 
-    assert snapshot.revision.id == expected_revision
-
-
-@pytest.mark.parametrize(
-    ("period", "revision_id", "expected_legal_refs"),
-    [
-        ("EXT-1T", "esquema-exterior", _M369_EXTERIOR_SCHEME_LEGAL_REFS),
-        ("1T", "esquema-union", _M369_UNION_SCHEME_LEGAL_REFS),
-        ("01", "esquema-importacion", _M369_IMPORTACION_SCHEME_LEGAL_REFS),
-    ],
-)
-def test_modelo_369_snapshots_carry_scheme_authority(
-    period: str,
-    revision_id: str,
-    expected_legal_refs: tuple[LegalRefId, ...],
-) -> None:
-    modelo, catalogues = _load_modelo_369()
-
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period=period,
-        revision_id=revision_id,
-    )
-
-    assert "orden-hac-610-2021:art-1" in snapshot.legal
-    assert "orden-hac-610-2021:art-2" in snapshot.legal
-    assert "orden-hac-610-2021:art-3" in snapshot.legal
-    for legal_ref in expected_legal_refs:
-        assert legal_ref in snapshot.legal
-    assert "aeat-dr-369-2021" in snapshot.sources
-    assert "aeat-modelo-369-procedure" in snapshot.sources
-    assert "boe-modelo-369-2021-form" in snapshot.sources
-    assert catalogues.sources["aeat-modelo-369-procedure"].evidence_tier == "official_source_guidance"
-    assert catalogues.sources["boe-modelo-369-2021-form"].evidence_tier == "layout_authority"
+        assert snapshot.revision.id == revision_id, period
+        assert "orden-hac-610-2021:art-1" in snapshot.legal
+        assert "orden-hac-610-2021:art-2" in snapshot.legal
+        assert "orden-hac-610-2021:art-3" in snapshot.legal
+        for legal_ref in expected_legal_refs:
+            assert legal_ref in snapshot.legal, revision_id
+        assert "aeat-dr-369-2021" in snapshot.sources
+        assert "aeat-modelo-369-procedure" in snapshot.sources
+        assert "boe-modelo-369-2021-form" in snapshot.sources
+        assert catalogues.sources["aeat-modelo-369-procedure"].evidence_tier == "official_source_guidance"
+        assert catalogues.sources["boe-modelo-369-2021-form"].evidence_tier == "layout_authority"
 
 
 def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
@@ -227,18 +272,7 @@ def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
         assert "orden-hac-610-2021:art-3" in schedule.legal_refs
 
 
-@pytest.mark.parametrize(
-    ("period", "revision_id"),
-    [
-        ("EXT-1T", "esquema-exterior"),
-        ("1T", "esquema-union"),
-        ("01", "esquema-importacion"),
-    ],
-)
-def test_modelo_369_filing_schedule_explains_b2c_scope_not_b2b(
-    period: str,
-    revision_id: str,
-) -> None:
+def test_modelo_369_filing_schedule_explains_b2c_scope_not_b2b() -> None:
     """Every Esquema's filing-schedule condition must disambiguate that the OSS/IOSS
     ventanilla unica covers B2C operations to final consumers (destinatarios que no
     tengan la condicion de sujetos pasivos), never B2B operations between taxable
@@ -249,105 +283,38 @@ def test_modelo_369_filing_schedule_explains_b2c_scope_not_b2b(
     163 octiesdecies-octovicies; HAC/610/2021). The note is asserted on the built
     snapshot projection, the surface an operator-facing consumer reads.
     """
-    modelo, catalogues = _load_modelo_369()
+    for period, revision_id, _expected_legal_refs in _M369_SCHEME_CASES:
+        snapshot = _committed_snapshot("369", 2025, period)
 
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period=period,
-        revision_id=revision_id,
-    )
+        schedules = tuple(snapshot.filing_schedules.values())
+        assert len(schedules) == 1
+        conditions = schedules[0].profile_conditions
+        assert conditions, f"{revision_id} filing schedule must declare a profile condition"
+        explanation = conditions[0].explanation.lower()
 
-    schedules = tuple(snapshot.filing_schedules.values())
-    assert len(schedules) == 1
-    conditions = schedules[0].profile_conditions
-    assert conditions, f"{revision_id} filing schedule must declare a profile condition"
-    explanation = conditions[0].explanation.lower()
-
-    assert "b2c" in explanation
-    assert "b2b" in explanation
-    # The B2C scope is grounded in the "no sujetos pasivos" / final-consumer wording.
-    assert "no tengan la condicion de sujetos pasivos" in explanation
-    assert "consumidores finales" in explanation
-    # The Union scheme additionally routes B2B intra-community flows to 303/349.
-    if revision_id == "esquema-union":
-        assert "inversion del sujeto pasivo" in explanation
-        assert "303" in explanation
-        assert "349" in explanation
+        assert "b2c" in explanation
+        assert "b2b" in explanation
+        # The B2C scope is grounded in the "no sujetos pasivos" / final-consumer wording.
+        assert "no tengan la condicion de sujetos pasivos" in explanation
+        assert "consumidores finales" in explanation
+        # The Union scheme additionally routes B2B intra-community flows to 303/349.
+        if revision_id == "esquema-union":
+            assert "inversion del sujeto pasivo" in explanation
+            assert "303" in explanation
+            assert "349" in explanation
 
 
-@pytest.mark.parametrize(
-    ("revision_id", "window_id", "period", "opens_on", "closes_on"),
-    [
-        (
-            "esquema-exterior",
-            "modelo-369-exterior-2025-ext-1t",
-            Period.from_year_and_code(2025, "EXT-1T"),
-            date(2025, 4, 1),
-            date(2025, 4, 30),
-        ),
-        (
-            "esquema-exterior",
-            "modelo-369-exterior-2025-ext-4t",
-            Period.from_year_and_code(2025, "EXT-4T"),
-            date(2026, 1, 1),
-            date(2026, 1, 31),
-        ),
-        (
-            "esquema-union",
-            "modelo-369-union-2025-1t",
-            Period.from_year_and_code(2025, "1T"),
-            date(2025, 4, 1),
-            date(2025, 4, 30),
-        ),
-        (
-            "esquema-union",
-            "modelo-369-union-2025-4t",
-            Period.from_year_and_code(2025, "4T"),
-            date(2026, 1, 1),
-            date(2026, 1, 31),
-        ),
-        (
-            "esquema-importacion",
-            "modelo-369-importacion-2025-01",
-            Period.from_year_and_code(2025, "01"),
-            date(2025, 2, 1),
-            date(2025, 2, 28),
-        ),
-        (
-            "esquema-importacion",
-            "modelo-369-importacion-2025-12",
-            Period.from_year_and_code(2025, "12"),
-            date(2026, 1, 1),
-            date(2026, 1, 31),
-        ),
-        (
-            "esquema-importacion",
-            "modelo-369-importacion-2026-01",
-            Period.from_year_and_code(2026, "01"),
-            date(2026, 2, 1),
-            date(2026, 2, 28),
-        ),
-    ],
-)
-def test_modelo_369_deadline_windows_close_last_day_next_natural_month(
-    revision_id: str,
-    window_id: str,
-    period: Period,
-    opens_on: date,
-    closes_on: date,
-) -> None:
+def test_modelo_369_deadline_windows_close_last_day_next_natural_month() -> None:
     modelo, _ = _load_modelo_369()
-    revision = modelo.revisions[revision_id]
-    windows = {w.id: w for w in revision.deadline_windows}
+    for revision_id, window_id, period, opens_on, closes_on in _M369_DEADLINE_WINDOW_CASES:
+        revision = modelo.revisions[revision_id]
+        windows = {w.id: w for w in revision.deadline_windows}
 
-    window = windows[window_id]
-    assert window.period == period
-    assert window.opens_on == opens_on
-    assert window.closes_on == closes_on
-    assert "orden-hac-610-2021:art-3" in window.legal_refs
+        window = windows[window_id]
+        assert window.period == period, window_id
+        assert window.opens_on == opens_on, window_id
+        assert window.closes_on == closes_on, window_id
+        assert "orden-hac-610-2021:art-3" in window.legal_refs
 
 
 def test_modelo_369_live_cross_references_are_read_only() -> None:
@@ -592,54 +559,19 @@ def test_modelo_369_esquema_union_constructs_link_oss_bindings() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("revision_id", "bound_casilla_ids", "total_casilla_id", "formula_id", "app_link_id"),
-    [
-        (
-            "esquema-exterior",
-            (_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA,),
-            _M369_EXTERIOR_CUOTA_TOTAL_CASILLA,
-            "modelo-369-exterior-cuota-total",
-            "modelo-369-exterior-calculation",
-        ),
-        (
-            "esquema-union",
-            (
-                _M369_UNION_DE_SERVICES_CUOTA_CASILLA,
-                _M369_UNION_FR_SERVICES_CUOTA_CASILLA,
-                _M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA,
-            ),
-            _M369_UNION_CUOTA_TOTAL_CASILLA,
-            "modelo-369-union-cuota-total",
-            "modelo-369-union-calculation",
-        ),
-        (
-            "esquema-importacion",
-            (_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA,),
-            _M369_IMPORTACION_CUOTA_TOTAL_CASILLA,
-            "modelo-369-importacion-cuota-total",
-            "modelo-369-importacion-calculation",
-        ),
-    ],
-)
-def test_modelo_369_per_esquema_result_casillas_present(
-    revision_id: str,
-    bound_casilla_ids: tuple[CasillaId, ...],
-    total_casilla_id: CasillaId,
-    formula_id: str,
-    app_link_id: str,
-) -> None:
+def test_modelo_369_per_esquema_result_casillas_present() -> None:
     modelo, _ = _load_modelo_369()
-    revision = modelo.revisions[revision_id]
-    casilla_ids = {c.id for c in revision.casillas}
-    formula_ids = {f.id for f in revision.formulas}
-    app_link_ids = {link.id for link in revision.application_links}
+    for revision_id, bound_casilla_ids, total_casilla_id, formula_id, app_link_id in _M369_RESULT_CASILLA_CASES:
+        revision = modelo.revisions[revision_id]
+        casilla_ids = {c.id for c in revision.casillas}
+        formula_ids = {f.id for f in revision.formulas}
+        app_link_ids = {link.id for link in revision.application_links}
 
-    for bound_id in bound_casilla_ids:
-        assert bound_id in casilla_ids
-    assert total_casilla_id in casilla_ids
-    assert formula_id in formula_ids
-    assert app_link_id in app_link_ids
+        for bound_id in bound_casilla_ids:
+            assert bound_id in casilla_ids, revision_id
+        assert total_casilla_id in casilla_ids, revision_id
+        assert formula_id in formula_ids, revision_id
+        assert app_link_id in app_link_ids, revision_id
 
 
 def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
@@ -655,12 +587,11 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         TransactionKind,
     )
     from .. import (
-        build_snapshot,
         calculate_registry_snapshot,
         resolve_bound_inputs_by_casilla_id,
     )
 
-    modelo, catalogues = _load_modelo_369()
+    modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
 
     observations = [
@@ -700,14 +631,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     ]
 
     binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="1T",
-        revision_id="esquema-union",
-    )
+    snapshot = _committed_snapshot("369", 2025, "1T")
     casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
@@ -745,12 +669,11 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         TransactionKind,
     )
     from .. import (
-        build_snapshot,
         calculate_registry_snapshot,
         resolve_bound_inputs_by_casilla_id,
     )
 
-    modelo, catalogues = _load_modelo_369()
+    modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]
 
     observations = [
@@ -779,14 +702,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
     ]
 
     binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="01",
-        revision_id="esquema-importacion",
-    )
+    snapshot = _committed_snapshot("369", 2025, "01")
     casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,

@@ -1,12 +1,12 @@
 """Operator-facing entry surface for Modelo 100 ``renta_family.descendiente.*`` facts.
 
 The Art. 58/61 LIRPF minimo por descendientes engine
-(:meth:`~aeat.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`,
+(:meth:`~domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`,
 consumed at calculate time by
-:func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`) reads the
+:func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`) reads the
 active profile's ``renta_family.descendiente.{n}.*`` facts. Before this module, no
-production CLI surface wrote those facts: :func:`~aeat.domain.contribuyente.parse_descendiente_flag`
-and :func:`~aeat.domain.contribuyente.descendant_facts_from_list` had zero non-test
+production CLI surface wrote those facts: :func:`~domain.contribuyente.parse_descendiente_flag`
+and :func:`~domain.contribuyente.descendant_facts_from_list` had zero non-test
 callers, so casillas 0513/0514 computed to zero for every filer with children. This
 module closes that gap with three verbs mounted under ``config profile descendiente``:
 ``add`` (append one or more descendants), ``list`` (show the declared descendants), and
@@ -17,12 +17,12 @@ patch of only the changed index would leave stale higher-index facts behind afte
 ``remove`` shrinks the set. ``descendant_list_from_facts`` reconstructs the current set,
 the verb mutates the in-memory tuple, and ``descendant_facts_from_list`` re-derives the
 canonical fact rows, which are then upserted (or cleared with ``value=None`` for indices
-no longer present) via :func:`~aeat.application.user_profile.set_active_fields`.
+no longer present) via :func:`~application.user_profile.set_active_fields`.
 
 See Also:
-    :mod:`~aeat.application.modelo._profile_binding`:
+    :mod:`~application.modelo._profile_binding`:
         ``inject_derived_minimo_descendientes_facts`` reads the facts this module writes.
-    :func:`~aeat.domain.contribuyente.parse_descendiente_flag`:
+    :func:`~domain.contribuyente.parse_descendiente_flag`:
         Parses the ``--descendiente`` flag's ``KEY=VALUE,...`` grammar.
 """
 
@@ -178,11 +178,11 @@ def descendiente_add(
     """Append one or more ``--descendiente`` rows to the active profile.
 
     Each ``--descendiente`` flag is parsed by
-    :func:`~aeat.domain.contribuyente.parse_descendiente_flag`; a malformed flag
+    :func:`~domain.contribuyente.parse_descendiente_flag`; a malformed flag
     refuses instructively before any profile write. The new rows are appended after
     the existing declared descendants and the full set is rewritten so the
     Art. 58/61 LIRPF minimo por descendientes engine
-    (:func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`) has
+    (:func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`) has
     real facts to compute from on the next M100 calculate.
     """
     _activate_subcommand_output_language(ctx, output_language)

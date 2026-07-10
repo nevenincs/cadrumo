@@ -4,8 +4,12 @@
 
 * ``reconcile pull <work-unit>`` fetches the justificante from AEAT (the
   ``pull`` standard) and reconciles against it in one flow.
-* ``reconcile file <work-unit> --file PATH`` reconciles against a local
-  justificante PDF (the ``--file`` standard); local-only, never contacts AEAT.
+* ``reconcile file <work-unit> --file PATH [--kind justificante|declaration]``
+  reconciles against a local PDF (the ``--file`` standard); local-only, never
+  contacts AEAT. ``--kind`` selects the evidence document's KIND, orthogonal to
+  the pull/file transport axis: ``justificante`` (the default, every modelo) or
+  ``declaration`` (a filed declaración PDF, casilla-level reconcile, enrolled
+  modelos only -- see :data:`application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`).
 * ``reconcile history`` lists past reconciliations.
 """
 
@@ -18,7 +22,7 @@ from typing import Annotated
 
 import typer
 
-from ...application.modelo import ModeloReconciliationReport
+from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationReport
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
 from ._common import _emit_envelope
@@ -105,7 +109,7 @@ def _render_reconciliation_report(
     *,
     command: str,
 ) -> None:
-    """Render a :class:`~aeat.application.modelo.ModeloReconciliationReport` through the typed envelope.
+    """Render a :class:`~application.modelo.ModeloReconciliationReport` through the typed envelope.
 
     ``command`` is the registered leaf id (``modelo.reconcile.pull`` /
     ``modelo.reconcile.file``); reconciliation advisories ride the typed
@@ -113,11 +117,7 @@ def _render_reconciliation_report(
     folded into the same text lines so JSON and text cannot drift.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ._payloads_modelo_reconcile import (
-        ModeloReconcileResult,
-        ModeloReconciliationAdvisoryPayload,
-        ModeloReconciliationDiffPayload,
-    )
+    from ._payloads_modelo_reconcile import ModeloReconcileResult, ModeloReconciliationDiffPayload
 
     result = ModeloReconcileResult(
         work_unit_id=report.work_unit_id,
@@ -136,14 +136,6 @@ def _render_reconciliation_report(
                 source_refs=diff.source_refs,
             )
             for diff in report.diffs
-        ),
-        advisories=tuple(
-            ModeloReconciliationAdvisoryPayload(
-                code=advisory.code,
-                message=advisory.message,
-                context=dict(advisory.context),
-            )
-            for advisory in report.advisories
         ),
         reconciled_at=report.reconciled_at.isoformat(),
         narrative=report.narrative,
@@ -189,6 +181,20 @@ _PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.mod
 _RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
 _BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
 _ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
+_KindOpt = Annotated[
+    ModeloReconciliationEvidenceKind | None,
+    typer.Option(
+        "--kind",
+        help=tr(
+            "cli.app.modelo.reconcile.file_kind_help",
+            default=(
+                "Evidence document kind: `justificante` (AEAT receipt, every modelo) or "
+                "`declaration` (filed declaración PDF, casilla-level reconcile, enrolled modelos only). "
+                "Defaults to `justificante`."
+            ),
+        ),
+    ),
+]
 
 
 @reconcile_app.command(
@@ -237,7 +243,9 @@ def reconcile_pull_verb(
     "file",
     help=tr(
         "cli.app.modelo.reconcile.file_help",
-        default="Reconcile a work unit against a local justificante PDF. Local-only; never contacts AEAT.",
+        default=(
+            "Reconcile a work unit against a local justificante or declaración PDF. Local-only; never contacts AEAT."
+        ),
     ),
 )
 def reconcile_file_verb(
@@ -248,7 +256,7 @@ def reconcile_file_verb(
             "--file",
             help=tr(
                 "cli.app.modelo.reconcile.file_path_help",
-                default="Path to the AEAT justificante PDF to reconcile against.",
+                default="Path to the local justificante or declaración PDF to reconcile against.",
             ),
         ),
     ],
@@ -259,15 +267,13 @@ def reconcile_file_verb(
     revision: _RevisionOpt = None,
     bucket_id: _BucketIdOpt = None,
     actor: _ActorOpt = None,
+    kind: _KindOpt = None,
 ) -> None:
-    """Reconcile a work unit against a local justificante PDF file."""
-    from ...application.modelo import (
-        ModeloReconciliationCommand,
-        ModeloReconciliationEvidenceKind,
-        modelo_reconcile,
-    )
+    """Reconcile a work unit against a local justificante or declaración PDF file."""
+    from ...application.modelo import ModeloReconciliationCommand, modelo_reconcile
 
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
+    resolved_kind = kind if kind is not None else ModeloReconciliationEvidenceKind.JUSTIFICANTE
     _require_profile()
     unit = _resolve_work_unit(
         work_unit_id=work_unit_id,
@@ -280,7 +286,7 @@ def reconcile_file_verb(
     report = modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=unit.work_unit_id,
-            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+            source_kind=resolved_kind,
             source_path=file,
             actor=resolved_actor,
         ),

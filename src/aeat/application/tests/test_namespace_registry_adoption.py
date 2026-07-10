@@ -18,13 +18,13 @@ no registered namespace is an unenrolled or typo'd namespace and fails the gate.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
-from ...core.paths import PROJECT_ROOT
-from ...tests import leaf_name
+from ...tests import SRC_AEAT, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,18 +41,17 @@ _SECURE_OBJECT_METHODS = {
 
 #: Production trees whose secure-object namespace literals are cross-checked.
 _GUARDED_ROOTS = (
-    "src/aeat/application",
-    "src/aeat/domain",
-    "src/aeat/adapters/outbound",
+    SRC_AEAT / "application",
+    SRC_AEAT / "domain",
+    SRC_AEAT / "adapters" / "outbound",
 )
 
 
-def test_production_secure_object_namespace_literals_match_the_registry() -> None:
+def test_production_secure_object_namespace_literals_match_the_registry(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     registry_values = _registry_namespace_values()
     offences: list[str] = []
-    for path in _iter_guarded_production_sources():
-        relative = path.relative_to(PROJECT_ROOT).as_posix()
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for path, tree in _iter_guarded_production_sources(source_tree_ast):
+        relative = repo_relative(path)
         for node in ast.walk(tree):
             for value, lineno in _namespace_literal_usages(node):
                 if value not in registry_values:
@@ -68,19 +67,14 @@ def _registry_namespace_values() -> frozenset[str]:
     return frozenset(item.namespace for item in STORAGE_NAMESPACE_REGISTRY.namespaces)
 
 
-def _iter_guarded_production_sources() -> tuple[Path, ...]:
+def _iter_guarded_production_sources(source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[Path, ast.AST], ...]:
     return tuple(
         sorted(
-            path
-            for root in _GUARDED_ROOTS
-            for path in (PROJECT_ROOT / root).rglob("*.py")
-            if not _is_test_surface(path)
+            (path, tree)
+            for path, tree in production_ast_items(source_tree_ast)
+            if any(path.is_relative_to(root) for root in _GUARDED_ROOTS)
         ),
     )
-
-
-def _is_test_surface(path: Path) -> bool:
-    return path.name.startswith("test_") or path.name == "conftest.py" or "/test_" in path.as_posix()
 
 
 def _namespace_literal_usages(node: ast.AST) -> list[tuple[str, int]]:

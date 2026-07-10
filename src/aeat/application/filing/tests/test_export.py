@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -46,7 +45,6 @@ from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
 from ._export_support import (
     _EXPORT_PATH,
     _EXPORT_VERIFY_MATCH_CASES,
-    _ExportVerifyMatchCase,
     _HEX_DIGEST,
     _M111_RESULTADO_CASILLA,
     _M111_RETENCIONES_TOTAL_CASILLA,
@@ -96,6 +94,7 @@ from ._export_support import (
     _approved_modelo_131_zero_payable_direct_debit_draft,
     _approved_registry_draft,
     _assert_missing_export_layout_refusal,
+    _ExportVerifyMatchCase,
     _field_slice,
     _modelo_111_export_headers,
     _modelo_111_export_payload,
@@ -362,31 +361,31 @@ def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
             casilla_id="0596",
             value=Decimal("4500.00"),
             kind=ModeloValueKind.INHERITED,
-            source="Marta verified salary withholding",
+            source="Operator-verified salary withholding",
         ),
         ModeloValue(
             casilla_id="0604",
             value=Decimal("1520.00"),
             kind=ModeloValueKind.COMPUTED,
-            source="Marta verified Modelo 130 relation fold",
+            source="Operator-verified Modelo 130 relation fold",
         ),
         ModeloValue(
             casilla_id="0609",
             value=Decimal("6020.00"),
             kind=ModeloValueKind.COMPUTED,
-            source="Marta verified total payments",
+            source="Operator-verified total payments",
         ),
         ModeloValue(
             casilla_id="0610",
             value=Decimal("2007.50"),
             kind=ModeloValueKind.COMPUTED,
-            source="Marta verified cuota diferencial",
+            source="Operator-verified cuota diferencial",
         ),
         ModeloValue(
             casilla_id="0670",
             value=Decimal("2007.50"),
             kind=ModeloValueKind.COMPUTED,
-            source="Marta verified resultado declaracion",
+            source="Operator-verified resultado declaracion",
         ),
     )
     provenance_by_id = {
@@ -465,7 +464,7 @@ def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
     receipt = export_draft(
         draft,
         output_path=output,
-        headers={"surnames": "MARTA BLANK", "name": "STATE"},
+        headers={"surnames": "SURNAME BLANK", "name": "STATE"},
         schema_provider=provider,
     )
 
@@ -521,7 +520,7 @@ def test_export_preserves_official_modelo_100_ecivil_xml_code(tmp_path: Path) ->
     export_draft(
         draft,
         output_path=output,
-        headers={"surnames": "MARTA BLANK", "name": "STATE", "ecivil": "4"},
+        headers={"surnames": "SURNAME BLANK", "name": "STATE", "ecivil": "4"},
         schema_provider=provider,
     )
 
@@ -538,7 +537,7 @@ def test_export_rejects_profile_only_pareja_hecho_ecivil_xml_code(tmp_path: Path
         export_draft(
             draft,
             output_path=output,
-            headers={"surnames": "MARTA BLANK", "name": "STATE", "ecivil": "5"},
+            headers={"surnames": "SURNAME BLANK", "name": "STATE", "ecivil": "5"},
             schema_provider=provider,
         )
 

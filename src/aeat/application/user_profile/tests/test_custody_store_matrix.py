@@ -22,11 +22,30 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
+from ....domain.filing import ModeloDraft
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
+from ....tests.custody_store_matrix_adapters import (
+    AmortizacionLedgerRepository,
+    AssetsLedgerRepository,
+    BucketEventHistoryRepository,
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    FiledDeclaracionObservationStore,
+    InventoryLedgerRepository,
+    InvoiceCatalogueRepository,
+    IvaCompensationWalletObservation,
+    IvaCompensationWalletRow,
+    ModeloAmendmentRepository,
+    ModeloDraftRepository,
+    SubmissionRepository,
+    VerificationReportCatalogueRepository,
+    load_usage_ratios,
+    save_usage_ratios,
+    secure_object_repository_for_active_bucket,
+)
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ...bucket_maintenance import (
     BucketMaintenanceService,
@@ -77,7 +96,6 @@ def _verify_classification_rule(bucket_id: str) -> None:
 
 
 def _seed_submission(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.submission import SubmissionRepository
     from ....core import Period
     from ....domain.submission import (
         ModeloPresentado,
@@ -107,8 +125,6 @@ def _seed_submission(bucket_id: str) -> None:
 
 
 def _verify_submission(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.submission import SubmissionRepository
-
     assert tuple(SubmissionRepository().iter_submissions()), "submission record lost"
 
 
@@ -192,7 +208,6 @@ def _verify_filing_history(bucket_id: str) -> None:
 
 
 def _seed_draft(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ....core import Period
     from ....domain.calculations.registry import RegistrySnapshotRef
     from ....domain.filing import ModeloDraft
@@ -215,27 +230,21 @@ def _seed_draft(bucket_id: str) -> None:
 
 
 def _verify_draft(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-
     assert tuple(ModeloDraftRepository().iter_drafts()), "draft lost"
 
 
 def _seed_usage_ratios(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
     from ....domain.usage_ratios import UsageRatioProfile
 
     save_usage_ratios(UsageRatioProfile(), bucket_id=bucket_id)
 
 
 def _verify_usage_ratios(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.usage_ratios import load_usage_ratios
-
     assert load_usage_ratios(bucket_id=bucket_id) is not None, "usage ratios lost"
 
 
 def _seed_invoice_catalogue(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
     from ....domain.iva import InvoiceKind
 
     line = InvoiceLine(
@@ -246,17 +255,31 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
         iva_rate=IvaRate.RATE_0,
         iva_amount=Decimal("0"),
     )
+    kind = InvoiceKind.RECEIVED
+    invoice_number = "F-2026-001"
+    issued_at = date(2026, 1, 15)
+    counterparty_tax_id = "12345678Z"
+    currency = "EUR"
+    grand_total = Decimal("100.00")
     invoice = Invoice(
-        kind=InvoiceKind.RECEIVED,
-        invoice_number="F-2026-001",
-        issued_at=date(2026, 1, 15),
+        invoice_id=derive_invoice_id(
+            kind=kind,
+            invoice_number=invoice_number,
+            issued_at=issued_at,
+            counterparty_tax_id=counterparty_tax_id,
+            currency=currency,
+            grand_total=grand_total,
+        ),
+        kind=kind,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
         counterparty_name="Proveedor SL",
-        counterparty_tax_id="12345678Z",
+        counterparty_tax_id=counterparty_tax_id,
         counterparty_country="ES",
         base_total=Decimal("100.00"),
         iva_total=Decimal("0"),
-        grand_total=Decimal("100.00"),
-        currency="EUR",
+        grand_total=grand_total,
+        currency=currency,
         lines=(line,),
         payment_status=PaymentStatus.PAID,
     )
@@ -264,13 +287,10 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
 
 
 def _verify_invoice_catalogue(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
     assert InvoiceCatalogueRepository().load().invoices, "invoice catalogue lost"
 
 
 def _seed_verification_reports(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ....domain.modelos import VerificationReportCatalogue
 
     # An empty catalogue still persists one secure-object row to carry.
@@ -278,8 +298,6 @@ def _seed_verification_reports(bucket_id: str) -> None:
 
 
 def _verify_verification_reports(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-
     assert VerificationReportCatalogueRepository().load() is not None, "verification reports lost"
 
 
@@ -469,7 +487,7 @@ def _verify_apoderado(bucket_id: str) -> None:
     assert _ApoderadoConfigRepository(bucket_id=bucket_id).load(bucket_id) is not None, "apoderado config lost"
 
 
-def _build_modelo_draft() -> object:
+def _build_modelo_draft() -> ModeloDraft:
     from ....core import Period
     from ....domain.calculations.registry import RegistrySnapshotRef
     from ....domain.filing import ModeloDraft
@@ -491,7 +509,6 @@ def _build_modelo_draft() -> object:
 
 
 def _seed_amendment(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
     from ....core import Period
     from ....domain.filing import (
         AmendmentKind,
@@ -516,13 +533,10 @@ def _seed_amendment(bucket_id: str) -> None:
 
 
 def _verify_amendment(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
-
     assert ModeloAmendmentRepository(bucket_id=bucket_id).list_amendment_ids(), "amendment lost"
 
 
 def _seed_inventory_ledger(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ....domain.contribuyente.inventory import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 
     ledger = InventoryLedger(
@@ -535,13 +549,10 @@ def _seed_inventory_ledger(bucket_id: str) -> None:
 
 
 def _verify_inventory_ledger(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
-
     assert InventoryLedgerRepository().load().ledgers, "inventory ledger lost"
 
 
 def _seed_assets_ledger(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.assets import AssetsLedgerRepository
     from ....domain.contribuyente.assets import AssetClass, AssetRecord, AssetsLedgerDocument
 
     asset = AssetRecord(
@@ -555,13 +566,10 @@ def _seed_assets_ledger(bucket_id: str) -> None:
 
 
 def _verify_assets_ledger(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.assets import AssetsLedgerRepository
-
     assert AssetsLedgerRepository().load().assets, "assets ledger lost"
 
 
 def _seed_amortization_ledger(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.assets import AmortizacionLedgerRepository
     from ....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger
 
     ledger = AmortizacionLedger(entries=(AmortizacionEntry(asset_id="asset-1", year=2024, amount=Decimal("200.00")),))
@@ -569,8 +577,6 @@ def _seed_amortization_ledger(bucket_id: str) -> None:
 
 
 def _verify_amortization_ledger(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.assets import AmortizacionLedgerRepository
-
     assert AmortizacionLedgerRepository().load().entries, "amortization ledger lost"
 
 
@@ -795,7 +801,9 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> None:
 def _verify_purchase_invoice_evidence(bucket_id: str) -> None:
     from ...ledger import PurchaseInvoiceEvidenceRepository
 
-    assert PurchaseInvoiceEvidenceRepository().load(bucket_id).records, "purchase invoice evidence lost"
+    document = PurchaseInvoiceEvidenceRepository().load(bucket_id)
+    assert document is not None, "purchase invoice evidence lost"
+    assert document.records, "purchase invoice evidence lost"
 
 
 def _seed_business_operation_invoice(bucket_id: str) -> None:
@@ -831,24 +839,21 @@ def _seed_business_operation_invoice(bucket_id: str) -> None:
 def _verify_business_operation_invoice(bucket_id: str) -> None:
     from ...ledger import BusinessOperationInvoiceRepository
 
-    assert BusinessOperationInvoiceRepository().load(f"{bucket_id}:payable_invoice").records, (
-        "business operation invoice lost"
-    )
+    document = BusinessOperationInvoiceRepository().load(f"{bucket_id}:payable_invoice")
+    assert document is not None, "business operation invoice lost"
+    assert document.records, "business operation invoice lost"
 
 
-def _filed_declaration_store() -> object:
-    from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
-    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-
+def _filed_declaration_store() -> FiledDeclaracionObservationStore:
     return FiledDeclaracionObservationStore(Path("unused"), objects=secure_object_repository_for_active_bucket())
 
 
-def _filed_artefact(body: bytes) -> object:
-    from ....adapters.outbound.aeat.sede import FiledDeclaracionArtefact
+def _filed_artefact(body: bytes) -> FiledDeclaracionArtefact:
+    from pydantic import AnyHttpUrl
 
     return FiledDeclaracionArtefact(
         kind="register_row",
-        source_url=aeat_url("sede", "/x"),
+        source_url=AnyHttpUrl(aeat_url("sede", "/x")),
         content_type="text/html",
         byte_count=len(body),
         sha256=sha256_hex(body),
@@ -857,7 +862,6 @@ def _filed_artefact(body: bytes) -> object:
 
 
 def _seed_filed_observation(bucket_id: str) -> None:
-    from ....adapters.outbound.aeat.sede import FiledDeclaracionObservation
     from ....core import Period
 
     fobs = FiledDeclaracionObservation(
@@ -870,18 +874,18 @@ def _seed_filed_observation(bucket_id: str) -> None:
         authenticated_identity="12345678Z",
         artefacts=(_filed_artefact(b"<row/>"),),
     )
-    _filed_declaration_store().persist_observation(fobs)  # type: ignore[attr-defined]
+    _filed_declaration_store().persist_observation(fobs)
 
 
 def _verify_filed_observation(bucket_id: str) -> None:
-    assert _filed_declaration_store().list_observations(), "filed declaration observation lost"  # type: ignore[attr-defined]
+    assert _filed_declaration_store().list_observations(), "filed declaration observation lost"
 
 
 def _seed_filed_artefact(bucket_id: str) -> None:
     from ....core import Period
 
     body = b"<row/>"
-    _filed_declaration_store().persist_artefact(  # type: ignore[attr-defined]
+    _filed_declaration_store().persist_artefact(
         ("303", 2024, Period.from_year_and_code(2024, "1T"), "202300000001T"),
         _filed_artefact(body),
         body,
@@ -889,17 +893,13 @@ def _seed_filed_artefact(bucket_id: str) -> None:
 
 
 def _verify_filed_artefact(bucket_id: str) -> None:
-    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-
     repo = secure_object_repository_for_active_bucket()
     assert repo.list_keys("aeat.outbound.aeat.sede.filed_declaration.artefacts"), "filed declaration artefact lost"
 
 
 def _seed_iva_wallet_observation(bucket_id: str) -> None:
-    from ....adapters.outbound.aeat.sede import (
-        IvaCompensationWalletObservation,
-        IvaCompensationWalletRow,
-    )
+    from pydantic import AnyHttpUrl
+
     from ....core import Period
 
     wobs = IvaCompensationWalletObservation(
@@ -915,14 +915,14 @@ def _seed_iva_wallet_observation(bucket_id: str) -> None:
             ),
         ),
         total_pending=Decimal("50.00"),
-        source_url=aeat_url("sede", "/cartera"),
+        source_url=AnyHttpUrl(aeat_url("sede", "/cartera")),
         captured_at=_NOW,
     )
-    _filed_declaration_store().persist_iva_wallet_observation(wobs)  # type: ignore[attr-defined]
+    _filed_declaration_store().persist_iva_wallet_observation(wobs)
 
 
 def _verify_iva_wallet_observation(bucket_id: str) -> None:
-    assert _filed_declaration_store().list_iva_wallet_observations(), "iva wallet observation lost"  # type: ignore[attr-defined]
+    assert _filed_declaration_store().list_iva_wallet_observations(), "iva wallet observation lost"
 
 
 _CASES: tuple[StoreCase, ...] = (

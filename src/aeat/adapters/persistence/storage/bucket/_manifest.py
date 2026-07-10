@@ -33,7 +33,7 @@ class ManifestKdfParams(BaseModel):
     """Argon2id parameters and salt as carried in the bucket manifest.
 
     Strict pydantic v2 record. The canonical OWASP-baseline constructor
-    is declared in :mod:`aeat.adapters.persistence.storage.master_key._kdf_params`;
+    is declared in :mod:`adapters.persistence.storage.master_key._kdf_params`;
     this manifest-side record holds whatever parameters the bucket was
     enrolled under so a future cost-bump can be non-breaking.
     """
@@ -66,7 +66,7 @@ class ManifestKdfParams(BaseModel):
 class BucketLifecycleStatus(StrEnum):
     """Plaintext lifecycle marker carried on the bucket manifest.
 
-    The encrypted :class:`~aeat.domain.user_profile.UserProfileStatus`
+    The encrypted :class:`~domain.user_profile.UserProfileStatus`
     record is the lifecycle authority, but reading it costs a bucket
     decryption. The manifest mirrors that status as a plaintext marker
     so the manifest scan can exclude a tombstoned profile from every

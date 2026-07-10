@@ -3,9 +3,57 @@ generated: true
 tags:
   - '#index'
   - '#live-iva-compensation-wallet'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-05'
+modified: '2026-07-05'
 related:
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S05]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S06]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S07]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P03-S08]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P03-S09]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P03-S10]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P03-S11]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P04-S12]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P04-S13]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P04-S14]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P04-S15]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P04-S16]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W01-P04-S17]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P05-S18]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P05-S19]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P05-S20]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P05-S21]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P06-S22]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P06-S23]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P06-S24]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W02-P06-S25]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P07-S26]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P07-S27]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P07-S28]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P08-S29]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P08-S30]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P08-S31]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P09-S32]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P09-S33]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P09-S34]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P10-S35]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P10-S36]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W03-P10-S37]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P11-S38]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P11-S39]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P11-S40]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P11-S41]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P12-S42]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P12-S43]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W04-P12-S44]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W05-P13-S45]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W05-P13-S46]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W05-P13-S47]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W05-P13-S48]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W05-P14-S49]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W07-P17-S61]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W07-P17-S62]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-W08-P19-S69]]'
   - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-05-19-live-iva-compensation-wallet-code-review-audit]]'
   - '[[2026-05-19-live-iva-compensation-wallet-implementation-summary-exec]]'
@@ -178,6 +226,7 @@ related:
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S93]]'
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-S98]]'
   - '[[2026-06-05-live-iva-compensation-wallet-W10-P24-summary]]'
+  - '[[2026-07-05-live-iva-compensation-wallet-audit]]'
 ---
 
 # `live-iva-compensation-wallet` feature index
@@ -220,6 +269,7 @@ Auto-generated index of all documents tagged with `#live-iva-compensation-wallet
 - `2026-06-02-live-iva-persistent-failure-team-brief-audit` - Live IVA Persistent Failure Team Brief
 - `2026-06-02-live-iva-surface-diagnostics-review-audit` - `live-iva-compensation-wallet` Code Review
 - `2026-06-03-live-iva-compensation-wallet-code-review-audit` - `live-iva-compensation-wallet` Code Review
+- `2026-07-05-live-iva-compensation-wallet-audit` - `live-iva-compensation-wallet` audit: `Sticky decision refresh code review`
 
 ### exec
 
@@ -361,6 +411,54 @@ Auto-generated index of all documents tagged with `#live-iva-compensation-wallet
 - `2026-06-05-live-iva-compensation-wallet-W10-P24-S93` - W10.P24.S93 live IVA evidence retry
 - `2026-06-05-live-iva-compensation-wallet-W10-P24-S98` - W10.P24.S98 vaultspec-rag service diagnostics
 - `2026-06-05-live-iva-compensation-wallet-W10-P24-summary` - `live-iva-compensation-wallet` `W10.P24` summary
+- `2026-05-19-live-iva-compensation-wallet-W01-P02-S05` - implement `fetch_iva_compensation_wallet` as a read-only Sede adapter
+- `2026-05-19-live-iva-compensation-wallet-W01-P02-S06` - add parser coverage from captured wallet HTML fixtures
+- `2026-05-19-live-iva-compensation-wallet-W01-P02-S07` - add opt-in live smoke coverage gated by `AEAT_LIVE_TESTS_ENABLED`
+- `2026-05-19-live-iva-compensation-wallet-W01-P03-S08` - add encrypted persistence support for wallet observations
+- `2026-05-19-live-iva-compensation-wallet-W01-P03-S09` - add repository roundtrip tests for wallet observations
+- `2026-05-19-live-iva-compensation-wallet-W01-P03-S10` - add encrypted persistence support for wallet reconciliation decisions
+- `2026-05-19-live-iva-compensation-wallet-W01-P03-S11` - add backend workflow entry point for operator-approved wallet pull
+- `2026-05-19-live-iva-compensation-wallet-W01-P04-S12` - implement local recurrence extraction for comparison without selecting the effective value
+- `2026-05-19-live-iva-compensation-wallet-W01-P04-S13` - implement wallet, override, local recurrence authority selection and blocking divergence statuses
+- `2026-05-19-live-iva-compensation-wallet-W01-P04-S14` - consume only non-blocking reconciliation decisions for Modelo 303 prior compensation prefill
+- `2026-05-19-live-iva-compensation-wallet-W01-P04-S15` - prevent automatic output when the wallet reconciliation decision is blocked
+- `2026-05-19-live-iva-compensation-wallet-W01-P04-S16` - add divergence scenario tests for match, AEAT-higher, AEAT-lower, stale wallet, missing wallet, and explicit taxpayer override
+- `2026-05-19-live-iva-compensation-wallet-W01-P04-S17` - run wallet, Modelo 303, Modelo 390, and relation-regression focused suites together
+- `2026-05-19-live-iva-compensation-wallet-W02-P05-S18` - block the wallet execute gate by static HTML inspection without running page JavaScript
+- `2026-05-19-live-iva-compensation-wallet-W02-P05-S19` - remove any wallet POST allowance from the read guard and prove wallet POST is rejected
+- `2026-05-19-live-iva-compensation-wallet-W02-P05-S20` - reject no-table wallet shells instead of interpreting them as zero-balance observations
+- `2026-05-19-live-iva-compensation-wallet-W02-P05-S21` - fail closed on AEAT representation-gate submission in wallet capture and Cl@ve verification
+- `2026-05-19-live-iva-compensation-wallet-W02-P06-S22` - enumerate every live AEAT click, fill, evaluate, navigation, and POST-capable browser action across Sede/auth adapters
+- `2026-05-19-live-iva-compensation-wallet-W02-P06-S23` - classify each action as authentication-only, read-only navigation, diagnostic cleanup, or forbidden live submission
+- `2026-05-19-live-iva-compensation-wallet-W02-P06-S24` - move accepted action markers into external constants and guard policies
+- `2026-05-19-live-iva-compensation-wallet-W02-P06-S25` - add tests that fail when new live AEAT form-submission paths are introduced without explicit safety classification
+- `2026-05-19-live-iva-compensation-wallet-W03-P07-S26` - verify ledger aggregation inputs for ordinary IVA, recargo equivalencia, exenciones, OSS/IOSS, intra-community operations, and adjustments
+- `2026-05-19-live-iva-compensation-wallet-W03-P07-S27` - verify Modelo 303 periodic casilla bindings consume registry formulas and ledger observations rather than mirrored test arithmetic
+- `2026-05-19-live-iva-compensation-wallet-W03-P07-S28` - add traceable calculation tests from ledger rows to Modelo 303 outputs for positive, negative, zero, and compensation-applied periods
+- `2026-05-19-live-iva-compensation-wallet-W03-P08-S29` - verify Modelo 390 annual fields reconcile against four Modelo 303 periods, including casillas `97` and `662`
+- `2026-05-19-live-iva-compensation-wallet-W03-P08-S30` - verify annual summary behavior for regimes represented in the ledger catalogue and identify unsupported regimes as blocking gaps rather than inferred formulas
+- `2026-05-19-live-iva-compensation-wallet-W03-P08-S31` - add cross-form tests that compare annual totals to periodic observations without reimplementing form business logic in tests
+- `2026-05-19-live-iva-compensation-wallet-W03-P09-S32` - model carry-forward age, source period, applied amount, remaining amount, and expiry review state across fiscal years
+- `2026-05-19-live-iva-compensation-wallet-W03-P09-S33` - enforce LIVA art. 99 four-year compensation-window policy from dated evidence rather than same-year recurrence only
+- `2026-05-19-live-iva-compensation-wallet-W03-P09-S34` - add multiyear tests for generation year, application year, expiry boundary, AEAT wallet divergence, and local filed-history fallback
+- `2026-05-19-live-iva-compensation-wallet-W03-P10-S35` - require persisted non-blocking reconciliation decisions before remote-state values affect form outputs
+- `2026-05-19-live-iva-compensation-wallet-W03-P10-S36` - keep AEAT wallet evidence, local recurrence, filed-history observations, and explicit taxpayer overrides as separate authority sources
+- `2026-05-19-live-iva-compensation-wallet-W03-P10-S37` - surface blocked reconciliation states through CLI/workflow before any calculation/export path can proceed
+- `2026-05-19-live-iva-compensation-wallet-W04-P11-S38` - brief a first-run autónomo persona to create/switch a profile, import or enter ledger evidence, calculate a Modelo 303 period, and report friction
+- `2026-05-19-live-iva-compensation-wallet-W04-P11-S39` - brief a returning accountant persona to inspect filed-history/ledger state, calculate four quarters, prepare Modelo 390, and report reconciliation gaps
+- `2026-05-19-live-iva-compensation-wallet-W04-P11-S40` - brief a live-wallet reviewer persona to run the official live wallet CLI path only up to the fail-closed safety boundary, verify no AEAT filing/payment/represented-taxpayer choice is submitted beyond the guarded wallet read query, and report the operator experience
+- `2026-05-19-live-iva-compensation-wallet-W04-P11-S41` - brief a multiyear compensation reviewer persona to exercise cross-year carry-forward scenarios and report whether the CLI exposes source-period age and authority decisions clearly
+- `2026-05-19-live-iva-compensation-wallet-W04-P12-S42` - capture persona commands, redacted outputs, friction points, and safety observations in audit notes
+- `2026-05-19-live-iva-compensation-wallet-W04-P12-S43` - convert repeated persona friction into concrete implementation tasks with severity and file/module ownership
+- `2026-05-19-live-iva-compensation-wallet-W04-P12-S44` - run code-review after each persona-driven implementation step and append findings to the wallet/IVA audit log
+- `2026-05-19-live-iva-compensation-wallet-W05-P13-S45` - Add redacted live-auth preflight diagnostics for active profile identity, configured DNI/NIE presence, support-number presence, certificate provider state, Cl@ve preference, and timeout. Partial 2026-05-26: existing Cl@ve diagnostic payload fields for identity/config/certificate state are now exposed through the application diagnostic read model, including `prefer_non_qr` and `timeout_ms`
+- `2026-05-19-live-iva-compensation-wallet-W05-P13-S46` - Classify and log the selected Cl@ve route as push, QR, non-QR fallback, certificate, or unknown without swallowing browser errors. Partial 2026-05-26: application diagnostics now classify captured AEAT auth URLs against centralized `external_constants.toml` Cl@ve/Sede routes
+- `2026-05-19-live-iva-compensation-wallet-W05-P13-S47` - Enforce the operator-facing auth wait window from centralized settings, with a production default not exceeding 120 seconds for Cl@ve approval waits
+- `2026-05-19-live-iva-compensation-wallet-W05-P13-S48` - Add real-behavior diagnostic tests that use production auth diagnostics and redaction logic without private taxpayer fixtures, fakes, stubs, or monkeypatched browser behavior. Partial 2026-05-26: `src/aeat/application/auth/test_diagnostics.py` now drives the real secure-object diagnostic read model with sanitized payloads and centralized AEAT route constants
+- `2026-05-19-live-iva-compensation-wallet-W05-P14-S49` - Introduce typed live-auth acquisition outcomes for no-prompt, operator-timeout, QR-required, certificate-required, wrong-identity, AEAT-403, DOM-drift, and authenticated. Partial 2026-05-26: `LiveIvaAcquisitionFailureMode` and `classify_live_iva_acquisition_failure` now map Cl@ve and Sede adapter exceptions into application-level outcomes
+- `2026-05-19-live-iva-compensation-wallet-W07-P17-S61` - Add reload APIs that return latest and historical remote IVA evidence for a profile without requiring a live AEAT login. Completed 2026-05-27: `load_iva_remote_state` reloads stored filed-history state, carry-forward lots, authority decisions, and redacted wallet observation summaries from active-profile secure storage without live AEAT contact. Follow-up 2026-05-27: the same stored-evidence report now includes redacted acquisition-manifest summaries with hashed manifest refs and per-surface typed outcomes, so downstream reconciliation can inspect filed-history, wallet observations, authority decisions, and acquisition attempts through one profile-local backend view
+- `2026-05-19-live-iva-compensation-wallet-W07-P17-S62` - Add secure-storage roundtrip tests for persisted remote IVA evidence using `aeat.tests.secure_sql` and `Settings.aeat_dev_test_database_password`. Completed 2026-05-27: persisted Cl@ve session metadata has isolated runtime-profile storage coverage, and remote IVA filed-history state, wallet observation, and reconciliation decision now roundtrip through profile secure SQL using `aeat.tests.secure_sql` without private taxpayer fixtures
+- `2026-05-19-live-iva-compensation-wallet-W08-P19-S69` - Verify Modelo 130 relation-regression remains tracked separately and cross-linked, because IRPF quarterly calculations share profile/storage/readiness infrastructure but not IVA compensation authority. Partial 2026-05-27: a full declaration parser gate exposed a separate Modelo 130 binding-resolution regression for casilla 15
 
 ### plan
 

@@ -29,10 +29,9 @@ from datetime import date
 import pytest
 
 from .....application.filing import build_runtime_schema_provider
-from .....application.filing._export import boe_representable_casilla_ids
 from .....core import Period
 from .....core.resources import resources
-from .....domain.calculations.registry import RegistrySnapshot
+from .....domain.calculations.registry import CasillaFieldKind, ExportLayoutDefinition, RegistrySnapshot
 from .. import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -73,14 +72,28 @@ def _boe_representable_ids(modelo: str, year: int, period: str) -> set[str]:
         filing_year=year, period=Period.from_year_and_code(year, period), modelos=(modelo,)
     )
     layout = provider.get_subview(modelo).export_layouts[0]
-    # Disposition-independent for this containment: a suppressed refund page only
-    # ever removes casillas, so a refund header gives the maximal representable set.
-    return set(boe_representable_casilla_ids(layout, headers={"declaration_type": "D"}, schema_provider=provider))
+    return _fixed_width_layout_casilla_slots(layout)
+
+
+def _fixed_width_layout_casilla_slots(layout: ExportLayoutDefinition) -> set[str]:
+    assert layout.format == "fixed_width", f"expected a fixed-width BOE layout, got {layout.format!r}"
+    direct_slots = {
+        field.casilla_id
+        for record in layout.records
+        for field in record.fields
+        if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None
+    }
+    row_slots = {casilla_id for record in layout.records for casilla_id in record.row_field_casilla_ids.values()}
+    return set(direct_slots | row_slots)
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(modelo: str, year: int, period: str, on: date) -> None:
+def test_fichero_boe_and_workbook_share_computed_export_surface(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
+    revision = snapshot.revision
+    by_id = {casilla.id: casilla for casilla in revision.casillas}
     workbook = _workbook_emitted_ids(snapshot)
     boe = _boe_representable_ids(modelo, year, period)
 
@@ -92,18 +105,9 @@ def test_fichero_boe_files_no_casilla_the_workbook_does_not_compute(modelo: str,
         f"the two transports diverge from the shared calculation surface"
     )
 
-
-@pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_both_transports_cover_the_computed_manifest_casillas(modelo: str, year: int, period: str, on: date) -> None:
     # Both transports must cover every COMPUTED manifest casilla the fichero-BOE
     # can represent (the fichero-BOE via its representable set, the workbook via an
     # emitted cell), so neither drops a required calculation result the other keeps.
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
-    revision = snapshot.revision
-    by_id = {casilla.id: casilla for casilla in revision.casillas}
-    workbook = _workbook_emitted_ids(snapshot)
-    boe = _boe_representable_ids(modelo, year, period)
-
     assert revision.completeness_manifest is not None
     computed_representable = {
         mc.casilla_id

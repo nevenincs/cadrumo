@@ -41,11 +41,11 @@ from ...adapters.persistence.storage import (
 from ...core import BindingSourceKind, Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
     BindingId,
+    CasillaDefinition,
     CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
     resolve_ledger_impatriado_income_aggregation_binding_values,
-    resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
@@ -64,11 +64,20 @@ from ...domain.invoices import (
     invoice_line_to_iva_observation,
 )
 from ...domain.renta import RentaDeductibleExpenseObservation
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
+from ...domain.transactions import (
+    OutOfWindowTransactionSummary,
+    TransactionCatalogueRepositoryProtocol,
+    TransactionPersistenceError,
+)
 from ...domain.usage_ratios import UsageRatioPersistenceError
 from ._errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
-from ._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations_from_repositories
+from ._iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    IvaLedgerProrrataApportionment,
+    aggregate_iva_ledger_observations_from_repositories,
+    resolve_iva_ledger_binding_values,
+)
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
@@ -92,6 +101,7 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    out_of_window_summary_source_diagnostic,
     storage_degradation_resolution,
 )
 
@@ -165,15 +175,17 @@ class LedgerIvaAggregationSourceResolver:
             )
         transaction_ids = {observation.ledger_id for observation in aggregation.observations}
         transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
-        binding_values = resolve_ledger_iva_aggregation_binding_values(
+        binding_values = resolve_iva_ledger_binding_values(
             context.revision,
             aggregation.observations,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
         )
         _raise_if_m303_invoice_domestic_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
             invoice_repository=self._invoice_repository,
+            prorrata_apportionment=aggregation.prorrata_apportionment,
         )
         # Reuse the fail-closed candidate-path screen as a NON-blocking advisory on
         # the calculate path: a declarable IVA observation whose category/rate/flow
@@ -188,7 +200,12 @@ class LedgerIvaAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             source_transaction_ids=tuple(sorted(transaction_ids)),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_iva_aggregation",
@@ -227,6 +244,11 @@ class LedgerIvaAggregationSourceResolver:
                         source_ref=f"prorrata:{reference.transaction_id}",
                     )
                     for reference in aggregation.prorrata_references
+                )
+                + _iva_prorrata_apportionment_provenance(
+                    context.revision,
+                    aggregation_period,
+                    aggregation.prorrata_apportionment,
                 )
             ),
         )
@@ -386,7 +408,12 @@ class LedgerRentaIncomeAggregationSourceResolver:
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_renta_income_aggregation",
@@ -486,7 +513,12 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_impatriado_income_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_impatriado_income_aggregation",
@@ -572,7 +604,12 @@ class LedgerRentaGastoAggregationSourceResolver:
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
-            diagnostics=tuple(
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_renta_gasto_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
                     source_kind="ledger_renta_gasto_aggregation",
@@ -611,6 +648,7 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     period: Period,
     transaction_binding_values: Mapping[BindingId, Decimal],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    prorrata_apportionment: IvaLedgerProrrataApportionment | None,
 ) -> None:
     """Refuse M303 when domestic invoice IVA would be absent from ledger totals.
 
@@ -632,7 +670,11 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     )
     if not invoice_observations:
         return
-    invoice_binding_values = resolve_ledger_iva_aggregation_binding_values(context.revision, invoice_observations)
+    invoice_binding_values = resolve_iva_ledger_binding_values(
+        context.revision,
+        invoice_observations,
+        prorrata_apportionment=prorrata_apportionment,
+    )
     missing_binding_values = {
         binding_id: invoice_value - transaction_value
         for binding_id in _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS
@@ -708,6 +750,25 @@ def _m303_standard_domestic_invoice_in_period(
     )
 
 
+def _out_of_window_summary_diagnostics(
+    summary: OutOfWindowTransactionSummary | None,
+    *,
+    source_kind: str,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    if summary is None:
+        return ()
+    return (
+        out_of_window_summary_source_diagnostic(
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            count=summary.count,
+            min_filing_date=summary.min_filing_date,
+            max_filing_date=summary.max_filing_date,
+        ),
+    )
+
+
 def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
     """Translate a canonical ``StandardPeriodCode`` token to a core period.
 
@@ -731,6 +792,55 @@ def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
             context={"filing_year": str(filing_year), "period": code},
         )
     return resolved
+
+
+def _iva_prorrata_apportionment_provenance(
+    revision: ModeloRevision,
+    period: Period,
+    apportionment: IvaLedgerProrrataApportionment | None,
+) -> tuple[CalculationSourceProvenance, ...]:
+    if apportionment is None:
+        return ()
+    casillas = _iva_deducible_cuota_casillas(revision)
+    return (
+        CalculationSourceProvenance(
+            source_kind="ledger_iva_aggregation",
+            source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
+            legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
+            source_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.source_refs)),
+        ),
+    )
+
+
+def _iva_prorrata_apportionment_source_ref(
+    period: Period,
+    apportionment: IvaLedgerProrrataApportionment,
+) -> str:
+    source_ref = (
+        f"prorrata-apportionment:{period.year}:{apportionment.regime.value}:"
+        f"percentage:{apportionment.percentage}:provenance:{apportionment.provenance.value}"
+    )
+    if apportionment.source_observation_ref is not None:
+        source_ref = f"{source_ref}:source-observation:{apportionment.source_observation_ref}"
+    return source_ref
+
+
+def _iva_deducible_cuota_casillas(revision: ModeloRevision) -> tuple[CasillaDefinition, ...]:
+    ledger_iva_amount_bindings = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+        and getattr(binding.selector, "fact", "iva_amount_sum") == "iva_amount_sum"
+    }
+    return tuple(
+        casilla
+        for casilla in revision.casillas
+        if "deducible" in casilla.section
+        and any(
+            binding_id is not None and binding_id in ledger_iva_amount_bindings
+            for binding_id in (casilla.binding, *casilla.alternate_bindings)
+        )
+    )
 
 
 def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:

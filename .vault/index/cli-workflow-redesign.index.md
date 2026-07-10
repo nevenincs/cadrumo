@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-06-15'
-modified: '2026-07-03'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -301,6 +301,35 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1840-s1841-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-p308-s1842-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-w62-summary-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S01]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S02]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S03]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S04]]'
+  - '[[2026-05-14-cli-workflow-redesign-P01-S05]]'
+  - '[[2026-05-14-cli-workflow-redesign-P02-S09]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S11]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S12]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S13]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S14]]'
+  - '[[2026-05-14-cli-workflow-redesign-P03-S15]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S16]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S17]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S18]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S19]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S20]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S21]]'
+  - '[[2026-05-14-cli-workflow-redesign-P04-S22]]'
+  - '[[2026-05-14-cli-workflow-redesign-P05-S23]]'
+  - '[[2026-05-14-cli-workflow-redesign-P05-S24]]'
+  - '[[2026-05-14-cli-workflow-redesign-P05-S25]]'
+  - '[[2026-05-14-cli-workflow-redesign-P05-S26]]'
+  - '[[2026-05-14-cli-workflow-redesign-P05-S27]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S28]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S29]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S30]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S31]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S32]]'
+  - '[[2026-05-14-cli-workflow-redesign-P06-S33]]'
   - '[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-exec]]'
@@ -419,6 +448,9 @@ related:
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2150]]'
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2152]]'
   - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2153]]'
+  - '[[2026-07-04-cli-workflow-redesign-audit]]'
+  - '[[2026-07-04-cli-workflow-redesign-reference]]'
+  - '[[2026-07-05-cli-workflow-redesign-audit]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -443,8 +475,8 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` - `cli-workflow-redesign` adr: `Bucket event history` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` - `cli-workflow-redesign` adr: `complementaria external filing path` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-config-auth-shape-adr` - `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
-- `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` - `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded by [[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]`)
-- `2026-05-12-cli-workflow-redesign-config-init-shape-adr` - `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
+- `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` - `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded`)
+- `2026-05-12-cli-workflow-redesign-config-init-shape-adr` - `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr` - `cli-workflow-redesign` adr: `domain harvest normatives and manuals` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr` - `cli-workflow-redesign` adr: `domain harvest OSS/IOSS` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr` - `cli-workflow-redesign` adr: `domain harvest rental` | (**status:** `accepted`)
@@ -479,7 +511,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` - `cli-workflow-redesign` adr: `Borrador 100 snapshot binding integration into app modelo calculate` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-borrador-snapshot-management-adr` - `cli-workflow-redesign` adr: `Borrador snapshot management list, discard, export, verify` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-config-profile-keys-discovery-adr` - `cli-workflow-redesign` adr: `Config profile keys discovery verb` | (**status:** `accepted`)
-- `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` - `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded by [[2026-05-16-profile-lifecycle-cli-adr]]`)
+- `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` - `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded`)
 - `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` - `cli-workflow-redesign` adr: `config repair shape` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-explain-legal-ref-convention-adr` - `cli-workflow-redesign` adr: `Cross-cutting --explain legal reference convention` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-ledger-ratios-eligible-and-validate-adr` - `cli-workflow-redesign` adr: `App ledger ratios eligible and validate verbs` | (**status:** `accepted`)
@@ -569,6 +601,8 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-22-w03-s12-deadline-review-audit` - `w03-s12-deadline` Code Review
 - `2026-05-22-w03-s13-rate-schedules-review-audit` - `cli-workflow-redesign` W03.S13 Rate Schedules Review
 - `2026-06-03-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `W83.P400.S2281 setup-event emission inventory`
+- `2026-07-04-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `Modelo 145 registry foundation review`
+- `2026-07-05-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `m145-service-owner-review`
 
 ### exec
 
@@ -803,6 +837,35 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-06-12-cli-workflow-redesign-W77-P374-S2150` - W77.P374.S2150 - retired config bucket mount reconciliation
 - `2026-06-12-cli-workflow-redesign-W77-P374-S2152` - W77.P374.S2152 - apex R08 closeout reconciliation
 - `2026-06-12-cli-workflow-redesign-W77-P374-S2153` - W77.P374.S2153 - child ADR amendment verification
+- `2026-05-14-cli-workflow-redesign-P01-S01` - Add local corpus copy and catalogue authority for AEAT G603 Modelo 145 payer communication
+- `2026-05-14-cli-workflow-redesign-P01-S02` - Add local corpus copy and catalogue authority for AEAT Modelo 145 non-electronic payer processing obligations
+- `2026-05-14-cli-workflow-redesign-P01-S03` - Add local corpus copy and catalogue authority for the current Modelo 145 form
+- `2026-05-14-cli-workflow-redesign-P01-S04` - Add local corpus copy and catalogue authority for the Modelo 145 record design
+- `2026-05-14-cli-workflow-redesign-P01-S05` - Add current BOE legal authority and relevant amendments for Modelo 145, with derogated historical authority only as historical context if retained
+- `2026-05-14-cli-workflow-redesign-P02-S09` - Add non-filing communication validation rules for rejected filing, deadline, live-read, and portal surfaces
+- `2026-05-14-cli-workflow-redesign-P03-S11` - Add Modelo 145 registry TOML using only source-backed communication, validation, and export authority
+- `2026-05-14-cli-workflow-redesign-P03-S12` - Model Modelo 145 lifecycle as local payer communication rather than AEAT filing
+- `2026-05-14-cli-workflow-redesign-P03-S13` - Add export layout metadata grounded in the official record design
+- `2026-05-14-cli-workflow-redesign-P03-S14` - Exclude filing schedules, deadline windows, live cross references, filing application links, and portal read or write links from Modelo 145
+- `2026-05-14-cli-workflow-redesign-P03-S15` - Verify Modelo 145 registry load, source grounding, export metadata, and rejected filing surfaces
+- `2026-05-14-cli-workflow-redesign-P04-S16` - Add backend service ownership for Modelo 145 local payer communication
+- `2026-05-14-cli-workflow-redesign-P04-S17` - Add create behavior for bucket-scoped Modelo 145 communication records
+- `2026-05-14-cli-workflow-redesign-P04-S18` - Add validate behavior backed by registry and source authority
+- `2026-05-14-cli-workflow-redesign-P04-S19` - Add export behavior backed by the Modelo 145 registry layout
+- `2026-05-14-cli-workflow-redesign-P04-S20` - Add local delivered-to-payer and completed communication state transitions
+- `2026-05-14-cli-workflow-redesign-P04-S21` - Emit communication-specific bucket events without filing or filed-state terminology
+- `2026-05-14-cli-workflow-redesign-P04-S22` - Add service-level errors and logs using communication vocabulary only
+- `2026-05-14-cli-workflow-redesign-P05-S23` - Add Modelo 145 command handlers that delegate to the backend communication service
+- `2026-05-14-cli-workflow-redesign-P05-S24` - Keep Modelo 145 argument parsing separate from business behavior
+- `2026-05-14-cli-workflow-redesign-P05-S25` - Render Modelo 145 command results through centralized output emitters
+- `2026-05-14-cli-workflow-redesign-P05-S26` - Route Modelo 145 command failures through the central command error boundary
+- `2026-05-14-cli-workflow-redesign-P05-S27` - Validate Modelo 145 help text avoids file, filing, deadline, live-read, and AEAT submission vocabulary
+- `2026-05-14-cli-workflow-redesign-P06-S28` - Add real service tests for create, validate, export, delivered-to-payer, and locally completed behavior
+- `2026-05-14-cli-workflow-redesign-P06-S29` - Add CLI behavior tests exercising Modelo 145 through real backend services
+- `2026-05-14-cli-workflow-redesign-P06-S30` - Add negative tests proving Modelo 145 has no filing, deadline, live-read, portal, submit, receipt, or AEAT electronic tramite surface
+- `2026-05-14-cli-workflow-redesign-P06-S31` - Add negative tests proving Modelo 145 has no shims, stubs, fake support, deprecated spellings, or compatibility aliases
+- `2026-05-14-cli-workflow-redesign-P06-S32` - Confirm Modelo 036 and Modelo 037 behavior and metadata remain unaffected by Modelo 145 successor work
+- `2026-05-14-cli-workflow-redesign-P06-S33` - Run the targeted registry, application, and CLI test slices without skips, xfails, mocks, stubs, or tautological assertions
 
 ### plan
 
@@ -811,6 +874,10 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan` - `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 - `2026-05-21-state-architecture-plan` - `cli-workflow-redesign` plan: profile state-management architecture
 - `2026-05-21-taxpayer-type-applicability-plan` - `cli-workflow-redesign` plan: taxpayer entity-type / regime / enrolment model
+
+### reference
+
+- `2026-07-04-cli-workflow-redesign-reference` - `cli-workflow-redesign` reference: `Modelo 145 fixed-width export layout ground-truth (dr145 v2.0)`
 
 ### research
 

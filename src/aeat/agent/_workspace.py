@@ -32,6 +32,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .. import __version__
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from . import harness_root, iter_operator_rules, iter_personas
 
@@ -61,7 +62,9 @@ _PLUGIN_DISPLAY_NAME = "AEAT Spanish tax assistant"
 _PLUGIN_DESCRIPTION = (
     "Operate the aeat Spanish-tax CLI: grounded search over the bundled BOE/AEAT "
     "legal corpus, situation-keyed guided workflows, and gated execution that "
-    "never files to AEAT."
+    "never files to AEAT. The server advertises an orientation core by default "
+    "(overview + contract + search/execute); set the surface option to 'full' to "
+    "advertise every verb up front."
 )
 _PLUGIN_AUTHOR_NAME = "AEAT tax assistant project"
 _PLUGIN_LICENSE = "Apache-2.0"
@@ -85,6 +88,12 @@ _MCP_CONSOLE_SCRIPT = "aeat-mcp"
 _PYPI_DISTRIBUTION = "aeat-cli"
 _MCP_PERSONA_ENV = "AEAT_MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
+# The advertised-tool-surface toggle (ADR mcp-progressive-discovery P1). ``core``
+# (default) advertises only the orientation slice; ``full`` restores the flat
+# per-verb surface. Wired from the ``userConfig`` surface option; the server
+# validates the value and refuses an unknown one.
+_MCP_SURFACE_ENV = "AEAT_MCP_SURFACE"
+_MCP_SURFACE_INTERPOLATION = "${user_config.surface}"
 
 # --- Claude marketplace layout --------------------------------------------
 #
@@ -122,8 +131,6 @@ def _plugin_version() -> str:
     try:
         return _metadata.version(_PLUGIN_NAME)
     except _metadata.PackageNotFoundError:
-        from .. import __version__
-
         return __version__
 
 
@@ -175,6 +182,14 @@ _PERSONA_CONFIG_DESCRIPTION = (
     "surface. The aeat-mcp server validates the value and refuses an unknown "
     "persona."
 )
+_SURFACE_CONFIG_KEY = "surface"
+_SURFACE_CONFIG_TITLE = "Tool surface"
+_SURFACE_CONFIG_DEFAULT = "core"
+_SURFACE_CONFIG_DESCRIPTION = (
+    "Which tools the server advertises up front: 'core' (default) advertises the "
+    "orientation slice plus search/execute; 'full' advertises every verb. Either "
+    "way the whole verb universe stays reachable through search and execute."
+)
 
 
 def _plugin_user_config(persona_default: str) -> dict[str, object]:
@@ -190,6 +205,13 @@ def _plugin_user_config(persona_default: str) -> dict[str, object]:
             "title": _PERSONA_CONFIG_TITLE,
             "description": _PERSONA_CONFIG_DESCRIPTION,
             "default": persona_default,
+            "required": False,
+        },
+        _SURFACE_CONFIG_KEY: {
+            "type": "string",
+            "title": _SURFACE_CONFIG_TITLE,
+            "description": _SURFACE_CONFIG_DESCRIPTION,
+            "default": _SURFACE_CONFIG_DEFAULT,
             "required": False,
         },
     }
@@ -333,7 +355,10 @@ def _mcp_config_document(version: str) -> dict[str, object]:
             _MCP_SERVER_NAME: {
                 "command": _MCP_LAUNCHER,
                 "args": ["--from", f"{_PYPI_DISTRIBUTION}[agent]=={version}", _MCP_CONSOLE_SCRIPT],
-                "env": {_MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION},
+                "env": {
+                    _MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION,
+                    _MCP_SURFACE_ENV: _MCP_SURFACE_INTERPOLATION,
+                },
             },
         },
     }

@@ -1,19 +1,19 @@
 """Strict Pydantic models for the LLM package.
 
-The public :mod:`aeat.adapters.outbound.llm` facade re-exports these records.
-:class:`~aeat.adapters.outbound.llm.LLMRequest`,
-:class:`~aeat.adapters.outbound.llm.LLMResponse`, and
-:class:`~aeat.adapters.outbound.llm.LLMProvider` form the
-:class:`~aeat.adapters.outbound.llm.LLMClient` boundary.
-:class:`~aeat.adapters.outbound.llm.CachedEntry`,
-:class:`~aeat.adapters.outbound.llm.CacheKey`, and
-:class:`~aeat.adapters.outbound.llm.CacheStats` support
-:class:`~aeat.adapters.outbound.llm.LLMCache`, while
-:class:`~aeat.adapters.outbound.llm.UsageRecord` and
-:class:`~aeat.adapters.outbound.llm.UsageSummary` support
-:class:`~aeat.adapters.outbound.llm.UsageRecorder`. Prompt definitions are
-managed through :class:`~aeat.adapters.outbound.llm.PromptRegistry`; validation
-helpers raise :exc:`~aeat.adapters.outbound.llm.LLMValidationError`.
+The public :mod:`adapters.outbound.llm` facade re-exports these records.
+:class:`~adapters.outbound.llm.LLMRequest`,
+:class:`~adapters.outbound.llm.LLMResponse`, and
+:class:`~adapters.outbound.llm.LLMProvider` form the
+:class:`~adapters.outbound.llm.LLMClient` boundary.
+:class:`~adapters.outbound.llm.CachedEntry`,
+:class:`~adapters.outbound.llm.CacheKey`, and
+:class:`~adapters.outbound.llm.CacheStats` support
+:class:`~adapters.outbound.llm.LLMCache`, while
+:class:`~adapters.outbound.llm.UsageRecord` and
+:class:`~adapters.outbound.llm.UsageSummary` support
+:class:`~adapters.outbound.llm.UsageRecorder`. Prompt definitions are
+managed through :class:`~adapters.outbound.llm.PromptRegistry`; validation
+helpers raise :exc:`~adapters.outbound.llm.LLMValidationError`.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
 
 class LLMProvider(StrEnum):
-    """Supported providers selected by :class:`~aeat.adapters.outbound.llm.LLMClient`."""
+    """Supported providers selected by :class:`~adapters.outbound.llm.LLMClient`."""
 
     ANTHROPIC = "ANTHROPIC"
     OPENAI = "OPENAI"
@@ -45,8 +45,8 @@ class MultimodalImageInput(BaseModel):
     Transient and in-memory only. Carries the base64-encoded image bytes the
     provider adapter forwards to a local vision model and the content address
     (an attachment-store SHA-256) that
-    :class:`~aeat.adapters.outbound.llm.LLMCache` folds into
-    :class:`~aeat.adapters.outbound.llm.CacheKey`. The base64 payload is never
+    :class:`~adapters.outbound.llm.LLMCache` folds into
+    :class:`~adapters.outbound.llm.CacheKey`. The base64 payload is never
     persisted -- only its content address enters the cache key
     (``sensitive-financial-data-secure-storage-only``).
     """
@@ -66,12 +66,12 @@ class MultimodalImageInput(BaseModel):
 
 
 class LLMRequest(BaseModel):
-    """User-facing completion request accepted by :class:`~aeat.adapters.outbound.llm.LLMClient`.
+    """User-facing completion request accepted by :class:`~adapters.outbound.llm.LLMClient`.
 
     Provider and model override fields select
-    :class:`~aeat.adapters.outbound.llm.LLMProvider` values for one call, and
+    :class:`~adapters.outbound.llm.LLMProvider` values for one call, and
     ``images`` carries transient
-    :class:`~aeat.adapters.outbound.llm.MultimodalImageInput` payloads for
+    :class:`~adapters.outbound.llm.MultimodalImageInput` payloads for
     local vision flows.
     """
 
@@ -96,7 +96,7 @@ class LLMRequest(BaseModel):
         """Ensure prompts are not empty or whitespace-only.
 
         Raises:
-            :exc:`~aeat.adapters.outbound.llm.LLMValidationError`: When the
+            :exc:`~adapters.outbound.llm.LLMValidationError`: When the
             prompt is blank after trimming.
         """
         normalized = value.strip()
@@ -124,11 +124,11 @@ class LLMRequest(BaseModel):
 
 
 class LLMResponse(BaseModel):
-    """Completion response returned by :meth:`~aeat.adapters.outbound.llm.LLMClient.complete`.
+    """Completion response returned by :meth:`~adapters.outbound.llm.LLMClient.complete`.
 
     Responses are persisted inside
-    :class:`~aeat.adapters.outbound.llm.CachedEntry` records and converted into
-    :class:`~aeat.adapters.outbound.llm.UsageRecord` values for cost tracking.
+    :class:`~adapters.outbound.llm.CachedEntry` records and converted into
+    :class:`~adapters.outbound.llm.UsageRecord` values for cost tracking.
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -145,7 +145,7 @@ class LLMResponse(BaseModel):
 
 
 class PromptDefinition(BaseModel):
-    """Prompt metadata stored by :class:`~aeat.adapters.outbound.llm.PromptRegistry`."""
+    """Prompt metadata stored by :class:`~adapters.outbound.llm.PromptRegistry`."""
 
     model_config = ConfigDict(strict=True, frozen=True, arbitrary_types_allowed=True)
 
@@ -169,7 +169,7 @@ class PromptDefinition(BaseModel):
 
 
 class PromptRegistry(BaseModel):
-    """Registry of versioned :class:`~aeat.adapters.outbound.llm.PromptDefinition` values."""
+    """Registry of versioned :class:`~adapters.outbound.llm.PromptDefinition` values."""
 
     model_config = ConfigDict(strict=True)
 
@@ -183,7 +183,7 @@ class PromptRegistry(BaseModel):
         self.definitions[self._composite_key(definition.id, definition.version)] = definition
 
     def get(self, prompt_id: str, version: int | None = None) -> PromptDefinition:
-        """Return a :class:`~aeat.adapters.outbound.llm.PromptDefinition` by id and optional version."""
+        """Return a :class:`~adapters.outbound.llm.PromptDefinition` by id and optional version."""
         if version is not None:
             return self.definitions[self._composite_key(prompt_id, version)]
         candidates = [item for item in self.definitions.values() if item.id == prompt_id]
@@ -197,7 +197,7 @@ class PromptRegistry(BaseModel):
 
     @classmethod
     def seeded(cls) -> PromptRegistry:
-        """Return a default :class:`~aeat.adapters.outbound.llm.PromptRegistry`."""
+        """Return a default :class:`~adapters.outbound.llm.PromptRegistry`."""
         registry = cls()
         registry.register(
             PromptDefinition(
@@ -240,7 +240,7 @@ class PromptRegistry(BaseModel):
 
 
 class CachedEntry(BaseModel):
-    """Encrypted cache record persisted by :class:`~aeat.adapters.outbound.llm.LLMCache`."""
+    """Encrypted cache record persisted by :class:`~adapters.outbound.llm.LLMCache`."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -253,7 +253,7 @@ class CachedEntry(BaseModel):
 
 
 class UsageRecord(BaseModel):
-    """Append-only usage record persisted by :class:`~aeat.adapters.outbound.llm.UsageRecorder`."""
+    """Append-only usage record persisted by :class:`~adapters.outbound.llm.UsageRecorder`."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -271,7 +271,7 @@ class UsageRecord(BaseModel):
 
 
 class Translation(BaseModel):
-    """Translation response built on top of :class:`~aeat.adapters.outbound.llm.LLMResponse`."""
+    """Translation response built on top of :class:`~adapters.outbound.llm.LLMResponse`."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -292,7 +292,7 @@ class Translation(BaseModel):
 
 
 class CacheKey(BaseModel):
-    """Derived cache key used by :class:`~aeat.adapters.outbound.llm.LLMCache`."""
+    """Derived cache key used by :class:`~adapters.outbound.llm.LLMCache`."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -303,7 +303,7 @@ class CacheKey(BaseModel):
 
 
 class CacheStats(BaseModel):
-    """Basic :class:`~aeat.adapters.outbound.llm.LLMCache` statistics for CLI reporting."""
+    """Basic :class:`~adapters.outbound.llm.LLMCache` statistics for CLI reporting."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -312,7 +312,7 @@ class CacheStats(BaseModel):
 
 
 class UsageSummary(BaseModel):
-    """Aggregated :class:`~aeat.adapters.outbound.llm.UsageRecorder` statistics."""
+    """Aggregated :class:`~adapters.outbound.llm.UsageRecorder` statistics."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 

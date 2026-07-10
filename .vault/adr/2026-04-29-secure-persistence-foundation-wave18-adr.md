@@ -3,14 +3,14 @@ tags:
   - "#adr"
   - "#secure-persistence-foundation"
 date: 2026-04-29
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-29-secure-persistence-foundation-wave18-research]]"
   - "[[2026-04-30-secure-persistence-foundation-wave15-16-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave17-audit]]"
 ---
 
-# `secure-persistence-foundation` wave-18 ADR: rotation-correctness fixes
+# `secure-persistence-foundation` wave-18 ADR: rotation-correctness fixes | (**status:** `accepted`)
 
 ## Status
 

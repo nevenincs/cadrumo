@@ -1,17 +1,17 @@
-"""Reconstruct a :class:`~aeat.domain.filing.ModeloDraft` from an AEAT justificante PDF.
+"""Reconstruct a :class:`~domain.filing.ModeloDraft` from an AEAT justificante PDF.
 
 The operator keeps the justificante PDF of a past filing on disk. This
-module parses the PDF into a :class:`~aeat.domain.justificante.Justificante`
-via :func:`aeat.adapters.inbound.justificante.parse_justificante`, validates
+module parses the PDF into a :class:`~domain.justificante.Justificante`
+via :func:`adapters.inbound.justificante.parse_justificante`, validates
 the printed period against the active registry subview, asks
-:func:`aeat.application.filing.build_draft` to materialise an empty draft
+:func:`application.filing.build_draft` to materialise an empty draft
 scaffold, and co-produces a companion
-:class:`~aeat.domain.submission.ModeloPresentado` record so the import can be
+:class:`~domain.submission.ModeloPresentado` record so the import can be
 used as an amendment baseline.
 
 The justificante is receipt metadata, not a full casilla-value source. When
 the active registry requires inputs or binding values that the receipt cannot
-provide, import fails with :class:`~aeat.domain.filing.ModeloImportError`
+provide, import fails with :class:`~domain.filing.ModeloImportError`
 instead of fabricating tax values.
 
 No AEAT certificate authentication or network call is involved — the
@@ -19,21 +19,21 @@ command is a pure offline transform from (PDF bytes) → (draft, submission,
 warnings).
 
 This is not the production external-evidence import path for current filing
-records. It does not create a :class:`~aeat.domain.modelos.ModeloRecord`, attach
-:class:`~aeat.domain.modelos.ExternalEvidence`, or infer missing casilla values
+records. It does not create a :class:`~domain.modelos.ModeloRecord`, attach
+:class:`~domain.modelos.ExternalEvidence`, or infer missing casilla values
 from receipt metadata.
 
 See Also:
-    :mod:`aeat.adapters.inbound.justificante`
+    :mod:`adapters.inbound.justificante`
         Local PDF parser that extracts the typed receipt record.
-    :func:`aeat.application.filing.build_runtime_schema_provider`
+    :func:`application.filing.build_runtime_schema_provider`
         Registry-backed schema provider used to validate supported periods
         and build the draft scaffold.
-    :func:`aeat.application.filing.build_complementaria`
+    :func:`application.filing.build_complementaria`
         Amendment flow that can consume the imported submission baseline.
-    :func:`aeat.application.modelo.import_external_filing_evidence`
+    :func:`application.modelo.import_external_filing_evidence`
         External-evidence import path that builds the current
-        :class:`~aeat.domain.modelos.ModeloRecord` baseline consumed by
+        :class:`~domain.modelos.ModeloRecord` baseline consumed by
         work-unit amendments.
 """
 
@@ -70,7 +70,7 @@ class _RegistryPeriodSubview(Protocol):
 class RegistryImportSchemaProvider(CasillaSchemaProvider, Protocol):
     """Combined casilla schema and period-subview provider used by the import path.
 
-    Implementations must satisfy both the :class:`aeat.domain.filing.CasillaSchemaProvider`
+    Implementations must satisfy both the :class:`domain.filing.CasillaSchemaProvider`
     contract (for draft construction) and expose ``get_subview`` so
     :func:`import_filing_from_justificante` can look up the supported
     period tokens for a given modelo during period canonicalisation.
@@ -87,12 +87,12 @@ class JustificanteImportResult:
     The container is deliberately a frozen dataclass rather than a
     pydantic model because it wraps two already-validated pydantic
     records and defers the ``ModeloPresentado`` type to runtime (the
-    ``aeat.adapters.outbound.aeat.export`` package itself imports :mod:`aeat.application.filing`, so
+    ``aeat.adapters.outbound.aeat.export`` package itself imports :mod:`application.filing`, so
     pulling ``ModeloPresentado`` in at module scope would cycle).
 
     Attributes:
-        draft: The freshly built :class:`~aeat.domain.filing.ModeloDraft` scaffold.
-        submission: The companion :class:`~aeat.domain.submission.ModeloPresentado`
+        draft: The freshly built :class:`~domain.filing.ModeloDraft` scaffold.
+        submission: The companion :class:`~domain.submission.ModeloPresentado`
             that lets the amendment engine treat the imported draft as a
             baseline.
         warnings: Multilingual advisory messages. The CLI renders these so
@@ -150,7 +150,10 @@ def import_filing_from_justificante(
             schema_provider=schema_provider,
         )
     except ModeloBuilderError as exc:
-        raise ModeloImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
+        raise ModeloImportError(
+            translated_message="application.filing.errors.import_failed",
+            context={"modelo": repr(justificante.modelo), "detail": str(exc)},
+        ) from exc
 
     submission = _build_submission_record(justificante=justificante, draft=draft)
     warnings: tuple[str, ...] = (_EMPTY_CASILLA_WARNING,)
@@ -175,7 +178,7 @@ def _normalise_period(
     """Validate a parsed justificante period against the active registry.
 
     The inbound justificante parser resolves printed AEAT tokens and
-    year-only annual receipts to :class:`aeat.core.Period` before this
+    year-only annual receipts to :class:`core.Period` before this
     import service builds filing records. This helper only confirms that
     the typed period matches the printed ``ejercicio`` and is declared by
     the active registry revision.
@@ -197,14 +200,21 @@ def _normalise_period(
     try:
         subview = schema_provider.get_subview(modelo)
     except ModeloBuilderError as exc:
-        raise ModeloImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+        raise ModeloImportError(
+            translated_message="application.filing.errors.modelo_not_in_registry",
+            context={"modelo": repr(modelo)},
+        ) from exc
     supported_periods = set(subview.period_selector_periods)
 
     if ejercicio is not None and (len(ejercicio) != 4 or not ejercicio.isdigit()):
-        raise ModeloImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
+        raise ModeloImportError(
+            translated_message="application.filing.errors.unexpected_ejercicio",
+            context={"modelo": modelo, "ejercicio": repr(ejercicio)},
+        )
     if ejercicio is not None and raw_period.filing_year != int(ejercicio):
         raise ModeloImportError(
-            f"modelo {modelo}: cannot canonicalise period {raw_period!s} for ejercicio {ejercicio!r}",
+            translated_message="application.filing.errors.period_ejercicio_mismatch",
+            context={"modelo": modelo, "period": str(raw_period), "ejercicio": repr(ejercicio)},
         )
 
     return _require_supported_period_token(
@@ -239,7 +249,7 @@ def _build_submission_record(
     justificante: Justificante,
     draft: ModeloDraft,
 ) -> ModeloPresentado:
-    """Build the companion :class:`~aeat.domain.submission.ModeloPresentado` for an import.
+    """Build the companion :class:`~domain.submission.ModeloPresentado` for an import.
 
     The ``submission_id`` hashes the CSV and the draft id together so it
     stays stable across re-imports of the same PDF and remains distinct

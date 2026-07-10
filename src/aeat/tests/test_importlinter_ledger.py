@@ -1,4 +1,16 @@
-"""Structural checks for the Import Linter ignore ledger."""
+"""Structural checks for the Import Linter ignore ledger.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the repository root anchor used to parse ``.importlinter``
+        without depending on the current working directory.
+    ``.importlinter``
+        Layered architecture contract and ignore ledger ratcheted by these
+        tests.
+
+The layered import-boundary model and its sanctioned exception registry must
+not drift unnoticed; this ratchet is what makes that drift visible.
+"""
 
 from __future__ import annotations
 
@@ -18,9 +30,9 @@ _SOURCE_ROOT = REPO_ROOT / "src"
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>aeat\.[\w.*]+)\s*->\s*(?P<target>aeat\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 840  # bumped: filing-amendment repository ports-inversion (W03.P08.S11, +4)
-_APPLICATION_SOURCE_MODULE_BASELINE = 77
-_DOMAIN_TO_ADAPTERS_BASELINE = 70  # bumped: filing-amendment repository domain roundtrip test edge (W03.P08.S11, +1)
+_APPLICATION_TO_ADAPTERS_BASELINE = 840  # filing-amendment repository ports-inversion increment (+4)
+_APPLICATION_SOURCE_MODULE_BASELINE = 78  # prorrata register application adapter pin
+_DOMAIN_TO_ADAPTERS_BASELINE = 70  # filing-amendment repository domain roundtrip test increment (+1)
 
 
 @dataclass(frozen=True)
@@ -53,8 +65,16 @@ def _ignore_edges() -> tuple[IgnoreEdge, ...]:
     return tuple(edges)
 
 
-def _layered_edges() -> tuple[IgnoreEdge, ...]:
-    return tuple(edge for edge in _ignore_edges() if edge.contract == "layered")
+@pytest.fixture(scope="module")
+def ignore_edges() -> tuple[IgnoreEdge, ...]:
+    """Return parsed Import Linter ignore edges once for this test module."""
+    return _ignore_edges()
+
+
+@pytest.fixture(scope="module")
+def layered_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> tuple[IgnoreEdge, ...]:
+    """Return the parsed layered-contract ignore edges."""
+    return tuple(edge for edge in ignore_edges if edge.contract == "layered")
 
 
 def _resolve_module_path(module: str) -> Path:
@@ -69,9 +89,9 @@ def _module_exists(module: str) -> bool:
     return path.with_suffix(".py").is_file() or (path / "__init__.py").is_file()
 
 
-def test_ignore_import_modules_resolve_on_disk() -> None:
+def test_ignore_import_modules_resolve_on_disk(ignore_edges: tuple[IgnoreEdge, ...]) -> None:
     missing: list[str] = []
-    for edge in _ignore_edges():
+    for edge in ignore_edges:
         for module in (edge.source, edge.target):
             if not _module_exists(module):
                 missing.append(f"line {edge.line_no}: {module}")
@@ -79,10 +99,10 @@ def test_ignore_import_modules_resolve_on_disk() -> None:
     assert missing == []
 
 
-def test_application_to_adapters_pin_count_does_not_grow() -> None:
+def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
     application_adapter_edges = tuple(
         edge
-        for edge in _layered_edges()
+        for edge in layered_edges
         if edge.source.startswith("aeat.application.") and edge.target.startswith("aeat.adapters")
     )
     blanket_edges = tuple(
@@ -97,30 +117,28 @@ def test_application_to_adapters_pin_count_does_not_grow() -> None:
     assert len(source_module_edges) <= _APPLICATION_SOURCE_MODULE_BASELINE
 
 
-def test_domain_to_adapters_pin_count_does_not_grow() -> None:
+def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
     domain_adapter_edges = tuple(
         edge
-        for edge in _layered_edges()
+        for edge in layered_edges
         if edge.source.startswith("aeat.domain.") and edge.target.startswith("aeat.adapters")
     )
 
     assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
 
 
-def test_zero_production_domain_to_adapters_edges() -> None:
-    """The ports-inversion campaign seam is closed: no PRODUCTION domain module
-    may pin a domain -> adapters ignore edge in any contract.
+def test_zero_production_domain_to_adapters_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> None:
+    """No production domain module may pin a domain -> adapters ignore edge.
 
     Every production domain repository now sits behind a Protocol port with its
-    concrete class under ``adapters.persistence.profile`` (arch-remediation-ports
-    -inversion, W04.P10.S19). Only test-file roundtrip / anti-tautology edges —
+    concrete class under ``adapters.persistence.profile``. Only test-file roundtrip / anti-tautology edges —
     which legitimately construct the concrete adapter to exercise the encrypted
     boundary — may remain. A production domain -> adapters edge reappearing here
-    is a seam regression and must fail loudly, not ratchet.
+    is an architecture regression and must fail loudly, not ratchet.
     """
     production_domain_adapter_edges = tuple(
         edge
-        for edge in _ignore_edges()
+        for edge in ignore_edges
         if edge.source.startswith("aeat.domain.")
         and edge.target.startswith("aeat.adapters")
         and ".tests." not in edge.source

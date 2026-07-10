@@ -1,19 +1,27 @@
 """Remote-telemetry consent gate.
 
-Mirrors :func:`aeat.application.ledger.cloud_evidence_read_permitted`'s exact
+Mirrors :func:`~application.ledger.cloud_evidence_read_permitted`'s exact
 shape (gestor-mode absolute bar, then the deployment opt-in flag, then the
 tier, then the per-invocation acknowledgement, all ANDed) so the codebase's
 off-host consent gates stay uniform
 (``sensitive-financial-data-secure-storage-only``,
 ``2026-07-04-remote-telemetry-adr``). Settings is imported lazily inside the
 function body to avoid the circular import that would result from
-``core.config`` importing :mod:`aeat.core.telemetry` for
-:class:`~aeat.core.telemetry.TelemetryTier` at module scope.
+``core.config`` importing :mod:`~core.telemetry` for
+:class:`~core.telemetry.TelemetryTier` at module scope.
+
+See Also:
+    :func:`~core.telemetry.emit_telemetry_event`
+        Applies this gate before dispatching any remote-eligible payload.
+    :class:`~core.telemetry.TelemetryTier`
+        Closed tier enum consulted by the gate.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
+from ._tier import TelemetryTier
 
 if TYPE_CHECKING:
     from ..config import Settings
@@ -35,11 +43,11 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
        conditions.
     2. The deployment has opted in (``settings.aeat_telemetry_opt_in`` is
        ``True``).
-    3. The configured tier is not ``TelemetryTier.OFF``.
+    3. The configured tier is not :attr:`~core.telemetry.TelemetryTier.OFF`.
     4. The operator acknowledged this specific invocation
        (``acknowledged`` is ``True``). The acknowledgement is never sticky;
        it must be re-affirmed at every call site, mirroring
-       :func:`aeat.application.ledger.cloud_evidence_read_permitted`.
+       :func:`~application.ledger.cloud_evidence_read_permitted`.
 
     Args:
         settings: Resolved deployment settings carrying the telemetry
@@ -50,8 +58,6 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     Returns:
         ``True`` only when all four conditions above hold.
     """
-    from ._tier import TelemetryTier
-
     if settings.aeat_telemetry_gestor_mode:
         return False
     if not settings.aeat_telemetry_opt_in:

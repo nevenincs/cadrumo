@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Awaitable
+from collections.abc import Coroutine
 
 import mcp.types as mcp_types
 import pytest
@@ -27,8 +27,8 @@ from .._tools import build_tool_descriptors
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _run[T](coro: Awaitable[T]) -> T:
-    return asyncio.run(coro)  # type: ignore[arg-type]
+def _run[T](coro: Coroutine[object, object, T]) -> T:
+    return asyncio.run(coro)
 
 
 async def _initialize_list_and_call() -> tuple[list[str], mcp_types.CallToolResult]:

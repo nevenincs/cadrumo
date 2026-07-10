@@ -4,7 +4,7 @@ Closes the non-interactive review loop the extraction primitive
 (``25ed55fd29``) and the ``evidence extract`` CLI verb (``58064ca45f``) opened:
 an operator (or an autonomous LLM operator per the agent-harness contract) can
 now run ``evidence confirm`` against a stored evidence record and mint a real
-:class:`~aeat.domain.invoices.Invoice` in the reconciliation catalogue, with
+:class:`~domain.invoices.Invoice` in the reconciliation catalogue, with
 any extracted field overridable and a same-identity re-confirm collapsing to a
 guarded no-op (``single-subject-mutation-is-idempotent-guarded``). The write
 itself is delegated to the sole sanctioned catalogue-invoice writer
@@ -14,6 +14,21 @@ confirm path never re-implements that write.
 Every case drives the real Typer CLI tree, a real encrypted bucket session,
 and a real reportlab-generated text-bearing PDF. No mocks, stubs, or
 monkeypatch.
+
+See Also:
+    :func:`~entrypoints.cli._ledger_evidence_cli._run_evidence_confirm`
+        CLI command runner exercised by these real Typer tests.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Application service that re-extracts, applies overrides, and writes.
+    :class:`~application.ledger.InvoiceConfirmationResult`
+        Result payload whose created/idempotent branches are asserted here.
+    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+        On-host evidence reader reused by the confirm path.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Sole sanctioned catalogue writer reached by confirmed drafts.
+
+Evidence reading stays local-first and secure-storage-only: nothing decrypted
+here is ever written outside the encrypted bucket substrate.
 """
 
 from __future__ import annotations

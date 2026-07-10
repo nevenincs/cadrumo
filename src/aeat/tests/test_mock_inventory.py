@@ -9,7 +9,7 @@ Classification rule:
 - Any mock import under deterministic production tests is drift.
 - Any pytest-mock ``mocker`` fixture reference is drift.
 - Any imported, assigned, or locally defined ``Mock*``, ``Fake*``, ``Stub*``,
-  or ``Dummy*`` test helper is drift; tests must name helpers by the concrete
+  ``Spy*``, or ``Dummy*`` test helper is drift; tests must name helpers by the concrete
   behaviour or contract they exercise.
 
 Current inventory for durable replacement:
@@ -17,14 +17,29 @@ Current inventory for durable replacement:
   tests, test-support modules, or conftests under ``src/aeat/``.  The codebase
   uses constructor injection with inline callables for boundary-injection sites
   rather than the mock library. Zero imported, assigned, or locally defined
-  mock/fake/stub/dummy helper classes or functions.
+  mock/fake/stub/spy/dummy helper classes or functions.
 
 The tests assert that neither mock imports nor test-double definitions appear.
+
+See Also:
+    :mod:`~tests.test_monkeypatch_inventory`
+        Companion production-test guard for monkeypatch mutation shortcuts.
+    :mod:`~tests.test_no_skip_xfail`
+        Companion guard for skip and xfail shortcuts across deterministic tests.
+    :func:`~tests._inventory.all_test_control_modules`
+        Shared inventory surface walked by this test-control ratchet.
+    :class:`_TestControlInventorySites`
+        AST-level site carrier collected for each inspected source tree.
+    :class:`_TestControlInventoryViolations`
+        Formatted violation aggregate consumed by the public assertions.
 """
 
 from __future__ import annotations
 
 import ast
+from collections import Counter
+from collections.abc import Iterable, Mapping
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -35,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # Import module names that constitute banned test-control usage.
 _FORBIDDEN_TEST_CONTROL_IMPORTS = ("unittest.mock", "unittest", "mock", "pytest_mock")
-_FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "dummy")
+_FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "spy", "dummy")
 _PYTEST_MOCK_FIXTURE_NAME = "mocker"
 
 
@@ -52,7 +67,7 @@ class _TestControlInventorySites(NamedTuple):
 class _TestControlInventoryViolations(NamedTuple):
     """Formatted mock/test-double policy violations for the test-control surface."""
 
-    test_control_and_pytest_mock: tuple[str, ...]
+    test_control_and_pytest_mock_usage: tuple[str, ...]
     test_double_imports: tuple[str, ...]
     test_double_bindings: tuple[str, ...]
     test_double_definitions: tuple[str, ...]
@@ -69,7 +84,11 @@ def _test_control_inventory_sites(tree: ast.AST) -> _TestControlInventorySites:
     for node in ast.walk(tree):
         _add_forbidden_import_sites(node, test_control_imports, test_double_imports)
 
-        if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef) and _is_test_double_name(node.name):
+        if (
+            isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+            and not node.name.startswith("test_")
+            and _is_test_double_name(node.name)
+        ):
             test_double_definitions.append((node.lineno, node.name))
 
         if isinstance(node, ast.arg):
@@ -126,9 +145,12 @@ def _add_forbidden_binding_sites(node: ast.AST, test_double_assignments: list[tu
     if isinstance(node, ast.Assign):
         targets = list(node.targets)
         lineno = node.lineno
-    elif isinstance(node, ast.AnnAssign | ast.For | ast.AsyncFor):
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign | ast.For | ast.AsyncFor | ast.NamedExpr):
         targets = [node.target]
         lineno = node.lineno
+    elif isinstance(node, ast.comprehension):
+        targets = [node.target]
+        lineno = getattr(node.target, "lineno", None)
     for target in targets:
         for name in _target_names(target):
             if lineno is not None and _is_test_double_name(name):
@@ -183,6 +205,8 @@ def _target_names(target: ast.expr) -> list[str]:
     """Return simple names bound by an assignment target."""
     if isinstance(target, ast.Name):
         return [target.id]
+    if isinstance(target, ast.Attribute):
+        return [target.attr]
     if isinstance(target, ast.Tuple | ast.List):
         names: list[str] = []
         for element in target.elts:
@@ -203,28 +227,27 @@ def _pytest_mock_fixture_sites(tree: ast.AST) -> list[tuple[int, str]]:
 
 def _is_test_double_name(name: str) -> bool:
     """Return True for helper names that encode mock/fake/stub/dummy semantics."""
-    normalized = name.lstrip("_").lower()
-    return any(normalized.startswith(prefix) for prefix in _FORBIDDEN_TEST_DOUBLE_PREFIXES)
+    normalized = name.strip("_").lower()
+    return any(
+        normalized.startswith(prefix) or normalized.endswith(prefix) for prefix in _FORBIDDEN_TEST_DOUBLE_PREFIXES
+    )
 
 
-@pytest.fixture(scope="module")
-def test_control_inventory() -> _TestControlInventoryViolations:
-    """Return all mock/test-double policy violations from one test-control inventory pass."""
-    test_control_and_pytest_mock: list[str] = []
+def _test_control_inventory_for_module_trees(
+    module_trees: Iterable[tuple[str, ast.AST]],
+) -> _TestControlInventoryViolations:
+    """Return formatted test-control policy violations for parsed modules."""
+    test_control_and_pytest_mock_usage: list[str] = []
     test_double_imports: list[str] = []
     test_double_bindings: list[str] = []
     test_double_definitions: list[str] = []
 
-    for module_path in all_test_control_modules():
-        relative = repo_relative(module_path)
-        tree = ast_for_path(module_path)
-        if tree is None:
-            continue
+    for relative, tree in module_trees:
         sites = _test_control_inventory_sites(tree)
         for lineno, banned_module in sites.test_control_imports:
-            test_control_and_pytest_mock.append(f"{relative}:{lineno}: import {banned_module}")
+            test_control_and_pytest_mock_usage.append(f"{relative}:{lineno}: import {banned_module}")
         for lineno, reference in sites.pytest_mock_fixture_refs:
-            test_control_and_pytest_mock.append(f"{relative}:{lineno}: {reference}")
+            test_control_and_pytest_mock_usage.append(f"{relative}:{lineno}: {reference}")
         for lineno, name in sites.test_double_imports:
             test_double_imports.append(f"{relative}:{lineno}: {name}")
         for lineno, name in sites.test_double_assignments:
@@ -233,38 +256,88 @@ def test_control_inventory() -> _TestControlInventoryViolations:
             test_double_definitions.append(f"{relative}:{lineno}: {name}")
 
     return _TestControlInventoryViolations(
-        test_control_and_pytest_mock=tuple(test_control_and_pytest_mock),
+        test_control_and_pytest_mock_usage=tuple(test_control_and_pytest_mock_usage),
         test_double_imports=tuple(test_double_imports),
         test_double_bindings=tuple(test_double_bindings),
         test_double_definitions=tuple(test_double_definitions),
     )
 
 
+def _test_control_inventory_for_source(relative_path: str, source: str) -> _TestControlInventoryViolations:
+    """Return formatted test-control policy violations for one in-memory source module."""
+    tree = ast.parse(source, filename=relative_path)
+    return _test_control_inventory_for_module_trees(((relative_path, tree),))
+
+
+def _violation_suffix_counts(violations: Iterable[str]) -> Counter[str]:
+    """Return policy violation suffix counts independent of source line numbers."""
+    return Counter(violation.rsplit(": ", maxsplit=1)[-1] for violation in violations)
+
+
+@pytest.fixture(scope="module")
+def test_control_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _TestControlInventoryViolations:
+    """Return all mock/test-double policy violations from one test-control inventory pass."""
+    module_trees: list[tuple[str, ast.AST]] = []
+    for module_path in all_test_control_modules():
+        tree = ast_for_path(module_path, source_tree_ast)
+        if tree is None:
+            continue
+        module_trees.append((repo_relative(module_path), tree))
+    return _test_control_inventory_for_module_trees(module_trees)
+
+
 def test_no_mock_imports_or_pytest_mock_fixture_refs(
     test_control_inventory: _TestControlInventoryViolations,
 ) -> None:
     """No deterministic production test may import mock libraries or use pytest-mock."""
-    violations = test_control_inventory.test_control_and_pytest_mock
+    violations = test_control_inventory.test_control_and_pytest_mock_usage
 
     assert not violations, "Banned mock-library or pytest-mock fixture usage found:\n" + "\n".join(violations)
 
 
-def test_pytest_mock_fixture_detector_rejects_mocker_argument_and_usage() -> None:
-    """The mock inventory must catch pytest-mock usage that has no import site."""
-    tree = ast.parse(
-        """
+@pytest.mark.parametrize(
+    (
+        "source",
+        "expected_usage",
+        "expected_imports",
+        "expected_bindings",
+        "expected_definitions",
+    ),
+    (
+        pytest.param(
+            """
+import unittest
+import unittest.mock as mock_lib
+from unittest import mock
+import mock
+import pytest_mock
+""",
+            Counter(
+                {
+                    "import unittest": 1,
+                    "import unittest.mock": 2,
+                    "import mock": 1,
+                    "import pytest_mock": 1,
+                }
+            ),
+            Counter({"mock": 3, "pytest_mock": 1}),
+            Counter(),
+            Counter(),
+            id="banned-mock-imports",
+        ),
+        pytest.param(
+            """
 def test_uses_pytest_mock_fixture(mocker):
     mocker.patch("aeat.module.boundary")
-"""
-    )
-
-    assert _pytest_mock_fixture_sites(tree) == [(2, "argument mocker"), (3, "name mocker")]
-
-
-def test_test_double_name_detector_rejects_mock_named_helpers() -> None:
-    """Mock-named helpers are test doubles even without importing a mock library."""
-    tree = ast.parse(
-        """
+""",
+            Counter({"argument mocker": 1, "name mocker": 1}),
+            Counter(),
+            Counter({"mocker": 1}),
+            Counter(),
+            id="pytest-mock-fixture",
+        ),
+        pytest.param(
+            """
 from helpers import MockRepository as ConcreteRepository
 
 MockService = object()
@@ -272,6 +345,9 @@ mock_result = object()
 
 def test_argument_binding(mock_client):
     return mock_client
+
+state.mock_client = object()
+namespace.fake_service = object()
 
 for mock_row in (1,):
     pass
@@ -289,19 +365,102 @@ class MockTransport:
 
 def mock_response_factory():
     return object()
-"""
-    )
+""",
+            Counter(),
+            Counter({"MockRepository": 1}),
+            Counter(
+                {
+                    "MockService": 1,
+                    "mock_result": 1,
+                    "mock_client": 2,
+                    "fake_service": 1,
+                    "mock_row": 1,
+                    "mock_resource": 1,
+                    "mock_error": 1,
+                }
+            ),
+            Counter({"MockTransport": 1, "mock_response_factory": 1}),
+            id="mock-named-helpers",
+        ),
+        pytest.param(
+            """
+items = [mock_row for mock_row in rows]
+mapping = {fake_key: value for fake_key, value in rows}
+total = sum(stub.value for stub in rows)
+chosen = next((item for item in rows if (dummy_value := item.value)), None)
+""",
+            Counter(),
+            Counter(),
+            Counter({"mock_row": 1, "fake_key": 1, "stub": 1, "dummy_value": 1}),
+            Counter(),
+            id="comprehension-targets",
+        ),
+        pytest.param(
+            """
+mock_count += 1
+state.fake_counter += 1
+""",
+            Counter(),
+            Counter(),
+            Counter({"mock_count": 1, "fake_counter": 1}),
+            Counter(),
+            id="augmented-assignment-targets",
+        ),
+        pytest.param(
+            """
+from helpers import SpyClient
 
-    assert _forbidden_test_double_imports(tree) == [(2, "MockRepository")]
-    assert set(_forbidden_test_double_assignments(tree)) == {
-        (4, "MockService"),
-        (5, "mock_result"),
-        (7, "mock_client"),
-        (10, "mock_row"),
-        (13, "mock_resource"),
-        (18, "mock_error"),
-    }
-    assert _forbidden_test_double_definitions(tree) == [(21, "MockTransport"), (24, "mock_response_factory")]
+spy_result = object()
+namespace.spy_service = object()
+
+class SpyTransport:
+    pass
+
+def spy_response_factory():
+    return object()
+""",
+            Counter(),
+            Counter({"SpyClient": 1}),
+            Counter({"spy_result": 1, "spy_service": 1}),
+            Counter({"SpyTransport": 1, "spy_response_factory": 1}),
+            id="spy-named-helpers",
+        ),
+        pytest.param(
+            """
+from helpers import ClientFake, Repository_Stub as Repository
+
+client_fake = object()
+transportStub = object()
+namespace.repository_dummy = object()
+
+class TransportSpy:
+    pass
+
+def repositoryMock():
+    return object()
+""",
+            Counter(),
+            Counter({"ClientFake": 1, "Repository_Stub": 1}),
+            Counter({"client_fake": 1, "transportStub": 1, "repository_dummy": 1}),
+            Counter({"TransportSpy": 1, "repositoryMock": 1}),
+            id="suffix-named-helpers",
+        ),
+    ),
+)
+def test_test_control_policy_rejects_forbidden_test_double_shapes(
+    source: str,
+    expected_usage: Counter[str],
+    expected_imports: Counter[str],
+    expected_bindings: Counter[str],
+    expected_definitions: Counter[str],
+) -> None:
+    """Banned mocks and test-double names must fail through the real policy path."""
+    inventory = _test_control_inventory_for_source("dev/tests/test_mock_policy.py", source)
+
+    assert _violation_suffix_counts(inventory.test_control_and_pytest_mock_usage) == expected_usage
+    assert _violation_suffix_counts(inventory.test_double_imports) == expected_imports
+    assert _violation_suffix_counts(inventory.test_double_bindings) == expected_bindings
+    assert _violation_suffix_counts(inventory.test_double_definitions) == expected_definitions
 
 
 def test_no_fake_stub_or_dummy_imports(

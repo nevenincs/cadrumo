@@ -4,7 +4,7 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 - modelo export writes an
   AEAT declaration file from a validated registry snapshot for an approved
-  :class:`aeat.domain.filing.ModeloDraft` and reports the byte-level
+  :class:`domain.filing.ModeloDraft` and reports the byte-level
   summary the operator needs to track the artefact (output path, draft
   identity, content hash, format).
 - modelo export verification re-reads a previously
@@ -15,55 +15,51 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 The records are structured return values for renderers, persistence, and
 JSON round trips. Runtime export requires registry-backed
-:class:`aeat.domain.calculations.registry.ExportLayoutDefinition` records,
+:class:`domain.calculations.registry.ExportLayoutDefinition` records,
 and verification parses payloads through
-:func:`aeat.domain.calculations.registry.parse_export_payload`.
+:func:`domain.calculations.registry.parse_export_payload`.
 
 The records intentionally do not embed the AEAT submission lifecycle
-(:mod:`aeat.domain.submission`) — local export and live submit are
+(:mod:`domain.submission`) — local export and live submit are
 separate concerns and live submit is permanently forbidden.
 
 This module is the draft-level renderer. The work-unit export service in
-:mod:`aeat.application.modelo._export` rebuilds an approved
-:class:`aeat.domain.filing.ModeloDraft` from a
-:class:`aeat.domain.modelos.CalculationRevision`, then delegates here to write
+:mod:`application.modelo._export` rebuilds an approved
+:class:`domain.filing.ModeloDraft` from a
+:class:`domain.modelos.CalculationRevision`, then delegates here to write
 and verify the fichero-BOE bytes.
 
 See Also:
-    :func:`aeat.application.modelo._export.export_modelo_revision`
+    :func:`application.modelo._export.export_modelo_revision`
         Higher-level work-unit export service that replays a calculation
         revision before calling this draft renderer.
-    :mod:`aeat.adapters.outbound.aeat.export`
+    :mod:`adapters.outbound.aeat.export`
         Outbound export-format adapter errors and fixed-width helper
         namespace.
-    :class:`aeat.core.access_gate.LiveSubmitForbiddenError`
+    :class:`core.access_gate.LiveSubmitForbiddenError`
         Core refusal raised for every attempted live AEAT write.
-    :mod:`aeat.domain.submission`
+    :mod:`domain.submission`
         Local-only submitted-state lifecycle, separate from file export.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from xml.etree import ElementTree
 
-from defusedxml import ElementTree as DefusedElementTree
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
-    Modelo,
     Period,
     ResultDisposition,
     result_disposition_is_refund,
 )
 from ...core.decimal import coerce_decimal
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
@@ -77,12 +73,9 @@ from ...domain.calculations.registry import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistryValidationError,
-    SourceReference,
-    XmlDictionaryEntry,
     parse_export_payload,
     xml_dictionary_entries,
 )
-from ...domain.contribuyente import modelo100_ecivil_export_code
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
@@ -90,6 +83,7 @@ from ...domain.filing import (
     ModeloDraft,
 )
 from ...domain.submission import ModeloDraftStatus
+from ._export_xml_dictionary import render_xml_dictionary_layout
 from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -147,7 +141,7 @@ class DeclaracionExportResult(BaseModel):
     the export event without re-reading the file.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
+        draft_id: The :class:`domain.filing.ModeloDraft` identity
             the export was generated from.
         modelo: AEAT modelo identifier.
         period: Typed filing period for the exported draft.
@@ -168,7 +162,7 @@ class DeclaracionExportResult(BaseModel):
         :class:`DeclaracionVerifyResult`
             Verification record that re-reads the exported bytes and
             anchors the comparison by ``file_sha256``.
-        :class:`aeat.domain.calculations.registry.ExportLayoutDefinition`
+        :class:`domain.calculations.registry.ExportLayoutDefinition`
             Registry layout used to render the fixed-width payload.
     """
 
@@ -203,11 +197,11 @@ class DeclaracionVerifyResult(BaseModel):
 
     The verify command re-reads the file the export command wrote and
     compares its casilla payload against the approved
-    :class:`aeat.domain.filing.ModeloDraft`. The verdict is the typed
+    :class:`domain.filing.ModeloDraft`. The verdict is the typed
     return value the CLI renders.
 
     Attributes:
-        draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
+        draft_id: The :class:`domain.filing.ModeloDraft` identity
             the file was compared against.
         file_path: Absolute path of the file that was verified.
         verdict: Closed :class:`DeclaracionVerifyVerdict`.
@@ -232,7 +226,7 @@ class DeclaracionVerifyResult(BaseModel):
             subset of ``mismatched_casilla_ids``.
 
     See Also:
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used to compute parser-covered casillas.
         :class:`DeclaracionVerifyVerdict`
             Closed verdict enum rendered by the CLI.
@@ -291,10 +285,10 @@ def export_draft(
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
     The function selects the active registry
-    :class:`~aeat.domain.calculations.registry.ExportLayoutDefinition`,
+    :class:`~domain.calculations.registry.ExportLayoutDefinition`,
     renders its fixed-width records, writes only ``output_path``, and
     never contacts AEAT. Live submission is outside this surface and is
-    refused by :class:`aeat.core.access_gate.LiveSubmitForbiddenError`.
+    refused by :class:`core.access_gate.LiveSubmitForbiddenError`.
 
     Args:
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
@@ -310,10 +304,10 @@ def export_draft(
         :func:`verify_export`
             Re-read a local export file and compare parser-covered casillas
             against the approved draft.
-        :func:`aeat.application.modelo._export.export_modelo_revision`
+        :func:`application.modelo._export.export_modelo_revision`
             Work-unit-facing export orchestration that supplies an approved
             draft reconstructed from a calculation revision.
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used by the verification path.
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
@@ -417,7 +411,7 @@ def verify_export(
     See Also:
         :func:`export_draft`
             Write the local fichero-BOE artefact being verified.
-        :func:`aeat.domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.parse_export_payload`
             Registry parser used to read the file.
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
@@ -525,7 +519,7 @@ def _render_export_layout(
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
     if layout.format == "xml_dictionary":
-        return _render_xml_dictionary_layout(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+        return render_xml_dictionary_layout(layout, draft=draft, headers=headers, schema_provider=schema_provider)
     return _render_layout(layout, draft=draft, headers=headers)
 
 
@@ -559,148 +553,6 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
 
 render_layout = _render_layout
 
-_XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
-ElementTree.register_namespace("xsi", _XML_SCHEMA_INSTANCE_NS)
-
-
-def _render_xml_dictionary_layout(
-    layout: ExportLayoutDefinition,
-    *,
-    draft: ModeloDraft,
-    headers: dict[str, str],
-    schema_provider: RegistrySchemaAccessor,
-) -> bytes:
-    entries = xml_dictionary_entries(layout, source_root=schema_provider.source_root, sources=schema_provider.sources)
-    xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
-    version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)
-    root = ElementTree.Element(
-        "Declaracion",
-        {
-            "modelo": draft.modelo,
-            "ejercicio": str(draft.period.filing_year),
-            "periodo": draft.period.registry_token,
-            "versionxsd": version,
-            f"{{{_XML_SCHEMA_INSTANCE_NS}}}noNamespaceSchemaLocation": xsd_source.source_url,
-        },
-    )
-    normalized_headers = {key.lower(): value for key, value in headers.items()}
-    casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
-    for entry in entries:
-        rendered = _xml_dictionary_rendered_value(
-            entry,
-            draft=draft,
-            casilla_values=casilla_values,
-            headers=normalized_headers,
-        )
-        if rendered is None or rendered == "":
-            continue
-        _set_xml_dictionary_path(root, entry.path, rendered)
-    return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
-
-
-def _xml_dictionary_xsd_source(
-    layout: ExportLayoutDefinition,
-    sources: Mapping[str, SourceReference],
-) -> SourceReference:
-    refs = set(layout.source_refs)
-    for source in sources.values():
-        if source.id in refs and source.kind == "xsd":
-            return source
-    raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
-
-
-def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: Path | None) -> str:
-    if source_root is None:
-        raise FilingExportError(f"XML dictionary XSD source {source.id!r} requires source_root")
-    try:
-        root = DefusedElementTree.parse(source_root / source.corpus_path).getroot()
-    except (DefusedElementTree.ParseError, OSError) as exc:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
-    versions: list[str] = []
-    for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
-        if simple_type.attrib.get("name") != "tipo_VersionXSD":
-            continue
-        for enumeration in simple_type.iter("{http://www.w3.org/2001/XMLSchema}enumeration"):
-            value = enumeration.attrib.get("value")
-            if value:
-                versions.append(value)
-    if not versions:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
-    return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
-
-
-def _xml_dictionary_rendered_value(
-    entry: XmlDictionaryEntry,
-    *,
-    draft: ModeloDraft,
-    casilla_values: dict[CasillaId, object],
-    headers: dict[str, str],
-) -> str | None:
-    raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
-    if raw is None:
-        raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
-    if raw is None:
-        return None
-    rendered = _format_xml_dictionary_value(entry.data_type, raw)
-    if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
-        try:
-            return modelo100_ecivil_export_code(rendered)
-        except ValueError as exc:
-            raise FilingExportValidationError(str(exc)) from exc
-    return rendered
-
-
-def _xml_dictionary_header_value(
-    entry: XmlDictionaryEntry,
-    *,
-    draft: ModeloDraft,
-    headers: dict[str, str],
-) -> object | None:
-    path_tail = entry.path.rsplit("/", 1)[-1].lstrip("@").lower()
-    for key in (entry.field_id.lower(), path_tail):
-        value = headers.get(key)
-        if value is not None:
-            return value
-    if entry.field_id == "DPNIF_D":
-        return draft.profile_tax_id
-    if entry.field_id == "DP_APENOM_D":
-        return headers.get("legal_name") or " ".join(
-            part for part in (headers.get("surnames", ""), headers.get("name", "")) if part
-        )
-    return None
-
-
-def _format_xml_dictionary_value(data_type: str, value: object) -> str:
-    if isinstance(value, bool):
-        return "S" if value else "N"
-    if isinstance(value, date):
-        return f"{value.day}/{value.month}/{value.year}"
-    normalized_type = data_type.upper()
-    if normalized_type.startswith(("N", "P")):
-        amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
-        return f"{round_to_cents(amount):.2f}"
-    return str(value).strip()
-
-
-def _set_xml_dictionary_path(root: ElementTree.Element[str], absolute_path: str, value: str) -> None:
-    parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
-    if not parts:
-        raise FilingExportValidationError("XML dictionary entry path must not be empty")
-    current = root
-    for index, part in enumerate(parts):
-        if index == 0 and part == root.tag:
-            continue
-        if part.startswith("@"):
-            if index != len(parts) - 1:
-                raise FilingExportValidationError("XML dictionary attribute must terminate its path")
-            current.set(part[1:], value)
-            return
-        child = next((candidate for candidate in current if candidate.tag == part), None)
-        if child is None:
-            child = ElementTree.SubElement(current, part)
-        current = child
-    current.text = value
-
 
 def _record_render_rows(
     record: ExportRecordDefinition,
@@ -725,7 +577,7 @@ def _record_render_rows(
         active_fields = tuple(
             field
             for field in binding_fields
-            if _is_active_binding_value(binding_values.get((field.binding, row_index)))
+            if field.binding is not None and _is_active_binding_value(binding_values.get((field.binding, row_index)))
         )
         for group in _compatible_binding_field_groups(active_fields):
             rows.append(
@@ -1200,7 +1052,7 @@ def assert_export_mirrors_manifest(
     - Casilla numbering/segmento: every manifest casilla the official record files
       a slot for must carry the same ``(number, segmento)`` the registry
       ``CasillaDefinition`` declares -- re-grounded against the projected
-      :class:`~aeat.application.filing.runtime.CasillaRecordMetadata`, not the
+      :class:`~application.filing.runtime.CasillaRecordMetadata`, not the
       manifest's own copy (:func:`_assert_casilla_metadata_fidelity`).
 
     Each dimension is a hard, enumerated :class:`FilingExportError`; a structural
@@ -1308,7 +1160,7 @@ def _assert_casilla_metadata_fidelity(
     The completeness manifest carries its own copy of each casilla's official
     ``(number, segmento)`` -- the metadata this parity gate reports and keys on.
     This assertion re-grounds that copy against the authoritative
-    :class:`~aeat.application.filing.runtime.CasillaRecordMetadata` projected from
+    :class:`~application.filing.runtime.CasillaRecordMetadata` projected from
     the registry ``CasillaDefinition`` (the same authority the calculation engine
     consumes), for every manifest casilla the official record files a slot for
     (``representable``). A divergent ``number`` or ``segmento`` -- or a manifest

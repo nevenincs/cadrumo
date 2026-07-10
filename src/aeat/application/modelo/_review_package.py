@@ -1,17 +1,17 @@
 """Review-package build and integrity verification for accountant handoff.
 
 A review package is a shareable, checksum-verifiable ZIP archive assembled
-from an already-verified or filed :class:`~aeat.domain.modelos.CalculationRevision`:
+from an already-verified or filed :class:`~domain.modelos.CalculationRevision`:
 the fichero-BOE draft export bytes, the revision's typed casilla observations
 (regulatory grounding included), its bundled ledger filing evidence (when
 present), and a small package-info descriptor binding everything to the
 source work unit / bucket / modelo / period.
 
 This module builds and verifies review packages. It reuses the corpus-bundle
-checksum-manifest primitive (:func:`aeat.core.corpus_manifest.build_corpus_bundle`
-/ :func:`aeat.core.corpus_manifest.verify_corpus_bundle`) rather than
+checksum-manifest primitive (:func:`~core.corpus_manifest.build_corpus_bundle`
+/ :func:`~core.corpus_manifest.verify_corpus_bundle`) rather than
 re-deriving SHA-256 bundling logic: a review package is, mechanically, a
-:class:`~aeat.core.corpus_manifest.CorpusManifest`-checksummed zip whose
+:class:`~core.corpus_manifest.CorpusManifest`-checksummed zip whose
 members happen to be filing artefacts instead of corpus reference files.
 
 Cryptographic signing (ed25519 sender/recipient identity) and the
@@ -23,19 +23,19 @@ receipt workflow on top of the manifest this module produces.
 
 The package is a plaintext operator-directed handoff artefact — the operator
 explicitly requested a shareable export, mirroring the existing
-:meth:`~aeat.application.evidence.EvidenceBundleService.export` and
-:func:`~aeat.application.modelo.export_modelo_revision` plaintext-export
+:meth:`~application.evidence.EvidenceBundleService.export` and
+:func:`~application.modelo.export_modelo_revision` plaintext-export
 exceptions. Nothing here mutates encrypted bucket state or persists a new
 catalogue record; the ZIP is written directly to the caller-supplied path.
 
 See Also:
-    :func:`~aeat.application.modelo.export_modelo_revision`:
+    :func:`~application.modelo.export_modelo_revision`:
         Produces the fichero-BOE draft bytes bundled into the package.
-    :class:`~aeat.domain.modelos.LedgerFilingEvidence`:
+    :class:`~domain.modelos.LedgerFilingEvidence`:
         The bundled ledger fact basis included when present on the revision.
-    :func:`~aeat.core.corpus_manifest.build_corpus_bundle`:
+    :func:`~core.corpus_manifest.build_corpus_bundle`:
         The reused checksum-manifest zip-build primitive.
-    :func:`~aeat.core.corpus_manifest.verify_corpus_bundle`:
+    :func:`~core.corpus_manifest.verify_corpus_bundle`:
         The reused checksum-manifest zip-verify primitive.
 """
 
@@ -108,7 +108,7 @@ class ReviewPackageRevisionStateError(ReviewPackageError):
 class ReviewPackageIntegrityError(ReviewPackageError):
     """Raised when a review package fails checksum-manifest verification.
 
-    Wraps the underlying :class:`~aeat.core.corpus_manifest.CorpusBundleError`
+    Wraps the underlying :class:`~core.corpus_manifest.CorpusBundleError`
     family (missing/unexpected/mismatched members, manifest tamper, or a
     structurally invalid archive) behind one review-package-scoped error so
     callers do not need to import the corpus-manifest error hierarchy.
@@ -118,7 +118,7 @@ class ReviewPackageIntegrityError(ReviewPackageError):
 class ReviewPackageManifest(BaseModel):
     """Package-info descriptor embedded in every review package as JSON.
 
-    Distinct from the reused :class:`~aeat.core.corpus_manifest.CorpusManifest`
+    Distinct from the reused :class:`~core.corpus_manifest.CorpusManifest`
     (which only knows file names, sizes, and digests): this descriptor
     carries the review-domain identity — which work unit, calculation
     revision, bucket, modelo, and period the package represents — so a
@@ -157,7 +157,7 @@ class ReviewPackageVerification(BaseModel):
     """Outcome of :func:`verify_review_package`.
 
     ``missing`` / ``unexpected`` / ``mismatched`` mirror
-    :class:`~aeat.core.corpus_manifest.CorpusBundleVerification` exactly (the
+    :class:`~core.corpus_manifest.CorpusBundleVerification` exactly (the
     review package's checksum layer IS a corpus bundle); ``manifest`` is the
     review-specific :class:`ReviewPackageManifest` recovered from the
     package's ``package-info.json`` member once the archive is confirmed
@@ -198,13 +198,13 @@ def build_review_package(
     re-resolving it, keeping this module free of a catalogue-repository
     dependency. ``draft_bytes`` is the already-rendered fichero-BOE artefact
     (the caller obtains this from
-    :func:`~aeat.application.modelo.export_modelo_revision`, which owns every
+    :func:`~application.modelo.export_modelo_revision`, which owns every
     export-time safety gate — evidence completeness, cross-period clean
     state, IVA wallet reconciliation — so this function does not re-validate
     export eligibility beyond the revision-state check above).
 
     The package bundles four members under a checksum manifest built by
-    :func:`~aeat.core.corpus_manifest.build_corpus_bundle` (reused verbatim,
+    :func:`~core.corpus_manifest.build_corpus_bundle` (reused verbatim,
     not re-derived):
 
     * ``draft.fichero-boe`` — the rendered filing artefact bytes.
@@ -212,13 +212,13 @@ def build_review_package(
       its typed ``observations`` (legal_refs / source_refs grounding for
       every casilla).
     * ``evidence.json`` — the revision's bundled
-      :class:`~aeat.domain.modelos.LedgerFilingEvidence` when present, or an
+      :class:`~domain.modelos.LedgerFilingEvidence` when present, or an
       explicit ``{"present": false}`` marker when the revision carries no
       ledger evidence (a non-ledger modelo, or a manual-only filing).
     * ``package-info.json`` — the :class:`ReviewPackageManifest` descriptor.
 
     Members are written to a temporary staging directory then packed with
-    :func:`~aeat.core.corpus_manifest.build_corpus_bundle`, which itself
+    :func:`~core.corpus_manifest.build_corpus_bundle`, which itself
     writes atomically (temp-file-then-rename) so a build failure never
     leaves a partial package at ``output_path``.
 
@@ -299,7 +299,7 @@ def verify_review_package(package_path: Path) -> ReviewPackageVerification:
     """Verify a review package's checksum manifest and recover its descriptor.
 
     Delegates the checksum layer entirely to
-    :func:`~aeat.core.corpus_manifest.verify_corpus_bundle` (no hashing logic
+    :func:`~core.corpus_manifest.verify_corpus_bundle` (no hashing logic
     is re-derived here). When the archive is clean, the embedded
     ``package-info.json`` member is loaded and validated into a
     :class:`ReviewPackageManifest`. A dirty archive still returns a best-effort
@@ -384,7 +384,7 @@ def _recover_package_manifest(
 def assert_review_package_verifies(package_path: Path) -> ReviewPackageManifest:
     """Verify ``package_path`` and raise on any drift; return its descriptor on success.
 
-    Mirrors :func:`~aeat.core.corpus_manifest.assert_corpus_bundle_verifies`
+    Mirrors :func:`~core.corpus_manifest.assert_corpus_bundle_verifies`
     for the review-package surface: the operator-facing assertion a receiving
     side calls before trusting a handed-over package.
     """

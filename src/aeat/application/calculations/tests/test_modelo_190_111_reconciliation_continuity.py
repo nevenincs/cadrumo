@@ -49,6 +49,7 @@ from pathlib import Path
 import pytest
 
 from ....core import BindingSourceKind, Period
+from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -226,7 +227,7 @@ def _withholding_obs(source_id: str, nif: str, clave: str, *, filing_year: int) 
         source_id=source_id,
         perceptor_tax_id=nif,
         transaction_date=date(filing_year, 6, 1),
-        clave=clave,
+        clave=RetencionClave(clave),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("190.00"),
     )
@@ -278,7 +279,7 @@ def _retencion_observations_for_111_inputs(
     accrued_on = f"{filing_year}-{_PERIOD_ACCRUAL_DATES[period]}"
     return tuple(
         RetencionObservation(
-            source_kind=BindingSourceKind.LEDGER_TRANSACTION.value,
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             source_object_id=f"m111-{filing_year}-{period}-work-{index:02d}",
             perceptor_nif=f"{index:08d}H",
             perceptor_name=f"Trabajador {index:02d}",

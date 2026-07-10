@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-17-export-first-adr]]"
@@ -12,7 +12,7 @@ related:
   - "[[2026-04-18-unified-review-queue-adr]]"
 ---
 
-# `aeat-cli-wireframe` adr: `kent-first cli language system and root wireframe` | (**status:** `superseded` — the 13-root wireframe was replaced by the accepted two-root `config`/`app` design in `2026-05-02-aeat-cli-redesign` → the `2026-05-12/13/14-cli-workflow-redesign-*` family → `2026-06-03-cli-workflow-redesign-epic-adr`; a third root is now barred by the `aeat-architecture-boundaries` rule. Closes issues #390 (controlling-shape decision) and #392 (33-iteration hardening EPIC, all children delivered under the two-root surface).)
+# `aeat-cli-wireframe` adr: `kent-first cli language system and root wireframe` | (**status:** `superseded`)
 
 ## CLI Backend Boundary
 

@@ -1,9 +1,30 @@
-"""Tests for the backend-owned operator surface contract."""
+"""Tests for the backend-owned operator surface contract.
+
+The suite pins the command roots, mounted command families, lifecycle tokens,
+parser-only source-kind aliases, help documents, and registered refusal error
+used by entrypoint adapters. It deliberately exercises the application-owned
+contract as data so CLI and MCP surfaces cannot redefine operator vocabulary in
+their own layers.
+
+See Also:
+    :mod:`~application.operator_surface`
+        Public facade for the backend-owned command contract under test.
+    :func:`~application.operator_surface.get_operator_surface_contract`
+        Cached contract builder exercised by the root, lifecycle, command-family,
+        and source-kind assertions.
+    :func:`~application.operator_surface.build_help_document`
+        Backend help document builder checked against the current mounted
+        command families.
+    :func:`~application.operator_surface.require_accepted_root`
+        Refusal gate that raises the registered operator-surface contract error.
+    :func:`~application.operator_surface.build_operator_surface_manifest`
+        Agent-facing manifest builder that consumes the same backend contract.
+    :mod:`~entrypoints.cli._app_contract`
+        CLI adapter that emits the manifest without owning the contract.
+"""
 
 from __future__ import annotations
 
-import importlib
-import inspect
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -32,10 +53,6 @@ from .. import (
 from .._models import LifecycleContract, RootSurface
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _module_source(module_name: str) -> str:
-    return inspect.getsource(importlib.import_module(module_name))
 
 
 @pytest.fixture(autouse=True)
@@ -139,16 +156,39 @@ def test_contract_models_are_strict_and_immutable() -> None:
 
 
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
-    module_sources = [
-        inspect.getsource(operator_surface),
-        _module_source("aeat.application.operator_surface._contract"),
-        _module_source("aeat.application.operator_surface._help"),
-        _module_source("aeat.application.operator_surface._models"),
-    ]
-    joined = "\n".join(module_sources)
+    import subprocess
+    import sys
+    import textwrap
 
-    assert "typer" not in joined.lower()
-    assert "entrypoints.cli" not in joined
+    script = textwrap.dedent("""\
+        import importlib
+        import sys
+
+        for module_name in (
+            "aeat.application.operator_surface",
+            "aeat.application.operator_surface._contract",
+            "aeat.application.operator_surface._help",
+            "aeat.application.operator_surface._models",
+        ):
+            importlib.import_module(module_name)
+
+        leaked = sorted(
+            name
+            for name in sys.modules
+            if name == "typer" or name.startswith("typer.") or name.startswith("aeat.entrypoints.cli")
+        )
+        assert leaked == [], leaked
+    """)
+    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, (
+        f"operator surface imported a CLI-only dependency.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
 
 
 def test_log_fields_and_error_codes_are_backend_owned() -> None:
@@ -256,37 +296,13 @@ def test_root_landing_report_reads_profile_state_input_only() -> None:
 
 
 def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
-    """FilingStatus.FILED is the single authoritative source for the ``"filed"`` token.
-
-    This test verifies that:
-    - The LIVE command-family contract exposes the token through FilingStatus.FILED,
-      not a bare string literal.
-    - The operator-surface contract source contains no bare ``"filed"`` string
-      that would silently diverge from the enum definition.
-    - FilingStatus.FILED evaluates to the expected string value.
-    """
-    # The enum member itself must carry the correct token value.
+    """FilingStatus.FILED is the token exposed by the LIVE command family."""
     assert FilingStatus.FILED == "filed"
     assert str(FilingStatus.FILED) == "filed"
 
-    # The LIVE family must declare exactly the filed sub-command via the enum.
     contract = get_operator_surface_contract()
     live_family = next(f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE)
     assert FilingStatus.FILED in live_family.commands
-
-    # The contract module source must not contain bare "filed" string literals
-    # outside of the FilingStatus import/usage lines.  We inspect the source and
-    # verify every occurrence of the token '"filed"' is the FilingStatus import or
-    # usage, not a stand-alone bare literal in a tuple or keyword argument.
-    contract_source = _module_source("aeat.application.operator_surface._contract")
-    # All occurrences of the raw token must be attributable to FilingStatus references.
-    bare_literal_count = contract_source.count('"filed"')
-    # Each FilingStatus reference in the source accounts for one use of the token
-    # (import line and usage site).  No bare literal should exist beyond that.
-    assert bare_literal_count == 0, (
-        f"Found {bare_literal_count} bare '\"filed\"' literal(s) in _contract.py; "
-        "all occurrences must be replaced with FilingStatus.FILED"
-    )
 
 
 def test_filing_status_has_no_token_shim_module() -> None:

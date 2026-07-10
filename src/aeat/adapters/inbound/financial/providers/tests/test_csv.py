@@ -24,32 +24,25 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 _FIXTURES = FIXTURES_DIR / "financial"
 
 
-@pytest.mark.parametrize(
-    ("fixture_name", "expected_currency", "expected_description"),
-    [
+def test_csv_provider_ingests_supported_bank_layouts() -> None:
+    """The CSV provider should ingest each supported bank layout."""
+    for fixture_name, expected_currency, expected_description in (
         ("bbva-sample.csv", "EUR", "Transferencia recibida CLIENTE UNO"),
         ("santander-sample.csv", "EUR", "Pago cuota autonomos"),
         ("caixabank-sample.csv", "EUR", "Cobro factura F-2026-014"),
         ("revolut-sample.csv", "EUR", "Coffee subscription"),
-    ],
-)
-def test_csv_provider_ingests_supported_bank_layouts(
-    fixture_name: str,
-    expected_currency: str,
-    expected_description: str,
-) -> None:
-    """The CSV provider should ingest each supported bank layout."""
-    provider = CsvProvider()
-    fixture = _FIXTURES / fixture_name
-    validation = provider.validate_source(fixture)
-    assert validation.is_valid, validation.warnings
-    parsed_rows = tuple(provider.ingest(fixture))
-    assert parsed_rows
-    assert parsed_rows[0].raw.currency == expected_currency
-    assert parsed_rows[0].raw.description == expected_description
-    assert parsed_rows[0].raw.provenance.source_format.value == "csv"
-    # Amounts are stored as non-negative magnitudes; flow is in direction.
-    assert parsed_rows[0].raw.amount >= 0
+    ):
+        provider = CsvProvider()
+        fixture = _FIXTURES / fixture_name
+        validation = provider.validate_source(fixture)
+        assert validation.is_valid, (fixture_name, validation.warnings)
+        parsed_rows = tuple(provider.ingest(fixture))
+        assert parsed_rows, fixture_name
+        assert parsed_rows[0].raw.currency == expected_currency, fixture_name
+        assert parsed_rows[0].raw.description == expected_description, fixture_name
+        assert parsed_rows[0].raw.provenance.source_format.value == "csv", fixture_name
+        # Amounts are stored as non-negative magnitudes; flow is in direction.
+        assert parsed_rows[0].raw.amount >= 0, fixture_name
 
 
 def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
@@ -196,33 +189,15 @@ _INVALID_PREFERRED = "definitely-not-a-codec"
 
 
 @pytest.mark.parametrize(
-    ("raw_bytes", "expected_encoding", "expected_char"),
+    ("label", "raw_bytes", "expected_encoding", "expected_char"),
     [
-        # utf-8-sig wins: BOM-prefixed bytes with invalid preferred codec.
-        # utf-8-sig is first in the chain; Python's codec strips the BOM.
-        (
-            "é".encode("utf-8-sig"),
-            "utf-8-sig",
-            "é",
-        ),
-        # cp1252 wins: 0x80 is a utf-8 continuation byte → UnicodeDecodeError
-        # in utf-8-sig and utf-8; cp1252 maps 0x80 to U+20AC (€).
-        (
-            b"\x80",
-            "cp1252",
-            "€",
-        ),
-        # iso-8859-1 wins: 0x81 is undefined in cp1252 (Python raises on
-        # decode); utf-8-sig and utf-8 also reject it.  iso-8859-1 maps it
-        # to U+0081 (C1 control character).
-        (
-            b"\x81",
-            "iso-8859-1",
-            "\x81",
-        ),
+        pytest.param("utf-8-sig", "é".encode("utf-8-sig"), "utf-8-sig", "é", id="utf-8-sig"),
+        pytest.param("cp1252", b"\x80", "cp1252", "€", id="cp1252"),
+        pytest.param("iso-8859-1", b"\x81", "iso-8859-1", "\x81", id="iso-8859-1"),
     ],
 )
 def test_csv_provider_decode_bytes_follows_fallback_chain(
+    label: str,
     raw_bytes: bytes,
     expected_encoding: str,
     expected_char: str,
@@ -240,9 +215,10 @@ def test_csv_provider_decode_bytes_follows_fallback_chain(
         provider = CsvProvider()
         text, winning_encoding = provider._decode_bytes(raw_bytes)
     assert winning_encoding == expected_encoding, (
-        f"Expected encoding {expected_encoding!r} but got {winning_encoding!r}; chain is {CSV_ENCODING_FALLBACK_CHAIN}"
+        f"{label}: expected encoding {expected_encoding!r} but got {winning_encoding!r}; "
+        f"chain is {CSV_ENCODING_FALLBACK_CHAIN}"
     )
-    assert expected_char in text, f"Decoded text {text!r} does not contain expected character {expected_char!r}"
+    assert expected_char in text, f"{label}: decoded text {text!r} lacks {expected_char!r}"
 
 
 def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain() -> None:

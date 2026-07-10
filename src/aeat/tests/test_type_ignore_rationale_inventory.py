@@ -44,6 +44,20 @@ To clean up a known-violating site:
    ``# type: ignore`` line or in the 3 lines immediately above.
 2. Remove the ``(path, lineno)`` entry from ``_KNOWN_VIOLATING_LINES``.
 3. The test will then permanently lock that site at zero.
+
+See Also:
+    :func:`~tests._inventory.production_python_files`
+        Shared production-file inventory walked by this suppression ratchet.
+    :mod:`~tests.test_cast_rationale_inventory`
+        Companion typed-boundary guard whose ``CAST-RATIONALE-*`` markers also
+        satisfy historical type-ignore escape sites.
+    :mod:`~tests.test_any_param_rationale_inventory`
+        Parameter-level ``Any`` rationale ratchet mirroring the same
+        enrollment pattern for parameter-level type escapes.
+
+The type-ignore corpus paid down from 99 enrolled sites to the 7 hard-deferred
+residuals this ratchet guards; every remaining suppression must carry a
+rationale marker or a named, justified ratchet entry.
 """
 
 from __future__ import annotations

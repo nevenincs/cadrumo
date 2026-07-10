@@ -5,7 +5,7 @@ in a single verb: it resolves readiness, resumes or creates the work unit,
 calculates a draft revision, verifies it, and exports the verified revision to a
 local fichero-BOE file — surfacing each stage's typed outcome and stopping
 instructively at the first stage that refuses. It re-implements no stage; it is a
-thin transport over :func:`aeat.application.modelo.run_modelo_quickfile`, which
+thin transport over :func:`application.modelo.run_modelo_quickfile`, which
 composes the existing single-stage application services.
 
 The command is a child of ``app`` (the CLI root surface is pinned to ``config``
@@ -39,10 +39,7 @@ from ._modelo_rendering import advisory_notice, verification_report_notices
 
 app = typer.Typer(
     name="quickfile",
-    help=(
-        "Run the full local modelo filing chain in one command: readiness -> create -> "
-        "calculate -> verify -> export. Build and export only; never submits to AEAT."
-    ),
+    help=tr("cli.app.quickfile.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
 )

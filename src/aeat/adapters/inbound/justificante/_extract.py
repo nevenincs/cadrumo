@@ -1,8 +1,8 @@
 """Regex-driven field extraction for AEAT justificante receipt PDFs.
 
 This module translates the raw text of a justificante (as returned by one of
-the backends in :mod:`aeat.adapters.inbound.justificante._parsers`) into a
-:class:`~aeat.domain.justificante.Justificante` pydantic record. It extracts
+the backends in :mod:`adapters.inbound.justificante._parsers`) into a
+:class:`~domain.justificante.Justificante` pydantic record. It extracts
 receipt metadata only: CSV, modelo, period/ejercicio, taxpayer, presentation
 timestamp, optional payment totals, and the verification URL. Casilla-level
 filing values belong to the declaración/borrador adapters, not this receipt
@@ -17,7 +17,7 @@ The extractor is **deterministic**: same input bytes produce the same output
 record. All monetary values are parsed via :class:`decimal.Decimal` to
 preserve the receipt precision; never floats. Parse failures populate the
 structured attributes on
-:class:`~aeat.domain.justificante.JustificanteParseError` so callers and tests
+:class:`~domain.justificante.JustificanteParseError` so callers and tests
 do not need to parse message strings.
 """
 

@@ -74,7 +74,7 @@ Adapt invoice, evidence, payable, collectible, counterpart, and withholding sour
 - [x] `W02.P05.S26` - Adapt purchase invoice evidence records into source mesh resolution; `src/aeat/application/ledger/_evidence.py`.
 - [x] `W02.P05.S27` - Adapt payable invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
 - [x] `W02.P05.S28` - Adapt collectible invoice records into source mesh resolution; `src/aeat/application/ledger/_business_operation_invoice.py`.
-- [ ] `W02.P05.S29` - Enroll counterpart aggregation registry provider through source mesh; `src/aeat/application/aggregation/_registry_provider.py`.
+- [x] `W02.P05.S29` - Adjudicate counterpart source provider against accepted 2026-07-04-counterpart-source-provider-adr (Option D): repository-backed provider in the counterpart family module, owned_sources narrowed to the two reserved kinds, RESERVED and non-enrolled until the first M347 declaring binding co-lands enrollment plus the S21 correctness gate; `src/aeat/application/aggregation/_counterpart.py`.
 - [x] `W02.P05.S30` - Enroll retenciones aggregation through repository backed source resolution; `src/aeat/application/aggregation/_retenciones.py`.
 - [x] `W02.P05.S31` - Test invoice ledger cross references produce stable source refs; `src/aeat/application/aggregation/test_source_mesh_invoices.py`.
 - [x] `W02.P05.S32` - Test retenciones source observations are period and source kind filtered; `src/aeat/application/aggregation/test_source_mesh_retenciones.py`.
@@ -87,22 +87,22 @@ Prepare region-aware Renta, fincas, and inventory source enrollment without bypa
 
 Make deductible expense context region-aware only where the data model and category profiles support it.
 
-- [ ] `W03.P06.S33` - Add region field to Renta deductibility context when category profiles require it; `src/aeat/domain/renta/_ledger_expenses.py`.
-- [ ] `W03.P06.S34` - Extend category profile lookup to accept filing year and CCAA key; `src/aeat/core/resources/_repos/category_profiles.py`.
-- [ ] `W03.P06.S35` - Represent region scoped category profiles in registry resources; `src/aeat/_data/registry/aeat/categories/profiles`.
-- [ ] `W03.P06.S36` - Derive Renta source region from TaxResidenceProfile CCAA; `src/aeat/application/aggregation/_renta_ledger.py`.
-- [ ] `W03.P06.S37` - Test non regional category profiles preserve existing Renta results; `src/aeat/application/aggregation/test_renta_ledger.py`.
-- [ ] `W03.P06.S38` - Test region scoped category profiles select by profile CCAA; `src/aeat/application/aggregation/test_renta_ledger_region.py`.
+- [x] `W03.P06.S33` - Add region field to Renta deductibility context when category profiles require it; `src/aeat/domain/renta/_ledger_expenses.py`.
+- [x] `W03.P06.S34` - Extend category profile lookup to accept filing year and CCAA key; `src/aeat/core/resources/_repos/category_profiles.py`.
+- [x] `W03.P06.S35` - Represent region scoped category profiles in registry resources; `src/aeat/_data/registry/aeat/categories/profiles`.
+- [x] `W03.P06.S36` - Derive Renta source region from TaxResidenceProfile CCAA; `src/aeat/application/aggregation/_renta_ledger.py`.
+- [x] `W03.P06.S37` - Test non regional category profiles preserve existing Renta results; `src/aeat/application/aggregation/test_renta_ledger.py`.
+- [x] `W03.P06.S38` - Test region scoped category profiles select by profile CCAA; `src/aeat/application/aggregation/test_renta_ledger_region.py`.
 
 ### Phase `W03.P07` - fincas and inventory readiness
 
 Define resolver readiness gates for property and inventory sources before calculation enrollment.
 
-- [ ] `W03.P07.S39` - Define fincas calculation source readiness diagnostics; `src/aeat/domain/fincas/_source_readiness.py`.
-- [ ] `W03.P07.S40` - Define fincas resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_fincas.py`.
-- [ ] `W03.P07.S41` - Define inventory calculation source readiness diagnostics; `src/aeat/application/inventory/_source_readiness.py`.
-- [ ] `W03.P07.S42` - Define inventory resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_inventory.py`.
-- [ ] `W03.P07.S43` - Test fincas and inventory resolvers emit blocked readiness diagnostics; `src/aeat/application/aggregation/test_source_mesh_readiness.py`.
+- [x] `W03.P07.S39` - Define fincas calculation source readiness diagnostics; `src/aeat/domain/fincas/_source_readiness.py`.
+- [x] `W03.P07.S40` - Define fincas resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_fincas.py`.
+- [x] `W03.P07.S41` - Define inventory calculation source readiness diagnostics; `src/aeat/application/inventory/_source_readiness.py`.
+- [x] `W03.P07.S42` - Define inventory resolver adapter boundaries without enrolling calculations; `src/aeat/application/aggregation/_source_inventory.py`.
+- [x] `W03.P07.S43` - Test fincas and inventory resolvers emit blocked readiness diagnostics; `src/aeat/application/aggregation/test_source_mesh_readiness.py`.
 
 ## Wave `W04` - verification and rollout
 
@@ -122,12 +122,12 @@ Prevent silent all-zero outputs by validating every registry source against reso
 
 Verify real operator flows and calculation provenance with repository-backed tests and approval-basis coverage.
 
-- [ ] `W04.P09.S49` - Include resolver fingerprints in approval basis; `src/aeat/application/filing/_review.py`.
-- [ ] `W04.P09.S50` - Persist source refs and fingerprints on calculation revisions; `src/aeat/domain/modelos/_calculation.py`.
-- [ ] `W04.P09.S51` - Emit bucket events with source mesh diagnostics and fingerprints; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P09.S52` - Test approval staleness changes when invoice source data changes; `src/aeat/application/filing/test_source_mesh_review.py`.
-- [ ] `W04.P09.S53` - Test calculation revision roundtrip preserves source refs; `src/aeat/application/modelo/test_source_mesh_revision_roundtrip.py`.
-- [ ] `W04.P09.S54` - Run feature surface quality gate for source mesh touched files; `.agents/skills/feature-surface-gate/SKILL.md`.
+- [x] `W04.P09.S49` - Include resolver fingerprints in approval basis; `src/aeat/application/filing/_review.py`.
+- [x] `W04.P09.S50` - Persist source refs and fingerprints on calculation revisions; `src/aeat/domain/modelos/_calculation.py`.
+- [x] `W04.P09.S51` - Emit bucket events with source mesh diagnostics and fingerprints; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P09.S52` - Test approval staleness changes when invoice source data changes; `src/aeat/application/filing/test_source_mesh_review.py`.
+- [x] `W04.P09.S53` - Test calculation revision roundtrip preserves source refs; `src/aeat/application/modelo/test_source_mesh_revision_roundtrip.py`.
+- [x] `W04.P09.S54` - Run feature surface quality gate for source mesh touched files; `.agents/skills/feature-surface-gate/SKILL.md`.
 
 ## Wave `W05` - continuous discovery hardening and review
 
@@ -137,15 +137,17 @@ Keep the plan open to newly discovered calculation source surfaces and require c
 
 Re-run source discovery during implementation and extend this plan whenever a relevant unenrolled surface is found.
 
-- [ ] `W05.P10.S55` - Re-run registry source inventory after each implementation wave; `src/aeat/_data/registry/aeat/modelos`.
-- [ ] `W05.P10.S56` - Extend plan rows for newly discovered unenrolled source surfaces; `.vault/plan/2026-05-20-calculation-source-connectivity-plan.md`.
-- [ ] `W05.P10.S57` - Document discovered source surfaces in execution records; `.vault/exec/2026-05-20-calculation-source-connectivity`.
+- [x] `W05.P10.S55` - Re-run registry source inventory after each implementation wave; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `W05.P10.S56` - Extend plan rows for newly discovered unenrolled source surfaces; `.vault/plan/2026-05-20-calculation-source-connectivity-plan.md`.
+- [x] `W05.P10.S57` - Document discovered source surfaces in execution records; `.vault/exec/2026-05-20-calculation-source-connectivity`.
+- [x] `W05.P10.S62` - Follow-up: extend the approval-basis source fingerprint beyond the invoice catalogue to the remaining self-loadable mesh sources (profile, previous_filing, relations) without coupling the review layer to the full source mesh; `src/aeat/application/filing/_review.py`.
+- [x] `W05.P10.S63` - Follow-up: fingerprint the profile-activity relation-scoping inputs (activity_start_date, m111_no_retenciones_periods, not_applicable_source_modelos from ProfileRepository) in the approval basis, so a relation-scoping profile change invalidates an approval even when the observation store is unchanged; `src/aeat/application/filing/_review.py`.
 
 ### Phase `W05.P11` - review audit and hardening
 
 Review each implemented wave for architectural drift missing provenance stale fingerprints and unsafe silent calculation behavior.
 
-- [ ] `W05.P11.S58` - Run code review after each completed implementation wave; `.agents/skills/vaultspec-code-review/SKILL.md`.
-- [ ] `W05.P11.S59` - Run architecture boundary audit for source mesh directionality; `src/aeat/application/aggregation`.
-- [ ] `W05.P11.S60` - Run calculation grounding audit for provenance and legal refs; `src/aeat/application/modelo`.
-- [ ] `W05.P11.S61` - Run hardening pass for silent zero and missing source diagnostics; `src/aeat/domain/calculations/registry`.
+- [x] `W05.P11.S58` - Run code review after each completed implementation wave; `.agents/skills/vaultspec-code-review/SKILL.md`.
+- [x] `W05.P11.S59` - Run architecture boundary audit for source mesh directionality; `src/aeat/application/aggregation`.
+- [x] `W05.P11.S60` - Run calculation grounding audit for provenance and legal refs; `src/aeat/application/modelo`.
+- [x] `W05.P11.S61` - Run hardening pass for silent zero and missing source diagnostics; `src/aeat/domain/calculations/registry`.

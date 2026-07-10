@@ -281,7 +281,20 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
 
 
 def _stage_status(payload: dict[str, object]) -> dict[str, str]:
-    return {stage["stage"]: stage["status"] for stage in payload["stages"]}
+    stages = payload["stages"]
+    assert isinstance(stages, list)
+    result: dict[str, str] = {}
+    for stage in stages:
+        assert isinstance(stage, dict)
+        # ``isinstance(stage, dict)`` only proves *some* dict — this data is
+        # always parsed JSON envelope output, so re-keying with ``str(k)``
+        # gives an honestly-typed ``dict[str, object]`` to index into.
+        typed_stage = {str(k): v for k, v in stage.items()}
+        name, status = typed_stage["stage"], typed_stage["status"]
+        assert isinstance(name, str)
+        assert isinstance(status, str)
+        result[name] = status
+    return result
 
 
 def test_quickfile_runs_full_chain_to_exported_fichero(tmp_path: Path) -> None:

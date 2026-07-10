@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
-modified: '2026-06-13'
+modified: '2026-07-10'
 title: "Certificate Pre-Expiry Health Check + Workflow Gate"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"
@@ -12,7 +12,7 @@ related:
   - "[[2026-04-12-workflow-engine-adr]]"
 ---
 
-# ADR: Certificate Pre-Expiry Health Check + Workflow Gate
+# ADR: Certificate Pre-Expiry Health Check + Workflow Gate | (**status:** `accepted`)
 
 ## Status
 Accepted — 2026-04-13. Implements GitHub issue #94.

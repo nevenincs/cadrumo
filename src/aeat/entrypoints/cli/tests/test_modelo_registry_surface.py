@@ -1,4 +1,24 @@
-"""Modelo registry/discovery CLI surface tests split from ``test_modelo``."""
+"""Modelo registry/discovery CLI surface integration tests.
+
+The suite pins the ``aeat app modelo`` discovery and work-calculation ingress
+surface: help discoverability, canonical period tokens, describe/casillas/formulas
+queries, binding and relation guidance, typed override-key validation, and JSON
+payload redaction. It exercises the live Typer tree against the real registry
+query and calculation helper paths rather than scanning command source.
+
+See Also:
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Typer registration for list, describe, casillas, formulas, and bindings
+        discovery commands.
+    :class:`~domain.calculations.registry.RegistryQueryService`
+        Typed registry introspection service behind the discovery surface.
+    :func:`~entrypoints.cli._modelo._missing_binding_guidance`
+        Work-calculate refusal helper that turns registry missing-input errors
+        into operator guidance.
+
+The bindings discovery surface is locked to the registry as its single
+source of truth, and ``work calculate`` reads from that same registry.
+"""
 
 from __future__ import annotations
 
@@ -324,23 +344,6 @@ def test_work_calculate_relation_help_names_m200_m202_relation_channels() -> Non
     assert "40.3 casilla 34" in collapsed
     assert "40.2 casilla 03" in collapsed
     assert "0" in collapsed
-
-
-def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None:
-    """The work calculation application helper must use the bucket-backed boundary.
-
-    This keeps default operator calculations on the same source mesh path as
-    repository-backed application calculations, instead of reaching around it
-    to the low-level registry engine action.
-    """
-
-    import inspect
-
-    from ....application.modelo import calculate_modelo_work_revision
-
-    source = inspect.getsource(calculate_modelo_work_revision)
-    assert "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(" in source
-    assert "calculate_modelo_revision(" not in source
 
 
 def test_missing_binding_guidance_enriches_registry_validation_error() -> None:

@@ -994,13 +994,20 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104"
 published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
-reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
-notes = "Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior."
+reviewed_at = 2026-07-07
+reviewed_by = "claude-opus (art 104.Tres exclusion clauses 1a-6a added verbatim from bundled ley-37-1992-art-104.html#a104; subvenciones NON-exclusion recorded per Ley 3/2006; operator to re-stamp)"
+notes = "Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior. El apartado Tres enumera las seis operaciones excluidas de ambos terminos de la relacion (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos permanentes fuera del TAI; (2) las cuotas de IVA que gravaron directamente esas operaciones; (3) entregas y exportaciones de bienes de inversion utilizados en la actividad; (4) operaciones inmobiliarias o financieras que no constituyan actividad habitual (arrendamiento siempre habitual; operaciones financieras del art 20.Uno.18); (5) operaciones no sujetas del art 7; (6) operaciones del art 9, numero 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio NO son una exclusion del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley 3/2006 (BOE-A-2006-5691), por lo que no se computan en absoluto en lugar de excluirse de un volumen computado."
 required_text = [
     "La prorrata de deducción resultante de la aplicación de los criterios anteriores se redondeará en la unidad superior.",
     "Tres. Para la determinación del porcentaje de deducción no se computarán en ninguno de los términos de la relación:",
+    "Las operaciones realizadas desde establecimientos permanentes situados fuera del territorio de aplicación del Impuesto.",
+    "Las cuotas del Impuesto sobre el Valor Añadido que hayan gravado directamente las operaciones a que se refiere el apartado anterior.",
+    "El importe de las entregas y exportaciones de los bienes de inversión que el sujeto pasivo haya utilizado en su actividad empresarial o profesional.",
+    "El importe de las operaciones inmobiliarias o financieras que no constituyan actividad empresarial o profesional habitual del sujeto pasivo.",
     "En todo caso se reputará actividad empresarial o profesional habitual del sujeto pasivo la de arrendamiento.",
+    "Tendrán la consideración de operaciones financieras a estos efectos las descritas en el artículo 20, apartado uno, número 18.º de esta Ley, incluidas las que no gocen de exención.",
+    "Las operaciones no sujetas al impuesto según lo dispuesto en el artículo 7 de esta Ley.",
+    "Las operaciones a que se refiere el artículo 9, número 1.º, letra d) de esta Ley.",
 ]
 
 [legal."ley-37-1992:art-105"]
@@ -1014,13 +1021,100 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a105"
 published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
-reviewed_at = 2026-07-01
-reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro procedimiento de la prorrata general; operator to re-stamp)"
-notes = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo."
+reviewed_at = 2026-07-07
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro/.Cinco procedimiento de la prorrata general; operator to re-stamp)"
+notes = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupcion durante uno o mas anos naturales de la actividad (o de un sector diferenciado), el porcentaje definitivamente aplicable durante cada uno de esos anos es el que globalmente corresponda al conjunto de los tres ULTIMOS anos naturales en que se hubiesen realizado operaciones (porcentaje global sobre los volumenes agregados de los tres anos activos, saltando la interrupcion; no la media de los tres porcentajes ni los tres anos de calendario). Base legal de la siembra del ejercicio que reanuda tras una interrupcion."
 required_text = [
     "el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente",
     "En la última declaración-liquidación del impuesto correspondiente a cada año natural el sujeto pasivo calculará la prorrata de deducción definitiva",
     "practicará la consiguiente regularización de las deducciones provisionales",
+    "En los supuestos de interrupción durante uno o más años naturales de la actividad empresarial o profesional",
+    "el que globalmente corresponda al conjunto de los tres últimos años naturales en que se hubiesen realizado operaciones",
+]
+
+[legal."ley-37-1992:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a103"
+document_id = "BOE-A-1992-28740"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a103"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a103 clases de prorrata; operator to re-stamp)"
+notes = "Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata tiene dos modalidades, general y especial; la general se aplica cuando no concurren las circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las cuotas deducibles del ano natural por la regla general excede en un 10 por ciento o mas del que resultaria por la regla especial (obligacion de especial). Base legal del aviso +10% de prorrata especial obligatoria (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE)."
+required_text = [
+    "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
+    "La regla de prorrata especial será aplicable en los siguientes supuestos:",
+    "Cuando el montante total de las cuotas deducibles en un año natural por aplicación de la regla de prorrata general exceda en un 10 por ciento o más del que resultaría por aplicación de la regla de prorrata especial.",
+]
+
+[legal."ley-37-1992:art-106"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a106"
+document_id = "BOE-A-1992-28740"
+article = "106"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a106"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp)"
+notes = "Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deduccion por uso del input: 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a deduccion se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento del art 105. Base legal del enrutado por InputClassification (exclusively_deductible/exclusively_non_deductible/common)."
+required_text = [
+    "El ejercicio del derecho a deducir en la prorrata especial se ajustará a las siguientes reglas:",
+    "utilizados exclusivamente en la realización de operaciones que originen el derecho a la deducción podrán deducirse íntegramente.",
+    "utilizados exclusivamente en la realización de operaciones que no originen el derecho a deducir no podrán ser objeto de deducción.",
+    "utilizados sólo en parte en la realización de operaciones que originen el derecho a la deducción podrán ser deducidas en la proporción resultante de aplicar al importe global de las mismas el porcentaje a que se refiere el artículo 104, apartados Dos y siguientes.",
+]
+
+[legal."ley-37-1992:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a101"
+document_id = "BOE-A-1992-28740"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a101"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-08
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp)"
+notes = "Articulo 101 LIVA: regimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: el sujeto pasivo que realiza actividades economicas en sectores diferenciados (art 9.1.c) debe aplicar SEPARADAMENTE el regimen de deducciones respecto de cada uno; la prorrata especial puede aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: cada input a la deduccion de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deduccion COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de cuotas deducibles por el regimen comun exceda en un 20 por 100 al que resultaria aplicando con independencia el regimen de cada sector - se registra como caso de autorizacion (register authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado para admitirlo."
+required_text = [
+    "Los sujetos pasivos que realicen actividades económicas en sectores diferenciados de la actividad empresarial o profesional deberán aplicar separadamente el régimen de deducciones respecto de cada uno de ellos.",
+    "La aplicación de la regla de prorrata especial podrá efectuarse independientemente respecto de cada uno de los sectores diferenciados",
+    "para su utilización en común en varios sectores diferenciados de actividad, será de aplicación lo establecido en el artículo 104, apartados dos y siguientes de esta Ley",
+    "La Administración podrá autorizar la aplicación de un régimen de deducción común a los sectores diferenciados",
+    "exceda en un 20 por 100 al que resultaría de aplicar con independencia el régimen de deducciones respecto de cada sector diferenciado",
+]
+
+[legal."ley-37-1992:art-9-1-c"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9"
+document_id = "BOE-A-1992-28740"
+article = "9.1.c"
+section = "sectores-diferenciados"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-08
+reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp)"
+notes = "Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad (base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS PORCENTUALES respecto de la actividad principal (base del test PRORRATA_SECTORAL_SEPARATION_SPREAD_PP = 50). Letra b': actividades acogidas a los regimenes especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si divergen >50pp, si hay regimen especial) - operator-declared, nunca inferido del ledger."
+required_text = [
+    "se considerarán sectores diferenciados de la actividad empresarial o profesional los siguientes",
+    "Se considerarán actividades económicas distintas aquellas que tengan asignados grupos diferentes en la Clasificación Nacional de Actividades Económicas.",
+    "difirieran en más de 50 puntos porcentuales del correspondiente a la citada actividad principal",
+    "Las actividades acogidas a los regímenes especiales simplificado, de la agricultura, ganadería y pesca, de las operaciones con oro de inversión o del recargo de equivalencia.",
 ]
 
 [legal."ley-37-1992:art-107"]
@@ -1585,3 +1679,137 @@ applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 review_status = "reviewed"
+
+[legal."ley-37-1992:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a75"
+document_id = "BOE-A-1992-28740"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a75"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
+required_text = [
+    "Artículo 75. Devengo del impuesto.",
+    "Se devengará el Impuesto",
+]
+
+[legal."ley-37-1992:art-163-decies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163decies"
+document_id = "BOE-A-1992-28740"
+article = "163-decies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163decies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 decies LIVA: requisitos subjetivos para aplicar el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 decies. Requisitos subjetivos de aplicación.",
+    "régimen especial del criterio de caja",
+]
+
+[legal."ley-37-1992:art-163-undecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163undecies"
+document_id = "BOE-A-1992-28740"
+article = "163-undecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163undecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 undecies. Condiciones para la aplicación del régimen especial del criterio de caja.",
+    "opten por su aplicación",
+]
+
+[legal."ley-37-1992:art-163-duodecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163duodecies"
+document_id = "BOE-A-1992-28740"
+article = "163-duodecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163duodecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 duodecies LIVA: ambito objetivo y operaciones excluidas del regimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversion del sujeto pasivo e importaciones."
+required_text = [
+    "Artículo 163 duodecies. Requisitos objetivos de aplicación.",
+    "Quedan excluidas del régimen especial del criterio de caja",
+]
+
+[legal."ley-37-1992:art-163-terdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163terdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-terdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163terdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 terdecies LIVA: devengo por cobro total o parcial, fallback de 31 de diciembre del ano siguiente, acreditacion del cobro, y nacimiento del derecho a deducir por pago para sujetos acogidos."
+required_text = [
+    "Artículo 163 terdecies. Contenido del régimen especial del criterio de caja.",
+    "momento del cobro total o parcial",
+    "31 de diciembre del año inmediato posterior",
+]
+
+[legal."ley-37-1992:art-163-quaterdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quaterdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-quaterdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quaterdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del regimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
+required_text = [
+    "Artículo 163 quaterdecies. Efectos de la renuncia o exclusión del régimen especial del criterio de caja.",
+    "operaciones efectuadas durante su vigencia",
+]
+
+[legal."ley-37-1992:art-163-quinquiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quinquiesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-quinquiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quinquiesdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "codex"
+notes = "Articulo 163 quinquiesdecies LIVA: nacimiento del derecho a la deduccion por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 quinquiesdecies. Operaciones afectadas por el régimen especial del criterio de caja.",
+    "momento del pago total o parcial",
+]

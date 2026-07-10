@@ -1,8 +1,30 @@
-"""Tests for the central per-modelo aggregation service."""
+"""Tests for the central per-modelo aggregation service.
+
+The suite pins :func:`~application.aggregation.aggregate_per_modelo` as the
+application-owned dispatch boundary for retenciones, counterpart, and foreign
+asset provider families. It verifies the immutable command/result contracts,
+the canonical :class:`~core.BindingSourceKind` taxonomy, source-mesh parity for
+the counterpart and foreign-assets follow-up surfaces, and the retenciones
+collapse onto :meth:`~application.aggregation.RetencionesAggregationSourceResolver.aggregate`.
+
+See Also:
+    :mod:`~application.aggregation._service`
+        Service contracts and dispatch implementation under test.
+    :func:`~application.aggregation.get_per_modelo_aggregation_contract`
+        Backend-owned provider/source-kind contract asserted by this module.
+    :class:`~application.aggregation.PerModeloAggregationCommand`
+        Strict command envelope that selects the provider family.
+    :class:`~application.aggregation.PerModeloAggregationResult`
+        Typed result envelope checked for provider/payload coherence.
+    :class:`~application.aggregation._counterpart.CounterpartAggregationSourceResolver`
+        Counterpart source-mesh resolver compared with the service surface for
+        Modelo 347/349 evidence.
+    :class:`~application.aggregation.ForeignAssetsAggregationSourceResolver`
+        Foreign-assets resolver compared with Modelo 720 row projections.
+"""
 
 from __future__ import annotations
 
-import inspect
 from decimal import Decimal
 
 import pytest
@@ -10,12 +32,11 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
-    resolve_counterpart_binding_values,
+    load_modelo_directory,
     resolve_foreign_asset_binding_row_values,
 )
-from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
@@ -48,8 +69,7 @@ from .._counterpart import (
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
-    _m349_declarante_summary_union,
-    _registry_observations_from_counterpart_aggregation,
+    aggregate_counterpart_347,
     aggregate_counterpart_349,
 )
 from .._foreign_assets import (
@@ -64,6 +84,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+
+
+def _modelo_revision(modelo_id: str, revision_id: str):
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo_id))
+    return modelo.revisions[revision_id]
 
 
 def _retencion_obs(*, source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION) -> RetencionObservation:
@@ -251,7 +276,7 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
     assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
 
-def test_counterpart_m349_mesh_resolution_matches_prior_aggregate_exactly() -> None:
+def test_counterpart_m349_service_keeps_invoice_observations_outside_reserved_resolver_claim() -> None:
     observations = (
         _counterpart_obs(
             nif="DE123456789",
@@ -294,20 +319,81 @@ def test_counterpart_m349_mesh_resolution_matches_prior_aggregate_exactly() -> N
         period=_P_2025_Q1,
         revision=snapshot.revision,
     )
-    expected_values = resolve_counterpart_binding_values(
-        snapshot.revision,
-        _registry_observations_from_counterpart_aggregation(expected_aggregation),
-    )
-    expected_values = _m349_declarante_summary_union(context=context, binding_values=expected_values)
 
     resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
 
     assert service_result.aggregation == expected_aggregation
-    assert dict(resolution.binding_values) == expected_values
-    assert {item.source_ref for item in resolution.provenance} == {
-        "collectible_invoice:sale-de",
-        "payable_invoice:purchase-it",
-    }
+    assert resolution.owned_sources == (
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    )
+    assert resolution.binding_values == {}
+    assert resolution.provenance == ()
+    assert resolution.source_transaction_ids == ()
+
+
+def test_counterpart_m347_service_does_not_claim_invoice_owned_registry_bindings() -> None:
+    observations = (
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-delivery",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="2000.00",
+        ),
+        _counterpart_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-acquisition",
+            operation_kind=OperationKind347.ACQUISITION.value,
+            invoice_total="1505.07",
+        ),
+        _counterpart_obs(
+            nif="B00000002",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="m347-ledger-threshold-control",
+            operation_kind=OperationKind347.DELIVERY.value,
+            invoice_total="3005.06",
+        ),
+        _counterpart_obs(
+            nif="DE123456789",
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+            source_id="m349-control",
+            operation_kind=OperationKind349.INTRA_DELIVERY.value,
+            country="DE",
+            invoice_total="9999.00",
+        ),
+    )
+    expected_aggregation = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="347",
+            period=_P_2025_ANNUAL,
+            counterpart_observations=observations,
+        ),
+    )
+    revision = _modelo_revision("347", "2008-y-siguientes")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="347",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=revision,
+    )
+
+    resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert declarable_counterparty_nifs_347(expected_aggregation) == frozenset({"B00000001"})
+    assert any(
+        binding.id == "modelo-347-declarante-numero-personas-entidades"
+        and binding.source is BindingSourceKind.COLLECTIBLE_INVOICE
+        for binding in revision.bindings
+    )
+    assert not any(
+        binding.source in {BindingSourceKind.LEDGER_TRANSACTION, BindingSourceKind.PURCHASE_INVOICE_EVIDENCE}
+        for binding in revision.bindings
+    )
+    assert resolution.binding_values == {}
+    assert resolution.provenance == ()
     assert resolution.source_transaction_ids == ()
 
 
@@ -401,10 +487,86 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
         ("modelo-720-asset-row-acquisition-date", 2): "2021-02-20",
     }
     assert resolution.binding_values == {}
+    assert dict(resolution.row_binding_values) == expected_row_values
     assert resolution.source_transaction_ids == ("tx-account-ad",)
     assert {item.source_ref for item in resolution.provenance} == {
         "ledger_transaction:tx-account-ad",
         "payable_invoice:payable-account-ch",
+    }
+
+
+def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenance() -> None:
+    observations = (
+        _asset_obs(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="tx-security-li",
+            asset_class=ForeignAssetClass.SECURITY,
+            asset_external_id="LI-SECURITY-001",
+            country="LI",
+            valuation="30000.00",
+            acquisition_date="2020-01-15",
+        ),
+        _asset_obs(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            source_id="payable-insurance-ch",
+            asset_class=ForeignAssetClass.INSURANCE,
+            asset_external_id="CH-INSURANCE-001",
+            country="CH",
+            valuation="25000.00",
+            acquisition_date="2021-02-20",
+        ),
+    )
+    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="720",
+            period=_P_2025_ANNUAL,
+            foreign_asset_observations=observations,
+        ),
+    )
+    snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="720",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=snapshot.revision,
+    )
+    row_observations = _registry_observations_from_foreign_assets_aggregation(
+        expected_aggregation,
+        observations,
+    )
+    expected_row_values = resolve_foreign_asset_binding_row_values(snapshot.revision, row_observations)
+
+    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(context)
+
+    assert service_result.aggregation == expected_aggregation
+    assert declarable_asset_classes_720(expected_aggregation) == frozenset(
+        {
+            ForeignAssetClass.SECURITY,
+            ForeignAssetClass.INSURANCE,
+        },
+    )
+    assert expected_row_values == {
+        ("modelo-720-asset-row-class", 1): "S",
+        ("modelo-720-asset-row-country", 1): "CH",
+        ("modelo-720-asset-row-currency", 1): "EUR",
+        ("modelo-720-asset-row-identifier", 1): "CH-INSURANCE-001",
+        ("modelo-720-asset-row-valuation", 1): Decimal("25000.00"),
+        ("modelo-720-asset-row-acquisition-date", 1): "2021-02-20",
+        ("modelo-720-asset-row-class", 2): "V",
+        ("modelo-720-asset-row-country", 2): "LI",
+        ("modelo-720-asset-row-currency", 2): "EUR",
+        ("modelo-720-asset-row-identifier", 2): "LI-SECURITY-001",
+        ("modelo-720-asset-row-valuation", 2): Decimal("30000.00"),
+        ("modelo-720-asset-row-acquisition-date", 2): "2020-01-15",
+    }
+    assert resolution.binding_values == {}
+    assert dict(resolution.row_binding_values) == expected_row_values
+    assert resolution.source_transaction_ids == ("tx-security-li",)
+    assert {item.source_ref for item in resolution.provenance} == {
+        "ledger_transaction:tx-security-li",
+        "payable_invoice:payable-insurance-ch",
     }
 
 
@@ -491,15 +653,14 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
         )
 
 
-# --- S19: retenciones double-path collapse is behaviour-preserving (P03) ---------
+# --- Retenciones dispatch collapse is behaviour-preserving --------------------
 #
-# S13 collapsed the two retenciones dispatch tables (the per-modelo service's local
-# 6-entry ``dispatch`` and the mesh resolver's 4-entry ``_RETENCIONES_AGGREGATORS``)
-# onto ONE canonical entry point,
-# :meth:`RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
+# The per-modelo service dispatch table and the mesh resolver dispatch table share
+# the canonical entry point,
+# :meth:`~application.aggregation.RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
 # mesh (``resolve``) and the per-modelo aggregation service (``aggregate_per_modelo``,
 # the CLI ``aggregate`` / pull surface). These gates prove the collapse routes each
-# modelo to the SAME core it did before (``one-aggregation-path-pull-equals-calculate``)
+# modelo to the same core it did before (``one-aggregation-path-pull-equals-calculate``)
 # with no value shift and the landed distinct-NIF perceptor count unchanged.
 
 # The pre-existing, independently-tested aggregation cores are the oracle: the collapsed
@@ -630,13 +791,34 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
 
 
 def test_service_surface_has_no_cli_dependency() -> None:
-    source = "\n".join(
-        [
-            inspect.getsource(aggregation._service),
-            inspect.getsource(aggregation.PerModeloAggregationCommand),
-            inspect.getsource(aggregation.PerModeloAggregationResult),
-        ],
+    import subprocess
+    import sys
+    import textwrap
+
+    script = textwrap.dedent("""\
+        import importlib
+        import sys
+
+        for module_name in (
+            "aeat.application.aggregation",
+            "aeat.application.aggregation._service",
+        ):
+            importlib.import_module(module_name)
+
+        leaked = sorted(
+            name
+            for name in sys.modules
+            if name == "typer" or name.startswith("typer.") or name.startswith("aeat.entrypoints.cli")
+        )
+        assert leaked == [], leaked
+    """)
+    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
 
-    assert "typer" not in source.lower()
-    assert "entrypoints.cli" not in source
+    assert result.returncode == 0, (
+        f"aggregation service imported a CLI-only dependency.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )

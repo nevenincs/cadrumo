@@ -46,10 +46,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_decode_invoice_payload_decodes_single_json_object() -> None:
     raw = '{"invoice_id": "inv-1", "base_total": "100"}'
 
-    result = _decode_invoice_payload(raw)
+    (item,) = _decode_invoice_payload(raw)
 
-    assert len(result) == 1
-    assert result[0].get("invoice_id") == "inv-1"
+    assert item.get("invoice_id") == "inv-1"
 
 
 def test_decode_invoice_payload_decodes_json_array_of_objects() -> None:
@@ -67,10 +66,9 @@ def test_decode_invoice_payload_handles_leading_whitespace_before_json() -> None
     CSV."""
     raw = '\n  {"invoice_id": "inv-1"}'
 
-    result = _decode_invoice_payload(raw)
+    (item,) = _decode_invoice_payload(raw)
 
-    assert len(result) == 1
-    assert result[0].get("invoice_id") == "inv-1"
+    assert item.get("invoice_id") == "inv-1"
 
 
 def test_decode_invoice_payload_rejects_json_with_scalar_top_level() -> None:
@@ -160,24 +158,24 @@ def test_reject_top_level_iva_rate_refuses_mixed_payload() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_kind_passes_invoice_kind_through_unchanged() -> None:
+@pytest.mark.parametrize(
+    ("raw_kind", "expected"),
+    [
+        pytest.param(InvoiceKind.ISSUED, InvoiceKind.ISSUED, id="typed-issued"),
+        pytest.param(InvoiceKind.RECEIVED, InvoiceKind.RECEIVED, id="typed-received"),
+        pytest.param("issued", InvoiceKind.ISSUED, id="lowercase-issued"),
+        pytest.param("received", InvoiceKind.RECEIVED, id="lowercase-received"),
+        pytest.param("  issued  ", InvoiceKind.ISSUED, id="whitespace-issued"),
+        pytest.param("ISSUED", InvoiceKind.ISSUED, id="uppercase-issued"),
+    ],
+)
+def test_coerce_kind_accepts_valid_invoice_kind_inputs(
+    raw_kind: InvoiceKind | str,
+    expected: InvoiceKind,
+) -> None:
     """An already-typed :class:`InvoiceKind` member returns
     identically — the helper does not re-construct it."""
-    assert _coerce_kind(InvoiceKind.ISSUED) is InvoiceKind.ISSUED
-    assert _coerce_kind(InvoiceKind.RECEIVED) is InvoiceKind.RECEIVED
-
-
-def test_coerce_kind_uppercases_lowercase_string() -> None:
-    assert _coerce_kind("issued") is InvoiceKind.ISSUED
-    assert _coerce_kind("received") is InvoiceKind.RECEIVED
-
-
-def test_coerce_kind_strips_surrounding_whitespace() -> None:
-    assert _coerce_kind("  issued  ") is InvoiceKind.ISSUED
-
-
-def test_coerce_kind_handles_already_uppercase_string() -> None:
-    assert _coerce_kind("ISSUED") is InvoiceKind.ISSUED
+    assert _coerce_kind(raw_kind) is expected
 
 
 def test_coerce_kind_raises_on_unknown_string() -> None:

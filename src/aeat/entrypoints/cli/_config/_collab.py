@@ -4,20 +4,33 @@ Mounts ``aeat config collab recipient add|list|remove`` on the ``config`` root.
 A taxpayer records a trusted recipient (an accountant/gestor) by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band (read
 aloud, compared over a separate channel) before it is trusted -- exactly the
-:class:`~aeat.application.modelo.RecipientFingerprintRegistryRepository`
+:class:`~application.modelo.RecipientFingerprintRegistryRepository`
 contract this module wires, never re-implements
 (``composition-service-no-parallel-write-path``). The registered public key is
 what ``aeat app modelo review-package encrypt-for-recipient`` seals a package
-against; see :mod:`~aeat.entrypoints.cli._modelo_review_package_cli`.
+against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
 
 ``add`` is idempotent-guarded to the extent the underlying repository already
 is: a duplicate ``recipient_id`` refuses instructively (``RecipientAlreadyRegisteredError``
-propagates verbatim through :func:`~aeat.entrypoints.cli._errors.command_error_boundary`,
-which renders every registered :class:`~aeat.core.errors.AeatError` at the CLI
+propagates verbatim through :func:`~entrypoints.cli._errors.command_error_boundary`,
+which renders every registered :class:`~core.errors.AeatError` at the CLI
 boundary) rather than silently overwriting the prior fingerprint -- a
 fingerprint swap must be an explicit ``remove`` followed by ``add``, never an
 implicit clobber, since the whole point of the out-of-band verification is
 that the operator confirms the exact key on file.
+
+See Also:
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`
+        Active-bucket persistence boundary this CLI surface delegates to.
+    :class:`~application.modelo.RecipientFingerprintRecord`
+        Public-key and fingerprint record projected into command results.
+    :func:`~application.modelo.public_key_hex_from_raw_bytes`
+        Public-key validator used before a recipient is registered.
+    :mod:`~entrypoints.cli._config._collab_payloads`
+        Typed JSON payload schemas emitted by these commands.
+    :mod:`~entrypoints.cli._modelo_review_package_cli`
+        Review-package command group that consumes registered recipients for
+        ``encrypt-for-recipient``.
 """
 
 from __future__ import annotations
@@ -69,7 +82,7 @@ def _validated_public_key_hex(public_key: str) -> str:
 
     A malformed hex string is a CLI input-format error (``typer.BadParameter``),
     distinct from the registry's own domain refusals (duplicate/missing id),
-    which propagate as registered :class:`~aeat.core.errors.AeatError`
+    which propagate as registered :class:`~core.errors.AeatError`
     subclasses and render automatically at the command boundary.
     """
     normalized = public_key.strip().lower()
@@ -98,7 +111,7 @@ def collab_recipient_add(
         ...,
         help=tr(
             "cli.config.collab.recipient.recipient_id_help",
-            default="Stable operator-chosen label (e.g. 'kents-accountant').",
+            default="Stable operator-chosen label (e.g. 'my-accountant').",
         ),
     ),
     public_key: str = typer.Option(
@@ -185,7 +198,7 @@ def collab_recipient_remove(
         ...,
         help=tr(
             "cli.config.collab.recipient.recipient_id_help",
-            default="Stable operator-chosen label (e.g. 'kents-accountant').",
+            default="Stable operator-chosen label (e.g. 'my-accountant').",
         ),
     ),
 ) -> None:

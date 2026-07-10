@@ -1,6 +1,6 @@
 """The descriptor-to-SDK-Tool adaptation builds correct MCP objects.
 
-When the MCP SDK (the ``aeat[agent]`` extra) is installed, this proves the
+When the MCP SDK (the ``aeat-cli[agent]`` extra) is installed, this proves the
 mutability-to-annotation projection lands on the real ``ToolAnnotations`` hint
 fields. Without the SDK, the same test asserts the lazy import fails at the
 optional dependency boundary.
@@ -36,5 +36,6 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert contract.outputSchema
 
     remove = by_name["aeat_ledger_remove"]
+    assert remove.annotations is not None
     assert remove.annotations.readOnlyHint is False
     assert remove.annotations.destructiveHint is True

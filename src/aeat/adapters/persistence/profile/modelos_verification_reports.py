@@ -2,22 +2,41 @@
 
 :class:`VerificationReportCatalogueRepository` persists and loads
 :class:`VerificationReport` entries in a :class:`VerificationReportCatalogue`
-via :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`. The
+via :class:`~adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`. The
 catalogue is stored as a single encrypted BLOB per profile bucket, wrapped in
-:class:`~aeat.adapters.persistence.storage.Envelope` before serialisation.
+:class:`~adapters.persistence.storage.Envelope` before serialisation.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`. It
-lives in the persistence adapter (not in :mod:`aeat.domain.modelos`) because its
+:class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`. It
+lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`VerificationReportCatalogue` model and its pure mutators.
+
+See Also:
+    :mod:`~adapters.persistence.profile._modelo_runtime`
+        Bucket-id resolution and runtime secure-object factory shared by modelo
+        persistence adapters.
+    :class:`~domain.modelos.VerificationReportCatalogue`
+        Domain catalogue payload encrypted by this repository.
+    :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :mod:`~adapters.persistence.profile.modelos_calculation`
+        Sibling calculation-revision repository whose revisions are assessed by
+        verification reports stored here.
+    :func:`~application.modelo.list_verification_reports`
+        Read-side application service that loads reports through this repository
+        boundary.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.modelos import (
@@ -41,10 +60,10 @@ class VerificationReportCatalogueRepository:
     """Repository over encrypted SQL-backed verification-report catalogue storage.
 
     The catalogue payload is wrapped in
-    :class:`~aeat.adapters.persistence.storage.Envelope` before
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.Envelope` before
+    :class:`~adapters.persistence.storage.SecureObjectRepository`
     persists it; this class is the concrete load/save implementation behind
-    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
+    :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -112,7 +131,7 @@ class VerificationReportCatalogueRepository:
             )
         if record is None:
             return VerificationReportCatalogue()
-        envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             _LOGGER.error(
                 "verification-report catalogue classification mismatch",
@@ -170,7 +189,7 @@ class VerificationReportCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
 

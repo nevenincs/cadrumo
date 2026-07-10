@@ -21,7 +21,7 @@ from .. import (
     storage_degradation_resolution,
 )
 from .._errors import AggregationValidationError
-from .._source_mesh import SourceMeshError
+from .._source_mesh import SourceMeshError, out_of_window_summary_source_diagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,6 +38,7 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
         binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("21.00")},
         enum_binding_values={"profile-ccaa": "madrid"},
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
+        row_binding_values={("modelo-720-asset-row-valuation", 2): Decimal("60000.00")},
         relation_values={"modelo-180-rel-115-base-anual": Decimal("2128.75")},
         bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("21.00")},
         source_transaction_ids=("tx-2", "tx-1"),
@@ -63,9 +64,72 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     assert resolution.provenance[0].binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
+    assert resolution.model_dump(mode="json")["row_binding_values"] == [
+        {
+            "binding_id": "modelo-720-asset-row-valuation",
+            "row_index": 2,
+            "value": "60000.00",
+            "value_kind": "decimal",
+        },
+    ]
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
+
+
+def test_source_resolution_row_binding_json_replay_restores_serialized_coordinates() -> None:
+    resolution = CalculationSourceResolution(
+        resolver_id="foreign-assets",
+        owned_sources=(BindingSourceKind.FOREIGN_ASSET,),
+        row_binding_values={
+            ("modelo-720-asset-row-class", 2): "B",
+            ("modelo-720-asset-row-identifier", 2): "000123",
+            ("modelo-720-asset-row-valuation", 2): Decimal("60000.00"),
+        },
+    )
+
+    raw = resolution.model_dump_json()
+    replayed = CalculationSourceResolution.model_validate_json(raw)
+
+    assert replayed.row_binding_values == {
+        ("modelo-720-asset-row-class", 2): "B",
+        ("modelo-720-asset-row-identifier", 2): "000123",
+        ("modelo-720-asset-row-valuation", 2): Decimal("60000.00"),
+    }
+    assert replayed.model_dump_json() == raw
+
+
+def test_source_resolution_rejects_serialized_row_binding_index_below_one() -> None:
+    raw = (
+        '{"resolver_id":"foreign-assets",'
+        '"row_binding_values":[{"binding_id":"modelo-720-asset-row-class","row_index":0,"value":"B"}]}'
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution.model_validate_json(raw)
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.row_binding_index_invalid"
+
+
+def test_source_resolution_rejects_invalid_serialized_decimal_row_binding_value() -> None:
+    raw = (
+        '{"resolver_id":"foreign-assets",'
+        '"row_binding_values":[{"binding_id":"modelo-720-asset-row-valuation",'
+        '"row_index":1,"value":"not-decimal","value_kind":"decimal"}]}'
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution.model_validate_json(raw)
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.row_binding_value_invalid"
 
 
 def test_source_diagnostic_keeps_advisory_category_separate_from_binding_source() -> None:
@@ -93,6 +157,58 @@ def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> Non
     error = context["error"]
     assert isinstance(error, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.binding_source_mismatch"
+
+
+def test_out_of_window_summary_source_diagnostic_carries_count_and_date_span() -> None:
+    diagnostic = out_of_window_summary_source_diagnostic(
+        source_kind="ledger_renta_income_aggregation",
+        resolver_id="ledger_renta_income_aggregation",
+        count=27_516,
+        min_filing_date=date(2021, 1, 1),
+        max_filing_date=date(2030, 12, 31),
+    )
+
+    assert diagnostic.reason == "source_issue"
+    assert diagnostic.out_of_window_count == 27_516
+    assert diagnostic.out_of_window_min_filing_date == date(2021, 1, 1)
+    assert diagnostic.out_of_window_max_filing_date == date(2030, 12, 31)
+    assert "27516 ledger transaction(s)" in diagnostic.message
+    assert "2021-01-01..2030-12-31" in diagnostic.message
+    assert diagnostic.model_dump(mode="json")["out_of_window_min_filing_date"] == "2021-01-01"
+
+
+def test_source_diagnostic_rejects_incomplete_out_of_window_summary() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            message="period summary",
+            out_of_window_count=2,
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.out_of_window_summary_incomplete"
+
+
+def test_source_diagnostic_rejects_reversed_out_of_window_summary_span() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            message="period summary",
+            out_of_window_count=2,
+            out_of_window_min_filing_date=date(2024, 6, 1),
+            out_of_window_max_filing_date=date(2024, 1, 1),
+        )
+
+    context = exc_info.value.errors()[0].get("ctx")
+    assert context is not None
+    error = context["error"]
+    assert isinstance(error, SourceMeshError)
+    assert str(error) == "aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid"
 
 
 def test_source_provenance_projects_canonical_binding_source() -> None:
@@ -294,6 +410,30 @@ def test_source_resolution_merge_rejects_duplicate_relation_ownership() -> None:
     assert context["second_resolver"] == "aeat-live"
 
 
+def test_source_resolution_merge_rejects_duplicate_row_binding_ownership() -> None:
+    left = CalculationSourceResolution(
+        resolver_id="foreign-assets",
+        owned_sources=(BindingSourceKind.FOREIGN_ASSET,),
+        row_binding_values={("modelo-720-asset-row-class", 1): "B"},
+    )
+    right = CalculationSourceResolution(
+        resolver_id="manual-bridge",
+        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
+        row_binding_values={("modelo-720-asset-row-class", 1): "I"},
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        merge_source_resolutions((left, right))
+
+    assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_row_binding_owner"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["binding_id"] == "modelo-720-asset-row-class"
+    assert context["row_index"] == 1
+    assert context["first_resolver"] == "foreign-assets"
+    assert context["second_resolver"] == "manual-bridge"
+
+
 def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:
     left = CalculationSourceResolution(
         resolver_id="profile",
@@ -336,6 +476,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
         resolver_id="ledger-iva",
         owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
         binding_values={"binding-decimal": binding_input},
+        row_binding_values={("modelo-720-asset-row-valuation", 1): Decimal("60000.00")},
         relation_values={"relation-decimal": relation_input},
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
         source_transaction_ids=("tx-1",),
@@ -356,6 +497,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     assert merged.resolver_id == "source_mesh"
     assert merged.owned_sources == (BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.PROFILE)
     assert merged.binding_values["binding-decimal"] == ledger_resolution.binding_values["binding-decimal"]
+    assert merged.row_binding_values[("modelo-720-asset-row-valuation", 1)] == Decimal("60000.00")
     assert merged.relation_values["relation-decimal"] == ledger_resolution.relation_values["relation-decimal"]
     assert merged.date_binding_values["profile-birth-date"] == date(1980, 1, 31)
     assert merged.enum_binding_values["profile-ccaa"] == "madrid"

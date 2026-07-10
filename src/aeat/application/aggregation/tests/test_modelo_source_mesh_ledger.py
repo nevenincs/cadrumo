@@ -13,9 +13,10 @@ import pytest
 from sqlalchemy import text
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
-from ....core import Period
+from ....core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.classification import SensitivityClass
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
@@ -34,6 +35,7 @@ from ....domain.iva import (
 from ....domain.iva import (
     InvoiceKind as IvaInvoiceKind,
 )
+from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions import (
     TX_BUCKET_NAMESPACE,
     BusinessClassification,
@@ -267,6 +269,59 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_obje
     }
 
 
+def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    prorrata_repo = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    outgoing = _iva_transaction(
+        "purchase-prorrata-general",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("60.50"),
+        taxable_base=Decimal("50.00"),
+        iva_amount=Decimal("10.50"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((outgoing,)))
+    prorrata_repo.save(
+        ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=2026,
+                    regime=ProrrataRegisterRegime.GENERAL,
+                    provisional_percentage=Decimal("80"),
+                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    source_observation_ref="303:2025:4T",
+                ),
+            ),
+        ),
+    )
+
+    resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=revision,
+        ),
+    )
+
+    prorrata_provenance = [
+        item for item in resolution.provenance if item.source_ref.startswith("prorrata-apportionment:")
+    ]
+    assert len(prorrata_provenance) == 1
+    provenance = prorrata_provenance[0]
+    assert provenance.binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+    assert provenance.source_ref == (
+        "prorrata-apportionment:2026:general:"
+        "percentage:80:provenance:carried_prior_definitiva:source-observation:303:2025:4T"
+    )
+    assert provenance.source_casilla_ids == ()
+    assert provenance.legal_refs
+    assert provenance.source_refs
+
+
 def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -296,6 +351,7 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
             ),
         )
 
+    assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
     assert exc_info.value.context["period"] == "1T"
     assert exc_info.value.context["invoice_count"] == "1"
@@ -513,7 +569,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     assert resolution.diagnostics == ()
 
 
-def test_iva_source_mesh_resolver_suppresses_out_of_period_personal_source_diagnostic(
+def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic(
     secure_objects: SecureObjectRepository,
 ) -> None:
     revision = _revision("303", "2009-y-siguientes")
@@ -545,7 +601,15 @@ def test_iva_source_mesh_resolver_suppresses_out_of_period_personal_source_diagn
         ),
     )
 
-    assert resolution.diagnostics == ()
+    assert len(resolution.diagnostics) == 1
+    diagnostic = resolution.diagnostics[0]
+    assert diagnostic.reason == "source_issue"
+    assert diagnostic.source_kind == "ledger_iva_aggregation"
+    assert diagnostic.resolver_id == "ledger_iva_aggregation"
+    assert diagnostic.out_of_window_count == 1
+    assert diagnostic.out_of_window_min_filing_date == date(2026, 4, 10)
+    assert diagnostic.out_of_window_max_filing_date == date(2026, 4, 10)
+    assert "outside the requested period" in diagnostic.message
     assert personal_q2.transaction_id not in resolution.source_transaction_ids
 
 

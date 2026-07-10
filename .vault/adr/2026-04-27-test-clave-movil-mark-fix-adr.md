@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#test-clave-movil-mark-fix'
 date: '2026-04-27'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - '[[2026-04-27-test-clave-movil-mark-fix-research]]'
 ---
 
-# `test-clave-movil-mark-fix` adr: Keep Cl@ve Movil tests protocol-level | (**status:** `supersedes earlier marker decision`)
+# `test-clave-movil-mark-fix` adr: Keep Cl@ve Movil tests protocol-level | (**status:** `accepted`)
 
 ## Problem Statement
 

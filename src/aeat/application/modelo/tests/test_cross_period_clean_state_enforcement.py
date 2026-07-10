@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -54,6 +55,9 @@ from .. import (
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....adapters.persistence.storage import SecureObjectRepository
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
@@ -105,7 +109,7 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _seed_ready_profile(bucket_id: str, objects: object | None = None, *, modelo: str = "390") -> None:
+def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390") -> None:
     is_legal_entity = modelo in {"200", "202", "353"}
     facts = [
         UserProfileFact(path="identity.tax_id", value="B12345674" if is_legal_entity else "X1234567L"),
@@ -145,7 +149,7 @@ def _seed_ready_profile(bucket_id: str, objects: object | None = None, *, modelo
     UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(record)
 
 
-def _seed_m100_profile_facts(bucket_id: str, objects: object) -> None:
+def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
     record = UserProfileRecord(
         profile_id=bucket_id,
         display_name="Test runtime profile",

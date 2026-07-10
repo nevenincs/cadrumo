@@ -1,23 +1,33 @@
 """X25519 encrypt-for-recipient roundtrip and anti-tautology proofs.
 
-Exercises :mod:`aeat.application.modelo._review_package_recipient_encryption`
+Exercises :mod:`~application.modelo._review_package_recipient_encryption`
 end to end: a real X25519 keypair, a real review package built via
-:func:`~aeat.application.modelo.build_review_package`, real ECDH + HKDF +
+:func:`~application.modelo.build_review_package`, real ECDH + HKDF +
 AES-256-GCM (no mocks, no hand-rolled crypto) -- encrypt for the recipient,
 confirm the recipient's own key decrypts it byte-for-byte, and confirm a
 wrong key / tampered ciphertext / mismatched recipient key all fail closed.
 
 Also proves composition with the recipient fingerprint registry: a public
 key registered via
-:mod:`aeat.application.modelo._review_package_recipient_registry` is the
+:mod:`~application.modelo._review_package_recipient_registry` is the
 same public key this module's encryption targets.
 
 Also exercises the expiry, review-only, and replay-defence follow-up slice:
 a package presented past its ``valid_until`` deadline refuses, a
 ``review_only`` envelope decrypts but is flagged non-filing-grade, and the
 envelope's replay nonce composes with
-:class:`~aeat.application.modelo.RecipientReplayGuardRepository` to refuse a
+:class:`~application.modelo.RecipientReplayGuardRepository` to refuse a
 second presentation of the same package.
+
+See Also:
+    :func:`~application.modelo.encrypt_review_package_for_recipient`:
+        X25519 ECIES encryption primitive under test.
+    :func:`~application.modelo.decrypt_review_package_for_recipient`:
+        Expiry-aware decrypt primitive that returns typed recovered bytes.
+    :class:`~application.modelo.RecipientFingerprintRegistryRepository`:
+        Trusted-recipient public-key registry used by the composition tests.
+    :func:`~entrypoints.cli._modelo_review_package_cli.review_package_decrypt`:
+        CLI call site that composes decryption with replay-guard consumption.
 """
 
 from __future__ import annotations
@@ -39,6 +49,13 @@ from ....domain.modelos import (
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
+)
+from ....tests.review_package_adapters import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
+)
+from ....tests.review_package_adapters import (
+    SecureObjectRow,
+    session_scope,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package import build_review_package
@@ -254,8 +271,8 @@ def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-g-registry") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
-        repository.add(recipient_id="kents-accountant", public_key_hex=recipient_public_key_hex, added_at=_NOW)
-        registered = repository.get("kents-accountant")
+        repository.add(recipient_id="my-accountant", public_key_hex=recipient_public_key_hex, added_at=_NOW)
+        registered = repository.get("my-accountant")
 
     envelope = encrypt_review_package_for_recipient(
         package_bytes,
@@ -603,15 +620,9 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
 
         from sqlalchemy import select
 
-        from ....adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-        )
-        from ....adapters.persistence.storage.sql import SecureObjectRow
-        from ....adapters.persistence.storage.sql.session import session_scope
-
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+                select(SecureObjectRow).where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
             ).scalar_one()
             ciphertext_bytes = bytes(row.payload)
 

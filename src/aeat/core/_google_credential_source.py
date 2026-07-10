@@ -1,7 +1,7 @@
-"""Closed taxonomy for how ``adapters.outbound.google`` obtains credentials.
+"""Closed taxonomy for how :mod:`~adapters.outbound.google` obtains credentials.
 
-:class:`GoogleCredentialSourceKind` is the accepted-value set governing which
-mechanism ``adapters.outbound.google`` uses to produce a
+:class:`~core.GoogleCredentialSourceKind` is the accepted-value set governing
+which mechanism :mod:`~adapters.outbound.google` uses to produce a
 ``google.oauth2.credentials.Credentials``-shaped object for the Sheets/Drive
 export mirror. Declared in ``core`` per ``aeat-architecture-boundaries``
 (closed value sets are ``StrEnum`` in the innermost ring) and
@@ -9,11 +9,12 @@ export mirror. Declared in ``core`` per ``aeat-architecture-boundaries``
 belongs in the central authority, not scattered string literals).
 
 See Also:
-    :func:`adapters.outbound.google.resolve_impersonated_credentials`
-        Resolves :attr:`GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`
+    :func:`~adapters.outbound.google.resolve_impersonated_credentials`
+        Resolves
+        :attr:`~core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`
         into a real, short-lived-token ``Credentials`` object.
-    :func:`adapters.outbound.storage.build_google_credentials`
-        Resolves :attr:`GoogleCredentialSourceKind.OAUTH_DESKTOP`, the
+    :func:`~adapters.outbound.storage.build_google_credentials`
+        Resolves :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP`, the
         existing per-profile interactive-consent credential source.
 """
 

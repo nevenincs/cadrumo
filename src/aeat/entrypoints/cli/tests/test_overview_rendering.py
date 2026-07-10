@@ -9,10 +9,19 @@ was lost (the downgraded overview-wording polish item).
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from ....application.overview import OverviewStatusReport
-from .._overview_rendering import render_cli_overview_status_lines
+from ....application.overview import OverviewCalendarRange, OverviewStatusReport, build_overview_calendar
+from ....domain.deadlines import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    TaxpayerProfile,
+)
+from .._overview_rendering import overview_calendar_output, render_cli_overview_status_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -171,3 +180,23 @@ def test_invoice_register_line_with_records_names_the_register() -> None:
     invoice_line = next(line for line in lines if "invoice" in line.lower())
     assert "3" in invoice_line
     assert "register" in invoice_line.lower()
+
+
+def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap() -> None:
+    """A régimen simplificado calendar-gap warning must render operator text, not a raw locale key."""
+
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.SIMPLIFICADO,
+    )
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    calendar = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
+
+    _, lines, _ = overview_calendar_output(calendar, rng, evidence_notices=())
+
+    warning_line = next(line for line in lines if line.startswith("warning\tiva.regime.m303_simplificado"))
+    assert "cli.overview.warning" not in warning_line
+    assert "forfait calculation engine is not yet available" in warning_line

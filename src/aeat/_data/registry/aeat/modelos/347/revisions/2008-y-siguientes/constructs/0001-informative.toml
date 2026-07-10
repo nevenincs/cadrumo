@@ -28,6 +28,10 @@ casilla_ids = [
     "contraparte.importe-Q4",
     "contraparte.pais-codigo",
 ]
+bindings = [
+    "modelo-347-declarante-numero-personas-entidades",
+    "modelo-347-declarante-importe-total-anual-operaciones",
+]
 workbook_parity_refs = ["modelo-347-dr-2025", "modelo-347-dr-2011"]
 live_cross_references = [
     "modelo-347-static-documentation",

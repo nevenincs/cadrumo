@@ -8,7 +8,7 @@ materialises filed rows as provenance-bearing
 :class:`CasillaObservation` records.
 
 See Also:
-    :func:`~aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation`
+    :func:`~adapters.outbound.aeat.sede.capture_filed_declaration_observation`
         Browser capture surface that produces filed-declaration observations.
     :func:`registry_observation_from_filed_declaration`
         Conversion boundary from Sede observations to registry observations.
@@ -494,13 +494,13 @@ def registry_observation_from_filed_declaration(
 ) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into registry observation rows.
 
-    The :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    The :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     is checked against the selected
     :class:`RegistrySnapshot`; each accepted
-    :class:`~aeat.adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
+    :class:`~adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
     provenance-bearing :class:`CasillaObservation`
     inside the returned
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`.
+    :class:`~domain.calculations.registry.RegistryModeloObservation`.
     """
     period_token = observation.period.registry_token
     snapshot = _registry_authority().snapshot(
@@ -637,13 +637,13 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     """Resolve registry previous-filing bindings from filed AEAT observations.
 
     The :class:`ModeloRevision` supplies the
-    previous-filing binding selectors and the :class:`~aeat.core.Period` selects
+    previous-filing binding selectors and the :class:`~core.Period` selects
     the target filing period. Filed Sede
-    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
+    :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
     are converted to
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` before
-    :func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`
-    folds their casilla values into :class:`~aeat.domain.calculations.registry.BindingId`
+    :class:`~domain.calculations.registry.RegistryModeloObservation` before
+    :func:`~domain.calculations.registry.resolve_previous_filing_binding_values`
+    folds their casilla values into :class:`~domain.calculations.registry.BindingId`
     outputs.
     """
     return resolve_previous_filing_binding_values(
@@ -664,13 +664,13 @@ def resolve_relation_values_from_filed_declarations(
     """Resolve registry cross-model relation values from filed AEAT observations.
 
     The :class:`ModeloRevision` supplies the
-    relation declarations and the :class:`~aeat.core.Period` selects the target
+    relation declarations and the :class:`~core.Period` selects the target
     filing period. Filed Sede
-    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
+    :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
     are converted to
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` before
-    :func:`~aeat.domain.calculations.registry.resolve_relation_values_from_observations`
-    folds their casilla values into :class:`~aeat.domain.calculations.registry.RelationId`
+    :class:`~domain.calculations.registry.RegistryModeloObservation` before
+    :func:`~domain.calculations.registry.resolve_relation_values_from_observations`
+    folds their casilla values into :class:`~domain.calculations.registry.RelationId`
     outputs.
     """
     return resolve_relation_values_from_observations(

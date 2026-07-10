@@ -10,6 +10,14 @@ Per the ``glossary-concepts-are-taxpayer-facing`` rule the shipped search
 surfaces only ``approved``-lifecycle concepts — the ratified taxpayer/operator
 vocabulary — excluding ``draft`` (unreviewed) and ``deprecated`` (internal
 machinery) concepts, which the taxpayer glossary also excludes.
+
+See Also:
+    :func:`~application.corpus_search.search_terminology`
+        Public facade for approved-concept terminology search.
+    :func:`~application.corpus_search.lookup_terminology`
+        Public facade for exact concept-id lookup.
+    :func:`~entrypoints.mcp._terminology_tools.terminology_payload_from_hits`
+        MCP transport mapper for ranked terminology hits.
 """
 
 from __future__ import annotations
@@ -19,6 +27,7 @@ import tomllib
 import unicodedata
 from collections.abc import Iterable
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -74,17 +83,29 @@ def _fold(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", stripped).strip().lower()
 
 
-def _terminology_root() -> object:
+def _terminology_root() -> Path:
     return bundled_path(*_TERMINOLOGY_PARTS)
 
 
+def _as_str_object_dict(value: object) -> dict[str, object] | None:
+    """Coerce a TOML-decoded value to a str-keyed dict, or ``None`` if it isn't one.
+
+    TOML tables always decode to string-keyed dicts already; the comprehension
+    reconstructs the mapping under a precise ``dict[str, object]`` type instead
+    of the bare ``dict`` a plain ``isinstance`` narrows to.
+    """
+    if not isinstance(value, dict):
+        return None
+    return {str(key): item for key, item in value.items()}
+
+
 def _resolve_language(concept: dict[str, object], locale: str) -> tuple[str, dict[str, object]]:
-    languages = concept.get("language")
-    if not isinstance(languages, dict):
+    languages = _as_str_object_dict(concept.get("language"))
+    if languages is None:
         return _FALLBACK_LOCALE, {}
     for candidate in (locale, _FALLBACK_LOCALE):
-        block = languages.get(candidate)
-        if isinstance(block, dict):
+        block = _as_str_object_dict(languages.get(candidate))
+        if block is not None:
             return candidate, block
     return _FALLBACK_LOCALE, {}
 
@@ -155,7 +176,7 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     """
     root = _terminology_root()
     concepts: list[TerminologyConcept] = []
-    for path in sorted(root.glob("*.toml"), key=lambda item: item.name):  # type: ignore[attr-defined]  # TYPE-IGNORE-RATIONALE-stubs: Path.glob attr on a resource-path union not narrowed by the checker
+    for path in sorted(root.glob("*.toml"), key=lambda item: item.name):
         payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
         projected = _project_concept(payload, locale=locale)
         if projected is not None:

@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from ...core.errors import AeatError
+    from ..workflow import WorkflowState
 
 import contextlib
 import re
@@ -460,6 +461,38 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
+    "objective-estimation-modulos-iae-epigraph": typer.Option(
+        "--objective-estimation-modulos-iae-epigraph",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-iae-epigraph.help"),
+    ),
+    "objective-estimation-modulos-module-1-units": typer.Option(
+        "--objective-estimation-modulos-module-1-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-1-units.help"),
+    ),
+    "objective-estimation-modulos-module-2-units": typer.Option(
+        "--objective-estimation-modulos-module-2-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-2-units.help"),
+    ),
+    "objective-estimation-modulos-module-3-units": typer.Option(
+        "--objective-estimation-modulos-module-3-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-3-units.help"),
+    ),
+    "objective-estimation-modulos-module-4-units": typer.Option(
+        "--objective-estimation-modulos-module-4-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-4-units.help"),
+    ),
+    "objective-estimation-modulos-module-5-units": typer.Option(
+        "--objective-estimation-modulos-module-5-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-5-units.help"),
+    ),
+    "objective-estimation-modulos-module-6-units": typer.Option(
+        "--objective-estimation-modulos-module-6-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-6-units.help"),
+    ),
+    "objective-estimation-modulos-module-7-units": typer.Option(
+        "--objective-estimation-modulos-module-7-units",
+        help=tr("wizard.setup.flags.objective-estimation-modulos-module-7-units.help"),
+    ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
         click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
@@ -733,7 +766,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ..user_profile import profile_storage_session, read_active_profile, record_to_path_values
+    from ..user_profile import profile_storage_session, record_to_path_values
     from ..workflow import workflow_state_repository
     from ._persistence import persist_patch, profile_values_from_patch, project_answers
 
@@ -743,9 +776,9 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     with profile_storage_session(profile_id):
         repository = workflow_state_repository()
 
-        def _persist_if_filing_baseline_survives(state):
+        def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
             nonlocal merged_values
-            values = record_to_path_values(read_active_profile(state))
+            values = record_to_path_values(state.active_profile_record())
             values.update(patched_values)
             merged_values = values
             missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
@@ -789,7 +822,6 @@ def _run_full_flow(
     from ..user_profile import (
         profile_create_storage_span,
         profile_storage_session,
-        read_active_profile,
         record_to_path_values,
     )
     from ..workflow import workflow_state_repository
@@ -865,9 +897,9 @@ def _run_full_flow(
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:
 
-        def _persist_if_filing_baseline_survives(state):
+        def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
             if mode == "edit":
-                values = record_to_path_values(read_active_profile(state))
+                values = record_to_path_values(state.active_profile_record())
                 values.update({path: value for path, value in profile_values.items() if value})
                 missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
                 if missing_baseline:
@@ -1172,7 +1204,15 @@ def _emit_wizard_success(
         payload["active_profile"] = profile_name
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        emit_json_success(command_path, payload, notices=notices)
+        # Populate the envelope-spine active_profile identity anchor (ADR
+        # mcp-identity-linked-operation I3). The wizard emits through
+        # emit_json_success directly rather than the CLI _emit_envelope funnel
+        # that resolves the active label, so it must supply the label itself. On
+        # create the newly-created profile IS the active one, so its name is the
+        # label; on edit the active profile is not necessarily the edited one, so
+        # the spine stays null (the label is not the wizard's to assert there).
+        active_profile = profile_name if mode == "create" else None
+        emit_json_success(command_path, payload, notices=notices, active_profile=active_profile)
         return
 
     lines = [

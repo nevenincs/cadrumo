@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-formulas'
 date: '2026-04-17'
-modified: '2026-06-29'
+modified: '2026-07-10'
 related:
   - '[[2026-04-17-modelo-formula-ruleset-research]]'
   - '[[2026-04-12-casilla-db-adr]]'
@@ -14,7 +14,7 @@ related:
   - '[[2026-04-17-relative-imports-adr]]'
 ---
 
-# modelo-formulas adr: per-modelo calculation formula engine (**status:** `accepted`)
+# modelo-formulas adr: per-modelo calculation formula engine | (**status:** `accepted`)
 
 Date: 2026-04-17
 Branch: `feature/173-modelo-formulas`

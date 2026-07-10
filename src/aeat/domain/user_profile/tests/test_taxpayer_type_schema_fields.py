@@ -154,6 +154,29 @@ def test_objective_estimation_threshold_refs_resolve_against_catalogue(
         assert refs <= legal_ids
 
 
+def test_objective_estimation_modulos_profile_facts_are_stable_annual_inputs(
+    schema: ProfileSchemaDefinition,
+    legal_ids: frozenset[str],
+) -> None:
+    """Módulos profile facts store operator-declared annual inputs, not coefficients."""
+    epigraph = schema.field("irpf.objective_estimation_modulos_iae_epigraph")
+    assert epigraph.type.value == "string"
+    assert epigraph.model_selectors == ("irpf.objective_estimation_modulos_iae_epigraph",)
+    assert "coefficient tables remain in the modelo registry" in epigraph.description
+
+    expected_refs = {"ley-35-2006:art-31", "orden-hac-1425-2025:art-4"}
+    assert set(epigraph.legal_refs) == expected_refs
+    assert expected_refs <= legal_ids
+
+    for slot in range(1, 8):
+        field = schema.field(f"irpf.objective_estimation_modulos_module_{slot}_units")
+        assert field.type.value == "decimal"
+        assert field.model_selectors == (f"irpf.objective_estimation_modulos_module_{slot}_units",)
+        assert field.required is False
+        assert set(field.legal_refs) == expected_refs
+        assert set(field.legal_refs) <= legal_ids
+
+
 def test_selected_irpf_and_irnr_profile_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
     legal_ids: frozenset[str],

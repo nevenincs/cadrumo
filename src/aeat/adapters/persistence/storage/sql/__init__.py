@@ -27,7 +27,8 @@ this package facade only re-exports the SQL storage API.
 
 from __future__ import annotations
 
-from ._orm import Base, FincaRow, SecureObjectRow
+from ._orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
+from ._secure_object_schema import ensure_quarantine_table
 from .engine import (
     create_engine_from_settings,
     dispose_engine,
@@ -47,6 +48,7 @@ from .secure_objects import (
     SecureObjectDeletion,
     SecureObjectMetadata,
     SecureObjectNamespaceIntegrity,
+    SecureObjectRawRow,
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectWrite,
@@ -67,15 +69,18 @@ __all__ = [
     "SecureObjectDeletion",
     "SecureObjectMetadata",
     "SecureObjectNamespaceIntegrity",
+    "SecureObjectRawRow",
     "SecureObjectRecord",
     "SecureObjectRepository",
     "SecureObjectRow",
     "SecureObjectWrite",
     "SqlRecordRepository",
+    "TransactionDateIndexRow",
     "create_engine_from_settings",
     "dispose_engine",
     "dispose_engine_handle",
     "dispose_engines_for_bucket",
+    "ensure_quarantine_table",
     "get_engine",
     "get_sessionmaker",
     "session_scope",

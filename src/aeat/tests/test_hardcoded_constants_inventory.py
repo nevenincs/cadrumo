@@ -2,6 +2,19 @@
 
 Asserts that none of the literals canonicalised in ratchet history survive in production
 Python source outside their single canonical definition site and documented escapes.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production-file and regex scanners used by this literal
+        centralisation gate.
+    :mod:`~core.external_constants`
+        Canonical registry for shared MIME, encoding, host, and route constants.
+    :mod:`~adapters.outbound.aeat.sede._browser_constants`
+        Adapter-local Playwright and Sede body-encoding constants excluded as
+        authoritative definition sites.
+
+Executable AEAT/Sede constants must live in a schema-owned canonical surface,
+never as scattered literals across production modules.
 """
 
 from __future__ import annotations
@@ -12,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, package_python_files, regex_line_hits
+from ._inventory import SRC_AEAT, non_test_package_python_files, regex_line_hits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,12 +50,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
 
 def _production_py_files() -> tuple[Path, ...]:
     """Return all non-test Python source files under src/aeat/."""
-    return tuple(
-        p
-        for p in package_python_files(include_data=True)
-        if not any(part.startswith("test_") or part == "tests" or part == "__pycache__" for part in p.parts)
-        and p not in _CANONICAL_DEFINITIONS
-    )
+    return tuple(p for p in non_test_package_python_files(include_data=True) if p not in _CANONICAL_DEFINITIONS)
 
 
 def _scan(files: Iterable[Path], pattern: re.Pattern[str]) -> list[str]:

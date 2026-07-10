@@ -1,26 +1,26 @@
 """Parse a two-column casilla-value spreadsheet into a decimal mapping.
 
-Kent keeps a hand-authored CSV or XLSX spreadsheet of ``casilla_code, value``
+An operator keeps a hand-authored CSV or XLSX spreadsheet of ``casilla_code, value``
 rows — a cert-free reconstruction path for a past filing when neither the
-justificante PDF (:mod:`aeat.application.filing._import`) nor a live AEAT pull
+justificante PDF (:mod:`application.filing._import`) nor a live AEAT pull
 is available. This module owns exactly the tabular-to-mapping projection: read
 the two declared columns, coerce every value to :class:`~decimal.Decimal`, and
 hand the caller a plain ``{casilla_code: Decimal}`` mapping keyed by the raw
 spreadsheet token (not yet validated against any registry revision).
 
 Casilla-id canonicalisation, registry-membership validation, and
-:class:`~aeat.domain.calculations.registry.CasillaObservation` construction
-remain owned by :func:`~aeat.application.modelo._local_observation_actions.record_operator_local_observation`,
+:class:`~domain.calculations.registry.CasillaObservation` construction
+remain owned by :func:`~application.modelo._local_observation_actions.record_operator_local_observation`,
 which this module's CLI caller feeds directly — there is no second casilla
 validation path here (``no-dormant-source-resolvers`` companion: one
 validation authority, not two).
 
 See Also:
-    :func:`~aeat.application.modelo._local_observation_actions.record_operator_local_observation`:
+    :func:`~application.modelo._local_observation_actions.record_operator_local_observation`:
         Consumes the parsed mapping, validates every casilla id against the
-        law-determined :class:`~aeat.domain.calculations.registry.RegistrySnapshot`,
+        law-determined :class:`~domain.calculations.registry.RegistrySnapshot`,
         and persists the non-official observation.
-    :mod:`aeat.adapters.inbound.financial.providers._csv`:
+    :mod:`adapters.inbound.financial.providers._csv`:
         Sibling tabular-ingest module for bank-statement rows; this module is
         deliberately smaller — a casilla-value sheet has two logical columns
         and no bank-layout detection, date parsing, or currency handling.

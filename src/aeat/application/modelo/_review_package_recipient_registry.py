@@ -5,7 +5,7 @@ encrypted review package -- an accountant or gestor -- by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band
 (read aloud, compared over a separate channel) before it is trusted.
 It is the taxpayer-side companion to
-:mod:`aeat.application.modelo._review_package_recipient_encryption`,
+:mod:`~application.modelo._review_package_recipient_encryption`,
 which consumes a registered recipient's public key to seal a review
 package so only that recipient's matching private key can open it.
 
@@ -17,21 +17,26 @@ encrypts feedback back to the taxpayer) is out of scope for this
 module.
 
 Persistence follows the exact shape of
-:class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
+:class:`~adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`:
 one ``FINANCIAL``-sensitivity secure-object singleton per bucket, an
 empty register when absent, and duplicate-``recipient_id`` refusal on
 add.
 
+The encrypted row's storage policy is governed by
+:class:`~adapters.persistence.storage.SensitivityClass`; this registry stores
+public-key trust records at ``FINANCIAL`` sensitivity, never private key
+material.
+
 See Also:
-    :mod:`aeat.application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo._review_package_recipient_encryption`
         Consumes a registered recipient's public key to encrypt a
         review package.
-    :mod:`aeat.application.modelo._review_package_signing`
+    :mod:`~application.modelo._review_package_signing`
         Sibling per-profile keypair primitive (Ed25519, signature-only)
         this module's X25519 keypair concept deliberately does not
         share key material with -- signing and encryption keys must
         not be reused across purposes.
-    :class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
+    :class:`~adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
         The structural template this repository mirrors.
 """
 
@@ -44,6 +49,14 @@ from typing import TYPE_CHECKING
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.storage import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    SensitivityClass,
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -134,10 +147,10 @@ class RecipientFingerprintRegistryRepository:
     """Governed repository for the encrypted recipient-fingerprint register.
 
     The singleton row is owned by
-    :data:`adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE`
+    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE`
     and persisted through
-    :class:`adapters.persistence.storage.SecureObjectRepository`, mirroring
-    :class:`adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`.
+    :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`.
     """
 
     def __init__(
@@ -152,16 +165,13 @@ class RecipientFingerprintRegistryRepository:
             bucket_id: Explicit bucket to bind to, resolved through
                 :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
                 Ignored when ``objects`` is supplied.
-            objects: Explicit :class:`SecureObjectRepository` override
+            objects: Explicit
+                :class:`~adapters.persistence.storage.SecureObjectRepository`
+                override
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object
                 store.
         """
-        from ...adapters.persistence.storage import (
-            secure_object_repository_for_active_bucket,
-            secure_object_repository_for_bucket,
-        )
-
         if objects is not None:
             self._objects = objects
         elif bucket_id is not None:
@@ -185,11 +195,6 @@ class RecipientFingerprintRegistryRepository:
                 loudly, not silently coerced into a plausible-looking
                 empty register.
         """
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
-        )
-        from ...adapters.persistence.storage import SensitivityClass
-
         try:
             record = self._objects.load(
                 _NAMESPACE.namespace,
@@ -238,7 +243,7 @@ class RecipientFingerprintRegistryRepository:
 
         Args:
             recipient_id: Stable operator-chosen label (e.g.
-                ``"kents-accountant"``). Must be unique within the
+                ``"my-accountant"``). Must be unique within the
                 register.
             public_key_hex: The recipient's raw 32-byte X25519 public
                 key, hex-encoded (see :func:`public_key_hex_from_raw_bytes`).
@@ -288,11 +293,6 @@ class RecipientFingerprintRegistryRepository:
         return updated
 
     def _save_unlocked(self, register: RecipientFingerprintRegister) -> None:
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
-        )
-        from ...adapters.persistence.storage import SensitivityClass
-
         self._objects.save(
             namespace=_NAMESPACE.namespace,
             object_key=self._object_key,
@@ -305,10 +305,6 @@ class RecipientFingerprintRegistryRepository:
 
     @property
     def _object_key(self) -> str:
-        from ...adapters.persistence.storage import (
-            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
-        )
-
         return _NAMESPACE.require_default_object_key()
 
 

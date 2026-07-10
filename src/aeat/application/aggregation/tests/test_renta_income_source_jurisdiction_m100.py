@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import TransactionCatalogue
-from .._renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
+from .._renta_income_ledger import (
+    RentaIncomeLedgerAggregationIssueReason,
+    aggregate_renta_income_ledger,
+    aggregate_renta_m100_income_ledger,
+    aggregate_renta_m100_income_ledger_from_repositories,
+)
 from ._renta_income_aggregation_support import (
     _ANNUAL_2024,
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
@@ -18,11 +27,19 @@ from ._renta_income_aggregation_support import (
     _Q1_2024,
     _actividad_transaction_with_source,
     _income_transaction,
+    isolated_renta_income_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# S385a: source_jurisdiction provenance pass-through (#258)
+
+@pytest.fixture
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_renta_income_objects(tmp_path) as objects:
+        yield objects
+
+
+# Source-jurisdiction provenance pass-through.
 #
 # LIRPF Art. 8 establishes the universal-base presumption for Spanish-
 # resident taxpayers: M100 / M130 actividad-económica income aggregates
@@ -129,6 +146,78 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
         (jan_amount, dec_amount),
         Decimal("0"),
     )
+    # Regression (issue #408): the excluded prior-year row must surface as a
+    # visible OUTSIDE_PERIOD issue, not silently vanish.
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert result.issues[0].transaction_id == prior.transaction_id
+
+
+def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_transactions(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A catalogue transaction outside the requested ejercicio must surface as a summary.
+
+    Regression test (issue #408): the repository-backed M100 entry point must
+    not silently drop out-of-window rows. The compact summary keeps the
+    visibility signal without allocating one issue per plaintext index entry.
+    """
+    jan_amount, prior_amount = Decimal("3000.00"), Decimal("999.00")
+    jan = _income_transaction("m100-repo-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    prior = _income_transaction("m100-repo-prior", value_date=date(2023, 12, 31), amount=prior_amount)
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((jan, prior)))
+
+    result = aggregate_renta_m100_income_ledger_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
+    assert result.casilla_aggregation.casilla_values[_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == jan_amount
+    assert result.issues == ()
+    assert result.out_of_window_summary is not None
+    assert result.out_of_window_summary.count == 1
+    assert result.out_of_window_summary.min_filing_date == date(2023, 12, 31)
+    assert result.out_of_window_summary.max_filing_date == date(2023, 12, 31)
+
+
+def test_repository_backed_m100_aggregation_partition_matches_full_scan(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The M100 partitioned result matches the full-scan result for declared values.
+
+    The same multi-year catalogue is aggregated once through the
+    repository-backed partition and once through the pure full-scan aggregator.
+    In-window observations and casilla totals/provenance must match; only the
+    out-of-window issue taxonomy can differ.
+    """
+    in_year = _income_transaction("m100-parity-in-year", value_date=date(2024, 6, 1), amount=Decimal("4000.00"))
+    prior_year = _income_transaction("m100-parity-prior-year", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
+    catalogue = TransactionCatalogue.from_transactions((in_year, prior_year))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(catalogue)
+
+    partitioned = aggregate_renta_m100_income_ledger_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+    full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+
+    assert set(partitioned.observations) == set(full_scan.observations)
+    assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
+    assert set(partitioned.casilla_aggregation.provenance) == set(full_scan.casilla_aggregation.provenance)
+    assert {o.transaction_id for o in partitioned.observations} == {in_year.transaction_id}
+
+    assert partitioned.issues == ()
+    assert partitioned.out_of_window_summary is not None
+    assert partitioned.out_of_window_summary.count == 1
+    assert partitioned.out_of_window_summary.min_filing_date == date(2023, 12, 31)
+    assert partitioned.out_of_window_summary.max_filing_date == date(2023, 12, 31)
+    assert {i.transaction_id for i in full_scan.issues} == {prior_year.transaction_id}
+    assert full_scan.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
 
 
 def test_m100_annual_income_rejects_non_annual_period() -> None:

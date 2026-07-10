@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from typing import TypedDict
 
 from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
@@ -50,50 +51,8 @@ def taxpayer_profile_from_mapping(
     and to ``iva_regime_default`` for profiles that still require an
     IVA regime declaration.
     """
-    # Coerce mixed-typed mappings to canonical-token strings before the
-    # descriptor's projection runs.
-    canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
-    # The wizard's SELECT validator only accepts the IVARegime
-    # canonical uppercase token, so the mapping is normalised here
-    # against the enum's value form before projection.
-    if canonical.get("iva.regime"):
-        canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
-
+    canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
     setup_flow = get_setup_flow()
-
-    # SetupAnswers requires identity.tax_id and activities.description;
-    # the deadline engine supplies a tax_id default so it can render
-    # diagnostic schedules against an empty profile. Pad here so
-    # project_answers' strict validation runs against the same shape.
-    padded = dict(canonical)
-    padded.setdefault("identity.tax_id", canonical.get("tax.id") or tax_id_default)
-    padded.setdefault("activities.description", canonical.get("activity") or "schedule-only")
-    # Forward selector-keyed input from external callers to the canonical
-    # schema path the wizard projects against.
-    if "tax.id" in canonical and "identity.tax_id" not in canonical:
-        padded["identity.tax_id"] = canonical["tax.id"]
-    if "activity" in canonical and "activities.description" not in canonical:
-        padded["activities.description"] = canonical["activity"]
-    # Bare boolean flag names map to their canonical wizard keys so the
-    # descriptor's project_answers picks them up.
-    for bare, canonical_key in (
-        ("has_employees", "withholding.has_employees"),
-        ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
-        ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
-        ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
-        ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
-        ("does_intracomunitario", "iva.does_intracomunitario"),
-        ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
-        (
-            "monedas_virtuales_extranjero_above_threshold",
-            "obligations.monedas_virtuales_extranjero_above_threshold",
-        ),
-        ("enrollment.large_company", "censo.large_company"),
-        ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
-    ):
-        if bare in canonical and canonical_key not in canonical:
-            padded[canonical_key] = canonical[bare]
-
     typed = project_answers(setup_flow, padded)
     if not isinstance(typed, SetupAnswers):
         raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
@@ -125,18 +84,7 @@ def taxpayer_profile_from_mapping(
         art109_activity_income_withholding_ge_70pct=typed.art109_activity_income_withholding_ge_70pct,
         pays_rent_with_retencion=typed.pays_rent_with_retencion,
         pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
-        objective_estimation_prior_year_gross_income_eur=_parse_decimal(
-            canonical.get("irpf.objective_estimation_prior_year_gross_income_eur"),
-        ),
-        objective_estimation_prior_year_invoice_gross_income_eur=_parse_decimal(
-            canonical.get("irpf.objective_estimation_prior_year_invoice_gross_income_eur"),
-        ),
-        objective_estimation_prior_year_agri_livestock_forest_gross_eur=_parse_decimal(
-            canonical.get("irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"),
-        ),
-        objective_estimation_prior_year_purchases_eur=_parse_decimal(
-            canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
-        ),
+        **_objective_estimation_fields(canonical),
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
@@ -203,6 +151,127 @@ def taxpayer_profile_from_mapping(
         irpf_pagadores_secondary_income=_parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
         irpf_pagadores_total_work_income=_parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
         days_in_spain=_parse_days_in_spain(canonical),
+    )
+
+
+def _canonicalize_and_pad(
+    values: Mapping[str, object],
+    *,
+    tax_id_default: str,
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Coerce ``values`` to canonical-token strings and pad it for projection.
+
+    Returns ``(canonical, padded)``: ``canonical`` is the raw mapping
+    stringified to canonical tokens (used throughout the caller to read back
+    individual fields); ``padded`` layers the identity/activity defaults and
+    bare-flag forwarding ``project_answers`` needs to run its strict
+    validation against a well-formed shape.
+    """
+    # Coerce mixed-typed mappings to canonical-token strings before the
+    # descriptor's projection runs.
+    canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
+    # The wizard's SELECT validator only accepts the IVARegime
+    # canonical uppercase token, so the mapping is normalised here
+    # against the enum's value form before projection.
+    if canonical.get("iva.regime"):
+        canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
+
+    # SetupAnswers requires identity.tax_id and activities.description;
+    # the deadline engine supplies a tax_id default so it can render
+    # diagnostic schedules against an empty profile. Pad here so
+    # project_answers' strict validation runs against the same shape.
+    padded = dict(canonical)
+    padded.setdefault("identity.tax_id", canonical.get("tax.id") or tax_id_default)
+    padded.setdefault("activities.description", canonical.get("activity") or "schedule-only")
+    # Forward selector-keyed input from external callers to the canonical
+    # schema path the wizard projects against.
+    if "tax.id" in canonical and "identity.tax_id" not in canonical:
+        padded["identity.tax_id"] = canonical["tax.id"]
+    if "activity" in canonical and "activities.description" not in canonical:
+        padded["activities.description"] = canonical["activity"]
+    # Bare boolean flag names map to their canonical wizard keys so the
+    # descriptor's project_answers picks them up.
+    for bare, canonical_key in (
+        ("has_employees", "withholding.has_employees"),
+        ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
+        ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
+        ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
+        ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
+        ("does_intracomunitario", "iva.does_intracomunitario"),
+        ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
+        (
+            "monedas_virtuales_extranjero_above_threshold",
+            "obligations.monedas_virtuales_extranjero_above_threshold",
+        ),
+        ("enrollment.large_company", "censo.large_company"),
+        ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
+    ):
+        if bare in canonical and canonical_key not in canonical:
+            padded[canonical_key] = canonical[bare]
+
+    return canonical, padded
+
+
+class _ObjectiveEstimationFields(TypedDict):
+    objective_estimation_prior_year_gross_income_eur: Decimal | None
+    objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None
+    objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None
+    objective_estimation_prior_year_purchases_eur: Decimal | None
+    objective_estimation_modulos_iae_epigraph: str
+    objective_estimation_modulos_module_1_units: Decimal | None
+    objective_estimation_modulos_module_2_units: Decimal | None
+    objective_estimation_modulos_module_3_units: Decimal | None
+    objective_estimation_modulos_module_4_units: Decimal | None
+    objective_estimation_modulos_module_5_units: Decimal | None
+    objective_estimation_modulos_module_6_units: Decimal | None
+    objective_estimation_modulos_module_7_units: Decimal | None
+
+
+def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEstimationFields:
+    """Return the estimación objetiva (módulos) ``TaxpayerProfile`` kwargs.
+
+    Groups the prior-year gross-income figures and the seven módulos unit
+    counts the M131/M303 régimen de módulos formulas consume, keeping this
+    cohesive field family out of the main constructor call.
+    """
+    return _ObjectiveEstimationFields(
+        objective_estimation_prior_year_gross_income_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_gross_income_eur"),
+        ),
+        objective_estimation_prior_year_invoice_gross_income_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_invoice_gross_income_eur"),
+        ),
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"),
+        ),
+        objective_estimation_prior_year_purchases_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
+        ),
+        objective_estimation_modulos_iae_epigraph=canonical.get(
+            "irpf.objective_estimation_modulos_iae_epigraph",
+            "",
+        ),
+        objective_estimation_modulos_module_1_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_1_units"),
+        ),
+        objective_estimation_modulos_module_2_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_2_units"),
+        ),
+        objective_estimation_modulos_module_3_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_3_units"),
+        ),
+        objective_estimation_modulos_module_4_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_4_units"),
+        ),
+        objective_estimation_modulos_module_5_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_5_units"),
+        ),
+        objective_estimation_modulos_module_6_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_6_units"),
+        ),
+        objective_estimation_modulos_module_7_units=_parse_decimal(
+            canonical.get("irpf.objective_estimation_modulos_module_7_units"),
+        ),
     )
 
 

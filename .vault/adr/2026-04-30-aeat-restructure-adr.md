@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#aeat-restructure'
 date: '2026-04-30'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - '[[2026-04-30-aeat-restructure-research]]'
 ---
 
-# `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted — execution-ready`)
+# `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted`)
 
 > **APPROVAL-READY — 2026-04-30.** This ADR has converged through
 > 22 audit operations + 2 prior cold-eyes reviews + wave-5 gap-check

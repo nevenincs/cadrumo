@@ -10,6 +10,7 @@ from ._action_test_support import (
     _BUCKET_ID,
     LedgerSourceImportCommand,
     Path,
+    SecureObjectRepository,
     TransactionDirection,
     TransactionValidationError,
     _repositories,
@@ -106,7 +107,7 @@ def test_import_ledger_source_auto_unsupported_file_raises_localised_import_erro
 
 
 def test_import_dedup_keeps_opposite_direction_same_amount_narrative_date(
-    secure_objects,
+    secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
     """Opposite cashflow directions are distinct imported movements."""
@@ -146,7 +147,7 @@ def test_import_dedup_keeps_opposite_direction_same_amount_narrative_date(
 
 
 def test_import_dedup_keeps_same_numeric_amount_in_different_currencies(
-    secure_objects,
+    secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
     """Currency is part of imported movement identity."""

@@ -3,14 +3,14 @@ tags:
   - "#adr"
   - "#casilla-db"
 date: 2026-04-12
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-casilla-db-research]]"
   - "[[2026-04-12-data-storage-adr]]"
   - "[[2026-04-12-trilingual-i18n-adr]]"
 ---
 
-# Architecture Decision Record: Casilla DB
+# Architecture Decision Record: Casilla DB | (**status:** `accepted`)
 
 ## Status
 Accepted

@@ -18,17 +18,19 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Awaitable, Mapping
+from collections.abc import Coroutine, Mapping
 from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
+from mcp.client.session import ElicitationFnT
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from .._dispatch import tool_name_for_command
 from .._faithfulness import SessionGroundingWindow, arguments_faithfulness
 from .._persona_scope import AgentPersona
 from .._server import build_server
+from .._surface import SurfaceMode
 from .._telemetry import SessionTelemetryWriter, read_session_records
 from .._tools import build_tool_descriptors
 
@@ -40,8 +42,8 @@ _FILE_TOOL = tool_name_for_command("modelo.work.file")
 _DESCRIBE_TOOL = tool_name_for_command("modelo.describe")
 
 
-def _run[T](coro: Awaitable[T]) -> T:
-    return asyncio.run(coro)  # type: ignore[arg-type]
+def _run[T](coro: Coroutine[object, object, T]) -> T:
+    return asyncio.run(coro)
 
 
 async def _accept_confirmation(
@@ -75,7 +77,12 @@ async def _accept_but_unconfirmed(
 
 
 async def _list_tool_names(persona: AgentPersona | None) -> set[str]:
-    server = build_server(build_tool_descriptors(), persona=persona)
+    # FULL surface: this helper asserts the persona-scope and handoff-deny
+    # filtering of the per-verb tool list, a property that only manifests when
+    # the per-verb tools are actually advertised. The default-surface policy
+    # (CORE advertises only the orientation slice) is owned by
+    # ``test_surface_policy.py``; here it must not hide the verbs under test.
+    server = build_server(build_tool_descriptors(), persona=persona, surface_mode=SurfaceMode.FULL)
     async with connect(server) as session:
         listed = await session.list_tools()
         return {tool.name for tool in listed.tools}
@@ -86,11 +93,17 @@ async def _call(
     name: str,
     arguments: Mapping[str, object],
     *,
-    elicit: object = None,
+    elicit: ElicitationFnT | None = None,
     telemetry: SessionTelemetryWriter | None = None,
 ) -> mcp_types.CallToolResult:
     server = build_server(build_tool_descriptors(), persona=persona, telemetry=telemetry)
-    async with connect(server, elicitation_callback=elicit) as session:  # type: ignore[arg-type]
+    async with connect(server, elicitation_callback=elicit) as session:
+        # Clear the block-first-mutation identity gate (ADR I2) with a real
+        # whoami identity read so these serving-path gate tests reach the
+        # confirm / faithfulness gate under test rather than the identity gate.
+        # whoami is a read-only console tool that emits no telemetry, so record
+        # counts are unaffected.
+        await session.call_tool("aeat_whoami", {})
         return await session.call_tool(name, dict(arguments))
 
 
@@ -199,7 +212,7 @@ def test_telemetry_records_payload_free_rows(tmp_path: Path) -> None:
     ],
 )
 def test_confirm_elicitation_refuses_over_the_wire_when_not_confirmed(
-    elicit: object,
+    elicit: ElicitationFnT,
     outcome_token: str,
 ) -> None:
     # e2e over the memory-transport wire: a handoff verb (leaf ``export``) routes

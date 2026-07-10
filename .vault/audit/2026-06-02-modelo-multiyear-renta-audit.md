@@ -45,10 +45,11 @@ invariant rather than a hand-computed value. The recorder enforces its
 its own type boundary, and `assert_enrollment_matches_manifest` converts the
 manifest from an honour claim into a verified one.
 
-Structural completeness remains **gated on the remaining HIGH and MEDIUM findings
-below**. HIGH-1 and HIGH-2 are closed on the current corpus/registry path; HIGH-3
-and the MEDIUM findings still require closure or formal deferral before the
-campaign is declared complete.
+Structural completeness originally remained **gated on the remaining HIGH and
+MEDIUM findings below**. HIGH-1 and HIGH-2 were closed on the 2026-06-29
+corpus/registry path; HIGH-3 and the MEDIUM findings still required closure or
+formal deferral before the campaign could be declared complete. The 2026-07-06
+current-state review below records the later closures and supersessions.
 
 ## Current State — 2026-06-29
 
@@ -106,6 +107,37 @@ The current registry/corpus closes the two legal-grounding findings from this au
   formulas remain grounded on `ley-35-2006:art-49`.
 - **Verification gate:** the grounding evidence gate is green. Tracked as task
   `#39` (corpus prerequisite `#44`).
+
+## Current State — 2026-07-06 Post-S89 Review
+
+The post-S89 current-state pass rechecked every remaining HIGH/MEDIUM blocker and
+the LOW softness items against the live tree after commits `8f5442bc0d` and
+`55d04363fd`:
+
+- HIGH-3 is closed: `test_modelo_353_grupo_aggregation_continuity.py` no longer
+  carries `EXPECTED TO FAIL`, `HELD-PENDING`, or a stale `type: ignore` marker.
+- MEDIUM-1 is closed: `fd` finds only
+  `test_modelo_721_cripto_extranjero_fidelity.py`; the older
+  `test_modelo_721_cripto_exterior_fidelity.py` orphan is absent.
+- MEDIUM-2 is closed: M309 and M369 both declare `evidence_class =
+  "calculation"` and their enrollment tests use `record_calculation_year` with
+  real registry calculations, not context-mode labels.
+- MEDIUM-3 is closed: the A4 income ADR now names the delivered M100
+  general-base carry as `1391 -> 1388`, grounded on art. 48, and scopes the
+  savings-base family as deferred follow-on work.
+- LOW-1 is hardened: the M202 continuity test reads
+  `is.modalidad_cuota.percentage` from the live registry snapshot and separately
+  cross-checks the registry parameter against the statutory 18% instruction.
+- LOW-2 is closed: the M714 baseline-fidelity test now states the Phase-A wealth
+  figure is a roundtrip input, while the art. 30 escala is verified by dedicated
+  registry calculation tests.
+- The residual M721 `source_output` previous-filing promise is closed by explicit
+  supersession in the accepted ADR and by M721-specific tests proving the
+  row-observation advisory path is the live continuity mechanism.
+
+No new HIGH or MEDIUM blockers were found in this pass. The remaining non-blocking
+inventory is the pre-campaign `executable_parity_evidence` tier debt and the
+project-level stash inventory already recorded below.
 
 ### HIGH-3 — M353 enrollment test carries stale "expected to fail / held-pending-A2" framing
 
@@ -257,20 +289,15 @@ here so the close is honest about what it does and does not cover.
 
 ## Recommendations
 
-- Close HIGH-1 (`#40`), HIGH-2 (`#39` + corpus `#44`), and HIGH-3 (`#41`) before
-  declaring the campaign structurally complete; each has a concrete verification
-  gate above.
-- Reconcile the MEDIUM findings (`#42`, `#43`, and the A4 ADR doc-trail under
-  `#39`) or formally defer each with a follow-up reference, per the
-  campaign-close-honesty rule's "closed with verification or formally deferred"
-  requirement.
-- Action the LOW findings (`#32`, `#43`) opportunistically; they are softness, not
-  correctness gaps.
-- Treat the `executable_parity_evidence` gap as out-of-scope standing tier-debt
+- Treat the HIGH and MEDIUM findings from this audit as closed by the 2026-07-06
+  current-state review above.
+- Keep the `executable_parity_evidence` gap as out-of-scope standing tier-debt
   (verified pre-campaign above); do not let it block the campaign close.
-- Re-run a fresh honesty review after the HIGH/MEDIUM remediations land; a pattern
-  of recurring multi-item discoveries per pass is documented and expected — the
-  gate is that an honest review ran before closure was declared, which it did.
+- Keep the stash inventory as project-level safety debt for the coordinator, not a
+  model-multiyear-renta campaign blocker.
+- If a future campaign wants registry-native M721 row-set previous-filing, open a
+  new ADR and plan for row-set selector/schema work rather than reviving the
+  superseded scalar `source_output` clause.
 
 ## Codification candidates
 

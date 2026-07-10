@@ -105,24 +105,24 @@ REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
 )
 
 
-def test_canonical_layout_package_import_smoke() -> None:
+@pytest.mark.parametrize("module_name", CANONICAL_LAYOUT_PACKAGES)
+def test_canonical_layout_package_import_smoke(module_name: str) -> None:
     """Every canonical layout import surface must be importable."""
-    for module_name in CANONICAL_LAYOUT_PACKAGES:
-        importlib.import_module(module_name)
+    importlib.import_module(module_name)
 
 
-def test_canonical_public_symbols_are_exposed() -> None:
+@pytest.mark.parametrize(("module_name", "symbol_name"), CANONICAL_PUBLIC_SYMBOLS)
+def test_canonical_public_symbols_are_exposed(module_name: str, symbol_name: str) -> None:
     """Representative public symbols remain available at canonical paths."""
-    for module_name, symbol_name in CANONICAL_PUBLIC_SYMBOLS:
-        module = importlib.import_module(module_name)
+    module = importlib.import_module(module_name)
 
-        assert hasattr(module, symbol_name), f"{module_name} must expose {symbol_name}"
+    assert hasattr(module, symbol_name), f"{module_name} must expose {symbol_name}"
 
 
-def test_relocated_surfaces_exist_at_canonical_paths() -> None:
+@pytest.mark.parametrize("relative_path", REQUIRED_RELOCATED_PATHS)
+def test_relocated_surfaces_exist_at_canonical_paths(relative_path: str) -> None:
     """Moved implementation surfaces must exist at their canonical destinations."""
-    for relative_path in REQUIRED_RELOCATED_PATHS:
-        assert (SRC_AEAT / relative_path).exists(), relative_path
+    assert (SRC_AEAT / relative_path).exists(), relative_path
 
 
 def test_legacy_normatives_package_is_absent() -> None:
@@ -136,14 +136,17 @@ def test_domain_justificante_does_not_export_parser_pipeline() -> None:
     assert not hasattr(module, "parse_justificante")
 
 
-def test_aeat_auth_does_not_export_google_auth_pipeline() -> None:
-    module = importlib.import_module("aeat.adapters.outbound.aeat.auth")
-
-    for symbol_name in (
+@pytest.mark.parametrize(
+    "symbol_name",
+    [
         "ADC_LOGIN_SCOPE_CSV",
         "GoogleAuthPath",
         "build_drive_service",
         "get_credentials_for_scopes",
         "inspect_google_auth",
-    ):
-        assert not hasattr(module, symbol_name), symbol_name
+    ],
+)
+def test_aeat_auth_does_not_export_google_auth_pipeline(symbol_name: str) -> None:
+    module = importlib.import_module("aeat.adapters.outbound.aeat.auth")
+
+    assert not hasattr(module, symbol_name), symbol_name

@@ -5,7 +5,7 @@ tags:
   - "#adr"
   - "#pytest-only-testing"
 date: 2026-04-17
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-17-pytest-only-testing-research]]"
   - "[[2026-04-12-dev-scaffolding-adr]]"
@@ -14,7 +14,7 @@ related:
 status: accepted
 ---
 
-# pytest-only-testing adr
+# pytest-only-testing adr | (**status:** `accepted`)
 
 ## status
 

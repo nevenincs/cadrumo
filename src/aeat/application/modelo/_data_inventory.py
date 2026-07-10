@@ -8,20 +8,20 @@ so an unset profile fact — e.g. the home-office usage ratio — surfaces as an
 actionable gap rather than a silent blank downstream).
 
 This module owns the read-only composition over
-:func:`aeat.application.modelo._registry_resources.authority_via_resources`
+:func:`~application.modelo._registry_resources.authority_via_resources`
 (the registry snapshot for the casilla/binding declarations) and
-:func:`aeat.application.modelo._binding_readiness.profile_resolvable_binding_ids`
+:func:`~application.modelo.profile_resolvable_binding_ids`
 (the profile-fact resolution already used by the ``bindings list --missing``
 surface), so the CLI ``requires`` command stays a thin projection layer. No new
 aggregation path is introduced: the same registry snapshot and profile-binding
 resolver the calculate path uses are read, not re-derived.
 
 See Also:
-    :func:`aeat.application.modelo._registry_helpers.required_input_casilla_ids_for_revision`
+    :func:`~application.modelo._registry_helpers.required_input_casilla_ids_for_revision`
         Sibling helper returning only the bare required/optional id tuples
         (used by amendment completeness checks); this module composes the
         richer operator-facing checklist over the same snapshot.
-    :func:`aeat.application.modelo._binding_readiness.profile_resolvable_binding_ids`
+    :func:`~application.modelo.profile_resolvable_binding_ids`
         Profile-fact binding resolver reused here to flag missing coefficients.
 """
 
@@ -63,12 +63,12 @@ class DataInventoryChecklist:
     ``required_manual`` and ``optional_manual`` are the casillas an operator
     must (or may) hand-enter. ``ledger_derivable`` are casillas the ledger
     aggregation mesh populates automatically once the relevant transactions
-    are imported and classified — Kent imports these rather than typing them.
-    ``profile_derivable`` are casillas populated from the active taxpayer
-    profile (coefficients such as the home-office usage ratio);
+    are imported and classified — the operator imports these rather than
+    typing them. ``profile_derivable`` are casillas populated from the active
+    taxpayer profile (coefficients such as the home-office usage ratio);
     ``unresolved_profile_bindings`` names the subset of those bindings the
     active profile has not yet supplied a fact for, so the checklist can warn
-    Kent before he calculates and hits a missing-binding refusal.
+    the operator before they calculate and hit a missing-binding refusal.
     """
 
     modelo: str
@@ -92,13 +92,13 @@ def data_inventory_checklist(
 ) -> DataInventoryChecklist:
     """Compose the data-inventory checklist for one modelo / year / period.
 
-    Reads the resolved :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+    Reads the resolved :class:`~domain.calculations.registry.RegistrySnapshot`
     for ``(modelo, filing_year, period)`` and classifies every casilla:
 
     * ``input_kind == MANUAL`` casillas split into ``required_manual`` /
       ``optional_manual`` by their ``required`` flag.
     * ``input_kind == BOUND`` casillas are classified by their binding's
-      :class:`~aeat.core.aggregation.BindingSourceKind`: ledger-aggregation
+      :class:`~core.aggregation.BindingSourceKind`: ledger-aggregation
       sources become ``ledger_derivable``; ``profile`` sources become
       ``profile_derivable``. Every other bound source (previous-filing carry,
       relation prefill, live observation, constant value, ...) requires no
@@ -109,7 +109,7 @@ def data_inventory_checklist(
 
     When ``bucket_id`` names an active profile, ``profile_derivable`` bindings
     are cross-checked against
-    :func:`aeat.application.modelo._binding_readiness.profile_resolvable_binding_ids`
+    :func:`~application.modelo.profile_resolvable_binding_ids`
     and any binding the profile has not yet resolved is surfaced in
     ``unresolved_profile_bindings`` — the coefficient-missing warning the issue
     calls for (e.g. an unset home-office ratio). ``profile_checked`` is

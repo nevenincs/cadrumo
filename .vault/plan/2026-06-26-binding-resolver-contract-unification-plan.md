@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-07-04'
+modified: '2026-07-05'
 tier: L2
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
@@ -49,12 +49,12 @@ Bring counterpart 347/349 and foreign-assets 720 onto the live calculate mesh as
 
 - [x] `P03.S10` - Author a counterpart 347/349 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_counterpart_347/349, behaviour-preserving against the existing counterpart suites; `src/aeat/application/aggregation/_counterpart.py`.
 - [x] `P03.S11` - Author a foreign-assets 720 ModeloSourceResolver returning CalculationSourceResolution that delegates to aggregate_foreign_assets_720, behaviour-preserving against the existing 720 suites; `src/aeat/application/aggregation/_foreign_assets.py`.
-- [ ] `P03.S21` - Prove the counterpart 347/349 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 347 and a 349 fixture, asserting the live-mesh resolution equals the prior aggregate_counterpart_347/349 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
-- [ ] `P03.S20` - Prove the foreign-assets 720 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 720 fixture, asserting the live-mesh resolution equals the prior aggregate_foreign_assets_720 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
-- [ ] `P03.S12` - Enroll the counterpart and foreign-assets resolvers in merge_source_resolutions and remove FOREIGN_ASSET from DEFERRED_SOURCE_KINDS now that it has a live resolver, applying the apply-cached-on-collision drive against the live peer WIP; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `P03.S21` - Prove the counterpart 347/349 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 347 and a 349 fixture, asserting the live-mesh resolution equals the prior aggregate_counterpart_347/349 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
+- [x] `P03.S20` - Prove the foreign-assets 720 mesh resolver produces a CORRECT aggregation value by oracle/calc-smoke check against a 720 fixture, asserting the live-mesh resolution equals the prior aggregate_foreign_assets_720 output exactly so the now-resolving (no longer deferred) source cannot silently under-declare; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
+- [x] `P03.S12` - Enroll the counterpart and foreign-assets resolvers in merge_source_resolutions and remove FOREIGN_ASSET from DEFERRED_SOURCE_KINDS now that it has a live resolver, applying the apply-cached-on-collision drive against the live peer WIP; `src/aeat/application/modelo/_calculation_actions.py`.
 - [x] `P03.S13` - Collapse the retenciones double-path so the per-modelo service retenciones branch delegates to the same mesh RetencionesAggregationSourceResolver, retiring the duplicate retenciones service result type without changing the landed perceptor-count result; `src/aeat/application/aggregation/_service.py`.
 - [x] `P03.S19` - Prove the retenciones collapse is behaviour-preserving by asserting the single mesh RetencionesAggregationSourceResolver reproduces the prior per-modelo-service aggregation value exactly against a 111/115/123/180/190/193 fixture, with the landed perceptor-count result unchanged and no casilla value shift; `src/aeat/application/aggregation/tests/test_per_modelo_service.py`.
-- [ ] `P03.S14` - Keep the CLI aggregate verb as a thin delegating projection whose aggregation delegates to the ONE mesh resolver with no re-implemented aggregation in the verb and whose persist-retencion-observations side-effect delegates to the existing single-writer observation repository with no bespoke parallel write path per composition-service-no-parallel-write-path, retiring the verb ONLY if proven to have no distinct operator purpose beyond calculate/pull and then only with the full documented-command-conformance plus how-to plus suggestion/next_action/help sweep; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `P03.S14` - Keep the CLI aggregate verb as a thin delegating projection whose aggregation delegates to the ONE mesh resolver with no re-implemented aggregation in the verb and whose persist-retencion-observations side-effect delegates to the existing single-writer observation repository with no bespoke parallel write path per composition-service-no-parallel-write-path, retiring the verb ONLY if proven to have no distinct operator purpose beyond calculate/pull and then only with the full documented-command-conformance plus how-to plus suggestion/next_action/help sweep; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `P04` - One disposition registry plus parity gate
 
@@ -68,7 +68,7 @@ Replace the four scattered enrollment structures (merge_source_resolutions tuple
 
 Prove the full bindings, calculate, and roundtrip surfaces green plus the extended disposition parity gate, confirm zero vestigial envelope definitions remain, verify no casilla value shifted, and owner-triage the full collect-only tree.
 
-- [ ] `P05.S18` - Run the full bindings, calculate, and roundtrip test surface plus the extended disposition parity gate and confirm green with zero vestigial envelope definitions remaining and no casilla value shifted, then owner-triage the full collect-only tree; `src/aeat/application/modelo/tests/test_binding_source_kind_mesh_parity.py`.
+- [x] `P05.S18` - Run the full bindings, calculate, and roundtrip test surface plus the extended disposition parity gate and confirm green with zero vestigial envelope definitions remaining and no casilla value shifted, then owner-triage the full collect-only tree; `src/aeat/application/modelo/tests/test_binding_source_kind_mesh_parity.py`.
 
 ## Description
 

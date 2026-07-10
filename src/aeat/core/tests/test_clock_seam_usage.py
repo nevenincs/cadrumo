@@ -3,10 +3,10 @@
 Walks every production module under ``src/aeat`` (tests excluded) and fails if a
 bare ``datetime.now(...)`` / ``datetime.utcnow(...)`` call appears — the wall-clock
 read that bypasses the deterministic-output seam
-(:func:`aeat.core.time.now` / :func:`aeat.core.time.frozen_clock`). A call site that
-reads the clock directly is invisible to :func:`~aeat.core.time.frozen_clock`, so a
+(:func:`~core.time.now` / :func:`~core.time.frozen_clock`). A call site that
+reads the clock directly is invisible to :func:`~core.time.frozen_clock`, so a
 golden capture or replay cannot pin it; routing every read through
-:func:`aeat.core.time.now` keeps the seam the single consulted clock.
+:func:`~core.time.now` keeps the seam the single consulted clock.
 
 Detection is by AST, grounded in each module's own imports so an aliased binding is
 caught and an unrelated ``.now()`` on a non-datetime object is not:
@@ -25,23 +25,31 @@ in :data:`_ALLOWLIST` with a stated per-entry reason.
 
 This is the clock-seam companion to the AST gates in ``test_modelo_string_usage.py``
 and ``test_external_constants.py``.
+
+See Also:
+    :mod:`~tests._inventory`
+        Provides the production AST inventory and repository-relative path
+        helpers used by this gate.
+    :mod:`~core.time`
+        Canonical clock and frozen-clock seam protected from direct wall-clock
+        reads.
 """
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+from ...tests import aeat_relative, production_ast_items
 
-#: Repo-relative ``src/aeat`` root.
-_AEAT_ROOT = Path(__file__).parents[2]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The one production module that owns a bare ``datetime.now`` for a structural
 #: reason: it IS the seam, returning real wall-clock when unfrozen.
-_SKIP_FILES: frozenset[Path] = frozenset({_AEAT_ROOT / "core" / "time" / "_clock.py"})
+_SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
 
 #: Injectable live-AEAT sites permitted to fall back to a bare ``datetime.now``.
 #: Keyed by ``src/aeat``-relative POSIX path → reason. Each accepts an explicit
@@ -116,11 +124,7 @@ def _is_bare_clock_read(node: ast.Call, class_names: set[str], module_names: set
     )
 
 
-def _is_test_path(path: Path) -> bool:
-    return "tests" in path.parts or path.name.startswith("test_") or path.name.endswith("_test.py")
-
-
-def test_no_bare_wall_clock_reads_in_production() -> None:
+def test_no_bare_wall_clock_reads_in_production(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No production module reads a bare ``datetime.now``/``utcnow`` outside the seam.
 
     Self-verifying: the offender worklist is recomputed from each module's AST on
@@ -130,14 +134,13 @@ def test_no_bare_wall_clock_reads_in_production() -> None:
     offenders: list[str] = []
     used_allowlist: set[str] = set()
 
-    for path in sorted(_AEAT_ROOT.rglob("*.py")):
-        if _is_test_path(path) or path in _SKIP_FILES:
+    for path, tree in production_ast_items(source_tree_ast):
+        rel = aeat_relative(path)
+        if rel in _SKIP_FILES:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         class_names, module_names = _datetime_bindings(tree)
         if not class_names and not module_names:
             continue
-        rel = path.relative_to(_AEAT_ROOT).as_posix()
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call) or not _is_bare_clock_read(node, class_names, module_names):
                 continue

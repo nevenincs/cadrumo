@@ -17,6 +17,16 @@ Non-tautology proof: label_pattern values on the registry
 descriptions, not the registry casilla ``label`` fields; a pattern that
 drifts from the DR vocabulary produces a zero-match parse failure on this
 fixture.
+
+See Also:
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m100_current_year`
+        Round-trip tests that consume the generated 2024/2025 fixture PDFs.
+    :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m100_current_support`
+        Shared expected casilla set that mirrors this generator's rows.
+    :func:`~domain.calculations.registry.validated_casilla_id`
+        Core casilla-id validator used to keep render-row keys canonical.
+    ``2026-07-05-modelo-130-100-continuity-audit``
+        Current-year declaration coverage that makes casilla 0604 load-bearing.
 """
 
 from __future__ import annotations
@@ -91,6 +101,7 @@ _M100_CURRENT_YEAR_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     ),
     (_casilla_id("0587"), "Cuota liquida incrementada total ( [0585] + [0586] )", "200,00"),
     (_casilla_id("0595"), "Cuota resultante de la autoliquidacion ( [0587] - [0588] - [0589] )", "200,00"),
+    (_casilla_id("0604"), "Pagos fraccionados ingresados (actividades economicas)", "50,00"),
     (_casilla_id("0610"), "Cuota diferencial", "150,00"),
     (_casilla_id("0670"), "Resultado de la declaracion ( [0610] - [0611] + [0612] )", "150,00"),
 )

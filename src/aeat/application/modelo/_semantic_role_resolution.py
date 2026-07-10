@@ -6,13 +6,13 @@ Advisory helpers that already hold a revision object use the structural
 revision resolver and get the same ambiguity guard.
 
 See Also:
-    :mod:`~aeat.application.modelo._calculate_input`
+    :mod:`~application.modelo._calculate_input`
         Work-unit input shortcuts that resolve operator-facing semantic-role
         tokens through a registry snapshot.
-    :mod:`~aeat.application.modelo._binding_resolution`
+    :mod:`~application.modelo._binding_resolution`
         Declaration-period metadata binding path that only accepts
         informational semantic-role casillas.
-    :mod:`~aeat.application.modelo._taxation_comparison`
+    :mod:`~application.modelo._taxation_comparison`
         Snapshot-backed comparison surface that uses semantic roles for the
         Modelo 100 result and quota casillas.
 """
@@ -21,9 +21,22 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
 from ...domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ...domain.modelos import ModeloError
+
+
+@runtime_checkable
+class _CasillaLike(Protocol):
+    """Structural shape a casilla-carrying object must expose to resolve an id.
+
+    Mirrors the ``id`` attribute the registry :class:`CasillaDefinition` shape
+    carries, without importing the concrete registry type for this ``object``
+    -typed structural walk.
+    """
+
+    id: object
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +138,7 @@ def _casilla_ids_for_semantic_role(casillas: Iterable[object], semantic_role: st
     for casilla in casillas:
         if getattr(casilla, "semantic_role", None) != semantic_role:
             continue
-        if not hasattr(casilla, "id"):
+        if not isinstance(casilla, _CasillaLike):
             raise ValueError(f"semantic_role={semantic_role!r} matched a casilla without canonical casilla.id")
         resolved.append(
             validated_casilla_id(

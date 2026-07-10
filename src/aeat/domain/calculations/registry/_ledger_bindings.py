@@ -14,7 +14,9 @@ from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregation
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
+    InputClassification,
     InvoiceKind,
+    IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
@@ -88,7 +90,6 @@ def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
 # binding-definition time; the runtime resolver then consumes
 # :class:`OssIossLedgerObservation` instances (per-line ledger facts already
 # tagged with the substrate classification) and returns the aggregated value.
-# ---------------------------------------------------------------------------
 
 
 class OssIossLedgerObservation(BaseModel):
@@ -288,7 +289,6 @@ def unsupported_ledger_oss_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger IVA aggregation source bindings (cross-modelo IVA roll-out).
 #
 # Generic counterpart to :func:`resolve_ledger_oss_aggregation_binding_values`
@@ -303,7 +303,6 @@ def unsupported_ledger_oss_observations(
 # generic source covers domestic IVA, intra-community supplies /
 # acquisitions, exports, imports, recargo de equivalencia, and
 # domestic-reverse-charge operations.
-# ---------------------------------------------------------------------------
 
 
 class IvaLedgerObservation(BaseModel):
@@ -350,6 +349,36 @@ class IvaLedgerObservation(BaseModel):
     390 binding selectors filter prorrata-linked observations without
     a manual join against the parallel ``prorrata_references`` tuple.
     """
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    """Independent criterio-de-caja axis.
+
+    Settlement observations use ``NONE`` and therefore flow through the normal
+    Modelo 303 base/cuota bindings. Informational observations for boxes
+    62/63/74/75 carry the actual cash-accounting treatment so ordinary
+    domestic rows cannot be confused with art. 75 projections.
+    """
+    input_classification: InputClassification | None = None
+    """Operator-declared LIVA art. 106 prorrata-especial per-input use class.
+
+    Carried from the source ledger transaction's
+    ``input_classification``. Meaningful only for ``SOPORTADO`` (input IVA)
+    rows in a bucket under prorrata especial: the regime-aware ledger IVA
+    apportionment routes the deducible cuota by this classification (the
+    art. 106.Uno reglas 100%/0%/general). ``None`` for every row not under
+    especial or carrying no per-input use declaration; the general-regime
+    apportionment ignores it.
+    """
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
+    """Operator-declared LIVA arts. 9.1.c / 101 differentiated sector.
+
+    Carried from the source ledger transaction's ``prorrata_sector_id``.
+    Meaningful only for ``SOPORTADO`` (input IVA) rows in a sectorized bucket:
+    the sector-aware ledger IVA apportionment applies THAT sector's provisional
+    percentage to the deducible cuota. ``None`` is a common-use input in a
+    sectorized bucket (apportioned by the art. 104.Dos common percentage) and
+    the whole-entity default otherwise; the non-sectorized apportionment ignores
+    it.
+    """
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
@@ -370,6 +399,7 @@ class _IvaLedgerSelector(BaseModel):
     exemption_articles: tuple[IvaExemptionArticle, ...] | None = Field(default=None, min_length=1)
     rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
     flow_direction: IvaFlowDirection
+    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment.NONE,)
     fact: Literal["iva_amount_sum", "base_amount_sum", "recargo_amount_sum"] = "iva_amount_sum"
 
     @field_validator("categories", mode="after")
@@ -384,6 +414,16 @@ class _IvaLedgerSelector(BaseModel):
     def _rate_kinds_unique(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("rate_kinds entries must be unique")
+        return value
+
+    @field_validator("cash_accounting_treatments", mode="after")
+    @classmethod
+    def _cash_accounting_treatments_unique(
+        cls,
+        value: tuple[IvaCashAccountingTreatment, ...],
+    ) -> tuple[IvaCashAccountingTreatment, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("cash_accounting_treatments entries must be unique")
         return value
 
     @field_validator("exemption_articles", mode="after")
@@ -458,6 +498,8 @@ def _iva_ledger_observation_matches_selector(
     if observation.rate_kind not in rate_kinds:
         return False
     if observation.flow_direction is not selector.flow_direction:
+        return False
+    if observation.cash_accounting_treatment not in set(selector.cash_accounting_treatments):
         return False
     if selector.exemption_articles is None:
         return True
@@ -566,7 +608,6 @@ def unsupported_ledger_iva_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger Renta deductible-expense aggregation source bindings.
 #
 # These bindings consume first-slice Modelo 100 expense observations produced
@@ -578,7 +619,6 @@ def unsupported_ledger_iva_observations(
 # The registry accesses only four attributes on each observation. A Protocol
 # avoids a cross-domain import (domain.calculations -> domain.renta) that
 # would violate the hexagonal direction.
-# ---------------------------------------------------------------------------
 
 # Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
 # These must stay in sync with the binding selectors in the TOML and with
@@ -982,7 +1022,6 @@ def unsupported_ledger_renta_income_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger Modelo 151 impatriado (Ley Beckham, art. 93 LIRPF) Spanish-source
 # base aggregation source bindings.
 #
@@ -996,7 +1035,6 @@ def unsupported_ledger_renta_income_observations(
 # registry family only needs the ES-scoped observation totals; the source-scope
 # gate is owned by the classifier, so the resolver here simply sums the matched
 # observations per the one-aggregation-path discipline.
-# ---------------------------------------------------------------------------
 
 
 class _ImpatriadoLedgerIncomeSelector(BaseModel):
@@ -1180,7 +1218,6 @@ def unsupported_ledger_impatriado_income_observations(
     return tuple(unsupported)
 
 
-# ---------------------------------------------------------------------------
 # Ledger Renta Modelo 130 deductible-expense (gasto) aggregation source bindings.
 #
 # The OUTGOING sibling of ``ledger_renta_income_aggregation``: M130 casilla 02
@@ -1192,7 +1229,6 @@ def unsupported_ledger_impatriado_income_observations(
 # ``ledger_renta_expense_aggregation`` source, whose annual / invoice-evidence /
 # category-profile machinery is constraint-shape-divergent from this simple
 # cumulative sum.
-# ---------------------------------------------------------------------------
 
 # Casilla IDs that the M130 gasto cumulative aggregation may feed. Validated at
 # registry load time so a binding targeting any other casilla surfaces before

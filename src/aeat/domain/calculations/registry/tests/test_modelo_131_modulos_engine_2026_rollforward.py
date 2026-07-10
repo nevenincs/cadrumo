@@ -1,10 +1,9 @@
-"""Modelo 131 estimación-objetiva módulos engine — 2026 per-year roll-forward parity.
+"""Modelo 131 estimación-objetiva módulos engine — 2026 roll-forward parity.
 
-Per the ``2026-07-01-modelo-131-eo-modulos-engine-adr`` Phase 4 (per-year
-roll-forward), the 2026 revision replicates the 2025 revision's four-fase
-módulos engine (coefficient table, casillas, formulas, verification
-predicates) because the bundled Orden HAC/1425/2025 Anexo II reproduces the
-SAME euro figures as Orden HAC/1347/2024 for every currently-tabled activity
+The 2026 revision replicates the 2025 revision's four-fase módulos engine
+(coefficient table, casillas, formulas, verification predicates) because the
+bundled Orden HAC/1425/2025 Anexo II reproduces the same euro figures as Orden
+HAC/1347/2024 for every currently-tabled activity
 (confirmed by a full numeric diff of the corpus text at authoring time: every
 signos/módulos rendimiento figure, every índice-corrector-de-exceso cuantía,
 the reducción general, and the incentivos-al-empleo tramos/incremento
@@ -15,6 +14,16 @@ from the bundled ``corpus/normatives/html/orden-hac-1425-2025.html`` — the
 2026 filing year's own applicable Orden — and the fase 2ª/3ª/4ª arithmetic is
 reproduced by an independent helper (not the registry formula under test)
 before being compared against the engine's output.
+
+See Also:
+    :mod:`~domain.calculations.registry._formula_runtime_m131`
+        Runtime evaluators for the M131 table-driven módulos operations.
+    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+        Public registry calculation entry point exercised by the parity cases.
+    :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine`
+        Baseline 2025 módulos-engine behavior this roll-forward must preserve.
+    ``src/aeat/_data/registry/aeat/modelos/131/revisions/2026/formulas/0003-modulos-engine.toml``
+        Registry-authored 2026 formula chain under test.
 """
 
 from __future__ import annotations
@@ -120,6 +129,7 @@ def _run_modulos_engine_2026(
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     snapshot = _committed_snapshot("131", 2026, "1T")
+    assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
         snapshot,
@@ -225,6 +235,7 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
         (calculation-source-canonical-mechanism).
         """
         snapshot_2025 = _committed_snapshot("131", 2025, "1T")
+        assert snapshot_2025.filing_period is not None
         result_2025 = calculate_registry_snapshot(
             snapshot_2025,
             inputs={

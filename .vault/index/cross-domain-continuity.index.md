@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-09'
+modified: '2026-07-10'
 related:
   - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
   - '[[2026-05-26-cross-domain-continuity-P01-S06]]'
@@ -37,6 +37,8 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W01-P07-S233]]'
   - '[[2026-05-26-cross-domain-continuity-W03-P14-S223]]'
   - '[[2026-05-26-cross-domain-continuity-W04-P19-S398]]'
+  - '[[2026-05-26-cross-domain-continuity-W05-P24-S281]]'
+  - '[[2026-05-26-cross-domain-continuity-W05-P24-S287]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S113]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S114]]'
   - '[[2026-05-26-cross-domain-continuity-W07-P31-S115]]'
@@ -55,10 +57,13 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S202]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S205]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S208]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S209]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S250]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S251]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S252]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S253]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S254]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S255]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S256]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S257]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S267]]'
@@ -69,14 +74,24 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S272]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S285]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S286]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S288]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S289]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S290]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S291]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S292]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S297]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S298]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S302]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S304]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S307]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S309]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S311]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S320]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S323]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S338]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S341]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S347]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S348]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S380]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S392]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S393]]'
@@ -84,6 +99,9 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S395]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S396]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P41-S410]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S411]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S413]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P41-S414]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P42-S165]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S168]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S204]]'
@@ -109,13 +127,19 @@ related:
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S295]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S303]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S312]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S317]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S319]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S328]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S329]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S330]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S331]]'
+  - '[[2026-05-26-cross-domain-continuity-W09-P45-S332]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S333]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S356]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P45-S358]]'
   - '[[2026-05-26-cross-domain-continuity-W09-P47-S170]]'
+  - '[[2026-05-26-cross-domain-continuity-W11-P59-S335]]'
+  - '[[2026-05-26-cross-domain-continuity-W11-P59-S336]]'
   - '[[2026-05-26-cross-domain-continuity-W12-P61-S277]]'
   - '[[2026-05-26-cross-domain-continuity-adr]]'
   - '[[2026-05-26-cross-domain-continuity-audit]]'
@@ -216,6 +240,13 @@ related:
   - '[[2026-06-04-cross-domain-continuity-research]]'
   - '[[2026-07-01-cross-domain-continuity-audit]]'
   - '[[2026-07-02-cross-domain-continuity-audit]]'
+  - '[[2026-07-06-cross-domain-continuity-adr]]'
+  - '[[2026-07-06-cross-domain-continuity-research]]'
+  - '[[2026-07-07-cross-domain-continuity-W07-P31-S301]]'
+  - '[[2026-07-07-cross-domain-continuity-W09-P41-S300]]'
+  - '[[2026-07-07-cross-domain-continuity-W09-P41-S308]]'
+  - '[[2026-07-07-cross-domain-continuity-adr]]'
+  - '[[2026-07-09-cross-domain-continuity-audit]]'
 ---
 
 # `cross-domain-continuity` feature index
@@ -229,6 +260,8 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `verification-predicate-strategy` | (**status:** `accepted`)
 - `2026-05-27-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `ledger-classification-rule-engine` | (**status:** `accepted`)
 - `2026-05-27-profile-portability-adr` - `cross-domain-continuity` adr: `profile-portability` | (**status:** `accepted`)
+- `2026-07-06-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `iva cash accounting treatment for modelo 303` | (**status:** `accepted`)
+- `2026-07-07-cross-domain-continuity-adr` - `cross-domain-continuity` adr: `Modelo 184 attribution-member source promotion` | (**status:** `accepted`)
 
 ### audit
 
@@ -239,6 +272,7 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-06-03-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `Peer-WIP collision protocol audit (lint-zero session)`
 - `2026-07-01-cross-domain-continuity-audit` - `cross-domain-continuity` audit: rolling code review
 - `2026-07-02-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `W09.P45 operator-surface review`
+- `2026-07-09-cross-domain-continuity-audit` - `cross-domain-continuity` audit: `W11.P60.S196 rolling-checkpoint at-rest declaration`
 
 ### exec
 
@@ -440,6 +474,33 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 - `2026-05-26-cross-domain-continuity-W09-P45-S358` - R9-TOMAS-HIGH royalties SGAE guidance gap
 - `2026-05-26-cross-domain-continuity-W01-P07-S233` - R7-INES-7 fix period token notation inconsistency in overview backlog
 - `2026-05-26-cross-domain-continuity-W09-P41-S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer
+- `2026-05-26-cross-domain-continuity-W05-P24-S281` - Implement Modelo 303 cash-accounting IVA axis
+- `2026-05-26-cross-domain-continuity-W05-P24-S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer
+- `2026-05-26-cross-domain-continuity-W09-P41-S251` - Resolve Cataluna 2024 autonomic tariff discrepancy
+- `2026-05-26-cross-domain-continuity-W09-P41-S288` - Close duplicate criterio de caja cash-accounting split
+- `2026-05-26-cross-domain-continuity-W09-P41-S298` - R8-ROSA-CRITICAL M100 missing binding for estimacion objetiva regimen
+- `2026-05-26-cross-domain-continuity-W09-P41-S302` - R8-ROSA-F add regime incompatibility warnings
+- `2026-05-26-cross-domain-continuity-W09-P41-S307` - R8-NURIA-HIGH M184 atribucion de rentas calculation path missing
+- `2026-05-26-cross-domain-continuity-W09-P41-S309` - R8-NURIA-MODERATE M131 módulos manual entry path
+- `2026-05-26-cross-domain-continuity-W09-P41-S347` - Annotate stale overview explain deadlines
+- `2026-07-07-cross-domain-continuity-W07-P31-S301` - cross-domain-continuity W07.P31.S301
+- `2026-07-07-cross-domain-continuity-W09-P41-S300` - cross-domain-continuity W09.P41.S300 — objetiva módulos annual profile facts
+- `2026-07-07-cross-domain-continuity-W09-P41-S308` - R8-NURIA-MODERATE encrypted profile-bundle transfer path
+- `2026-05-26-cross-domain-continuity-W09-P41-S209` - migrate 20 CLI test files from monkeypatch unsecured-backend pattern to isolated_runtime_profile fixture established in test_errors_boundary.py and test_modelo_casilla_normalisation.py
+- `2026-05-26-cross-domain-continuity-W09-P41-S255` - follow-on to W08.P35.S140 sweep: convert 120 hardcoded f-string error raises across 43 application files identified by the Haiku discovery sweep
+- `2026-05-26-cross-domain-continuity-W09-P41-S311` - ambient-index commit discipline violation: peer agent's commit 38d82ce95 absorbed coder1's S296 working tree via git add -A or equivalent
+- `2026-05-26-cross-domain-continuity-W09-P41-S338` - CRITICAL incident log  -  S278 commit c25b14a54 + c94ed9a38 used HEAD-based reconstruction + restore pattern to isolate from peer WIP per coder1 step record
+- `2026-05-26-cross-domain-continuity-W09-P41-S341` - reproduce the M303 verification_source failure in a fresh tmp_path with cleared registry caches and capture the traceback, then triage H1 stale loader or snapshot cache (check whether the 688ed6713 dir-fingerprint hardening already closed it) versus the H2-H3 programmatic-construction site, and fix at the identified layer with a regression test
+- `2026-05-26-cross-domain-continuity-W09-P41-S348` - R9-ANDREA-LOW period token notation inconsistency between ledger preflight (uses 2024Q1) and modelo work create (uses 1T)
+- `2026-05-26-cross-domain-continuity-W09-P41-S411` - add the socio-profile repeatable attribution_received.N.* fact group (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year) to the central profile schema with wizard/edit capture prompts and en/es/ca/hu locale keys through the locale CLI
+- `2026-05-26-cross-domain-continuity-W09-P41-S413` - emit per-socio M184 verify/file handoff info Notices carrying the attributed Modelo184MemberRow values and the exact socio-side profile-capture command
+- `2026-05-26-cross-domain-continuity-W09-P41-S414` - add the non-blocking M100 omission advisory that fires when attribution_received facts exist for the filing year but the atribucion casillas resolve empty (and prompts capture when an SC-membership signal exists with no facts), with an anti-tautology test
+- `2026-05-26-cross-domain-continuity-W09-P45-S317` - add NEXT_ACTION guidance hints to work_verify work_list work_status work_history success/failure outputs per discovery3 #121
+- `2026-05-26-cross-domain-continuity-W09-P45-S319` - standardise explicit --json flag across CLI verbs
+- `2026-05-26-cross-domain-continuity-W09-P45-S329` - R9-ZSOFIA-B identify and localise commands where --language flag is accepted but has no effect on output
+- `2026-05-26-cross-domain-continuity-W09-P45-S332` - R9-ZSOFIA-E broad --help text globally not hu-localised
+- `2026-05-26-cross-domain-continuity-W11-P59-S335` - durable maintenance gate one  -  vault check all CI-equivalent runs on every commit to chore branch
+- `2026-05-26-cross-domain-continuity-W11-P59-S336` - durable maintenance gate two  -  ledger and storage roundtrip test suite remains in CI
 
 ### plan
 
@@ -448,3 +509,4 @@ Auto-generated index of all documents tagged with `#cross-domain-continuity`.
 ### research
 
 - `2026-06-04-cross-domain-continuity-research` - `cross-domain-continuity` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.
+- `2026-07-06-cross-domain-continuity-research` - `cross-domain-continuity` research: `iva cash accounting treatment for modelo 303`

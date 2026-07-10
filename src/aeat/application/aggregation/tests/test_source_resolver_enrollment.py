@@ -1,12 +1,13 @@
-"""Reflective gate: every exported source-mesh resolver is enrolled or classified.
+"""Reflective gate: every discoverable source-mesh resolver is enrolled or classified.
 
 The rule (no-dormant-source-resolvers, aeat-architecture-boundaries): every class
 that satisfies the :class:`ModeloSourceResolver` structural protocol
 (``resolver_id`` + ``owned_sources`` + ``resolve``) and is reachable from a
-package public surface (``__all__``) MUST be enrolled on the live calculate path —
-either inside the ``merge_source_resolutions`` mesh tuple in
-``_resolve_bucket_source_mesh`` (``_calculation_actions.py``) or as a documented
-pre-mesh resolver called directly on the production calculate path.
+package public surface (``__all__``), or is an explicitly enrolled real-source
+module, MUST be enrolled on the live calculate path — either inside the
+``merge_source_resolutions`` mesh tuple in ``_resolve_bucket_source_mesh``
+(``_calculation_actions.py``) or as a documented pre-mesh resolver called
+directly on the production calculate path.
 
 A second shape of resolver — a ``resolve``-bearing class that does NOT satisfy the
 source-mesh protocol (it lacks ``resolver_id`` / ``owned_sources``), such as the
@@ -30,8 +31,8 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Packages that publish resolver symbols through their ``__all__`` surface.
-_RESOLVER_PACKAGES = (
+# Modules that publish resolver symbols through their ``__all__`` surface.
+_RESOLVER_MODULES = (
     "aeat.application.aggregation",
     "aeat.application.calculations",
     "aeat.application.invoices",
@@ -46,12 +47,14 @@ _SOURCE_MESH_MEMBERS = ("resolver_id", "owned_sources", "resolve")
 _PROTOCOL_QUALNAME = "aeat.application.aggregation.ModeloSourceResolver"
 
 # Concrete source-mesh resolvers that are live on the production calculate path.
-# Twelve are wired into the ``merge_source_resolutions`` tuple inside
+# Sixteen are wired into the ``merge_source_resolutions`` tuple inside
 # ``_resolve_bucket_source_mesh``; three are pre-mesh resolvers invoked directly
 # on the production calculate path (the iva-wallet gate and the binding-resolution
-# gate). All fifteen are enrolled — none may resolve to a silent blank.
+# gate). All nineteen are enrolled — none may resolve to a silent blank.
 _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
     {
+        "aeat.application.aggregation.AtribucionMemberSourceResolver",
+        "aeat.application.aggregation.ForeignAssetsAggregationSourceResolver",
         "aeat.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
         "aeat.application.aggregation.LedgerIvaAggregationSourceResolver",
         "aeat.application.aggregation.LedgerRentaExpenseAggregationSourceResolver",
@@ -61,9 +64,11 @@ _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
         "aeat.application.aggregation.ProfileSourceResolver",
         "aeat.application.aggregation.RetencionesAggregationSourceResolver",
         "aeat.application.aggregation.WithholdingSourceResolver",
+        "aeat.application.calculations.BienesInversionRegularizacionSourceResolver",
         "aeat.application.calculations.IvaCompensationAnnualPartitionSourceResolver",
         "aeat.application.calculations.IvaWalletDecisionSourceResolver",
         "aeat.application.calculations.PreviousFilingSourceResolver",
+        "aeat.application.calculations.ProrrataRegularizacionSourceResolver",
         "aeat.application.calculations.RelationPrefillSourceResolver",
         "aeat.application.invoices.InvoiceCatalogueSourceResolver",
         "aeat.application.modelo.Modelo100BorradorSourceResolver",
@@ -77,17 +82,18 @@ _KNOWN_NON_MESH_RESOLVERS: dict[str, str] = {}
 
 
 def _discover_resolve_bearing_classes() -> dict[str, bool]:
-    """Return {qualified_name: is_source_mesh} for every exported resolver class.
+    """Return {qualified_name: is_source_mesh} for every discovered resolver class.
 
-    A class qualifies if it is exported via a package ``__all__`` and carries a
-    ``resolve`` method. ``is_source_mesh`` is True when the class also carries the
-    remaining protocol members (``resolver_id`` and ``owned_sources``). No instance
-    is constructed: the check reads the class object directly so a resolver with
-    required constructor dependencies is still discovered.
+    A class qualifies if it is exported via a discovered module's ``__all__`` and
+    carries a ``resolve`` method. ``is_source_mesh`` is True when the class also
+    carries the remaining protocol members (``resolver_id`` and
+    ``owned_sources``). No instance is constructed: the check reads the class
+    object directly so a resolver with required constructor dependencies is still
+    discovered.
     """
     discovered: dict[str, bool] = {}
-    for package_name in _RESOLVER_PACKAGES:
-        module = importlib.import_module(package_name)
+    for module_name in _RESOLVER_MODULES:
+        module = importlib.import_module(module_name)
         for name in getattr(module, "__all__", []):
             obj = getattr(module, name, None)
             if not inspect.isclass(obj):
@@ -95,7 +101,7 @@ def _discover_resolve_bearing_classes() -> dict[str, bool]:
             if not hasattr(obj, "resolve"):
                 continue
             is_source_mesh = all(hasattr(obj, member) for member in _SOURCE_MESH_MEMBERS)
-            discovered[f"{package_name}.{name}"] = is_source_mesh
+            discovered[f"{module_name}.{name}"] = is_source_mesh
     return discovered
 
 
@@ -109,7 +115,7 @@ def test_every_discovered_resolver_is_enrolled_or_classified() -> None:
     discovered = _discover_resolve_bearing_classes()
     assert discovered, (
         "Discovery returned no resolver classes — the package surface or the "
-        "discovery logic is broken. Check that _RESOLVER_PACKAGES lists the right "
+        "discovery logic is broken. Check that _RESOLVER_MODULES lists the right "
         "module paths and that the resolver symbols are still exported."
     )
 
@@ -188,7 +194,7 @@ def test_known_non_mesh_resolvers_still_exported() -> None:
 def test_discovery_count_is_pinned() -> None:
     """The exported resolver surface is pinned so a new resolver fails loudly.
 
-    Fifteen concrete source-mesh resolvers (all enrolled) plus the protocol
+    Nineteen concrete source-mesh resolvers (all enrolled) plus the protocol
     contract plus zero known non-mesh resolvers. A new resolver added without
     updating the enrolled or non-mesh set changes this count and fails here.
     """

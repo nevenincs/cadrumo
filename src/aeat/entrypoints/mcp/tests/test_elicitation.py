@@ -98,8 +98,12 @@ def test_request_payload_is_argument_free_and_interpolates_the_command() -> None
     # values, figures, or taxpayer data (the MCP-spec sensitive-data constraint).
     properties = request.requested_schema["properties"]
     assert isinstance(properties, dict)
-    assert set(properties) == {"confirm"}
-    assert properties["confirm"]["type"] == "boolean"
+    typed_properties: dict[str, object] = {str(key): value for key, value in properties.items()}
+    assert set(typed_properties) == {"confirm"}
+    confirm_property = typed_properties["confirm"]
+    assert isinstance(confirm_property, dict)
+    typed_confirm_property: dict[str, object] = {str(key): value for key, value in confirm_property.items()}
+    assert typed_confirm_property["type"] == "boolean"
     assert request.requested_schema["required"] == ["confirm"]
     # The command is interpolated into the localized message (not hardcoded prose).
     assert _HANDOFF in request.message
@@ -119,3 +123,93 @@ def test_refusal_messages_interpolate_the_command() -> None:
     assert "modelo.work.submit" in blocked
     assert _HANDOFF in no_channel
     assert blocked != no_channel
+
+
+# --- H8: no secret ever rides an MCP elicitation channel -------------------
+#
+# ADR 2026-07-08-mcp-protocol-hardening H8 records the decided stance: secrets
+# (certificate passphrases, tokens, API keys, PINs) are entered ONLY through the
+# local CLI (`aeat config auth certificate secret set`) into encrypted storage;
+# no secret ever rides any MCP channel, form or URL. The console's sole
+# elicitation payload is ``confirmation_request``, which asks exactly one boolean
+# ``confirm`` field. This gate asserts that stance and locks it: a secret-like
+# field in an elicitation schema would fail here.
+
+# Field-name fragments that name a secret. ``token``/``pin`` are matched as whole
+# underscore-delimited segments to avoid substring false positives (e.g. "pin"
+# inside "mapping"); the rest are unambiguous enough to substring-match.
+_SECRET_SUBSTRINGS = (
+    "password",
+    "passphrase",
+    "secret",
+    "api_key",
+    "apikey",
+    "private_key",
+    "privatekey",
+    "credential",
+    "certificate",
+)
+_SECRET_SEGMENTS = frozenset({"token", "pin", "pwd", "cert", "otp", "key"})
+
+
+def _name_requests_secret(name: str) -> bool:
+    """True when a field name names a secret the MCP channel must never collect."""
+    lowered = name.lower()
+    if any(fragment in lowered for fragment in _SECRET_SUBSTRINGS):
+        return True
+    segments = {segment for segment in lowered.replace("-", "_").split("_") if segment}
+    return bool(segments & _SECRET_SEGMENTS)
+
+
+def _schema_field_names(schema: dict[str, object]) -> set[str]:
+    properties = schema.get("properties")
+    if not isinstance(properties, dict):
+        return set()
+    return {str(name) for name in properties}
+
+
+def _schema_requests_secret(schema: dict[str, object]) -> bool:
+    return any(_name_requests_secret(name) for name in _schema_field_names(schema))
+
+
+def test_confirmation_schema_asks_only_a_boolean_and_no_secret() -> None:
+    # The one elicitation schema the console can emit asks a single boolean
+    # confirm field — never a password, passphrase, token, API key, or PIN.
+    for command_key in (_HANDOFF, _NON_HANDOFF_DESTRUCTIVE, "ledger.add"):
+        schema = confirmation_request(command_key=command_key).requested_schema
+        assert _schema_field_names(schema) == {"confirm"}
+        properties = schema["properties"]
+        assert isinstance(properties, dict)
+        confirm_field = properties["confirm"]
+        assert isinstance(confirm_field, dict)
+        assert confirm_field["type"] == "boolean"
+        assert not _schema_requests_secret(schema), f"{command_key} elicitation schema requests a secret-like field"
+
+
+def test_secret_detector_flags_credential_fields() -> None:
+    # Anti-tautology negative control: the detector DOES fire on secret-like
+    # fields, so the assertion above would fail the moment an elicitation schema
+    # tried to collect one. Proves the H8 gate has teeth.
+    for secret_name in (
+        "password",
+        "passphrase",
+        "api_key",
+        "apikey",
+        "auth_token",
+        "certificate_pin",
+        "card_pin",
+        "otp",
+        "cert_password",
+    ):
+        assert _name_requests_secret(secret_name), f"detector missed secret field {secret_name!r}"
+    # And it does not false-fire on the real, innocuous confirm field or on plain
+    # non-secret field names.
+    for benign_name in ("confirm", "mapping", "period", "modelo", "amount"):
+        assert not _name_requests_secret(benign_name), f"detector false-flagged {benign_name!r}"
+
+    secret_schema = {
+        "type": "object",
+        "properties": {"passphrase": {"type": "string"}},
+        "required": ["passphrase"],
+    }
+    assert _schema_requests_secret(secret_schema)

@@ -3,12 +3,12 @@ tags:
   - "#adr"
   - "#relative-imports"
 date: 2026-04-17
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-17-relative-imports-research]]"
 ---
 
-# relative-imports adr: enforce relative imports inside src/aeat/ (**status:** `accepted`)
+# relative-imports adr: enforce relative imports inside src/aeat/ | (**status:** `accepted`)
 
 Date: 2026-04-17
 Branch: `feature/162-relative-imports`

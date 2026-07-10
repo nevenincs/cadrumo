@@ -8,6 +8,26 @@ revision is finalized, the blocking guard refuses destructive edits to its sourc
 rows (behavior contract). These two mechanisms are complementary: the block protects finalized
 filings, the staleness sweep is the defense-in-depth that catches any drift that
 reaches a snapshot-backed revision.
+
+See Also:
+    :func:`~application.aggregation.compute_ledger_filing_snapshot`
+        Transaction-aware capture of contributor fingerprints for a revision.
+    :func:`~application.aggregation.evaluate_ledger_filing_staleness`
+        Runtime comparison between a stored snapshot and the live ledger
+        catalogue.
+    :func:`~application.aggregation.stale_filed_revisions`
+        System-level sweep that reports finalized snapshot-backed revisions whose
+        ledger contributors drifted.
+    :func:`~application.ledger.update_manual_transaction_fields`
+        Ledger mutation path whose finalized-modelo write guard is exercised.
+    :class:`~domain.modelos.CalculationRevision`
+        Revision record that carries the optional ledger filing snapshot.
+    :class:`~domain.transactions.TransactionCatalogue`
+        Live ledger catalogue used to recompute contributor fingerprints.
+
+Filing snapshots must stay immutable once captured, and the inverse
+transaction-to-modelo reference index must remain derived and rebuildable,
+never a second source of truth.
 """
 
 from __future__ import annotations
@@ -31,6 +51,7 @@ from ..application.aggregation import (
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
 from ..core import Period
 from ..domain.calculations.registry import CasillaId, validated_casilla_id
+from ..domain.iva import IvaCategory
 from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -106,7 +127,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
-            "iva_category": "domestic_general_21",
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",

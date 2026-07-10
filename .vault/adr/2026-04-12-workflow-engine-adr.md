@@ -4,14 +4,14 @@ description: Architecture decision record for the composite end-user workflow en
 tags:
   - "#adr"
   - "#workflow-engine"
-date: 2026-04-12
-modified: '2026-06-13'
+date: '2026-04-12'
+modified: '2026-07-10'
 related:
   - "[[2026-04-12-workflow-engine-research]]"
   - "[[2026-04-12-workflow-engine-plan]]"
 ---
 
-# workflow-engine adr
+# workflow-engine adr | (**status:** `accepted`)
 
 ## status
 

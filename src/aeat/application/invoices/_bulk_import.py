@@ -2,13 +2,13 @@
 
 The accountant/gestor batch case: a spreadsheet of invoice rows (counterparty
 NIF, invoice number, date, taxable base, IVA rate) is turned into one
-:class:`~aeat.domain.invoices.Invoice` per row. This module is a typed transport
-over :func:`aeat.application.invoices.create_catalogue_invoice` -- the sole
+:class:`~domain.invoices.Invoice` per row. This module is a typed transport
+over :func:`~application.invoices.create_catalogue_invoice` -- the sole
 sanctioned :class:`Invoice` writer (``composition-service-no-parallel-write-path``);
 it never persists a row itself.
 
 Each row's identity is the same content-derived
-:attr:`~aeat.domain.invoices.Invoice.invoice_id` hash the single-invoice
+:attr:`~domain.invoices.Invoice.invoice_id` hash the single-invoice
 ``catalogue create`` verb and the evidence-confirm slice use, so a re-import of
 an unchanged file is a guarded no-op per row
 (``single-subject-mutation-is-idempotent-guarded``): an already-catalogued
@@ -19,6 +19,17 @@ CSV row number and the failing field, and the remaining valid rows are still
 applied -- partial-success semantics matching the ledger CSV import and bulk
 classify pattern (``no-silent-under-declaration``: a bad row is reported, never
 silently dropped).
+
+See Also:
+    :func:`~application.invoices.import_invoices_from_rows`
+        Public application facade for applying validated bulk rows.
+    :func:`~application.invoices.create_catalogue_invoice`
+        Single catalogue writer invoked for every accepted row.
+    :func:`~application.invoices.create_invoice_via_wizard`
+        Manual single-invoice path with the same writer and idempotent identity.
+    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+        Evidence-confirm path that also delegates the final invoice write to
+        the catalogue writer.
 """
 
 from __future__ import annotations
@@ -32,8 +43,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
 from ._creation import build_catalogue_invoice, create_catalogue_invoice
@@ -79,7 +92,7 @@ class BulkInvoiceImportRow(BaseModel):
     accepts one at a time; ``taxable_base`` and ``iva_rate`` synthesise the
     single line item exactly as :func:`build_catalogue_invoice` does for the
     single-invoice verb, so a bulk row produces an identical
-    :class:`~aeat.domain.invoices.Invoice` shape.
+    :class:`~domain.invoices.Invoice` shape.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -135,9 +148,12 @@ def _cell_text(value: object) -> str:
 
 def _parse_row_date(raw: str, *, row_number: int, field: str) -> date:
     try:
-        return date.fromisoformat(raw)
+        value = parse_iso8601_date(raw)
     except ValueError as exc:
         raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}") from exc
+    if value is None:
+        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid ISO-8601 date: {raw!r}")
+    return value
 
 
 def _parse_row_decimal(raw: str, *, row_number: int, field: str) -> Decimal:
@@ -306,10 +322,10 @@ def import_invoices_from_rows(
     """Create one catalogue :class:`Invoice` per valid row in *rows*.
 
     Every accepted row is handed to
-    :func:`aeat.application.invoices.create_catalogue_invoice` -- this
+    :func:`~application.invoices.create_catalogue_invoice` -- this
     function never persists a row itself
     (``composition-service-no-parallel-write-path``). Because
-    :class:`~aeat.domain.invoices.Invoice` identity is a content-derived hash of
+    :class:`~domain.invoices.Invoice` identity is a content-derived hash of
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)``, re-importing the identical file a second time resolves
     every row to its already-catalogued ``invoice_id`` and reports it in
@@ -323,8 +339,6 @@ def import_invoices_from_rows(
     number and the failing field name; the remaining valid rows still import
     (partial-success semantics).
     """
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     catalogue = repo.load()
     existing_ids = set(catalogue.invoices)

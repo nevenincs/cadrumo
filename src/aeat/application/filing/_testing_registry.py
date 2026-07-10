@@ -1,19 +1,20 @@
 """Registry-backed draft builders for filing tests.
 
 The helpers keep tests on the same path as production filing: they resolve a
-typed :class:`~aeat.core.Period` through
-:func:`aeat.application.filing.build_runtime_schema_provider`, call
-:func:`aeat.application.filing.build_draft`, and only use
-:func:`aeat.application.filing.approve_draft` when the requested
-:class:`~aeat.domain.submission.ModeloDraftStatus` is
-:attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO`. The approval path
-receives an empty :class:`TransactionCatalogue` so tests without ledger state
-get a deterministic approval basis.
+typed :class:`~core.Period` through
+:func:`application.filing.build_runtime_schema_provider`, call
+:func:`application.filing.build_draft`, and only use
+:func:`application.filing.approve_draft` when the requested
+:class:`~domain.submission.ModeloDraftStatus` is
+:attr:`~domain.submission.ModeloDraftStatus.APROBADO`. The approval path
+receives an empty :class:`TransactionCatalogue` and an empty
+:class:`~domain.invoices.InvoiceCatalogue` so tests without ledger or
+invoice state get a deterministic approval basis without a bucket self-load.
 
 See Also:
-    :mod:`aeat.application.filing.runtime`
+    :mod:`application.filing.runtime`
         Production registry schema-provider projection.
-    :mod:`aeat.application.filing.testing`
+    :mod:`application.filing.testing`
         Public fixture helper facade that re-exports these builders.
 """
 
@@ -28,9 +29,17 @@ from pydantic import TypeAdapter, ValidationError
 from ...core import Period
 from ...domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ...domain.filing import ModeloDraft, ModeloInputs
+from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
-from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
+from . import (
+    ModeloBuilderError,
+    approve_draft,
+    build_draft,
+    build_runtime_schema_provider,
+    empty_prior_filing_observations_fingerprint,
+    empty_profile_activity_fingerprint,
+)
 
 _REGISTRY_TEST_BUCKET_ID = "registry-test"
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
@@ -38,7 +47,7 @@ _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 
 @dataclass(frozen=True, slots=True)
 class RegistryTestProfile:
-    """Minimal :class:`aeat.application.filing.ModeloProfile` for registry-backed tests."""
+    """Minimal :class:`application.filing.ModeloProfile` for registry-backed tests."""
 
     tax_id: str
     display_name: str
@@ -57,24 +66,24 @@ def build_registry_filing_draft(
 
     Args:
         modelo: Stable modelo id to resolve from the bundled registry.
-        period: Typed :class:`~aeat.core.Period`; raw string periods are
+        period: Typed :class:`~core.Period`; raw string periods are
             rejected before registry lookup.
         profile_tax_id: Tax identifier written to the generated test profile.
         casilla_values: Casilla input mapping passed to
-            :func:`aeat.application.filing.build_draft`.
+            :func:`application.filing.build_draft`.
         binding_values: Optional registry binding inputs. Keys that duplicate
             ``casilla_values`` are rejected so fixture data cannot shadow itself.
-        status: Desired final :class:`~aeat.domain.submission.ModeloDraftStatus`.
-            ``APROBADO`` uses :func:`aeat.application.filing.approve_draft`;
+        status: Desired final :class:`~domain.submission.ModeloDraftStatus`.
+            ``APROBADO`` uses :func:`application.filing.approve_draft`;
             every other status clears approval metadata on the built draft.
 
     Returns:
         The built :class:`ModeloDraft`, approved only when ``status`` is
-        :attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO`.
+        :attr:`~domain.submission.ModeloDraftStatus.APROBADO`.
 
     Raises:
         ModeloBuilderError: When ``period`` is not a
-            :class:`~aeat.core.Period`, duplicate input ids are supplied, or
+            :class:`~core.Period`, duplicate input ids are supplied, or
             the registry build/approval path rejects the fixture inputs.
     """
     if not isinstance(period, Period):
@@ -107,6 +116,9 @@ def build_registry_filing_draft(
             approved_by="registry",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
+            invoice_catalogue=InvoiceCatalogue(),
+            prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
+            profile_activity_fingerprint=empty_profile_activity_fingerprint(),
         )
     return draft.model_copy(
         update={
@@ -131,19 +143,19 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
     """Coerce decimal strings before building through the registry runtime.
 
     Casilla keys are canonicalised with
-    :func:`aeat.domain.calculations.registry.validated_casilla_id`; binding
+    :func:`domain.calculations.registry.validated_casilla_id`; binding
     keys are validated as registry ``BindingId`` tokens before the coerced
     values are forwarded to :func:`build_registry_filing_draft`.
 
     Args:
         modelo: Stable modelo id to resolve from the bundled registry.
-        period: Typed :class:`~aeat.core.Period` passed through unchanged.
+        period: Typed :class:`~core.Period` passed through unchanged.
         profile_tax_id: Tax identifier written to the generated test profile.
         casilla_decimals: Casilla-id keyed values as :class:`Decimal` instances
             or decimal strings.
         binding_decimals: Optional binding-id keyed values as
             :class:`Decimal` instances or decimal strings.
-        status: Desired final :class:`~aeat.domain.submission.ModeloDraftStatus`.
+        status: Desired final :class:`~domain.submission.ModeloDraftStatus`.
 
     Returns:
         The :class:`ModeloDraft` returned by :func:`build_registry_filing_draft`.

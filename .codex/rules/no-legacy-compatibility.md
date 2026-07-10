@@ -76,3 +76,19 @@ Operator directive recorded 2026-06-10 during the quality-hardening campaign on
 the `chore/eliminate-shims` branch. Backing inventory:
 `2026-06-10-zero-legacy-purge-research`. Companion rule:
 `aeat-architecture-boundaries` (no new shims / deprecation paths).
+
+## Status
+
+Active and unchanged for the pre-release compatibility regime. This rule governs
+in full while `aeat.core.COMPATIBILITY_REGIME` is `PRE_RELEASE` (today):
+delete-not-migrate, floors chase current, no read-tolerance of pre-current shapes.
+The transition to the post-release durability-mandatory regime is governed by the
+companion rule `compatibility-lifecycle-checkpoint` (ADR
+`2026-07-09-compatibility-lifecycle-adr`), which switches on the one-way
+`COMPATIBILITY_REGIME` constant. At the checkpoint flip this rule does not die — it
+narrows to "no legacy beyond the released durability floor": read-tolerance of
+shapes nothing released wrote, and shims/aliases, stay forbidden in both regimes.
+Installing the dormant regime constant, empty upgrader registries, and the
+regime-aware gates does not violate this rule — they read no old shapes and migrate
+nothing, the same blessed category as the `max_supported_version` forward-ceiling
+this rule already keeps.

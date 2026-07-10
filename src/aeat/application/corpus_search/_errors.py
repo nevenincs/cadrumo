@@ -1,6 +1,6 @@
 """Typed errors for the on-host corpus-search grounding surface.
 
-These are registered :class:`aeat.core.errors.AeatError` subclasses, so a
+These are registered :class:`~core.errors.AeatError` subclasses, so a
 corpus-search failure that reaches the CLI boundary renders as its proper
 category envelope (a ``REFUSED`` input/dependency refusal, an ``ERROR`` base)
 rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
@@ -33,7 +33,7 @@ class CorpusSearchError(AeatError):
         # Preserve the surface's always-a-dict ``context`` contract (AeatError's
         # own base leaves it None when unset); consumers read ``.context`` as a
         # mapping.
-        self.context: dict[str, object] = dict(context or {})
+        self.context = dict(context or {})
         self.suggestion = suggestion
 
 
@@ -52,7 +52,7 @@ class CorpusSearchDependencyError(CorpusSearchError):
     The lexical index and the citation lookup run on the standard library
     plus ``snowballstemmer`` and are always importable. Only the
     build-time embedding precompute and the runtime query embedder need
-    the semantic stack (``model2vec``), which rides the ``aeat[search]``
+    the semantic stack (``model2vec``), which rides the ``aeat-cli[search]``
     extra; when it is absent the surface refuses with an install hint
     (``suggestion``) rather than crashing, and the degraded lexical-only
     mode stays live.

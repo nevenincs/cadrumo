@@ -64,26 +64,39 @@ def _clause(key: str, raw_value: str) -> EditClause:
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_decimal_accepts_plain_decimal_strings() -> None:
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    (
+        ("120", Decimal("120")),
+        ("120.50", Decimal("120.50")),
+        ("-42.5", Decimal("-42.5")),
+    ),
+)
+def test_coerce_decimal_accepts_plain_decimal_strings(raw_value: str, expected: Decimal) -> None:
     """The regex anchor permits a leading minus sign — negative
     decimals are valid for ledger amounts (e.g. refunds / credits)."""
-    for raw_value, expected in (("120", Decimal("120")), ("120.50", Decimal("120.50")), ("-42.5", Decimal("-42.5"))):
-        assert _coerce_decimal(_clause("base", raw_value), scope="invoice") == expected
+    assert _coerce_decimal(_clause("base", raw_value), scope="invoice") == expected
 
 
-def test_coerce_decimal_rejects_non_plain_decimal_values() -> None:
-    """The narrow regex excludes scientific notation — operator
-    inputs should be plain decimals, not ``1e6``."""
-    cases = (
+@pytest.mark.parametrize(
+    ("scope", "raw_value", "expected_reason"),
+    (
         ("invoice", "not-a-decimal", "invalid-value-invoice"),
         ("invoice", "1e6", "invalid-value-invoice"),
         ("ledger", "not-a-decimal", "invalid-value-ledger"),
-    )
-    for scope, raw_value, expected_reason in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc_info:
-            _coerce_decimal(_clause("base", raw_value), scope=scope)
+    ),
+)
+def test_coerce_decimal_rejects_non_plain_decimal_values(
+    scope: str,
+    raw_value: str,
+    expected_reason: str,
+) -> None:
+    """The narrow regex excludes scientific notation — operator
+    inputs should be plain decimals, not ``1e6``."""
+    with pytest.raises(EditParseError, match=expected_reason) as exc_info:
+        _coerce_decimal(_clause("base", raw_value), scope=scope)
 
-        assert exc_info.value.reason == expected_reason
+    assert exc_info.value.reason == expected_reason
 
 
 # ---------------------------------------------------------------------------
@@ -91,23 +104,28 @@ def test_coerce_decimal_rejects_non_plain_decimal_values() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_invoice_iva_rate_accepts_canonical_substrate_slots() -> None:
-    for rate in ("0", "4", "10", "21"):
-        assert _coerce_invoice_iva_rate(_clause("iva.rate", rate)) == Decimal(rate)
+@pytest.mark.parametrize("rate", ("0", "4", "10", "21"))
+def test_coerce_invoice_iva_rate_accepts_canonical_substrate_slots(rate: str) -> None:
+    assert _coerce_invoice_iva_rate(_clause("iva.rate", rate)) == Decimal(rate)
 
 
-def test_coerce_invoice_iva_rate_rejects_non_canonical_or_non_numeric_values() -> None:
-    """7% is not a known IVA substrate slot; the parser rejects it
-    before it can reach an invoice record."""
-    cases = (
+@pytest.mark.parametrize(
+    ("raw_value", "expected_reason"),
+    (
         ("7", "unsupported-iva-rate"),
         ("abc", "invalid-value-invoice-iva-rate"),
-    )
-    for raw_value, expected_reason in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc_info:
-            _coerce_invoice_iva_rate(_clause("iva.rate", raw_value))
+    ),
+)
+def test_coerce_invoice_iva_rate_rejects_non_canonical_or_non_numeric_values(
+    raw_value: str,
+    expected_reason: str,
+) -> None:
+    """7% is not a known IVA substrate slot; the parser rejects it
+    before it can reach an invoice record."""
+    with pytest.raises(EditParseError, match=expected_reason) as exc_info:
+        _coerce_invoice_iva_rate(_clause("iva.rate", raw_value))
 
-        assert exc_info.value.reason == expected_reason
+    assert exc_info.value.reason == expected_reason
 
 
 # ---------------------------------------------------------------------------
@@ -115,22 +133,27 @@ def test_coerce_invoice_iva_rate_rejects_non_canonical_or_non_numeric_values() -
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_invoice_retention_rate_accepts_bounds() -> None:
-    for rate in ("0", "15", "100"):
-        assert _coerce_invoice_retention_rate(_clause("retention.rate", rate)) == Decimal(rate)
+@pytest.mark.parametrize("rate", ("0", "15", "100"))
+def test_coerce_invoice_retention_rate_accepts_bounds(rate: str) -> None:
+    assert _coerce_invoice_retention_rate(_clause("retention.rate", rate)) == Decimal(rate)
 
 
-def test_coerce_invoice_retention_rate_rejects_out_of_range_or_non_numeric_values() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("raw_value", "expected_reason"),
+    (
         ("150", "retention-rate-out-of-range"),
         ("-1", "retention-rate-out-of-range"),
         ("fifteen", "invalid-value-invoice-retention-rate"),
-    )
-    for raw_value, expected_reason in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc_info:
-            _coerce_invoice_retention_rate(_clause("retention.rate", raw_value))
+    ),
+)
+def test_coerce_invoice_retention_rate_rejects_out_of_range_or_non_numeric_values(
+    raw_value: str,
+    expected_reason: str,
+) -> None:
+    with pytest.raises(EditParseError, match=expected_reason) as exc_info:
+        _coerce_invoice_retention_rate(_clause("retention.rate", raw_value))
 
-        assert exc_info.value.reason == expected_reason
+    assert exc_info.value.reason == expected_reason
 
 
 # ---------------------------------------------------------------------------
@@ -138,19 +161,19 @@ def test_coerce_invoice_retention_rate_rejects_out_of_range_or_non_numeric_value
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_share_accepts_inclusive_zero_one_range() -> None:
-    for share in ("0", "0.5", "1", "1.0"):
-        assert _coerce_share(_clause("business.share", share), scope="ledger") == Decimal(share)
+@pytest.mark.parametrize("share", ("0", "0.5", "1", "1.0"))
+def test_coerce_share_accepts_inclusive_zero_one_range(share: str) -> None:
+    assert _coerce_share(_clause("business.share", share), scope="ledger") == Decimal(share)
 
 
-def test_coerce_share_rejects_out_of_range_or_non_numeric_values() -> None:
+@pytest.mark.parametrize("raw_value", ("1.5", "-0.1", "half"))
+def test_coerce_share_rejects_out_of_range_or_non_numeric_values(raw_value: str) -> None:
     """1.5 violates the inclusive 0..1 envelope; the scope tag
     propagates into the reason code."""
-    for raw_value in ("1.5", "-0.1", "half"):
-        with pytest.raises(EditParseError, match=r"invalid-value-ledger") as exc_info:
-            _coerce_share(_clause("business.share", raw_value), scope="ledger")
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger") as exc_info:
+        _coerce_share(_clause("business.share", raw_value), scope="ledger")
 
-        assert exc_info.value.reason == "invalid-value-ledger"
+    assert exc_info.value.reason == "invalid-value-ledger"
 
 
 # ---------------------------------------------------------------------------
@@ -158,15 +181,15 @@ def test_coerce_share_rejects_out_of_range_or_non_numeric_values() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_coerce_path_returns_path_without_checking_filesystem_existence() -> None:
+@pytest.mark.parametrize("raw_path", ("project/data/example.pdf", "/nonexistent/path/that/does/not/exist.pdf"))
+def test_coerce_path_returns_path_without_checking_filesystem_existence(raw_path: str) -> None:
     """The parser does not stat the path — that's the use-case's
     responsibility. A non-existent path round-trips through the
     coercer without raising."""
-    for raw_path in ("project/data/example.pdf", "/nonexistent/path/that/does/not/exist.pdf"):
-        result = _coerce_path(_clause("document.path", raw_path))
+    result = _coerce_path(_clause("document.path", raw_path))
 
-        assert result == Path(raw_path)
-        assert isinstance(result, Path)
+    assert result == Path(raw_path)
+    assert isinstance(result, Path)
 
 
 # ---------------------------------------------------------------------------
@@ -182,15 +205,15 @@ def test_ensure_unique_keys_accepts_distinct_keys_and_rejects_scope_tagged_dupli
 
     # The edit-spec helper raises EditParseError, not FilterParseError;
     # the error type discriminates which CLI surface failed.
-    cases = (
-        ("invoice", (_clause("base", "120"), _clause("base", "200")), "duplicate-key-invoice"),
-        ("ledger", (_clause("category", "software"), _clause("category", "office")), "duplicate-key-ledger"),
-    )
-    for scope, duplicate_clauses, expected_reason in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc_info:
-            _ensure_unique_keys(duplicate_clauses, scope=scope)
+    with pytest.raises(EditParseError, match="duplicate-key-invoice") as exc_info:
+        _ensure_unique_keys((_clause("base", "120"), _clause("base", "200")), scope="invoice")
 
-        assert exc_info.value.reason == expected_reason
+    assert exc_info.value.reason == "duplicate-key-invoice"
+
+    with pytest.raises(EditParseError, match="duplicate-key-ledger") as exc_info:
+        _ensure_unique_keys((_clause("category", "software"), _clause("category", "office")), scope="ledger")
+
+    assert exc_info.value.reason == "duplicate-key-ledger"
 
 
 # ---------------------------------------------------------------------------
@@ -205,13 +228,14 @@ def test_ensure_known_keys_accepts_allowed_keys_and_rejects_scope_tagged_unknown
     result = _ensure_known_keys(clauses, scope="invoice", allowed=allowed)
     assert result is None
 
-    cases = (
-        ("invoice", {"base", "iva.rate"}, (_clause("notakey", "value"),), "unknown-key-invoice", "notakey=value"),
-        ("ledger", {"category"}, (_clause("nonsense", "value"),), "unknown-key-ledger", "nonsense=value"),
-    )
-    for scope, allowed_keys, unknown_clauses, expected_reason, raw_token_fragment in cases:
-        with pytest.raises(EditParseError, match=expected_reason) as exc_info:
-            _ensure_known_keys(unknown_clauses, scope=scope, allowed=allowed_keys)
+    with pytest.raises(EditParseError, match="unknown-key-invoice") as exc_info:
+        _ensure_known_keys((_clause("notakey", "value"),), scope="invoice", allowed={"base", "iva.rate"})
 
-        assert exc_info.value.reason == expected_reason
-        assert raw_token_fragment in exc_info.value.raw_token
+    assert exc_info.value.reason == "unknown-key-invoice"
+    assert "notakey=value" in exc_info.value.raw_token
+
+    with pytest.raises(EditParseError, match="unknown-key-ledger") as exc_info:
+        _ensure_known_keys((_clause("nonsense", "value"),), scope="ledger", allowed={"category"})
+
+    assert exc_info.value.reason == "unknown-key-ledger"
+    assert "nonsense=value" in exc_info.value.raw_token

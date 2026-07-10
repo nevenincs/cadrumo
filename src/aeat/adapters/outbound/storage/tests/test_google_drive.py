@@ -6,8 +6,11 @@ constructed. They use no Drive API doubles or patched dependencies.
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
+import json
+import subprocess
+import sys
+import textwrap
+from typing import Any
 
 import pytest
 
@@ -23,19 +26,47 @@ def _provider() -> GoogleDriveProvider:
     return GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="aeat-vault")
 
 
-def test_google_drive_module_does_not_construct_settings_at_import_time() -> None:
-    tree = ast.parse(Path(__file__).parent.parent.joinpath("_google_drive.py").read_text(encoding="utf-8"))
-    offenders = [
-        node.lineno
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"Settings", "_Settings"}
-    ]
+def test_google_drive_explicit_constructor_does_not_build_google_client() -> None:
+    probe = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import json
+                import sys
 
-    assert offenders == []
+                from aeat.adapters.outbound.storage._google_drive import GoogleDriveProvider
+
+                provider = GoogleDriveProvider(
+                    credentials=object(),
+                    root_folder_id="drive-root",
+                    vault_folder_name="aeat-vault",
+                )
+                watched = (
+                    "googleapiclient.discovery",
+                    "googleapiclient.http",
+                )
+                print(json.dumps({"root_folder_id": provider.root_folder_id, **{name: name in sys.modules for name in watched}}, sort_keys=True))
+                """
+            ),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert probe.returncode == 0, probe.stderr
+    assert json.loads(probe.stdout) == {
+        "googleapiclient.discovery": False,
+        "googleapiclient.http": False,
+        "root_folder_id": "drive-root",
+    }
 
 
-def test_google_drive_provider_rejects_blank_constructor_values_with_localized_message() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("provider_kwargs", "message", "context"),
+    (
         (
             {"credentials": object(), "root_folder_id": " ", "vault_folder_name": "aeat-vault"},
             "adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
@@ -46,21 +77,28 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
             "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
             None,
         ),
-    )
+    ),
+    ids=("blank-root-folder", "blank-vault-folder"),
+)
+def test_google_drive_provider_rejects_blank_constructor_values_with_localized_message(
+    provider_kwargs: dict[str, object],
+    message: str,
+    context: dict[str, str] | None,
+) -> None:
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        kwargs: Any = provider_kwargs
+        GoogleDriveProvider(**kwargs)
 
-    for provider_kwargs, message, context in cases:
-        with pytest.raises(OutboundStorageValidationError) as raised:
-            GoogleDriveProvider(**provider_kwargs)
-
-        exc = raised.value
-        assert exc.translated_message == message
-        assert exc.translated_message is not None
-        assert exc.context == context
-        assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+    exc = raised.value
+    assert exc.translated_message == message
+    assert exc.translated_message is not None
+    assert exc.context == context
+    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
-def test_google_drive_provider_rejects_blank_put_values_before_service_construction() -> None:
-    cases = (
+@pytest.mark.parametrize(
+    ("put_kwargs", "message"),
+    (
         (
             {"namespace": "", "object_key_hmac": "a" * 64, "payload": b"x", "content_hash": "sha256-x", "label": "x"},
             "adapters.outbound.storage.google_drive.errors.namespace_blank",
@@ -85,16 +123,21 @@ def test_google_drive_provider_rejects_blank_put_values_before_service_construct
             },
             "adapters.outbound.storage.google_drive.errors.content_hash_blank",
         ),
-    )
+    ),
+    ids=("blank-namespace", "blank-object-hmac", "blank-content-hash"),
+)
+def test_google_drive_provider_rejects_blank_put_values_before_service_construction(
+    put_kwargs: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        kwargs: Any = put_kwargs
+        _provider().put(**kwargs)
 
-    for put_kwargs, message in cases:
-        with pytest.raises(OutboundStorageValidationError) as raised:
-            _provider().put(**put_kwargs)
-
-        exc = raised.value
-        assert exc.translated_message == message
-        assert exc.translated_message is not None
-        assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+    exc = raised.value
+    assert exc.translated_message == message
+    assert exc.translated_message is not None
+    assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
 
 
 def test_google_drive_provider_rejects_forbidden_namespace_before_service_construction() -> None:

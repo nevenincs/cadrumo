@@ -12,22 +12,27 @@ The filing path runs here only after its caller has passed readiness, workflow,
 and clean-state gates. It records the local/internal filing transition: create a
 current :class:`ModeloRecord`, supersede any prior current filing for the work
 target, move calculation revisions into ``PRESENTADO`` states, and co-emit
-the :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` writes
-plus cross-period observation projections. It never submits to AEAT and never
-turns the non-official ``app_filing`` carry projection into filing-grade external
-evidence.
+the :class:`~domain.modelos.TransactionRevisionParticipationIndex` writes,
+cross-period observation projections, and Modelo 303 settlement prorrata
+register writeback. It never submits to AEAT and never turns the non-official
+``app_filing`` carry projection into filing-grade external evidence.
 
 See Also:
-    :func:`aeat.application.modelo.file_modelo_revision`:
+    :func:`~application.modelo.file_modelo_revision`:
         Orchestrates preconditions and result-disposition resolution before
         delegating successful mutations here.
-    :func:`aeat.application.modelo.import_external_filing_evidence`:
+    :func:`~application.modelo.import_external_filing_evidence`:
         Separate import boundary that creates current records with
-        :class:`~aeat.domain.modelos.ExternalEvidence`; this persistence helper
+        :class:`~domain.modelos.ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
-    :func:`aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`:
+        Profile-scoped encrypted repository co-emitted for Modelo 303
+        settlement prorrata writeback.
+    :class:`~domain.prorrata_register.ProrrataRegisterEntry`:
+        Typed row updated with definitive percentage and annual volume inputs.
 """
 
 from __future__ import annotations
@@ -38,6 +43,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ...core import Modelo, ProrrataRegisterRegime
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -53,11 +60,13 @@ from ...domain.calculations.registry import (
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RelationId,
+    validated_casilla_id,
 )
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    CalculationSourceRef,
     ModeloDetailRow,
     ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -73,6 +82,11 @@ from ...domain.modelos import (
     upsert_transaction_participation,
     upsert_work_unit,
 )
+from ...domain.prorrata_register import (
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    ProrrataRegisterRepositoryProtocol,
+)
 from ..calculations import CalculationObservationRepository
 from ._filed_revision_observation import persist_filed_revision_observation
 
@@ -81,6 +95,20 @@ if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""
+
+_PRORRATA_SETTLEMENT_PERIOD_TOKENS = frozenset({"4T", "0A"})
+_PRORRATA_VOLUMEN_TOTAL_CASILLA = validated_casilla_id(
+    "iva.prorrata-volumen-total",
+    surface="prorrata settlement volumen total casilla id",
+)
+_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="prorrata settlement volumen con derecho casilla id",
+)
+_PRORRATA_PORCENTAJE_CASILLA = validated_casilla_id(
+    "iva.prorrata-porcentaje",
+    surface="prorrata settlement definitive percentage casilla id",
+)
 
 
 def emit_bucket_event(
@@ -126,6 +154,21 @@ def emit_bucket_event(
     return event
 
 
+def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
+    """Deterministic digest of the persisted source-mesh provenance trace.
+
+    Emitted on the ``modelo.calculation.created`` bucket event so an audit reader
+    can detect a source-connectivity change without decrypting the calculation
+    revision. The digest folds each provenance row's stable
+    ``source_kind``/``source_ref``/``fingerprint`` triple in a sort-canonical
+    order so the value is order-independent, mirroring the existing
+    ``borrador_bindings_trace_sha256`` join-record pattern. An empty provenance
+    tuple yields the digest of the empty string.
+    """
+    lines = sorted(f"{ref.source_kind}\x1f{ref.source_ref}\x1f{ref.fingerprint or ''}" for ref in source_provenance)
+    return sha256_hex("\n".join(lines).encode("utf-8"))
+
+
 def persist_calculation_revision(
     *,
     work_unit_id: str,
@@ -133,6 +176,7 @@ def persist_calculation_revision(
     work_units: WorkUnitCatalogue,
     input_values_by_casilla_id: dict[CasillaId, str],
     binding_overrides: dict[BindingId, str],
+    row_binding_values: dict[BindingId, dict[str, str]],
     relation_overrides: dict[RelationId, str],
     casilla_values: dict[CasillaId, Decimal],
     source_transaction_ids: tuple[str, ...],
@@ -140,6 +184,7 @@ def persist_calculation_revision(
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
+    source_provenance: tuple[CalculationSourceRef, ...] = (),
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
     actor: str,
@@ -157,16 +202,25 @@ def persist_calculation_revision(
     :class:`CasillaObservation` rows carry the legal and source provenance
     persisted with a new calculation revision.
 
+    The ``source_provenance`` tuple carries the resolver-level source-mesh trace
+    (:class:`~domain.modelos.CalculationSourceRef` rows projected from the
+    calculation source mesh) so the persisted revision records which resolver
+    mesh and which upstream source objects produced it. It is additive and does
+    NOT participate in ``derive_calculation_revision_id``.
+
     The emitted :class:`BucketEvent` uses the revision id as ``object_id`` and
-    includes a ``has_provenance`` payload flag. Audit readers can therefore use
-    the event as a compact pointer back to the persisted
-    :class:`CalculationRevision` instead of treating bucket history as the
-    standalone provenance store.
+    includes a ``has_provenance`` payload flag plus a ``source_provenance_count``
+    and an order-independent ``source_provenance_trace_sha256`` digest of the
+    source-mesh trace. Audit readers can therefore use the event as a compact
+    pointer back to the persisted :class:`CalculationRevision`, and detect a
+    source-connectivity change from the digest without decrypting the revision,
+    instead of treating bucket history as the standalone provenance store.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        row_binding_values=row_binding_values,
         relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -200,6 +254,7 @@ def persist_calculation_revision(
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        row_binding_values=row_binding_values,
         relation_overrides=relation_overrides,
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_snapshot_id,
@@ -207,6 +262,7 @@ def persist_calculation_revision(
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
+        source_provenance=source_provenance,
         detail_rows=detail_rows,
         created_at=now,
         updated_at=now,
@@ -238,6 +294,7 @@ def persist_calculation_revision(
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period.registry_token,
             "input_casilla_count": str(len(input_values_by_casilla_id)),
+            "row_binding_count": str(sum(len(rows) for rows in row_binding_values.values())),
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(formula_count),
             "source_transaction_count": str(len(source_transaction_ids)),
@@ -248,6 +305,8 @@ def persist_calculation_revision(
                 "\n".join(bindings_sourced_from_borrador).encode("utf-8"),
             ),
             "has_provenance": "true" if observations else "false",
+            "source_provenance_count": str(len(source_provenance)),
+            "source_provenance_trace_sha256": _source_provenance_trace_sha256(source_provenance),
         },
     )
     return revision
@@ -264,7 +323,7 @@ def _build_filed_participation_writes(
 
     For each ``source_transaction_id`` of the filed revision, load that
     transaction's
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    :class:`~domain.modelos.TransactionRevisionParticipationIndex`, upsert
     the ``PRESENTADO`` participation carrying the ``filing_record_id``
     (replacing the prior verified entry for the same revision in place), and
     return the resulting ``SecureObjectWrite`` so the caller co-emits them in
@@ -295,6 +354,133 @@ def _participation_index_repository(
     return repository or TransactionParticipationIndexRepository(bucket_id=bucket_id)
 
 
+def _prorrata_register_repository(
+    repository: ProrrataRegisterRepositoryProtocol | None,
+    *,
+    bucket_id: str,
+) -> ProrrataRegisterRepositoryProtocol:
+    return repository or ProrrataRegisterRepository(bucket_id=bucket_id)
+
+
+def _build_prorrata_settlement_write(
+    *,
+    filed_target: CalculationRevision,
+    work_unit: WorkUnit,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+) -> SecureObjectWrite | None:
+    """Build the settlement prorrata-register write for an M303 year close."""
+    values = _prorrata_settlement_values(filed_target=filed_target, work_unit=work_unit)
+    if values is None:
+        return None
+
+    register = prorrata_register_repository.load()
+    entry = _settled_prorrata_register_entry(
+        work_unit=work_unit,
+        register=register,
+        volumen_total=values[0],
+        volumen_con_derecho=values[1],
+        definitive_percentage=values[2],
+    )
+    retained = tuple(
+        existing
+        for existing in register.entries
+        if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
+    )
+    return prorrata_register_repository.to_secure_object_write(
+        ProrrataRegister(
+            entries=(*retained, entry),
+            sector_definitions=register.sector_definitions,
+        )
+    )
+
+
+def _prorrata_settlement_values(
+    *,
+    filed_target: CalculationRevision,
+    work_unit: WorkUnit,
+) -> tuple[Decimal, Decimal, Decimal] | None:
+    if str(work_unit.modelo) != Modelo.M303.value:
+        return None
+    if work_unit.period.registry_token not in _PRORRATA_SETTLEMENT_PERIOD_TOKENS:
+        return None
+
+    casilla_values = filed_target.casilla_values
+    volumen_total = casilla_values.get(_PRORRATA_VOLUMEN_TOTAL_CASILLA)
+    volumen_con_derecho = casilla_values.get(_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA)
+    definitive_percentage = casilla_values.get(_PRORRATA_PORCENTAJE_CASILLA)
+    if volumen_total is None or volumen_con_derecho is None or definitive_percentage is None:
+        return None
+    return volumen_total, volumen_con_derecho, definitive_percentage
+
+
+def _settled_prorrata_register_entry(
+    *,
+    work_unit: WorkUnit,
+    register: ProrrataRegister,
+    volumen_total: Decimal,
+    volumen_con_derecho: Decimal,
+    definitive_percentage: Decimal,
+) -> ProrrataRegisterEntry:
+    volumen_sin_derecho = volumen_total - volumen_con_derecho
+    settlement_fields = {
+        "definitive_percentage": definitive_percentage,
+        "definitive_volume_con_derecho": volumen_con_derecho,
+        "definitive_volume_sin_derecho": volumen_sin_derecho,
+    }
+    existing = register.entry_for(work_unit.filing_year)
+    if existing is not None:
+        return ProrrataRegisterEntry.model_validate({**existing.model_dump(), **settlement_fields})
+
+    regime = ProrrataRegisterRegime.GENERAL if volumen_sin_derecho > Decimal("0") else ProrrataRegisterRegime.NINGUNA
+    return ProrrataRegisterEntry(
+        ejercicio=work_unit.filing_year,
+        regime=regime,
+        **settlement_fields,
+    )
+
+
+def _new_local_filing_record(
+    *,
+    filing_record_id: str,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    notes: str | None,
+    actor: str,
+    now: datetime,
+) -> ModeloRecord:
+    return ModeloRecord(
+        filing_record_id=filing_record_id,
+        work_unit_id=target.work_unit_id,
+        calculation_revision_id=target.calculation_revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=now,
+        filed_by=actor.strip(),
+        notes=notes.strip() if notes else None,
+        aeat_accepted=False,
+        status=ModeloRecordStatus.VIGENTE,
+        source_transaction_ids=target.source_transaction_ids,
+    )
+
+
+def _filed_calculation_revision(
+    *,
+    target: CalculationRevision,
+    actor: str,
+    now: datetime,
+) -> CalculationRevision:
+    return target.model_copy(
+        update={
+            "state": CalculationRevisionState.PRESENTADO,
+            "filed_at": now,
+            "filed_by": actor.strip(),
+            "updated_at": now,
+        },
+    )
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -309,6 +495,7 @@ def persist_filed_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository | None = None,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
     refunded: bool = False,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
@@ -322,19 +509,26 @@ def persist_filed_revision(
 
     When ``calculation_observation_repository`` is supplied, the filed revision's
     observations are co-emitted with ``MODELO_FILED`` through
-    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`,
+    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`,
     so later calculations can carry them through the ``previous_filing`` resolver.
     The record is stamped with NON-official ``app_filing`` and never satisfies the
     cross-period clean-state filing gate; use
-    :func:`aeat.application.modelo.import_external_filing_evidence` when the
+    :func:`~application.modelo.import_external_filing_evidence` when the
     current record must carry
-    :class:`~aeat.domain.modelos.ExternalEvidence`.
+    :class:`~domain.modelos.ExternalEvidence`.
 
     ``refunded`` is resolved once at the calculate/file boundary by
     ``resolve_modelo_result_disposition``. For refunded Modelo 303 filings
     (devolución, Tipo de declaración ``D``), it tells
     :func:`persist_filed_revision_observation` to persist ZERO compensación carry;
     the default ``False`` preserves standard carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+
+    For Modelo 303 settlement periods, the filed definitive prorrata percentage
+    and annual volume inputs are also co-emitted to the profile
+    :class:`~domain.prorrata_register.ProrrataRegister` through
+    :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
+    in the same secure-object save as the filing catalogue and filed
+    calculation revision.
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
@@ -351,20 +545,13 @@ def persist_filed_revision(
         period=work_unit.period,
     )
 
-    new_filing = ModeloRecord(
+    new_filing = _new_local_filing_record(
         filing_record_id=new_filing_id,
-        work_unit_id=target.work_unit_id,
-        calculation_revision_id=calculation_revision_id,
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        filed_at=now,
-        filed_by=actor.strip(),
-        notes=notes.strip() if notes else None,
-        aeat_accepted=False,
-        status=ModeloRecordStatus.VIGENTE,
-        source_transaction_ids=target.source_transaction_ids,
+        target=target,
+        work_unit=work_unit,
+        notes=notes,
+        actor=actor,
+        now=now,
     )
 
     revisions = calculation_repository.load()
@@ -391,14 +578,7 @@ def persist_filed_revision(
             revisions = upsert_calculation_revision(revisions, superseded_revision)
 
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
-    filed_target = target.model_copy(
-        update={
-            "state": CalculationRevisionState.PRESENTADO,
-            "filed_at": now,
-            "filed_by": actor.strip(),
-            "updated_at": now,
-        },
-    )
+    filed_target = _filed_calculation_revision(target=target, actor=actor, now=now)
     revisions = upsert_calculation_revision(revisions, filed_target)
 
     participation_repo = _participation_index_repository(participation_index_repository, bucket_id=work_unit.bucket_id)
@@ -408,6 +588,16 @@ def persist_filed_revision(
         filing_record_id=new_filing_id,
         participation_index_repository=participation_repo,
     )
+    prorrata_repo = _prorrata_register_repository(prorrata_register_repository, bucket_id=work_unit.bucket_id)
+    prorrata_write = _build_prorrata_settlement_write(
+        filed_target=filed_target,
+        work_unit=work_unit,
+        prorrata_register_repository=prorrata_repo,
+    )
+    extra_writes = (calculation_repository.to_secure_object_write(revisions), *participation_writes)
+    if prorrata_write is not None:
+        extra_writes = (*extra_writes, prorrata_write)
+
     # Co-emit the filed revision, filing catalogue, and per-transaction
     # participation index in the filing repository's save_many call. The
     # participation rows gain filing_record_id in the same SQL unit of work as
@@ -415,7 +605,7 @@ def persist_filed_revision(
     # from the receipt it names.
     filing_repository.save_with_secure_object_writes(
         updated_filing_catalogue,
-        (calculation_repository.to_secure_object_write(revisions), *participation_writes),
+        extra_writes,
     )
     work_unit_repository.save(
         upsert_work_unit(

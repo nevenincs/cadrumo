@@ -179,6 +179,8 @@ from ._review import (
     compute_current_approval_basis,
     compute_review_checksum,
     describe_stale_reason,
+    empty_prior_filing_observations_fingerprint,
+    empty_profile_activity_fingerprint,
     refresh_review_status,
     unapprove_draft,
 )
@@ -715,6 +717,12 @@ _ROW_FIELD_DATA_TYPES: dict[str, str] = {
     "party_tax_id": "text",
     "party_legal_name": "text",
     "clave": "text",
+    "asset_class_code": "text",
+    "currency_code": "text",
+    "asset_identifier": "text",
+    "asset_name": "text",
+    "acquisition_date": "text",
+    "valuation_amount": "money",
 }
 
 
@@ -881,6 +889,8 @@ __all__ = [
     "compute_review_checksum",
     "derive_validation_status",
     "describe_stale_reason",
+    "empty_prior_filing_observations_fingerprint",
+    "empty_profile_activity_fingerprint",
     "export_draft",
     "export_layout_renderability_reason",
     "filing_profile_from_taxpayer",

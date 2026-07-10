@@ -34,7 +34,7 @@ from ...core.resources import resources
 
 
 def revision_carry_outcome(
-    stamped_revision_id: str,
+    stamped_revision_id: str | None,
     *,
     source_modelo: str,
     source_filing_year: int,
@@ -57,6 +57,9 @@ def revision_carry_outcome(
 
     Args:
         stamped_revision_id: The revision the source filing was stamped with.
+            ``None`` represents a legacy missing stamp and is refused by this
+            shared gate; ADR-specific readers that permit a missing-stamp
+            advisory must handle that case before calling this function.
         source_modelo: The carried observation's source modelo id.
         source_filing_year: The source filing year.
         source_period: The source period as the bare registry token

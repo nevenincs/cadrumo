@@ -1,8 +1,8 @@
 """Cross-period clean-state findings for modelo verification gates.
 
-This module adapts :func:`~aeat.application.calculations.evaluate_cross_period_clean_state`
-into :class:`~aeat.domain.modelos.ModeloVerificationFinding` rows. It can inspect
-the target :class:`~aeat.domain.modelos.CalculationRevision` for explicit zero
+This module adapts :func:`~application.calculations.evaluate_cross_period_clean_state`
+into :class:`~domain.modelos.ModeloVerificationFinding` rows. It can inspect
+the target :class:`~domain.modelos.CalculationRevision` for explicit zero
 previous-filing binding overrides before deciding whether a prior-year carry
 requires upstream filing evidence.
 """

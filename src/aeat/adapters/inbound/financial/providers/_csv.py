@@ -1,16 +1,16 @@
 """CSV financial provider with bank-layout-aware parsing.
 
 Provides :class:`CsvProvider`, an implementation of
-:class:`~aeat.adapters.inbound.financial.providers.FinancialProvider`
+:class:`~adapters.inbound.financial.providers.FinancialProvider`
 that ingests bank CSV exports for the BBVA, Santander, CaixaBank and
 Revolut layouts. Each layout is described by a frozen
 :class:`CsvBankLayout` carrying the header aliases, date-format
 hint, and decimal-separator hint the parser needs.
 
-Successful rows become :class:`~aeat.adapters.inbound.financial.providers.ParsedLedgerRow`
-objects: the stored :class:`~aeat.domain.transactions.RawTransaction` carries
+Successful rows become :class:`~adapters.inbound.financial.providers.ParsedLedgerRow`
+objects: the stored :class:`~domain.transactions.RawTransaction` carries
 an absolute amount and provenance, while
-:class:`~aeat.domain.transactions.TransactionDirection` records the source flow.
+:class:`~domain.transactions.TransactionDirection` records the source flow.
 """
 
 from __future__ import annotations
@@ -212,8 +212,8 @@ class CsvProvider(FinancialProvider):
     Detects the bank layout by scoring the first ten rows of the
     decoded text against every entry in :data:`CSV_LAYOUTS`, then
     streams the data rows through :func:`build_raw_transaction`. The
-    decoder honours :attr:`aeat.core.config.Settings.financial_default_csv_encoding`
-    as the preferred encoding before falling back to a fixed
+    decoder honours the ``financial_default_csv_encoding`` setting as the
+    preferred encoding before falling back to a fixed
     UTF-8 / CP-1252 / ISO-8859-1 sequence.
 
     CSV layouts can provide either a source-signed amount or an explicit

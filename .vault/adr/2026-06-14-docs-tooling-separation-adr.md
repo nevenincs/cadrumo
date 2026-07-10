@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#docs-tooling-separation'
 date: '2026-06-14'
-modified: '2026-06-15'
+modified: '2026-07-10'
 related:
   - "[[2026-06-14-docs-tooling-separation-research]]"
   - "[[2026-06-04-aeat-cli-userdocs-hardening-plan]]"
 ---
 
-# `docs-tooling-separation` ADR: `terminology package separation from production`
+# `docs-tooling-separation` ADR: `terminology package separation from production` | (**status:** `accepted`)
 
 ## Status
 

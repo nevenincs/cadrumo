@@ -75,7 +75,7 @@ def _create_profile(
 
 
 def _export_profile(name: str, bundle_path: Path) -> Result:
-    return _invoke(("config", "profile", "export", name, "--to", str(bundle_path)))
+    return _invoke(("config", "profile", "export", name, "--to", str(bundle_path), "--cleartext-local"))
 
 
 def _import_bundle(
@@ -374,6 +374,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         from ....core import resolve_active_bucket_id
 
         active_import_id = resolve_active_bucket_id()
+        assert active_import_id is not None
         assert active_import_id == mutated_id
         assert_public_profile_id_not_leaked(r_mut.output, active_import_id)
 

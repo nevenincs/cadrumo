@@ -8,14 +8,18 @@ and structural mixin bases that are not raised directly.
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
+import importlib
+import inspect
+import pkgutil
+from types import ModuleType
 
 import pytest
 
+from .... import __path__ as _aeat_package_path
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_BARE_EXCEPTION_BASES = frozenset({"Exception", "ValueError", "RuntimeError", "KeyError", "TypeError"})
+_BARE_EXCEPTION_BASES = (Exception, ValueError, RuntimeError, KeyError, TypeError)
 _ALLOWLIST = {
     "aeat.core.errors.AeatError": "central root of the registry-bound exception hierarchy",
     "aeat.application.live._snapshot_base.SnapshotNotFoundError": (
@@ -34,50 +38,80 @@ _ALLOWLIST = {
         "agent-harness live-eval scaffolding runtime error; intentionally a plain RuntimeError "
         "(a harness-boundary execution signal), not an operator-facing registry-bound filing error"
     ),
+    "aeat.application.auth._certificate_secret_backend.CertificateSecretBackendUnavailableError": (
+        "certificate-secret backend boundary error; translated by the auth command/service layer, not raised as a "
+        "registry-bound calculation or filing error"
+    ),
+    "aeat.application.auth._certificate_secret_backend.CertificateSecretNotFoundError": (
+        "certificate-secret backend absence signal; callers collapse it to optional secret state"
+    ),
+    "aeat.application.auth._certificate_sources.CertificateSourceNoActiveBucketError": (
+        "certificate-source mutation precondition signal for an uninitialised local profile bucket"
+    ),
+    "aeat.application.auth._certificate_sources.CertificateSourceNotFoundError": (
+        "mapping-style certificate-source lookup miss; inherits KeyError so callers can preserve key semantics"
+    ),
+    "aeat.application.bucket_maintenance._sandbox.SandboxAlreadyExistsError": (
+        "sandbox lifecycle application-service refusal; CLI boundary renders it as an operator action refusal"
+    ),
+    "aeat.application.bucket_maintenance._sandbox.SandboxDiscardRefusedError": (
+        "sandbox destructive-action gate refusal; intentionally local to sandbox lifecycle orchestration"
+    ),
+    "aeat.application.bucket_maintenance._sandbox.SandboxMergeRefusedError": (
+        "sandbox merge confirmation/scope refusal; intentionally local to sandbox lifecycle orchestration"
+    ),
+    "aeat.application.bucket_maintenance._sandbox.SandboxNotArchivedError": (
+        "sandbox restore precondition refusal; intentionally local to sandbox lifecycle orchestration"
+    ),
+    "aeat.application.bucket_maintenance._sandbox.SandboxNotFoundError": (
+        "sandbox bucket lookup miss; intentionally local to sandbox lifecycle orchestration"
+    ),
+    "aeat.application.bucket_maintenance._sandbox.SandboxSourceNotFoundError": (
+        "sandbox seed-source lookup miss; intentionally local to sandbox lifecycle orchestration"
+    ),
+    "aeat.application.invoices._bulk_import._RowParseError": (
+        "private row parser control-flow carrier; converted to BulkInvoiceImportRowFailure before leaving the module"
+    ),
+    "aeat.application.invoices._wizard._WizardFieldError": (
+        "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
+    ),
 }
+
+
+def _iter_imported_aeat_modules() -> list[ModuleType]:
+    modules: list[ModuleType] = []
+    for info in pkgutil.walk_packages(_aeat_package_path, prefix="aeat."):
+        name = info.name
+        if ".tests." in name or ".test_" in name or "._test_" in name:
+            continue
+        modules.append(importlib.import_module(name))
+    return modules
+
+
+def _module_exception_classes(module: ModuleType) -> list[type[BaseException]]:
+    module_name = module.__name__
+    return [
+        error_type
+        for _, error_type in inspect.getmembers(module, inspect.isclass)
+        if error_type.__module__ == module_name and issubclass(error_type, BaseException)
+    ]
 
 
 def test_production_exception_classes_do_not_introduce_unregistered_builtin_roots() -> None:
     violations: list[str] = []
-    for path in sorted(Path("src/aeat").rglob("*.py")):
-        if path.name.startswith(("test_", "_test_")):
-            continue
-        module_name = _module_name_for_path(path)
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ClassDef):
-                continue
-            qualname = f"{module_name}.{node.name}"
+    for module in _iter_imported_aeat_modules():
+        for error_type in _module_exception_classes(module):
+            qualname = f"{error_type.__module__}.{error_type.__qualname__}"
             if qualname in _ALLOWLIST:
                 continue
-            bare_bases = sorted(
-                base_name for base in node.bases if (base_name := _base_name(base)) in _BARE_EXCEPTION_BASES
-            )
-            # Multiple inheritance such as `DomainValidationError(AeatError, ValueError)`
-            # preserves built-in compatibility while still routing through a
-            # registry-bound AEAT base. The unsafe shape is a new root whose
-            # bases are only Python built-ins.
-            if bare_bases and len(bare_bases) == len(node.bases):
-                violations.append(f"{path}:{node.lineno}: {node.name}({', '.join(bare_bases)})")
+            bare_bases = tuple(base.__name__ for base in error_type.__bases__ if base in _BARE_EXCEPTION_BASES)
+            if bare_bases and len(bare_bases) == len(error_type.__bases__):
+                violations.append(
+                    f"{error_type.__module__}.{error_type.__qualname__}({', '.join(sorted(bare_bases))})",
+                )
 
     assert violations == []
 
 
 def test_exception_base_hygiene_allowlist_carries_review_rationales() -> None:
     assert all(reason.strip() for reason in _ALLOWLIST.values())
-
-
-def _module_name_for_path(path: Path) -> str:
-    relative = path.with_suffix("").relative_to(Path("src"))
-    parts = list(relative.parts)
-    if parts[-1] == "__init__":
-        parts = parts[:-1]
-    return ".".join(parts)
-
-
-def _base_name(node: ast.expr) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return ""

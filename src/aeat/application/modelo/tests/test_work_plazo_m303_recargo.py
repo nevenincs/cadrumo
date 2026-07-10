@@ -37,7 +37,7 @@ import pytest
 
 from ....core import Period
 from ....domain.deadlines import build_recovery_for_overdue, resolve_filing_closes_on
-from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._work_plazo import modelo_work_plazo_summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -49,6 +49,12 @@ _REVISION_ID = "303-2023-y-siguientes"
 # is a distinct member of the R9 quarterly-IVA deadline cluster.
 _QUARTERS = ("1T", "2T", "3T", "4T")
 _FILING_YEARS = (2025, 2026)
+
+
+def _quarter_year_cases():
+    for quarter in _QUARTERS:
+        for filing_year in _FILING_YEARS:
+            yield quarter, filing_year
 
 
 def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
@@ -64,7 +70,7 @@ def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
     return WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
-        modelo="303",
+        modelo=ModeloCode("303"),
         filing_year=filing_year,
         period=period,
         revision_id=_REVISION_ID,
@@ -74,9 +80,7 @@ def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
     )
 
 
-@pytest.mark.parametrize("filing_year", _FILING_YEARS)
-@pytest.mark.parametrize("quarter", _QUARTERS)
-def test_late_m303_quarter_surfaces_recargo_advisory(quarter: str, filing_year: int) -> None:
+def test_late_m303_quarter_surfaces_recargo_advisory() -> None:
     """A Modelo 303 quarter filed after its plazo carries the Art. 27 recargo.
 
     The reference date is derived as ``closes_on + 40 days`` — unambiguously
@@ -85,38 +89,38 @@ def test_late_m303_quarter_surfaces_recargo_advisory(quarter: str, filing_year: 
     frozen literal. The recargo band is cross-checked against the domain
     ``build_recovery_for_overdue`` computation, not a hand-picked percentage.
     """
-    period = Period.from_year_and_code(filing_year, quarter)
-    closes_on = resolve_filing_closes_on("303", filing_year, period)
-    assert closes_on is not None, f"registry must carry an M303 {filing_year} {quarter} window"
+    for quarter, filing_year in _quarter_year_cases():
+        case_id = f"M303 {filing_year} {quarter}"
+        period = Period.from_year_and_code(filing_year, quarter)
+        closes_on = resolve_filing_closes_on("303", filing_year, period)
+        assert closes_on is not None, f"registry must carry an {case_id} window"
 
-    reference_today = closes_on + timedelta(days=40)
-    work_unit = _work_unit_for(quarter, filing_year)
+        reference_today = closes_on + timedelta(days=40)
+        work_unit = _work_unit_for(quarter, filing_year)
 
-    summary = modelo_work_plazo_summary(work_unit, today=reference_today)
+        summary = modelo_work_plazo_summary(work_unit, today=reference_today)
 
-    assert summary is not None
-    assert summary.closes_on == closes_on
-    assert summary.days_remaining is None
-    assert summary.days_overdue == (reference_today - closes_on).days
-    assert summary.days_overdue == 40
+        assert summary is not None, case_id
+        assert summary.closes_on == closes_on, case_id
+        assert summary.days_remaining is None, case_id
+        assert summary.days_overdue == (reference_today - closes_on).days, case_id
+        assert summary.days_overdue == 40, case_id
 
-    assert summary.recargo is not None
-    assert summary.recargo.legal_ref.startswith("ley-58-2003:art-27")
+        assert summary.recargo is not None, case_id
+        assert summary.recargo.legal_ref.startswith("ley-58-2003:art-27"), case_id
 
-    expected = build_recovery_for_overdue(
-        closes_on=closes_on,
-        reference_today=reference_today,
-        modelo="303",
-        period=period,
-    )
-    assert summary.recargo.band_id == expected.recargo_band.id
-    assert summary.recargo.surcharge_pct == expected.recargo_band.surcharge_pct
-    assert summary.recargo.interest_applies is expected.recargo_band.interest_applies
+        expected = build_recovery_for_overdue(
+            closes_on=closes_on,
+            reference_today=reference_today,
+            modelo="303",
+            period=period,
+        )
+        assert summary.recargo.band_id == expected.recargo_band.id, case_id
+        assert summary.recargo.surcharge_pct == expected.recargo_band.surcharge_pct, case_id
+        assert summary.recargo.interest_applies is expected.recargo_band.interest_applies, case_id
 
 
-@pytest.mark.parametrize("filing_year", _FILING_YEARS)
-@pytest.mark.parametrize("quarter", _QUARTERS)
-def test_in_time_m303_quarter_is_silent(quarter: str, filing_year: int) -> None:
+def test_in_time_m303_quarter_is_silent() -> None:
     """A Modelo 303 quarter filed inside its plazo carries no recargo advisory.
 
     The reference date is derived as ``closes_on - 5 days`` from the
@@ -124,20 +128,22 @@ def test_in_time_m303_quarter_is_silent(quarter: str, filing_year: int) -> None:
     hardcoded calendar. The summary must carry ``days_remaining`` and no
     recargo — the advisory stays silent when the filing is not extemporáneo.
     """
-    period = Period.from_year_and_code(filing_year, quarter)
-    closes_on = resolve_filing_closes_on("303", filing_year, period)
-    assert closes_on is not None
+    for quarter, filing_year in _quarter_year_cases():
+        case_id = f"M303 {filing_year} {quarter}"
+        period = Period.from_year_and_code(filing_year, quarter)
+        closes_on = resolve_filing_closes_on("303", filing_year, period)
+        assert closes_on is not None, case_id
 
-    reference_today = closes_on - timedelta(days=5)
-    work_unit = _work_unit_for(quarter, filing_year)
+        reference_today = closes_on - timedelta(days=5)
+        work_unit = _work_unit_for(quarter, filing_year)
 
-    summary = modelo_work_plazo_summary(work_unit, today=reference_today)
+        summary = modelo_work_plazo_summary(work_unit, today=reference_today)
 
-    assert summary is not None
-    assert summary.closes_on == closes_on
-    assert summary.days_overdue is None
-    assert summary.days_remaining == 5
-    assert summary.recargo is None
+        assert summary is not None, case_id
+        assert summary.closes_on == closes_on, case_id
+        assert summary.days_overdue is None, case_id
+        assert summary.days_remaining == 5, case_id
+        assert summary.recargo is None, case_id
 
 
 def test_m303_quarterly_resolver_returns_dates_for_full_cluster() -> None:

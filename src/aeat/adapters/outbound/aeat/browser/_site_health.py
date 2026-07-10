@@ -11,14 +11,14 @@ The closed state catalogue is an :class:`enum.StrEnum`. Collections are
 ``tuple[str, ...]`` so evidence remains immutable after classification.
 
 See Also:
-    :func:`aeat.adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
+    :func:`adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
         Pure parser entry point that creates :class:`SiteHealthStatus` records
         from HTTP status, headers, and body text.
-    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate`
+    :meth:`adapters.outbound.aeat.browser.BrowserSession.navigate`
         Browser navigation hook that raises
-        :class:`aeat.core.errors.SiteHealthError` when a non-OK status is
+        :class:`core.errors.SiteHealthError` when a non-OK status is
         classified.
-    :class:`aeat.core.errors.SiteHealthStatusLike`
+    :class:`core.errors.SiteHealthStatusLike`
         Core-layer structural view that lets application workflow and
         diagnostics consume these adapter records without importing them.
 """
@@ -48,7 +48,7 @@ class SiteHealthState(StrEnum):
     """Closed catalogue of AEAT site-health classifications.
 
     Parser functions emit these states inside :class:`SiteHealthStatus`.
-    :class:`~aeat.core.errors.SiteHealthError` then carries non-OK states across
+    :class:`~core.errors.SiteHealthError` then carries non-OK states across
     the browser/application boundary.
 
     Values:
@@ -137,9 +137,9 @@ class SiteHealthStatus(_SiteHealthRecord):
     """Full classification record for a single probe.
 
     Produced by the parser suite and by
-    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate` for
+    :meth:`adapters.outbound.aeat.browser.BrowserSession.navigate` for
     transport failures. Non-OK records are carried by
-    :class:`aeat.core.errors.SiteHealthError`; diagnostics and workflow code
+    :class:`core.errors.SiteHealthError`; diagnostics and workflow code
     then inspect this record instead of re-parsing response bodies.
 
     Attributes:

@@ -3,12 +3,12 @@ tags:
   - "#adr"
   - "#multilang-externalization"
 date: 2026-05-04
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-05-04-multilang-externalization-phase1-research]]"
 ---
 
-# Architecture Decision Record: Multilang Externalization
+# Architecture Decision Record: Multilang Externalization | (**status:** `accepted`)
 
 ## Status
 Accepted

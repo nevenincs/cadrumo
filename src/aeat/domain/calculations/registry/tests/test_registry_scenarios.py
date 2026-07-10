@@ -12,6 +12,7 @@ from .....core.resources import bundled_path
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._scenarios import (
     RegistryCalculationScenario,
+    RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
@@ -202,53 +203,50 @@ def test_registry_scenario_requires_declared_operand_casilla_refs() -> None:
 
 def test_registry_scenario_expected_output_requires_grounding() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
+        output_dict = {
+            "target_casilla_id": _operand_casilla_refs("0222")[0],
+            "value": Decimal("2000.00"),
+            "source_refs": ("aeat-renta-2025-manual-parte1",),
+        }
         RegistryCalculationScenario(
             id="ungrounded-expected-output",
             modelo="100",
             revision="2025",
             filing_year=2025,
             period="0A",
-            expected_outputs=(
-                {
-                    "target_casilla_id": _operand_casilla_refs("0222")[0],
-                    "value": Decimal("2000.00"),
-                    "source_refs": ("aeat-renta-2025-manual-parte1",),
-                },
-            ),
+            expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
     with pytest.raises(ValidationError, match="legal_refs"):
+        output_dict = {
+            "target_casilla_id": _operand_casilla_refs("0222")[0],
+            "value": Decimal("2000.00"),
+            "legal_refs": ("",),
+            "source_refs": ("aeat-renta-2025-manual-parte1",),
+        }
         RegistryCalculationScenario(
             id="blank-legal-ref-expected-output",
             modelo="100",
             revision="2025",
             filing_year=2025,
             period="0A",
-            expected_outputs=(
-                {
-                    "target_casilla_id": _operand_casilla_refs("0222")[0],
-                    "value": Decimal("2000.00"),
-                    "legal_refs": ("",),
-                    "source_refs": ("aeat-renta-2025-manual-parte1",),
-                },
-            ),
+            expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
     with pytest.raises(ValidationError, match="source_refs"):
+        output_dict = {
+            "target_casilla_id": _operand_casilla_refs("0222")[0],
+            "value": Decimal("2000.00"),
+            "legal_refs": ("ley-35-2006:art-30",),
+            "source_refs": (" ",),
+        }
         RegistryCalculationScenario(
             id="blank-source-ref-expected-output",
             modelo="100",
             revision="2025",
             filing_year=2025,
             period="0A",
-            expected_outputs=(
-                {
-                    "target_casilla_id": _operand_casilla_refs("0222")[0],
-                    "value": Decimal("2000.00"),
-                    "legal_refs": ("ley-35-2006:art-30",),
-                    "source_refs": (" ",),
-                },
-            ),
+            expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
 

@@ -46,11 +46,11 @@ complementaria/sustitutiva pair for every period, never asserting rectificativa
 support that no bundled source confirms.
 
 See Also:
-    :func:`aeat.application.modelo.resolve_amendment_kind_regime`:
-        Application-layer resolver that binds this table to
-        :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind` and
+    :func:`~application.modelo._amendment_kind_resolution.assert_amendment_kind_permitted`:
+        Application-layer guard that binds this table to
+        :class:`~domain.modelos.CalculationRevisionAmendmentKind` and
         refuses an operator-requested kind the period does not permit.
-    :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`:
+    :class:`~domain.modelos.CalculationRevisionAmendmentKind`:
         The domain enum this module's string values back.
 """
 
@@ -73,6 +73,8 @@ if TYPE_CHECKING:
     # initialization ``ImportError`` the facade's ordering otherwise avoids.
     # ``Period`` is used only as a type annotation here, so the deferred import
     # is sufficient and the module needs no runtime binding of the name.
+    from _typeshed import SupportsAllComparisons
+
     from ._period import Period
 
 
@@ -102,7 +104,7 @@ class AmendmentKindRegime:
 
     Attributes:
         permitted_kinds: The closed set of
-            :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind`
+            :class:`~domain.modelos.CalculationRevisionAmendmentKind`
             string values legally available for this modelo and period.
             ``"sustitutiva"`` is always permitted (a material restatement is
             never barred by the rectificativa timeline); ``"rectificativa"``
@@ -175,7 +177,7 @@ def resolve_amendment_kind_regime(modelo: str, period: Period) -> AmendmentKindR
     """Resolve the codified amendment-kind regime for ``modelo`` at ``period``.
 
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
-    :class:`~aeat.domain.modelos.CalculationRevisionAmendmentKind` string
+    :class:`~domain.modelos.CalculationRevisionAmendmentKind` string
     values for this ``(modelo, period)`` pair. A modelo with no codified
     boundary (:func:`modelo_has_codified_amendment_regime` is ``False``)
     always resolves to the pre-rectificativa pair, never asserting
@@ -210,7 +212,11 @@ def permitted_amendment_kind_values(modelo: str, period: Period) -> frozenset[st
     return resolve_amendment_kind_regime(modelo, period).permitted_kinds
 
 
-def classify_amendment_liability_direction(*, baseline_result: object, corrected_result: object) -> str:
+def classify_amendment_liability_direction(
+    *,
+    baseline_result: SupportsAllComparisons,
+    corrected_result: SupportsAllComparisons,
+) -> str:
     """Classify whether a correction increases, decreases, or leaves liability unchanged.
 
     ``baseline_result`` and ``corrected_result`` are the modelo's signed final
@@ -218,18 +224,18 @@ def classify_amendment_liability_direction(*, baseline_result: object, corrected
     negative value means a credit or refund position, modelo-dependent) before
     and after the operator's overrides. An increase in the signed result (a
     higher amount to pay, or a lower credit/refund) is
-    :attr:`AmendmentLiabilityDirection.INCREASE` (LGT art. 122.2,
+    :attr:`~core.AmendmentLiabilityDirection.INCREASE` (LGT art. 122.2,
     complementaria territory); a decrease is
-    :attr:`AmendmentLiabilityDirection.DECREASE` (LGT art. 120.3, solicitud de
+    :attr:`~core.AmendmentLiabilityDirection.DECREASE` (LGT art. 120.3, solicitud de
     rectificación territory pre-unification). Equal values are
-    :attr:`AmendmentLiabilityDirection.UNCHANGED`.
+    :attr:`~core.AmendmentLiabilityDirection.UNCHANGED`.
 
     Accepts any ``Decimal``-comparable numeric type so callers do not need to
     import :mod:`decimal` solely to call this classifier.
     """
-    if corrected_result > baseline_result:  # type: ignore[operator]
+    if corrected_result > baseline_result:
         return AmendmentLiabilityDirection.INCREASE
-    if corrected_result < baseline_result:  # type: ignore[operator]
+    if corrected_result < baseline_result:
         return AmendmentLiabilityDirection.DECREASE
     return AmendmentLiabilityDirection.UNCHANGED
 
