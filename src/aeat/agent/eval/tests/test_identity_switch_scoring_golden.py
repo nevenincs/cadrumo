@@ -1,9 +1,8 @@
-"""Identity-confirmation scoring gate for the operator eval (ADR ``mcp-identity-linked-operation`` I2 / I4).
+"""Identity-confirmation scoring gate for the operator evaluation.
 
 Scores whether an OBSERVED trajectory confirmed the active taxpayer identity before
 every mutation, and RE-confirmed after a profile switch - the Erik/Erika hazard the
-P03 block-first-mutation gate exists to close (plan step S12, exercising the S11
-``identidad_perfil.toml`` scenario). The dimension replays the REAL
+block-first-mutation gate exists to close. The dimension replays the REAL
 ``identity_gate_refusal`` decision over a hand-constructed :class:`LiveTrajectory`
 (the injection point: this test imports the gate from the ``entrypoints.mcp`` facade
 and hands it to the SDK-independent scorer, which never imports ``entrypoints.mcp``),
@@ -90,12 +89,12 @@ def _trajectory(*calls: LiveToolCallRecord, session_id: str) -> LiveTrajectory:
 
 
 # --------------------------------------------------------------------------- #
-# S11: the scenario is a valid, minimal-but-valid GoldenScenario
+# The scenario is a valid, minimal GoldenScenario.
 # --------------------------------------------------------------------------- #
 
 
 def test_identity_scenario_loads_and_passes_the_shared_golden_dimensions() -> None:
-    """The S11 scenario is a valid GoldenScenario that passes the shared trajectory/skill/provenance gate."""
+    """The scenario is valid and passes the shared trajectory, skill, and provenance gate."""
     scenario = load_scenario(_IDENTITY_SCENARIO)
     assert scenario.name == "identidad-perfil-switch-reconfirm"
     result = run_golden_scenario(scenario, valid_commands=_valid_commands())
@@ -114,7 +113,7 @@ def test_scenario_constants_are_real_and_correctly_shaped() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# S12: the identity-confirmation dimension over an observed trajectory
+# Measure identity confirmation over an observed trajectory.
 # --------------------------------------------------------------------------- #
 
 
@@ -158,9 +157,7 @@ def test_mutation_after_switch_without_reconfirm_fails_the_scenario() -> None:
     assert score.mutating_step_present
     assert not score.identity_confirmed
     assert _MUTATING in score.gate_refused_mutations
-    assert any(
-        _MUTATING in failure and "re-armed" in failure and "Erik/Erika" in failure for failure in score.failures
-    )
+    assert any(_MUTATING in failure and "re-armed" in failure and "Erik/Erika" in failure for failure in score.failures)
 
 
 def test_first_mutation_without_any_identity_read_fails() -> None:
@@ -190,7 +187,7 @@ def test_identity_read_verb_also_confirms_before_a_mutation() -> None:
 
 
 def test_harness_load_read_also_clears_the_gate() -> None:
-    """PASS: the harness.load floor read confirms identity (ADR I2 refinement, option b)."""
+    """PASS: the harness.load floor read confirms identity."""
     trajectory = _trajectory(
         _console_read(_HARNESS_LOAD),
         _verb(_MUTATING),
