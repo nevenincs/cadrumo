@@ -10,9 +10,6 @@ related:
   - "[[2026-07-09-m210-irnr-phase-2-engine-adr]]"
 ---
 
-
-
-
 # add the M210 period token `0A` (agrupacion anual) to the canonical period grammar scoped to M210, resolved through the single `Period.contains` boundary authority
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
-
 # author the official M210 tipo-de-renta code list (01, 02, 27, 28, 29, 33, 35, ...) as declared registry data on the 2025 revision, each code row citing its bundled Orden EHA/3316/2010 and AEAT M210 instructions grounding
 
 ## Scope

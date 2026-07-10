@@ -9,9 +9,6 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
-
 # add the per-row segregation gate in the M151 classifier so a row with `source_jurisdiction != "ES"` produces a `BECKHAM_FOREIGN_SOURCE_SEGREGATED` issue rather than a base observation, anchored on LIRPF Art 93.5
 
 ## Scope

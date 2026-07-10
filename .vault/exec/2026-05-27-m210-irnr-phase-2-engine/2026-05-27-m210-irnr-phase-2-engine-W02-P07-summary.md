@@ -8,9 +8,6 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
-
 # `m210-irnr-phase-2-engine` `W02.P07` summary
 
 The source-jurisdiction gate shape is closed as a classifier decision.

@@ -8,8 +8,6 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
 # `m210-irnr-phase-2-engine` audit: `plan reconciliation`
 
 ## Scope
@@ -40,3 +38,31 @@ S17 prescribes two locale keys, but the completed M151 classifier emits typed fr
 - Keep S06, S10-S12, S17, and S18 open with explicit carry-forward blockers.
 - Create an ADR-backed M210 grouped-renta contract before resuming S06.
 - Create an approved M210 ledger aggregation design before resuming S10-S12 and the remaining task #62 closure.
+
+## Resolution
+
+The approved follow-on ADR is implemented in commit `8f5f690ed0`. S06 now has a
+strict persisted annual grouped-renta row with the official 0A constraints: lease
+and sublease codes only, same raw official code, rate, property/right and payer,
+and the explicit code-35 multiple-payer exception. The registry records the
+official Article 2 source for that contract.
+
+S10-S12 now use an explicit persisted M210 income classification and an explicit
+manual-or-ledger authority for casilla `[5]`. The ledger path admits only active,
+incoming Spanish-source transactions, preserves the raw official income code and
+row facts for annual grouping, carries Article 13.1 territorial evidence with the
+Article 24 base, and records typed exclusions for foreign, unresolved, or
+unclassified source rows. The filing snapshot fingerprints and stores the source
+and classification evidence, so later source or classification changes make the
+calculation stale.
+
+The formal source and operator-surface reviews initially found snapshot evidence,
+manual/ledger authority, raw-code consistency, CLI routing, taxonomy, and locale
+gaps. All were repaired before closure; the final review reported no residual
+finding. S17 adds the localized CLI and diagnostic surface in all supported
+catalogues.
+
+Verification: `ruff check` on the changed Python surface; the focused M210 suite
+(`86 passed`); the M210 auto-split CLI refusal integration test (`1 passed`);
+CLI module-size checks (`2 passed`); locale scaffold and audit; and generated API
+stub scaffold/audit all passed.

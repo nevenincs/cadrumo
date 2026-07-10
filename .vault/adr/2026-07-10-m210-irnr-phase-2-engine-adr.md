@@ -8,8 +8,6 @@ related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-research]]"
 ---
 
-
-
 # `m210-irnr-phase-2-engine` adr: `M210 grouped-rentas and source-scope ingestion` | (**status:** `accepted`)
 
 ## Problem Statement
