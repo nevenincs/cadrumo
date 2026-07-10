@@ -26,6 +26,8 @@ related:
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
   - '[[2026-07-09-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-07-10-m210-irnr-phase-2-engine-audit]]'
+  - '[[2026-07-10-m210-irnr-phase-2-engine-reference]]'
+  - '[[2026-07-10-m210-irnr-phase-2-engine-research]]'
 ---
 
 # `m210-irnr-phase-2-engine` feature index
@@ -65,6 +67,11 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 
 - `2026-05-27-m210-irnr-phase-2-engine-plan` - `m210-irnr-phase-2-engine` `M210 IRNR Phase 2 engine - full diseno-de-registro + Convenios roster + remaining tipo-de-renta variants` plan
 
+### reference
+
+- `2026-07-10-m210-irnr-phase-2-engine-reference` - `m210-irnr-phase-2-engine` reference: `M210 aggregation and grouped-row implementation blueprint`
+
 ### research
 
 - `2026-06-04-m210-irnr-phase-2-engine-research` - `m210-irnr-phase-2-engine` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.
+- `2026-07-10-m210-irnr-phase-2-engine-research` - `m210-irnr-phase-2-engine` research: `M210 grouped-rentas and ledger aggregation contract`
