@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-research]]'
 ---
 
-# schedule-predicate-catalogue adr: eager compile-time validation of schedule-predicate field references | (status: accepted)
+# schedule-predicate-catalogue adr: eager compile-time validation of schedule-predicate field references | (**status:** `accepted`)
 
 ## Problem Statement
 

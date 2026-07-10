@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-history-fetch"
 date: 2026-04-16
-modified: '2026-06-13'
+modified: '2026-07-10'
 title: AEAT filing-history read surface — ADR
 related:
   - "[[2026-04-16-aeat-history-fetch-research]]"
@@ -14,7 +14,7 @@ epic: wgergely/aeat#166
 status: accepted
 ---
 
-# adr: aeat filing-history read surface
+# adr: aeat filing-history read surface | (**status:** `accepted`)
 
 ## context
 

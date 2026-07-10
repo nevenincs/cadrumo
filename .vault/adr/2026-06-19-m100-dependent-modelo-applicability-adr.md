@@ -3,11 +3,11 @@ tags:
   - '#adr'
   - '#m100-dependent-modelo-applicability'
 date: '2026-06-19'
-modified: '2026-06-26'
+modified: '2026-07-10'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'
 ---
-# `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `accepted` — implemented via the grounded `taxpayer_files_source` classification distinction, commit `fd14bdf01`; Option 1's schedule heuristic was reverted)
+# `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `accepted`)
 
 ## Problem Statement
 

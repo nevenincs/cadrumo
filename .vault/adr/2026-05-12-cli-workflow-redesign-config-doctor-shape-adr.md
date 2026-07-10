@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-06-30'
+modified: '2026-07-10'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-research]]"
@@ -14,7 +14,7 @@ related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
 ---
 
-# `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded by [[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]`)
+# `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded`)
 
 > Superseded by the `config repair shape` ADR. The `doctor` namespace is
 > replaced by `aeat config repair`: same composite-diagnostics surface,

@@ -3,14 +3,14 @@ tags:
   - "#adr"
   - "#inventory-management"
 date: 2026-04-30
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-04-30-inventory-management-cli-design-research]]"
   - "[[2026-04-29-inventory-management-adr]]"
   - "[[2026-04-30-inventory-management-cli-design-reference]]"
 ---
 
-# inventory-management cli design adr: canonical data ledgers ux
+# inventory-management cli design adr: canonical data ledgers ux | (**status:** `accepted`)
 
 ## CLI Backend Boundary
 

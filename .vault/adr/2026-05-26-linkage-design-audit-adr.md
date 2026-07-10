@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#linkage-design-audit'
 date: '2026-05-26'
-modified: '2026-06-13'
+modified: '2026-07-10'
 related:
   - "[[2026-05-26-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-research]]"
@@ -11,7 +11,7 @@ related:
   - "[[2026-05-18-linkage-design-audit-audit]]"
 ---
 
-# `linkage-design-audit` ADR: `boundary-typed-contracts` (**status:** `accepted`)
+# `linkage-design-audit` ADR: `boundary-typed-contracts` | (**status:** `accepted`)
 
 This ADR records four related architectural decisions for the
 `linkage-design-audit` plan, all ratifying the "contract typed

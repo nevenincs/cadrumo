@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
-modified: '2026-06-30'
+modified: '2026-07-10'
 title: ADR — StatusReader.fetch_filing_detail (#227)
 status: accepted
 issue: wgergely/aeat#227
@@ -14,7 +14,7 @@ related:
   - "[[2026-04-16-aeat-history-fetch-adr]]"
 ---
 
-# adr — StatusReader.fetch_filing_detail (#227)
+# adr — StatusReader.fetch_filing_detail (#227) | (**status:** `accepted`)
 
 ## context
 
