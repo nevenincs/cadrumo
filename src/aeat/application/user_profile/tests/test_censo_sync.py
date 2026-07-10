@@ -119,6 +119,59 @@ def test_refresh_reports_only_fields_dropped_from_prior_active_snapshot(secure_s
     )
 
 
+def test_refresh_reports_no_drop_when_new_snapshot_is_superset(secure_store: SecureObjectRepository) -> None:
+    service = _service(secure_store)
+    profile_id = "11111111-1111-4111-8111-111111111111"
+    service.refresh_censo(profile_id=profile_id, source_url=_G313, fact_source=_facts)
+
+    outcome = service.refresh_censo(
+        profile_id=profile_id,
+        source_url=_G313,
+        fact_source=lambda: {**_facts(), "activities.iae_epigraph": "763"},
+    )
+
+    assert outcome.dropped_fields == ()
+    assert outcome.snapshot.state is SnapshotLifecycleState.ACTIVE
+
+
+def test_refresh_value_change_is_not_a_drop(secure_store: SecureObjectRepository) -> None:
+    service = _service(secure_store)
+    profile_id = "11111111-1111-4111-8111-111111111111"
+    service.refresh_censo(profile_id=profile_id, source_url=_G313, fact_source=_facts)
+
+    # Same key set, every value changed: a value change is never a drop.
+    outcome = service.refresh_censo(
+        profile_id=profile_id,
+        source_url=_G313,
+        fact_source=lambda: {path: f"{value}-changed" for path, value in _facts().items()},
+    )
+
+    assert outcome.dropped_fields == ()
+
+
+def test_refresh_full_field_removal_proceeds_and_reports(secure_store: SecureObjectRepository) -> None:
+    """A legitimate full removal (operator closed the home office) is
+    respected: the capture proceeds and the new ACTIVE snapshot carries
+    the reduced facts. The drop is surfaced, never blocked."""
+
+    service = _service(secure_store)
+    profile_id = "11111111-1111-4111-8111-111111111111"
+    service.refresh_censo(profile_id=profile_id, source_url=_G313, fact_source=_facts)
+
+    outcome = service.refresh_censo(
+        profile_id=profile_id,
+        source_url=_G313,
+        fact_source=lambda: {"censo.establecimiento_type": "propio"},
+    )
+
+    assert outcome.snapshot.state is SnapshotLifecycleState.ACTIVE
+    assert "vivienda_office.office_m2" not in outcome.snapshot.censo_facts
+    assert "vivienda_office.office_m2" in outcome.dropped_fields
+    assert "vivienda_office.total_m2" in outcome.dropped_fields
+    # The freshly captured snapshot is the authority the ratio reads.
+    assert service.bound_raw_afectacion_ratio(profile_id=profile_id) is None
+
+
 def test_refresh_with_production_factory_enrolls_censo_event(secure_store: SecureObjectRepository) -> None:
 
     service = CensoSyncService(
