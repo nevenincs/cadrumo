@@ -77,7 +77,7 @@ Apply the LIRPF Art 93.5 segregation rule at the M151 aggregation surface: the B
 
 - [x] `W02.P06.S13` - add the `source_jurisdiction` provenance pass-through on the M151 observation model; `src/aeat/application/aggregation`.
 - [x] `W02.P06.S14` - add the per-row segregation gate in the M151 classifier so a row with `source_jurisdiction != "ES"` produces a `BECKHAM_FOREIGN_SOURCE_SEGREGATED` issue rather than a base observation, anchored on LIRPF Art 93.5; `src/aeat/application/aggregation`.
-- [ ] `W02.P06.S15` - add the anti-tautology test proving the Beckham IRPF base sums only the ES row, the DE row is emitted as a segregated issue with its jurisdiction preserved, and a gate-bypass mutant inflates the IRPF base by the DE row; `src/aeat/application/aggregation`.
+- [x] `W02.P06.S15` - add the anti-tautology test proving the Beckham IRPF base sums only the ES row, the DE row is emitted as a segregated issue with its jurisdiction preserved, and a gate-bypass mutant inflates the IRPF base by the DE row; `src/aeat/application/aggregation`.
 
 ### Phase `W02.P07` - predicate-shape decision and registry surface (architect call)
 
