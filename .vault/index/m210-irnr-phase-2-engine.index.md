@@ -18,7 +18,9 @@ related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-S13]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-S14]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-S15]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P06-summary]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P07-S16]]'
+  - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P07-summary]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-plan]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
@@ -55,7 +57,9 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 - `2026-05-27-m210-irnr-phase-2-engine-W02-P06-S13` - add the `source_jurisdiction` provenance pass-through on the M151 observation model
 - `2026-05-27-m210-irnr-phase-2-engine-W02-P06-S14` - add the per-row segregation gate in the M151 classifier so a row with `source_jurisdiction != "ES"` produces a `BECKHAM_FOREIGN_SOURCE_SEGREGATED` issue rather than a base observation, anchored on LIRPF Art 93.5
 - `2026-05-27-m210-irnr-phase-2-engine-W02-P06-S15` - add the anti-tautology test proving the Beckham IRPF base sums only the ES row, the DE row is emitted as a segregated issue with its jurisdiction preserved, and a gate-bypass mutant inflates the IRPF base by the DE row
+- `2026-05-27-m210-irnr-phase-2-engine-W02-P06-summary` - `m210-irnr-phase-2-engine` `W02.P06` summary
 - `2026-05-27-m210-irnr-phase-2-engine-W02-P07-S16` - architect-2 selects classifier-based vs predicate-based shape, determining the S10/S11 and S13/S14 sites (if predicate-based, author a new operator following the S376/S377/S378 pattern, otherwise close as a no-op affirming the classifier-based Steps)
+- `2026-05-27-m210-irnr-phase-2-engine-W02-P07-summary` - `m210-irnr-phase-2-engine` `W02.P07` summary
 
 ### plan
 
