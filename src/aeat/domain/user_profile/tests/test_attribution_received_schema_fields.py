@@ -5,8 +5,7 @@ The ``attribution_received`` repeatable section is the member-side counterpart o
 de bienes, herencia yacente) files Modelo 184 in its own workspace, and a member
 socio records the share it received here so the member's own Modelo 100 has a
 typed, provenance-carrying home for the attributed base. Grounded in LIRPF
-arts. 86-89 (régimen de atribución de rentas) per the
-``2026-07-09-m184-socio-attribution-handoff-adr``.
+arts. 86-89 (régimen de atribución de rentas).
 """
 
 from __future__ import annotations
