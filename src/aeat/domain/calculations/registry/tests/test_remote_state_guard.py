@@ -7,6 +7,7 @@ from pydantic import AnyUrl, ValidationError
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
     AEAT_LEGACY_SEDE_CANARY,
     PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE,
@@ -428,6 +429,67 @@ def test_remote_state_guard_blocks_unknown_aeat_host() -> None:
                 method="GET",
                 url=AnyUrl(aeat_url("www2", UNCLASSIFIED_WWW2_READ_PATH_CANARY)),
             ),
+        )
+
+
+def _host_suffix_policy() -> RemoteStateGuardPolicy:
+    # An authenticated read surface pinned to www6 but widened to accept any
+    # subdomain under the AEAT apex, mirroring the declarations/censo live-pull
+    # guards that must tolerate ``www{n}`` load-balancer dispatch.
+    return RemoteStateGuardPolicy(
+        id="host-suffix-read",
+        evidence_tier="official_source_guidance",
+        classification="authenticated_read_surface",
+        allowed_hosts=(_WWW6_HOST,),
+        allowed_host_suffixes=(AEAT_HOST_SUFFIX_EXPECTED,),
+        synthetic_data_allowed=False,
+        requires_authentication=True,
+        requires_aeat_authorization=True,
+    )
+
+
+def test_host_suffix_admits_sibling_load_balancer_host() -> None:
+    # A GET dispatched to www12 (not the pinned www6) is accepted because the
+    # policy widened to the AEAT apex suffix — the host-mapping-drift fix.
+    result = assert_remote_operation_allowed(
+        _host_suffix_policy(),
+        RemoteOperation(
+            kind="http",
+            method="GET",
+            url=AnyUrl(aeat_url("www12", configured_path("sede_paths", "declarations_listing"))),
+        ),
+    )
+
+    assert result.decision == "allowed"
+
+
+def test_host_suffix_still_refuses_non_aeat_host() -> None:
+    # Widening to the AEAT apex suffix must NOT admit an off-AEAT host: the
+    # suffix is AEAT-owned, so a foreign host still fails closed.
+    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
+        assert_remote_operation_allowed(
+            _host_suffix_policy(),
+            RemoteOperation(
+                kind="http",
+                method="GET",
+                url=AnyUrl("https://attacker.example/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            ),
+        )
+
+
+def test_host_suffix_field_rejects_non_aeat_suffix() -> None:
+    # A declared host suffix MUST itself be an AEAT-owned apex; a foreign
+    # suffix would silently widen the allow-list to a non-AEAT surface.
+    with pytest.raises(ValidationError, match="allowed host suffix is not an AEAT host"):
+        RemoteStateGuardPolicy(
+            id="host-suffix-foreign",
+            evidence_tier="official_source_guidance",
+            classification="authenticated_read_surface",
+            allowed_hosts=(_WWW6_HOST,),
+            allowed_host_suffixes=("example.com",),
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=True,
         )
 
 

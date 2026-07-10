@@ -115,6 +115,7 @@ log = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
+_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
 _COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
 _COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
@@ -143,11 +144,18 @@ def _get_ver_click_timeout_ms() -> int:
     return load_settings().aeat_browser_ver_click_timeout_ms
 
 
+# AEAT dispatches the authenticated sede surface across a ``www{n}``
+# load-balancer pool (www1/www2/www6/www12/sede). Pinning the read guard
+# to a single host (www6) refuses a live justificante/download URL served
+# from a sibling subdomain — a legitimate host-mapping drift, not a write.
+# The guard therefore admits any subdomain under the AEAT apex suffix while
+# success detection stays on the declarations listing/cotejo PATH prefix.
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
+    allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
     allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.declarations_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
