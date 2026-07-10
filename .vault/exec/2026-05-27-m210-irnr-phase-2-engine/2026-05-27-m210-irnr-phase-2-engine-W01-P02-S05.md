@@ -10,45 +10,8 @@ related:
   - "[[2026-07-09-m210-irnr-phase-2-engine-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace m210-irnr-phase-2-engine with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S05 and 2026-05-27-m210-irnr-phase-2-engine-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The declare the M210 plazo windows as REGISTRY deadline_windows TOML (grounded in the bundled CONSOLIDATED Orden EHA/3316/2010 art 5, in vigor 24/06/2026 - amended by HAC/56/2024 art 4.2 + HAC/623/2026 art 1.2), NOT hand-coded in the read-only _plazo.py resolver. CURRENT LAW (supersedes the stale HAC/56/2024 January wording the earlier spec carried): a-ingresar general = 20 primeros dias de abril/julio/octubre/enero por el trimestre natural anterior (period 1T-4T) and ## Scope
-
-- `arrendamiento a-ingresar = 20 primeros dias de ABRIL del ano siguiente`
-- `cuota cero = 1-20 enero`
-- `a devolver = desde el 1 de febrero (4 anos)`
-- `imputadas tipo 02 = presentacion todo el ano natural siguiente (1 enero-31 diciembre`
-- `la domiciliacion es 1 abril-23 diciembre). Only the a-ingresar-general quarterly (1T-4T) is a clean (modelo`
-- `period) window and is built now`
-- `the resultado/tipo-dependent annual plazos are DEFERRED to a resultado/tipo-keyed deadline ADR addendum (a period token cannot express a computed resultado or tipo). period_selector widen (1T-4T) also deferred - pinned EVENT-N by test_modelo_210_registry.py:110`
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/ + src/aeat/_data/registry/aeat/legal/irnr.toml + src/aeat/_data/registry/aeat/modelos/210/revisions/2025/application_links/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # declare the M210 plazo windows as REGISTRY deadline_windows TOML (grounded in the bundled CONSOLIDATED Orden EHA/3316/2010 art 5, in vigor 24/06/2026 - amended by HAC/56/2024 art 4.2 + HAC/623/2026 art 1.2), NOT hand-coded in the read-only _plazo.py resolver. CURRENT LAW (supersedes the stale HAC/56/2024 January wording the earlier spec carried): a-ingresar general = 20 primeros dias de abril/julio/octubre/enero por el trimestre natural anterior (period 1T-4T)
 
