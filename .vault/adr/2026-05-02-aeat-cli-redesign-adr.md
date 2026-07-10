@@ -1,9 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#aeat-cli-redesign'
+  - "#adr"
+  - "#aeat-cli-redesign"
 date: '2026-05-02'
-modified: '2026-07-10'
 related:
   - "[[2026-05-02-aeat-cli-redesign-research]]"
   - "[[2026-05-02-aeat-cli-redesign-reference]]"
@@ -11,9 +10,10 @@ related:
   - "[[2026-04-18-live-submit-cli-excision-adr]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-21-auth-cli-adr]]"
+superseded_by: '2026-05-12-cli-workflow-redesign-adr'
+modified: '2026-07-10'
 ---
-
-# `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `proposed`)
+# `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `superseded`)
 
 ## CLI Backend Boundary
 
