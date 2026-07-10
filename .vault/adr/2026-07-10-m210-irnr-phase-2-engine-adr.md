@@ -88,6 +88,12 @@ as an explicit payer mode; it is never encoded as a missing payer. The row
 validator rejects blank identities, negative components, and invalid exception
 combinations.
 
+The selected official code is a durable M210 input/provenance field on the
+calculation revision. It remains separate from the existing conceptual
+`TipoRentaIrnr` text value used by formula and treaty-rate resolution: codes
+such as `01` and `03` may share that rate concept but are not legally
+interchangeable for aggregation or grouping.
+
 When the operator elects M210 agrupacion/`0A`, the application boundary accepts
 only this M210 row set and passes it explicitly to one registry-authorable
 row-set verification operator. That operator verifies a non-empty set, a single
