@@ -302,6 +302,8 @@ dev = [
   # __init__.py missing, only the .pyc remained, so AttributeError evaded the
   # xdist ImportError fallback).
   "psutil>=5.9",
+  # Reproducible light-theme CLI GIFs for the repository README.
+  "pillow==12.3.0",
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
   "ruff>=0.15.12",
