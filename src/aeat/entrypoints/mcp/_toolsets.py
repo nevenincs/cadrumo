@@ -12,7 +12,7 @@ directly onto their live operator-surface manifest domains
 (:class:`~application.operator_surface.MountedCommandDomain`). The three
 tax-concept toolsets are finer than the family-granular manifest can express, so
 they key on the command tree's own stable segment tokens - the census surface
-(Modelo 036 plus the ``censo`` profile sync), the IVA wallet surface, and the
+(Modelo 036), the IVA wallet surface, and the
 renta draft (borrador) surface. In every case the member set is computed against
 the live command keys, so a verb added to any of these surfaces joins its toolset
 automatically and the console cannot drift from the CLI.

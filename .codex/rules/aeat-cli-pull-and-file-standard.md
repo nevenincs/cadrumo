@@ -48,8 +48,10 @@ locale CLI).
 - **Good:** `aeat app live justificante pull`, `aeat app live expedientes pull`
   / `pull-all`, `aeat app live notifications pull`, `aeat app live filed pull` /
   `pull-all` / `pull-sources`, `aeat app live iva-wallet pull-history` /
-  `pull-remote-state`, `aeat config profile censo pull` — every live AEAT read is
-  a `pull`.
+  `pull-remote-state` — every live AEAT read is a `pull`. (The former
+  `aeat config profile censo pull` was retired with the live censo scrape per
+  the `2026-07-11-censo-operator-manual-enrolment-adr`; censal facts are
+  operator-manual.)
 - **Good:** `aeat app ledger import --file STATEMENT.csv` and
   `aeat app modelo reconcile file --file JUSTIFICANTE.pdf` — the single local
   file is `--file` on both.
