@@ -6,8 +6,8 @@ Assertions
     does not exist on disk and cannot be imported.
 (b) ``CounterpartSourceKind`` has a single canonical home in the domain
     layer; the application layer re-exports it from there.
-(c) Every surviving ``_parse_date`` wrapper in sede/_notifications,
-    sede/_censo, and domain/deadlines/_profiles delegates to the
+(c) Every surviving ``_parse_date`` wrapper in sede/_notifications
+    and domain/deadlines/_profiles delegates to the
     canonical ``aeat.core.parsing._dates._parse_date``.
 (d) ``ApoderadoService`` has production callers in the CLI entrypoint;
     the module is intact and the service is callable.
@@ -95,17 +95,6 @@ def test_notifications_parse_date_delegates_to_canonical() -> None:
     assert notif_mod._parse_date_local("not-a-date") is None, (
         "_parse_date_local must return None on invalid input (on_error='none')"
     )
-
-
-def test_censo_parse_date_delegates_to_canonical() -> None:
-    """sede._censo._parse_date must delegate to core._parse_date_canonical."""
-    from ..adapters.outbound.aeat.sede import CensoParseError
-    from ..adapters.outbound.aeat.sede import _censo as censo_mod
-
-    result = censo_mod._parse_date("15-03-2024", field="activity_start_date")
-    assert result == date(2024, 3, 15)
-    with pytest.raises(CensoParseError, match="activity_start_date"):
-        censo_mod._parse_date("2024-03-15", field="activity_start_date")
 
 
 def test_profiles_parse_date_delegates_to_canonical() -> None:

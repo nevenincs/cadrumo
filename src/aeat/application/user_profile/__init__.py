@@ -71,7 +71,8 @@ See Also:
         Application service for register, edit, rename, duplicate, snapshot, and
         remove operations over :class:`domain.user_profile.UserProfileRecord`.
     :class:`CensoSyncService`
-        Censo snapshot comparison and profile-fact application service.
+        Read-only censo-derived home-office afectación ratio for the ledger
+        proportional-deduction path.
     :mod:`application.bucket_maintenance`
         Bucket lifecycle facade that composes this package's portable-bundle
         serialiser and deserialiser for sealed export/import.
@@ -121,20 +122,11 @@ if TYPE_CHECKING:
         resolve_capability,
     )
     from ._censo_errors import (
-        CensoApplyConflictError,
-        CensoFieldValidationError,
-        CensoNotAvailableError,
         CensoSyncError,
     )
     from ._censo_sync import (
         CENSO_DERIVED_SOURCE_TAG,
         CENSO_SOURCE_TAG,
-        CensoApplyResult,
-        CensoComparisonStatus,
-        CensoFactSource,
-        CensoFieldComparison,
-        CensoProfileComparison,
-        CensoRefreshOutcome,
         CensoSyncService,
     )
     from ._commands import (
@@ -277,24 +269,13 @@ def __getattr__(name: str):
         from ._lifecycle import ProfileLifecycleService
 
         return ProfileLifecycleService
-    if name in (
-        "CensoApplyConflictError",
-        "CensoFieldValidationError",
-        "CensoNotAvailableError",
-        "CensoSyncError",
-    ):
+    if name in ("CensoSyncError",):
         from . import _censo_errors
 
         return getattr(_censo_errors, name)
     if name in (
         "CENSO_DERIVED_SOURCE_TAG",
         "CENSO_SOURCE_TAG",
-        "CensoApplyResult",
-        "CensoComparisonStatus",
-        "CensoFactSource",
-        "CensoFieldComparison",
-        "CensoProfileComparison",
-        "CensoRefreshOutcome",
         "CensoSyncService",
     ):
         from . import _censo_sync
@@ -444,15 +425,6 @@ __all__ = [
     "USER_PROFILE_VALUE_NAMESPACE",
     "CapabilityDecision",
     "CapabilitySource",
-    "CensoApplyConflictError",
-    "CensoApplyResult",
-    "CensoComparisonStatus",
-    "CensoFactSource",
-    "CensoFieldComparison",
-    "CensoFieldValidationError",
-    "CensoNotAvailableError",
-    "CensoProfileComparison",
-    "CensoRefreshOutcome",
     "CensoSyncError",
     "CensoSyncService",
     "CustodyRecoverResult",

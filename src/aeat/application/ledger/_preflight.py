@@ -411,8 +411,8 @@ def _issues_for_transaction(
                 **common,
                 reason=LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH,
                 detail=(
-                    f"{censo_ratio_mismatch_detail}; run 'aeat config profile censo pull' and "
-                    "'aeat config profile censo apply', or unset the HOME_OFFICE ratio before using it in modelo "
+                    f"{censo_ratio_mismatch_detail}; update your censo vivienda_office data with "
+                    "'aeat config profile edit', or unset the HOME_OFFICE ratio before using it in modelo "
                     "calculations"
                 ),
             ),

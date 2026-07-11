@@ -15,9 +15,10 @@ namespaced secure-object key, and a closed ACTIVE / SUPERSEDED /
 DISCARDED state machine. Re-fetch auto-supersedes the prior ACTIVE
 snapshot for the same profile.
 
-The CLI-facing ``CensoSyncService`` is the only caller; the
-sede G313 adapter populates ``censo_facts`` from the live
-Mis Datos Censales endpoint.
+``CensoSyncService.bound_raw_afectacion_ratio`` reads the latest ACTIVE
+snapshot to derive the ledger home-office afectación ratio. The live
+Modelo 036 scrape that once populated ``censo_facts`` was retired;
+censal facts are operator-supplied through ``config profile edit``.
 """
 
 from __future__ import annotations
@@ -199,7 +200,7 @@ class CensoSnapshotRepository:
                 object_key=censo_snapshot_object_key,
                 not_found_factory=lambda snapshot_id: CensoSnapshotNotFoundError(
                     f"censo snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                    suggestion="aeat config profile censo pull",
+                    suggestion="aeat config profile edit",
                 ),
                 ambiguous_prefix_factory=lambda snapshot_id, _full_ids: CensoSnapshotNotFoundError(
                     f"censo snapshot prefix {snapshot_id!r} is ambiguous",
@@ -241,17 +242,14 @@ class CensoSnapshotRepository:
 class CensoSnapshotService(SnapshotService[CensoSnapshot]):
     """Canonical backend service for bucket-scoped 036 censo snapshots.
 
-    Mirrors :class:`Borrador100SnapshotService`. The CLI's
-    `CensoSyncService.refresh_censo` is the only caller of
-    :meth:`capture`; `show_censo` reads via :meth:`latest_active`
-    and ``resolve_snapshot``; `apply_censo_to_profile` reads
-    via :meth:`latest_active`.
+    Mirrors :class:`Borrador100SnapshotService`. The ledger
+    proportional-deduction path reads the latest ACTIVE snapshot via
+    :meth:`latest_active` (through ``CensoSyncService.bound_raw_afectacion_ratio``)
+    to derive the home-office afectación ratio.
 
-    The caller is responsible for emitting the
-    `CENSO_REFRESHED` bucket event after a successful capture (the
-    snapshot service itself is intentionally event-free so the same
-    machinery can be exercised from test scaffolding without
-    polluting the bucket-event-history catalogue).
+    The snapshot service itself is intentionally event-free so the same
+    machinery can be exercised from test scaffolding without polluting
+    the bucket-event-history catalogue.
     """
 
     def __init__(
@@ -324,10 +322,10 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
     def latest_active(self, *, profile_id: str) -> CensoSnapshot | None:
         """Return the most recently captured ACTIVE snapshot for a profile.
 
-        Serves the ``show_censo`` and ``apply_censo_to_profile`` CLI verbs,
-        which need the single current view of an operator's Modelo 036 census
-        facts. Selects the ACTIVE snapshot with the latest ``captured_at`` for
-        the given profile.
+        Serves ``CensoSyncService.bound_raw_afectacion_ratio``, which needs the
+        single current view of an operator's Modelo 036 census facts. Selects
+        the ACTIVE snapshot with the latest ``captured_at`` for the given
+        profile.
 
         Args:
             profile_id: Operator profile whose latest capture is wanted.

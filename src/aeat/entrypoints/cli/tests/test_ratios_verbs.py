@@ -19,7 +19,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _AEAT = Settings.external_constants().aeat
-_G313_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
+_G313_URL = f"{_AEAT.domains.sede}/operator-declared-censo"
 _CENSO_CAPTURED_AT = datetime(2026, 5, 28, 13, 45, 0, tzinfo=UTC)
 
 

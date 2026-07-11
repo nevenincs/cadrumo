@@ -200,8 +200,8 @@ def load_usage_ratios_with_censo_guard(
     (calculate / verify / file / build_draft / approve_draft /
     export_draft) must therefore surface the underlying
     :exc:`CensoRatioMismatchError` to the operator so they can
-    re-run ``aeat config profile censo pull + apply`` or unset
-    the diverging override.
+    update their censo vivienda_office data via
+    ``aeat config profile edit`` or unset the diverging override.
 
     Args:
         bucket_id: Active workflow bucket id.

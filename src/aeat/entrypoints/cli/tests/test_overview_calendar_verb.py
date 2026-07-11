@@ -36,7 +36,7 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....tests.cli_runner import invoke_cached_cli
-from .._overview import _calendar_shift_reason_text
+from .._overview import _calendar_shift_reason_text, _live_censo_verified_profile_keys
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
@@ -773,3 +773,42 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
     # Output is structured with per-profile header lines.
     profile_lines = [line for line in result.output.splitlines() if line.startswith("profile\t")]
     assert len(profile_lines) == 2, f"expected 2 profile header lines, got: {result.output}"
+
+
+def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> None:
+    """Retirement guard: operator-entered censal facts (``config profile edit``,
+    stamped ``PROVENANCE_SOURCE_MANUAL_CLI``) are a non-official evidence tier and
+    must never be counted as AEAT-verified censo — the analog of
+    ``app_filing not in _OFFICIAL_SOURCE_KINDS``. With the live scrape retired,
+    nothing stamps the verified censo tags, so the verified-key set stays empty
+    for a hand-entered profile and the calendar keeps its unverified posture.
+    """
+    from ....application.user_profile import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+    from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+
+    verified_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+    assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
+
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator-declared censo",
+        facts=(
+            UserProfileFact(
+                path="activities.iae_epigraph",
+                value="861",
+                source=PROVENANCE_SOURCE_MANUAL_CLI,
+            ),
+            UserProfileFact(
+                path="iva.regime",
+                value="general",
+                source=CENSO_SOURCE_TAG,
+            ),
+        ),
+    )
+
+    verified = _live_censo_verified_profile_keys(record)
+    # The manual-cli fact is excluded; only a censo-stamped fact would count,
+    # proving the filter is the source-tag gate and not a vacuous empty return.
+    assert "activities.iae_epigraph" not in verified
+    assert verified == ("iva.regime",)

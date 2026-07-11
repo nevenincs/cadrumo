@@ -45,7 +45,6 @@ Submodules
    aeat.domain.portals._entries.portal_m720_bienes_extranjero
    aeat.domain.portals._entries.portal_m840_iae
    aeat.domain.portals._entries.portal_mi_area_personal
-   aeat.domain.portals._entries.portal_mis_datos_censales
    aeat.domain.portals._entries.portal_mis_documentos_pendientes_firma
    aeat.domain.portals._entries.portal_mis_expedientes
    aeat.domain.portals._entries.portal_mis_notificaciones

@@ -57,7 +57,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path)
     assert report.checked_transaction_count == 1
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH]
     assert "persisted HOME_OFFICE overrides require an applied censo" in report.issues[0].detail
-    assert "aeat config profile censo" in report.issues[0].detail
+    assert "aeat config profile edit" in report.issues[0].detail
 
 
 def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(tmp_path: Path) -> None:

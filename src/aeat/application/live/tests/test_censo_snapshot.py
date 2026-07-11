@@ -41,10 +41,7 @@ _SNAPSHOT_BUCKET_ID = _SESSION_BUCKET_ID
 _OTHER_BUCKET_ID = "48484848-4848-4484-8484-484848484848"
 _SHARED_BUCKET_ID = _SESSION_BUCKET_ID
 _DISCARD_ACTOR = "operator-label"
-_G313_URL = (
-    f"{Settings.external_constants().aeat.domains.sede}"
-    f"{Settings.external_constants().aeat.sede_paths.censo_g313_launcher}"
-)
+_G313_URL = f"{Settings.external_constants().aeat.domains.sede}/operator-declared-censo"
 
 
 class _DeriveKwargs(TypedDict):

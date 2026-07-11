@@ -18,6 +18,7 @@ from ....domain.deadlines import (
     ObligationStatus,
     TaxpayerProfile,
 )
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ...live import PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
 from .. import (
     OverviewCalendar,
@@ -35,6 +36,7 @@ from .. import (
     calendar_events_from_notification_snapshots,
     user_state_for,
 )
+from .._calendar import _registry_window_for_work_unit
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
 )
@@ -49,6 +51,57 @@ from .calendar_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _annual_work_unit_without_authored_window(*, modelo: str, filing_year: int) -> WorkUnit:
+    """Build a real historic annual work unit for overview deadline lookup."""
+    period = Period.from_year_and_code(filing_year, "0A")
+    revision_id = "historic-annual-deadline-selection"
+    created_at = datetime(filing_year, 1, 2, tzinfo=UTC)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=ModeloCode(modelo),
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"historic-{modelo}-{filing_year}",
+        created_at=created_at,
+        updated_at=created_at,
+    )
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "calendar_range"),
+    (
+        ("180", 2023, OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 1, 31))),
+        ("100", 2019, OverviewCalendarRange(from_date=date(2021, 4, 1), to_date=date(2021, 6, 30))),
+    ),
+)
+def test_calendar_does_not_project_historic_annual_work_into_future_registry_window(
+    modelo: str,
+    filing_year: int,
+    calendar_range: OverviewCalendarRange,
+) -> None:
+    """Overview retains an unregistered annual work unit instead of borrowing the successor's campaign."""
+    work_unit = _annual_work_unit_without_authored_window(modelo=modelo, filing_year=filing_year)
+
+    assert _registry_window_for_work_unit(work_unit) is None
+
+    calendar = build_overview_calendar(
+        _profile(),
+        calendar_range,
+        today=calendar_range.from_date,
+        work_units=(work_unit,),
+    )
+
+    assert all(entry.local_work_unit_id != work_unit.work_unit_id for entry in calendar.entries)
 
 
 def test_calendar_censo_enrolment_profile_keys_are_centralised() -> None:
@@ -109,6 +162,36 @@ def test_calendar_censo_warning_clears_when_every_modelo_enrolment_key_is_verifi
     assert modelo_303.censo_enrolment_state is OverviewCensoEnrolmentState.VERIFIED
     censo_warnings = [item for item in calendar.warnings if item.code == "censo.enrolment_unverified"]
     assert not any("303" in warning.affected_modelos for warning in censo_warnings)
+
+
+def test_calendar_keeps_unverified_posture_when_no_censo_is_verified() -> None:
+    """Retirement guard: with the live censo scrape retired, nothing stamps a
+    censo-verified fact, so the calendar keeps its honest ``censo.enrolment_unverified``
+    posture for every censo-dependent modelo when the verified-key set is empty.
+
+    Pins the honest default the 2026-07-11-censo-operator-manual-enrolment ADR
+    preserves: an empty ``live_censo_verified_profile_keys`` (the post-retirement
+    reality) must never grant a VERIFIED enrolment state.
+    """
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31)),
+        today=date(2025, 1, 1),
+        live_censo_verified_profile_keys=(),
+    )
+
+    censo_dependent = {"100", "130", "303", "390"}
+    present = {entry.modelo for entry in calendar.entries} & censo_dependent
+    assert present, "fixture must yield at least one censo-dependent modelo"
+
+    for entry in calendar.entries:
+        assert entry.censo_enrolment_state is not OverviewCensoEnrolmentState.VERIFIED
+
+    warning = next(item for item in calendar.warnings if item.code == "censo.enrolment_unverified")
+    for modelo in present:
+        entry = next(item for item in calendar.entries if item.modelo == modelo)
+        assert entry.censo_enrolment_state is OverviewCensoEnrolmentState.UNVERIFIED
+        assert modelo in warning.affected_modelos
 
 
 def test_calendar_entry_marks_censo_enrolment_not_checked_when_no_live_censo_scope() -> None:
@@ -728,7 +811,7 @@ def test_build_orders_entries_by_close_then_modelo_then_period() -> None:
         today=date(2026, 4, 1),
     )
     keys = [
-        (entry.closes_on, entry.modelo, entry.period.year, entry.period.registry_token) for entry in calendar.entries
+        (entry.closes_on, entry.modelo, entry.period.filing_year, entry.period.registry_token) for entry in calendar.entries
     ]
     assert keys == sorted(keys)
 
@@ -740,7 +823,7 @@ def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary() -> No
         OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20)),
         today=date(2026, 5, 3),
     )
-    years = {entry.period.year for entry in calendar.entries}
+    years = {entry.period.filing_year for entry in calendar.entries}
     # The range straddles 2025 -> 2026, so both years must contribute.
     assert 2025 in years or 2026 in years
 
