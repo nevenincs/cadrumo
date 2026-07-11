@@ -30,7 +30,7 @@ published_at = 1992-12-29
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 9 bis: acuerdo de ventas de bienes en consigna. Define las transferencias intracomunitarias en consigna, el plazo de doce meses, y la inclusion reglamentaria en declaracion recapitulativa. Base sustantiva de las claves M349 R, D y C desde la revision 2020."
 required_text = [
     "Acuerdo de ventas de bienes en consigna",
@@ -70,7 +70,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 80: modificacion de la base imponible. Grounds rectified M349 bases where the declared intracommunity operation base changes because the taxable base is reduced or otherwise modified."
 required_text = [
     "Modificación de la base imponible",
@@ -322,7 +322,7 @@ published_at = 1992-12-29
 effective_from = 2011-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 27.12: importaciones exentas followed by onward delivery to another Member State. Base sustantiva de las claves M349 M y H when the M349 instructions cite importacion exenta and representative-fiscal flows."
 required_text = [
     "Importaciones de bienes cuya entrega en el interior estuviese exenta del impuesto",
@@ -342,7 +342,7 @@ published_at = 1992-12-29
 effective_from = 2010-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 69: general place-of-supply rules for services. Grounds M349 intracommunity service prestation/acquisition keys S and I together with the RIVA recapitulativa obligation."
 required_text = [
     "Lugar de realización de las prestaciones de servicios. Reglas generales",
@@ -361,7 +361,7 @@ published_at = 1992-12-29
 effective_from = 2010-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 70: special place-of-supply rules for services. Complements art 69 for M349 service keys S and I where official instructions distinguish services localized in or outside the TAI."
 required_text = [
     "Lugar de realización de las prestaciones de servicios. Reglas especiales",
@@ -380,7 +380,7 @@ published_at = 1992-12-29
 effective_from = 2011-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 86.3: import representative-fiscal obligation for importations covered by art 27.12. Base sustantiva for M349 key H where the instructions require representative-fiscal deliveries after exempt import."
 required_text = [
     "Sujetos pasivos",
@@ -420,7 +420,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 121: determinacion del volumen de operaciones. Defines the operation-volume calculation used by regulated thresholds, including the RIVA art 71 large-company monthly liquidation threshold."
 required_text = [
     "Determinación del volumen de operaciones",
@@ -464,7 +464,7 @@ published_at = 1992-12-31
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Reglamento del IVA art 79: obligation to present the declaracion recapitulativa. Enumerates the M349 operation universe: intracommunity deliveries, acquisitions, services, triangular subsequent deliveries, and consignment-sale movements."
 required_text = [
     "Obligación de presentar la declaración recapitulativa",
@@ -484,7 +484,7 @@ published_at = 1992-12-31
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Reglamento del IVA art 80: content of the declaracion recapitulativa, including identification data, operation bases/importes, consignment-sale information, and rectification of erroneous recapitulativa data."
 required_text = [
     "Contenido de la declaración recapitulativa",
@@ -504,7 +504,7 @@ published_at = 1992-12-31
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Reglamento del IVA art 81: place, form, filing periods, and deadlines for the declaracion recapitulativa. Grounds Modelo 349 monthly cadence and the 50,000 EUR quarterly-threshold exception across the reference quarter and four prior natural quarters."
 required_text = [
     "Lugar, forma y plazos de presentacion de la declaracion recapitulativa",
@@ -526,7 +526,7 @@ published_at = 1992-12-31
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-19
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Reglamento del IVA art 29: forma de las devoluciones de oficio vinculadas al articulo 115 LIVA."
 required_text = [
     "Devoluciones de oficio",
@@ -546,7 +546,7 @@ published_at = 1992-12-31
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-19
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Reglamento del IVA art 30: registro de devolucion mensual y limites para solicitar devolucion en periodos distintos del ultimo periodo anual."
 required_text = [
     "Devoluciones al término de cada período de liquidación",

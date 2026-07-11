@@ -100,7 +100,7 @@ published_at = 2021-09-28
 effective_from = 2021-09-28
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Orden HAC/1023/2021: aprueba los modelos de declaracion del Impuesto sobre el Patrimonio, ejercicio 2021 y siguientes, incluido el Modelo 714."
 required_text = [
     "se aprueban los modelos de declaración",

@@ -10,7 +10,7 @@ published_at = 2011-01-05
 effective_from = 2011-01-05
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Resolucion de 3 de enero de 2011 que aprueba el Modelo 145 como comunicacion de datos del perceptor de rentas del trabajo a su pagador."
 required_text = [
     "Aprobación del modelo 145",
@@ -30,7 +30,7 @@ published_at = 2014-01-03
 effective_from = 2014-01-03
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Resolucion de 17 de diciembre de 2013 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2014."
 required_text = [
     "queda modificada como sigue",
@@ -50,7 +50,7 @@ published_at = 2014-12-31
 effective_from = 2014-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Resolucion de 18 de diciembre de 2014 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2015."
 required_text = [
     "queda modificada como sigue",

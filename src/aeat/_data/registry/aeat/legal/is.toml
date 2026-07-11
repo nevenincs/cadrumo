@@ -10,7 +10,7 @@ published_at = 2014-11-28
 effective_from = 2015-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (verified against official BOE-A-2014-12328 consolidated art. 7; corpus excerpt bundled)"
+reviewed_by = "verified against official BOE-A-2014-12328 consolidated art. 7; corpus excerpt bundled"
 notes = "LIS art 7 defines contributors to Impuesto sobre Sociedades, including resident legal persons and using the abbreviated designations sociedades or entidades. Grounds the legal_entity branch of the profile entity-type axis."
 required_text = [
     "Contribuyentes",
@@ -390,7 +390,7 @@ effective_from = 2002-12-25
 consolidated_as_of = 2023-12-20
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex (verified against live BOE-A-2002-25039 art. 10 and bundled corpus excerpt)"
+reviewed_by = "verified against live BOE-A-2002-25039 art. 10 and bundled corpus excerpt"
 notes = "Ley 49/2002 art 10: regime-specific Impuesto sobre Sociedades rate for positive taxable base from non-exempt economic activities of entities without profit motive under Title II; supports the Modelo 200 10 percent special-regime branch alongside LIS art 29.3."
 required_text = [
     "Artículo 10. Tipo de gravamen.",
@@ -412,7 +412,7 @@ effective_from = 2002-12-25
 consolidated_as_of = 2023-12-20
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex (verified against live BOE-A-2002-25039 art. 14 and bundled corpus excerpt)"
+reviewed_by = "verified against live BOE-A-2002-25039 art. 14 and bundled corpus excerpt"
 notes = "Ley 49/2002 art 14: application of the Title II special fiscal regime by option in the regulatory form/period, indefinite linkage while art. 3 requirements remain met and no renunciation is filed, proof burden on the entity, and non-compliance repayment consequences."
 required_text = [
     "Artículo 14. Aplicación del régimen fiscal especial.",
@@ -445,7 +445,7 @@ effective_from = 2002-12-25
 consolidated_as_of = 2023-12-20
 review_status = "reviewed"
 reviewed_at = 2026-06-30
-reviewed_by = "claude (agent-prepared; verified against live BOE-A-2002-25039 art. 6 consolidated text 2023-12-20; pending operator re-stamp)"
+reviewed_by = "agent-prepared; verified against live BOE-A-2002-25039 art. 6 consolidated text 2023-12-20; pending operator re-stamp"
 notes = "Ley 49/2002 art 6: rentas exentas del Impuesto sobre Sociedades obtenidas por entidades sin fines lucrativos del Título II — donativos y donaciones, cuotas de asociados/colaboradores/benefactores, subvenciones (salvo las que financian explotaciones no exentas), rendimientos del patrimonio mobiliario e inmobiliario, rentas de adquisiciones/transmisiones, rentas de explotaciones económicas exentas del art. 7, y rentas atribuidas/imputadas procedentes de rentas exentas. Grounds the Modelo 200 régimen-especial disminución corrections that exclude exempt income from the base imponible."
 required_text = [
     "Artículo 6. Rentas exentas.",
@@ -476,7 +476,7 @@ effective_from = 2024-01-01
 consolidated_as_of = 2023-12-20
 review_status = "reviewed"
 reviewed_at = 2026-06-30
-reviewed_by = "claude (agent-prepared; verified against live BOE-A-2002-25039 art. 7 consolidated text 2023-12-20, apartado 12.º RD-ley 6/2023; pending operator re-stamp)"
+reviewed_by = "agent-prepared; verified against live BOE-A-2002-25039 art. 7 consolidated text 2023-12-20, apartado 12.º RD-ley 6/2023; pending operator re-stamp"
 notes = "Ley 49/2002 art 7: explotaciones económicas exentas del Impuesto sobre Sociedades cuando se desarrollan en cumplimiento del objeto o finalidad específica de la entidad sin fines lucrativos (acción/asistencia social, hospitalización y asistencia sanitaria, I+D+i del art. 35 LIS, bienes de interés cultural y museos, artes escénicas, espacios naturales protegidos, enseñanza y formación, exposiciones y seminarios, edición, deporte, auxiliares/complementarias hasta el 20%, y escasa relevancia con INCN ≤ 20.000 EUR). Su renta es la renta exenta del art. 6.4.º excluida de la base imponible del Modelo 200."
 required_text = [
     "Artículo 7. Explotaciones económicas exentas.",
@@ -525,7 +525,7 @@ published_at = 2014-11-28
 effective_from = 2015-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-27
-reviewed_by = "codex (bundled corpus excerpt cross-checked against live BOE)"
+reviewed_by = "bundled corpus excerpt cross-checked against live BOE"
 notes = "LIS art 101: define the entidades de reducida dimensión threshold by prior-period INCN below 10 million euros and the annualisation/group rules used by DT 44 ERD rate dispatch."
 required_text = [
     "inferior a 10 millones de euros",
@@ -659,7 +659,7 @@ published_at = 2018-07-04
 effective_from = 2018-07-05
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "coordinator-web-verified (agent-prepared; verified against live BOE-A-2014-12328 consolidated DA-14ª and the AEAT Modelo 202 clave 33 instructions; redacción vigente del art. 71 de la Ley 6/2018 (BOE-A-2018-9268); STC 78/2020 anuló por motivos formales la redacción originaria del RDL 2/2016; STC 175/2025 declaró la redacción de la Ley 6/2018 conforme a la capacidad económica; pending operator re-stamp)"
+reviewed_by = "agent-prepared; verified against live BOE-A-2014-12328 consolidated DA-14ª and the AEAT Modelo 202 clave 33 instructions; redacción vigente del art. 71 de la Ley 6/2018 (BOE-A-2018-9268); STC 78/2020 anuló por motivos formales la redacción originaria del RDL 2/2016; STC 175/2025 declaró la redacción de la Ley 6/2018 conforme a la capacidad económica; pending operator re-stamp"
 notes = "LIS disposición adicional decimocuarta (redacción del art. 71 de la Ley 6/2018, BOE-A-2018-9268): pago fraccionado mínimo de la modalidad del art. 40.3 de la LIS. Para contribuyentes cuyo importe neto de la cifra de negocios en los 12 meses anteriores sea al menos 10 millones de euros, la cantidad a ingresar no podrá ser inferior al 23 por ciento (25 por ciento para las entidades a las que resulte de aplicación el tipo del primer párrafo del apartado 6 del art. 29) del resultado positivo de la cuenta de pérdidas y ganancias de los 3, 9 u 11 primeros meses, minorado en los pagos fraccionados anteriores del mismo período impositivo. Funda la casilla 33 del Modelo 202 (mínimo a ingresar, CN >= 10 millones euros)."
 required_text = [
     "no podrá ser inferior",
@@ -681,7 +681,7 @@ effective_from = 2017-03-16
 consolidated_as_of = 2025-03-19
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex (downloaded consolidated BOE-A-2017-2778 from BOE on 2026-06-29)"
+reviewed_by = "downloaded consolidated BOE-A-2017-2778 from BOE on 2026-06-29"
 notes = "Base approval order for Modelo 202 pagos fraccionados. Article 1 approves the model and establishes mandatory use for IS and IRNR permanent-establishment pagos fraccionados."
 required_text = [
     "Artículo 1. Aprobación del modelo 202",
@@ -745,7 +745,7 @@ published_at = 2018-09-14
 effective_from = 2018-09-15
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex (downloaded BOE-A-2018-12515 from BOE on 2026-06-29)"
+reviewed_by = "downloaded BOE-A-2018-12515 from BOE on 2026-06-29"
 notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017. Grounds the 2019-2022 record-design revision, whose official AEAT design is labelled Orden HAC/941/2018."
 required_text = [
     "Artículo primero. Modificación de la Orden HFP/227/2017",
@@ -766,7 +766,7 @@ published_at = 2023-03-31
 effective_from = 2023-04-01
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex (downloaded BOE-A-2023-8120 from BOE on 2026-06-29)"
+reviewed_by = "downloaded BOE-A-2023-8120 from BOE on 2026-06-29"
 notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017 for the 2023-2024 form surface."
 required_text = [
     "Artículo único. Modificación de la Orden HFP/227/2017",
@@ -786,7 +786,7 @@ published_at = 2025-03-19
 effective_from = 2025-03-20
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex (downloaded BOE-A-2025-5407 from BOE on 2026-06-29)"
+reviewed_by = "downloaded BOE-A-2025-5407 from BOE on 2026-06-29"
 notes = "Current amendment order replacing Modelo 202 annex I under Orden HFP/227/2017, first applicable to pagos fraccionados whose filing period begins in April 2025."
 required_text = [
     "Artículo único. Modificación de la Orden HFP/227/2017",
@@ -1124,7 +1124,7 @@ published_at = 2002-05-24
 effective_from = 2002-05-25
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (verified against official BOE-A-2002-9969 consolidated art. 15; corpus excerpt bundled)"
+reviewed_by = "verified against official BOE-A-2002-9969 consolidated art. 15; corpus excerpt bundled"
 notes = "Concierto Economico Pais Vasco art 15: Impuesto sobre Sociedades taxpayers that tribute jointly to the Diputaciones Forales and the Administracion del Estado allocate the tax in proportion to the volume of operations in each territory, expressed as a percentage. Grounds the Modelo 200 Estado/foral percentage profile fact."
 required_text = [
     "Impuesto sobre Sociedades",
@@ -1146,7 +1146,7 @@ published_at = 1990-12-27
 effective_from = 2003-07-17
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (verified against official BOE-A-1990-31117 consolidated art. 19; corpus excerpt bundled)"
+reviewed_by = "verified against official BOE-A-1990-31117 consolidated art. 19; corpus excerpt bundled"
 notes = "Convenio Economico Navarra art 19: Impuesto sobre Sociedades taxpayers operating in common and Navarra territories tribute jointly to both Administrations in proportion to operation volume, expressed as a percentage. Grounds the Modelo 200 Estado/Navarra percentage profile fact."
 required_text = [
     "Comunidad Foral de Navarra",
@@ -1188,7 +1188,7 @@ published_at = 2025-06-24
 effective_from = 2025-07-01
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Orden HAC/657/2025: aprueba el Modelo 200 de declaracion del Impuesto sobre Sociedades para periodos impositivos iniciados en 2024; the bundled BOE excerpt carries the Art. 6 reference to Art. 1 approval, deadline, entry into force, and Modelo 200 heading."
 required_text = [
     "modelo 200 de declaración del Impuesto sobre Sociedades",
@@ -1326,7 +1326,7 @@ published_at = 2015-10-22
 effective_from = 2015-10-24
 review_status = "reviewed"
 reviewed_at = 2026-06-30
-reviewed_by = "codex (verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt currentized)"
+reviewed_by = "verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt currentized"
 notes = "Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al menos una cifra superior al doble del capital social. El articulo tambien limita el destino de la reserva a compensar perdidas cuando no haya otras reservas disponibles suficientes y/o a adquirir acciones o participaciones propias para enajenarlas a trabajadores indefinidos conforme al art 12. La reduccion de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente en Ley 44/2015 art 13."
 required_text = [
     "reserva especial",

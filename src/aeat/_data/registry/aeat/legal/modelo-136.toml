@@ -11,7 +11,7 @@ effective_from = 2020-01-01
 consolidated_as_of = 2026-07-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE consolidated LIRPF corpus audit on 2026-07-01)"
+reviewed_by = "official BOE consolidated LIRPF corpus audit on 2026-07-01"
 notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and autoliquidation duty when no withholding or payment on account applies."
 required_text = [
     "Gravamen especial sobre los premios de determinadas loterias y apuestas",
@@ -34,7 +34,7 @@ published_at = 2013-01-31
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 5 approves Modelo 136 and identifies the form title."
 required_text = [
     "Articulo 5. Aprobacion del modelo 136",
@@ -54,7 +54,7 @@ published_at = 2013-01-31
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 6 defines the taxpayers obliged to file Modelo 136."
 required_text = [
     "Articulo 6. Obligados a presentar el modelo 136",
@@ -74,7 +74,7 @@ published_at = 2013-01-31
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 7 sets quarterly Modelo 136 filing and payment windows."
 required_text = [
     "Articulo 7. Plazos de presentacion del modelo 136",
@@ -94,7 +94,7 @@ published_at = 2013-01-31
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 10 defines general electronic filing conditions for Modelos 230 and 136."
 required_text = [
     "Articulo 10. Condiciones generales para la presentacion telematica de los modelos 230 y 136",
@@ -114,7 +114,7 @@ published_at = 2013-01-31
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 11 defines the internet filing procedure, the quarterly period codes, and the positive amount-to-enter condition for Modelo 136."
 required_text = [
     "Articulo 11. Procedimiento para la presentacion telematica por Internet de los modelos 230 y 136",
@@ -135,7 +135,7 @@ published_at = 2013-01-31
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 12 grounds the banking and domiciliation payment fields used by Modelo 136."
 required_text = [
     "Articulo 12. Pago de las deudas tributarias resultantes de las autoliquidaciones de los modelos 230 o 136 mediante domiciliacion bancaria",
@@ -155,7 +155,7 @@ published_at = 2018-07-18
 effective_from = 2018-07-19
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
 notes = "Articulo tercero replaces the Modelo 136 annex in Orden HAP/70/2013 with the current form in Anexo III."
 required_text = [
     "Articulo tercero. Modificacion de la Orden HAP/70/2013",
@@ -175,7 +175,7 @@ published_at = 2018-07-18
 effective_from = 2018-07-19
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01)"
+reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
 notes = "Final provision: the new Modelo 136 applies to 2018 Q3 and later autoliquidations."
 required_text = [
     "Disposicion final unica. Entrada en vigor",
