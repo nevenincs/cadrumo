@@ -66,9 +66,9 @@ be calculated:
   profile. Modelo 303 depends on IVA facts such as `--iva-regime`,
   `--iva-sii-enrolled`, `--iva-redeme-enrolled`, ROI/OSS enrollment, activity
   and residence facts, and the active profile.
-- If you use AEAT census data, [link Modelo 036 census information](censo-update.md)
-  before calculating. Censo facts can affect profile readiness and local
-  classifications.
+- Check your census facts before calculating - see
+  [Maintain Modelo 036 census facts in your profile](censo-update.md). Censo
+  facts can affect profile readiness and local classifications.
 - [Plan your filing calendar](filing-calendar.md) and confirm the period token
   with [Understand filing periods](filing-periods.md). Standard non-exempt
   profiles use quarterly periods such as `1T`; monthly IVA-liquidation profiles

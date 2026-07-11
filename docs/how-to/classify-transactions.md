@@ -139,11 +139,9 @@ Remove a category ratio you no longer want with
 `aeat app ledger ratios unset <category-id>`.
 
 For home-office expenses, save a ratio for the relevant home-office category
-and allocate as above. If you have linked and applied Modelo 036 censo facts
-with valid home-office area data, `aeat` can seed censo-derived home-office
-ratios for relevant categories. See
-[Link Modelo 036 census information](censo-update.md) before relying on that
-ratio.
+and allocate as above. Home-office ratios follow the manual or saved ratio
+workflow; keep the census facts in your profile correct first - see
+[Maintain Modelo 036 census facts in your profile](censo-update.md).
 
 ## Classify many rows from CSV
 

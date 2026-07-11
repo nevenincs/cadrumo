@@ -3,7 +3,8 @@ name: cese-actividad
 description: >-
   Life-situation itinerary for ceasing an economic activity: record the
   end date on the profile, treat the censo baja (Modelo 036) as the
-  taxpayer's own AEAT-portal act, mirror the resulting censo state, and
+  taxpayer's own AEAT-portal act, record the resulting censo facts on
+  the profile by hand, and
   close out the tail obligations the ceased activity still owes — the
   final quarter's filings and the following year's annual summaries. Use
   when the taxpayer is ceasing (or has ceased) an activity — the
@@ -22,8 +23,8 @@ Gating situation: the taxpayer is winding an activity down. The defining
 truth of a cese — and the thing most taxpayers get wrong — is that the
 obligations do NOT end on the cease date: the final quarter still files,
 and the next year's annual summaries and declaraciones still cover the
-activity's last year. This itinerary records the end honestly, mirrors
-the censo baja, and keeps the obligation tail visible until it is
+activity's last year. This itinerary records the end honestly, records
+the censo baja's facts on the profile, and keeps the obligation tail visible until it is
 actually empty. The same censo honesty rule as the alta applies: the
 application does not prepare or file the Modelo 036 baja censal — the
 taxpayer files it in the AEAT portal or through their gestor.
@@ -45,10 +46,13 @@ taxpayer files it in the AEAT portal or through their gestor.
 2. The censo baja itself: tell the taxpayer plainly that the Modelo 036
    baja censal is filed in the AEAT portal (or by their gestor). This
    application records and derives; it does not file the baja.
-3. After the baja is filed, mirror the official censo state:
-   `aeat config profile censo pull`, review with
-   `aeat config profile censo compare`, and apply what the taxpayer
-   confirms with `aeat config profile censo apply`.
+3. After the baja is filed, record the official censo state by hand:
+   read the filed Modelo 036 baja with the taxpayer and enter the
+   resulting facts through `aeat config profile edit`. AEAT publishes no
+   read-only censo view this application could fetch, so the profile
+   mirrors AEAT only as faithfully as the taxpayer's own copy; the
+   calendar keeps its `censo.enrolment_unverified` disclosure because
+   the facts are operator-declared, not AEAT-verified.
 4. Derive the tail: `aeat app overview agenda` for what is still due, and
    `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>`
    across the final quarter AND the following year's annual windows.
