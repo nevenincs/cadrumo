@@ -6,6 +6,7 @@ tags:
 date: '2026-07-11'
 modified: '2026-07-11'
 related:
+  - '[[2026-07-11-censo-operator-manual-enrolment-P02-S06]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-plan]]'
 ---
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#censo-operator-manual-enrolm
 ### adr
 
 - `2026-07-11-censo-operator-manual-enrolment-adr` - `censo-operator-manual-enrolment` adr: `censal facts are operator-manual; retire the live censo scrape` | (**status:** `accepted`)
+
+### exec
+
+- `2026-07-11-censo-operator-manual-enrolment-P02-S06` - Re-author the inicio-actividad and cese-actividad agent skills onto the operator-manual censo mirror so the rule-surface conformance gate stays green
 
 ### plan
 
