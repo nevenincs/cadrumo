@@ -56,8 +56,8 @@ MIN_DISTINCT_RENTA_YEARS: Final[int] = 2
 #: ``modelos/``). The manifest is directory-mode: each enrolled modelo owns
 #: one ``authorization.d/<modelo>.toml`` file, mirroring the registry's own
 #: directory-mode layout. The loader merges every fragment. Per-modelo
-#: files mean concurrent enrollment across the campaign swarm writes
-#: disjoint files — zero cross-coder contention on a single manifest.
+#: files let concurrent enrollment target disjoint files — zero
+#: contention on a single shared manifest.
 AUTHORIZATION_MANIFEST_DIRNAME: Final[str] = "authorization.d"
 
 #: The canonical fleet of modelo ids the gate enrolls. The owner mandate

@@ -20,7 +20,7 @@ published_at = 1991-06-06
 effective_from = 1991-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "coder-opus-iva"
+reviewed_by = "agent-review"
 notes = "Ley 19/1991 Art. 28 — base liquidable y mínimo exento del Impuesto sobre el Patrimonio. El mínimo exento general es de 700.000 euros, con competencia autonómica para modificarlo (CV: 600.000 €). Declaración: Modelo 714 (Orden HAC/1023/2021). document_id corregido a BOE-A-1991-14392 (Ley 19/1991): el valor anterior BOE-A-1991-14461 era una resolución de la Universidad de Sevilla, no la Ley del Patrimonio."
 required_text = [
     "base liquidable",
@@ -39,7 +39,7 @@ published_at = 1991-06-06
 effective_from = 1991-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "coder-opus-iva"
+reviewed_by = "agent-review"
 notes = "Ley 19/1991 Art. 30 — cuota íntegra. Escala estatal por defecto de ocho tramos con tipos marginales del 0,2 % al 3,5 % (aplicable cuando la Comunidad Autónoma no apruebe escala propia). Base de la tarifa del Modelo 714."
 required_text = [
     "0,2",
@@ -59,7 +59,7 @@ published_at = 1991-06-06
 effective_from = 1991-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "coder-opus-iva"
+reviewed_by = "agent-review"
 notes = "Ley 19/1991 Art. 31 — límite de la cuota íntegra. La cuota del IP junto con las cuotas del IRPF no puede exceder del 60 % de la suma de las bases imponibles del IRPF; cuando se supera, la cuota del IP se reduce sin que la reducción exceda del 80 % (suelo del 20 %). La regla excluye determinadas ganancias/pérdidas patrimoniales de la base del ahorro y la parte correspondiente de cuotas IRPF, y excluye la parte del IP de elementos no susceptibles de producir rendimientos gravados por IRPF."
 required_text = [
     "60 por 100",
@@ -81,7 +81,7 @@ published_at = 1991-06-06
 effective_from = 1991-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "coder-opus-iva"
+reviewed_by = "agent-review"
 notes = "Ley 19/1991 Art. 4 apartado Nueve — exención de la vivienda habitual del contribuyente hasta un importe máximo de 300.000 euros (remite al art. 68.1.3.º LIRPF para el concepto de vivienda habitual). NOTA: la exención de la vivienda habitual reside en el apartado Nueve, no en el apartado Cuatro."
 required_text = [
     "vivienda habitual",
