@@ -70,7 +70,7 @@ published_at = 2004-03-08
 effective_from = 2011-03-06
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (verified against official BOE-A-2004-4163 consolidated art. 6; corpus excerpt bundled)"
+reviewed_by = "verified against official BOE-A-2004-4163 consolidated art. 6; corpus excerpt bundled"
 notes = "RDLeg 1/2004 art 6.3 defines the cadastral reference as the alphanumeric identifier assigned to each immovable property and requires that identifier in documents with economic or tax relevance linked to the property. Grounds the fiscal-address cadastral-reference profile/censo field."
 required_text = [
     "referencia catastral",

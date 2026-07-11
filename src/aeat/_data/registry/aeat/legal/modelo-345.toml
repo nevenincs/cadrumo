@@ -10,7 +10,7 @@ published_at = 2022-08-30
 effective_from = 2023-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 1: aprueba el Modelo 345 y sus disenos de registro."
 required_text = [
     "Se aprueba el modelo",
@@ -30,7 +30,7 @@ published_at = 2022-08-30
 effective_from = 2023-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 2: remite la obligacion de presentar el Modelo 345 a las personas o entidades del articulo 53 del RD 1065/2007."
 required_text = [
     "personas o entidades a las que se refiere",
@@ -50,7 +50,7 @@ published_at = 2022-08-30
 effective_from = 2023-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 3: define el objeto de informacion del Modelo 345 sobre participes, aportaciones y contribuciones a sistemas de prevision social."
 required_text = [
     "modelo",
@@ -70,7 +70,7 @@ published_at = 2022-08-30
 effective_from = 2023-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 4: fija el plazo reglamentario anual del Modelo 345 entre el 1 y el 31 de enero."
 required_text = [
     "entre el",
@@ -90,7 +90,7 @@ published_at = 2022-08-30
 effective_from = 2023-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 5: remite la presentacion del Modelo 345 a la presentacion electronica regulada por Orden HAP/2194/2013."
 required_text = [
     "Formas de",
@@ -110,7 +110,7 @@ published_at = 2023-05-30
 effective_from = 2023-05-31
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/528/2023 articulo unico: modifica los campos clave, subclave y nuevos campos adicionales del registro de declarado del Modelo 345."
 required_text = [
     "Se modifica el campo",
@@ -130,7 +130,7 @@ published_at = 2023-05-30
 effective_from = 2023-05-31
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/528/2023 disposicion final unica: aplica por primera vez sus modificaciones del Modelo 345 a declaraciones del ejercicio 2023."
 required_text = [
     "declaraciones informativas correspondientes al ejercicio",
@@ -151,7 +151,7 @@ published_at = 2023-12-29
 effective_from = 2024-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1397/2023 articulo sexto: modifica la subclave 03 de la clave A del registro de declarado del Modelo 345."
 required_text = [
     "Orden HFP/823/2022",
@@ -171,7 +171,7 @@ published_at = 2023-12-29
 effective_from = 2024-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1397/2023 disposicion final unica: aplica por primera vez su modificacion del Modelo 345 a declaraciones del ejercicio 2023."
 required_text = [
     "modelo",
@@ -192,7 +192,7 @@ published_at = 2024-12-31
 effective_from = 2025-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2024-27528 HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2024-27528 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1504/2024 articulo octavo: modifica clave, subclave y el campo de rendimientos del trabajo no superiores a 60.000 euros del Modelo 345."
 required_text = [
     "Orden HFP/823/2022",
@@ -212,7 +212,7 @@ published_at = 2025-12-16
 effective_from = 2025-12-17
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01)"
+reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1430/2025 articulo septimo: modifica el campo de rendimientos integros del trabajo superiores a 60.000 euros del Modelo 345."
 required_text = [
     "Orden HFP/823/2022",

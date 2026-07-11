@@ -48,7 +48,7 @@ published_at = 2023-07-29
 effective_from = 2023-07-30
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex-legal-grounding"
+reviewed_by = "agent-review"
 notes = "Orden HFP/886/2023 art 1: aprueba el Modelo 721 'Declaracion informativa sobre monedas virtuales situadas en el extranjero' y sus disenos fisicos y logicos. BOE-A-2023-17429 (DISTINTO de BOE-A-2023-18679 que es Orden HFP/887/2023 = Modelos 172/173 custodiadores)."
 required_text = [
     "Modelo 721",
@@ -69,7 +69,7 @@ published_at = 2023-07-29
 effective_from = 2023-07-30
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex-legal-grounding"
+reviewed_by = "agent-review"
 notes = "Orden HFP/886/2023 art 2: obligados a presentar el Modelo 721. Personas fisicas y juridicas, y entidades del art 35.4 LGT, residentes en territorio espanol que posean monedas virtuales en el extranjero a traves de custodio extranjero cuyo valor agregado supere 50.000 EUR a 31 de diciembre."
 required_text = [
     "Modelo 721",
@@ -90,7 +90,7 @@ published_at = 2023-07-29
 effective_from = 2023-07-30
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex-legal-grounding"
+reviewed_by = "agent-review"
 notes = "Orden HFP/886/2023 art 3: contenido del Modelo 721. Remite al anexo de la orden y al art. 42 quater RGAT para la informacion sobre monedas virtuales situadas en el extranjero."
 required_text = [
     "información contenida en el anexo",
@@ -111,7 +111,7 @@ published_at = 2023-07-29
 effective_from = 2023-07-30
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex-legal-grounding"
+reviewed_by = "agent-review"
 notes = "Orden HFP/886/2023 art 4: plazo de presentacion del Modelo 721, entre el 1 de enero y el 31 de marzo del ano siguiente al ejercicio al que se refiera la informacion."
 required_text = [
     "1 de enero",
@@ -131,7 +131,7 @@ published_at = 2024-12-31
 effective_from = 2025-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex-legal-grounding"
+reviewed_by = "agent-review"
 notes = "Orden HAC/1504/2024 art 9: modifica la Orden HFP/886/2023 y sustituye su anexo por el anexo I de la nueva orden, actualizando el diseno del Modelo 721."
 required_text = [
     "Se sustituye el anexo",
@@ -151,7 +151,7 @@ published_at = 2024-12-31
 effective_from = 2025-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex-legal-grounding"
+reviewed_by = "agent-review"
 notes = "Orden HAC/1504/2024 disposicion final unica: entrada en vigor al dia siguiente de la publicacion y primera aplicacion a declaraciones informativas del ejercicio 2024 presentadas en 2025."
 required_text = [
     "ejercicio 2024",
