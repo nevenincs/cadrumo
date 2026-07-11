@@ -4376,7 +4376,6 @@ cli:
           az env valtozokat; AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file,
           AEAT_SECRET_STORE_DIR es AEAT_SECRET_PASSPHRASE; a naplok alapertelmezes
           szerint ezen tarhelygyoker alatt vannak.
-        profile_censo: AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
         profile_history: Az append-only profil eseménytörténet megtekintése.
@@ -4917,9 +4916,6 @@ entries:
   portal_mi_area_personal:
     label: Személyes területem
     purpose: Hitelesített adózói személyes terület az Elektronikus Irodában.
-  portal_mis_datos_censales:
-    label: Nyilvántartási adataim
-    purpose: Az adózó regisztrált nyilvántartási adatainak áttekintése.
   portal_mis_documentos_pendientes_firma:
     label: Aláírásra váró dokumentumok
     purpose: Aláírási portfólió az elektronikus aláírásra váró dokumentumokkal.
@@ -5091,17 +5087,6 @@ errors:
     unsupported_op: Nem tamogatott muvelet.
   censo:
     bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
-    no_snapshot_captured: Nem sikerült censo-pillanatképet rögzíteni a(z) {profile_id}
-      profilhoz.
-    profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt
-      hozza létre.
-    sede_g313_no_censo: Az AEAT G313 szekcióból nem sikerült olvasható censot lekérni
-      a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je
-      regisztrálva van-e.
-    sede_no_censo: Az AEAT szekcióból nem sikerült olvasható censot lekérni a(z) {profile_id}
-      profilhoz.
-    snapshot_profile_mismatch: A(z) {snapshot_id} censo-pillanatkép a(z) {snapshot_profile_id}
-      profilhoz tartozik, nem a(z) {profile_id} profilhoz.
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -5379,7 +5364,6 @@ errors:
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
     fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni sanitizáláshoz.
     fail_secure_storage: Biztonságos tárhelyhiba történt.
-    fail_sede_censo_parse: Az AEAT Sede censo-oldalán egy értéket nem sikerült elemezni.
     fail_sede_justificante_fetch: A bizonylat PDF letöltése az AEAT Sede-ről meghiúsult,
       vagy a fájl hibás.
     fail_sede_parse: A rögzített AEAT Sede oldalt nem sikerült elemezni.
@@ -5586,12 +5570,6 @@ errors:
       kért hitelesítési munkamenettel.
     bootstrap_already_complete: Már létezik profil; az első futtatás beállítása csak
       egyszer fut le. Profil váltáshoz használja az  parancsot.
-    censo_apply_conflict: A censo nem alkalmazható, mert folyamatban van munka egy
-      függő egységen. Először oldja meg a függőben lévő állapotot.
-    censo_field_validation: Az AEAT censo olyan értéket adott vissza, amelyet a séma
-      nem tud elfogadni. Tekintse át az elnevezett mezőt tanácsadójával.
-    censo_not_available: Az AEAT nem adott vissza olvasható censot. Előfordulhat,
-      hogy nincs IAE-n regisztrálva, vagy a tanúsítványa nincs a NIF-jéhez rendelve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modelo-futtatást,
       mert az még nem nyújtható be.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának

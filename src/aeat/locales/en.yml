@@ -4131,7 +4131,6 @@ cli:
         paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
           AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
           logs default under that storage root.
-        profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
         profile_history: Inspect the append-only profile event history.
@@ -4661,9 +4660,6 @@ entries:
   portal_mi_area_personal:
     label: My Personal Area
     purpose: Authenticated taxpayer personal area in the Electronic Office.
-  portal_mis_datos_censales:
-    label: My Censo Data
-    purpose: Review of the taxpayer's registered censo data.
   portal_mis_documentos_pendientes_firma:
     label: Documents Awaiting Signature
     purpose: Signature portfolio with documents awaiting electronic signature.
@@ -4827,14 +4823,6 @@ errors:
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
     bucket_id_blank: The censo sync service requires a profile bucket.
-    no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
-    profile_not_found: Profile {profile_id} does not exist; create it before applying
-      censo.
-    sede_g313_no_censo: AEAT sede G313 returned no readable censo for profile {profile_id};
-      confirm your certificate or Cl@ve is registered against this NIF.
-    sede_no_censo: AEAT's sede returned no readable censo for profile {profile_id}.
-    snapshot_profile_mismatch: Censo snapshot {snapshot_id} belongs to profile {snapshot_profile_id},
-      not profile {profile_id}.
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -5115,7 +5103,6 @@ errors:
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
     fail_secure_storage: A secure-storage error occurred.
-    fail_sede_censo_parse: A value on the AEAT Sede censo page could not be parsed.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
     fail_sede_parse: The captured AEAT Sede page could not be parsed.
@@ -5324,12 +5311,6 @@ errors:
     bootstrap_already_complete: Secure storage bootstrap is already complete. Use
       aeat config switch NAME to activate an existing profile or aeat config profile
       create NAME to add another profile.
-    censo_apply_conflict: The censo cannot be applied because there is in-flight work
-      on a dependent unit. Resolve the pending state first.
-    censo_field_validation: The AEAT censo returned a value the schema cannot accept.
-      Review the field named with your adviser.
-    censo_not_available: The AEAT returned no readable censo. You may not be registered
-      for IAE, or your certificate may not be registered against your NIF.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix

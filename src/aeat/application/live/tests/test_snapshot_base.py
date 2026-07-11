@@ -468,9 +468,9 @@ def test_censo_snapshot_not_found_error_inherits_shared_base() -> None:
 def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     error = CensoSnapshotNotFoundError(
         f"censo snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
-        suggestion="aeat config profile censo pull",
+        suggestion="aeat config profile edit",
     )
-    assert error.suggestion == "aeat config profile censo pull"
+    assert error.suggestion == "aeat config profile edit"
 
 
 # ---- SnapshotRepository structural-conformance gate (contract) -----------------

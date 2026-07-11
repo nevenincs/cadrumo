@@ -184,8 +184,6 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config google sync push",
     "config google sync calc pull",
     "config google sync calc compute",
-    "config profile censo pull",
-    "config profile censo apply",
     "config reset",
 )
 """Profile-bound mutation verb prefixes guarded by the root write policy.

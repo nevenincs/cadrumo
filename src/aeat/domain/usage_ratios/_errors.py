@@ -56,8 +56,8 @@ class CensoRatioMismatchError(UsageRatioError):
     boundary so the calculation surface never silently consumes a stale
     ratio.
 
-    The fix is operator-driven: either refresh the censo via
-    ``aeat config profile censo pull`` and ``apply``, or unset the
+    The fix is operator-driven: either update the censo vivienda_office
+    data via ``aeat config profile edit``, or unset the
     diverging override via ``aeat app ledger ratios unset``. No
     automatic migration; no shim.
     """

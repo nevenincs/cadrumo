@@ -125,16 +125,31 @@ def _home_office_censo_facts() -> dict[str, str]:
 
 
 def _apply_home_office_censo(bucket_id: str) -> None:
+    """Seed a home-office censo snapshot and its derived HOME_OFFICE usage ratios.
+
+    Reproduces what the retired ``censo apply`` verb did for the ledger
+    preflight tests: capture an ACTIVE censo snapshot carrying the
+    ``vivienda_office`` afectación m² (so ``bound_raw_afectacion_ratio``
+    resolves) and persist the derived HOME_OFFICE ratios so the operator's
+    override agrees with the bound censo.
+    """
+    from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
+    from ....domain.usage_ratios import UsageRatioProfile, derive_home_office_ratios_from_censo
+
     profiles = UserProfileLifecycleRepository(bucket_id=bucket_id)
     profiles.save(UserProfileRecord(profile_id=bucket_id, display_name="Ledger preflight profile"))
-    service = CensoSyncService(
-        bucket_id=bucket_id,
-        snapshots=CensoSnapshotService(bucket_id=bucket_id),
-        profiles=profiles,
-    )
-    service.refresh_censo(
+    snapshots = CensoSnapshotService(bucket_id=bucket_id)
+    snapshots.capture(
         profile_id=bucket_id,
-        source_url=f"{_SEDE_ORIGIN}/",
-        fact_source=_home_office_censo_facts,
+        captured_at=datetime(2026, 1, 1, tzinfo=UTC),
+        source_url=f"{_SEDE_ORIGIN}/operator-declared",
+        censo_facts=_home_office_censo_facts(),
     )
-    service.apply_censo_to_profile(profile_id=bucket_id)
+    raw = CensoSyncService(bucket_id=bucket_id, snapshots=snapshots).bound_raw_afectacion_ratio(
+        profile_id=bucket_id,
+    )
+    assert raw is not None
+    derived = derive_home_office_ratios_from_censo(raw, year=2025)
+    merged = dict(load_usage_ratios(bucket_id=bucket_id).ratios)
+    merged.update(derived.ratios)
+    save_usage_ratios(UsageRatioProfile(ratios=merged), bucket_id=bucket_id)

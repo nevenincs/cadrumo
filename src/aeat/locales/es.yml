@@ -4458,7 +4458,6 @@ cli:
           AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
           y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
-        profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
@@ -5013,9 +5012,6 @@ entries:
   portal_mi_area_personal:
     label: Mi Área Personal
     purpose: Área personal autenticada del contribuyente en la Sede.
-  portal_mis_datos_censales:
-    label: Mis datos censales
-    purpose: Consulta de los datos censales registrados del contribuyente.
   portal_mis_documentos_pendientes_firma:
     label: Documentos pendientes de firma
     purpose: Portafirmas con los documentos pendientes de firma electrónica.
@@ -5190,17 +5186,6 @@ errors:
     unsupported_op: 'Operador de formula no admitido: %{op}.'
   censo:
     bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
-    no_snapshot_captured: No se ha capturado ninguna instantánea del censo para el
-      perfil {profile_id}.
-    profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
-      censo.
-    sede_g313_no_censo: La sede de la AEAT (G313) no devolvió ningún censo legible
-      para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado
-      para este NIF.
-    sede_no_censo: La sede de la AEAT no devolvió ningún censo legible para el perfil
-      {profile_id}.
-    snapshot_profile_mismatch: La instantánea censal {snapshot_id} pertenece al perfil
-      {snapshot_profile_id}, no al perfil {profile_id}.
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
@@ -5512,8 +5497,6 @@ errors:
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
-    fail_sede_censo_parse: Un valor de la página del censo de la Sede de la AEAT no
-      se pudo interpretar.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
       de la AEAT falló o el archivo no es válido.
     fail_sede_parse: No se pudo interpretar la página capturada de la Sede de la AEAT.
@@ -5737,13 +5720,6 @@ errors:
     bootstrap_already_complete: El arranque del almacenamiento seguro ya esta completo.
       Usa aeat config switch NAME para activar un perfil existente o aeat config profile
       create NAME para anadir otro perfil.
-    censo_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
-      sobre una unidad dependiente. Resuelve primero el estado pendiente.
-    censo_field_validation: El censo de la AEAT devolvió un valor que el esquema no
-      admite. Revisa el campo indicado con tu asesor.
-    censo_not_available: La AEAT no devolvió ningún censo legible. Es posible que
-      no estés dado de alta en el IAE o que tu certificado no esté registrado a tu
-      NIF.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación

@@ -4411,7 +4411,6 @@ cli:
           AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
           i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
-        profile_censo: Mostrar l'estat del cens del perfil actiu.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
@@ -4958,9 +4957,6 @@ entries:
   portal_mi_area_personal:
     label: La Meva Àrea Personal
     purpose: Àrea personal autenticada del contribuent a la Seu.
-  portal_mis_datos_censales:
-    label: Les meves dades censals
-    purpose: Consulta de les dades censals registrades del contribuent.
   portal_mis_documentos_pendientes_firma:
     label: Documents pendents de signatura
     purpose: Portasignatures amb els documents pendents de signatura electrònica.
@@ -5136,17 +5132,6 @@ errors:
     unsupported_op: 'Operador de formula no ames: %{op}.'
   censo:
     bucket_id_blank: El servei de sincronització censal requereix un bucket de perfil.
-    no_snapshot_captured: No s'ha capturat cap instantània del cens per al perfil
-      {profile_id}.
-    profile_not_found: El perfil {profile_id} no existeix; crea'l abans d'aplicar
-      el cens.
-    sede_g313_no_censo: La seu electrònica de l'AEAT (G313) no ha retornat cap cens
-      llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve
-      està registrat per a aquest NIF.
-    sede_no_censo: La seu electrònica de l'AEAT no ha retornat cap cens llegible per
-      al perfil {profile_id}.
-    snapshot_profile_mismatch: La instantània censal {snapshot_id} pertany al perfil
-      {snapshot_profile_id}, no al perfil {profile_id}.
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
@@ -5457,8 +5442,6 @@ errors:
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sanitization_source_parse: El PDF d'origen no s'ha pogut obrir per sanejar-lo.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
-    fail_sede_censo_parse: Un valor de la pàgina del cens de la Seu de l'AEAT no s'ha
-      pogut interpretar.
     fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
       de l'AEAT ha fallat o el fitxer no és vàlid.
     fail_sede_parse: No s'ha pogut interpretar la pàgina capturada de la Seu de l'AEAT.
@@ -5686,13 +5669,6 @@ errors:
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja esta completa.
       Fes servir aeat config switch NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.
-    censo_apply_conflict: No es pot aplicar el cens perquè hi ha feina en curs sobre
-      una unitat dependent. Resol primer l'estat pendent.
-    censo_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema no
-      admet. Revisa el camp indicat amb el teu assessor.
-    censo_not_available: L'AEAT no ha retornat cap cens llegible. És possible que
-      no estiguis donat d'alta a l'IAE o que el teu certificat no estigui registrat
-      al teu NIF.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació

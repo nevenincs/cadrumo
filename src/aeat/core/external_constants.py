@@ -116,7 +116,6 @@ class AeatSedePaths(_Frozen):
     notifications_summary: str
     notifications_query: str
     certificate_selector: str
-    censo_g313_launcher: str
     r210_simulator_open_ajax: str
     borrador_100_detail_template: str
     declaracion_consult: str

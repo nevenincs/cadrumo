@@ -382,39 +382,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.user_profile._censo_errors.CensoNotAvailableError",
-        ErrorCode(
-            code="REFUSED_CENSO_NOT_AVAILABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.censo_not_available",
-            default_suggestion="aeat config auth configure",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.user_profile._censo_errors.CensoFieldValidationError",
-        ErrorCode(
-            code="REFUSED_CENSO_FIELD_VALIDATION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.censo_field_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.user_profile._censo_errors.CensoApplyConflictError",
-        ErrorCode(
-            code="REFUSED_CENSO_APPLY_CONFLICT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.censo_apply_conflict",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_REGISTERED",

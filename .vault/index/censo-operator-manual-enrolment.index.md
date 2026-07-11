@@ -6,7 +6,12 @@ tags:
 date: '2026-07-11'
 modified: '2026-07-11'
 related:
+  - '[[2026-07-11-censo-operator-manual-enrolment-P01-S01]]'
+  - '[[2026-07-11-censo-operator-manual-enrolment-P01-S02]]'
+  - '[[2026-07-11-censo-operator-manual-enrolment-P02-S04]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-P02-S06]]'
+  - '[[2026-07-11-censo-operator-manual-enrolment-P03-S08]]'
+  - '[[2026-07-11-censo-operator-manual-enrolment-P03-S09]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-plan]]'
 ---
@@ -23,7 +28,12 @@ Auto-generated index of all documents tagged with `#censo-operator-manual-enrolm
 
 ### exec
 
+- `2026-07-11-censo-operator-manual-enrolment-P01-S01` - Retire the sede live-censo scrape: delete the launcher drive, the G313 parser, their tests, the censo_g313_launcher constant, and the sede package exports
+- `2026-07-11-censo-operator-manual-enrolment-P01-S02` - Retire the config profile censo pull/compare/apply/show verb family with its payloads and tests, deregister it from the profile app, and narrow CensoSyncService to the read-only afectacion projection the ledger still consumes
+- `2026-07-11-censo-operator-manual-enrolment-P02-S04` - Remove the dead censo pull/compare/apply locale key subtree through the locales CLI (keeping the operator-manual advisory strings) and confirm scaffold --check is clean
 - `2026-07-11-censo-operator-manual-enrolment-P02-S06` - Re-author the inicio-actividad and cese-actividad agent skills onto the operator-manual censo mirror so the rule-surface conformance gate stays green
+- `2026-07-11-censo-operator-manual-enrolment-P03-S08` - Pin the calendar censo.enrolment_unverified posture with a regression: the warning is present and strict projection refuses for modelos 100/130/303/390 when censo is unverified
+- `2026-07-11-censo-operator-manual-enrolment-P03-S09` - Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty
 
 ### plan
 
