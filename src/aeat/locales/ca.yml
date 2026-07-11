@@ -5854,8 +5854,6 @@ errors:
       amb l'identificador indicat.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
-    refused_live_censo_snapshot_not_found: No existeix cap instantània del cens del
-      Model 036 amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
       amb l'identificador indicat.
     refused_live_justificante_capture_snapshot_not_found: No existeix cap captura

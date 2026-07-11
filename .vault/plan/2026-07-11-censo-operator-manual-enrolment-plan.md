@@ -127,6 +127,12 @@ Pin the honest end state with regressions (calendar enrolment_unverified posture
 - [x] `P03.S09` - Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty; `src/aeat/application/user_profile/tests/test_censo_sync.py`.
 - [ ] `P03.S10` - Run the full gate battery (collect-only, ruff, documented-command conformance, rule-surface conformance, locales and apidocs scaffold checks) and record the honest reconciliation of the superseded g313 plan as an exec note without fabricating completion; `src/aeat, .vault/exec/2026-07-11-censo-operator-manual-enrolment/`.
 
+### Phase `P04` - re-seat afectacion ratio and delete the snapshot substrate
+
+Complete the accepted decision: re-seat the surviving home-office ratio read onto operator-declared profile facts and delete the now-producerless censo snapshot substrate, reconciling the retired provenance enum.
+
+- [x] `P04.S11` - Re-seat bound_raw_afectacion_ratio onto operator-declared vivienda_office m2 profile facts, delete the producerless censo snapshot substrate (module, namespace, custody resolver, re-exports, error entry + locale leaves, api stub, tests), reconcile away CENSO_CORROBORATED + censo_snapshot_id, and add real-behavior guard tests; `src/aeat/application/user_profile/_censo_sync.py, src/aeat/application/live/_censo.py, src/aeat/adapters/persistence/storage/_namespace_registry.py, src/aeat/application/calculations/_cross_period_models.py`.
+
 ## Description
 
 Implement the accepted Option-4 direction of

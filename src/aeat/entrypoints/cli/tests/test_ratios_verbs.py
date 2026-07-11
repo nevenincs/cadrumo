@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -11,16 +10,11 @@ from click.testing import Result
 
 from ....application.user_profile import profile_create_storage_span, register_minimal_profile
 from ....application.workflow import workflow_state_repository
-from ....core import resolve_active_bucket_id
-from ....core.config import Settings
 from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-_AEAT = Settings.external_constants().aeat
-_G313_URL = f"{_AEAT.domains.sede}/operator-declared-censo"
-_CENSO_CAPTURED_AT = datetime(2026, 5, 28, 13, 45, 0, tzinfo=UTC)
 
 
 def _invoke_ratios(args: Sequence[str]) -> Result:
@@ -154,26 +148,23 @@ def test_ratios_unset_emits_ledger_ratios_unset_event() -> None:
 
 
 def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
-    """Capture a censo snapshot for the active profile with the supplied m².
+    """Declare the active profile's ``vivienda_office`` m² facts.
 
-    Used by censo-override-warning tests so the ratios_set handler has
-    a bound raw afectación ratio to compare the operator-supplied value
-    against.
+    The live censo scrape was retired; censal facts are operator-supplied
+    through ``config profile edit``. Writing the m² facts through the
+    real profile-edit path gives the ratios_set handler a bound raw
+    afectación ratio (``office_m2 / total_m2``) to compare the
+    operator-supplied override against.
     """
+    from decimal import Decimal
 
-    from ....application.live import CensoSnapshotService
+    from ....application.user_profile import UserProfileFact, set_active_fields
 
-    bucket_id = resolve_active_bucket_id() or ""
-    service = CensoSnapshotService(bucket_id=bucket_id)
-    service.capture(
-        profile_id=bucket_id,
-        captured_at=_CENSO_CAPTURED_AT,
-        source_url=_G313_URL,
-        censo_facts={
-            "vivienda_office.total_m2": total_m2,
-            "vivienda_office.office_m2": office_m2,
-        },
+    facts = (
+        UserProfileFact(path="vivienda_office.total_m2", value=Decimal(total_m2)),
+        UserProfileFact(path="vivienda_office.office_m2", value=Decimal(office_m2)),
     )
+    workflow_state_repository().update(lambda state: set_active_fields(state, facts))
 
 
 def test_ratios_set_emits_censo_override_warning_when_suministros_diverges() -> None:

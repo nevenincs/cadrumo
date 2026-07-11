@@ -35,7 +35,6 @@ _DEFAULT_SQL_BACKED_CONSTRUCTORS: frozenset[str] = frozenset(
         "BucketEventHistoryRepository",
         "CalculationObservationRepository",
         "CalculationRevisionCatalogueRepository",
-        "CensoSnapshotRepository",
         "FincaAmortizacionLedgerRepository",
         "FincaGastoRepository",
         "FincaRendimientoRepository",

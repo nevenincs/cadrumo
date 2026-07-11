@@ -5485,8 +5485,6 @@ errors:
       identifier provided.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
-    refused_live_censo_snapshot_not_found: No Modelo 036 censo snapshot exists with
-      the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
       the identifier provided.
     refused_live_justificante_capture_snapshot_not_found: No captured justificante

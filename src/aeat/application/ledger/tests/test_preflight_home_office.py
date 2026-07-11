@@ -19,10 +19,62 @@ from ._preflight_test_support import (
     _HOME_OFFICE_PROFILE_ID,
     _Q2_2026,
     _apply_home_office_censo,
+    _declare_home_office_m2,
     _transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(tmp_path: Path) -> None:
+    """Retirement regression: the ``config profile edit`` instruction is live.
+
+    With the live censo scrape retired, ``bound_raw_afectacion_ratio`` derives
+    from the operator-declared ``vivienda_office`` m² facts. A persisted
+    HOME_OFFICE override with those facts ABSENT must refuse and name
+    ``config profile edit``; declaring the facts through the real profile
+    write path must then CLEAR the refusal — proving the operator instruction
+    is not a dead instruction.
+    """
+    category = SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
+        save_usage_ratios(
+            UsageRatioProfile(ratios={category: Decimal("0.060")}),
+            bucket_id=profile.bucket_id,
+        )
+        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        repository.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _transaction(
+                        "row-home-office-instruction",
+                        business_classification=BusinessClassification.MIXED,
+                        business_pct=Decimal("0.060"),
+                        category_id=category.value,
+                        usage_ratio_id=category.value,
+                    ),
+                ),
+            ),
+        )
+
+        before = preflight_ledger_tax_readiness(
+            bucket_id=profile.bucket_id,
+            period=_Q2_2026,
+            transaction_repository=repository,
+        )
+        assert before.ready is False
+        assert [issue.reason for issue in before.issues] == [LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH]
+        assert "aeat config profile edit" in before.issues[0].detail
+
+        _declare_home_office_m2(profile.bucket_id)
+
+        after = preflight_ledger_tax_readiness(
+            bucket_id=profile.bucket_id,
+            period=_Q2_2026,
+            transaction_repository=repository,
+        )
+        assert after.ready is True
+        assert after.issues == ()
 
 
 def test_preflight_flags_home_office_ratio_without_applied_censo(tmp_path: Path) -> None:

@@ -415,13 +415,13 @@ def _cross_period_operator_declared_suppression_advisory_finding(
 ) -> ModeloVerificationFinding:
     """Build the NON-BLOCKING advisory for an operator-declared pre-activity suppression.
 
-    ADR 2026-06-13-first-filer-attestation-adr (operator-declared now,
-    censo-corroborated when the live censo surface is fixed): a dependency was
-    scoped out as no-prior-obligation because its period falls strictly before the
-    operator-declared activity-start date. The date has NOT been corroborated
-    against an AEAT censo snapshot, so the suppression is surfaced as a
-    non-blocking advisory - never presented as AEAT-authoritative, never trusted
-    silently - mirroring the WARNING severity that keeps the grant path open.
+    ADR 2026-06-13-first-filer-attestation-adr: a dependency was scoped out as
+    no-prior-obligation because its period falls strictly before the
+    operator-declared activity-start date. Censal facts are operator-supplied
+    (the live Modelo 036 censo read was retired), so the date is never
+    AEAT-corroborated and the suppression is surfaced as a non-blocking advisory -
+    never presented as AEAT-authoritative, never trusted silently - mirroring the
+    WARNING severity that keeps the grant path open.
     """
     requirement = evidence.requirement
     requirement_period = requirement.period.registry_token

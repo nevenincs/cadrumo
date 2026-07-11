@@ -5746,8 +5746,6 @@ errors:
       azonosítóval.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
-    refused_live_censo_snapshot_not_found: Nem létezik Modelo 036 censo-pillanatkép
-      a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
     refused_live_justificante_capture_snapshot_not_found: Nem létezik rögzített igazolás-pillanatkép
