@@ -28,7 +28,7 @@ published_at = 2021-07-10
 effective_from = 2021-07-11
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "coder-sonnet-informativa"
+reviewed_by = "agent-review"
 notes = "Disposicion adicional decima de la Ley 11/2021: introduce la obligacion informativa de monedas virtuales en el extranjero como letra d de la DA-18 de la LGT. Habilita el desarrollo reglamentario que desemboca en el Modelo 721. Es el HABILITANTE; la obligacion operativa es ley-58-2003:da-18 letra d."
 required_text = [
     "monedas virtuales",
@@ -171,7 +171,7 @@ published_at = 2023-07-28
 effective_from = 2023-08-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "coder-sonnet-informativa"
+reviewed_by = "agent-review"
 notes = "RGAT art 42 quater (introducido por RD 249/2023): obligacion de informar sobre monedas virtuales situadas en el extranjero custodiadas por tercero. Desarrolla reglamentariamente la DA-18 letra d de la LGT (= DA-10 de la Ley 11/2021). Misma estructura de umbral que art-42-bis/ter/54-bis (720): inicial 50.000 EUR, re-declaracion si variacion > 20.000 EUR. Habilita el Modelo 721."
 required_text = [
     "monedas virtuales",
