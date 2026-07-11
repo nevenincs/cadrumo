@@ -21,7 +21,9 @@ from .._recargo import (
     build_recovery_for_overdue,
     completed_months_late,
     load_recargo_bands,
+    more_than_twelve_months_elapsed,
     resolve_recargo_band,
+    twelve_month_anniversary,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -73,8 +75,29 @@ def test_five_completed_months_yields_6_pct() -> None:
     assert band.interest_applies is False
 
 
+def test_twelve_completed_months_yields_13_pct_no_interest() -> None:
+    """Exactly 12 completed months → 1% + 12% = 13%, still no interest (Art. 27.2).
+
+    The graduated "1 por ciento más otro 1 por ciento adicional por cada mes
+    completo de retraso" reaches its maximum, 13%, at the twelve-month
+    anniversary. The 15% + intereses tail only applies once the twelve months
+    have been exceeded (see the boundary tests below), so 12 completed months is
+    still graduated.
+    """
+    bands = load_recargo_bands()
+    band = resolve_recargo_band(12, bands)
+    assert band.id == "completed_months_12"
+    assert band.surcharge_pct == Decimal("13.00")
+    assert band.interest_applies is False
+
+
 def test_after_12_completed_months_adds_interest() -> None:
-    """At/after 12 completed months the 15% + interest band applies."""
+    """At/after 13 completed months the 15% + interest tail band applies.
+
+    Thirteen completed months is unambiguously past the twelve-month term (a
+    completed thirteenth month can only exist strictly beyond twelve months), so
+    the 15% + intereses de demora tail is correct here (Art. 27.2 LGT).
+    """
     bands = load_recargo_bands()
     band = resolve_recargo_band(13, bands)
     assert band.id == "after_12_months"
@@ -126,3 +149,74 @@ def test_load_recargo_bands_wraps_missing_path_as_domain_error(tmp_path: Path) -
 
     with pytest.raises(DeadlineValidationError, match=r"cannot stat recargo bracket registry"):
         load_recargo_bands(missing)
+
+
+# ---------------------------------------------------------------------------
+# Art. 27.2 LGT — exact twelve-month boundary (the anniversary belongs to the
+# graduated band; the 15% + intereses tail begins the DAY AFTER)
+# ---------------------------------------------------------------------------
+
+
+def test_twelve_month_anniversary_is_same_day_next_year() -> None:
+    """The twelve-month term is the same day-of-month twelve months later."""
+    assert twelve_month_anniversary(date(2026, 4, 20)) == date(2027, 4, 20)
+    assert twelve_month_anniversary(date(2026, 1, 30)) == date(2027, 1, 30)
+
+
+def test_twelve_month_anniversary_clamps_leap_day() -> None:
+    """A 29 February close clamps to 28 February in a non-leap target year."""
+    assert twelve_month_anniversary(date(2024, 2, 29)) == date(2025, 2, 28)
+
+
+def test_more_than_twelve_months_elapsed_is_strict_after_anniversary() -> None:
+    """The 15% tail predicate fires strictly AFTER the anniversary, not on it.
+
+    External authority: Ley 58/2003 Art. 27.2 — the 15% + intereses tail applies
+    "una vez transcurridos 12 meses", and intereses run "desde el día siguiente al
+    término de los 12 meses". So the anniversary is not yet the tail; the day
+    after is.
+    """
+    closes = date(2026, 4, 20)
+    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 19)) is False
+    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 20)) is False
+    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 21)) is True
+
+
+def test_exact_twelve_month_anniversary_stays_in_graduated_band() -> None:
+    """The exact twelve-month anniversary resolves to 13% graduated, NOT the 15% tail.
+
+    Regression for the cross-domain-continuity audit finding
+    ``articulo-27-exact-twelve-month-boundary``: the demonstrated runtime case
+    (plazo 2026-04-20, presented 2027-04-20 — exactly twelve months later) wrongly
+    resolved to the 15% + intereses tail. Per Art. 27.2 LGT the anniversary is the
+    ``término`` of the twelve-month period and still belongs to the graduated
+    1%-per-completed-month band: 12 completed months → 1% + 12% = 13%, no interest.
+    """
+    recovery = build_recovery_for_overdue(
+        closes_on=date(2026, 4, 20),
+        reference_today=date(2027, 4, 20),
+        modelo="130",
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+    assert recovery.recargo_band.id == "completed_months_12"
+    assert recovery.recargo_band.surcharge_pct == Decimal("13.00")
+    assert recovery.recargo_band.interest_applies is False
+
+
+def test_day_after_twelve_month_anniversary_enters_interest_tail() -> None:
+    """The day after the twelve-month anniversary is the first 15% + intereses day.
+
+    Art. 27.2 LGT: intereses de demora run "desde el día siguiente al término de
+    los 12 meses", so 2027-04-21 (one day past the 2027-04-20 anniversary of a
+    2026-04-20 plazo) is the first day of the 15% + intereses tail — even though it
+    still reports only twelve completed months.
+    """
+    recovery = build_recovery_for_overdue(
+        closes_on=date(2026, 4, 20),
+        reference_today=date(2027, 4, 21),
+        modelo="130",
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+    assert recovery.recargo_band.id == "after_12_months"
+    assert recovery.recargo_band.surcharge_pct == Decimal("15.00")
+    assert recovery.recargo_band.interest_applies is True

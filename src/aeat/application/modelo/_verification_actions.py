@@ -44,7 +44,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import Modelo
+from ...core import M210GrossIncomeSourceMode, Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -115,6 +115,7 @@ from ._iva_wallet_gate import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
@@ -295,13 +296,18 @@ def _optional_observation_refs(observations: Iterable[CasillaObservation | None]
 def _manual_fact_basis_entries(
     input_values_by_casilla_id: Mapping[CasillaId, str],
     observations: Iterable[CasillaObservation],
+    *,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
 ) -> tuple[ManualFactBasisEntry, ...]:
     """Project a revision's operator casilla inputs into manual fact-basis entries.
 
     The ``input_values_by_casilla_id`` holds the caller-supplied (operator-entered) casilla
     values that are not ledger-derived; each non-empty entry is part of the fact
     basis a filing artefact must explain. Blank values are skipped (they carry no
-    fact).
+    fact). The M210 ledger-derived ``rendimientos_integros`` input is deliberately
+    excluded: it is present in the replay map so formula replay is exact, but its
+    fact basis is the fingerprinted transaction evidence rather than a manual
+    declaration.
     """
     observations_by_casilla_id = {observation.casilla_id: observation for observation in observations}
     return tuple(
@@ -319,6 +325,10 @@ def _manual_fact_basis_entries(
         )
         for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
+        and not (
+            m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER
+            and casilla == "rendimientos_integros"
+        )
     )
 
 
@@ -616,6 +626,12 @@ def verify_modelo_revision(
             calculation_repository=cr_repo,
         ),
     )
+    findings.extend(
+        m210_agrupacion_renta_verification_findings(
+            work_unit=work_unit,
+            revision=target,
+        ),
+    )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required_casilla_ids,
@@ -789,7 +805,11 @@ def _persist_verified_revision_evidence(
         captured_at=now,
         legal_refs=evidence_legal_refs,
         source_refs=evidence_source_refs,
-        manual_entries=_manual_fact_basis_entries(target.input_values_by_casilla_id, target.observations),
+        manual_entries=_manual_fact_basis_entries(
+            target.input_values_by_casilla_id,
+            target.observations,
+            m210_gross_income_source_mode=target.m210_gross_income_source_mode,
+        ),
     )
     _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
     verified = target.model_copy(

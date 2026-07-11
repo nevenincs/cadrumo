@@ -517,16 +517,6 @@ LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
-LIVE_CENSO_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="live_censo_snapshot",
-    namespace="aeat.application.live.censo_snapshot",
-    owner="aeat.application.live",
-    sensitivity=SensitivityClass.IDENTITY,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="censo-snapshot:{bucket_id}:{snapshot_id}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
-)
 LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_m036_declaration",
     namespace="aeat.application.modelo.m036_declaration",
@@ -1099,7 +1089,6 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
-        LIVE_CENSO_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,
         M145_COMMUNICATION_RECORD_NAMESPACE,
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
@@ -1170,7 +1159,6 @@ __all__ = [
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
     "LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
-    "LIVE_CENSO_SNAPSHOT_NAMESPACE",
     "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
     "LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",

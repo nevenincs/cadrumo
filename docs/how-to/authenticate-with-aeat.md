@@ -269,7 +269,7 @@ unaffected — revoke it through AEAT's own procedures.
 
 ## Next steps
 
-- [Link Modelo 036 census information](censo-update.md)
+- [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Set up your taxpayer profile](profile-setup.md)
 - [Diagnose and repair your local setup](troubleshooting.md)
 

@@ -43,7 +43,7 @@ from ...application.modelo import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core import Modelo, RescateType
+from ...core import M210GrossIncomeSourceMode, Modelo, RescateType
 from ...core.errors import AeatError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -488,6 +488,7 @@ def work_calculate_input_bundle_from_cli(
     relation: list[str] | None,
     row: list[str] | None,
     borrador_snapshot_id: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
     prestacion_inss_exenta: str | None,
     meses_trabajo_con_hijo_menor_3: list[str] | None,
     rescate_plan_pensiones_capital: str | None,
@@ -518,6 +519,7 @@ def work_calculate_input_bundle_from_cli(
             relation_overrides=relation_pairs,
             detail_rows=detail_rows,
             borrador_snapshot_id=borrador_snapshot_id,
+            m210_gross_income_source_mode=m210_gross_income_source_mode,
             prestacion_inss_exenta=optional_decimal_option(
                 prestacion_inss_exenta,
                 translation_key="cli.app.modelo.work.prestacion_inss_exenta_not_decimal",

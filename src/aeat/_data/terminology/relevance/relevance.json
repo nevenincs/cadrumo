@@ -546,25 +546,11 @@
           "ranking_weight": 0.452807
         },
         {
-          "record_id": "code:aeat.entrypoints.cli._config._profile_censo",
-          "target": "api/aeat.entrypoints.cli._config._profile_censo.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.432748
-        },
-        {
           "record_id": "code:aeat.application.user_profile._censo_sync",
           "target": "api/aeat.application.user_profile._censo_sync.html",
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.413535
-        },
-        {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._censo_live",
-          "target": "api/aeat.adapters.outbound.aeat.sede._censo_live.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.402485
         },
         {
           "record_id": "page:how-to/choose-modelo",
@@ -634,13 +620,6 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.482119
-        },
-        {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._censo_live",
-          "target": "api/aeat.adapters.outbound.aeat.sede._censo_live.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.453458
         }
       ],
       "dropped_count": 15,

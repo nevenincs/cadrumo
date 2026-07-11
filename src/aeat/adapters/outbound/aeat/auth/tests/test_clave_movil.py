@@ -30,7 +30,7 @@ from ......domain.calculations.registry import RegistryValidationError, RemoteOp
 from ......tests.aeat_literal_fixtures import CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .. import _session_store
+from .. import _session_store, operator_progress_sink
 from .._clave_movil import (
     CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
@@ -262,6 +262,30 @@ class TestDescribe:
         assert "not a valid DNI" in (description.health_summary or "")
 
 
+def test_render_progress_banner_routes_to_operator_sink_only_when_armed() -> None:
+    """The wait banner reaches an armed operator sink and no sink otherwise.
+
+    Opt-in by construction: an unarmed call routes nothing to the caller's
+    sink (production/default behaviour is log-only); an armed call routes the
+    banner — carrying the verification code — exactly once. Proves the code
+    surfaces to the operator channel without a value change to any other
+    surface."""
+
+    captured: list[str] = []
+
+    _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+    assert captured == [], "an unarmed banner must not route to any operator sink"
+
+    with operator_progress_sink(captured.append):
+        _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+
+    assert len(captured) == 1
+    banner = captured[0]
+    assert "YLL" in banner
+    assert "verification code" in banner.lower()
+    assert "Cl@ve" in banner
+
+
 # ── authenticate() — fresh login ─────────────────────────────────────────────
 
 
@@ -305,6 +329,34 @@ class TestAuthenticateFresh:
             assert session.provider_detail.landing_url == _aeat_url(_DOMAINS.www6, target_path)
 
         _run(run())
+
+    def test_fresh_login_routes_verification_code_to_armed_operator_sink(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """A headless operator must see the AEAT verification code during the
+        Cl@ve wait, not only in the runtime log. When an operator progress sink
+        is armed, the wait banner (carrying the code the operator confirms in
+        their app) is handed to it as the fresh login reaches the wait state."""
+
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        browser_session = _RecordingBrowserSession(
+            target_path=settings.aeat_sede_expedientes_path,
+            verification_code="YLL",
+        )
+        captured: list[str] = []
+
+        async def run() -> None:
+            with operator_progress_sink(captured.append):
+                await provider.authenticate(browser_session=browser_session)
+
+        _run(run())
+
+        assert captured, "the operator progress sink must receive the wait banner during fresh login"
+        banner = "\n".join(captured)
+        assert "YLL" in banner
+        assert "verification code" in banner.lower()
 
     def test_initial_selector_navigation_timeout_is_typed(
         self,

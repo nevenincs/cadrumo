@@ -107,24 +107,23 @@ class NoPriorObligationProvenanceKind(StrEnum):
     NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR = "no_fractional_payment_obligation_first_year"
 
     #: The activity-start date is the operator-declared ``activity_start_date``
-    #: field (not corroborated by an AEAT censo snapshot). Carries the advisory.
+    #: field. Censal facts are operator-supplied through ``config profile edit``
+    #: (the live Modelo 036 censo read was retired: AEAT exposes no read-only
+    #: "Mis Datos Censales" projection), so this is the sole provenance kind for
+    #: a scoped-out no-prior-obligation dependency. Carries the advisory.
     OPERATOR_DECLARED = "operator_declared"
-
-    #: The activity-start date was corroborated against an AEAT censo snapshot.
-    #: Deferred per the accepted ADR until the live censo read is functional;
-    #: declared above for the upgrade path so the facet vocabulary is stable.
-    CENSO_CORROBORATED = "censo_corroborated"
 
 
 class NoPriorObligationProvenance(BaseModel):
     """Typed marker that a dependency was scoped out as no-prior-obligation.
 
-    ADR 2026-06-13-first-filer-attestation-adr (operator-declared now,
-    censo-corroborated when the live censo surface is fixed): records the
-    activity-start date that scoped a pre-activity dependency out of the
-    requirement graph, the provenance kind of that date, and - when present - the
-    AEAT censo snapshot id that corroborated it. The suppression is an explicit,
-    auditable outcome (``no-silent-under-declaration``), never a silent omission.
+    ADR 2026-06-13-first-filer-attestation-adr: records the activity-start date
+    that scoped a pre-activity dependency out of the requirement graph and the
+    provenance kind of that date. The date is operator-declared — censal facts
+    are operator-supplied through ``config profile edit`` since the live Modelo
+    036 censo read was retired — so ``OPERATOR_DECLARED`` is the sole provenance
+    kind. The suppression is an explicit, auditable outcome
+    (``no-silent-under-declaration``), never a silent omission.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -132,22 +131,13 @@ class NoPriorObligationProvenance(BaseModel):
     facet_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.NO_PRIOR_OBLIGATION_PRE_ACTIVITY
     activity_start_date: date
     provenance_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.OPERATOR_DECLARED
-    censo_snapshot_id: str | None = None
 
     @model_validator(mode="after")
     def _provenance_kind_is_a_source_kind(self) -> Self:
-        if self.provenance_kind not in (
-            NoPriorObligationProvenanceKind.OPERATOR_DECLARED,
-            NoPriorObligationProvenanceKind.CENSO_CORROBORATED,
-        ):
+        if self.provenance_kind is not NoPriorObligationProvenanceKind.OPERATOR_DECLARED:
             raise ValueError(
-                f"provenance_kind must be OPERATOR_DECLARED or CENSO_CORROBORATED, got {self.provenance_kind.value!r}",
+                f"provenance_kind must be OPERATOR_DECLARED, got {self.provenance_kind.value!r}",
             )
-        if (
-            self.provenance_kind is NoPriorObligationProvenanceKind.CENSO_CORROBORATED
-            and self.censo_snapshot_id is None
-        ):
-            raise ValueError("censo_corroborated provenance requires a censo_snapshot_id")
         return self
 
     @property

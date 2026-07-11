@@ -69,10 +69,9 @@ class Portal(StrEnum):
     PORTAL_RENTA_WEB_BORRADOR = "portal_renta_web_borrador"
     PORTAL_PRE303_AYUDA = "portal_pre303_ayuda"
 
-    # Consultation (4)
+    # Consultation (3)
     PORTAL_MIS_EXPEDIENTES = "portal_mis_expedientes"
     PORTAL_MIS_NOTIFICACIONES = "portal_mis_notificaciones"
-    PORTAL_MIS_DATOS_CENSALES = "portal_mis_datos_censales"
     PORTAL_MIS_DOCUMENTOS_PENDIENTES_FIRMA = "portal_mis_documentos_pendientes_firma"
 
     # Payment (5)

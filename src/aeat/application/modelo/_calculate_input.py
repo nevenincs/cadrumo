@@ -35,7 +35,13 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import FETCH_GATED_M210_TIPO_RENTA_CODES, M210_TIPO_RENTA_CODE_PROJECTION, Modelo, RescateType
+from ...core import (
+    FETCH_GATED_M210_TIPO_RENTA_CODES,
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    M210GrossIncomeSourceMode,
+    Modelo,
+    RescateType,
+)
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
@@ -144,11 +150,13 @@ class WorkCalculateInputBundle:
 
     casilla_inputs: Mapping[CasillaId, Decimal]
     text_casilla_inputs: Mapping[CasillaId, str]
+    m210_official_tipo_renta_code: str | None
     binding_values: Mapping[BindingId, Decimal]
     enum_binding_values: Mapping[BindingId, str]
     relation_values: Mapping[RelationId, Decimal]
     detail_rows: tuple[ModeloDetailRow, ...]
     borrador_snapshot_id: str | None
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL
     shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Non-blocking advisories raised while resolving shortcut inputs.
 
@@ -170,6 +178,8 @@ class WorkCalculateInputBundle:
         detail_rows: tuple[ModeloDetailRow, ...],
         borrador_snapshot_id: str | None,
         text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+        m210_official_tipo_renta_code: str | None = None,
+        m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
         shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
@@ -180,11 +190,15 @@ class WorkCalculateInputBundle:
         return cls(
             casilla_inputs=dict(casilla_inputs),
             text_casilla_inputs=dict(text_casilla_inputs or {}),
+            m210_official_tipo_renta_code=(
+                m210_official_tipo_renta_code.strip() if m210_official_tipo_renta_code else None
+            ),
             binding_values=dict(binding_values),
             enum_binding_values=dict(enum_binding_values),
             relation_values=dict(relation_values),
             detail_rows=detail_rows,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            m210_gross_income_source_mode=m210_gross_income_source_mode,
             shortcut_diagnostics=shortcut_diagnostics,
         )
 
@@ -287,6 +301,8 @@ def calculate_modelo_work_revision(
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
         text_casilla_inputs=inputs.optional_text_casilla_inputs(),
+        m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),
         enum_binding_values=inputs.optional_enum_binding_values(),
         borrador_snapshot_id=inputs.borrador_snapshot_id,
@@ -312,6 +328,7 @@ def build_work_calculate_input_bundle(
     relation_overrides: Mapping[RelationId, str],
     detail_rows: tuple[ModeloDetailRow, ...],
     borrador_snapshot_id: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
     prestacion_inss_exenta: Decimal | None = None,
     meses_trabajo_con_hijo_menor_3: tuple[tuple[str, int], ...] = (),
     rescate_plan_pensiones_capital: Decimal | None = None,
@@ -350,13 +367,15 @@ def build_work_calculate_input_bundle(
     revision_casillas_by_id = casillas_by_id(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
     text_casilla_inputs: dict[CasillaId, str] = {}
+    m210_official_tipo_renta_code: str | None = None
     for raw_key, raw_value in casilla_overrides.items():
         _refuse_detail_casilla_override(raw_key)
         key = _validated_canonical_casilla_id(raw_key, revision)
         casilla_def = revision_casillas_by_id.get(key)
         if casilla_def is not None and casilla_def.data_type == "text":
             if casilla_def.semantic_role == "irnr_tipo_renta":
-                text_casilla_inputs[key] = _validated_m210_tipo_renta_code(raw_value, key=key)
+                m210_official_tipo_renta_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
+                text_casilla_inputs[key] = M210_TIPO_RENTA_CODE_PROJECTION[m210_official_tipo_renta_code].value
             elif casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
                 text_casilla_inputs[key] = _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def)
             else:
@@ -420,6 +439,8 @@ def build_work_calculate_input_bundle(
         relation_values=relation_values,
         detail_rows=detail_rows,
         borrador_snapshot_id=borrador_snapshot_id,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
         shortcut_diagnostics=shortcut_diagnostics,
     )
 
@@ -541,10 +562,21 @@ def _validated_m210_tipo_renta_code(raw_value: str, *, key: str) -> str:
     per-code form-fidelity display belongs to the fetch-gated full-casilla
     schema, Slice C.)
     """
+    return M210_TIPO_RENTA_CODE_PROJECTION[_validated_m210_official_tipo_renta_code(raw_value, key=key)].value
+
+
+def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str:
+    """Return the validated raw M210 code without collapsing its identity.
+
+    The formula engine receives the conceptual rate token, while the ledger
+    source resolver and persisted calculation revision retain this official
+    code. Keeping both values prevents the many-to-one rate projection from
+    turning distinct declarations such as codes ``01`` and ``03`` into the
+    same ledger-selection key.
+    """
     value = _text_value(raw_value, key=key)
-    concept = M210_TIPO_RENTA_CODE_PROJECTION.get(value)
-    if concept is not None:
-        return concept.value
+    if value in M210_TIPO_RENTA_CODE_PROJECTION:
+        return value
     accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
     if value in FETCH_GATED_M210_TIPO_RENTA_CODES:
         raise ModeloCalculateTextInputError(

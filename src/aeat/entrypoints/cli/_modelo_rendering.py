@@ -373,6 +373,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
             f"recargo_band\t{summary.recargo.band_id}",
             f"recargo_pct\t{summary.recargo.surcharge_pct}",
             f"recargo_interest_applies\t{summary.recargo.interest_applies}",
+            f"recargo_conditional\t{summary.recargo.conditional}",
             f"recargo_legal_ref\t{summary.recargo.legal_ref}",
             tr(
                 "cli.app.modelo.work.plazo_vencido_warning",
@@ -411,6 +412,7 @@ def _work_unit_deadline_output_from_summary(
             surcharge_pct=str(summary.recargo.surcharge_pct),
             interest_applies=summary.recargo.interest_applies,
             legal_ref=summary.recargo.legal_ref,
+            conditional=summary.recargo.conditional,
         )
     deadline_payload = WorkPlazoDeadlinePayload(
         closes_on=summary.closes_on.isoformat(),
@@ -438,6 +440,9 @@ def _work_unit_deadline_output_from_summary(
         context["recargo_band"] = summary.recargo.band_id
         context["surcharge_pct"] = str(summary.recargo.surcharge_pct)
         context["interest_applies"] = str(summary.recargo.interest_applies)
+        # Distinguish a rate-only conditional advisory from a statutory
+        # computation so the operator surface never over-claims eligibility.
+        context["recargo_conditional"] = str(summary.recargo.conditional)
     else:
         # No recargo band resolved (e.g. deadline-validation failure), but the
         # filing is still extemporáneo under Art. 27 LGT; carry the binding

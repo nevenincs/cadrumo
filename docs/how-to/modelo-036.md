@@ -3,9 +3,9 @@
 Modelo 036 is the AEAT census declaration - the form you use to register, update, or
 deregister your tax situation. You file it yourself at AEAT's Sede Electrónica (the
 sede), the official online portal. The commands on this page only record that fact
-in your local audit trail afterwards - they never file anything at AEAT. To pull your
-registered census facts from AEAT into your profile, see
-[update your profile from AEAT census data](censo-update.md).
+in your local audit trail afterwards - they never file anything at AEAT. To keep
+your registered census facts current in your profile, see
+[maintain Modelo 036 census facts in your profile](censo-update.md).
 
 ## Before you start
 
@@ -100,9 +100,9 @@ edits or deletes a recorded declaration.
 The record is a local note for your own audit trail. It does not change your filing
 calendar, your obligations, or your profile facts.
 
-After AEAT processes your declaration, bring your registered census facts into your
-profile with the censo pull, compare, and apply commands - see
-[update your profile from AEAT census data](censo-update.md).
+After AEAT processes your declaration, update the census facts in your profile by
+hand to match what you filed - see
+[maintain Modelo 036 census facts in your profile](censo-update.md).
 
 ## Where to get help
 
@@ -113,7 +113,7 @@ profile with the censo pull, compare, and apply commands - see
 
 ## Next steps
 
-- [Update your profile from AEAT census data](censo-update.md)
+- [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Set up your taxpayer profile](profile-setup.md)
 - [Check your filing calendar](filing-calendar.md)
 - [CLI reference](../cli/index.rst)

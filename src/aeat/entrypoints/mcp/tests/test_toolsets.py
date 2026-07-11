@@ -47,11 +47,10 @@ def test_modelo_lifecycle_excludes_the_tax_concept_carve_outs() -> None:
     assert all("m036" not in key.split(".") for key in lifecycle)
 
 
-def test_censo_spans_the_m036_and_profile_censo_surfaces() -> None:
+def test_censo_covers_the_m036_surface() -> None:
     members = _members()
     censo = members[Toolset.CENSO]
     assert "modelo.m036.alta" in censo
-    assert "config.profile.censo.pull" in censo
 
 
 def test_iva_spans_live_and_modelo_wallet_surfaces() -> None:

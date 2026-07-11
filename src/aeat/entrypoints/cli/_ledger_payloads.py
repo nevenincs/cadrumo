@@ -139,6 +139,17 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
+class M210IncomeClassificationPayload(OutputSchema):
+    """Operator-visible persisted M210 classification facts for one ledger row."""
+
+    official_tipo_renta_code: str
+    gross_income_amount: str
+    applicable_rate: str
+    payer_mode: str
+    payer_id: str | None = None
+    asset_or_right_id: str | None = None
+
+
 class TransactionPayload(OutputSchema):
     """Nested CLI copy of :class:`LedgerTransactionPayload`."""
 
@@ -160,6 +171,7 @@ class TransactionPayload(OutputSchema):
     iva_category: str | None = None
     counterparty_eu_member_state: str | None = None
     irpf_category: str | None = None
+    m210_income_classification: M210IncomeClassificationPayload | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     purchase_invoice_evidence_id: str | None = None
@@ -612,6 +624,7 @@ class LedgerListRowPayload(OutputSchema):
     iva_category: str | None = None
     counterparty_eu_member_state: str | None = None
     irpf_category: str | None = None
+    m210_income_classification: M210IncomeClassificationPayload | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     purchase_invoice_evidence_id: str | None = None

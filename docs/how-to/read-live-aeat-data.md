@@ -22,8 +22,6 @@ you upload your filings yourself at the AEAT portal. See
 
 Each source has its own guide with the exact commands:
 
-- Census (*censo*) facts for your profile - see
-  [Link Modelo 036 census information](censo-update.md).
 - Official notifications, your declaration history, filed returns, and the IVA
   (Value Added Tax) compensation balance - see
   [Check AEAT notifications and live observations](check-aeat-notifications.md).
@@ -35,15 +33,6 @@ Each source has its own guide with the exact commands:
 Every live read works the same way. It uses your configured authentication,
 reads from the AEAT sede read-only, and saves an encrypted local copy in your
 profile. It applies nothing automatically.
-
-For example, pull your censo into a local snapshot:
-
-```bash
-aeat config profile censo pull
-```
-
-This reads your censo from AEAT and saves a snapshot. It changes nothing in your
-profile until you review and apply it.
 
 The `aeat app live` command group collects the read-only commands. Each one
 takes the arguments that scope the read. For example:
@@ -62,8 +51,11 @@ for each one.
 
 Reading is separate from applying. A pull saves a local copy; applying a
 downloaded fact updates only your local profile or records, and only after you
-review it. For example, `aeat config profile censo apply` writes the reviewed
-censo facts into your local profile. Nothing is sent back to AEAT.
+review it. Nothing is sent back to AEAT.
+
+Census (*censo*) facts are not a live read: AEAT publishes no read-only census
+view, so you enter census facts by hand - see
+[Maintain Modelo 036 census facts in your profile](censo-update.md).
 
 ## You don't set the live-tests variable
 
@@ -93,7 +85,7 @@ on that page before you take the issue to the project's issue tracker.
 ## Next steps
 
 - [Authenticate with AEAT](authenticate-with-aeat.md)
-- [Link Modelo 036 census information](censo-update.md)
+- [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Check AEAT notifications and live observations](check-aeat-notifications.md)
 - [Pull and keep your filing receipts](justificante-receipts.md)
 - [Recording a filing and the boundary](../explanation/recording-a-filing-and-the-boundary.md)

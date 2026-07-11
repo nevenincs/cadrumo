@@ -11,7 +11,6 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
-from ....core.config import Settings
 from ....domain.categories import SpendingCategory
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
@@ -23,12 +22,10 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....domain.user_profile import UserProfileRecord
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
-from ...live import CensoSnapshotService
 from ...user_profile import CensoSyncService, UserProfileLifecycleRepository
 
-_SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _OTHER_BUCKET_ID = "23232323-2323-4323-8323-232323232323"
 _HOME_OFFICE_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
@@ -124,17 +121,42 @@ def _home_office_censo_facts() -> dict[str, str]:
     }
 
 
+def _declare_home_office_m2(bucket_id: str) -> None:
+    """Persist only the operator-declared ``vivienda_office`` m² facts.
+
+    Mirrors ``config profile edit``: a real encrypted profile record
+    carrying the afectación m² so ``bound_raw_afectacion_ratio`` resolves
+    from the operator-declared facts, with no usage-ratio overrides.
+    """
+    m2_facts = tuple(
+        UserProfileFact(path=path, value=Decimal(value)) for path, value in _home_office_censo_facts().items()
+    )
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Ledger preflight profile",
+            facts=m2_facts,
+        ),
+    )
+
+
 def _apply_home_office_censo(bucket_id: str) -> None:
-    profiles = UserProfileLifecycleRepository(bucket_id=bucket_id)
-    profiles.save(UserProfileRecord(profile_id=bucket_id, display_name="Ledger preflight profile"))
-    service = CensoSyncService(
-        bucket_id=bucket_id,
-        snapshots=CensoSnapshotService(bucket_id=bucket_id),
-        profiles=profiles,
-    )
-    service.refresh_censo(
-        profile_id=bucket_id,
-        source_url=f"{_SEDE_ORIGIN}/",
-        fact_source=_home_office_censo_facts,
-    )
-    service.apply_censo_to_profile(profile_id=bucket_id)
+    """Declare the operator's ``vivienda_office`` m² facts and derived HOME_OFFICE ratios.
+
+    Reproduces what the retired ``censo apply`` verb did for the ledger
+    preflight tests: persist the operator-declared ``vivienda_office``
+    afectación m² onto the profile record (so ``bound_raw_afectacion_ratio``
+    resolves from the profile facts, as ``config profile edit`` would write
+    them) and persist the derived HOME_OFFICE ratios so the operator's
+    override agrees with the bound afectación ratio.
+    """
+    from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
+    from ....domain.usage_ratios import UsageRatioProfile, derive_home_office_ratios_from_censo
+
+    _declare_home_office_m2(bucket_id)
+    raw = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
+    assert raw is not None
+    derived = derive_home_office_ratios_from_censo(raw, year=2025)
+    merged = dict(load_usage_ratios(bucket_id=bucket_id).ratios)
+    merged.update(derived.ratios)
+    save_usage_ratios(UsageRatioProfile(ratios=merged), bucket_id=bucket_id)

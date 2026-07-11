@@ -43,11 +43,11 @@ Configure read-only AEAT authentication for live-read workflows.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Link Modelo 036 Censo
+:::{grid-item-card} Maintain Modelo 036 Censo Facts
 :link: censo-update
 :link-type: doc
 
-Pull, compare, and apply AEAT census facts for the active profile.
+Keep AEAT census facts correct in the active profile.
 :::
 
 :::{grid-item-card} Which Modelos Apply to You

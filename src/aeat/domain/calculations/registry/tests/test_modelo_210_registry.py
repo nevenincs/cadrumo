@@ -20,6 +20,7 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
+_M210_AGRUPACION_ORDER_REF = "orden-eha-3316-2010:art-2"
 
 
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -105,19 +106,29 @@ def test_modelo_210_revision_2025_formula_targets_resolve() -> None:
         assert formula_id in formula_ids, f"formula {formula_id} not found in revision formulas"
 
 
-def test_modelo_210_snapshot_builds_for_2025_event_period() -> None:
+def test_modelo_210_snapshot_builds_for_2025_event_and_annual_group_periods() -> None:
     modelo, catalogues = _load_modelo_210()
-    assert modelo.revisions["2025"].period_selector.periods == ("EVENT-N",)
-    snapshot = build_snapshot(
+    assert modelo.revisions["2025"].period_selector.periods == ("EVENT-N", "0A")
+    event_snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
         filing_year=2025,
         period="EVENT-1",
     )
-    assert snapshot.revision.id == "2025"
-    assert snapshot.filing_period is not None
-    assert str(snapshot.filing_period.code) == "EVENT-1"
+    annual_snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+    )
+    assert event_snapshot.revision.id == "2025"
+    assert event_snapshot.filing_period is not None
+    assert str(event_snapshot.filing_period.code) == "EVENT-1"
+    assert annual_snapshot.revision.id == "2025"
+    assert annual_snapshot.filing_period is not None
+    assert str(annual_snapshot.filing_period.code) == "0A"
 
 
 def test_modelo_210_legacy_evento_period_is_not_supported() -> None:
@@ -162,6 +173,25 @@ def test_modelo_210_form_order_is_boe_corpus_backed() -> None:
     source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
     assert "Última actualización publicada el 23/06/2026" in source_text
     assert "Se aprueba el modelo 210" in source_text
+
+
+def test_modelo_210_annual_agrupacion_rule_is_boe_corpus_backed() -> None:
+    """The 0A selector and grouped-row contract cite the consolidated Article 2 text."""
+    modelo, catalogues = _load_modelo_210()
+    revision = modelo.revisions["2025"]
+    legal = {_M210_AGRUPACION_ORDER_REF: catalogues.legal[_M210_AGRUPACION_ORDER_REF]}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _M210_AGRUPACION_ORDER_REF in modelo.legal_refs
+    assert _M210_AGRUPACION_ORDER_REF in revision.legal_refs
+    reference = legal[_M210_AGRUPACION_ORDER_REF]
+    assert reference.document_id == "BOE-A-2010-19707"
+    assert reference.article == "2"
+    assert reference.corpus_ref == "corpus/normatives/html/orden-eha-3316-2010.html#a2"
+    assert "mismo código de tipo de renta" in reference.required_text
+    assert "código específico de tipo de renta, el 35" in reference.required_text
+    assert "En ningún caso las rentas agrupadas pueden compensarse entre sí." in reference.required_text
 
 
 def test_modelo_210_irnr_sources_separate_aeat_guidance_from_boe_layout() -> None:

@@ -22,7 +22,6 @@ _GUARDED_WRITE_VERBS: tuple[tuple[str, ...], ...] = (
     ("app", "modelo", "work", "verify", "abc"),
     ("app", "modelo", "work", "file", "abc"),
     ("app", "modelo", "export", "abc", "--output", "out.txt"),
-    ("config", "profile", "censo", "pull"),
 )
 
 _BOOTSTRAP_SAFE_PROBES: tuple[tuple[str, ...], ...] = (
@@ -48,8 +47,6 @@ _GUARDED_PREDICATE_PATHS: tuple[str, ...] = (
     "app live notifications pull",
     "app live expedientes pull",
     "app live iva-wallet pull-history",
-    "config profile censo pull",
-    "config profile censo apply",
     "app ledger inventory valuation preview actividad 2026",
 )
 

@@ -39,7 +39,7 @@ published_at = 2006-11-29
 effective_from = 2025-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-04
-reviewed_by = "claude (agent-authored from BOE-A-2006-20764#a93 art. 93.2.e).2.º redacción vigente; operator to re-stamp)"
+reviewed_by = "agent-authored from BOE-A-2006-20764#a93 art. 93.2.e).2.º redacción vigente; operator to re-stamp"
 notes = "LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen especial de impatriados (Modelo 151): a la parte de la base liquidable correspondiente a las rentas del art. 25.1.f) TRLIRNR (dividendos, intereses, ganancias patrimoniales del ahorro) se le aplica la escala progresiva del ahorro. Redacción vigente (efectos 1-1-2025, disp. final 7.3 Ley 7/2024, BOE-A-2024-26694): 19% hasta 6.000 €, 21% hasta 50.000 €, 23% hasta 200.000 €, 27% hasta 300.000 € y 30% en adelante; cuotas íntegras acumuladas 1.140 / 10.380 / 44.880 / 71.880. Grounded contra el texto consolidado ley-35-2006.html#a93 (tabla verbatim del BOE). Distinta de la escala general plana del número 1.º (24/47)."
 required_text = [
     "a la parte de la base liquidable correspondiente a las rentas",
@@ -79,7 +79,7 @@ published_at = 2007-03-31
 effective_from = 2023-12-07
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (agent-authored from BOE-A-2007-6820#a115; operator to re-stamp)"
+reviewed_by = "agent-authored from BOE-A-2007-6820#a115; operator to re-stamp"
 notes = "RIRPF Art. 115 fixes the duration of the impatriado special regime: the tax period in which Spanish residence is acquired and the five following tax periods, with the 183-day residence-year rule."
 required_text = [
     "Duración",
@@ -99,7 +99,7 @@ published_at = 2007-03-31
 effective_from = 2023-12-07
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (agent-authored from BOE-A-2007-6820#a116; operator to re-stamp)"
+reviewed_by = "agent-authored from BOE-A-2007-6820#a116; operator to re-stamp"
 notes = "RIRPF Art. 116 establishes how the impatriado option is exercised and the six-month communication deadline. Grounds the profile special_regime_start_date selector."
 required_text = [
     "Ejercicio de la opción",
@@ -119,7 +119,7 @@ published_at = 2008-10-08
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Orden EHA/2887/2008: aprueba el Modelo 151 de declaracion del IRPF para contribuyentes en el regimen especial aplicable a trabajadores desplazados a territorio espanol."
 required_text = [
     "se aprueba el modelo 151 de declaración",

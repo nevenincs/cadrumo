@@ -202,7 +202,7 @@ _CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
 
 _CENSO_ENROLMENT_WARNING_CODE = "censo.enrolment_unverified"
 _CENSO_ENROLMENT_WARNING_MESSAGE = "cli.overview.warning.censo_enrolment_unverified"
-_CENSO_ENROLMENT_FIX_COMMAND = "aeat config profile censo pull && aeat config profile censo apply"
+_CENSO_ENROLMENT_FIX_COMMAND = "aeat config profile edit"
 _JUSTIFICANTE_UNVERIFIED_WARNING_CODE = "filing.justificante_unverified"
 _JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE = "cli.overview.warning.justificante_unverified"
 _JUSTIFICANTE_UNVERIFIED_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"

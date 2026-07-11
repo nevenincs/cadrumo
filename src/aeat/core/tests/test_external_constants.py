@@ -79,12 +79,17 @@ def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.A
 
 
 def _docstring_constant_ids(tree: ast.AST) -> set[int]:
-    return {
-        id(node.body[0].value)
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
-        and _is_docstring_node(node)
-    }
+    ids: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        if not _is_docstring_node(node):
+            continue
+        first = node.body[0]
+        assert isinstance(first, ast.Expr)
+        assert isinstance(first.value, ast.Constant)
+        ids.add(id(first.value))
+    return ids
 
 
 def _token_literal_offenders(
@@ -151,7 +156,6 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.notifications_summary,
         paths.notifications_query,
         paths.certificate_selector,
-        paths.censo_g313_launcher,
         paths.irpf_expediente_detail_year_prefix,
         paths.notificaciones,
         paths.iva_compensation_wallet,
@@ -387,7 +391,6 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
     assert re.compile(constants.portal_paths.filing_censo_path_regex)
     assert constants.portal_paths.filing_censo_path_description
     assert set(constants.portal_paths.paths) == {portal.value for portal in Portal} - {
-        Portal.PORTAL_MIS_DATOS_CENSALES.value,
         Portal.PORTAL_PRE303_AYUDA.value,
     }
     for portal_id, path in constants.portal_paths.paths.items():
@@ -395,7 +398,9 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
         assert portal_path(Portal(portal_id)) == path
 
 
-def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
 
     volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS

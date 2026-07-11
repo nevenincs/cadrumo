@@ -24,6 +24,7 @@ from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY
 from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import is_exposable_command, tool_name_for_command
 from ._input_schema import VerbInputSchema, build_verb_input_schemas
+from ._result_thinning import thin_output_schema
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -135,4 +136,9 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     schema = SCHEMA_REGISTRY.get(command_key)
     if schema is None:
         return {"type": "object"}
-    return schema.model_json_schema()
+    # ADR H4: a thinned verb moves its bulk arrays to resource_link URIs, so its
+    # declared output schema drops those properties in lock-step with the runtime
+    # envelope thinning (_result_thinning.thin_envelope) - the advertised shape
+    # and the emitted structuredContent stay identical, and the size-budget gate
+    # measures the thinned schema.
+    return thin_output_schema(command_key, schema.model_json_schema())

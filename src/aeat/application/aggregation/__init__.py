@@ -132,6 +132,7 @@ from ._ledger_filing_snapshot import (
 )
 from ._modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
+    LedgerIrnrIncomeAggregationSourceResolver,
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
     LedgerRentaGastoAggregationSourceResolver,
@@ -263,6 +264,7 @@ __all__ = [
     "IvaLedgerInputKind",
     "LedgerFilingSnapshot",
     "LedgerImpatriadoIncomeAggregationSourceResolver",
+    "LedgerIrnrIncomeAggregationSourceResolver",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
     "LedgerRentaGastoAggregationSourceResolver",

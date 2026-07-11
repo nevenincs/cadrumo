@@ -32,8 +32,8 @@ after this guide.
 Start with the local filing context:
 
 - [Set up your taxpayer profile](profile-setup.md) and check the active profile.
-- If you use AEAT census data, update the local profile first with
-  [Link Modelo 036 census information](censo-update.md).
+- Check the census facts in your profile first with
+  [Maintain Modelo 036 census facts in your profile](censo-update.md).
 - Use [Plan your filing calendar](filing-calendar.md) to confirm the annual
   filing window.
 - Confirm the annual period token with

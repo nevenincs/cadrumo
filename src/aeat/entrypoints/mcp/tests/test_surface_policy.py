@@ -1,6 +1,6 @@
 """The console advertises an orientation core, not the flat verb universe.
 
-Proves the ADR ``mcp-progressive-discovery`` P1 surface policy: the default
+Proves the surface policy: the default
 ``core`` surface advertises only the always-on floor / grounding / meta tools
 plus the orientation slice (``overview`` family + ``contract``), the ``full``
 opt-out restores the flat per-verb surface, and a verb outside the advertised

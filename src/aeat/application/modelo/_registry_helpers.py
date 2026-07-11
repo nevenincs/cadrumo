@@ -458,6 +458,8 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
         relation_overrides=revision.relation_overrides,
         casilla_values=revision.casilla_values,
         source_transaction_ids=revision.source_transaction_ids,
+        m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=revision.m210_gross_income_source_mode,
         borrador_snapshot_id=revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
         detail_rows=revision.detail_rows,

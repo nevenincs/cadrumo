@@ -51,7 +51,6 @@ from ._entries import (
     portal_m720_bienes_extranjero,
     portal_m840_iae,
     portal_mi_area_personal,
-    portal_mis_datos_censales,
     portal_mis_documentos_pendientes_firma,
     portal_mis_expedientes,
     portal_mis_notificaciones,
@@ -109,7 +108,6 @@ _ENTRIES: tuple[PortalMetadata, ...] = (
     # CONSULTATION
     portal_mis_expedientes.ENTRY,
     portal_mis_notificaciones.ENTRY,
-    portal_mis_datos_censales.ENTRY,
     portal_mis_documentos_pendientes_firma.ENTRY,
     # PAYMENT
     portal_pago_autoliquidacion_cuenta.ENTRY,

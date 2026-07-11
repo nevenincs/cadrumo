@@ -40,12 +40,23 @@ class ModeloWorkRecargoSummary:
     id, surcharge percentage, interest applicability, and legal reference. The
     CLI renderer serialises this structure into the recargo block on the
     deadline payload.
+
+    ``conditional`` records whether this is a rate-only CONDITIONAL advisory or a
+    statutory recargo COMPUTATION. The Art. 27 LGT recargo is only *determined*
+    when there is an importe a ingresar, the actual presentation date is known,
+    and there is no prior AEAT requirement. The calculate path normally holds none
+    of those facts, so the band it surfaces is the surcharge percentage that
+    *would* apply — a conditional advisory (``conditional=True``) — not an
+    eligibility determination. It is set to ``False`` only when
+    :func:`modelo_work_plazo_summary` is given all three statutory facts and they
+    establish that a recargo is actually due.
     """
 
     band_id: str
     surcharge_pct: Decimal
     interest_applies: bool
     legal_ref: str
+    conditional: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +79,9 @@ def modelo_work_plazo_summary(
     work_unit: WorkUnit,
     *,
     today: date | None = None,
+    amount_payable: Decimal | None = None,
+    presentation_date: date | None = None,
+    prior_requirement: bool | None = None,
 ) -> ModeloWorkPlazoSummary | None:
     """Return deadline and recargo posture for a :class:`WorkUnit`, if known.
 
@@ -76,13 +90,39 @@ def modelo_work_plazo_summary(
     returns ``None`` so callers can omit the deadline block. When the filing is
     still inside the voluntary window, the summary carries ``days_remaining``.
     When the close date has passed, it carries ``days_overdue`` and, when
-    available, a :class:`ModeloWorkRecargoSummary`.
+    applicable, a :class:`ModeloWorkRecargoSummary`.
+
+    Art. 27 LGT statutory-fact gate. The recargo por declaración extemporánea is
+    only *determined* — a statutory computation — when three facts hold: there is
+    an importe a ingresar (Art. 27.2: the recargo is computed "sobre el importe a
+    ingresar"), the actual presentation date is known, and there is no prior AEAT
+    requirement (Art. 27.1: the regime applies only "sin requerimiento previo").
+    The calculate path is given only a work unit and a reference date, so it holds
+    none of those facts. This function therefore FAILS CLOSED: absent the facts it
+    surfaces the surcharge percentage that *would* apply as a rate-only
+    CONDITIONAL advisory (``recargo.conditional=True``) and makes no eligibility
+    claim; a supplied ``prior_requirement=True`` or a non-positive
+    ``amount_payable`` yields the overdue posture with **no** recargo at all,
+    because neither can attract an Art. 27 recargo. The recargo is marked a
+    statutory computation (``conditional=False``) only when all three facts are
+    present and establish that a recargo is due.
 
     Args:
         work_unit: The :class:`WorkUnit` whose modelo, filing year, and
             :class:`~aeat.core.Period` select a registry filing window.
         today: Optional reference date for deterministic tests; defaults to
-            ``date.today()``.
+            ``date.today()``. Drives the ``days_remaining`` / ``days_overdue``
+            posture.
+        amount_payable: The importe a ingresar of the filing, when known. A
+            ``None`` value means "unknown" (conditional); a value ``<= 0`` means
+            there is nothing to ingresar, so no recargo is due.
+        presentation_date: The actual date the self-assessment is presented, when
+            committed. Drives the recargo band when supplied; ``None`` means the
+            band is computed against ``today`` as a conditional estimate.
+        prior_requirement: Whether a prior AEAT requerimiento exists. ``True``
+            removes the Art. 27 sin-requerimiento recargo regime; ``None`` means
+            unknown (conditional); ``False`` is one of the three facts required to
+            treat the recargo as a statutory computation.
 
     Returns:
         A :class:`ModeloWorkPlazoSummary`, or ``None`` when the registry has no
@@ -110,10 +150,24 @@ def modelo_work_plazo_summary(
     if days_overdue < 1:
         return ModeloWorkPlazoSummary(closes_on=closes_on)
 
+    # Fail-closed statutory gate. A prior requerimiento, or a filing with no
+    # importe a ingresar (informational / zero / refund), cannot attract an
+    # Art. 27 recargo: surface the overdue posture with no recargo claim.
+    if prior_requirement is True or (amount_payable is not None and amount_payable <= 0):
+        return ModeloWorkPlazoSummary(closes_on=closes_on, days_overdue=days_overdue)
+
+    statutory_facts_established = (
+        amount_payable is not None
+        and amount_payable > 0
+        and presentation_date is not None
+        and prior_requirement is False
+    )
+    band_reference = presentation_date or resolved_today
+
     try:
         recovery = build_recovery_for_overdue(
             closes_on=closes_on,
-            reference_today=resolved_today,
+            reference_today=band_reference,
             modelo=str(work_unit.modelo),
             period=work_unit.period,
         )
@@ -138,6 +192,7 @@ def modelo_work_plazo_summary(
             surcharge_pct=band.surcharge_pct,
             interest_applies=band.interest_applies,
             legal_ref=band.legal_ref,
+            conditional=not statutory_facts_established,
         ),
     )
 

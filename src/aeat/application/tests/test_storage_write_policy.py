@@ -22,7 +22,6 @@ _PROFILE_BOUND_VERB_CASES = (
     ("app ledger rule add --description-pattern fuel --classification expense", True),
     ("app ledger rule apply --dry-run", True),
     ("app modelo work file abc", True),
-    ("config profile censo pull", True),
     ("config profile edit operator", False),
     ("config profile delete operator --yes", False),
     ("config profile duplicate operator operator-copy", False),

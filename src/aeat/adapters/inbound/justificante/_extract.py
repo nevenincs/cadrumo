@@ -136,13 +136,14 @@ _EJERCICIO_LOOSE_RE = re.compile(
 # label. The parser preserves the observed year in that case; application
 # import/reconciliation code performs canonical period conversion.
 _NIF_RE = re.compile(
-    # NIF / NIE shape: leading letter (NIE) or digit (NIF), 7-8 mid
-    # digits, trailing checksum letter. Total length 9 in practice.
+    # Spanish tax-id shape: a natural-person NIF/NIE or a legal-entity CIF,
+    # all represented as one leading letter/digit, seven digits, and a final
+    # letter or digit. Total length is nine characters in practice.
     # The shape constraint excludes the word "PRESENTADOR" that the
     # ``NIF Presentador: <value>`` register-printed shape places after
     # the label.
     r"NIF\s*(?:Presentador)?\s*[:\-]?\s*"
-    r"([XYZ\d]\d{7}[A-Z])",
+    r"([A-Z\d]\d{7}[A-Z\d])",
     re.IGNORECASE,
 )
 # Legacy 2021 modelos (iText 2.1.4 producer) print value-then-label
@@ -152,7 +153,7 @@ _NIF_RE = re.compile(
 # English-language receipts use "Tax identification number(NIF)of
 # filer:" as the label; the inverted form catches both.
 _NIF_INVERTED_RE = re.compile(
-    r"\b([XYZ\d]\d{7}[A-Z])\s+"
+    r"\b([A-Z\d]\d{7}[A-Z\d])\s+"
     r"(?:NIF(?:\s+Presentador)?|Tax\s+identification\s+number\s*\(NIF\))"
     r"\s*[:\-]?",
     re.IGNORECASE,

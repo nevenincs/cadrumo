@@ -23,6 +23,10 @@ Supported row types:
   One row per counterparty. Annual importe threshold check (> €3,005.06)
   is performed by the CLI validator, not the model, so partial row sets
   accumulate correctly before final validation.
+* ``Modelo210AgrupacionRentaRow`` — one component renta in an annual
+  Modelo 210 agrupación (period ``0A``). The row retains the official
+  two-digit renta code and the statutory grouping keys; it is evidence
+  only and never an alternate arithmetic input.
 
 These models are the CLI boundary layer. They validate operator input
 before being carried into ``detail_rows`` on the ``CalculationRevision``.
@@ -35,9 +39,9 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210PayerMode
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR  # re-export
 from ...core.identity import nif_iva_format_for_country
@@ -50,6 +54,7 @@ _NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, 
 _NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
 _RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
+_M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
 
 
 # ---------------------------------------------------------------------------
@@ -621,6 +626,161 @@ class Modelo347ContraparteRow(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Modelo 210 - annual grouped-renta rows
+#
+# Orden HAC/56/2024 art. 4.1 substitutes the M210 grouping rule in Orden
+# EHA/3316/2010 art. 2: grouped rents share one official renta code, rate and
+# (where applicable) property/right; one payer is required except for code 35;
+# components must not offset one another. Annual 0A is the lease/sublease
+# grouping period, represented by official codes 01 and 35.
+# ---------------------------------------------------------------------------
+
+_M210_ANNUAL_AGRUPACION_CODES = frozenset({"01", "35"})
+
+
+class Modelo210AgrupacionRentaRow(BaseModel):
+    """One non-offsetting component renta in an annual Modelo 210 grouping.
+
+    The record deliberately carries the official M210 code rather than the
+    rate-concept token used by the formula engine. Several official codes map to
+    the same conceptual rate, but Article 2's grouping test is on the official
+    code itself. ``source_id`` remains stable across persistence and can name a
+    manual supporting record now or a classified ledger transaction later.
+
+    Rows evidence the legality of a grouped declaration. They do not sum into a
+    casilla: the registry-owned manual M210 formula remains the sole arithmetic
+    path.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    row_type: Literal["agrupacion_renta"] = "agrupacion_renta"
+    source_id: _RequiredNameStr
+    tipo_renta_code: _M210OfficialTipoRentaCode
+    importe: Decimal = Field(ge=Decimal("0"), description="Non-negative individual renta amount in EUR")
+    tipo_gravamen: Decimal = Field(
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Applicable tax-rate fraction (for example, 0.24 for 24%)",
+    )
+    pagador_mode: M210PayerMode
+    pagador_id: _RequiredNameStr | None = None
+    deriva_de_bien_derecho: bool
+    bien_derecho_id: _RequiredNameStr | None = None
+
+    @field_validator("tipo_renta_code")
+    @classmethod
+    def _tipo_renta_code_is_registry_declared(cls, value: str) -> str:
+        if value not in M210_TIPO_RENTA_CODE_PROJECTION:
+            accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
+            raise ValueError(
+                f"tipo_renta_code must be a registry-declared Modelo 210 official code; "
+                f"got {value!r}; accepted codes: {accepted}"
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _statutory_identity_contract(self) -> Modelo210AgrupacionRentaRow:
+        if self.tipo_renta_code == "35":
+            if self.pagador_mode is not M210PayerMode.MULTIPLE_PAYERS_CODE_35:
+                raise ValueError("tipo_renta_code '35' requires the explicit multiple-payers code-35 mode")
+        elif self.pagador_mode is not M210PayerMode.SINGLE_PAYER:
+            raise ValueError("only tipo_renta_code '35' may use the multiple-payers code-35 mode")
+        elif self.pagador_id is None:
+            raise ValueError("single-payer grouped renta rows require a non-blank pagador_id")
+
+        if self.deriva_de_bien_derecho:
+            if self.bien_derecho_id is None:
+                raise ValueError("a renta derived from a bien or derecho requires bien_derecho_id")
+        elif self.bien_derecho_id is not None:
+            raise ValueError("bien_derecho_id is only valid when deriva_de_bien_derecho is true")
+        return self
+
+
+class Modelo210AgrupacionRentaRowsError(ValueError):
+    """A Modelo 210 annual grouped-renta set violates Article 2 compatibility."""
+
+    def __init__(self, *, reason: str, detail: str) -> None:
+        self.reason = reason
+        self.detail = detail
+        super().__init__(f"Modelo 210 annual agrupación rows are invalid ({reason}): {detail}")
+
+
+def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
+    """Validate the complete M210 annual ``0A`` grouped-renta row set.
+
+    The validator makes the statutory grouping facts explicit: at least one
+    component; one official renta code, rate, and identified property/right;
+    and one payer unless the set declares the explicit code-35 multi-payer
+    exception. Individual row validation forbids negative components, so no
+    component can offset another in the group.
+
+    Raises:
+        Modelo210AgrupacionRentaRowsError: if the supplied row set cannot be a
+            lawful annual grouping.
+    """
+    if not rows:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="empty_group",
+            detail="period 0A requires at least one grouped-renta component",
+        )
+
+    source_ids = tuple(row.source_id for row in rows)
+    if len(set(source_ids)) != len(source_ids):
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="duplicate_source_id",
+            detail="each grouped-renta component must carry a unique stable source_id",
+        )
+
+    codes = {row.tipo_renta_code for row in rows}
+    if len(codes) != 1:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="mixed_tipo_renta_code",
+            detail=f"components use more than one official code: {', '.join(sorted(codes))}",
+        )
+    code = next(iter(codes))
+    if code not in _M210_ANNUAL_AGRUPACION_CODES:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="annual_code_not_lease_or_sublease",
+            detail=f"period 0A is limited to lease/sublease grouped rentas (01 or 35), got {code}",
+        )
+
+    rates = {row.tipo_gravamen for row in rows}
+    if len(rates) != 1:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="mixed_tipo_gravamen",
+            detail=f"components use more than one tax rate: {', '.join(str(rate) for rate in sorted(rates))}",
+        )
+
+    if not all(row.deriva_de_bien_derecho and row.bien_derecho_id is not None for row in rows):
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="missing_bien_derecho",
+            detail="annual lease/sublease grouping requires an identified shared bien or derecho",
+        )
+    bienes_derechos = {row.bien_derecho_id for row in rows}
+    if len(bienes_derechos) != 1:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="mixed_bien_derecho",
+            detail="components derive from more than one bien or derecho",
+        )
+
+    if code == "35":
+        if any(row.pagador_mode is not M210PayerMode.MULTIPLE_PAYERS_CODE_35 for row in rows):
+            raise Modelo210AgrupacionRentaRowsError(
+                reason="code_35_payer_mode",
+                detail="code 35 requires the explicit multiple-payers mode on every component",
+            )
+        return
+
+    payer_ids = {row.pagador_id for row in rows}
+    if None in payer_ids or len(payer_ids) != 1:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="mixed_pagador",
+            detail="non-35 grouped rentas must proceed from one identified payer",
+        )
+
+
+# ---------------------------------------------------------------------------
 # Discriminated union — single type accepted by the CLI --row argument
 # ---------------------------------------------------------------------------
 
@@ -630,6 +790,7 @@ ModeloDetailRow = (
     | Modelo349OperadorRow
     | Modelo349RectificacionRow
     | Modelo347ContraparteRow
+    | Modelo210AgrupacionRentaRow
 )
 
 
@@ -704,6 +865,8 @@ __all__ = [
     "M347_THRESHOLD_EUR",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
+    "Modelo210AgrupacionRentaRow",
+    "Modelo210AgrupacionRentaRowsError",
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
     "Modelo347ThresholdError",
@@ -713,6 +876,7 @@ __all__ = [
     "ModeloDetailRow",
     "m349_nif_number_for_export",
     "validate_m184_member_share_sum",
+    "validate_m210_agrupacion_renta_rows",
     "validate_m347_threshold",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",

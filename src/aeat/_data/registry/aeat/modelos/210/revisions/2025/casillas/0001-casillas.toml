@@ -47,7 +47,7 @@ data_type = "money"
 semantic_role = "irnr_rendimientos_integros"
 required = true
 input_kind = "manual"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-modelo-210-procedure"] }
 

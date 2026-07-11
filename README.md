@@ -1,127 +1,173 @@
+<p align="center">
+  <img src="assets/readme/aeat-logo.png" alt="aeat project logo" width="136">
+</p>
+
 # aeat
 
-A Spanish tax-filing assistant, driven by a deterministic engine and an agent harness.
+**A Claude plugin, command-line interface (CLI), and deterministic calculation engine for preparing Spanish tax filings.**
 
-At the core of `aeat` is a comprehensive command line that you and your agent operate together. It's for autónomos, small businesses, and the people who help them file. It ingests your financial records, calculates each modelo's figures, and prepares the filing: checked against the form's rules, grounded in the regulation that defines each casilla, and exported ready to upload. Your responsibility is to verify the result and to file it yourself, through the official channels of the Agencia Estatal de Administración Tributaria (AEAT).
+[![Latest aeat-cli version on PyPI](https://img.shields.io/pypi/v/aeat-cli?label=PyPI)](https://pypi.org/project/aeat-cli/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/aeat-cli)](https://pypi.org/project/aeat-cli/)
+[![Claude plugin in the neve marketplace](https://img.shields.io/badge/Claude-plugin-D97757?logo=claude&logoColor=white)](https://github.com/nevenincs/neve-marketplace)
+[![Apache 2.0 license](https://img.shields.io/pypi/l/aeat-cli)](LICENSE)
+![Project status: alpha](https://img.shields.io/badge/status-alpha-orange)
 
-You run it as a Claude plugin, through any Model Context Protocol (MCP) client, or directly at the terminal. Describe your situation in plain language; the assistant drives the toolkit, and the deterministic engine computes every figure and cites the legal rule behind it.
+`aeat` turns local financial records into calculated, checked, and exportable Spanish tax modelos (forms). The Claude plugin and CLI use the same calculation path.
 
-> **Verify everything.** `aeat` works to ground every figure in current regulation and cites its sources, but it can make mistakes. Never accept a result blindly. You remain responsible for every declaration you file, and the authors accept no liability for incorrect output.
->
-> **Status: beta.** Expect breaking changes between versions. The web home at `aeat.neve.md` is under construction; until it lands, this repository is the canonical source.
+Use `aeat` if you're self-employed, run a small business, file under a supported regime, or prepare filings for others. Each profile keeps one taxpayer's work separate.
 
-## What you use it for
+> [!IMPORTANT]
+> `aeat` never submits a filing. Review every result, then file through official Agencia Estatal de Administración Tributaria (AEAT) channels. This independent project isn't affiliated with or endorsed by AEAT. It doesn't provide tax, legal, accounting, or financial advice.
 
-- Keep an encrypted ledger of transactions, invoices, and supporting evidence
-- Classify each entry for IRPF (personal income tax) and IVA (value-added tax), including mixed business and personal use
-- Calculate a modelo's figures from the ledger, grounded in the BOE (Boletín Oficial del Estado) and AEAT rules that define each casilla
-- Verify a draft against the form's own consistency checks before anything leaves your machine
-- Export a submission-ready file in the official format
-- Reconcile your records against the justificante AEAT issues after you file
+Alpha releases may introduce breaking changes before 1.0.
 
-## What it is not
+## See the CLI flow
 
-- **It never files.** No submit command exists, and no code path contacts AEAT to file on your behalf. You upload the exported file through AEAT's own tools.
-- **It isn't a tax adviser.** It computes and checks figures from published rules; it doesn't judge your situation. When in doubt, consult a professional.
-- **It isn't affiliated with AEAT**, and it doesn't replace AEAT's official software.
-- **It prepares one taxpayer at a time.** Profiles keep each taxpayer's records separate and encrypted.
+![Animated terminal showing aeat calculate, verify, and export a Modelo 115 to a local file](assets/readme/cli-demo.gif)
 
-## Spanish tax terms
+This recording uses fictional data and the production calculation path. It writes a verified Modelo 115 export file locally without contacting or submitting to AEAT.
 
-These terms appear throughout the project:
+<details>
+<summary>Read the terminal transcript</summary>
 
-- **Modelo** - an AEAT tax form, named by a three-digit code such as 100 (annual income tax), 130 (quarterly income-tax instalment), or 303 (quarterly IVA).
-- **Casilla** - a single numbered field on a modelo.
-- **Justificante** - the receipt PDF AEAT issues after you file, carrying the verification code and the filed figures.
-- **Autónomo** - a self-employed individual who files their own taxes with AEAT.
-
-## How it works
-
-The project is two halves: an agent harness that the assistant loads to operate safely, and a deterministic engine that does the tax work. The assistant orchestrates, extracts, and narrates; the engine computes. No tax value ever comes from a language model.
-
-### The agent harness
-
-The harness is the operating layer the assistant loads before touching your records:
-
-- **Operator rules** - the always-on contract: read the typed result envelopes, preserve provenance, never guess a figure, stop at the filing boundary.
-- **Personas** - seven scoped roles (coordinator, onboarding, ledger groomer, classifier, modelo preparer, verifier, reconciler), each limited to the tools its job needs.
-- **Skills** - situation-keyed playbooks selected by who you are (an autónomo in estimación directa, a sociedad, an arrendador), what's happening (a quarter closes, an activity starts), or which modelo is due (such as 130, 303, and 390).
-- **The operating console** - one MCP server, `aeat-mcp`, exposes the toolkit to any MCP client. It carries grounded search over the bundled BOE and AEAT legal corpus, a Spanish tax terminology lookup, a capability contract, and gated command execution.
-
-Consequential actions pass a human-in-the-loop gate: reads run freely, local changes ask for confirmation where it matters, and anything that would write to AEAT is refused outright.
-
-### The CLI as the brain
-
-Under the harness sits `aeat`, a Python CLI published on PyPI as [`aeat-cli`](https://pypi.org/project/aeat-cli/). It's a self-contained tax engine and works without any AI in the loop:
-
-- Modelo definitions live in a versioned registry compiled from TOML. Every casilla carries the legal references and official sources that define it, keyed by filing year and revision.
-- Every command emits a versioned JSON envelope with a stable exit-code table and typed notices, so an assistant or a script reads outcomes without scraping text.
-- Financial data persists only in encrypted storage on your machine, unlocked through your OS keychain or a passphrase fallback.
-- The surface is two command families: `aeat config` (profiles, authentication, diagnostics) and `aeat app` (ledger, modelos, registry, read-only live AEAT pulls).
-
-## Install
-
-### The Claude plugin (recommended)
-
-You need [Claude Code](https://claude.com/claude-code) or the Claude desktop app, plus [uv](https://docs.astral.sh/uv/); the plugin launches the published `aeat-cli` package with `uvx`.
-
-```
-/plugin marketplace add nevenincs/neve-marketplace
-/plugin install aeat@neve
+```text
+aeat app quickfile --modelo=115 --year=2026 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe
+operation  quickfile
+modelo  115
+filing_year  2026
+period  1T
+registry_revision_id  2019-y-siguientes
+stage  readiness  warning  profile is not yet source-ready; caller-supplied inputs may still satisfy calculate
+stage  create  ok  created
+stage  calculate  ok
+stage  verify  ok
+stage  export  ok
+completed  true
+output_path  var/readme-demo/m115.boe
+file_sha256  45cd24be65bd39783b5e9e87a30b64441192d7360a49e601aea9d98ed6ed1fef
 ```
 
-One install carries the skills, the personas, and the operating console. Then ask for what you need in plain language: "set up my taxpayer profile", "import this bank statement", or "prepare my Modelo 303 for 3T". The [quickstart](docs/how-to/quickstart.md) walks the full path from an empty profile to an exported file.
+</details>
 
-### The CLI on its own
+## One engine, three ways to work
 
-If you prefer the terminal, or want the console in a different MCP client:
+| Use | Best for | Role |
+| --- | --- | --- |
+| **Claude plugin** | Guided preparation in Claude Code, Claude Desktop, or Cowork | Loads the operating rules, skills, personas, and local Model Context Protocol (MCP) console. The assistant guides and explains; it doesn't calculate tax values. |
+| **CLI** | Direct terminal work and automation | Exposes human-readable commands and versioned JavaScript Object Notation (JSON) results through `aeat`. It also provides the `aeat-mcp` console for other MCP clients. |
+| **Calculation engine** | Registry-backed figures beneath both interfaces | Selects the filing-year rules, resolves declared inputs, evaluates formulas, and returns form-field (`casilla`) values with legal and source references. |
 
-```bash
+Both interfaces use the same application services and calculation path.
+
+## Prepare a filing from records
+
+Use `aeat` to:
+
+- Create a taxpayer profile whose sensitive facts and app-managed records are encrypted at rest
+- Classify business, personal, and mixed-use ledger entries with operator review
+- Calculate supported modelos from profile facts, records, prior filings, relations, and explicit inputs
+- Verify required values, provenance, internal consistency, and known blocking conditions
+- Export supported fixed-width or structured filing files to a local path
+- Reconcile local work with the justificante (filing receipt) or read-only AEAT evidence obtained after filing
+
+Coverage varies by modelo. `aeat app modelo list` shows catalogue and local-work eligibility. `aeat app modelo describe 115` shows its registered fields and formulas.
+
+At runtime, `aeat` may refuse a calculation or export when the selected modelo lacks the required support.
+
+## Start with Claude
+
+In Claude Code, you need `uv` on `PATH`. Installing the plugin for the first time requires access to GitHub and PyPI.
+
+```console
+claude plugin marketplace add nevenincs/neve-marketplace
+claude plugin install aeat@neve
+claude plugin enable aeat@neve
+```
+
+Start a fresh workspace and ask:
+
+> Set up my taxpayer profile.
+
+The public [neve marketplace](https://github.com/nevenincs/neve-marketplace) carries the plugin. Continue with the [workflow overview](docs/how-to/onboarding.md) or the [full quickstart](docs/how-to/quickstart.md).
+
+In Claude Desktop or Cowork, use the plugin browser and follow the [marketplace installation instructions](https://github.com/nevenincs/neve-marketplace).
+
+## Start with the CLI
+
+`aeat-cli` requires Python 3.13 or later. `uv` installs the tool in an isolated environment and can obtain a compatible Python interpreter.
+
+```console
 uv tool install aeat-cli
-aeat --version
+aeat --language en --help
 ```
 
-Every command carries its own `--help`. Any MCP client runs the same console with:
+Omit `--language en` to use the default Spanish interface. Follow the [quickstart](docs/how-to/quickstart.md) to create a profile, add records, calculate, verify, and export.
 
-```bash
+For scripts, inspect the live capability and schema contract:
+
+```console
+aeat --language en --format json app contract
+```
+
+Every successful JSON command returns a versioned envelope with a command key, status, typed result, and notices. Expose the same command set through a local MCP server:
+
+```console
 uvx --from "aeat-cli[agent]" aeat-mcp
 ```
 
-If you want to inspect or adapt the harness itself, `aeat app agent --output=<dir>` writes it to disk as a Claude-native workspace, and `aeat app agent --output=<dir> --layout=plugin` writes the plugin tree.
+Read the [architecture overview](docs/architecture/index.md) and [application programming interface (API) entry point](docs/api/aeat.rst) before integrating with Python. The package provides documented module entry points, but no stable top-level software development kit (SDK) before 1.0.
 
-## Documentation
+## Follow one calculation path
 
-The [`docs/`](docs/index.md) tree holds the full documentation:
+```text
+records → encrypted local storage → resolved inputs → selected filing rules
+        → calculated form fields with sources → checks → local export
+```
 
-- [Quickstart](docs/how-to/quickstart.md) - profile, ledger, and a first modelo export.
-- [Tutorial](docs/tutorials/index.md) - build a Modelo 130 filing end to end.
-- [How-to guides](docs/how-to/index.md) - task recipes for the day-to-day workflow.
-- [How it works](docs/explanation/index.md) - how records become modelo figures, and why `aeat` never files.
-- [Architecture overview](docs/architecture/index.md) - the layered design, the registry pipeline, and the storage model, for readers who want the whole picture.
+The assistant guides this path and relays its results. Application logic gathers profile, ledger, invoice, relation, and prior-filing inputs. The deterministic engine owns formulas and legal grounding.
 
-Run `just docs` to build the rendered site, which adds the command-line and API reference.
+Each calculated field keeps its value, formula inputs where applicable, and legal and official-source references. The verification step records both blockers and warnings.
 
-## Safety and privacy
+See [how records become figures](docs/explanation/from-records-to-figures.md) for the full explanation.
 
-- Building, checking, and exporting happen locally. Live AEAT access is read-only - pulling your justificantes, notifications, and censo data - and each profile opts in to it per capability.
-- Ledger rows, invoices, and evidence bytes persist only inside encrypted storage on your machine. There's no cloud backend.
-- When an assistant operates the toolkit, your chat provider sees the conversation and the figures discussed in it, nothing more.
+## Know the data boundary
 
-## Getting help
+- App-managed financial records and evidence are encrypted at rest in the active profile's local storage.
+- Original imported files remain where you placed them. A local export is cleartext at the path you choose.
+- Authenticated AEAT retrieval commands run only when you invoke them. They can download information but cannot write or submit anything to AEAT.
+- If you choose an assistant or cloud classifier, its provider receives the words, figures, and transaction fields you send.
+- A cloud classifier receives text from supporting evidence only when the profile permits cloud upload and you confirm that invocation. Image evidence is processed locally with Ollama.
 
-Report bugs and ask questions on the [issue tracker](https://github.com/nevenincs/aeat/issues). Report a security vulnerability privately instead, following [`SECURITY.md`](SECURITY.md).
+Review the [filing boundary](docs/explanation/recording-a-filing-and-the-boundary.md), [data-to-figure explanation](docs/explanation/from-records-to-figures.md), and [full disclaimer](docs/disclaimer.md) before relying on the tool.
 
-## Contributing
+## Find the right documentation
 
-- The local quality gates are the source of truth: `just check-style`, `just check-types`, `just test-unit`, and `just check-pre-commit`.
-- Build the docs with `just docs`; check them with `just docs-check`.
-- Adding a modelo to the registry starts with `python -m dev.registry.newmodelo scaffold <modelo-id> <revision-id>`, which writes the authoring skeleton and prints the contributor checklist.
-- The agent-driven contribution workflow is documented in [`CLAUDE.md`](CLAUDE.md).
+| Goal | Read |
+| --- | --- |
+| Complete one example | [Quickstart](docs/how-to/quickstart.md) |
+| Find a task recipe | [How-to guides](docs/how-to/index.md) |
+| Understand calculations | [From records to figures](docs/explanation/from-records-to-figures.md) |
+| Understand the codebase | [Architecture](docs/architecture/index.md) |
+| Inspect Python modules | [API reference entry point](docs/api/aeat.rst) |
+| Diagnose a problem | [Troubleshooting](docs/how-to/troubleshooting.md) |
+| Review shipped changes | [Changelog](CHANGELOG.md) |
 
-## License
+The generated CLI reference and glossary are part of the Sphinx documentation build. Until the public documentation site is deployed, use `aeat --help`, `aeat app contract`, and the tracked guides.
 
-Apache 2.0. See [LICENSE](LICENSE).
+## Get help or contribute
 
-## Disclaimer
+This source repository is currently private. Authorized collaborators can open an [issue](https://github.com/nevenincs/aeat/issues) and follow [`SECURITY.md`](SECURITY.md). A public support channel and guaranteed confidential contact aren't available yet. Never publish vulnerability details in an issue.
 
-This project is not a substitute for professional tax advice, and it isn't affiliated with AEAT. It never submits filings; you upload any exported file through AEAT's official tools yourself and remain responsible for every declaration. The authors accept no liability for filings produced or actions taken with this software. Read the [full disclaimer](docs/disclaimer.md) before relying on `aeat`.
+Start development with the [workstation setup guide](docs/workstation-setup.md). The main local gates are:
+
+```console
+just check-all
+uv run pytest
+just docs-check
+```
+
+Tests must exercise real behavior. The project doesn't accept fakes, mocks, monkeypatching, skipped tests, or tautological calculation assertions as shortcuts.
+
+## License and disclaimer
+
+`aeat` is available under the [Apache License 2.0](LICENSE). It is provided as-is, without warranties or guarantees. Read the [full disclaimer](docs/disclaimer.md) for the responsibility, affiliation, advice, and liability boundaries.

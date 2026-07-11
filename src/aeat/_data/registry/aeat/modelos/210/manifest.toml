@@ -14,6 +14,7 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
     "orden-eha-3316-2010:art-1",
+    "orden-eha-3316-2010:art-2",
 ]
 source_refs = [
     "boe-modelo-210-base-order",

@@ -3,8 +3,9 @@ name: inicio-actividad
 description: >-
   Life-situation itinerary for starting an economic activity: record the
   start facts on the profile, treat the censo alta (Modelo 036) as the
-  taxpayer's own AEAT-portal act, mirror the resulting censo state into
-  the profile, and derive the first obligations the new activity creates.
+  taxpayer's own AEAT-portal act, record the resulting censo facts on the
+  profile by hand, and derive the first obligations the new activity
+  creates.
   Use when the taxpayer is starting (or has just started) an activity —
   the profile's activity start date is being set or was set recently.
   Never invents the new obligation set; derives it from the overview
@@ -49,13 +50,14 @@ pretending otherwise.
    alta censal is filed in the AEAT portal (or by their gestor), before
    the activity starts. This application records and derives; it does not
    file the alta.
-3. After the alta is filed, mirror the official censo state:
-   `aeat config profile censo pull` to fetch it, and
-   `aeat config profile censo compare` to see it against the local
-   profile; apply what the taxpayer confirms with
-   `aeat config profile censo apply`. The censo is a one-way mirror of
-   AEAT's view — divergences are questions for the taxpayer, not silent
-   overwrites.
+3. After the alta is filed, record the official censo state by hand:
+   read the filed Modelo 036 (or the AEAT portal) with the taxpayer and
+   enter the resulting facts through `aeat config profile edit`. AEAT
+   publishes no read-only censo view this application could fetch, so
+   the profile mirrors AEAT only as faithfully as the taxpayer's own
+   copy — divergences are questions for the taxpayer, and the calendar
+   keeps its `censo.enrolment_unverified` disclosure because the facts
+   are operator-declared, not AEAT-verified.
 4. Derive the new obligation universe:
    `aeat app overview calendar --from <PERIOD-START> --to <PERIOD-END>`
    for the first filing horizon and `aeat app overview agenda` for what
@@ -76,13 +78,13 @@ pretending otherwise.
   discussed; nothing was derived from an undeclared profile.
 - The censo alta was described as the taxpayer's own AEAT-portal act;
   no narration implied this application filed it.
-- The post-alta censo state was pulled and compared, and any divergence
-  was put to the taxpayer.
+- The post-alta censo facts were entered from the taxpayer's own filed
+  036 copy, and any divergence was put to the taxpayer.
 - The first obligations were read from `aeat app overview calendar` /
   `agenda` / `explain`, never recited from memory.
 
 ## Hand off
 
 Steady-state operation belongs to the selected WHO itinerary. This
-itinerary closes when the censo mirror agrees with the profile, the first
+itinerary closes when the recorded censo facts agree with the filed 036, the first
 deadlines are known to the taxpayer, and the bookkeeping loop is running.

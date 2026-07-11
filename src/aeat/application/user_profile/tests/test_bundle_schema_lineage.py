@@ -1,7 +1,6 @@
 """Bundle schema-lineage gate and the shared payload validate path.
 
-Companion to the storage-substrate lineage gate
-(``2026-07-08-released-data-durability-adr``): the portable-bundle version
+Companion to the storage-substrate lineage gate: the portable-bundle version
 gate is a ceiling with a durability floor, the supported set is derived
 from that range, and a future version bump without its registered one-hop
 payload upgrader fails here instead of orphaning a taxpayer's exported
@@ -70,15 +69,17 @@ def test_floor_matches_the_regime_expected_floor() -> None:
     so this asserts the pre-release floors-chase-current posture: no released
     bundles exist below the current version, so the floor sits at it. Post-
     flip the expected floor becomes the frozen released value and this same
-    assertion demands the floor stay pinned there
-    (``2026-07-09-compatibility-lifecycle-adr``).
+    assertion demands the floor stay pinned there.
     """
-    assert expected_floor(
-        COMPATIBILITY_REGIME,
-        "bundle",
-        BUNDLE_SCHEMA_VERSION,
-        RELEASED_FORMAT_FLOORS,
-    ) == BUNDLE_DURABILITY_FLOOR
+    assert (
+        expected_floor(
+            COMPATIBILITY_REGIME,
+            "bundle",
+            BUNDLE_SCHEMA_VERSION,
+            RELEASED_FORMAT_FLOORS,
+        )
+        == BUNDLE_DURABILITY_FLOOR
+    )
 
 
 def test_supported_versions_is_the_floor_to_current_range() -> None:

@@ -33,6 +33,7 @@ from .. import Topic, TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+assert __package__ is not None
 topics_module = sys.modules[__package__.removesuffix(".tests")]
 
 _EXPECTED_TOPICS = frozenset(

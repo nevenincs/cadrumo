@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core import BindingSourceKind, Modelo, Period
@@ -748,7 +748,12 @@ def _resolve_cross_period_source(
         if expected_member_set is None:
             blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER)
             blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
-            value_member_payloads = member_payloads
+            # CAST-RATIONALE-CROSS-PERIOD-MEMBER-PAYLOAD: iter_modelo records are typed envelopes at runtime.
+            value_member_payloads = tuple(
+                # CAST-RATIONALE-CROSS-PERIOD-MEMBER-ITEM: iter_modelo records are typed envelopes at runtime.
+                cast(_ObservationPayload, item)
+                for item in member_payloads
+            )
         else:
             expected_member_nifs = tuple(sorted(set(expected_member_set.member_nifs)))
             expected_member_nif_set = set(expected_member_nifs)
@@ -759,8 +764,12 @@ def _resolve_cross_period_source(
                 blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
             if unexpected_member_nifs:
                 blockers.append(CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE)
+            # CAST-RATIONALE-CROSS-PERIOD-FILTERED-PAYLOAD: roster filtering retains the typed repository envelope.
             value_member_payloads = tuple(
-                item for item in member_payloads if str(item.member_nif) in expected_member_nif_set
+                # CAST-RATIONALE-CROSS-PERIOD-FILTERED-ITEM: roster filtering retains the typed repository envelope.
+                cast(_ObservationPayload, item)
+                for item in member_payloads
+                if str(item.member_nif) in expected_member_nif_set
             )
         # R2 carry gate: check revision stamp on each member payload.
         for item in value_member_payloads:
@@ -773,9 +782,14 @@ def _resolve_cross_period_source(
             )
             blockers.extend(extra_blockers)
     else:
-        payload = observation_repository.load_observation(
-            requirement.source_modelo,
-            requirement.period,
+        # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
+        # CAST-RATIONALE-CROSS-PERIOD-SINGLE-RESULT: load_observation returns the same envelope contract as iteration.
+        payload = cast(
+            _ObservationPayload | None,
+            observation_repository.load_observation(
+                requirement.source_modelo,
+                requirement.period,
+            ),
         )
         # R2 carry gate: re-confirm stamped revision == law-determined revision.
         if payload is not None:

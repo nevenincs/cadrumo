@@ -68,9 +68,9 @@ def test_registry_closure_over_portal_enum() -> None:
     assert set(PORTAL_REGISTRY.keys()) == set(Portal)
 
 
-def test_registry_count_is_42() -> None:
-    """The registry holds exactly 42 entries."""
-    assert len(PORTAL_REGISTRY) == 42
+def test_registry_count_is_41() -> None:
+    """The registry holds exactly 41 entries."""
+    assert len(PORTAL_REGISTRY) == 41
 
 
 def test_every_entry_matches_its_key() -> None:
@@ -161,7 +161,7 @@ def test_portals_by_category_counts_and_sort_match_reference_breakdown() -> None
         PortalCategory.FILING: 19,
         PortalCategory.CENSO: 2,
         PortalCategory.BORRADOR: 2,
-        PortalCategory.CONSULTATION: 4,
+        PortalCategory.CONSULTATION: 3,
         PortalCategory.PAYMENT: 5,
         PortalCategory.CALENDAR_REFERENCE: 2,
     }
@@ -179,12 +179,12 @@ def test_finalise_registry_logs_info_on_success(
     caplog.clear()
     with caplog.at_level(logging.DEBUG, logger="aeat.domain.portals._registry"):
         mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
-    assert len(mapping) == 42
+    assert len(mapping) == 41
     debug_records = [
         r for r in caplog.records if r.name == "aeat.domain.portals._registry" and r.levelno == logging.DEBUG
     ]
     assert len(debug_records) == 1
-    assert "loaded 42 portal entries" in debug_records[0].getMessage()
+    assert "loaded 41 portal entries" in debug_records[0].getMessage()
 
 
 def test_registry_finalisation_does_not_write_to_stdio(capsys: pytest.CaptureFixture[str]) -> None:
@@ -193,6 +193,6 @@ def test_registry_finalisation_does_not_write_to_stdio(capsys: pytest.CaptureFix
     mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
     captured = capsys.readouterr()
 
-    assert len(mapping) == 42
+    assert len(mapping) == 41
     assert captured.out == ""
     assert captured.err == ""

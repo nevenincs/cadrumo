@@ -27,7 +27,7 @@ source diagnostics rather than silently blanking the filed calculation.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -38,7 +38,7 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...core import BindingSourceKind, Modelo, Period, PeriodError
+from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Modelo, Period, PeriodError, StandardPeriodCode
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -46,11 +46,13 @@ from ...domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
     resolve_ledger_impatriado_income_aggregation_binding_values,
+    resolve_ledger_irnr_income_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
+    unsupported_ledger_irnr_income_observations,
     unsupported_ledger_iva_observations,
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
@@ -63,6 +65,7 @@ from ...domain.invoices import (
     InvoicePersistenceError,
     invoice_line_to_iva_observation,
 )
+from ...domain.modelos import Modelo210AgrupacionRentaRow
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import (
     OutOfWindowTransactionSummary,
@@ -72,6 +75,7 @@ from ...domain.transactions import (
 from ...domain.usage_ratios import UsageRatioPersistenceError
 from ._errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
+from ._irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
 from ._iva_ledger import (
     IvaLedgerAggregationIssueReason,
     IvaLedgerProrrataApportionment,
@@ -122,6 +126,11 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
 )
 _M130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
+    "rendimientos_integros",
+    surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
+)
+
 _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS: tuple[BindingId, ...] = (
     "modelo-303-iva-repercutido-general-cuota",
     "modelo-303-iva-repercutido-reducido-cuota",
@@ -549,6 +558,149 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                 for observation in aggregation.observations
             ),
         )
+
+
+class LedgerIrnrIncomeAggregationSourceResolver:
+    """Resolve the selected-code M210 ``ledger_irnr_income_aggregation`` source.
+
+    This resolver owns M210 ``rendimientos_integros`` only when the persisted
+    gross-income source mode is ``ledger``.
+    It passes the durable official tipo-renta selection through to the classifier
+    rather than using the conceptual rate token, so codes such as ``01`` and
+    ``03`` cannot be merged merely because they share a rate concept.
+    """
+
+    resolver_id = "ledger_irnr_income_aggregation"
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,)
+
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+        self._transaction_repository = transaction_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if context.m210_gross_income_source_mode is not M210GrossIncomeSourceMode.LEDGER:
+            # The registry declares the optional M210 source unconditionally so
+            # its selector remains validated.  Manual mode deliberately elects
+            # not to produce a value, though, and that is a handled source
+            # state—not an unenrolled-source advisory on every manual M210 run.
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not _revision_has_binding_source(context.revision, "ledger_irnr_income_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        selected_official_tipo_renta_code = context.m210_official_tipo_renta_code
+        if selected_official_tipo_renta_code is None:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                diagnostics=(
+                    CalculationSourceDiagnostic(
+                        reason="source_issue",
+                        source_kind="ledger_irnr_income_aggregation",
+                        resolver_id=self.resolver_id,
+                        message=(
+                            "M210 ledger income binding requires the durable official tipo-renta code selection; "
+                            "the conceptual formula token cannot select a ledger source"
+                        ),
+                    ),
+                ),
+            )
+
+        aggregation_period = aggregation_period_for_modelo(
+            filing_year=context.filing_year,
+            code=context.period.registry_token,
+        )
+        try:
+            aggregation = aggregate_irnr_income_ledger_from_repositories(
+                bucket_id=context.bucket_id,
+                period=aggregation_period,
+                revision=context.revision,
+                selected_official_tipo_renta_code=selected_official_tipo_renta_code,
+                transaction_repository=self._transaction_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+
+        binding_values = resolve_ledger_irnr_income_aggregation_binding_values(
+            context.revision,
+            aggregation.observations,
+        )
+        unrouted = unsupported_ledger_irnr_income_observations(context.revision, aggregation.observations)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=binding_values,
+            bound_inputs_by_casilla_id={
+                _M210_RENDIMIENTOS_INTEGROS_CASILLA: aggregation.casilla_aggregation.casilla_values.get(
+                    _M210_RENDIMIENTOS_INTEGROS_CASILLA,
+                    Decimal("0"),
+                ),
+            },
+            detail_rows=_irnr_annual_agrupacion_renta_rows(context, aggregation.observations),
+            source_transaction_ids=tuple(
+                sorted(observation.transaction_id for observation in aggregation.observations),
+            ),
+            diagnostics=_out_of_window_summary_diagnostics(
+                aggregation.out_of_window_summary,
+                source_kind="ledger_irnr_income_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_irnr_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=issue.detail,
+                )
+                for issue in aggregation.issues
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_irnr_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        "declarable M210 IRNR gross-income observation "
+                        f"(target_casilla_id={observation.target_casilla_id!r}, "
+                        f"gross_income_amount={observation.gross_income_amount}) is not consumed by any "
+                        "ledger_irnr_income_aggregation binding on revision "
+                        f"{context.revision.id!r}; its income is not declared on this calculation"
+                    ),
+                )
+                for observation in unrouted
+            ),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="ledger_irnr_income_aggregation",
+                    source_ref=f"transaction:{observation.transaction_id}",
+                )
+                for observation in aggregation.observations
+            ),
+        )
+
+
+def _irnr_annual_agrupacion_renta_rows(
+    context: CalculationSourceContext,
+    observations: Sequence[IrnrIncomeObservation],
+) -> tuple[Modelo210AgrupacionRentaRow, ...]:
+    """Derive annual M210 grouping evidence from the admitted classifications."""
+    if context.period.standard_code is not StandardPeriodCode.ANNUAL:
+        return ()
+    return tuple(
+        Modelo210AgrupacionRentaRow(
+            source_id=observation.transaction_id,
+            tipo_renta_code=observation.official_tipo_renta_code,
+            importe=observation.gross_income_amount,
+            tipo_gravamen=observation.applicable_rate,
+            pagador_mode=observation.payer_mode,
+            pagador_id=observation.payer_id,
+            deriva_de_bien_derecho=observation.asset_or_right_id is not None,
+            bien_derecho_id=observation.asset_or_right_id,
+        )
+        for observation in observations
+    )
 
 
 class LedgerRentaGastoAggregationSourceResolver:

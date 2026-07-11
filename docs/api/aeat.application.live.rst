@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    aeat.application.live._borrador_100
-   aeat.application.live._censo
    aeat.application.live._errors
    aeat.application.live._expedientes
    aeat.application.live._filed_data

@@ -29,7 +29,9 @@ def _production_trees(source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[Pa
     return tuple(items)
 
 
-def test_registry_production_code_does_not_swallow_exceptions_with_pass(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_registry_production_code_does_not_swallow_exceptions_with_pass(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """A caught exception must be handled, converted, logged, or re-raised."""
 
     offenders: list[str] = []
@@ -95,7 +97,9 @@ def test_registry_production_broad_exception_handlers_raise_or_log(source_tree_a
 
 def _location(path: Path, node: ast.AST) -> str:
     relative = path.relative_to(_REGISTRY_PACKAGE)
-    return f"{relative}:{node.lineno}"
+    lineno = getattr(node, "lineno", None)
+    assert isinstance(lineno, int)
+    return f"{relative}:{lineno}"
 
 
 def _is_broad_exception_type(node: ast.expr) -> bool:

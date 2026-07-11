@@ -23,6 +23,8 @@ leaf-name heuristic: a call is mutating when its classification is not
 
 from __future__ import annotations
 
+from typing import Protocol
+
 from ...application.operator_surface import command_classification
 from ...core.i18n import tr
 from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
@@ -105,7 +107,16 @@ class SessionIdentityState:
         self._identity_confirmed = False
 
 
-def identity_gate_refusal(command_key: str, *, state: SessionIdentityState) -> str | None:
+class _IdentityGateState(Protocol):
+    @property
+    def identity_confirmed(self) -> bool: ...
+
+    def record_identity_read(self) -> None: ...
+
+    def rearm(self) -> None: ...
+
+
+def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str | None:
     """Return a localized refusal for an unconfirmed first mutating call, else ``None``.
 
     Evaluated for every verb call on both the direct and ``execute`` paths, in

@@ -17,7 +17,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."
 required_text = ["tributo de naturaleza indirecta que recae sobre el consumo"]
 
@@ -33,7 +33,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 1: naturaleza del IRPF (tributo personal y directo sobre la renta)."
 required_text = ["tributo de carácter personal y directo"]
 
@@ -49,7 +49,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 5: la Administración tributaria; competencias de la AEAT."
 required_text = ["la Administración Tributaria estará integrada por los órganos y entidades"]
 
@@ -65,7 +65,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex (agent-authored from official BOE-A-2003-23186#a26 and bundled ley-58-2003-art-26.html; operator to re-stamp)"
+reviewed_by = "agent-authored from official BOE-A-2003-23186#a26 and bundled ley-58-2003-art-26.html; operator to re-stamp"
 notes = "LGT art 26: interes de demora. Define the accessory tax interest charge, the cases in which it is due, calculation over unpaid or improperly refunded amounts, and the art 26.6 legal-interest-plus-25-percent rule cited by RIRPF art 59 for lost deduction regularization."
 required_text = [
     "Interés de demora",
@@ -87,7 +87,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 148: régimen especial del recargo de equivalencia."
 required_text = ["El régimen especial del recargo de equivalencia se aplicará"]
 
@@ -103,7 +103,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M303/M390)."
 required_text = ["Sin perjuicio de lo establecido en el"]
 
@@ -119,7 +119,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 96: obligación de declarar (M100)."
 required_text = ["Los contribuyentes estarán obligados a presentar y suscribir"]
 
@@ -135,7 +135,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 98: borrador de declaración."
 required_text = ["La Administración tributaria podrá poner a disposición de los"]
 
@@ -151,7 +151,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 98: iniciación de los procedimientos tributarios (declaraciones, modelos, casillas)."
 required_text = ["Las actuaciones y procedimientos tributarios podrán iniciarse"]
 
@@ -167,7 +167,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 99: desarrollo de las actuaciones y procedimientos; documentación (justificante)."
 required_text = ["En el desarrollo de las actuaciones y procedimientos tributarios"]
 
@@ -183,7 +183,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 213: medios de revisión de los actos tributarios."
 required_text = ["Los actos y actuaciones de aplicación de los tributos"]
 
@@ -199,7 +199,7 @@ published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "RGAT art. 3: formación de los censos tributarios (Censo de Obligados Tributarios)."
 required_text = ["El Censo de Obligados Tributarios estará formado por la totalidad"]
 
@@ -215,7 +215,7 @@ published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "RGAT art. 18: obligación de disponer de un número de identificación fiscal (NIF)."
 required_text = ["Obligación de disponer de un número de identificación fiscal"]
 
@@ -231,7 +231,7 @@ published_at = 2015-10-02
 effective_from = 2016-10-02
 review_status = "reviewed"
 reviewed_at = 2026-07-01
-reviewed_by = "codex (verified against bundled corpus; operator to re-stamp)"
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."
 required_text = ["La sede electrónica es aquella dirección electrónica, disponible"]
 

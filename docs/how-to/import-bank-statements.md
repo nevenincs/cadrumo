@@ -19,8 +19,8 @@ You need:
   encrypted storage in a session; for a non-interactive shell, set
   `AEAT_SECRET_PASSPHRASE`
 - a bank statement file or directory, unless you are adding transactions by hand
-- for AEAT census-derived home-office ratios, reviewed censo facts; see
-  [Link Modelo 036 census information](censo-update.md)
+- for home-office ratios, reviewed census facts in the profile; see
+  [Maintain Modelo 036 census facts in your profile](censo-update.md)
 
 Confirm the active profile before you write transaction data:
 

@@ -29,3 +29,20 @@ source_refs = ["aeat-modelo-210-procedure"]
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-210-procedure"
 required_text = ["no residentes", "país de residencia"]
+
+# Modelo 210 source-scoped gross-income binding.  Art. 13.1 is the territorial
+# gateway: only a persisted, explicit M210 classification on a Spanish-source
+# incoming ledger row may reach [5].  Art. 24 then governs the gross-income base
+# fact.  Rate provisions (including art. 25.1) are deliberately not used as the
+# source-scope authority.
+[[revisions."2025".bindings]]
+id = "m210-2025-ledger-irnr-rendimientos-integros"
+source = "ledger_irnr_income_aggregation"
+selector = { modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["Modelo 210"]

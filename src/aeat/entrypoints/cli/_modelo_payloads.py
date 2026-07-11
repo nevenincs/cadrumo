@@ -133,12 +133,19 @@ class WorkRecargoPayload(OutputSchema):
     late filing so a JSON consumer reads the same band id, percentage,
     interest applicability, and binding legal reference the text-mode
     plazo lines render.
+
+    ``conditional`` distinguishes a rate-only advisory (the surcharge that
+    *would* apply, when the calculate path lacks the importe a ingresar, the
+    actual presentation date, and the no-prior-requirement facts) from a
+    statutory recargo computation established from those facts. It defaults to
+    ``True`` so the machine surface never over-claims eligibility.
     """
 
     band_id: str
     surcharge_pct: str  # serialised Decimal
     interest_applies: bool
     legal_ref: str
+    conditional: bool = True
 
 
 class WorkPlazoDeadlinePayload(OutputSchema):

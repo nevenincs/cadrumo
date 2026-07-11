@@ -896,7 +896,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "LIVA art 97: formal requirements for exercising the deduction right. Grounds missing-evidence advisories that ask the operator to attach invoice or equivalent documentary support before relying on deductible input VAT."
 required_text = [
     "Requisitos formales de la deducción",
@@ -916,7 +916,7 @@ published_at = 2012-12-01
 effective_from = 2013-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "RD 1619/2012 Reglamento de facturación art 2: obligation to issue invoices, including operations whose recipient is an entrepreneur or professional. Grounds missing-evidence advisories alongside LIVA art 97."
 required_text = [
     "Obligación de expedir factura",
@@ -936,7 +936,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-19
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 115 LIVA: supuestos generales de devolucion. Conecta el saldo a favor no hecho efectivo por compensacion del articulo 99 con la solicitud de devolucion al cierre del ultimo periodo de liquidacion del ano natural."
 required_text = [
     "Supuestos generales de devolución",
@@ -956,7 +956,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-19
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 116 LIVA: solicitud de devoluciones al fin de cada periodo de liquidacion. Base legal de la devolucion periodica para sujetos pasivos que optan por el procedimiento reglamentario."
 required_text = [
     "Solicitud de devoluciones al fin de cada período de liquidación",
@@ -995,7 +995,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-07
-reviewed_by = "claude-opus (art 104.Tres exclusion clauses 1a-6a added verbatim from bundled ley-37-1992-art-104.html#a104; subvenciones NON-exclusion recorded per Ley 3/2006; operator to re-stamp)"
+reviewed_by = "art 104.Tres exclusion clauses 1a-6a added verbatim from bundled ley-37-1992-art-104.html#a104; subvenciones NON-exclusion recorded per Ley 3/2006; operator to re-stamp"
 notes = "Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior. El apartado Tres enumera las seis operaciones excluidas de ambos terminos de la relacion (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos permanentes fuera del TAI; (2) las cuotas de IVA que gravaron directamente esas operaciones; (3) entregas y exportaciones de bienes de inversion utilizados en la actividad; (4) operaciones inmobiliarias o financieras que no constituyan actividad habitual (arrendamiento siempre habitual; operaciones financieras del art 20.Uno.18); (5) operaciones no sujetas del art 7; (6) operaciones del art 9, numero 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio NO son una exclusion del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley 3/2006 (BOE-A-2006-5691), por lo que no se computan en absoluto en lugar de excluirse de un volumen computado."
 required_text = [
     "La prorrata de deducción resultante de la aplicación de los criterios anteriores se redondeará en la unidad superior.",
@@ -1022,7 +1022,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-07
-reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro/.Cinco procedimiento de la prorrata general; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro/.Cinco procedimiento de la prorrata general; operator to re-stamp"
 notes = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupcion durante uno o mas anos naturales de la actividad (o de un sector diferenciado), el porcentaje definitivamente aplicable durante cada uno de esos anos es el que globalmente corresponda al conjunto de los tres ULTIMOS anos naturales en que se hubiesen realizado operaciones (porcentaje global sobre los volumenes agregados de los tres anos activos, saltando la interrupcion; no la media de los tres porcentajes ni los tres anos de calendario). Base legal de la siembra del ejercicio que reanuda tras una interrupcion."
 required_text = [
     "el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente",
@@ -1044,7 +1044,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-07
-reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a103 clases de prorrata; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a103 clases de prorrata; operator to re-stamp"
 notes = "Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata tiene dos modalidades, general y especial; la general se aplica cuando no concurren las circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las cuotas deducibles del ano natural por la regla general excede en un 10 por ciento o mas del que resultaria por la regla especial (obligacion de especial). Base legal del aviso +10% de prorrata especial obligatoria (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE)."
 required_text = [
     "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
@@ -1064,7 +1064,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-07
-reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp"
 notes = "Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deduccion por uso del input: 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a deduccion se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento del art 105. Base legal del enrutado por InputClassification (exclusively_deductible/exclusively_non_deductible/common)."
 required_text = [
     "El ejercicio del derecho a deducir en la prorrata especial se ajustará a las siguientes reglas:",
@@ -1085,7 +1085,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-08
-reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp"
 notes = "Articulo 101 LIVA: regimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: el sujeto pasivo que realiza actividades economicas en sectores diferenciados (art 9.1.c) debe aplicar SEPARADAMENTE el regimen de deducciones respecto de cada uno; la prorrata especial puede aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: cada input a la deduccion de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deduccion COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de cuotas deducibles por el regimen comun exceda en un 20 por 100 al que resultaria aplicando con independencia el regimen de cada sector - se registra como caso de autorizacion (register authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado para admitirlo."
 required_text = [
     "Los sujetos pasivos que realicen actividades económicas en sectores diferenciados de la actividad empresarial o profesional deberán aplicar separadamente el régimen de deducciones respecto de cada uno de ellos.",
@@ -1108,7 +1108,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-08
-reviewed_by = "claude-opus (agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp"
 notes = "Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad (base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS PORCENTUALES respecto de la actividad principal (base del test PRORRATA_SECTORAL_SEPARATION_SPREAD_PP = 50). Letra b': actividades acogidas a los regimenes especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si divergen >50pp, si hay regimen especial) - operator-declared, nunca inferido del ledger."
 required_text = [
     "se considerarán sectores diferenciados de la actividad empresarial o profesional los siguientes",
@@ -1497,7 +1497,7 @@ published_at = 2016-12-06
 effective_from = 2017-07-01
 review_status = "reviewed"
 reviewed_at = 2026-06-28
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturacion."
 required_text = [
     "nuevo sistema de llevanza de libros registro a través de la Sede electrónica de la Agencia Tributaria",
@@ -1518,7 +1518,7 @@ effective_from = 2023-12-07
 consolidated_as_of = 2025-12-03
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Real Decreto 1007/2023: aprueba el reglamento de requisitos de los sistemas informaticos de facturacion y define los Sistemas de emision de facturas verificables o Sistemas VERI*FACTU; las fechas de adaptacion estan en la disposicion final cuarta consolidada tras el Real Decreto-ley 15/2025."
 required_text = [
     "requisitos que deben adoptar los sistemas y programas informáticos o electrónicos que soporten los procesos de facturación",
@@ -1540,7 +1540,7 @@ effective_from = 2023-12-07
 consolidated_as_of = 2025-12-03
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturacion: IS, IRPF con actividades economicas, IRNR con establecimiento permanente y entidades en atribucion de rentas con actividades economicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica tambien a productores/comercializadores en su actividad."
 required_text = [
     "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
@@ -1566,7 +1566,7 @@ effective_from = 2025-12-04
 consolidated_as_of = 2025-12-03
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "La disposicion final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
 required_text = [
     "antes del 1 de enero de 2027",
@@ -1599,7 +1599,7 @@ effective_from = 2025-01-01
 effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-07-02
-reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Mecanismo del regimen simplificado de IVA para 2025 (LIVA art. 123): cuota devengada por operaciones corrientes = suma de las cuantias de los modulos (cantidad asignada x numero de unidades); cuota derivada del regimen simplificado = la mayor de (cuota devengada - cuotas soportadas por operaciones corrientes - 1% de dificil justificacion) o la cuota minima (Anexo II, aplicada sobre la cuota devengada). Cuotas trimestrales 1T-3T: ingreso a cuenta = porcentaje de la actividad (Anexo II) x cuota devengada del trimestre."
 required_text = [
     "La cuota devengada por operaciones corrientes será la suma de las cuantías correspondientes a los módulos previstos para la actividad",
@@ -1621,7 +1621,7 @@ effective_from = 2025-01-01
 effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-07-02
-reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 721.2 Transporte por autotaxis: modulo 1 personal empleado 903,46 euros/persona; modulo 2 distancia recorrida 8,78 euros/1.000 km. Cuota minima por operaciones corrientes: 10 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
 required_text = [
     "Cuota mínima por operaciones corrientes: 10 % de la cuota devengada por operaciones corrientes.",
@@ -1641,7 +1641,7 @@ effective_from = 2025-01-01
 effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-07-02
-reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 722 Transporte de mercancias por carretera, excepto residuos: modulo 1 personal empleado 4.149,99 euros/persona; modulo 2 carga vehiculos 388,55 euros/tonelada. Cuota minima por operaciones corrientes: 10 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
 required_text = [
     "Cuota mínima por operaciones corrientes: 10 % de la cuota devengada por operaciones corrientes.",
@@ -1661,7 +1661,7 @@ effective_from = 2025-01-01
 effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-07-02
-reviewed_by = "claude-opus (agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp)"
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
 notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 972.1 Servicios de peluqueria de senora y caballero: modulo 1 personal empleado 2.562,75 euros/persona; modulo 2 superficie del local 41,33 euros/m2; modulo 3 consumo de energia electrica 17,48 euros/100 kWh. Cuota minima por operaciones corrientes: 13 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
 required_text = [
     "Cuota mínima por operaciones corrientes: 13 % de la cuota devengada por operaciones corrientes.",
@@ -1692,7 +1692,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
 required_text = [
     "Artículo 75. Devengo del impuesto.",
@@ -1711,7 +1711,7 @@ published_at = 1992-12-29
 effective_from = 2014-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 163 decies LIVA: requisitos subjetivos para aplicar el regimen especial del criterio de caja."
 required_text = [
     "Artículo 163 decies. Requisitos subjetivos de aplicación.",
@@ -1730,7 +1730,7 @@ published_at = 1992-12-29
 effective_from = 2014-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el regimen especial del criterio de caja."
 required_text = [
     "Artículo 163 undecies. Condiciones para la aplicación del régimen especial del criterio de caja.",
@@ -1749,7 +1749,7 @@ published_at = 1992-12-29
 effective_from = 2014-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 163 duodecies LIVA: ambito objetivo y operaciones excluidas del regimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversion del sujeto pasivo e importaciones."
 required_text = [
     "Artículo 163 duodecies. Requisitos objetivos de aplicación.",
@@ -1768,7 +1768,7 @@ published_at = 1992-12-29
 effective_from = 2014-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 163 terdecies LIVA: devengo por cobro total o parcial, fallback de 31 de diciembre del ano siguiente, acreditacion del cobro, y nacimiento del derecho a deducir por pago para sujetos acogidos."
 required_text = [
     "Artículo 163 terdecies. Contenido del régimen especial del criterio de caja.",
@@ -1788,7 +1788,7 @@ published_at = 1992-12-29
 effective_from = 2014-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del regimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
 required_text = [
     "Artículo 163 quaterdecies. Efectos de la renuncia o exclusión del régimen especial del criterio de caja.",
@@ -1807,7 +1807,7 @@ published_at = 1992-12-29
 effective_from = 2014-01-01
 review_status = "reviewed"
 reviewed_at = 2026-07-06
-reviewed_by = "codex"
+reviewed_by = "agent-review"
 notes = "Articulo 163 quinquiesdecies LIVA: nacimiento del derecho a la deduccion por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el regimen especial del criterio de caja."
 required_text = [
     "Artículo 163 quinquiesdecies. Operaciones afectadas por el régimen especial del criterio de caja.",

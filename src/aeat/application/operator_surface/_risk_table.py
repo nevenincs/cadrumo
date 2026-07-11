@@ -127,10 +127,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.archive.inspect": CommandRiskDeclaration(),
     "config.profile.capabilities.set": CommandRiskDeclaration(),
     "config.profile.capabilities.show": CommandRiskDeclaration(),
-    "config.profile.censo.apply": CommandRiskDeclaration(),
-    "config.profile.censo.compare": CommandRiskDeclaration(),
-    "config.profile.censo.pull": CommandRiskDeclaration(),
-    "config.profile.censo.show": CommandRiskDeclaration(),
     "config.profile.create": CommandRiskDeclaration(),
     "config.profile.delete": CommandRiskDeclaration(destructive=True),
     "config.profile.descendiente.add": CommandRiskDeclaration(),
@@ -170,6 +166,17 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.show_recovery": CommandRiskDeclaration(),
     "config.switch": CommandRiskDeclaration(),
     "config.verify_recovery": CommandRiskDeclaration(),
+    # Diagnostics reads run-health, latency, error, and LLM-usage telemetry and
+    # flush/inspect the local telemetry store: a mutating family, none destructive
+    # (a flush prunes bounded local telemetry, not taxpayer state) and no handoff
+    # or live-write - one bare row each, per the no-silent-default contract.
+    "diagnostics.errors": CommandRiskDeclaration(),
+    "diagnostics.latency": CommandRiskDeclaration(),
+    "diagnostics.llm_usage": CommandRiskDeclaration(),
+    "diagnostics.run_health": CommandRiskDeclaration(),
+    "diagnostics.runs": CommandRiskDeclaration(),
+    "diagnostics.telemetry.flush": CommandRiskDeclaration(),
+    "diagnostics.telemetry.status": CommandRiskDeclaration(),
     "ledger.add": CommandRiskDeclaration(),
     "ledger.allocate": CommandRiskDeclaration(),
     "ledger.archive": CommandRiskDeclaration(),

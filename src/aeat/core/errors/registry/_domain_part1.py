@@ -228,17 +228,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.live._censo.CensoSnapshotNotFoundError",
-        ErrorCode(
-            code="REFUSED_LIVE_CENSO_SNAPSHOT_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_live_censo_snapshot_not_found",
-            default_suggestion="aeat config profile censo pull",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.live._justificante.JustificanteCaptureSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NOT_FOUND",
@@ -706,7 +695,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_financial_usage_ratios_censo_mismatch",
-            default_suggestion="aeat config profile censo pull && aeat config profile censo apply",
+            default_suggestion="aeat config profile edit",
             retryable=False,
             runbook_id=None,
         ),

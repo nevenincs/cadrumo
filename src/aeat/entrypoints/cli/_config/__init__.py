@@ -1065,15 +1065,14 @@ def config_status(
         lines.append(f"next_action\t{profile_health.next_action}")
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
-    # ``status`` reports *filing readiness*: a profile is only ``ready`` here
-    # once it carries the facts needed to start filing work (a tax id and an
-    # activity description). This is a stricter, forward-looking gate than the
-    # *record validity* that ``config profile show`` reports — a freshly
-    # created record can be schema-``valid`` (show) while still ``blocked``
-    # for filing (status) because no activity has been declared yet. The two
-    # surfaces use distinct header tokens (``readiness`` vs ``record_validity``)
-    # so this legitimate difference no longer reads as a contradiction.
-    if not values.get("identity.tax_id") or not values.get("activities.description"):
+    # ``status`` reports the same profile-wide filing baseline as the modelo
+    # readiness gate. An activity description is required when the profile
+    # declares economic activity (or is a legal entity), not for a lawful
+    # no-business natural person whose only return can be Modelo 100.
+    from ....application.modelo import modelo_work_profile_baseline_missing_paths
+
+    baseline_missing = modelo_work_profile_baseline_missing_paths(record)
+    if baseline_missing:
         result = ConfigStatusResult(
             active_profile=active_profile,
             tax_id_present=bool(values.get("identity.tax_id")),
@@ -1118,6 +1117,7 @@ def config_status(
         profile_id=active_uuid,
         tax_id_present=bool(values.get("identity.tax_id")),
         activity_present=bool(values.get("activities.description")),
+        configured=True,
         iva_regime=values.get("iva.regime", ""),
         tax_residence_ccaa=values.get("tax_residence.ccaa", ""),
         next_action="aeat app overview status",
@@ -1191,9 +1191,7 @@ def config_reset(
 
 from ._capabilities_cli import register as _register_profile_capabilities
 from ._check_cli import register as _register_config_check
-from ._profile_censo import register as _register_profile_censo
 
-_register_profile_censo(profile_app)
 _register_profile_capabilities(profile_app)
 _register_config_check(app)
 register_profile_bundle_commands(

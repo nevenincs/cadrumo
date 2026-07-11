@@ -17,8 +17,6 @@ Submodules
    aeat.adapters.outbound.aeat.sede._auth_state
    aeat.adapters.outbound.aeat.sede._browser_constants
    aeat.adapters.outbound.aeat.sede._browser_stage
-   aeat.adapters.outbound.aeat.sede._censo
-   aeat.adapters.outbound.aeat.sede._censo_live
    aeat.adapters.outbound.aeat.sede._declarations
    aeat.adapters.outbound.aeat.sede._declarations_diagnostics
    aeat.adapters.outbound.aeat.sede._declarations_listbox

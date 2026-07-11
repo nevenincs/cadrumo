@@ -139,6 +139,7 @@ from ._llm import (
     resolve_split_proposer,
     unregister_classifier,
 )
+from ._m210_income_classification import M210IncomeClassification
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
 from ._models import (
     BucketTransactionRef,
@@ -238,6 +239,7 @@ __all__ = [
     "LedgerIrpfCategoryDescriptor",
     "LedgerNoActiveBucketError",
     "LedgerStorageError",
+    "M210IncomeClassification",
     "ModelCapability",
     "ModelProfile",
     "ModelTier",
