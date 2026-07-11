@@ -6,9 +6,9 @@ The live Modelo 036 censo scrape (``config profile censo pull`` and the
 through ``config profile edit`` at the operator-declared (non-official)
 tier. What survives here is the read-only projection the ledger
 proportional-deduction path still consumes: the home-office afectación
-ratio derived from any captured :class:`CensoSnapshot`, plus the two
-provenance tags the overview calendar reads to decide whether censo
-enrolment is AEAT-verified.
+ratio derived from the operator-declared ``vivienda_office`` m² facts on
+the encrypted profile, plus the two provenance tags the overview
+calendar reads to decide whether censo enrolment is AEAT-verified.
 
 ``CENSO_SOURCE_TAG`` / ``CENSO_DERIVED_SOURCE_TAG`` remain the markers of
 an AEAT-verified censo fact. With the live scrape retired nothing stamps
@@ -21,11 +21,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ...core.logging import get_logger
-from ..live import CensoSnapshotService
 from ._censo_errors import CensoSyncError
+
+if TYPE_CHECKING:
+    from ._repository import UserProfileLifecycleRepository
 
 CENSO_SOURCE_TAG: Final = "aeat_censo_read"
 """``UserProfileFact.source`` value marking an AEAT-verified censo fact."""
@@ -42,40 +44,52 @@ class CensoSyncService:
     The service no longer captures, compares, or applies censo snapshots
     (the live scrape was retired); it exposes the single surviving
     read: the home-office afectación ratio the ledger ratios and
-    preflight paths consume via :meth:`bound_raw_afectacion_ratio`.
+    preflight paths consume via :meth:`bound_raw_afectacion_ratio`,
+    derived from the operator-declared ``vivienda_office`` m² facts the
+    operator maintains through ``config profile edit``.
     """
 
     def __init__(
         self,
         *,
         bucket_id: str,
-        snapshots: CensoSnapshotService | None = None,
+        profiles: UserProfileLifecycleRepository | None = None,
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise CensoSyncError(translated_message="errors.censo.bucket_id_blank")
-        self._snapshots = snapshots or CensoSnapshotService(bucket_id=self._bucket_id)
+        self._profiles = profiles
 
     @property
     def bucket_id(self) -> str:
         return self._bucket_id
 
     def bound_raw_afectacion_ratio(self, *, profile_id: str) -> Decimal | None:
-        """Return ``office_m2 / total_m2`` from the active censo snapshot.
+        """Return ``office_m2 / total_m2`` from the operator-declared profile facts.
 
         Used by the ledger ratios CLI and the manual-transaction
         classify path to apply the legally-effective
         :func:`aeat.application.ledger._ratios.censo_override_warning`
         and :func:`aeat.application.ledger._ratios.censo_business_pct_for`
-        helpers without each consumer re-implementing the snapshot
-        lookup. Returns ``None`` when no ACTIVE snapshot exists OR when
+        helpers without each consumer re-implementing the profile-fact
+        lookup. Reads the encrypted profile record's canonical path-value
+        projection — the same operator-declared facts ``config profile
+        edit`` writes and the deadline engine hydrates — so updating the
+        ``vivienda_office`` m² through the CLI drives this ratio directly.
+        Returns ``None`` when the profile has no persisted record OR when
         either ``vivienda_office.total_m2`` / ``vivienda_office.office_m2``
         is absent / non-decimal / zero.
         """
-        snapshot = self._snapshots.latest_active(profile_id=profile_id)
-        if snapshot is None:
+        from ...domain.user_profile import ProfileNotFoundError
+        from ._projections import record_to_path_values
+        from ._repository import UserProfileLifecycleRepository
+
+        repository = self._profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
+        try:
+            record = repository.load(profile_id)
+        except ProfileNotFoundError:
             return None
-        return _raw_afectacion_ratio(snapshot.censo_facts)
+        return _raw_afectacion_ratio(record_to_path_values(record))
 
 
 def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:

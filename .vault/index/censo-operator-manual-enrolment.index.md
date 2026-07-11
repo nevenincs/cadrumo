@@ -12,6 +12,7 @@ related:
   - '[[2026-07-11-censo-operator-manual-enrolment-P02-S06]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-P03-S08]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-P03-S09]]'
+  - '[[2026-07-11-censo-operator-manual-enrolment-P04-S11]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-plan]]'
 ---
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#censo-operator-manual-enrolm
 - `2026-07-11-censo-operator-manual-enrolment-P02-S06` - Re-author the inicio-actividad and cese-actividad agent skills onto the operator-manual censo mirror so the rule-surface conformance gate stays green
 - `2026-07-11-censo-operator-manual-enrolment-P03-S08` - Pin the calendar censo.enrolment_unverified posture with a regression: the warning is present and strict projection refuses for modelos 100/130/303/390 when censo is unverified
 - `2026-07-11-censo-operator-manual-enrolment-P03-S09` - Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty
+- `2026-07-11-censo-operator-manual-enrolment-P04-S11` - Re-seat bound_raw_afectacion_ratio onto operator-declared vivienda_office m2 profile facts, delete the producerless censo snapshot substrate (module, namespace, custody resolver, re-exports, error entry + locale leaves, api stub, tests), reconcile away CENSO_CORROBORATED + censo_snapshot_id, and add real-behavior guard tests
 
 ### plan
 

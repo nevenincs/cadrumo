@@ -147,3 +147,54 @@ in `2026-07-10-censo-g313-launcher-fix-P01-S01`,
   the verb removal.
 - Opens: a low-cost revival path (watch for a real AEAT consulta endpoint; new
   ADR restores the automated read if one appears).
+
+## Update 2026-07-11 — ratio re-seat, snapshot substrate deletion, provenance reconcile
+
+This update completes the accepted decision: with the scrape and the
+`censo pull/compare/apply` family already retired, the surviving read still
+sourced its value from the now-producerless snapshot store, so it was dead. Three
+follow-ups were implemented by an authorized Opus pass on operator delegation.
+
+Re-seat. `CensoSyncService.bound_raw_afectacion_ratio` now derives
+`office_m2 / total_m2` from the operator-declared `vivienda_office` m² facts on the
+encrypted profile record — the same canonical path-values the deadline engine
+hydrates and `config profile edit` writes — instead of
+`CensoSnapshotService.latest_active(...).censo_facts`. The call-site signature is
+unchanged, so the ledger ratios CLI, the classify path, and the preflight guard are
+untouched. The existing home-office guard (`load_usage_ratios_with_censo_guard`,
+`derive_home_office_ratios_from_censo`, `censo_override_warning`,
+`censo_business_pct_for`, `CensoRatioMismatchError`) is kept intact and becomes live
+again: the "update via `config profile edit`" refusal is now a true instruction. The
+"censo" stem stays correct — the m² facts are censal Modelo 036 facts, now
+operator-declared and non-official; nothing stamps the CENSO source tags, so the
+overview calendar keeps its empty verified-key set and the `censo.enrolment_unverified`
+posture, unchanged.
+
+Substrate deletion. The producerless snapshot substrate was deleted outright
+(`no-legacy-compatibility`, no shims): the `application/live/_censo.py` module
+(`CensoSnapshot`, `CensoSnapshotService`, `CensoSnapshotRepository`,
+`CensoSnapshotNotFoundError`, `censo_snapshot_object_key`, `derive_censo_snapshot_id`),
+its `live_censo_snapshot` secure-object namespace registration, the custody-carry
+resolver for `aeat.application.live.censo_snapshot`, the `application/live` and storage
+`__all__` re-exports, the `REFUSED_LIVE_CENSO_SNAPSHOT_NOT_FOUND` error-registry entry
+and its four locale leaves, the generated api stub, and the substrate tests. After the
+re-seat `_censo_sync` no longer imports from `application/live`.
+
+Provenance reconcile. `NoPriorObligationProvenanceKind.CENSO_CORROBORATED` and the
+`NoPriorObligationProvenance.censo_snapshot_id` field were removed per
+`retired-enum-members-need-consumer-reconciliation`: their precondition ("until the
+live censo read is functional") is now permanently false, no production site ever
+constructed the member or set the field (every site is `OPERATOR_DECLARED`), and the
+evidence model is computed fresh at calculate time (not a persisted shape), so deletion
+strands no data. The validator now accepts `OPERATOR_DECLARED` as the sole provenance
+kind.
+
+Guard tests (real-behavior). Profile m² facts written through the real profile path
+drive the ratio; a matching HOME_OFFICE override passes the guard and a diverging one
+refuses naming both values; a single-profile regression proves an override with the
+facts absent refuses naming `config profile edit` and that declaring the facts clears
+the refusal (the dead-instruction fix); the classify path stamps the derived business_pct
+when the operator omits one and the facts are present. Full-tree collection is clean.
+The only red in the touched-suite run is a pre-existing peer `test_exception_base_hygiene`
+failure for the unrelated m210 `Modelo210AgrupacionRentaRowsError` class — not owned by
+this change.

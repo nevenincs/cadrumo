@@ -20,7 +20,6 @@ from ....core.errors import AeatError
 from ....core.identity import BucketId
 from ....tests.secure_sql import isolated_runtime_profile
 from .._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
-from .._censo import CensoSnapshotNotFoundError, CensoSnapshotRepository
 from .._errors import LiveApplicationInputError
 from .._snapshot_base import (
     SecureSnapshotRepository,
@@ -457,22 +456,6 @@ def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     assert error.suggestion == "aeat app live borrador 100 list"
 
 
-def test_censo_snapshot_not_found_error_inherits_shared_base() -> None:
-    error = CensoSnapshotNotFoundError("censo snapshot 'x' not found")
-    assert isinstance(error, SnapshotNotFoundError)
-    assert isinstance(error, AeatError)
-    assert issubclass(CensoSnapshotNotFoundError, SnapshotNotFoundError)
-    assert issubclass(CensoSnapshotNotFoundError, AeatError)
-
-
-def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
-    error = CensoSnapshotNotFoundError(
-        f"censo snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
-        suggestion="aeat config profile edit",
-    )
-    assert error.suggestion == "aeat config profile edit"
-
-
 # ---- SnapshotRepository structural-conformance gate (contract) -----------------
 # Rule 9-A: conformance is STRUCTURAL (isinstance against the @runtime_checkable
 # Protocol), NOT explicit inheritance. Concrete repos must NOT inherit from
@@ -487,14 +470,6 @@ def test_borrador100_snapshot_repository_conforms_to_protocol(
     assert isinstance(repo, SnapshotRepository)
     # Rule 9-A: structural conformance only — no explicit inheritance.
     assert SnapshotRepository not in type(repo).__mro__
-
-
-def test_censo_snapshot_repository_conforms_to_protocol(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """CensoSnapshotRepository satisfies SnapshotRepository[…] structurally."""
-    repo = CensoSnapshotRepository(bucket_id=_PROTO_BUCKET_ID, objects=secure_objects)
-    assert isinstance(repo, SnapshotRepository)
 
 
 def test_secure_snapshot_repository_conforms_to_protocol(

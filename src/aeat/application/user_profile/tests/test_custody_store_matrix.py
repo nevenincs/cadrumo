@@ -368,27 +368,6 @@ def _verify_iva_remote_state(bucket_id: str) -> None:
     assert tuple(IvaRemoteStateAcquisitionManifestRepository().iter_records()), "iva remote state lost"
 
 
-def _seed_censo(bucket_id: str) -> None:
-    from ...live import CensoSnapshot, CensoSnapshotRepository, SnapshotLifecycleState
-
-    snap = CensoSnapshot(
-        snapshot_id="censo-1",
-        bucket_id=bucket_id,
-        profile_id="profile-1",
-        captured_at=_NOW,
-        source_url="https://sede.aeat.es/censo",
-        state=SnapshotLifecycleState.ACTIVE,
-        censo_facts={},
-    )
-    CensoSnapshotRepository(bucket_id=bucket_id).save(snap)
-
-
-def _verify_censo(bucket_id: str) -> None:
-    from ...live import CensoSnapshotRepository
-
-    assert CensoSnapshotRepository(bucket_id=bucket_id).list_snapshots(), "censo snapshot lost"
-
-
 def _seed_justificante_capture(bucket_id: str) -> None:
     from ....core import Period
     from ...live import (
@@ -986,7 +965,6 @@ _CASES: tuple[StoreCase, ...] = (
         _seed_iva_remote_state,
         _verify_iva_remote_state,
     ),
-    StoreCase("aeat.application.live.censo_snapshot", _seed_censo, _verify_censo),
     StoreCase(
         "aeat.application.live.justificante_capture_snapshot",
         _seed_justificante_capture,

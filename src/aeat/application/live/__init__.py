@@ -98,13 +98,6 @@ from ._borrador_100 import (
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
-from ._censo import (
-    CensoSnapshot,
-    CensoSnapshotNotFoundError,
-    CensoSnapshotRepository,
-    CensoSnapshotService,
-    censo_snapshot_object_key,
-)
 from ._errors import (
     LiveApplicationError,
     LiveApplicationInputError,
@@ -543,10 +536,6 @@ __all__ = [
     "BorradorSnapshotNotFoundError",
     "BulkFiledDataCaptureReport",
     "BulkFiledDataListingReport",
-    "CensoSnapshot",
-    "CensoSnapshotNotFoundError",
-    "CensoSnapshotRepository",
-    "CensoSnapshotService",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
     "ExpedientesCapture",
@@ -606,7 +595,6 @@ __all__ = [
     "capture_justificante_snapshot_outcome",
     "capture_notifications",
     "capture_source_filed_data",
-    "censo_snapshot_object_key",
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
     "derive_justificante_capture_snapshot_id",

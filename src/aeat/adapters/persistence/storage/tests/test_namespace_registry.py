@@ -41,7 +41,6 @@ from .. import (
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
     LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
-    LIVE_CENSO_SNAPSHOT_NAMESPACE,
     LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
     LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
@@ -80,12 +79,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:
-    censo = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_censo_snapshot")
+    expedientes = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_expedientes_snapshot")
     repair = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("repair_integrity_decisions")
 
-    assert censo == LIVE_CENSO_SNAPSHOT_NAMESPACE
-    assert censo.sensitivity is SensitivityClass.IDENTITY
-    assert censo.object_key_grammar == "censo-snapshot:{bucket_id}:{snapshot_id}"
+    assert expedientes == LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
     assert repair == REPAIR_INTEGRITY_DECISION_NAMESPACE
     assert repair.sensitivity is SensitivityClass.AUDIT
     assert repair.object_key_grammar == "{decision_id_sha256_hex}"
@@ -237,8 +234,6 @@ def test_custody_profile_projection_matches_bucket_custody_worked_examples() -> 
     assert evidence_keys.isdisjoint(structured_keys)
     assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in full_keys
     assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in structured_keys
-    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.key in full_keys
-    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.key not in structured_keys
     assert BUCKET_EVENT_HISTORY_NAMESPACE.key in full_keys
     assert BUCKET_EVENT_HISTORY_NAMESPACE.key not in structured_keys
     assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in full_keys

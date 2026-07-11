@@ -5907,8 +5907,6 @@ errors:
       con el identificador indicado.
     refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
       de Modelo 100 con el identificador indicado.
-    refused_live_censo_snapshot_not_found: No existe ningún snapshot del censo de
-      Modelo 036 con el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
       con el identificador indicado.
     refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura

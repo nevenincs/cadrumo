@@ -74,14 +74,12 @@ from ..ledger import (
 )
 from ..live import (
     Borrador100Snapshot,
-    CensoSnapshot,
     IvaRemoteStateAcquisitionManifestRepository,
     JustificanteCaptureSnapshot,
     PersistedExpedientesSnapshot,
     PersistedNotificationsSnapshot,
     VerifyObservation,
     borrador_100_snapshot_object_key,
-    censo_snapshot_object_key,
     expedientes_snapshot_object_key,
     justificante_capture_snapshot_object_key,
     notifications_snapshot_object_key,
@@ -223,14 +221,6 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["aeat.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
 
     # --- Live captures (SecureSnapshotRepository) ----------------------------
-    def _censo_payload() -> type[CensoSnapshot]:
-        return CensoSnapshot
-
-    def _censo_key(bucket_id: str, snapshot_id: str) -> str:
-        return censo_snapshot_object_key(bucket_id, snapshot_id)
-
-    resolvers["aeat.application.live.censo_snapshot"] = _snapshot_resolver(_censo_payload, _censo_key)
-
     def _justificante_payload() -> type[JustificanteCaptureSnapshot]:
         return JustificanteCaptureSnapshot
 
