@@ -1,32 +1,32 @@
-"""Packaging gate for the two ``aeat-data-*`` corpus companion distributions.
+"""Packaging gate for the two ``cadrumo-data-*`` corpus companion distributions.
 
 The wheel-split decision moves the corpus source binaries
-(``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the slim ``aeat`` wheel. Because
+(``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the slim ``cadrumo`` wheel. Because
 the full binary set exceeds PyPI's 100 MB per-file cap, it is split along the
 corpus directory seam into TWO sub-cap companions, each under the cap so no size
 grant is needed:
 
-* ``aeat-data-manuals`` ships ``corpus/manuals``.
-* ``aeat-data-official`` ships ``corpus/aeat_official`` and ``corpus/normatives``.
+* ``cadrumo-data-manuals`` ships ``corpus/manuals``.
+* ``cadrumo-data-official`` ships ``corpus/aeat_official`` and ``corpus/normatives``.
 
-Both ship subtrees of the SAME ``aeat_data`` PEP 420 implicit namespace package
-(NEITHER ships ``aeat_data/__init__.py``, which would collide on a joint
-install), so ``importlib.resources.files("aeat_data")`` resolves a
+Both ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit namespace package
+(NEITHER ships ``cadrumo_data/__init__.py``, which would collide on a joint
+install), so ``importlib.resources.files("cadrumo_data")`` resolves a
 ``MultiplexedPath`` over both installed portions.
 
 This gate builds both real companion wheels and asserts:
 
 1. Each companion packages EXACTLY the git-tracked corpus source binaries under
    its owned subtree — no more, no fewer — each under the mirrored
-   ``aeat_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
+   ``cadrumo_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
    resolves.
 2. The two companions are DISJOINT and their union equals the FULL tracked
-   corpus-binary set — every binary the slim ``aeat`` wheel sheds is shipped by
+   corpus-binary set — every binary the slim ``cadrumo`` wheel sheds is shipped by
    exactly one companion, and none twice.
-3. Neither ships ``aeat_data/__init__.py`` (the namespace-package invariant) nor
+3. Neither ships ``cadrumo_data/__init__.py`` (the namespace-package invariant) nor
    any corpus DERIVED surface (extracted text, html, json) — those stay in the
-   ``aeat`` wheel.
-4. Each version equals the root ``aeat`` distribution version, so a companion
+   ``cadrumo`` wheel.
+4. Each version equals the root ``cadrumo`` distribution version, so a companion
    can only ship at the same version as the runtime wheel that resolves it.
 5. Each built wheel is under PyPI's 100 MB per-file cap — the whole point of the
    split, asserted as a hard requirement.
@@ -53,9 +53,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PACKAGING_ROOT = _REPO_ROOT / "packaging"
-_CORPUS_SOURCE_PREFIX = "src/aeat/_data/corpus/"
+_CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
-_COMPANION_CORPUS_PREFIX = "aeat_data/_data/corpus/"
+_COMPANION_CORPUS_PREFIX = "cadrumo_data/_data/corpus/"
 # PyPI's default per-file size cap, in the decimal-MB convention the publish
 # guard and CI artifact guard use (bytes / 1e6). The split exists to keep every
 # companion wheel under this without a size grant.
@@ -77,15 +77,15 @@ class _Companion:
 # binaries; the exhaustiveness test proves that against the live tracked tree.
 _COMPANIONS = (
     _Companion(
-        dist_name="aeat-data-manuals",
-        project_dir="aeat_data_manuals",
-        wheel_glob="aeat_data_manuals-*.whl",
+        dist_name="cadrumo-data-manuals",
+        project_dir="cadrumo_data_manuals",
+        wheel_glob="cadrumo_data_manuals-*.whl",
         owned_subdirs=("manuals",),
     ),
     _Companion(
-        dist_name="aeat-data-official",
-        project_dir="aeat_data_official",
-        wheel_glob="aeat_data_official-*.whl",
+        dist_name="cadrumo-data-official",
+        project_dir="cadrumo_data_official",
+        wheel_glob="cadrumo_data_official-*.whl",
         owned_subdirs=("aeat_official", "normatives"),
     ),
 )
@@ -106,9 +106,9 @@ def _tracked_corpus_binaries() -> set[str]:
         [
             "git",
             "ls-files",
-            "src/aeat/_data/corpus/**/*.pdf",
-            "src/aeat/_data/corpus/**/*.xls",
-            "src/aeat/_data/corpus/**/*.xlsx",
+            "src/cadrumo/_data/corpus/**/*.pdf",
+            "src/cadrumo/_data/corpus/**/*.xls",
+            "src/cadrumo/_data/corpus/**/*.xlsx",
         ],
         cwd=_REPO_ROOT,
         capture_output=True,
@@ -116,7 +116,7 @@ def _tracked_corpus_binaries() -> set[str]:
         check=True,
     )
     tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
-    # Mirror the companion build hooks: the aeat wheel sheds every tests/ subtree,
+    # Mirror the companion build hooks: the Cadrumo wheel sheds every tests/ subtree,
     # so test-pool binaries are not runtime corpus data and the companions omit
     # them too.
     tracked = {path for path in tracked if "/tests/" not in path}
@@ -128,7 +128,7 @@ def _tracked_corpus_binaries() -> set[str]:
 
 
 def _companion_member(tracked_path: str) -> str:
-    """Map a tracked ``src/aeat/_data/corpus/...`` path to its companion archive path."""
+    """Map a tracked ``src/cadrumo/_data/corpus/...`` path to its companion archive path."""
     return f"{_COMPANION_CORPUS_PREFIX}{tracked_path.removeprefix(_CORPUS_SOURCE_PREFIX)}"
 
 
@@ -144,42 +144,37 @@ def _pyproject_version(pyproject: Path) -> str:
         return str(tomllib.load(handle)["project"]["version"])
 
 
-def _build_wheel(companion: _Companion) -> _BuiltWheel:
+def _build_wheel(companion: _Companion, out_root: Path) -> _BuiltWheel:
     """Build one companion wheel and return its members and byte size."""
     project_root = _PACKAGING_ROOT / companion.project_dir
-    out_dir = project_root / "dist-test"
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    try:
-        subprocess.run(
-            ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            check=True,
+    out_dir = out_root / companion.project_dir
+    subprocess.run(
+        ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    wheels = sorted(out_dir.glob(companion.wheel_glob))
+    if len(wheels) != 1:
+        raise AssertionError(
+            f"expected exactly one {companion.wheel_glob} in {out_dir}; got {[w.name for w in wheels]!r}"
         )
-        wheels = sorted(out_dir.glob(companion.wheel_glob))
-        if len(wheels) != 1:
-            raise AssertionError(
-                f"expected exactly one {companion.wheel_glob} in {out_dir}; got {[w.name for w in wheels]!r}"
-            )
-        wheel = wheels[0]
-        with zipfile.ZipFile(wheel) as archive:
-            members = frozenset(info.filename for info in archive.infolist())
-        return _BuiltWheel(members=members, size_bytes=wheel.stat().st_size)
-    finally:
-        if out_dir.exists():
-            shutil.rmtree(out_dir)
+    wheel = wheels[0]
+    with zipfile.ZipFile(wheel) as archive:
+        members = frozenset(info.filename for info in archive.infolist())
+    return _BuiltWheel(members=members, size_bytes=wheel.stat().st_size)
 
 
 @pytest.fixture(scope="module")
-def built_wheels() -> dict[str, _BuiltWheel]:
+def built_wheels(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _BuiltWheel]:
     """Build both companion wheels once and return them keyed by distribution name."""
     if shutil.which("uv") is None:
         raise AssertionError(
-            "uv binary not found on PATH; the aeat-data distribution gate cannot run without the build driver",
+            "uv binary not found on PATH; the Cadrumo-data distribution gate cannot run without the build driver",
         )
-    return {companion.dist_name: _build_wheel(companion) for companion in _COMPANIONS}
+    out_root = tmp_path_factory.mktemp("cadrumo-data-wheels")
+    return {companion.dist_name: _build_wheel(companion, out_root) for companion in _COMPANIONS}
 
 
 def _corpus_members(built: _BuiltWheel) -> set[str]:
@@ -206,8 +201,8 @@ def test_companion_packages_exactly_its_owned_subtree(built_wheels: dict[str, _B
 
 def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWheel]) -> None:
     """The two companions share no member and together ship the full tracked corpus set."""
-    manuals = _corpus_members(built_wheels["aeat-data-manuals"])
-    official = _corpus_members(built_wheels["aeat-data-official"])
+    manuals = _corpus_members(built_wheels["cadrumo-data-manuals"])
+    official = _corpus_members(built_wheels["cadrumo-data-official"])
     overlap = sorted(manuals & official)
     assert not overlap, f"the two companions ship {len(overlap)} shared corpus member(s): {overlap[:10]!r}"
 
@@ -225,11 +220,11 @@ def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWh
 
 
 def test_companion_ships_no_init_or_derived_member(built_wheels: dict[str, _BuiltWheel]) -> None:
-    """No ``aeat_data/__init__.py`` (namespace invariant), no derived surfaces, nothing foreign."""
+    """No ``cadrumo_data/__init__.py`` (namespace invariant), derived surfaces, or foreign files."""
     for companion in _COMPANIONS:
         members = built_wheels[companion.dist_name].members
-        assert "aeat_data/__init__.py" not in members, (
-            f"{companion.dist_name} ships aeat_data/__init__.py; both companions must be PEP 420 namespace "
+        assert "cadrumo_data/__init__.py" not in members, (
+            f"{companion.dist_name} ships cadrumo_data/__init__.py; both companions must be PEP 420 namespace "
             "portions or a joint install collides on that path"
         )
         foreign = sorted(
@@ -246,18 +241,18 @@ def test_companion_ships_no_init_or_derived_member(built_wheels: dict[str, _Buil
             if member.startswith(_COMPANION_CORPUS_PREFIX) and not member.lower().endswith(_CORPUS_BINARY_SUFFIXES)
         )
         assert not derived, (
-            f"{companion.dist_name} ships {len(derived)} corpus DERIVED member(s) that belong in the aeat wheel: "
+            f"{companion.dist_name} ships {len(derived)} corpus DERIVED member(s) that belong in the Cadrumo wheel: "
             f"{derived[:10]!r}"
         )
 
 
 def test_companion_version_matches_root_distribution() -> None:
-    """Each companion version is locked to the root aeat distribution version."""
+    """Each companion version is locked to the root Cadrumo distribution version."""
     root_version = _pyproject_version(_REPO_ROOT / "pyproject.toml")
     for companion in _COMPANIONS:
         companion_version = _pyproject_version(_PACKAGING_ROOT / companion.project_dir / "pyproject.toml")
         assert companion_version == root_version, (
-            f"{companion.dist_name} version {companion_version!r} does not match the root aeat version "
+            f"{companion.dist_name} version {companion_version!r} does not match the root Cadrumo version "
             f"{root_version!r}; each companion must ship version-locked to the runtime wheel that resolves it — "
             "bump all together"
         )
