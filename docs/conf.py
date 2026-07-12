@@ -1,4 +1,4 @@
-"""Sphinx configuration for the aeat documentation set."""
+"""Sphinx configuration for the Cadrumo documentation set."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import warnings
 # CLI help strings are tr() values resolved at import time; the sphinx-click
 # build-time CLI reference renders them, so the language must be fixed for the
 # whole build process here, at the top of conf.py.
-os.environ["AEAT_OUTPUT_LANGUAGE"] = "en"
+os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
@@ -19,8 +19,8 @@ from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.deprecation import RemovedInSphinx90Warning
 
-# Make `aeat` importable for autodoc without installing the wheel.
-_PROJECT_ROOT = Path(os.environ.get("AEAT_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
+# Make `cadrumo` importable for autodoc without installing the wheel.
+_PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
@@ -35,10 +35,12 @@ def _project_metadata() -> dict[str, object]:
 
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
-_DOCS_BASE_URL = os.environ.get("AEAT_DOCS_BASE_URL", "").rstrip("/")
+_DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
 # Cadrumo brand type ramp (Figma / marketing frontend): Instrument Serif for
 # display headings, Hanken Grotesk for text, JetBrains Mono for code.
-_DOCS_FONT_STACK = '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+_DOCS_FONT_STACK = (
+    '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+)
 _DOCS_HEADING_FONT_STACK = '"Instrument Serif", ui-serif, Georgia, "Times New Roman", serif'
 _DOCS_MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace'
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
@@ -84,7 +86,7 @@ source_suffix = {
     ".md": "markdown",
 }
 
-master_doc = os.environ.get("AEAT_DOCS_MASTER_DOC", "index")
+master_doc = os.environ.get("CADRUMO_DOCS_MASTER_DOC", "index")
 # English is the only documentation language. Additional languages attach
 # here - set `language`, add `locale_dirs` and `gettext_compact`, and a
 # gettext / sphinx-intl build matrix. Documentation translation must not
@@ -102,7 +104,7 @@ exclude_patterns = [
 
 _DOCS_ROOT = Path(__file__).resolve().parent
 _ONLY_SOURCES = {
-    Path(item).as_posix() for item in os.environ.get("AEAT_DOCS_ONLY", "").split(os.pathsep) if item.strip()
+    Path(item).as_posix() for item in os.environ.get("CADRUMO_DOCS_ONLY", "").split(os.pathsep) if item.strip()
 }
 if _ONLY_SOURCES:
     for _source in _DOCS_ROOT.rglob("*"):
@@ -128,7 +130,7 @@ suppress_warnings = [
     "sphinx_autodoc_typehints.forward_reference",
     "sphinx_autodoc_typehints.guarded_import",
 ]
-if os.environ.get("AEAT_DOCS_SINGLE_PAGE"):
+if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
 
@@ -233,16 +235,16 @@ intersphinx_mapping = {
     "typer": ("https://typer.tiangolo.com/", None),
 }
 _SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"
-if os.environ.get("AEAT_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
+if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
     intersphinx_mapping["aeat-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
 
-# Offline-hermetic gate: the docs-check build sets AEAT_DOCS_OFFLINE to keep only
+# Offline-hermetic gate: the docs-check build sets CADRUMO_DOCS_OFFLINE to keep only
 # the vendored local inventories (read from disk) and drop the network-only
 # mappings, so the build resolves stdlib/SQLAlchemy targets deterministically
 # without any network access. The dropped third-party namespaces are covered by
 # nitpick_ignore_regex below.
-if os.environ.get("AEAT_DOCS_OFFLINE"):
+if os.environ.get("CADRUMO_DOCS_OFFLINE"):
     intersphinx_mapping = {
         name: (uri, inv) for name, (uri, inv) in intersphinx_mapping.items() if inv and Path(inv).is_file()
     }
@@ -383,7 +385,7 @@ html_context = {
         {"label": "Tutorial", "doc": "tutorials/index"},
         {"label": "CLI reference", "doc": "cli/index"},
         {"label": "How it works", "doc": "explanation/index"},
-        {"label": "API", "doc": "api/aeat"},
+        {"label": "API", "doc": "api/cadrumo"},
     ],
     "aeat_broadcasts": [
         {
@@ -423,7 +425,7 @@ html_context = {
         },
     ],
     "aeat_footer_note": (
-        "aeat is pre-alpha, local-first software. It is not tax advice, is not affiliated with AEAT, "
+        "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with AEAT, "
         "and never replaces official AEAT tools or professional review."
     ),
 }
@@ -597,7 +599,7 @@ nitpick_ignore_regex = [
     # Test modules are excluded from the documented API surface (see
     # ApiStubManager exclusions), so references into them have no stub target.
     (r"py:.*", r".*\btest_[A-Za-z0-9_]*$"),
-    (r"py:.*", r"^aeat\.tests(\..*)?$"),
+    (r"py:.*", r"^cadrumo\.tests(\..*)?$"),
     # Dunder, numeric-literal, and hex-like HTML-id targets that leak out of
     # docstrings as bogus cross-references (``:class:`1``` or AEAT source
     # anchors such as ``89ab``), never real documentable objects.
@@ -623,13 +625,13 @@ nitpick_ignore_regex = [
     # anyway; until a py:mod-aware resolver lands these bare project-module short
     # forms are ignored rather than reded. Scoped to the first-segment project
     # package names so an external / stdlib ``:mod:`` reference is unaffected.
-    # Any ``:mod:`` short reference that is NOT already ``aeat.``-qualified: the
+    # Any ``:mod:`` short reference that is NOT already ``cadrumo.``-qualified: the
     # short-reference resolver maps py:class/func/obj short names but not the
     # py:mod reftype, so a bare project-module reference (``:mod:`domain.iva```,
     # ``:mod:`registry```, ...) has no target. External / stdlib ``:mod:`` refs
     # are covered by the third-party namespace patterns above; a genuine
-    # ``aeat.``-qualified module reference still resolves and is unaffected here.
-    (r"py:mod", r"^(?!aeat\.)[a-z].*"),
+    # ``cadrumo.``-qualified module reference still resolves and is unaffected here.
+    (r"py:mod", r"^(?!cadrumo\.)[a-z].*"),
     # External library types written bare (no vendored inventory offline, so the
     # dotted third-party namespace patterns above do not cover the short forms):
     # the ``cryptography`` elliptic-curve / Edwards key classes
@@ -650,7 +652,7 @@ nitpick_ignore_regex = [
     # ``sha256_file`` / ``save_envelope`` / ``extract_pages_text`` /
     # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
     # last-segment suffix resolver cannot disambiguate by design; and (2) a
-    # project object written by a path that omits the ``aeat.`` root
+    # project object written by a path that omits the ``cadrumo.`` root
     # (``core.telemetry.workspace_hash``,
     # ``application.modelo.emit_collab_workspace_opened_event``,
     # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
@@ -672,12 +674,21 @@ nitpick_ignore_regex = [
         r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
     ),
     # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
-    # ``BindingId``, ... ) are ``NewType``/alias definitions, not documentable
-    # classes, so a ``:class:`` reference to their registry path (with or without
-    # the ``aeat.`` prefix) has no py:class target. Scoped to the registry
-    # namespace + the ``Id`` suffix so real classes are unaffected.
+    # ``BindingId``, ... ) are PEP 695 aliases, not documentable classes, so a
+    # ``:class:`` reference to their registry path has no py:class target. List
+    # the aliases explicitly so a future real ``*Id`` class cannot be hidden.
+    # Retain the former root only for historical source docstrings; Cadrumo is
+    # the current product import root.
     # ``ModeloDetailRow`` is a re-exported alias referenced bare.
-    (r"py:.*", r"^(aeat\.)?domain\.calculations\.registry\.\w+Id$"),
+    (
+        r"py:.*",
+        r"^(?:(?:aeat|cadrumo)\.)?domain\.calculations\.registry\.(?:"
+        r"ApplicationLinkId|BindingId|CasillaId|ConstructId|CrossReferenceId|"
+        r"DeadlineWindowId|DependencyClassificationId|ExportFieldId|ExportLayoutId|"
+        r"ExtractionProfileId|FormulaId|LegalRefId|ModeloId|OracleId|ParameterId|"
+        r"RecordId|RelationId|RevisionId|SourceRefId|SupportRemovalDecisionId|"
+        r"VerificationExpectationId|WorkbookFixtureId|WorkbookOutputId|WorkbookParityRefId)$",
+    ),
     (r"py:.*", r"^ModeloDetailRow$"),
     # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
     # google) types written ``Owner.method`` or ``obj.method``; the owning type
@@ -725,7 +736,7 @@ nitpick_ignore_regex = [
     # The CLI entrypoint subtree is intentionally excluded from the API stub set
     # (its commands are documented in the generated CLI reference under
     # docs/cli/), so module references into it have no autodoc target.
-    (r"py:.*", r"^aeat\.entrypoints\.cli(\..*)?$"),
+    (r"py:.*", r"^cadrumo\.entrypoints\.cli(\..*)?$"),
 ]
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
@@ -763,9 +774,9 @@ def _specific_build_sources() -> list[Path] | None:
 
 def _should_generate_cli_reference() -> bool:
     """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
-    if os.environ.get("AEAT_DOCS_FORCE_CLI_REFERENCE"):
+    if os.environ.get("CADRUMO_DOCS_FORCE_CLI_REFERENCE"):
         return True
-    if os.environ.get("AEAT_DOCS_SKIP_CLI_REFERENCE"):
+    if os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE"):
         return False
     specific_sources = _specific_build_sources()
     if specific_sources is None:
@@ -776,18 +787,18 @@ def _should_generate_cli_reference() -> bool:
 
 def _should_resolve_deferred_models() -> bool:
     """Return whether this Sphinx invocation needs diagnostics model rebuilding."""
-    if os.environ.get("AEAT_DOCS_FORCE_DEFERRED_MODELS"):
+    if os.environ.get("CADRUMO_DOCS_FORCE_DEFERRED_MODELS"):
         return True
-    if os.environ.get("AEAT_DOCS_SKIP_DEFERRED_MODELS"):
+    if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
         return False
     specific_sources = _specific_build_sources()
     if specific_sources is None:
         return True
     docs_root = Path(__file__).resolve().parent
     diagnostic_pages = {
-        (docs_root / "api" / "aeat.application.diagnostics.rst").resolve(),
-        (docs_root / "api" / "aeat.application.auth._diagnostics.rst").resolve(),
-        (docs_root / "api" / "aeat.application.transactions._diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.auth._diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.transactions._diagnostics.rst").resolve(),
     }
     return any(source in diagnostic_pages for source in specific_sources)
 
@@ -822,7 +833,7 @@ def _build_py_suffix_index(env):
     Returns:
         A mapping of bare object name to the list of fully-qualified names that
         end in it (for example ``InboundBorradorObservation`` ->
-        ``["aeat.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
+        ``["cadrumo.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
     """
     index: dict[str, list[str]] = {}
     for fullname in env.get_domain("py").objects:
@@ -836,7 +847,7 @@ def _resolve_short_reference(app, env, node, contnode):
     Stubs document every symbol exactly once, at its defining ``__module__``
     (``:ignore-module-all:``). Docstrings, however, reference re-exported public
     API either by bare name (``:class:`Name```) or by the public package path it
-    is re-exported under (``:class:`aeat.domain.filing.ModeloDraft```), neither
+    is re-exported under (``:class:`cadrumo.domain.filing.ModeloDraft```), neither
     of which autodoc can resolve to the qualified defining-module target. This
     resolver keys on the reference's final segment: when that bare name maps to
     exactly one documented object it returns a reference to it. Ambiguous names
@@ -868,9 +879,9 @@ def _resolve_short_reference(app, env, node, contnode):
     if not candidates:
         return None
 
-    # A public re-export path (``aeat.domain.iva.verify_catalogue``) maps onto a
+    # A public re-export path (``cadrumo.domain.iva.verify_catalogue``) maps onto a
     # defining-module path that carries extra private segments
-    # (``aeat.domain.iva._catalogue.verify_catalogue``). The public components
+    # (``cadrumo.domain.iva._catalogue.verify_catalogue``). The public components
     # still appear, in order, within the defining path, so disambiguate by
     # keeping the candidates whose dotted components contain the reference's
     # components as an ordered subsequence. This separates same-named symbols
@@ -968,7 +979,7 @@ def setup(app):
         """
         if not _should_resolve_deferred_models():
             return
-        from aeat.application import diagnostics
+        from cadrumo.application import diagnostics
 
         diagnostics._ensure_models_rebuilt()
 

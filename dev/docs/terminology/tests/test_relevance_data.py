@@ -1,6 +1,6 @@
 """Gates over the committed term-target relevance data (ADR D6 / D8).
 
-The relevance data (``src/aeat/_data/terminology/relevance/relevance.json``) is
+The relevance data (``src/cadrumo/_data/terminology/relevance/relevance.json``) is
 the precompiled RAG output that SHIPS so CI and the docs build -- which have no
 GPU and no RAG service -- can rank the palette WITHOUT running retrieval. It is
 committed (unlike the uncommitted Pagefind index) precisely because the build
@@ -31,8 +31,8 @@ from typing import TypedDict
 
 import pytest
 
-from aeat.core.config import PROJECT_ROOT
-from aeat.domain.calculations.registry import bundled_authority
+from cadrumo.core.config import PROJECT_ROOT
+from cadrumo.domain.calculations.registry import bundled_authority
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import SweepResult, enumerate_query_vocabulary
 
@@ -40,7 +40,7 @@ from ...terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_RELEVANCE_PATH = PROJECT_ROOT / "src" / "aeat" / "_data" / "terminology" / "relevance" / "relevance.json"
+_RELEVANCE_PATH = PROJECT_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
 _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 
@@ -251,7 +251,7 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
     """
     assert not _target_resolves("_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces)
     assert not _target_resolves("search.html?q=000+99999", build_surfaces)
-    assert not _target_resolves("api/aeat.module.that.is.not.real.html", build_surfaces)
+    assert not _target_resolves("api/cadrumo.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept = next(iter(build_surfaces["concept_ids"]))
     assert _target_resolves(f"_generated/glossary.html#term-{real_concept}", build_surfaces)

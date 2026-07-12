@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_text_extractor.py -> parents[4] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_CORPUS = _REPO_ROOT / "src" / "aeat" / "_data" / "corpus"
+_CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 
 # A real Modelo 100 .properties diccionario (cp1252) with a catalogued
 # manifest artefact, and a real Modelo 349 .txt instruction (no manifest).

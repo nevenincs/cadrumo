@@ -23,7 +23,7 @@ narrow by surface.
 Ranking: every record carries a base ranking weight from the unified
 projection (ADR D5 tier ordering - concepts outrank navigation outranks full
 text). If the committed relevance file
-(``src/aeat/_data/terminology/relevance/relevance.json``) is present, its
+(``src/cadrumo/_data/terminology/relevance/relevance.json``) is present, its
 term-to-target weights BOOST the matching records; if absent, the base weights
 stand. Because the Pagefind index regenerates on every build and this module
 re-reads the relevance file each run, the boost applies automatically once the
@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import ValidationError
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 
 from .terminology._sweep import SweepResult
 from .terminology._unified_record import SearchRecord, to_search_record

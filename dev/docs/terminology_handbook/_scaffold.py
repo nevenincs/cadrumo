@@ -39,7 +39,7 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
-from aeat.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enrolment import EnrolmentCandidate
 from ._enums import ConceptLifecycle, TermStatus
@@ -300,6 +300,6 @@ def _load_existing(concepts_dir: Path) -> dict[str, ConceptRecord]:
 
 
 def _today() -> date:
-    from aeat.core.time import now
+    from cadrumo.core.time import now
 
     return now().date()

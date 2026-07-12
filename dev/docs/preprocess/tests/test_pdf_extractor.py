@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_pdf_extractor.py -> parents[4] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_CORPUS = _REPO_ROOT / "src" / "aeat" / "_data" / "corpus"
+_CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 
 # A small real Diseno-de-registro instruction PDF (26 KB, one page) - fast to
 # extract and grounded by a per-artefact manifest. The manuales PDFs are

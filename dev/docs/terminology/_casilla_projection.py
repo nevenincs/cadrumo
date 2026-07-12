@@ -28,9 +28,9 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 
-from aeat.core import Modelo
-from aeat.core.external_constants import OutputLanguage
-from aeat.domain.calculations.registry import (
+from cadrumo.core import Modelo
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import (
     CasillaDefinition,
     ModeloDefinition,
     ModeloRevision,

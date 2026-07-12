@@ -3,14 +3,14 @@
 These StrEnum axes are the terminology-package-local closed sets that
 the concept-oriented schema (TBX / ISO 30042 three-tier model, SKOS
 relation vocabulary) declares. They live here, beside the schema they
-constrain, rather than in :mod:`aeat.core`, because they are
+constrain, rather than in :mod:`cadrumo.core`, because they are
 Handbook-internal vocabulary with no consumer outside the terminology
-surface: unlike :class:`~aeat.core.Modelo` (a cross-cutting AEAT
+surface: unlike :class:`~cadrumo.core.Modelo` (a cross-cutting AEAT
 identifier referenced across domain, application, and CLI layers), a
 concept's ``domain`` or ``term_status`` is meaningful only inside the
 Handbook. The one closed axis that IS cross-cutting -- the four output
 languages -- is NOT redeclared here; the schema reuses the canonical
-:class:`~aeat.core.external_constants.OutputLanguage`.
+:class:`~cadrumo.core.external_constants.OutputLanguage`.
 
 Provenance of each axis:
 
