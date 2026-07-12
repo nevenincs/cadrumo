@@ -72,7 +72,7 @@ Move the import root and every executable dynamic reference without aliases.
 
 - [x] `W02.P03.S09` - Move the production package root without leaving an aeat import package; `src/aeat to src/cadrumo package tree`.
 - [x] `W02.P03.S10` - Move package-local tests and direct imports without shadow modules; `src/aeat tests to src/cadrumo tests`.
-- [ ] `W02.P03.S11` - Retarget packaged-resource lookup to the Cadrumo root; `src/cadrumo/core/resources`.
+- [x] `W02.P03.S11` - Retarget packaged-resource lookup to the Cadrumo root; `src/cadrumo/core/resources`.
 - [ ] `W02.P03.S12` - Retarget registry callable strings while retaining authority taxonomy paths; `src/cadrumo/_data/registry TOML callable targets`.
 - [ ] `W02.P03.S13` - Retarget dynamic imports to public Cadrumo facades; `src/cadrumo dynamic import sites`.
 - [ ] `W02.P03.S14` - Retarget error-registration module paths and structural assertions; `src/cadrumo/core/errors registries`.
