@@ -1,7 +1,7 @@
 [[revisions."2022".application_links]]
 id = "modelo-100-deadline"
 surface = "deadline"
-consumer = "aeat.domain.deadlines"
+consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = [
     "orden-hfp-310-2023:art-8",

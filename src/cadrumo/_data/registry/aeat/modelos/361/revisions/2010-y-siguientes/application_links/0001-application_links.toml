@@ -1,7 +1,7 @@
 [[revisions."2010-y-siguientes".application_links]]
 id = "modelo-361-filing"
 surface = "filing"
-consumer = "aeat.application.filing"
+consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = [
     "orden-eha-789-2010:art-8",
@@ -17,7 +17,7 @@ source_refs = [
 [[revisions."2010-y-siguientes".application_links]]
 id = "modelo-361-deadline"
 surface = "deadline"
-consumer = "aeat.domain.deadlines"
+consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-eha-789-2010:art-10"]
 source_refs = ["aeat-modelo-361-procedure", "boe-modelo-361-form"]

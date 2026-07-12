@@ -9,7 +9,7 @@ source_refs = ["aeat-modelo-369-procedure"]
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-filing"
 surface = "filing"
-consumer = "aeat.application.filing"
+consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-modelo-369-procedure"]
@@ -17,7 +17,7 @@ source_refs = ["aeat-modelo-369-procedure"]
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-extractor"
 surface = "extractor"
-consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-modelo-369-procedure"]
@@ -25,7 +25,7 @@ source_refs = ["aeat-modelo-369-procedure"]
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-verification"
 surface = "verification"
-consumer = "aeat.application.verification"
+consumer = "cadrumo.application.verification"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-modelo-369-procedure"]
@@ -33,7 +33,7 @@ source_refs = ["aeat-modelo-369-procedure"]
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-deadline"
 surface = "deadline"
-consumer = "aeat.domain.deadlines"
+consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
@@ -41,7 +41,7 @@ source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-calculation"
 surface = "calculation"
-consumer = "aeat.domain.calculations.registry"
+consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = [
     "orden-hac-610-2021:art-1",
@@ -54,7 +54,7 @@ source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-review"
 surface = "review"
-consumer = "aeat.application.filing.review"
+consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
@@ -62,7 +62,7 @@ source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-approval"
 surface = "approval"
-consumer = "aeat.application.workflow.approval"
+consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
@@ -70,7 +70,7 @@ source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-reconciliation"
 surface = "reconciliation"
-consumer = "aeat.application.reconciliation"
+consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
@@ -78,7 +78,7 @@ source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-workflow"
 surface = "workflow"
-consumer = "aeat.application.workflow"
+consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
