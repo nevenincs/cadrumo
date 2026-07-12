@@ -61,7 +61,7 @@ _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
 # Distilled from the mcpb manifest one-liner; keeps the never-files-live boundary
 # stated on the operator-facing surface.
 _PLUGIN_DESCRIPTION = (
-    f"Operate {PRODUCT_IDENTITY.display_name} through the aeat Spanish-tax CLI: "
+    f"Operate {PRODUCT_IDENTITY.display_name} through the Cadrumo Spanish-tax CLI: "
     "grounded search over the bundled BOE/AEAT "
     "legal corpus, situation-keyed guided workflows, and gated execution that "
     "never files to AEAT. The server advertises an orientation core by default "
@@ -489,7 +489,7 @@ def _claude_memory(rule_names: Sequence[str]) -> str:
     imports = "\n".join(f"@{_CLAUDE_DIR}/{_RULES_SUBDIR}/{name}" for name in rule_names)
     return (
         "# Cadrumo operator workspace\n\n"
-        "Claude-native materialisation of the Cadrumo operator harness. The aeat CLI is a\n"
+        "Claude-native materialisation of the Cadrumo operator harness. The Cadrumo CLI is a\n"
         "deterministic Spanish-tax tool universe; this harness is how to operate it\n"
         "safely. The operating rules imported below are your always-on operating\n"
         "contract. Tax-advisor personas are Claude subagents under\n"
