@@ -3,7 +3,7 @@ id = "modelo-349-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
-parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
     {casilla_id = "decl.numero-operadores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'N[uú]mero\s+total\s+de\s+operadores\s+intracomunitarios(?!\s+con\s+rectificaciones)'},
     {casilla_id = "decl.importe-operaciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Importe\s+de\s+las\s+operaciones\s+intracomunitarias'},
@@ -29,7 +29,7 @@ id = "modelo-349-submitted-file"
 surface = "export_record"
 artefact_kind = "submitted_file"
 accepted_artefact_kinds = ["submitted_file"]
-parser = "aeat.domain.calculations.registry.parse_export_payload"
+parser = "cadrumo.domain.calculations.registry.parse_export_payload"
 target_casillas = [
     {casilla_id = "decl.numero-operadores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'N[uú]mero\s+total\s+de\s+operadores\s+intracomunitarios(?!\s+con\s+rectificaciones)'},
     {casilla_id = "decl.importe-operaciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Importe\s+de\s+las\s+operaciones\s+intracomunitarias'},

@@ -8,7 +8,7 @@
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-filing"
 surface = "filing"
-consumer = "aeat.application.filing"
+consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -27,7 +27,7 @@ source_refs = [
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-calculation"
 surface = "calculation"
-consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -42,7 +42,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-verification"
 surface = "verification"
-consumer = "aeat.application.verification"
+consumer = "cadrumo.application.verification"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -57,7 +57,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-review"
 surface = "review"
-consumer = "aeat.application.review"
+consumer = "cadrumo.application.review"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -72,7 +72,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-approval"
 surface = "approval"
-consumer = "aeat.application.workflow.approval"
+consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -87,7 +87,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-reconciliation"
 surface = "reconciliation"
-consumer = "aeat.application.reconciliation"
+consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -102,7 +102,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-workflow"
 surface = "workflow"
-consumer = "aeat.application.workflow"
+consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-13.1.h",
@@ -120,7 +120,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".application_links]]
 id = "modelo-210-2025-deadline"
 surface = "deadline"
-consumer = "aeat.domain.deadlines"
+consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-eha-3316-2010:art-5"]
 source_refs = ["aeat-modelo-210-procedure"]
