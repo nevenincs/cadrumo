@@ -9,39 +9,6 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Classify every persistence root, database, namespace, session directory, and bundle suffix and ## Scope
-
-- `persistence identity matrix` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Classify every persistence root, database, namespace, session directory, and bundle suffix
 
 ## Scope
@@ -86,7 +53,7 @@ The leading `aeat` in an application path, filename, setting, or logical namespa
 | AEAT status cache and browser-trace settings `aeat_status_cache_dir` and `aeat_status_browser_trace_dir`; `src/aeat/core/config.py:812-832` | Mixed: authority-derived content in product-controlled cache custody | Rename the product control to Cadrumo while retaining AEAT terminology in descriptions and payload semantics | Rebuild; never load the former cache |
 | AEAT browser storage state `<aeat_token_dir>/<bucket-id>-storage.json` and metadata/lock material; `src/aeat/adapters/outbound/aeat/browser/_factory.py:184`, `src/aeat/application/auth/_acquisition_lock.py` | Mixed: product-owned directory, authority-owned session payload | Place the unchanged authority session format below the Cadrumo token root | Never resume a session from the former product root; require fresh authentication |
 | Bundled authority roots `aeat_manuals_root`, `aeat_normatives_root`, and `aeat_iva_catalogue_root`; `src/aeat/core/config.py:375-396` | Authority-owned retain | Retain AEAT setting names and `registry/aeat` taxonomy; only their Python package path moves in the later root relocation | Continue reading the reviewed bundled authority corpus; this is not old application state |
-| Opt-in AEAT wallet diagnostic capture `aeat_wallet_diagnostic_dump_dir`; `src/aeat/core/config.py:406-421` | Authority-owned retain | Retain because it names capture of the authority's cartera surface; keep explicit operator-selected custody | Existing captures are evidence, not Cadrumo state to migrate; never auto-ingest them |
+| Opt-in wallet diagnostic directory `aeat_wallet_diagnostic_dump_dir`; `src/aeat/core/config.py:406-421`, consumed as the caller-selected `dump_dir` by `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py:201,481,573,676-705` | Product-owned rename with authority-owned payload terminology | Rename the local custody control to `cadrumo_wallet_diagnostic_dump_dir` / `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`; retain AEAT cartera, Sede, and wallet terminology in descriptions and redacted structural payloads | Do not read the former override or auto-ingest its directory; operator explicitly chooses a new Cadrumo-owned destination |
 | Google Drive folder default `aeat-vault`; `src/aeat/core/_config_integration_fields.py:43-47` | Product-owned rename | `cadrumo-vault` and Cadrumo setting/env identity | Do not automatically discover, rename, or reuse `aeat-vault` |
 | Blob ciphertext `.enc`, blob manifest suffix, profile ledger filenames, evidence `manifest.json`, and corpus manifest/extraction suffixes; storage and evidence modules | Format/domain-owned retain | Retain because none encodes product identity | Normal format validation applies |
 
