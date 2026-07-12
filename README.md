@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/readme/aeat-logo.png" alt="aeat project logo" width="136">
+  <img src="assets/readme/cadrumo-logo.svg" alt="Cadrumo logo" width="136">
 </p>
 
 # aeat
