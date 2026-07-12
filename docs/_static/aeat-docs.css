@@ -1,4 +1,7 @@
-/* aeat docs design system — a 2026 theme layer over the Furo skeleton.
+/* Cadrumo docs design system — the Figma-derived marketing brand applied
+ * as a theme layer over the Furo skeleton. Palette, type, and accents track
+ * the Cadrumo marketing frontend (warm paper neutrals, rust accent,
+ * Instrument Serif display / Hanken Grotesk text / JetBrains Mono code).
  *
  * Sections:
  *   1. Fonts                 6. Sidebar + page toc
@@ -8,46 +11,78 @@
  *   5. Broadcast strip      10. Footer, palette, responsive
  */
 
-/* ── 1. Fonts ─────────────────────────────────────────────────────────── */
+/* ── 1. Fonts (self-hosted, SIL OFL 1.1 — no third-party font CDN) ────── */
 
 @font-face {
-  font-family: "Geist";
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("hanken-grotesk-var-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("hanken-grotesk-var-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("geist-sans-latin-400-normal.woff2") format("woff2");
+  src: url("instrument-serif-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: "Geist";
+  font-family: "Instrument Serif";
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
   font-display: swap;
-  src: url("geist-sans-latin-500-normal.woff2") format("woff2");
+  src: url("instrument-serif-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 @font-face {
-  font-family: "Geist";
-  font-style: normal;
-  font-weight: 600;
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
   font-display: swap;
-  src: url("geist-sans-latin-600-normal.woff2") format("woff2");
+  src: url("instrument-serif-400-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: "Geist";
-  font-style: normal;
-  font-weight: 700;
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
   font-display: swap;
-  src: url("geist-sans-latin-700-normal.woff2") format("woff2");
+  src: url("instrument-serif-400-italic-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 @font-face {
-  font-family: "Geist Mono";
+  font-family: "JetBrains Mono";
   font-style: normal;
-  font-weight: 400 800;
+  font-weight: 400;
   font-display: swap;
-  src: url("geist-mono-latin-normal.woff2") format("woff2-variations");
+  src: url("jetbrains-mono-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("jetbrains-mono-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 /* ── 2. Design tokens ─────────────────────────────────────────────────── */
@@ -59,9 +94,9 @@
   --aeat-radius-m: 10px;
   --aeat-radius-l: 14px;
   --aeat-page-max: 100rem;
-  --aeat-accent-warning: light-dark(#b45309, #fbbf24);
-  --aeat-accent-success: light-dark(#047857, #34d399);
-  --aeat-accent-danger: light-dark(#dc2626, #f87171);
+  --aeat-accent-warning: light-dark(#a16a1b, #d9a441);
+  --aeat-accent-success: light-dark(#55876b, #8fbf9f);
+  --aeat-accent-danger: light-dark(#b3362a, #e08376);
   --aeat-shadow-pop:
     0 0 0 1px light-dark(rgb(0 0 0 / 5%), rgb(255 255 255 / 6%)),
     0 16px 48px -12px rgb(0 0 0 / 30%);
@@ -257,14 +292,14 @@ body[data-theme="dark"] .aeat-header-mark {
 }
 
 .aeat-header-wordmark {
-  font-size: 0.95rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .aeat-header-wordmark-suffix {
   color: var(--color-foreground-muted);
-  font-weight: 450;
+  font-weight: 400;
 }
 
 .aeat-header-nav {
@@ -393,8 +428,9 @@ html.aeat-broadcast-dismissed .aeat-broadcast {
   color: var(--aeat-accent-warning);
   display: inline-flex;
   flex: 0 0 auto;
-  font-size: 0.64rem;
-  font-weight: 600;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.62rem;
+  font-weight: 400;
   gap: 0.32rem;
   letter-spacing: 0.05em;
   line-height: 1;
@@ -570,8 +606,9 @@ html.aeat-broadcast-dismissed .aeat-broadcast {
 
 .sidebar-tree p.caption {
   color: var(--color-foreground-muted);
-  font-size: 0.67rem;
-  font-weight: 600;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.65rem;
+  font-weight: 400;
   letter-spacing: 0.08em;
   margin: 1.5rem 0 0.4rem;
   padding-left: 0.95rem;
@@ -625,8 +662,9 @@ html.aeat-broadcast-dismissed .aeat-broadcast {
 
 .toc-title {
   color: var(--color-foreground-muted);
-  font-size: 0.67rem;
-  font-weight: 600;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.65rem;
+  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -693,31 +731,37 @@ html.aeat-broadcast-dismissed .aeat-broadcast {
   font-weight: 500;
 }
 
+/* Editorial display headings: Instrument Serif ships one weight (400), so
+ * h1/h2 lean on size and air instead of boldness, mirroring the marketing
+ * hero and section titles. Smaller headings stay on the grotesk text stack. */
 .content h1 {
-  font-size: clamp(1.9rem, 1.45rem + 1.4vw, 2.5rem);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
-  margin-bottom: 1.1rem;
+  font-size: clamp(2.25rem, 1.6rem + 2.2vw, 3.25rem);
+  font-weight: 400;
+  letter-spacing: -0.0425rem;
+  line-height: 1.16;
+  margin-bottom: 1.25rem;
 }
 
 .content h2 {
-  font-size: 1.45rem;
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  line-height: 1.3;
-  margin-top: 2.7rem;
+  font-size: clamp(1.65rem, 1.35rem + 1vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: -0.026rem;
+  line-height: 1.18;
+  margin-top: 3rem;
 }
 
 .content h3 {
+  font-family: var(--font-stack);
   font-size: 1.13rem;
   font-weight: 600;
   letter-spacing: -0.008em;
-  margin-top: 2rem;
+  margin-top: 2.1rem;
 }
 
 .content h4,
-.content h5 {
+.content h5,
+.content h6 {
+  font-family: var(--font-stack);
   font-weight: 600;
   letter-spacing: 0;
 }
@@ -875,7 +919,7 @@ body .docutils.literal span.pre {
 }
 
 .content .highlight .aeat-tok-flag {
-  color: light-dark(#7c3aed, #c4b5fd);
+  color: light-dark(#55876b, #9dc2ac);
 }
 
 .content .highlight .go {
@@ -1127,9 +1171,10 @@ a.sd-card:any-link,
 
 .related-pages .page-info .context {
   color: var(--color-foreground-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -1160,8 +1205,9 @@ a.sd-card:any-link,
 .aeat-site-footer-kicker,
 .aeat-site-footer-title {
   color: var(--color-foreground-muted);
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.66rem;
+  font-weight: 400;
   letter-spacing: 0.08em;
   margin: 0 0 0.45rem;
   text-transform: uppercase;

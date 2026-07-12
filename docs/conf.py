@@ -36,11 +36,11 @@ def _project_metadata() -> dict[str, object]:
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
 _DOCS_BASE_URL = os.environ.get("AEAT_DOCS_BASE_URL", "").rstrip("/")
-_DOCS_FONT_STACK = (
-    '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
-)
-_DOCS_HEADING_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
-_DOCS_MONO_FONT_STACK = '"Geist Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace'
+# Cadrumo brand type ramp (Figma / marketing frontend): Instrument Serif for
+# display headings, Hanken Grotesk for text, JetBrains Mono for code.
+_DOCS_FONT_STACK = '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+_DOCS_HEADING_FONT_STACK = '"Instrument Serif", ui-serif, Georgia, "Times New Roman", serif'
+_DOCS_MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace'
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
 _ISSUES_URL = str(_PROJECT_URLS.get("Issues", ""))
 _RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
@@ -249,8 +249,8 @@ if os.environ.get("AEAT_DOCS_OFFLINE"):
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "aeat-cli - local Spanish tax-file automation"
-html_short_title = "aeat-cli"
+html_title = "Cadrumo - local Spanish tax-file automation"
+html_short_title = "Cadrumo"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
 html_favicon = "_static/aeat-favicon.svg"
 html_static_path = ["_static"]
@@ -273,97 +273,102 @@ html_theme_options = {
     "sidebar_hide_name": True,
     "announcement": "aeat-site-broadcast",
     "light_css_variables": {
-        # 2026 design-token pass: zinc neutral scale + Geist blue accent
-        # mapped onto Furo's semantic variables.
-        "color-brand-primary": "#18181b",
-        "color-brand-content": "#0068d6",
-        "color-brand-visited": "#0068d6",
-        "color-foreground-primary": "#18181b",
-        "color-foreground-secondary": "#52525b",
-        "color-foreground-muted": "#71717a",
-        "color-foreground-border": "#d4d4d8",
-        "color-background-primary": "#ffffff",
-        "color-background-secondary": "#fafafa",
-        "color-background-hover": "#f4f4f5",
-        "color-background-hover--transparent": "#f4f4f500",
-        "color-background-border": "#e4e4e7",
-        "color-card-border": "#e4e4e7",
-        "color-card-background": "transparent",
-        "color-card-marginals-background": "#fafafa",
-        "color-link": "#0068d6",
-        "color-link--hover": "#0054ad",
-        "color-link--visited": "#0068d6",
-        "color-link--visited--hover": "#0054ad",
+        # Cadrumo brand tokens (Figma / marketing frontend styles.css):
+        # warm paper neutrals — page #faf8f4, surface #f1eee7, border
+        # #e4ded4, ink #1c1a17, secondary #6b655c — with the rust accent
+        # #c4553b (hover #a94931) mapped onto Furo's semantic variables.
+        "color-brand-primary": "#1c1a17",
+        "color-brand-content": "#c4553b",
+        "color-brand-visited": "#c4553b",
+        "color-foreground-primary": "#1c1a17",
+        "color-foreground-secondary": "#6b655c",
+        "color-foreground-muted": "#8a8478",
+        "color-foreground-border": "#d5cec1",
+        "color-background-primary": "#faf8f4",
+        "color-background-secondary": "#f1eee7",
+        "color-background-hover": "#ece8df",
+        "color-background-hover--transparent": "#ece8df00",
+        "color-background-border": "#e4ded4",
+        "color-card-border": "#e4ded4",
+        "color-card-background": "#ffffff",
+        "color-card-marginals-background": "#f1eee7",
+        "color-link": "#c4553b",
+        "color-link--hover": "#a94931",
+        "color-link--visited": "#c4553b",
+        "color-link--visited--hover": "#a94931",
         "color-link-underline": "transparent",
-        "color-link-underline--hover": "#0068d6",
+        "color-link-underline--hover": "#c4553b",
         "color-link-underline--visited": "transparent",
-        "color-link-underline--visited--hover": "#0068d6",
-        "color-inline-code-background": "#f4f4f5",
-        "color-admonition-background": "#fafafa",
-        "color-admonition-title": "#18181b",
+        "color-link-underline--visited--hover": "#c4553b",
+        "color-inline-code-background": "#f1eee7",
+        "color-admonition-background": "#f1eee7",
+        "color-admonition-title": "#1c1a17",
         "color-admonition-title-background": "transparent",
         "color-admonition-title-background--important": "transparent",
-        "color-admonition-title--important": "#18181b",
+        "color-admonition-title--important": "#1c1a17",
         "color-admonition-title-background--warning": "transparent",
-        "color-admonition-title--warning": "#18181b",
+        "color-admonition-title--warning": "#1c1a17",
         "color-sidebar-background": "transparent",
         "color-sidebar-background-border": "transparent",
-        "color-sidebar-link-text": "#52525b",
-        "color-sidebar-link-text--top-level": "#3f3f46",
-        "color-sidebar-item-background--current": "#f4f4f5",
-        "color-sidebar-item-background--hover": "#f4f4f5",
+        "color-sidebar-link-text": "#6b655c",
+        "color-sidebar-link-text--top-level": "#4d483f",
+        "color-sidebar-item-background--current": "#ece8df",
+        "color-sidebar-item-background--hover": "#ece8df",
         "color-toc-background": "transparent",
-        "color-toc-item-text": "#52525b",
-        "color-toc-item-text--hover": "#18181b",
-        "color-toc-item-text--active": "#0068d6",
-        "color-toc-title-text": "#71717a",
+        "color-toc-item-text": "#6b655c",
+        "color-toc-item-text--hover": "#1c1a17",
+        "color-toc-item-text--active": "#c4553b",
+        "color-toc-title-text": "#8a8478",
         "font-stack": _DOCS_FONT_STACK,
         "font-stack--headings": _DOCS_HEADING_FONT_STACK,
         "font-stack--monospace": _DOCS_MONO_FONT_STACK,
     },
     "dark_css_variables": {
-        "color-brand-primary": "#fafafa",
-        "color-brand-content": "#52a8ff",
-        "color-brand-visited": "#52a8ff",
-        "color-foreground-primary": "#ededed",
-        "color-foreground-secondary": "#a1a1aa",
-        "color-foreground-muted": "#8f8f98",
-        "color-foreground-border": "#3f3f46",
-        "color-background-primary": "#0a0a0a",
-        "color-background-secondary": "#121214",
-        "color-background-hover": "#1d1d20",
-        "color-background-hover--transparent": "#1d1d2000",
-        "color-background-border": "#26262a",
-        "color-card-border": "#26262a",
-        "color-card-background": "transparent",
-        "color-card-marginals-background": "#121214",
-        "color-link": "#52a8ff",
-        "color-link--hover": "#7ec0ff",
-        "color-link--visited": "#52a8ff",
-        "color-link--visited--hover": "#7ec0ff",
+        # Dark companion to the brand palette: the same warm hue family
+        # inverted onto the ink #1c1a17, with the rust accent lifted for
+        # contrast on dark surfaces.
+        "color-brand-primary": "#f1eee7",
+        "color-brand-content": "#dd7a5f",
+        "color-brand-visited": "#dd7a5f",
+        "color-foreground-primary": "#f1eee7",
+        "color-foreground-secondary": "#b3ab9d",
+        "color-foreground-muted": "#8f887b",
+        "color-foreground-border": "#4a453c",
+        "color-background-primary": "#1c1a17",
+        "color-background-secondary": "#24211c",
+        "color-background-hover": "#2c2822",
+        "color-background-hover--transparent": "#2c282200",
+        "color-background-border": "#38342c",
+        "color-card-border": "#38342c",
+        "color-card-background": "#24211c",
+        "color-card-marginals-background": "#24211c",
+        "color-link": "#dd7a5f",
+        "color-link--hover": "#e69579",
+        "color-link--visited": "#dd7a5f",
+        "color-link--visited--hover": "#e69579",
         "color-link-underline": "transparent",
-        "color-link-underline--hover": "#52a8ff",
+        "color-link-underline--hover": "#dd7a5f",
         "color-link-underline--visited": "transparent",
-        "color-link-underline--visited--hover": "#52a8ff",
-        "color-inline-code-background": "#1b1b1f",
-        "color-admonition-background": "#121214",
-        "color-admonition-title": "#ededed",
+        "color-link-underline--visited--hover": "#dd7a5f",
+        "color-inline-code-background": "#26231d",
+        "color-admonition-background": "#24211c",
+        "color-admonition-title": "#f1eee7",
         "color-admonition-title-background": "transparent",
         "color-admonition-title-background--important": "transparent",
-        "color-admonition-title--important": "#ededed",
+        "color-admonition-title--important": "#f1eee7",
         "color-admonition-title-background--warning": "transparent",
-        "color-admonition-title--warning": "#ededed",
+        "color-admonition-title--warning": "#f1eee7",
         "color-sidebar-background": "transparent",
         "color-sidebar-background-border": "transparent",
-        "color-sidebar-link-text": "#a1a1aa",
-        "color-sidebar-link-text--top-level": "#d4d4d8",
-        "color-sidebar-item-background--current": "#1d1d20",
-        "color-sidebar-item-background--hover": "#1d1d20",
+        "color-sidebar-link-text": "#b3ab9d",
+        "color-sidebar-link-text--top-level": "#d5cec1",
+        "color-sidebar-item-background--current": "#2c2822",
+        "color-sidebar-item-background--hover": "#2c2822",
         "color-toc-background": "transparent",
-        "color-toc-item-text": "#a1a1aa",
-        "color-toc-item-text--hover": "#ededed",
-        "color-toc-item-text--active": "#52a8ff",
-        "color-toc-title-text": "#8f8f98",
+        "color-toc-item-text": "#b3ab9d",
+        "color-toc-item-text--hover": "#f1eee7",
+        "color-toc-item-text--active": "#dd7a5f",
+        "color-toc-title-text": "#8f887b",
     },
     "source_repository": _REPOSITORY_URL,
     "source_branch": "main",
@@ -424,7 +429,7 @@ html_context = {
 }
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
-ogp_site_name = "aeat documentation"
+ogp_site_name = "Cadrumo documentation"
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"
@@ -464,7 +469,7 @@ mermaid_dark_theme = "dark"
 # unquoted multi-word family names.
 mermaid_init_config = {
     "startOnLoad": False,
-    "fontFamily": "Geist, Segoe UI, system-ui, sans-serif",
+    "fontFamily": "Hanken Grotesk, Segoe UI, system-ui, sans-serif",
 }
 
 # ── Copy buttons ────────────────────────────────────────────────────────────

@@ -35,3 +35,19 @@ using the model above; they contain no third-party model weights.
 - **snowballstemmer** — BSD-3-Clause
   (https://github.com/snowballstem/snowball). The Spanish Snowball stemming
   algorithm is used for the lexical fallback column of the corpus index.
+
+## Documentation web fonts
+
+The documentation site under `docs/_static/` self-hosts subset `.woff2`
+builds of the following typefaces, each distributed under the
+**SIL Open Font License 1.1** (https://openfontlicense.org):
+
+- **Hanken Grotesk** — Copyright 2020 The Hanken Grotesk Project Authors
+  (https://github.com/marcologous/hanken-grotesk).
+- **Instrument Serif** — Copyright 2022 The Instrument Serif Project Authors
+  (https://github.com/Instrument/instrument-serif).
+- **JetBrains Mono** — Copyright 2020 The JetBrains Mono Project Authors
+  (https://github.com/JetBrains/JetBrainsMono).
+
+The README demo recording uses **Cascadia Mono** (SIL OFL 1.1); its licence
+text ships alongside the font under `assets/readme/fonts/`.
