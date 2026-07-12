@@ -7,7 +7,7 @@
 # testimonial gate: a harness change that breaks a cited verb, a trajectory, the
 # provenance grounding, the HITL tiers, or the faithfulness check fails here.
 
-name: Agent Harness Eval
+name: Cadrumo Agent Harness Eval
 
 on:
   workflow_dispatch:
@@ -37,7 +37,7 @@ permissions:
 
 jobs:
   agent-harness-eval:
-    name: Ubuntu / Python 3.13 / agent-harness eval
+    name: Ubuntu / Python 3.13 / Cadrumo agent-harness / cadrumo-mcp
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -54,7 +54,7 @@ jobs:
       - name: Sync frozen development environment
         run: uv sync --frozen
 
-      - name: Agent-harness eval surface
+      - name: Cadrumo agent-harness eval surface
         run: >-
           uv run --no-sync pytest
           src/cadrumo/agent

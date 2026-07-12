@@ -1,6 +1,6 @@
 """Live harness capture plus the live scorer's five semantics.
 
-Captures one real scripted-persona session against the real ``aeat-mcp`` server
+Captures one real scripted-persona session against the real ``cadrumo-mcp`` server
 over stdio, then scores trajectories with the REAL faithfulness check injected
 from ``entrypoints.mcp`` and the live-write / handoff leaf sets injected from
 their single ``_hitl`` declarations - the hexagonal injection pattern the scorer
@@ -12,7 +12,6 @@ inputs, no mocks.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import pytest
@@ -43,7 +42,7 @@ HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
 _LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
 
 # INTENTIONAL: local-eval-harness because "live" in this filename names the
-# live-EVAL harness under test (a local ``aeat-mcp`` stdio session it spawns),
+# live-EVAL harness under test (a local ``cadrumo-mcp`` stdio session it spawns),
 # not live-AEAT network access — so no ``CADRUMO_LIVE_TESTS_ENABLED`` gate applies.
 
 _SCENARIO_PATH = Path(__file__).resolve().parent.parent / "scenarios" / "modelo_130.toml"
@@ -57,7 +56,7 @@ def _valid_commands() -> frozenset[str]:
 
 def _call(command_key: str, *, result: str = "") -> LiveToolCallRecord:
     return LiveToolCallRecord(
-        tool_name="aeat_" + command_key.replace(".", "_"),
+        tool_name="cadrumo_" + command_key.replace(".", "_"),
         command_key=command_key,
         result_text=result,
     )
@@ -102,13 +101,13 @@ def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
     # A real stdio session capturing one floor-tool call, then scored against the
     # golden scenario: the capture is non-error and the scorer correctly reports
     # the one-call trajectory does not cover the scenario's expected trajectory.
-    driver = ScriptedPersonaDriver([LiveCallTool(tool_name="aeat_harness_load", arguments_json="{}")])
+    driver = ScriptedPersonaDriver([LiveCallTool(tool_name="cadrumo_harness_load", arguments_json="{}")])
     trajectory = run_live_session(
-        [sys.executable, "-c", "from cadrumo.entrypoints.mcp import main; main()"],
+        ["cadrumo-mcp"],
         persona="verifier",
         session_id="live-capture",
         driver=driver,
-        command_key_by_tool={"aeat_harness_load": ""},
+        command_key_by_tool={"cadrumo_harness_load": ""},
     )
     assert len(trajectory.tool_calls) == 1
     assert trajectory.tool_calls[0].is_error is False

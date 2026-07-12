@@ -32,9 +32,9 @@ def _resolver():
 
 
 _CALLS = (
-    ("aeat_modelo_work_calculate", ("wu_123",)),
-    ("aeat_contract", ()),
-    ("aeat_modelo_iva_wallet_balance", ("--year", "2024")),
+    ("cadrumo_modelo_work_calculate", ("wu_123",)),
+    ("cadrumo_contract", ()),
+    ("cadrumo_modelo_ivaw_balance", ("--year", "2024")),
 )
 
 
@@ -47,7 +47,7 @@ def test_recorded_tool_calls_replay_identically() -> None:
 
 def test_a_tampered_record_is_detected_as_divergent() -> None:
     resolve = _resolver()
-    record = record_tool_call("aeat_contract", (), resolve=resolve)
+    record = record_tool_call("cadrumo_contract", (), resolve=resolve)
     tampered = GoldenToolCall(
         tool_name=record.tool_name,
         args=record.args,

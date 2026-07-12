@@ -50,8 +50,8 @@ _SWITCH = "config.switch"
 _IDENTITY_READ_VERB = "config.profile.status"
 
 # The two console identity-read tool names (they carry no registry command key).
-_WHOAMI = "aeat_whoami"
-_HARNESS_LOAD = "aeat_harness_load"
+_WHOAMI = "cadrumo_whoami"
+_HARNESS_LOAD = "cadrumo_harness_load"
 
 
 def _valid_commands() -> frozenset[str]:
