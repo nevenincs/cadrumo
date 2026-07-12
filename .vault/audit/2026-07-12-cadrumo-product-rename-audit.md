@@ -486,6 +486,76 @@ The closure review found no data loss, former-state adoption, cryptographic
 downgrade, authority-identity corruption, or other critical defect. The reviewed
 W02.P04 findings are closed at current HEAD.
 
+### phase-p05-human-executable-contract-inversion | high | Reviewed commits contradict the accepted sole `aeat` executable
+
+The accepted executable ADR and the W03.P05 plan define one human command:
+`aeat`, bound directly to the Cadrumo CLI. The reviewed committed state instead
+sets `PRODUCT_IDENTITY.cli_executable` to `cadrumo`, declares the `cadrumo`
+console script, pins Typer to `cadrumo`, and changes product-owned command
+guidance to that spelling. `S24` and `S25` describe this inversion as a newer
+instruction, but no accepted replacement decision or reconciled plan records
+that change; their own originating Step rows continue to require `aeat`.
+
+This is a release-blocking contract defect, not a harmless rename preference.
+It makes the canonical tuple, package entry points, help output, tests, and the
+accepted operator interface disagree about which executable exists. Concurrent
+uncommitted bytes now expose `aeat` in `pyproject.toml` and pin the CLI main path
+to `aeat`, and the currently available local wheel correspondingly contains only `aeat`
+and `cadrumo-mcp`; however, `PRODUCT_IDENTITY` still says `cadrumo`, and
+uncommitted overlap is not closure evidence. Reconcile the tuple, runtime,
+tests, authored command guidance, metadata, and a freshly built installed wheel
+to the accepted `aeat` contract, or approve a superseding ADR and plan before
+claiming the opposite interface.
+
+### phase-p05-plan-cross-commit-drift | medium | S25 reopened unrelated completed Steps and left S24 unchecked
+
+Commit `58c524f9cd` did not limit its plan mutation to S25. It also reopened the
+previously completed identity-authority Steps S05 and S07 and reverted S24 from
+complete to incomplete. Consequently the current plan marks S24 unchecked even
+though an S24 execution record and commit claim completion, while S25 is checked
+against wording its implementation contradicts. The S24 and S25 records do not
+disclose this plan-state rollback. Reconcile plan status through the canonical
+plan workflow and keep future execution-record commits scoped to their own Step
+instead of carrying a stale plan snapshot across concurrent owners.
+
+### phase-p05-record-and-artifact-truthfulness | medium | S24 evidence names the wrong entry-point contract
+
+The S24 record says its wheel exposes a human `cadrumo` entry point and calls
+that the requested tuple even though the parent Step and accepted ADR require
+`aeat`. The wheel currently available for inspection reports `Name: cadrumo`,
+contains 19,181 `cadrumo/` members and no `aeat/` import root, and declares
+exactly `aeat` plus `cadrumo-mcp`; therefore it cannot substantiate the record's
+claimed entry-point result. Regenerate the wheel only after the executable
+decision is reconciled, record its hash/path and exact `entry_points.txt`, and
+do not reuse a concurrently rebuilt artifact as evidence for an earlier commit.
+
+### phase-p05-packaging-and-remedy-review | resolved | Distribution, MCP executable, and extras cut cleanly to Cadrumo
+
+Outside the human-command conflict, the reviewed packaging boundary is sound.
+The distribution and package root are `cadrumo`; the inspected wheel has no
+former import root; `import cadrumo` succeeds and `import aeat` has no spec; and
+`cadrumo-mcp` points directly at the Cadrumo MCP entrypoint. S26 changes only
+the MCP executable and install-remedy layer: server, tool-prefix, resource URI,
+and human-CLI subprocess wire work remain separable for W04.
+
+Every active Python runtime install remedy inspected names a declared Cadrumo
+extra. The focused identity/refusal/degradation slice passes (`11 passed, 1
+deselected`), and both real-client MCP handshake tests pass when the integration
+marker is enabled (`2 passed`). No former distribution alias, Python shim,
+fallback installer, fake, mock, stub, patch, monkeypatch, skip, or xfail was
+introduced. Retained AEAT names in adapter paths, Sede descriptions, official
+corpus concepts, and mixed authority namespaces remain authority terminology.
+The Spanish `aeat <comando> --help` sentence is consistent with the accepted
+human executable and must not be mechanically regenerated to `cadrumo` unless
+that decision is formally superseded.
+
+### phase-p05-review-critical-findings | critical | No critical W03.P05 finding identified
+
+The executable contradiction is high severity because it blocks a truthful
+installed interface, but the review found no data destruction, authority
+evidence corruption, import compatibility package, credential exposure, or
+other critical defect.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
@@ -505,3 +575,6 @@ W02.P04 findings are closed at current HEAD.
 15. Add the missing natural-key resolver for `cadrumo.application.modelo.m145_communication_record` through the authoritative production registry and prove a real record's export/import identity round trip before W02.P04 closure.
 16. Restore production namespace discovery coverage for `cadrumo.domain.transactions.bucket`; keep the worked-example assertion and fix the scanner/declaration boundary rather than deleting the expectation.
 17. Rerun both persistence integrity gates and the S23 acceptance file from a genuinely clean Cadrumo root after the local former database is handled by an operator-authorised process. Do not report the current hard-cut refusal as a broad test pass.
+18. Restore the accepted single `aeat` human executable consistently across `PRODUCT_IDENTITY`, Typer `prog_name`, authored command guidance, structural tests, and root metadata; alternatively, approve and propagate a superseding ADR before implementing `cadrumo` as the command.
+19. Reconcile S05, S07, S24, and S25 plan status through the canonical plan workflow. Do not let a Step commit carry unrelated checkbox reversions from a stale shared-plan snapshot.
+20. Build a fresh wheel from the reconciled committed tree and record the exact console-entrypoint pair, absence of an `aeat` import root, and installed `--help`/`--version` behavior. Keep MCP wire-identity changes assigned to W04.
