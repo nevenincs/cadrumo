@@ -21,6 +21,7 @@ Language pinning: a fresh subprocess with ``CADRUMO_OUTPUT_LANGUAGE=en`` ensures
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -39,6 +40,15 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
 #: per-command sections.  Only the family pages emit ``**Registry key:**``
 #: lines, so these are excluded from the per-command parsing helpers.
 _NON_FAMILY_PAGES: frozenset[str] = frozenset({"cli/index.rst", "cli/automation.rst", "cli/schemas.rst"})
+
+
+@pytest.fixture(autouse=True)
+def _isolated_cadrumo_storage_root(tmp_path: Path) -> Iterator[None]:
+    """Give direct Cadrumo imports an isolated, per-test local-storage root."""
+    from cadrumo.tests.env_scope import isolated_aeat_env
+
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "cadrumo-state")):
+        yield
 
 
 def _project_root() -> Path:

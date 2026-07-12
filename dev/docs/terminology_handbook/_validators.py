@@ -10,7 +10,7 @@ order the loader runs them.
 
 The legal-ref gate resolves against the SAME legal catalogue the
 registry calculation engine uses -- the authority's
-:class:`~aeat.domain.calculations.registry.RegistryCatalogues` ``legal``
+:class:`~cadrumo.domain.calculations.registry.RegistryCatalogues` ``legal``
 mapping, keyed by legal-ref id -- per the registry-authority-flow and
 registry-calculation-legal-grounding rules. It accepts an injected id
 set so a unit test can resolve against a small synthetic catalogue,
@@ -164,7 +164,7 @@ def approved_completeness_validator() -> HandbookValidator:
     """
 
     def _validate(handbook: TerminologyHandbook) -> None:
-        from aeat.core.external_constants import OutputLanguage
+        from cadrumo.core.external_constants import OutputLanguage
 
         failures: list[str] = []
         for concept in handbook.concepts:
@@ -210,7 +210,7 @@ def default_handbook_validators(legal_ref_ids: Container[str] | None = None) -> 
 
 
 def _bundled_legal_ref_ids() -> frozenset[str]:
-    from aeat.domain.calculations.registry import bundled_authority
+    from cadrumo.domain.calculations.registry import bundled_authority
 
     return frozenset(bundled_authority().catalogues.legal)
 

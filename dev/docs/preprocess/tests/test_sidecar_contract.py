@@ -45,7 +45,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 # carrying the exact <h5 class="articulo"> / <p class="parrafo"> markup the
 # production normatives preprocessor splits on.
 _WORKED_EXAMPLE_HTML = (
-    _REPO_ROOT / "src" / "aeat" / "_data" / "corpus" / "normatives" / "html" / "orden-hap-2250-2015-art-4.html"
+    _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives" / "html" / "orden-hap-2250-2015-art-4.html"
 )
 
 
@@ -67,7 +67,7 @@ def test_extractor_produces_schema_valid_output() -> None:
     assert output.schema_version == PREPROCESS_SCHEMA_VERSION
     assert output.source_kind is SourceDocumentKind.NORMATIVES_HTML
     assert output.status is ExtractionStatus.OK
-    assert output.source_relpath.endswith("src/aeat/_data/corpus/normatives/html/orden-hap-2250-2015-art-4.html")
+    assert output.source_relpath.endswith("src/cadrumo/_data/corpus/normatives/html/orden-hap-2250-2015-art-4.html")
     assert output.source_sha256 == sha256_of(_WORKED_EXAMPLE_HTML)
     assert output.attribution  # BOE/AEAT attribution obligation carried.
     assert len(output.units) == 1

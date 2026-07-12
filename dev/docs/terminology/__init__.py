@@ -1,7 +1,7 @@
 """Build-time compilers projecting registry data into docs search records.
 
 This package is dev build tooling (alongside ``dev/docs/cli_reference.py``
-and ``dev/docs/apidocs``), not shippable ``src/aeat`` code: the projected
+and ``dev/docs/apidocs``), not shippable ``src/cadrumo`` code: the projected
 records are a build-time artifact consumed by the downstream Pagefind
 injection, never committed (like the generated CLI reference). Per ADR D4
 the casilla records are MACHINE-GENERATED from registry snapshots and

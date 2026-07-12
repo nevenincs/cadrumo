@@ -4,7 +4,7 @@ The resolution map wrangles raw RAG sweep hits (path + line range + score) into
 typed, linkable targets across the five grounding surfaces -- modelo casillas,
 the CLI surface, BOE legal grounding, the codebase API reference, and built
 docs pages -- and DROPS+REPORTS any hit it cannot resolve (never shipped
-half-mapped). These gates drive real ``src/aeat/_data`` paths and the real
+half-mapped). These gates drive real ``src/cadrumo/_data`` paths and the real
 registry/legal authority through the resolver, so each rule is exercised
 against the actual on-disk surfaces, not mocks.
 
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry import bundled_authority
 from dev.docs.terminology._resolution import ChunkHit, TargetResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -44,7 +44,7 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    path = "src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.part-001.toml"
+    path = "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.part-001.toml"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CASILLA
@@ -57,7 +57,7 @@ def test_diseno_sidecar_resolves_to_the_casilla_surface(resolver: TargetResolver
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     path = (
-        "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
+        "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
         "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md"
     )
     out = resolver.resolve(_hit(path))
@@ -77,7 +77,7 @@ def test_normatives_sidecar_resolves_to_the_boe_article_anchor(resolver: TargetR
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
-    path = "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
+    path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
@@ -92,7 +92,7 @@ def test_normatives_target_matches_the_catalogue_permalink(resolver: TargetResol
 
     catalogue = bundled_authority().catalogues.legal
     entry = catalogue["ley-37-1992:art-104"]
-    path = "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
+    path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.record.target == entry.permalink
@@ -107,7 +107,7 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("src/aeat/_data/registry/aeat/legal/iva.toml"))
+    out = resolver.resolve(_hit("src/cadrumo/_data/registry/aeat/legal/iva.toml"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
     assert out.record.target.startswith("https://www.boe.es/")
@@ -115,26 +115,26 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None
 
 
 def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
-    """A real src/aeat module resolves to its generated API-stub page.
+    """A real src/cadrumo module resolves to its generated API-stub page.
 
-    The codebase grounding surface: ``src/aeat/foo/bar.py`` ->
-    ``api/aeat.foo.bar.html`` (the apidocs stub-naming convention).
+    The codebase grounding surface: ``src/cadrumo/foo/bar.py`` ->
+    ``api/cadrumo.foo.bar.html`` (the apidocs stub-naming convention).
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/_temporal.py"))
+    out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/_temporal.py"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CODEBASE
-    assert out.record.target == "api/aeat.domain.calculations.registry._temporal.html"
+    assert out.record.target == "api/cadrumo.domain.calculations.registry._temporal.html"
 
 
 def test_package_init_resolves_to_the_package_stub(resolver: TargetResolver) -> None:
     """A package ``__init__.py`` resolves to the package's dotted stub page."""
     from dev.docs.terminology._resolution import ResolvedTarget
 
-    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/__init__.py"))
+    out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/__init__.py"))
     assert isinstance(out, ResolvedTarget)
-    assert out.record.target == "api/aeat.domain.calculations.registry.html"
+    assert out.record.target == "api/cadrumo.domain.calculations.registry.html"
 
 
 def test_cli_reference_page_resolves_to_the_cli_surface(resolver: TargetResolver) -> None:
@@ -184,7 +184,7 @@ def test_test_surface_is_dropped_as_excluded(resolver: TargetResolver) -> None:
     """A test/fixture path is dropped as an excluded surface (never indexed)."""
     from dev.docs.terminology._resolution import DroppedHit, DropReason
 
-    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/tests/test_temporal.py"))
+    out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/tests/test_temporal.py"))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.EXCLUDED_SURFACE
 
@@ -197,7 +197,7 @@ def test_casilla_for_unknown_modelo_is_dropped(resolver: TargetResolver) -> None
     """
     from dev.docs.terminology._resolution import DroppedHit, DropReason
 
-    path = "src/aeat/_data/registry/aeat/modelos/999/revisions/2099/casillas/0001-casillas.toml"
+    path = "src/cadrumo/_data/registry/aeat/modelos/999/revisions/2099/casillas/0001-casillas.toml"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
@@ -213,7 +213,7 @@ def test_batch_resolution_partitions_resolved_and_dropped() -> None:
     from dev.docs.terminology._resolution import resolve_chunk_hits
 
     hits = (
-        _hit("src/aeat/domain/calculations/registry/_temporal.py"),
+        _hit("src/cadrumo/domain/calculations/registry/_temporal.py"),
         _hit("docs/how-to/profile-setup.md"),
         _hit("totally/unmapped/path.bin"),
     )
