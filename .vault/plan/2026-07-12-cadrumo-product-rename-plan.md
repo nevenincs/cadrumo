@@ -31,7 +31,7 @@ the Spanish authority, its portals, protocols, credentials, legal provenance,
 official corpus, registry taxonomy, citations, hashes, and historical evidence.
 
 The plan introduces no import, executable, environment, plugin, MCP, namespace,
-or persisted-state compatibility shim. The sole human command is `cadrumo`;
+or persisted-state compatibility shim. The sole human command is `aeat`;
 `cadrumo-mcp` remains the distinct MCP command.
 Generated surfaces follow their authored
 authorities, public publication remains blocked on evidenced external-name
@@ -99,11 +99,11 @@ Depends on W02 and produces installable local artifacts before integration regen
 
 ### Phase `W03.P05` - rename root distribution and scripts
 
-Make the Cadrumo distribution expose the sole human `cadrumo` command and the
+Make the Cadrumo distribution expose the sole human `aeat` command and the
 distinct `cadrumo-mcp` command.
 
-- [x] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts to cadrumo and cadrumo-mcp; `pyproject.toml`.
-- [x] `W03.P05.S25` - Rename CLI program identity and version and help surfaces; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
+- [x] `W03.P05.S24` - Rename root metadata, package selection, extras, and URLs to Cadrumo; `expose `aeat` and `cadrumo-mcp` scripts; `pyproject.toml`.
+- [x] `W03.P05.S25` - Retain the `aeat` CLI program identity while renaming version and help product surfaces to Cadrumo; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
 - [x] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp executable/refusal modules and focused real tests`.
 - [x] `W03.P05.S27` - Update the optional-extra authority and every directly generated runtime install remedy to current `cadrumo[...]` metadata, with real degradation tests; `src/cadrumo/core/_optional_extras.py; optional-extra consumers, error registries, agent/MCP/search/corpus degradation surfaces and direct tests`.
 
@@ -114,7 +114,7 @@ Move the companion projects and shared namespace coherently.
 - [x] `W03.P06.S28` - Move the manuals companion project directory; `packaging/aeat_data_manuals to packaging/cadrumo_data_manuals`.
 - [x] `W03.P06.S29` - Rename manuals distribution metadata and repository URLs; `packaging/cadrumo_data_manuals/pyproject.toml`.
 - [x] `W03.P06.S30` - Retarget manuals build mapping and plugin name to cadrumo_data; `packaging/cadrumo_data_manuals/hatch_build.py`.
-- [ ] `W03.P06.S31` - Move the official companion project directory; `packaging/aeat_data_official to packaging/cadrumo_data_official`.
+- [x] `W03.P06.S31` - Move the official companion project directory; `packaging/aeat_data_official to packaging/cadrumo_data_official`.
 - [ ] `W03.P06.S32` - Rename official distribution metadata and repository URLs; `packaging/cadrumo_data_official/pyproject.toml`.
 - [ ] `W03.P06.S33` - Retarget official build mapping and plugin name to cadrumo_data; `packaging/cadrumo_data_official/hatch_build.py`.
 - [ ] `W03.P06.S34` - Retarget runtime companion discovery to the cadrumo_data PEP 420 namespace; `src/cadrumo corpus source locator`.
@@ -253,8 +253,8 @@ permitted.
 
 1. `import cadrumo` succeeds from source and installed wheel, `import aeat`
    fails, and the wheel contains no former product import root.
-2. `cadrumo --version` and `cadrumo-mcp` work from clean installs. There is
-   no `aeat` human CLI alias or Python import package.
+2. `aeat --version` and `cadrumo-mcp` work from clean installs. There is no
+   `cadrumo` human CLI alias or `aeat` Python import package.
 3. The root and companion wheels share a version, remain within size budgets,
    install together, expose only `cadrumo_data`, preserve disjoint corpus
    ownership, and retain byte-exact official evidence.
