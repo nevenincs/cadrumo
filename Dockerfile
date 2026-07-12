@@ -1,4 +1,4 @@
-# Reproducible headless-Playwright-capable development image for `aeat`.
+# Reproducible headless-Playwright-capable development image for Cadrumo.
 #
 # Used by `.devcontainer/devcontainer.json` (VS Code "Reopen in Container")
 # and directly via `docker build`. Mirrors the base image already used by
@@ -52,8 +52,9 @@ RUN curl -LsSf https://astral.sh/uv/0.9.7/install.sh | sh
 
 # -- Non-root workspace user -------------------------------------------------
 # Named to match the devcontainer's default `remoteUser`; owns the workspace
-# mount and the persisted `~/.config/aeat/` volume declared in devcontainer.json.
-ARG USERNAME=aeat
+# mount and the persisted `~/.local/share/cadrumo/` state volume declared in
+# devcontainer.json (the Cadrumo XDG data root).
+ARG USERNAME=cadrumo
 ARG USER_UID=1000
 ARG USER_GID=1000
 RUN groupadd --gid ${USER_GID} ${USERNAME} \
