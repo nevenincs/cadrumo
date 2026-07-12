@@ -19,7 +19,7 @@ You need:
   [Authenticate with AEAT](authenticate-with-aeat.md)
 
 Every command on this page needs your master-key passphrase. The tool prompts
-for it, or set `AEAT_SECRET_PASSPHRASE` to run non-interactively. The tool's
+for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The tool's
 messages are in Spanish.
 
 If you have no profile yet, create one non-interactively with `--quiet` (a bare

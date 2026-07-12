@@ -19,7 +19,7 @@ You need:
   [Set up your taxpayer profile](profile-setup.md).
 - A master-key passphrase. The tool prompts for it the first time it opens your
   encrypted storage in a session; for a non-interactive shell, set
-  `AEAT_SECRET_PASSPHRASE`.
+  `CADRUMO_SECRET_PASSPHRASE`.
 
 The CLI emits its help and messages in Spanish; the English text on this page
 describes what each step does.

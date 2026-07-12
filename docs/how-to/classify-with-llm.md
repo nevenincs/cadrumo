@@ -11,7 +11,7 @@ You need:
 - An active profile - see [set up your taxpayer profile](profile-setup.md) - and
   at least one transaction in its ledger to classify.
 - Your master-key passphrase. The command opens the encrypted ledger, so it
-  prompts for the passphrase (or reads `AEAT_SECRET_PASSPHRASE` when set).
+  prompts for the passphrase (or reads `CADRUMO_SECRET_PASSPHRASE` when set).
 - The provider CLI installed, on `PATH`, and logged in. A logged-out provider
   makes the command refuse and relay the provider's own error (for example
   `La clasificacion por LLM fallo: claude CLI exited with 1: 'Not logged in ...'`).

@@ -18,7 +18,7 @@ aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
 ```
 
 Every profile-scoped command needs the master-key passphrase. The tool prompts
-for it, or you can set `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+for it, or you can set `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 The CLI emits help, results, and refusals in Spanish.
 
