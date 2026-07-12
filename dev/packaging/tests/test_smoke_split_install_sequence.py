@@ -9,11 +9,14 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging.smoke_core import _run, _venv_python
+from dev.packaging.smoke_pip_core import _create_pip_venv, _install_target_with_pip
 from dev.packaging.smoke_split_install import (
     _ADVISORY_PROBE,
     _CLEAN_PROBE,
     _build_data_wheels,
     _build_slim_wheel,
+    _runtime_env,
     _venv_cadrumo,
 )
 
@@ -40,6 +43,21 @@ def test_real_wheels_match_the_deferred_authority_sequence(tmp_path: Path) -> No
         official = set(archive.namelist())
     assert any(name.endswith(".docx") for name in official)
     assert any(name.endswith(".zip") for name in official)
+
+    venv = _create_pip_venv(tmp_path, f"{os.sys.version_info.major}.{os.sys.version_info.minor}")
+    _install_target_with_pip(tmp_path, str(wheel.resolve()), venv)
+    _run(
+        [str(_venv_python(venv)), "-c", _ADVISORY_PROBE],
+        cwd=tmp_path,
+        env=_runtime_env(tmp_path, "test-advisory-state"),
+    )
+    for companion in companions:
+        _install_target_with_pip(tmp_path, str(companion.resolve()), venv)
+    _run(
+        [str(_venv_python(venv)), "-c", _CLEAN_PROBE],
+        cwd=tmp_path,
+        env=_runtime_env(tmp_path, "test-clean-state"),
+    )
 
     assert "bundled_authority" not in _ADVISORY_PROBE
     assert "load_registry_tree" in _ADVISORY_PROBE

@@ -8,9 +8,9 @@ contribute subtrees to the SAME ``cadrumo_data`` implicit namespace package, so 
 corpus seam resolves a binary from either portion. This lane proves both halves
 of the contract in a fresh stdlib venv:
 
-- **Core alone (advisory path):** the source catalogue reports degradation
-  non-fatally while emitting a loud :class:`CorpusCompanionAdvisory` naming
-  the missing set and the ``cadrumo[corpus-sources]`` install hint, and the
+- **Core alone (degraded path):** the installed source catalogue and companion
+  resolver expose the missing split-owned set plus the canonical
+  ``cadrumo[corpus-sources]`` install hint, and the
   full registry authority remains deferred until its evidence is installed.
 - **With both companions (byte-identical path):** the same venv, after
   installing the two ``cadrumo-data-*`` wheels, resolves the binaries through the
@@ -42,10 +42,11 @@ _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
 
 _ADVISORY_PROBE = """
 from importlib.resources import files
-import warnings
 
 from cadrumo.core.resources import bundled_path, resolve_companion_binary
-from cadrumo.domain.calculations.registry import CorpusCompanionAdvisory, load_registry_tree
+from cadrumo.domain.calculations.registry import CORPUS_SOURCES_INSTALL_HINT, load_registry_tree
+from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+from cadrumo.entrypoints.cli._registry_corpus import refuse_when_corpus_companion_absent
 
 source_root = bundled_path()
 _, catalogues = load_registry_tree(source_root.joinpath("registry", "aeat"))
@@ -62,20 +63,16 @@ if not missing:
 if not files("cadrumo").joinpath("_data", "corpus", "aeat_official", "instructions").is_dir():
     raise SystemExit("slim wheel lost its non-split official instruction surfaces")
 
-with warnings.catch_warnings(record=True) as caught:
-    warnings.simplefilter("always")
-    warnings.warn(
-        f"{len(missing)} split-owned corpus binaries are absent; install cadrumo[corpus-sources]",
-        CorpusCompanionAdvisory,
-    )
-
-advisories = [w for w in caught if issubclass(w.category, CorpusCompanionAdvisory)]
-if not advisories:
-    raise SystemExit("expected the loud CorpusCompanionAdvisory in a companion-less split install")
-message = str(advisories[0].message)
-if "cadrumo[corpus-sources]" not in message:
-    raise SystemExit(f"advisory does not name the install hint: {message!r}")
-print("split-advisory-ok")
+if CORPUS_SOURCES_INSTALL_HINT != "pip install 'cadrumo[corpus-sources]'":
+    raise SystemExit(f"unexpected companion install hint: {CORPUS_SOURCES_INSTALL_HINT!r}")
+try:
+    refuse_when_corpus_companion_absent(capability="registry verification", missing_advisories=tuple(missing))
+except CliRefusedBoundaryError as exc:
+    if exc.context.get("install") != CORPUS_SOURCES_INSTALL_HINT:
+        raise SystemExit(f"unexpected companion refusal context: {exc.context!r}") from exc
+else:
+    raise SystemExit("production companion boundary did not refuse for the missing split-owned set")
+print(f"split-degradation-ok: {len(missing)} missing; {CORPUS_SOURCES_INSTALL_HINT}")
 """
 
 _CLEAN_PROBE = """
@@ -223,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
     venv_path = _create_pip_venv(work_dir, args.python)
     _install_target_with_pip(work_dir, str(wheel.resolve()), venv_path)
 
-    print("advisory path: split absence is loud; full authority remains deferred", flush=True)
+    print("degraded path: split absence and remedy detected; full authority remains deferred", flush=True)
     _run(
         [str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE],
         cwd=work_dir,
@@ -257,7 +254,8 @@ def main(argv: list[str] | None = None) -> int:
             "both cadrumo-data-* companion wheels build sub-cap (< 100 MB each)",
             "stdlib venv creation",
             "slim-wheel-only pip install",
-            "companion-less source catalogue emits the loud advisory without full authority construction",
+            "companion-less source catalogue exposes split absence and canonical remedy "
+            "without full authority construction",
             "both companions pip install into one venv (joined namespace)",
             "companion registry load is advisory-free",
             "companion registry verify runs byte-exact clean",
