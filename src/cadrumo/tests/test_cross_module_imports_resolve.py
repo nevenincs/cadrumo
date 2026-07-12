@@ -2,8 +2,8 @@
 
 The companion :mod:`test_layout_import_smoke` proves every canonical
 layout package imports cleanly. This gate proves the inverse: every
-``from aeat.X import {name}`` statement under ``src/cadrumo/`` resolves
-to an attribute that actually exists on ``aeat.X``.
+``from cadrumo.X import {name}`` statement under ``src/cadrumo/`` resolves
+to an attribute that actually exists on ``cadrumo.X``.
 
 Closes the foreign-WIP failure pattern that surfaced three times in
 the linkage integrity regression where a sibling change added an import
@@ -15,7 +15,7 @@ package itself imports cleanly.
 
 The scan walks every ``.py`` file under ``src/cadrumo/``, parses each
 via :mod:`ast`, collects every ``ImportFrom`` statement that targets
-the in-repo ``aeat.*`` namespace (absolute or relative), resolves
+the in-repo ``cadrumo.*`` namespace (absolute or relative), resolves
 the target package, and asserts every imported name is
 attribute-accessible after :func:`importlib.import_module`. Conditional
 imports inside ``if TYPE_CHECKING:`` blocks are skipped because their
@@ -54,9 +54,9 @@ def _resolve_relative_module(source: Path, level: int, module: str | None) -> st
     Python's relative-import semantics: ``level=1`` means *the package
     that contains this module*; ``level=2`` means that package's
     parent; and so on. For a non-``__init__`` file at
-    ``aeat/sub/mod.py`` the containing package is ``aeat.sub``; for
-    ``aeat/sub/__init__.py`` the file IS the package ``aeat.sub`` and
-    the containing package is still ``aeat.sub``.
+    ``cadrumo/sub/mod.py`` the containing package is ``cadrumo.sub``; for
+    ``cadrumo/sub/__init__.py`` the file IS the package ``cadrumo.sub`` and
+    the containing package is still ``cadrumo.sub``.
 
     Returns the absolute dotted module name (e.g. ``cadrumo.domain.modelos``)
     or ``None`` if the source file lives outside ``src/cadrumo`` (which
@@ -102,8 +102,8 @@ def _walk_import_from(tree: ast.AST) -> Iterator[ast.ImportFrom]:
 def _collect_import_pairs(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[tuple[Path, str, str]]:
     """Walk every Cadrumo source and yield ``(source_file, module, name)`` import triples.
 
-    Only ``from aeat.X import Y`` (absolute) and relative imports
-    resolving back into the ``aeat.*`` tree are returned. ``import *``
+    Only ``from cadrumo.X import Y`` (absolute) and relative imports
+    resolving back into the ``cadrumo.*`` tree are returned. ``import *``
     statements are excluded — they don't pin a specific name and the
     no-wildcard hygiene is a separate concern.
     """
@@ -169,10 +169,10 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
     return f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}"
 
 
-def test_aeat_cross_module_imports_resolve_against_baseline(
+def test_cadrumo_cross_module_imports_resolve_against_baseline(
     cadrumo_import_triples: list[tuple[Path, str, str]],
 ) -> None:
-    """Every ``from aeat.X import Y`` triple resolves, modulo the committed baseline.
+    """Every ``from cadrumo.X import Y`` triple resolves, modulo the committed baseline.
 
     Walks every parsed import triple, classifies it as resolvable or
     broken, then asserts the broken set equals ``_BASELINE_BROKEN_IMPORTS``
@@ -210,7 +210,7 @@ def test_aeat_cross_module_imports_resolve_against_baseline(
     assert not failure_lines, "\n" + "\n".join(failure_lines)
 
 
-def test_at_least_one_aeat_cross_module_import_was_collected(
+def test_at_least_one_cadrumo_cross_module_import_was_collected(
     cadrumo_import_triples: list[tuple[Path, str, str]],
 ) -> None:
     """Sanity: the AST walk found import triples to validate.
@@ -222,7 +222,7 @@ def test_at_least_one_aeat_cross_module_import_was_collected(
     assert len(cadrumo_import_triples) > 100, (
         f"Cross-module import scan found only {len(cadrumo_import_triples)} import triples — "
         f"the source-tree walk probably broke. Expected hundreds of "
-        f"``from aeat.X import Y`` statements across the package."
+        f"``from cadrumo.X import Y`` statements across the package."
     )
 
 
@@ -241,9 +241,9 @@ _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
     # these entries set the regression cap at the current count so the
     # gate ratchets shut as packages clean up their __all__ exports.
     # Decrement the cap (never increment) as imports get listed.
-    "aeat/application/filing/__init__.py": 12,
-    "aeat/core/corpus_manifest/__init__.py": 1,
-    "aeat/entrypoints/cli/__init__.py": 1,
+    "cadrumo/application/filing/__init__.py": 12,
+    "cadrumo/core/corpus_manifest/__init__.py": 1,
+    "cadrumo/entrypoints/cli/__init__.py": 1,
 }
 
 
@@ -273,7 +273,7 @@ def _collect_init_missing_from_all(source_tree_ast: Mapping[Path, ast.AST] | Non
             if not isinstance(node, ast.ImportFrom):
                 continue
             # Only the package's OWN siblings count — absolute imports
-            # from elsewhere in aeat or stdlib re-exports are caller's
+            # from elsewhere in Cadrumo or stdlib re-exports are caller's
             # choice, not a package-public-surface promise.
             if node.level == 0:
                 continue

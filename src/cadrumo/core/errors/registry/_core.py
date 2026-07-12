@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.core.output_rendering.OutputRenderingError",
+        "cadrumo.core.output_rendering.OutputRenderingError",
         ErrorCode(
             code="INTERNAL_OUTPUT_RENDERING",
             category=ErrorCategory.INTERNAL,
@@ -19,7 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.output_rendering.OutputFormatRefusedError",
+        "cadrumo.core.output_rendering.OutputFormatRefusedError",
         ErrorCode(
             code="REFUSED_OUTPUT_FORMAT",
             category=ErrorCategory.REFUSED,
@@ -30,7 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.json_contract.OutputSchemaError",
+        "cadrumo.core.json_contract.OutputSchemaError",
         ErrorCode(
             code="INTEGRITY_CLI_OUTPUT_SCHEMA",
             category=ErrorCategory.INTEGRITY,
@@ -41,7 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.CoreError",
+        "cadrumo.core.errors.CoreError",
         ErrorCode(
             code="ERROR_AEAT_CORE",
             category=ErrorCategory.ERROR,
@@ -52,7 +52,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.DecimalFormatError",
+        "cadrumo.core.errors.DecimalFormatError",
         ErrorCode(
             code="ERROR_DECIMAL_FORMAT",
             category=ErrorCategory.ERROR,
@@ -63,7 +63,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.RedactionError",
+        "cadrumo.core.errors.RedactionError",
         ErrorCode(
             code="ERROR_REDACTION",
             category=ErrorCategory.ERROR,
@@ -74,7 +74,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors._not_found.CoreNotFoundError",
+        "cadrumo.core.errors._not_found.CoreNotFoundError",
         ErrorCode(
             code="ERROR_AEAT_CORE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -85,7 +85,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.CoreValidationError",
+        "cadrumo.core.errors.CoreValidationError",
         ErrorCode(
             code="INTEGRITY_AEAT_CORE_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -96,7 +96,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core._optional_extras.MissingOptionalExtraError",
+        "cadrumo.core._optional_extras.MissingOptionalExtraError",
         ErrorCode(
             code="ERROR_OPTIONAL_EXTRA_MISSING",
             category=ErrorCategory.ERROR,
@@ -107,7 +107,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core._period.PeriodError",
+        "cadrumo.core._period.PeriodError",
         ErrorCode(
             code="INTEGRITY_PERIOD",
             category=ErrorCategory.INTEGRITY,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.ProfileAnswerTypeError",
+        "cadrumo.core.errors.ProfileAnswerTypeError",
         ErrorCode(
             code="INTEGRITY_PROFILE_ANSWER_TYPE",
             category=ErrorCategory.INTEGRITY,
@@ -129,7 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.AeatObservabilityError",
+        "cadrumo.core.errors.AeatObservabilityError",
         ErrorCode(
             code="ERROR_AEAT_OBSERVABILITY",
             category=ErrorCategory.ERROR,
@@ -140,7 +140,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.ModeloFixtureError",
+        "cadrumo.core.errors.ModeloFixtureError",
         ErrorCode(
             code="INTEGRITY_FILING_FIXTURE",
             category=ErrorCategory.INTEGRITY,
@@ -151,7 +151,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.FixtureProvisioningError",
+        "cadrumo.core.errors.FixtureProvisioningError",
         ErrorCode(
             code="ERROR_FIXTURE_PROVISIONING",
             category=ErrorCategory.ERROR,
@@ -162,7 +162,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.McpLaunchError",
+        "cadrumo.core.errors.McpLaunchError",
         ErrorCode(
             code="FAIL_MCP_LAUNCH",
             category=ErrorCategory.FAIL,
@@ -173,7 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.SiteHealthError",
+        "cadrumo.core.errors.SiteHealthError",
         ErrorCode(
             code="FAIL_SITE_HEALTH",
             category=ErrorCategory.FAIL,
@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.i18n._render.UnmatchedPlaceholderError",
+        "cadrumo.core.i18n._render.UnmatchedPlaceholderError",
         ErrorCode(
             code="INTERNAL_I18N_UNMATCHED_PLACEHOLDER",
             category=ErrorCategory.INTERNAL,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.calculations.registry._workbook_parity._BinaryXlsConversionError",
+        "cadrumo.domain.calculations.registry._workbook_parity._BinaryXlsConversionError",
         ErrorCode(
             code="INTEGRITY_REGISTRY_BINARY_XLS_CONVERSION",
             category=ErrorCategory.INTEGRITY,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.observability._errors.AeatCorpusDriftError",
+        "cadrumo.core.observability._errors.AeatCorpusDriftError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -217,7 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.observability._errors.GoldenCaptureError",
+        "cadrumo.core.observability._errors.GoldenCaptureError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_GOLDEN_CAPTURE",
             category=ErrorCategory.INTEGRITY,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.observability._errors.GoldenReplayMismatchError",
+        "cadrumo.core.observability._errors.GoldenReplayMismatchError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_GOLDEN_REPLAY_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.observability._errors.RunContextMissingError",
+        "cadrumo.core.observability._errors.RunContextMissingError",
         ErrorCode(
             code="INTERNAL_OBSERVABILITY_RUN_CONTEXT_MISSING",
             category=ErrorCategory.INTERNAL,
@@ -250,7 +250,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.observability._errors.RunTraceValidationError",
+        "cadrumo.core.observability._errors.RunTraceValidationError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_RUN_TRACE_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -261,7 +261,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.observability._errors.RunTracePersistenceError",
+        "cadrumo.core.observability._errors.RunTracePersistenceError",
         ErrorCode(
             code="FAIL_OBSERVABILITY_RUN_TRACE_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -272,7 +272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.identity._documents.IdentityError",
+        "cadrumo.core.identity._documents.IdentityError",
         ErrorCode(
             code="INTEGRITY_IDENTITY_DOCUMENT",
             category=ErrorCategory.INTEGRITY,
@@ -283,7 +283,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.locks_errors.LockAcquisitionError",
+        "cadrumo.core.locks_errors.LockAcquisitionError",
         ErrorCode(
             code="LOCKED_STORAGE_LOCK_ACQUISITION",
             category=ErrorCategory.LOCKED,
@@ -294,7 +294,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._errors.CorpusManifestError",
+        "cadrumo.core.corpus_manifest._errors.CorpusManifestError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -305,7 +305,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._errors.CorpusManifestTamperError",
+        "cadrumo.core.corpus_manifest._errors.CorpusManifestTamperError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER",
             category=ErrorCategory.INTEGRITY,
@@ -316,7 +316,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._errors.CorpusManifestDriftError",
+        "cadrumo.core.corpus_manifest._errors.CorpusManifestDriftError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -327,7 +327,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._errors.CorpusBundleError",
+        "cadrumo.core.corpus_manifest._errors.CorpusBundleError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE",
             category=ErrorCategory.INTEGRITY,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._errors.CorpusBundleVerificationError",
+        "cadrumo.core.corpus_manifest._errors.CorpusBundleVerificationError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE_VERIFICATION",
             category=ErrorCategory.INTEGRITY,
@@ -349,7 +349,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._bundle_signing.CorpusBundleSigningError",
+        "cadrumo.core.corpus_manifest._bundle_signing.CorpusBundleSigningError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNATURE",
             category=ErrorCategory.INTEGRITY,
@@ -360,7 +360,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.corpus_manifest._bundle_signing.CorpusBundleSigningKeyNotFoundError",
+        "cadrumo.core.corpus_manifest._bundle_signing.CorpusBundleSigningKeyNotFoundError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE_SIGNING_KEY_NOT_FOUND",
             category=ErrorCategory.INTEGRITY,
@@ -371,7 +371,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.AccessGateSubmissionError",
+        "cadrumo.core.access_gate._errors.AccessGateSubmissionError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION",
             category=ErrorCategory.ERROR,
@@ -382,7 +382,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.AccessGateSubmissionPreflightError",
+        "cadrumo.core.access_gate._errors.AccessGateSubmissionPreflightError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION_PREFLIGHT",
             category=ErrorCategory.ERROR,
@@ -393,7 +393,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.LiveSubmitForbiddenError",
+        "cadrumo.core.access_gate._errors.LiveSubmitForbiddenError",
         ErrorCode(
             code="LOCKED_ACCESS_GATE_LIVE_SUBMIT_FORBIDDEN",
             category=ErrorCategory.LOCKED,
@@ -404,7 +404,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.AeatLiveReadNotEnabledError",
+        "cadrumo.core.access_gate._errors.AeatLiveReadNotEnabledError",
         ErrorCode(
             code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
             category=ErrorCategory.REFUSED,
@@ -415,7 +415,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.AuthorizationManifestError",
+        "cadrumo.core.access_gate._errors.AuthorizationManifestError",
         ErrorCode(
             code="FAIL_ACCESS_GATE_AUTHORIZATION_MANIFEST",
             category=ErrorCategory.FAIL,
@@ -426,7 +426,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.locales.manager.LocaleError",
+        "cadrumo.locales.manager.LocaleError",
         ErrorCode(
             code="FAIL_LOCALE_MANAGER",
             category=ErrorCategory.FAIL,
@@ -437,7 +437,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.locales._modelo_manager.ModeloLocaleError",
+        "cadrumo.locales._modelo_manager.ModeloLocaleError",
         ErrorCode(
             code="FAIL_MODELO_LOCALE_MANAGER",
             category=ErrorCategory.FAIL,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.resources._errors.ResourceLoadError",
+        "cadrumo.core.resources._errors.ResourceLoadError",
         ErrorCode(
             code="ERROR_RESOURCES_LOAD",
             category=ErrorCategory.ERROR,
@@ -459,7 +459,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.resources._errors.ResourceNotFoundError",
+        "cadrumo.core.resources._errors.ResourceNotFoundError",
         ErrorCode(
             code="ERROR_RESOURCES_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -470,7 +470,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.resources._errors.ResourceValidationError",
+        "cadrumo.core.resources._errors.ResourceValidationError",
         ErrorCode(
             code="ERROR_RESOURCES_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -481,7 +481,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.resources._errors.ResourceBackendError",
+        "cadrumo.core.resources._errors.ResourceBackendError",
         ErrorCode(
             code="ERROR_RESOURCES_BACKEND",
             category=ErrorCategory.ERROR,
@@ -492,7 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.setup_answers.ProfileRegistrationError",
+        "cadrumo.core.setup_answers.ProfileRegistrationError",
         ErrorCode(
             code="INTERNAL_PROFILE_REGISTRATION",
             category=ErrorCategory.INTERNAL,
@@ -503,7 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.setup_answers.ProjectAnswersNotRegisteredError",
+        "cadrumo.core.setup_answers.ProjectAnswersNotRegisteredError",
         ErrorCode(
             code="INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED",
             category=ErrorCategory.INTERNAL,
@@ -514,7 +514,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.wizard_catalogue.WizardCatalogueNotRegisteredError",
+        "cadrumo.core.wizard_catalogue.WizardCatalogueNotRegisteredError",
         ErrorCode(
             code="INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED",
             category=ErrorCategory.INTERNAL,
@@ -525,7 +525,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.wizard_catalogue.WizardCatalogueAlreadyRegisteredError",
+        "cadrumo.core.wizard_catalogue.WizardCatalogueAlreadyRegisteredError",
         ErrorCode(
             code="INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED",
             category=ErrorCategory.INTERNAL,
@@ -536,7 +536,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.NoActiveProfileError",
+        "cadrumo.core.errors.NoActiveProfileError",
         ErrorCode(
             code="REFUSED_NO_ACTIVE_PROFILE",
             category=ErrorCategory.REFUSED,
@@ -547,7 +547,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.ActiveProfilePointerError",
+        "cadrumo.core.errors.ActiveProfilePointerError",
         ErrorCode(
             code="INTEGRITY_ACTIVE_PROFILE_POINTER",
             category=ErrorCategory.INTEGRITY,
@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.telemetry._errors.TelemetrySchemaError",
+        "cadrumo.core.telemetry._errors.TelemetrySchemaError",
         ErrorCode(
             code="ERROR_TELEMETRY_SCHEMA",
             category=ErrorCategory.ERROR,

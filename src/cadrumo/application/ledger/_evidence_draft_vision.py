@@ -254,7 +254,7 @@ class LocalVisionInvoiceFieldExtractor:
             if client is not None
             else LLMClient(
                 settings=vision_settings,
-                caller="aeat.application.ledger.evidence_draft_vision",
+                caller="cadrumo.application.ledger.evidence_draft_vision",
                 prompt_id="ledger-invoice-vision-extract",
             )
         )

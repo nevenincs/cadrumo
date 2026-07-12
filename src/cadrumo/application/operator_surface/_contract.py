@@ -1,7 +1,7 @@
 """Application-owned operator-surface contract for the workflow redesign.
 
 This module declares the accepted :class:`RootSurface` records, canonical
-:class:`~aeat.core.BindingSourceKind` subset, parser-only
+:class:`~cadrumo.core.BindingSourceKind` subset, parser-only
 :class:`SourceKindAlias` records, mounted :class:`MountedCommandFamily`
 records, backend :class:`ServiceOwner` inventory, log metadata, and registered
 error-code tuple that build the immutable :class:`OperatorSurfaceContract`.
@@ -98,7 +98,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="profile",
         operator_question="create, inspect, edit, and export profile buckets used by backend workflows",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=(
             "create",
             "edit",
@@ -127,7 +127,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="lock",
         operator_question="seal active profile custody for profile-bound backend workflows",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=("lock",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -136,7 +136,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="switch",
         operator_question="switch the active taxpayer profile for profile-bound backend workflows",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=("switch",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -145,7 +145,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="rekey",
         operator_question="rotate profile custody passphrase and recovery wrapping",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=("rekey",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -154,7 +154,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="recover",
         operator_question="recover profile custody using the printed recovery key",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=("recover",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -163,7 +163,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="show-recovery",
         operator_question="display custody recovery material through the redacted CLI surface",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=("show-recovery",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -172,7 +172,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="verify-recovery",
         operator_question="verify printed recovery custody material without rotating secrets",
-        service_owner="aeat.application.user_profile",
+        service_owner="cadrumo.application.user_profile",
         commands=("verify-recovery",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -181,7 +181,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="auth",
         operator_question="configure and inspect local authentication state for read-only AEAT access",
-        service_owner="aeat.application.auth",
+        service_owner="cadrumo.application.auth",
         commands=(
             "providers",
             "configure",
@@ -200,7 +200,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="repair",
         operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
-        service_owner="aeat.application.diagnostics",
+        service_owner="cadrumo.application.diagnostics",
         commands=("connectivity", "integrity", "quarantine", "reset-progress", "logs", "profile"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -209,7 +209,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="check",
         operator_question="check local provisioning readiness and active-profile capability state",
-        service_owner="aeat.application.provisioning",
+        service_owner="cadrumo.application.provisioning",
         commands=("check",),
         mutability=OperatorMutability.READ_ONLY,
     ),
@@ -218,7 +218,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="google",
         operator_question="configure Google account auth, Drive folder, and worksheet export mirror",
-        service_owner="aeat.application.storage",
+        service_owner="cadrumo.application.storage",
         commands=("folder", "login", "logout", "register", "status", "sync", "credential-source"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -227,7 +227,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="reset",
         operator_question="reset operator-entered local configuration scopes",
-        service_owner="aeat.application.config_reset",
+        service_owner="cadrumo.application.config_reset",
         commands=("reset",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -236,7 +236,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="collab",
         operator_question="register trusted review-package recipients by verified public-key fingerprint",
-        service_owner="aeat.application.modelo",
+        service_owner="cadrumo.application.modelo",
         commands=("recipient",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -245,7 +245,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="overview",
         operator_question="summarize active profile work state and period calendar readiness",
-        service_owner="aeat.application.overview",
+        service_owner="cadrumo.application.overview",
         commands=("status", "agenda", "backlog", "calendar", "explain", "pipeline", "prepare"),
         mutability=OperatorMutability.READ_ONLY,
     ),
@@ -254,7 +254,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="ledger",
         operator_question="ingest and review ledger transactions in the active bucket",
-        service_owner="aeat.application.transactions",
+        service_owner="cadrumo.application.transactions",
         commands=(
             "add",
             "update",
@@ -301,7 +301,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="live",
         operator_question="perform explicit read-only AEAT live observations",
-        service_owner="aeat.application.live",
+        service_owner="cadrumo.application.live",
         commands=(
             "borrador",
             "expedientes",
@@ -319,7 +319,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="modelo",
         operator_question="inspect modelo registry data and manage modelo work units",
-        service_owner="aeat.application.modelo",
+        service_owner="cadrumo.application.modelo",
         commands=(
             "list",
             "describe",
@@ -352,7 +352,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="registry",
         operator_question="inspect and verify local registry authority data",
-        service_owner="aeat.application.registry",
+        service_owner="cadrumo.application.registry",
         commands=(
             "inspect",
             "verify",
@@ -371,7 +371,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="review",
         operator_question="inspect read-only cross-domain items that need operator attention",
-        service_owner="aeat.application.review",
+        service_owner="cadrumo.application.review",
         commands=("queue", "view"),
         mutability=OperatorMutability.READ_ONLY,
     ),
@@ -380,7 +380,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="contract",
         operator_question="emit the operator-surface capability manifest the agent harness reads",
-        service_owner="aeat.application.operator_surface",
+        service_owner="cadrumo.application.operator_surface",
         commands=("contract",),
         mutability=OperatorMutability.READ_ONLY,
     ),
@@ -389,7 +389,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.APP,
         child="agent",
         operator_question="materialise the shipped operator agent harness (rules, personas, skills) for a runtime",
-        service_owner="aeat.application.operator_surface",
+        service_owner="cadrumo.application.operator_surface",
         commands=("agent",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -400,7 +400,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         operator_question=(
             "run the full local modelo filing chain (readiness, calculate, verify, export) in one command"
         ),
-        service_owner="aeat.application.modelo",
+        service_owner="cadrumo.application.modelo",
         commands=("quickfile",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -412,7 +412,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "report recent local LLM run health, latency, errors, and usage over the active "
             "bucket; inspect and control the opt-in remote telemetry consent level"
         ),
-        service_owner="aeat.application.diagnostics_run_health",
+        service_owner="cadrumo.application.diagnostics_run_health",
         commands=("run-health", "runs", "latency", "errors", "llm-usage", "telemetry"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -421,27 +421,27 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
 SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ServiceOwner(
         capability="root_contract",
-        owner="aeat.application.operator_surface",
+        owner="cadrumo.application.operator_surface",
         notes="owns accepted root, lifecycle, and source-kind contract records",
     ),
     ServiceOwner(
         capability="profile_and_bucket_state",
-        owner="aeat.application.user_profile",
+        owner="cadrumo.application.user_profile",
         notes="owns active profile state consumed by app commands",
     ),
     ServiceOwner(
         capability="bucket_event_history",
-        owner="aeat.domain.buckets",
+        owner="cadrumo.domain.buckets",
         notes="owns append-only bucket-event history records exposed by config profile history",
     ),
     ServiceOwner(
         capability="workflow_state",
-        owner="aeat.application.workflow",
+        owner="cadrumo.application.workflow",
         notes="owns profile read path and workflow state repository access",
     ),
     ServiceOwner(
         capability="modelo_lifecycle",
-        owner="aeat.application.filing",
+        owner="cadrumo.application.filing",
         notes=(
             "owns calculate, verify, file, amend, reconcile, history, and export behavior "
             "until modelo services split out"
@@ -449,27 +449,27 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ),
     ServiceOwner(
         capability="ledger_transactions",
-        owner="aeat.application.transactions",
+        owner="cadrumo.application.transactions",
         notes="owns ledger import and transaction diagnostics until ledger services split out",
     ),
     ServiceOwner(
         capability="review_queue",
-        owner="aeat.application.review",
+        owner="cadrumo.application.review",
         notes="owns operator review items and edits across source domains",
     ),
     ServiceOwner(
         capability="provisioning_readiness",
-        owner="aeat.application.provisioning",
+        owner="cadrumo.application.provisioning",
         notes="owns local provisioning readiness checked by config check",
     ),
     ServiceOwner(
         capability="google_export_mirror",
-        owner="aeat.application.storage",
+        owner="cadrumo.application.storage",
         notes="owns Google auth, Drive folder, and worksheet export-mirror state for config google",
     ),
     ServiceOwner(
         capability="config_reset",
-        owner="aeat.application.config_reset",
+        owner="cadrumo.application.config_reset",
         notes="owns the operator-entered configuration scope reset behind config reset",
     ),
 )

@@ -1,4 +1,4 @@
-"""Single resource-access boundary for the aeat package.
+"""Single resource-access boundary for the Cadrumo package.
 
 Exposes:
 

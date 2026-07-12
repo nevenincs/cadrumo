@@ -1,7 +1,7 @@
 [[revisions."2023-y-siguientes".application_links]]
 id = "modelo-180-deadline"
 surface = "deadline"
-consumer = "aeat.domain.deadlines"
+consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = [
     "orden-hfp-1284-2023:art-7",

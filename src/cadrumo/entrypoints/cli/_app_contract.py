@@ -43,8 +43,8 @@ logger = get_logger(__name__)
 # to enumerate the complete registered set. Limited to the payload directories
 # so importing the manifest command never pulls the test tree.
 _PAYLOAD_PACKAGES: tuple[str, ...] = (
-    "aeat.entrypoints.cli",
-    "aeat.entrypoints.cli._config",
+    "cadrumo.entrypoints.cli",
+    "cadrumo.entrypoints.cli._config",
 )
 
 

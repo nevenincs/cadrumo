@@ -29,7 +29,7 @@ remains public, while malformed, ambiguous, or low-coverage extraction raises
 
 Public API::
 
-    from aeat.adapters.inbound.declaracion import (
+    from cadrumo.adapters.inbound.declaracion import (
         InboundDeclaracionObservation,
         DeclaracionParseError,
         ExtractionWarning,

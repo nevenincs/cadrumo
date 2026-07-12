@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.domain.portals._errors.PortalValidationError",
+        "cadrumo.domain.portals._errors.PortalValidationError",
         ErrorCode(
             code="ERROR_PORTALS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -19,7 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.usage_ratios._errors.UsageRatioValidationError",
+        "cadrumo.domain.usage_ratios._errors.UsageRatioValidationError",
         ErrorCode(
             code="ERROR_USAGE_RATIOS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -30,7 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.deadlines._errors.DeadlineValidationError",
+        "cadrumo.domain.deadlines._errors.DeadlineValidationError",
         ErrorCode(
             code="ERROR_DEADLINES_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -41,7 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.submission._errors.SubmissionValidationError",
+        "cadrumo.domain.submission._errors.SubmissionValidationError",
         ErrorCode(
             code="ERROR_SUBMISSION_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -52,7 +52,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals._errors.ManualValidationError",
+        "cadrumo.domain.manuals._errors.ManualValidationError",
         ErrorCode(
             code="ERROR_MANUALS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -63,7 +63,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.assets.AssetRecordError",
+        "cadrumo.domain.contribuyente.assets.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",
             category=ErrorCategory.ERROR,
@@ -74,7 +74,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.assets.AssetValidationError",
+        "cadrumo.domain.contribuyente.assets.AssetValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -85,7 +85,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.bienes_inversion.BienInversionRecordError",
+        "cadrumo.domain.bienes_inversion.BienInversionRecordError",
         ErrorCode(
             code="ERROR_PROFILE_BIENES_INVERSION_RECORD",
             category=ErrorCategory.ERROR,
@@ -96,7 +96,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.bienes_inversion.BienInversionValidationError",
+        "cadrumo.domain.bienes_inversion.BienInversionValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -107,7 +107,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.prorrata_register.ProrrataRegisterError",
+        "cadrumo.domain.prorrata_register.ProrrataRegisterError",
         ErrorCode(
             code="ERROR_PROFILE_PRORRATA_REGISTER_RECORD",
             category=ErrorCategory.ERROR,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.prorrata_register.ProrrataRegisterValidationError",
+        "cadrumo.domain.prorrata_register.ProrrataRegisterValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -129,7 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.inventory.AmortizacionLedgerError",
+        "cadrumo.domain.contribuyente.inventory.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,
@@ -140,7 +140,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.inventory.InventoryLedgerError",
+        "cadrumo.domain.contribuyente.inventory.InventoryLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_INVENTORY_LEDGER",
             category=ErrorCategory.ERROR,
@@ -151,7 +151,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.inventory.InventoryValidationError",
+        "cadrumo.domain.contribuyente.inventory.InventoryValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_INVENTORY_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -162,7 +162,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.inventory.LIFOForbiddenError",
+        "cadrumo.domain.contribuyente.inventory.LIFOForbiddenError",
         ErrorCode(
             code="REFUSED_PROFILE_LIFO_FORBIDDEN",
             category=ErrorCategory.REFUSED,
@@ -173,7 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.contribuyente.inventory.BasisCapExceededError",
+        "cadrumo.domain.contribuyente.inventory.BasisCapExceededError",
         ErrorCode(
             code="REFUSED_PROFILE_BASIS_CAP_EXCEEDED",
             category=ErrorCategory.REFUSED,
@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.UserProfileError",
+        "cadrumo.domain.user_profile._errors.UserProfileError",
         ErrorCode(
             code="ERROR_USER_PROFILE",
             category=ErrorCategory.ERROR,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.UserProfileSchemaLoadError",
+        "cadrumo.domain.user_profile._errors.UserProfileSchemaLoadError",
         ErrorCode(
             code="FAIL_USER_PROFILE_SCHEMA_LOAD",
             category=ErrorCategory.FAIL,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.UserProfileValidationError",
+        "cadrumo.domain.user_profile._errors.UserProfileValidationError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -217,7 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.UserProfileNotFoundError",
+        "cadrumo.domain.user_profile._errors.UserProfileNotFoundError",
         ErrorCode(
             code="FAIL_USER_PROFILE_NOT_FOUND",
             category=ErrorCategory.FAIL,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileNotFoundError",
+        "cadrumo.domain.user_profile._errors.ProfileNotFoundError",
         ErrorCode(
             code="REFUSED_PROFILE_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileAlreadyExistsError",
+        "cadrumo.domain.user_profile._errors.ProfileAlreadyExistsError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_EXISTS",
             category=ErrorCategory.REFUSED,
@@ -250,7 +250,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileSchemaValidationError",
+        "cadrumo.domain.user_profile._errors.ProfileSchemaValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_SCHEMA_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -261,7 +261,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfilePreflightMissingError",
+        "cadrumo.domain.user_profile._errors.ProfilePreflightMissingError",
         ErrorCode(
             code="REFUSED_PROFILE_PREFLIGHT_MISSING",
             category=ErrorCategory.REFUSED,
@@ -272,7 +272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileSnapshotHashMismatchError",
+        "cadrumo.domain.user_profile._errors.ProfileSnapshotHashMismatchError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_HASH_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -283,7 +283,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileSnapshotNotFoundError",
+        "cadrumo.domain.user_profile._errors.ProfileSnapshotNotFoundError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.INTEGRITY,
@@ -294,7 +294,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.StoredProfileDriftError",
+        "cadrumo.domain.user_profile._errors.StoredProfileDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_PROFILE_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -305,7 +305,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.transactions._errors.StoredTransactionDriftError",
+        "cadrumo.domain.transactions._errors.StoredTransactionDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_TRANSACTION_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -316,7 +316,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileExportError",
+        "cadrumo.domain.user_profile._errors.ProfileExportError",
         ErrorCode(
             code="FAIL_PROFILE_EXPORT",
             category=ErrorCategory.FAIL,
@@ -327,7 +327,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileImportError",
+        "cadrumo.domain.user_profile._errors.ProfileImportError",
         ErrorCode(
             code="FAIL_PROFILE_IMPORT",
             category=ErrorCategory.FAIL,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileImportSignatureError",
+        "cadrumo.domain.user_profile._errors.ProfileImportSignatureError",
         ErrorCode(
             code="INTEGRITY_PROFILE_IMPORT_SIGNATURE",
             category=ErrorCategory.INTEGRITY,
@@ -349,7 +349,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.ProfileImportCollisionError",
+        "cadrumo.domain.user_profile._errors.ProfileImportCollisionError",
         ErrorCode(
             code="REFUSED_PROFILE_IMPORT_COLLISION",
             category=ErrorCategory.REFUSED,
@@ -360,7 +360,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.currency._errors.CurrencyError",
+        "cadrumo.domain.currency._errors.CurrencyError",
         ErrorCode(
             code="FAIL_CURRENCY_ERROR",
             category=ErrorCategory.FAIL,
@@ -371,7 +371,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.currency._errors.MissingExchangeRateError",
+        "cadrumo.domain.currency._errors.MissingExchangeRateError",
         ErrorCode(
             code="FAIL_MISSING_EXCHANGE_RATE",
             category=ErrorCategory.FAIL,
@@ -382,7 +382,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.currency._errors.UnsupportedCurrencyError",
+        "cadrumo.domain.currency._errors.UnsupportedCurrencyError",
         ErrorCode(
             code="REFUSED_UNSUPPORTED_CURRENCY",
             category=ErrorCategory.REFUSED,
@@ -393,7 +393,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.currency._errors.ExchangeRateProviderError",
+        "cadrumo.domain.currency._errors.ExchangeRateProviderError",
         ErrorCode(
             code="FAIL_EXCHANGE_RATE_PROVIDER",
             category=ErrorCategory.FAIL,
@@ -404,7 +404,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.currency._errors.StaleExchangeRateError",
+        "cadrumo.domain.currency._errors.StaleExchangeRateError",
         ErrorCode(
             code="FAIL_STALE_EXCHANGE_RATE",
             category=ErrorCategory.FAIL,
@@ -415,7 +415,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing.reconciliation._errors.ReconciliationError",
+        "cadrumo.domain.filing.reconciliation._errors.ReconciliationError",
         ErrorCode(
             code="FAIL_RECONCILIATION",
             category=ErrorCategory.FAIL,
@@ -426,7 +426,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.ModeloExportError",
+        "cadrumo.domain.modelos._errors.ModeloExportError",
         ErrorCode(
             code="FAIL_MODELO_EXPORT",
             category=ErrorCategory.FAIL,
@@ -437,7 +437,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.ModeloExportManifestError",
+        "cadrumo.domain.modelos._errors.ModeloExportManifestError",
         ErrorCode(
             code="FAIL_MODELO_EXPORT_MANIFEST",
             category=ErrorCategory.FAIL,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.Modelo036LifecycleError",
+        "cadrumo.domain.modelos._errors.Modelo036LifecycleError",
         ErrorCode(
             code="FAIL_MODELO_036_LIFECYCLE",
             category=ErrorCategory.FAIL,
@@ -459,7 +459,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.Modelo036PriorAltaRequiredError",
+        "cadrumo.domain.modelos._errors.Modelo036PriorAltaRequiredError",
         ErrorCode(
             code="REFUSED_MODELO_036_PRIOR_ALTA_REQUIRED",
             category=ErrorCategory.REFUSED,
@@ -470,7 +470,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.Modelo036TerminalStateError",
+        "cadrumo.domain.modelos._errors.Modelo036TerminalStateError",
         ErrorCode(
             code="REFUSED_MODELO_036_TERMINAL_STATE",
             category=ErrorCategory.REFUSED,
@@ -481,7 +481,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.CensoStaleRefusedError",
+        "cadrumo.domain.modelos._errors.CensoStaleRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_CENSO_STALE",
             category=ErrorCategory.REFUSED,
@@ -492,7 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing.reconciliation._errors.ReconciliationDeclaracionParseError",
+        "cadrumo.domain.filing.reconciliation._errors.ReconciliationDeclaracionParseError",
         ErrorCode(
             code="FAIL_DECLARATION_PARSE",
             category=ErrorCategory.FAIL,
@@ -503,7 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.filing.reconciliation._errors.ReconciliationDriftError",
+        "cadrumo.domain.filing.reconciliation._errors.ReconciliationDriftError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_DRIFT",
             category=ErrorCategory.REFUSED,
@@ -514,7 +514,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._row_models.Modelo349CountryPrefixContextError",
+        "cadrumo.domain.modelos._row_models.Modelo349CountryPrefixContextError",
         ErrorCode(
             code="REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT",
             category=ErrorCategory.REFUSED,
@@ -525,7 +525,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._row_models.Modelo347ThresholdError",
+        "cadrumo.domain.modelos._row_models.Modelo347ThresholdError",
         ErrorCode(
             code="REFUSED_MODELO_347_THRESHOLD",
             category=ErrorCategory.REFUSED,
@@ -536,7 +536,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._row_models.Modelo184ShareSumError",
+        "cadrumo.domain.modelos._row_models.Modelo184ShareSumError",
         ErrorCode(
             code="REFUSED_MODELO_184_SHARE_SUM",
             category=ErrorCategory.REFUSED,

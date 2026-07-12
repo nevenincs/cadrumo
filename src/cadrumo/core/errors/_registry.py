@@ -1,6 +1,6 @@
 """Structured error-code registry and CLI rendering helpers.
 
-Centralises AEAT's stable CLI error taxonomy. Every
+Centralises Cadrumo's stable CLI error taxonomy. Every
 :class:`core.errors.AeatError` subclass binds to a predeclared
 :class:`ErrorCode` row through :func:`bind_error_code`, so the public
 contract stays explicit, reviewable, and grep-stable. Rendering helpers
@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ..redaction import redact_for_log
 
-# aeat.core.logging.get_logger triggers configure_logging() → config → aeat.core.errors,
+# cadrumo.core.logging.get_logger triggers configure_logging() → config → cadrumo.core.errors,
 # creating a circular import at module load. Use the stdlib getter here; the root
 # SecretScrubbingFilter installed by configure_logging() propagates to this logger.
 logger = _logging_stdlib.getLogger(__name__)

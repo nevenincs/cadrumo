@@ -314,7 +314,7 @@ def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
             recorder.record(
                 LLMRunRecord(
                     run_id=uuid4().hex,
-                    caller="aeat.application.ledger.llm_classification",
+                    caller="cadrumo.application.ledger.llm_classification",
                     provider=provider,
                     duration_ms=max(0, round((time.monotonic() - clock_start) * 1000)),
                     succeeded=succeeded,

@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.entrypoints.cli._config._errors.ConfigBoundaryError",
+        "cadrumo.entrypoints.cli._config._errors.ConfigBoundaryError",
         ErrorCode(
             code="ERROR_CONFIG_BOUNDARY",
             category=ErrorCategory.ERROR,
@@ -19,7 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._errors.CliRefusedBoundaryError",
+        "cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",
             category=ErrorCategory.REFUSED,
@@ -30,7 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError",
+        "cadrumo.entrypoints.cli._errors.CliStoredDataValidationBoundaryError",
         ErrorCode(
             code="INTEGRITY_STORED_DATA_VALIDATION_BOUNDARY",
             category=ErrorCategory.INTEGRITY,
@@ -41,7 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._log_levels.LogLevelResolutionError",
+        "cadrumo.entrypoints.cli._log_levels.LogLevelResolutionError",
         ErrorCode(
             code="REFUSED_CLI_LOG_LEVEL_RESOLUTION",
             category=ErrorCategory.REFUSED,

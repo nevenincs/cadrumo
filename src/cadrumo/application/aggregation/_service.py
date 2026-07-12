@@ -44,7 +44,7 @@ LOGGER = get_logger(__name__)
 
 
 class PerModeloAggregationContributor(StrEnum):
-    """Implemented aggregation-contributor families owned by ``aeat.application.aggregation``.
+    """Implemented aggregation-contributor families owned by ``cadrumo.application.aggregation``.
 
     Names the contributor-role axis (which backend family aggregates a
     modelo's ledger evidence), distinct from the settled
@@ -129,7 +129,7 @@ class PerModeloAggregationContract(BaseModel):
     model_config = _STRICT_FROZEN
 
     schema_version: str = "1"
-    service_owner: str = "aeat.application.aggregation"
+    service_owner: str = "cadrumo.application.aggregation"
     providers: tuple[PerModeloAggregationContributorContract, ...]
     accepted_source_kinds: tuple[BindingSourceKind, ...]
     error_codes: tuple[str, ...]
@@ -275,19 +275,19 @@ def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.RETENCIONES,
             modelos=_RETENCIONES_MODELOS,
-            service_owner="aeat.application.aggregation",
+            service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.COUNTERPART,
             modelos=_COUNTERPART_MODELOS,
-            service_owner="aeat.application.aggregation",
+            service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
             modelos=_FOREIGN_ASSET_MODELOS,
-            service_owner="aeat.application.aggregation",
+            service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
     )

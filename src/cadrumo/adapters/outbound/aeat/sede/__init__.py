@@ -5,7 +5,7 @@ read-only records, URL templates, selectors, and parser outputs.
 
 Public API::
 
-    from aeat.adapters.outbound.aeat.sede import (
+    from cadrumo.adapters.outbound.aeat.sede import (
         # Records
         Declaracion,
         Expediente,

@@ -1,7 +1,7 @@
 [[revisions."2024".application_links]]
 id = "modelo-100-filing"
 surface = "filing"
-consumer = "aeat.application.filing"
+consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = [
     "ley-35-2006:art-27",

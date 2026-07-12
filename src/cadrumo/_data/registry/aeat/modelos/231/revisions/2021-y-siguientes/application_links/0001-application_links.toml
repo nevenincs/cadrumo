@@ -1,7 +1,7 @@
 [[revisions."2021-y-siguientes".application_links]]
 id = "modelo-231-filing"
 surface = "filing"
-consumer = "aeat.application.filing"
+consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = [
     "orden-hfp-1978-2016:art-4",
@@ -15,7 +15,7 @@ source_refs = [
 [[revisions."2021-y-siguientes".application_links]]
 id = "modelo-231-deadline"
 surface = "deadline"
-consumer = "aeat.domain.deadlines"
+consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hfp-1978-2016:art-3"]
 source_refs = ["aeat-modelo-231-procedure"]
