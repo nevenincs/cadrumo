@@ -512,7 +512,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
 
 
 def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) -> None:
-    namespace = "aeat.workflow"
+    namespace = "cadrumo.workflow"
     with isolated_runtime_profile(tmp_path=tmp_path):
         secure_object_repository_for_active_bucket().save(
             namespace=namespace,
@@ -531,7 +531,7 @@ def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: 
 
 
 def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) -> None:
-    namespace = "aeat.workflow"
+    namespace = "cadrumo.workflow"
     with isolated_runtime_profile(tmp_path=tmp_path):
         secure_object_repository_for_active_bucket().save(
             namespace=namespace,

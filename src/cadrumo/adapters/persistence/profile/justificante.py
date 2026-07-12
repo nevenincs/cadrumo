@@ -42,7 +42,7 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
     plaintext metadata from disk.
     """
 
-    namespace: ClassVar[str] = "aeat.domain.justificante.metadata"
+    namespace: ClassVar[str] = "cadrumo.domain.justificante.metadata"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
 

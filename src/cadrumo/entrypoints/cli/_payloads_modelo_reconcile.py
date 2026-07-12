@@ -72,7 +72,7 @@ class ModeloReconcileResult(OutputSchema):
 
 @register_schema("modelo.work.compare_taxation")
 class WorkCompareTaxationResult(OutputSchema):
-    """Result payload for ``aeat app modelo work compare-taxation``.
+    """Result payload for ``cadrumo app modelo work compare-taxation``.
 
     Projects :class:`TaxationComparisonResult` returned
     by :func:`compare_taxation_for_work_address`. It surfaces the

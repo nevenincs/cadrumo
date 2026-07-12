@@ -453,7 +453,7 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
         assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
         assert latest_key.startswith("iva-wallet-decision:")
         assert event_key.startswith("iva-wallet-decision-event:")
-        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        database_bytes = (profile.paths.db_dir / "cadrumo.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
 
@@ -500,7 +500,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
 
         assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) == second
         assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (first, second)
-        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        database_bytes = (profile.paths.db_dir / "cadrumo.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
 
@@ -588,6 +588,6 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
         )
         assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
         assert repo.list_decisions() == (decision,)
-        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        database_bytes = (profile.paths.db_dir / "cadrumo.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"operator-note:iva-wallet-review-2026-2T" not in database_bytes

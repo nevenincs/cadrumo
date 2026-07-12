@@ -1,4 +1,4 @@
-"""Shared refusal rendering for ``aeat config google`` commands."""
+"""Shared refusal rendering for ``cadrumo config google`` commands."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from ....adapters.outbound.storage import OutboundStorageError
 from ....core.i18n import tr
 from .._errors import CliRefusedBoundaryError
 
-# `aeat config google ...` commands catch the broad GoogleAuthError base
+# `cadrumo config google ...` commands catch the broad GoogleAuthError base
 # (and OutboundStorageError on Drive paths). `str(exc)` of either is the
 # adapter's English message, so wrapping it straight into a refusal leaks
 # English into every locale. Map the concrete exception type to a

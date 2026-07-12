@@ -1,6 +1,6 @@
 """Typer registration for the unified ledger business invoice command.
 
-One ``aeat app ledger invoice`` noun-group gated by ``--kind issued|received``
+One ``cadrumo app ledger invoice`` noun-group gated by ``--kind issued|received``
 replaces the prior payable-invoice / collectible-invoice split. The operator's
 ``--kind`` is routed through
 :func:`invoice_direction_to_source_kind` (the single
@@ -498,7 +498,7 @@ def catalogue_create(
     The slim ``invoice add`` record cannot be linked to a transaction; this
     verb mints the rich :class:`Invoice` whose
     content-addressed ``invoice_id`` is the value
-    ``aeat app ledger link --invoice-id`` resolves. Supplying an intra-community
+    ``cadrumo app ledger link --invoice-id`` resolves. Supplying an intra-community
     ``--operation-type`` stamps the invoice so the Modelo 349 recapitulative
     calculation can read it.
     """
@@ -839,7 +839,7 @@ def catalogue_view(
     """Show one rich catalogue invoice, resolving a full id or unambiguous prefix.
 
     The catalogue invoice carries a long content-addressed id that
-    ``aeat app ledger link --invoice-id`` resolves; this verb lets an operator
+    ``cadrumo app ledger link --invoice-id`` resolves; this verb lets an operator
     confirm that id and inspect the invoice's linked transactions before
     linking or removing it. A not-found id, or a prefix matching more than one
     invoice, is a typed refusal naming the candidates — never a silent miss.

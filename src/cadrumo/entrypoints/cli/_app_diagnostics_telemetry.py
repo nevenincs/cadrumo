@@ -1,4 +1,4 @@
-"""CLI commands for the ``aeat app diagnostics telemetry`` subcommand group.
+"""CLI commands for the ``cadrumo app diagnostics telemetry`` subcommand group.
 
 Provides the ``status`` and ``flush`` verbs over the default-off,
 consent-gated remote telemetry tier (``2026-07-04-remote-telemetry-adr``,
@@ -290,7 +290,7 @@ def diagnostics_telemetry_flush(
                     "cli.diagnostics.telemetry.flush.dry_run_notice",
                     default="Dry run: this payload was built but nothing was transmitted.",
                 ),
-                suggestion="aeat app diagnostics telemetry flush --no-dry-run --acknowledge-remote-telemetry",
+                suggestion="cadrumo app diagnostics telemetry flush --no-dry-run --acknowledge-remote-telemetry",
             ),
         )
     elif not preview.gate_permits:

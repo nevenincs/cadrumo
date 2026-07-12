@@ -43,7 +43,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NAMESPACE = "aeat-test.session.lifecycle"
+_NAMESPACE = "cadrumo-test.session.lifecycle"
 _OBJECT_KEY = "roundtrip-row"
 _CLASSIFICATION = SensitivityClass.OPERATIONAL
 

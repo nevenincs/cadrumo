@@ -80,7 +80,7 @@ def _aeat_external_constants():
 @contextmanager
 def _secure_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
-        yield profile.paths.db_dir / "aeat.db"
+        yield profile.paths.db_dir / "cadrumo.db"
 
 
 @contextmanager

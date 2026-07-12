@@ -78,7 +78,7 @@ def repo() -> JustificanteRepository:
 def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
     from .....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(runtime_profile.paths.db_dir / "aeat.db")
+    return read_db_at_rest_bytes(runtime_profile.paths.db_dir / "cadrumo.db")
 
 
 class TestEmptyState:

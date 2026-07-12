@@ -97,9 +97,9 @@ cadrumo = "cadrumo.entrypoints.cli:main"
 cadrumo-mcp = "cadrumo.entrypoints.mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/nevenincs/cadrumo"
-Issues = "https://github.com/nevenincs/cadrumo/issues"
-Repository = "https://github.com/nevenincs/cadrumo"
+Homepage = "https://github.com/cadrumo/cadrumo"
+Issues = "https://github.com/cadrumo/cadrumo/issues"
+Repository = "https://github.com/cadrumo/cadrumo"
 
 [project.optional-dependencies]
 workbook-windows = [
@@ -254,7 +254,7 @@ torch = [
 # The two data companions are not yet on PyPI, so the dev resolver builds each
 # from its in-repo project. uv sources never reach the published wheel metadata:
 # an installed `cadrumo[corpus-sources]` still resolves the bare
-# `cadrumo-data-manuals==0.1.0` / `cadrumo-data-official==0.1.0` pins from the index.
+# `cadrumo-data-manuals==0.1.1` / `cadrumo-data-official==0.1.1` pins from the index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
 
@@ -811,7 +811,7 @@ show_missing = true
 skip_covered = false
 
 # ── Bandit (security lint) ───────────────────────────────────────────────────
-# The aeat-audit pipeline runs bandit against the full source tree. Without
+# The Cadrumo audit pipeline runs bandit against the full source tree. Without
 # this filter every test file triggers B101 (assert_used) once per assertion
 # and B311 (random) once per fixture seed, accounting for ~4500 of the
 # ~5900 raw security findings. Suppress test-only false positives at the

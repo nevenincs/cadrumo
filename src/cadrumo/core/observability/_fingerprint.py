@@ -184,7 +184,7 @@ def compute_db_sha256(var_dir: Path) -> str:
     - ``var/divergences/``, ``var/i18n/`` — release / i18n diff
       artefacts; not part of the user-state surface.
 
-    Core state (``var/aeat.db``, ``var/workflow-runs/``, ``var/inbox/``,
+    Core state (``var/cadrumo.db``, ``var/workflow-runs/``, ``var/inbox/``,
     ``var/drafts/``, ``var/filing-history/``, ``var/justificantes/``)
     is included because changes there represent real state drift that
     a replay must detect.

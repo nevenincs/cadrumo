@@ -1,4 +1,4 @@
-"""Sealed bucket-archive command registration for ``aeat config profile archive``.
+"""Sealed bucket-archive command registration for ``cadrumo config profile archive``.
 
 ``config profile export``/``import`` (registered in :mod:`._profile_bundle`)
 carry a structured-only cleartext bundle and are explicitly NOT a full backup
@@ -193,7 +193,7 @@ def _build_export_completeness_notice() -> Notice:
                 "ledger, calculation, and filing history. When exported with "
                 "--recovery-wrap-passphrase it is the encrypted cross-host transfer "
                 "path for profile bundles. Store it somewhere safe; restore with "
-                "'aeat config profile archive import'."
+                "'cadrumo config profile archive import'."
             ),
         ),
     )
@@ -288,11 +288,11 @@ def _build_archive_import_active_switch_notice(bucket_id: str) -> Notice:
             "cli.config.profile.archive.import_active_switch_info",
             default=(
                 "The restored profile is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'aeat config switch <name>' to change "
+                "commands operate on it. Run 'cadrumo config switch <name>' to change "
                 "the active profile."
             ),
         ),
-        suggestion="aeat config switch",
+        suggestion="cadrumo config switch",
         context={"active_profile": bucket_id},
     )
 

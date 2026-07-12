@@ -15,10 +15,11 @@ from pathlib import Path
 from types import UnionType
 from typing import Union, get_args, get_origin
 
+import pydantic
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ..core.config import PROJECT_ROOT, CertificateBackend, Settings
+from ..core.config import PROJECT_ROOT, AuthProviderKindSetting, CertificateBackend, Settings
 from ..core.external_constants import load_external_constants
 from .env_scope import isolated_aeat_env as _isolated_aeat_env
 from .env_scope import settings_without_env_file
@@ -164,6 +165,41 @@ class TestStatusDetailUrlTemplate:
             settings = BlankEnvSettings()
         assert settings.aeat_certificate_path is None
         assert settings.aeat_certificate_password_secret is None
+
+    def test_legacy_product_dotenv_keys_are_excluded_without_weakening_unknown_key_validation(
+        self, tmp_path: Path
+    ) -> None:
+        """Cadrumo starts fresh while retaining strict validation for unrelated dotenv keys."""
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    "AEAT_LOCAL_STORAGE_ROOT=legacy-state-root",
+                    "AEAT_SECRET_PASSPHRASE=legacy-secret-value",
+                    "AEAT_AUTH_PROVIDER=certificate",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        class LegacyProductEnvSettings(Settings):
+            """Settings variant bound to a real legacy-product dotenv file."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        with _isolated_aeat_env():
+            settings = LegacyProductEnvSettings()
+        assert settings.cadrumo_local_storage_root != Path("legacy-state-root")
+        assert settings.aeat_auth_provider is AuthProviderKindSetting.CERTIFICATE
+
+        env_path.write_text("UNRELATED_CADRUMO_TYPO=1\n", encoding="utf-8")
+        with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
+            LegacyProductEnvSettings()
 
     def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
         """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
@@ -324,7 +360,7 @@ class TestDatabaseUrlDerivation:
 
     def test_storage_root_alone_derives_root_level_fallback_url(self, tmp_path: Path) -> None:
         """Storage root without an explicit URL or active profile derives the
-        ``sqlite:///<root>/aeat.db`` fallback rather than staying empty."""
+        ``sqlite:///<root>/cadrumo.db`` fallback rather than staying empty."""
         storage_root = tmp_path / "aeat-state"
         env_path = tmp_path / ".env"
         env_path.write_text(
@@ -335,7 +371,7 @@ class TestDatabaseUrlDerivation:
         with _isolated_aeat_env():
             settings = self._isolated(env_path)()
 
-        expected = f"sqlite:///{(storage_root / 'aeat.db').as_posix()}"
+        expected = f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}"
         assert settings.cadrumo_database_url == expected
         assert settings.cadrumo_database_url, "URL must never be empty when the storage root is set"
 
@@ -378,5 +414,5 @@ class TestDatabaseUrlDerivation:
         with _isolated_aeat_env():
             settings = self._isolated(env_path)()
 
-        expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'aeat.db').as_posix()}"
+        expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'cadrumo.db').as_posix()}"
         assert settings.cadrumo_database_url == expected

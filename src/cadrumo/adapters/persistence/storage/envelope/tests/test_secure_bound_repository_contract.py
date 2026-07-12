@@ -54,7 +54,7 @@ class _ContractPayload(BaseModel):
 
 
 class _ContractRepository(SecureBoundRepository[_ContractPayload]):
-    namespace: ClassVar[str] = "aeat-test.envelope.secure_bound_contract"
+    namespace: ClassVar[str] = "cadrumo-test.envelope.secure_bound_contract"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
     payload_type: ClassVar[type[BaseModel]] = _ContractPayload

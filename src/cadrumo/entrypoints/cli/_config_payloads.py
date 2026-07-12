@@ -100,7 +100,7 @@ class ProfileFactPayload(OutputSchema):
 
 @register_schema("config.repair.logs")
 class RepairLogsResult(OutputSchema):
-    """JSON envelope for ``aeat config repair logs``.
+    """JSON envelope for ``cadrumo config repair logs``.
 
     The payload is a bounded log-tail view: ``path`` identifies the log file
     rendered to the operator and ``lines`` contains the selected text lines.
@@ -112,7 +112,7 @@ class RepairLogsResult(OutputSchema):
 
 @register_schema("config.repair.quarantine")
 class RepairQuarantineResult(OutputSchema):
-    """JSON envelope for ``aeat config repair quarantine``.
+    """JSON envelope for ``cadrumo config repair quarantine``.
 
     Covers the no-active-profile guard, the dry-run preview path, and
     the confirmed quarantine path.  Dry-run rows come from
@@ -141,7 +141,7 @@ class RepairQuarantineResult(OutputSchema):
 
 @register_schema("config.repair.reset_progress")
 class RepairResetProgressResult(OutputSchema):
-    """JSON envelope for ``aeat config repair reset-progress``.
+    """JSON envelope for ``cadrumo config repair reset-progress``.
 
     Covers the no-active-profile guard, the dry-run preview path, and
     the confirmed reset path.  Dry-run calls
@@ -163,7 +163,7 @@ class RepairResetProgressResult(OutputSchema):
 
 @register_schema("config.repair.connectivity")
 class RepairConnectivityResult(OutputSchema):
-    """Read-only connectivity probe result for ``aeat config repair connectivity``.
+    """Read-only connectivity probe result for ``cadrumo config repair connectivity``.
 
     Wraps the browser/Sede status produced by
     :func:`probe_browser_connectivity` for the
@@ -181,7 +181,7 @@ class RepairConnectivityResult(OutputSchema):
 
 @register_schema("config.profile.list")
 class ConfigListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile list``.
+    """JSON envelope for ``cadrumo config profile list``.
 
     Note: ``config_list`` is registered on the ``profile list`` sub-command
     which maps to the CLI path ``config.list`` (the profile sub-app carries
@@ -197,7 +197,7 @@ class ConfigListResult(OutputSchema):
 
 @register_schema("config.switch")
 class ConfigSwitchResult(OutputSchema):
-    """JSON envelope for ``aeat config switch``.
+    """JSON envelope for ``cadrumo config switch``.
 
     Reports the profile name that became the active bucket pointer after the
     workflow-state update; no profile facts are emitted on this mutation.
@@ -208,7 +208,7 @@ class ConfigSwitchResult(OutputSchema):
 
 @register_schema("config.lock")
 class ConfigLockResult(OutputSchema):
-    """JSON envelope for ``aeat config lock``.
+    """JSON envelope for ``cadrumo config lock``.
 
     Confirms the profile whose local session material was locked and echoes the
     remaining active pointer, if any. ``session_warning`` carries the local
@@ -222,7 +222,7 @@ class ConfigLockResult(OutputSchema):
 
 @register_schema("config.rekey")
 class ConfigRekeyResult(OutputSchema):
-    """JSON envelope for ``aeat config rekey``.
+    """JSON envelope for ``cadrumo config rekey``.
 
     Reports the secure-store directory and whether local encrypted material was
     re-keyed. Key material and recovery phrases never enter this payload.
@@ -234,7 +234,7 @@ class ConfigRekeyResult(OutputSchema):
 
 @register_schema("config.recover")
 class ConfigRecoverResult(OutputSchema):
-    """JSON envelope for ``aeat config recover``.
+    """JSON envelope for ``cadrumo config recover``.
 
     Reports the recovery file used and the local secret-store directory that was
     recovered, without serialising the recovery secret itself.
@@ -247,7 +247,7 @@ class ConfigRecoverResult(OutputSchema):
 
 @register_schema("config.show_recovery")
 class ConfigShowRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config show-recovery``.
+    """JSON envelope for ``cadrumo config show-recovery``.
 
     The mnemonic is optional and appears only when the command intentionally
     rotates or reveals recovery material. The path and enrolment flags remain
@@ -262,7 +262,7 @@ class ConfigShowRecoveryResult(OutputSchema):
 
 @register_schema("config.verify_recovery")
 class ConfigVerifyRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config verify-recovery``.
+    """JSON envelope for ``cadrumo config verify-recovery``.
 
     Confirms whether the supplied recovery material matched the encrypted local
     recovery record; the secret phrase is not echoed back.
@@ -274,7 +274,7 @@ class ConfigVerifyRecoveryResult(OutputSchema):
 
 @register_schema("config.profile.show")
 class ConfigProfileShowResult(OutputSchema):
-    """JSON envelope for ``aeat config profile show``.
+    """JSON envelope for ``cadrumo config profile show``.
 
     Covers the missing-record branch, the unreadable-record branch, and
     the success path. Optional fields accommodate each branch. Successful rows
@@ -305,11 +305,11 @@ class ConfigProfileShowResult(OutputSchema):
 
 @register_schema("config.profile.validate")
 class ConfigProfileValidateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile validate``.
+    """JSON envelope for ``cadrumo config profile validate``.
 
     Report-only surface: same
     :class:`ProfileValidationService` outcome
-    that ``aeat config profile show`` exposes inline, but as the primary
+    that ``cadrumo config profile show`` exposes inline, but as the primary
     payload with no fact dump so the operator can audit a profile's schema
     conformance independent of its data view. Exit code is ``0`` when no
     blocking issues exist and ``2`` when any error-severity issue surfaces.
@@ -340,7 +340,7 @@ class ProfilePreflightMissingPayload(OutputSchema):
 
 @register_schema("config.profile.preflight")
 class ConfigProfilePreflightResult(OutputSchema):
-    """JSON envelope for ``aeat config profile preflight``.
+    """JSON envelope for ``cadrumo config profile preflight``.
 
     Reports which profile fields a given ``(modelo, revision_id, filing_year,
     period)`` filing context requires that the active profile does not yet
@@ -361,7 +361,7 @@ class ConfigProfilePreflightResult(OutputSchema):
 
 @register_schema("config.profile.delete")
 class ConfigProfileDeleteResult(OutputSchema):
-    """JSON envelope for ``aeat config profile delete``.
+    """JSON envelope for ``cadrumo config profile delete``.
 
     Reports the tombstoned profile id and display label plus whether the active
     profile pointer had to be cleared.
@@ -375,7 +375,7 @@ class ConfigProfileDeleteResult(OutputSchema):
 
 @register_schema("config.profile.duplicate")
 class ConfigProfileDuplicateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile duplicate``.
+    """JSON envelope for ``cadrumo config profile duplicate``.
 
     Projects the source and new immutable profile ids produced by the profile
     lifecycle service; the copied fact set is not expanded in this mutation
@@ -389,7 +389,7 @@ class ConfigProfileDuplicateResult(OutputSchema):
 
 @register_schema("config.profile.status")
 class ConfigStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config profile status``.
+    """JSON envelope for ``cadrumo config profile status``.
 
     Covers all readiness branches: none, dangling_pointer,
     missing/unreadable profile record, incomplete config, and ready. The ready
@@ -417,7 +417,7 @@ class ConfigStatusResult(OutputSchema):
 
 @register_schema("config.reset")
 class ConfigResetResult(OutputSchema):
-    """JSON envelope for ``aeat config reset``.
+    """JSON envelope for ``cadrumo config reset``.
 
     Reports the reset scope, removed profile ids, and whether local auth session
     state was removed. It does not include deleted profile records or auth
@@ -434,7 +434,7 @@ class ConfigResetResult(OutputSchema):
 
 @register_schema("config.auth.providers")
 class AuthProvidersResult(OutputSchema):
-    """JSON envelope for ``aeat config auth providers``.
+    """JSON envelope for ``cadrumo config auth providers``.
 
     Wraps :class:`AuthProvidersReport`; each row is the
     JSON form of :class:`AuthProviderListing`, preserving
@@ -446,7 +446,7 @@ class AuthProvidersResult(OutputSchema):
 
 @register_schema("config.auth.configure")
 class AuthConfigurePayload(OutputSchema):
-    """JSON envelope for ``aeat config auth configure``.
+    """JSON envelope for ``cadrumo config auth configure``.
 
     Field set mirrors :class:`AuthConfigureResult` from
     the application layer, whose fields are non-nullable with empty/false
@@ -497,7 +497,7 @@ class AuthConfigurePayload(OutputSchema):
 
 @register_schema("config.auth.status")
 class AuthStatusPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth status``.
+    """JSON envelope for ``cadrumo config auth status``.
 
     The application :class:`AuthStatusResult` model
     evolves independently; ``extra="allow"`` ensures any additional fields pass
@@ -513,7 +513,7 @@ class AuthStatusPayload(OutputSchema):
 
 @register_schema("config.auth.test")
 class AuthTestPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth test``.
+    """JSON envelope for ``cadrumo config auth test``.
 
     Thin envelope over :class:`AuthTestResult`; the
     application model carries all provider-specific probe fields.
@@ -529,7 +529,7 @@ class AuthTestPayload(OutputSchema):
 
 @register_schema("config.auth.login")
 class AuthLoginPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth login``.
+    """JSON envelope for ``cadrumo config auth login``.
 
     Thin envelope over :class:`AuthLoginResult`; the
     application model carries provider-specific live-login fields.
@@ -545,7 +545,7 @@ class AuthLoginPayload(OutputSchema):
 
 @register_schema("config.auth.clear")
 class AuthClearPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth clear``.
+    """JSON envelope for ``cadrumo config auth clear``.
 
     Field set is 1:1 with the application
     :class:`AuthClearResult`; the envelope derives its
@@ -580,7 +580,7 @@ class AuthClearPayload(OutputSchema):
 
 @register_schema("config.auth.apoderado.check")
 class ApoderadoCheckResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado check``.
+    """JSON envelope for ``cadrumo config auth apoderado check``.
 
     Mirrors the read-only :class:`ApoderadoStatus`
     projection once live verification is wired. Until then the command refuses
@@ -596,7 +596,7 @@ class ApoderadoCheckResult(OutputSchema):
 
 @register_schema("config.bucket.history")
 class BucketHistoryResult(OutputSchema):
-    """JSON envelope for ``aeat config profile history``.
+    """JSON envelope for ``cadrumo config profile history``.
 
     The envelope token ``config.bucket.history`` is a stable machine API and
     is intentionally retained after the operator-facing verb moved from
@@ -618,7 +618,7 @@ class BucketHistoryResult(OutputSchema):
 
 @register_schema("config.profile.create")
 class ConfigProfileCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile create``.
+    """JSON envelope for ``cadrumo config profile create``.
 
     The post-create next-step hint is surfaced on the envelope ``notices``
     channel, not as a bespoke ``next`` field. The lifecycle mutation itself is
@@ -632,7 +632,7 @@ class ConfigProfileCreateResult(OutputSchema):
 
 @register_schema("config.profile.edit")
 class ConfigProfileEditResult(OutputSchema):
-    """JSON envelope for ``aeat config profile edit``.
+    """JSON envelope for ``cadrumo config profile edit``.
 
     The post-edit next-step hint is surfaced on the envelope ``notices``
     channel, not as a bespoke ``next`` field. The payload reports only the
@@ -646,7 +646,7 @@ class ConfigProfileEditResult(OutputSchema):
 
 @register_schema("config.profile.export")
 class ConfigProfileExportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile export``.
+    """JSON envelope for ``cadrumo config profile export``.
 
     Reports the exported profile id, display label, output path, and portable
     bundle schema version. Bundle contents are written to ``out`` rather than
@@ -663,7 +663,7 @@ class ConfigProfileExportResult(OutputSchema):
 
 @register_schema("config.profile.subject_access_request")
 class ConfigProfileSubjectAccessRequestResult(OutputSchema):
-    """JSON envelope for ``aeat config profile subject-access-request``.
+    """JSON envelope for ``cadrumo config profile subject-access-request``.
 
     A GDPR right-of-access export: the same portable bundle
     ``config profile export`` produces, framed as the operator's own
@@ -681,7 +681,7 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
 
 @register_schema("config.profile.import")
 class ConfigProfileImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile import``.
+    """JSON envelope for ``cadrumo config profile import``.
 
     Projects :class:`ProfileImportResult` down to
     the imported profile identity, label, and bundle schema version.
@@ -694,7 +694,7 @@ class ConfigProfileImportResult(OutputSchema):
 
 @register_schema("config.profile.logout")
 class ConfigProfileLogoutResult(OutputSchema):
-    """JSON envelope for ``aeat config profile logout``.
+    """JSON envelope for ``cadrumo config profile logout``.
 
     Confirms which profile's local session was logged out and echoes any
     remaining active pointer. ``session_warning`` carries local secure-storage
@@ -708,7 +708,7 @@ class ConfigProfileLogoutResult(OutputSchema):
 
 @register_schema("config.profile.rename")
 class ConfigProfileRenameResult(OutputSchema):
-    """JSON envelope for ``aeat config profile rename``.
+    """JSON envelope for ``cadrumo config profile rename``.
 
     Reports the immutable profile id plus the previous and new display labels;
     profile identity and bucket storage remain unchanged.
@@ -724,7 +724,7 @@ class ConfigProfileRenameResult(OutputSchema):
 
 @register_schema("config.profile.archive.export")
 class ConfigProfileArchiveExportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile archive export``.
+    """JSON envelope for ``cadrumo config profile archive export``.
 
     Reports the exported profile id, the written archive path, the manifest
     digest recorded in the archive header, and whether the archive is sealed
@@ -743,7 +743,7 @@ class ConfigProfileArchiveExportResult(OutputSchema):
 
 @register_schema("config.profile.archive.import")
 class ConfigProfileArchiveImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile archive import``.
+    """JSON envelope for ``cadrumo config profile archive import``.
 
     Reports the restored profile id, the manifest digest authenticated at
     decryption, and the archive schema version. The profile identity is
@@ -759,7 +759,7 @@ class ConfigProfileArchiveImportResult(OutputSchema):
 
 @register_schema("config.profile.archive.inspect")
 class ConfigProfileArchiveInspectResult(OutputSchema):
-    """JSON envelope for ``aeat config profile archive inspect``.
+    """JSON envelope for ``cadrumo config profile archive inspect``.
 
     A read-only preview of a sealed archive's plaintext header plus the
     on-disk file size: the profile id it holds, when it was written, its
@@ -781,7 +781,7 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
 
 @register_schema("config.repair.profile")
 class RepairProfileResult(OutputSchema):
-    """JSON envelope for ``aeat config repair profile``.
+    """JSON envelope for ``cadrumo config repair profile``.
 
     Covers the inspection branch (operator-readable profile-record status),
     and the ``--clear-active`` pointer-repair branch. The application layer
@@ -799,7 +799,7 @@ class RepairProfileResult(OutputSchema):
 
 @register_schema("config.repair.integrity.objects")
 class RepairIntegrityObjectsResult(OutputSchema):
-    """JSON envelope for ``aeat config repair integrity objects``.
+    """JSON envelope for ``cadrumo config repair integrity objects``.
 
     Covers the no-active-profile guard branch (``readable``/``unreadable``
     counts with ``reason``) and the live-probe branch (full report with
@@ -816,7 +816,7 @@ class RepairIntegrityObjectsResult(OutputSchema):
 
 @register_schema("config.repair.integrity.registry")
 class RepairIntegrityRegistryResult(OutputSchema):
-    """JSON envelope for ``aeat config repair integrity registry``.
+    """JSON envelope for ``cadrumo config repair integrity registry``.
 
     Mirrors
     :class:`RegistryIntegrityReport`
@@ -836,7 +836,7 @@ class RepairIntegrityRegistryResult(OutputSchema):
 
 @register_schema("config.auth.apoderado.status")
 class ApoderadoStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado status``.
+    """JSON envelope for ``cadrumo config auth apoderado status``.
 
     Mirrors :class:`ApoderadoStatus`. ``extra="allow"``
     lets the application model evolve without breaking the envelope contract
@@ -854,7 +854,7 @@ class ApoderadoStatusResult(OutputSchema):
 
 @register_schema("config.auth.apoderado.configure")
 class ApoderadoConfigureResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado configure``.
+    """JSON envelope for ``cadrumo config auth apoderado configure``.
 
     Projects :class:`ApoderadoConfiguration` after scope
     validation against the apoderamientos catalogue. The represented NIF is
@@ -872,7 +872,7 @@ class ApoderadoConfigureResult(OutputSchema):
 
 @register_schema("config.auth.apoderado.clear")
 class ApoderadoClearResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado clear``.
+    """JSON envelope for ``cadrumo config auth apoderado clear``.
 
     Reports the bucket whose encrypted apoderado configuration was removed and
     whether a record existed to clear.
@@ -884,7 +884,7 @@ class ApoderadoClearResult(OutputSchema):
 
 @register_schema("config.auth.apoderado.scopes.list")
 class ApoderadoScopesListResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado scopes list``.
+    """JSON envelope for ``cadrumo config auth apoderado scopes list``.
 
     Mirrors the apoderado scope catalogue payload from
     :class:`ApoderamientosCatalogue`.
@@ -936,7 +936,7 @@ register_schema("config.auth.certificate.remove")(CertificateSourceMutationPaylo
 
 @register_schema("config.auth.certificate.list")
 class CertificateSourceListPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth certificate list``.
+    """JSON envelope for ``cadrumo config auth certificate list``.
 
     Mirrors :class:`application.auth.CertificateSourceListResult`.
     """
@@ -964,7 +964,7 @@ class CertificateSourceCheckEntryPayload(OutputSchema):
 
 @register_schema("config.auth.certificate.check")
 class CertificateSourceCheckPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth certificate check``.
+    """JSON envelope for ``cadrumo config auth certificate check``.
 
     Mirrors :class:`application.auth.CertificateSourceCheckReport`.
     """
@@ -998,7 +998,7 @@ register_schema("config.auth.certificate.secret.remove")(CertificateSourceSecret
 
 @register_schema("config.auth.diagnostics.list")
 class AuthDiagnosticsListResult(OutputSchema):
-    """JSON envelope for ``aeat config auth diagnostics list``.
+    """JSON envelope for ``cadrumo config auth diagnostics list``.
 
     Mirrors :class:`AuthDiagnosticListReport`
     ``model_dump(mode='json')``. ``extra="allow"`` forwards the per-row
@@ -1012,7 +1012,7 @@ class AuthDiagnosticsListResult(OutputSchema):
 
 @register_schema("config.auth.diagnostics.show")
 class AuthDiagnosticsShowResult(OutputSchema):
-    """JSON envelope for ``aeat config auth diagnostics show``.
+    """JSON envelope for ``cadrumo config auth diagnostics show``.
 
     Mirrors :class:`AuthDiagnosticDetail`
     ``model_dump(mode='json')`` with fingerprint fields. ``extra="allow"``
@@ -1028,7 +1028,7 @@ class AuthDiagnosticsShowResult(OutputSchema):
 
 @register_schema("config.auth.diagnostics.report")
 class AuthDiagnosticsReportResult(OutputSchema):
-    """JSON envelope for ``aeat config auth diagnostics report``.
+    """JSON envelope for ``cadrumo config auth diagnostics report``.
 
     Projects :class:`AuthDiagnosticReportResult` after an
     operator records the phone-state outcome for an encrypted auth diagnostic.
@@ -1061,7 +1061,7 @@ class ProfileDescendientePayload(OutputSchema):
 
 @register_schema("config.profile.descendiente.add")
 class ConfigProfileDescendienteAddResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente add``."""
+    """JSON envelope for ``cadrumo config profile descendiente add``."""
 
     profile: str
     added: int
@@ -1070,7 +1070,7 @@ class ConfigProfileDescendienteAddResult(OutputSchema):
 
 @register_schema("config.profile.descendiente.list")
 class ConfigProfileDescendienteListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente list``."""
+    """JSON envelope for ``cadrumo config profile descendiente list``."""
 
     profile: str
     total: int
@@ -1079,7 +1079,7 @@ class ConfigProfileDescendienteListResult(OutputSchema):
 
 @register_schema("config.profile.descendiente.remove")
 class ConfigProfileDescendienteRemoveResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente remove``."""
+    """JSON envelope for ``cadrumo config profile descendiente remove``."""
 
     profile: str
     removed_index: int
@@ -1088,7 +1088,7 @@ class ConfigProfileDescendienteRemoveResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.create")
 class ConfigProfileSandboxCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox create``.
+    """JSON envelope for ``cadrumo config profile sandbox create``.
 
     Reports the new sandbox bucket identity and label; the sandbox is now the
     active profile. ``seeded_from`` names the live profile whose facts were
@@ -1102,7 +1102,7 @@ class ConfigProfileSandboxCreateResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.list")
 class ConfigProfileSandboxListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox list``.
+    """JSON envelope for ``cadrumo config profile sandbox list``.
 
     Reuses :class:`ProfilePointerPayload` rows, filtered to buckets whose
     label carries the reserved sandbox prefix.
@@ -1114,7 +1114,7 @@ class ConfigProfileSandboxListResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.use")
 class ConfigProfileSandboxUseResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox use``.
+    """JSON envelope for ``cadrumo config profile sandbox use``.
 
     Same shape as :class:`ConfigSwitchResult`; registered under its own
     command path since ``sandbox use`` delegates to the canonical
@@ -1139,7 +1139,7 @@ class SandboxNamespacePayload(OutputSchema):
 
 @register_schema("config.profile.sandbox.discard")
 class ConfigProfileSandboxDiscardResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox discard``.
+    """JSON envelope for ``cadrumo config profile sandbox discard``.
 
     Covers both the ``--dry-run`` preview branch (``dry_run=True``, no
     mutation — ``namespaces`` lists what would be removed) and the confirmed
@@ -1155,7 +1155,7 @@ class ConfigProfileSandboxDiscardResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.prune")
 class ConfigProfileSandboxPruneResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox prune``.
+    """JSON envelope for ``cadrumo config profile sandbox prune``.
 
     Covers the ``--dry-run`` preview branch (``sandboxes`` names every
     sandbox that would be discarded, nothing removed) and the confirmed
@@ -1171,7 +1171,7 @@ class ConfigProfileSandboxPruneResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.archive")
 class ConfigProfileSandboxArchiveResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox archive``.
+    """JSON envelope for ``cadrumo config profile sandbox archive``.
 
     Reports the archived sandbox's bucket identity and label. Unlike
     ``discard``, the sandbox bucket, manifest, and encrypted record all
@@ -1185,7 +1185,7 @@ class ConfigProfileSandboxArchiveResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.restore")
 class ConfigProfileSandboxRestoreResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox restore``.
+    """JSON envelope for ``cadrumo config profile sandbox restore``.
 
     Reports the restored sandbox's bucket identity and label. The
     symmetric inverse of ``sandbox archive``.
@@ -1219,7 +1219,7 @@ class SandboxDiskUsagePayload(OutputSchema):
 
 @register_schema("config.profile.sandbox.usage")
 class ConfigProfileSandboxUsageResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox usage``.
+    """JSON envelope for ``cadrumo config profile sandbox usage``.
 
     Reports the on-disk footprint of one named sandbox, or of every sandbox
     at once when no name is given (``total_bytes`` then sums across every
@@ -1234,7 +1234,7 @@ class ConfigProfileSandboxUsageResult(OutputSchema):
 
 @register_schema("config.profile.sandbox.merge")
 class ConfigProfileSandboxMergeResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox merge``.
+    """JSON envelope for ``cadrumo config profile sandbox merge``.
 
     Reports the promoted scope, the source sandbox and target profile
     labels, and the per-category row counts merged via

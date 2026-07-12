@@ -42,7 +42,7 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _database_bytes(profile: TestRuntimeProfile) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db")
+    return read_db_at_rest_bytes(profile.paths.db_dir / "cadrumo.db")
 
 
 def test_load_missing_returns_empty(tmp_path: Path) -> None:
@@ -61,7 +61,7 @@ def test_save_does_not_create_requested_plaintext_file(
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     assert not target.exists()
-    assert (_runtime_profile.paths.db_dir / "aeat.db").exists()
+    assert (_runtime_profile.paths.db_dir / "cadrumo.db").exists()
 
 
 def test_save_round_trips(tmp_path: Path) -> None:

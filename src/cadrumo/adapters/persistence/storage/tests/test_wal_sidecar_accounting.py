@@ -37,7 +37,7 @@ _ROW_BLOB = b"committed-but-uncheckpointed financial payload for the WAL account
 
 
 def _db_path(db_dir: Path) -> Path:
-    return db_dir / "aeat.db"
+    return db_dir / "cadrumo.db"
 
 
 def test_at_rest_scan_reads_a_committed_row_from_the_wal_sidecar(tmp_path: Path) -> None:

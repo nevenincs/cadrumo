@@ -18,7 +18,7 @@ _RUNNER = CliRunner()
 class ClickInvokeKwargs(TypedDict, total=False):
     """Typed surface for ``CliRunner.invoke`` keyword arguments.
 
-    Covers the kwargs that AEAT tests legitimately pass.  Any kwarg
+    Covers the kwargs that Cadrumo tests legitimately pass.  Any kwarg
     not listed here is a caller mistake and will be caught by the
     type-checker.
     """
@@ -30,7 +30,7 @@ class ClickInvokeKwargs(TypedDict, total=False):
 
 
 @cache
-def aeat_click_command() -> click.Command:
+def cadrumo_click_command() -> click.Command:
     """Materialize the Typer app once for default-locale CLI tests."""
 
     from ..entrypoints.cli import app
@@ -70,14 +70,14 @@ def invoke_uncached_typer_app(
 
 
 def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:
-    """Invoke the cached AEAT Click command.
+    """Invoke the cached Cadrumo Click command.
 
     Typer's test runner rebuilds the full Click command tree on every
-    invocation. The AEAT tree is large enough that repeated materialization
+    invocation. The Cadrumo tree is large enough that repeated materialization
     dominates test runtime for default-locale CLI smoke tests.
 
     Only kwargs declared in :class:`ClickInvokeKwargs` are accepted; unknown
     kwargs are a static type error, catching accidental misuse at author time.
     """
 
-    return _RUNNER.invoke(aeat_click_command(), list(args), **kwargs)
+    return _RUNNER.invoke(cadrumo_click_command(), list(args), **kwargs)

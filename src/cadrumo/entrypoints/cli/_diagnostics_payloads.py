@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for ``aeat app diagnostics`` commands.
+"""Typed ``--json`` payload schemas for ``cadrumo app diagnostics`` commands.
 
 Every declared payload is an :class:`OutputSchema` subclass registered with
 :func:`register_schema` for the local-only run-health diagnostic surface
@@ -43,7 +43,7 @@ class LlmRunProviderPayload(OutputSchema):
 
 @register_schema("diagnostics.run_health")
 class RunHealthResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics run-health``.
+    """JSON envelope for ``cadrumo app diagnostics run-health``.
 
     Presents local-only LLM run-timing telemetry (per-provider run counts,
     outcomes, and duration distribution) alongside the persisted-AEAT-session
@@ -86,7 +86,7 @@ class RunRecordPayload(OutputSchema):
 
 @register_schema("diagnostics.runs")
 class RunsListResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics runs``.
+    """JSON envelope for ``cadrumo app diagnostics runs``.
 
     Lists individual local LLM run-timing records, most-recent-first, sourced
     from :func:`~application.diagnostics_run_health.list_recent_runs`. It
@@ -126,7 +126,7 @@ class LatencyProviderRowPayload(OutputSchema):
 
 @register_schema("diagnostics.latency")
 class LatencyResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics latency``.
+    """JSON envelope for ``cadrumo app diagnostics latency``.
 
     Presents P50/P95/P99 (plus min/max/mean) run-duration percentiles overall
     and, unless ``--provider`` scopes the query, broken down per provider.
@@ -156,7 +156,7 @@ class ErrorKindCountPayload(OutputSchema):
 
 @register_schema("diagnostics.errors")
 class ErrorsBreakdownResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics errors``.
+    """JSON envelope for ``cadrumo app diagnostics errors``.
 
     Presents a breakdown of failed LLM runs by provider and ``error_kind``,
     sorted by descending failure count. Sourced from
@@ -210,7 +210,7 @@ class LlmUsageProviderPayload(OutputSchema):
 
 @register_schema("diagnostics.llm_usage")
 class LlmUsageResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics llm-usage``.
+    """JSON envelope for ``cadrumo app diagnostics llm-usage``.
 
     Presents a run-count/duration/success-rate usage summary grouped by
     provider and, within each provider, by model. Sourced from
@@ -236,7 +236,7 @@ class LlmUsageResult(OutputSchema):
 
 @register_schema("diagnostics.telemetry.status")
 class TelemetryStatusResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics telemetry status``.
+    """JSON envelope for ``cadrumo app diagnostics telemetry status``.
 
     Mirrors :class:`~application.diagnostics_telemetry.TelemetryStatusReport`.
     Default-off, consent-gated remote telemetry posture
@@ -273,7 +273,7 @@ class TelemetryPayloadPreviewPayload(OutputSchema):
 
 @register_schema("diagnostics.telemetry.flush")
 class TelemetryFlushResult(OutputSchema):
-    """JSON envelope for ``aeat app diagnostics telemetry flush``.
+    """JSON envelope for ``cadrumo app diagnostics telemetry flush``.
 
     Mirrors :class:`~application.diagnostics_telemetry.TelemetryFlushPreview`.
     ``dry_run=True`` never performs a network call regardless of ``sent``;

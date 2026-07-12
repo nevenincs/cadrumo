@@ -1,4 +1,4 @@
-"""Typer registration for the ``aeat app modelo review-package`` verb group.
+"""Typer registration for the ``cadrumo app modelo review-package`` verb group.
 
 Assembles a shareable, checksum-verifiable review package (``build``) and
 verifies one already received (``verify``). All verbs are local-only: they
@@ -31,7 +31,7 @@ the holder of the matching X25519 private key, unlike ``sign``/``counter-sign``,
 which leave the archive itself in plaintext ZIP form.
 ``encrypt-for-recipient`` looks up the recipient's registered public key via
 :class:`~application.modelo.RecipientFingerprintRegistryRepository`
-(populated by ``aeat config collab recipient add``); ``decrypt`` mints-or-loads
+(populated by ``cadrumo config collab recipient add``); ``decrypt`` mints-or-loads
 the running bucket's OWN X25519 keypair (mirroring the signing keypair's
 mint-once-persist-as-ciphertext contract exactly, via
 :func:`~application.modelo.ensure_recipient_encryption_keypair`) and
@@ -305,7 +305,7 @@ def review_package_build(
     resolved_actor = actor or resolve_default_actor()
     work_unit = load_work_unit(selected_revision.work_unit_id)
 
-    with tempfile.TemporaryDirectory(prefix="aeat-review-package-draft-") as staging_name:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-") as staging_name:
         draft_path = Path(staging_name) / "draft.fichero-boe"
         try:
             export_result = export_modelo_revision(
@@ -765,7 +765,7 @@ def review_package_encrypt_for_recipient(
             "--recipient",
             help=tr(
                 "cli.app.modelo.review_package.recipient_id_help",
-                default="Registered recipient id (see `aeat config collab recipient add`).",
+                default="Registered recipient id (see `cadrumo config collab recipient add`).",
             ),
         ),
     ],
@@ -965,7 +965,7 @@ def review_package_encrypt_feedback(
                 "cli.app.modelo.review_package.originator_id_help",
                 default=(
                     "Registered originator id whose public key seals the feedback "
-                    "(see `aeat config collab recipient add`)."
+                    "(see `cadrumo config collab recipient add`)."
                 ),
             ),
         ),

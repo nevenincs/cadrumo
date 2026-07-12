@@ -95,7 +95,7 @@ _log = get_logger(__name__)
 # namespace / schema-version strings preserved across the relocation to avoid
 # orphaning persisted envelopes; redeclared here as the persisted-envelope contract.
 _TX_CATALOGUE_VERSION = 1
-TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
+TX_BUCKET_NAMESPACE = "cadrumo.domain.transactions.bucket"
 
 
 class _TransactionIndex(BaseModel):

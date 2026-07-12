@@ -1,4 +1,4 @@
-"""``aeat config google credential-source ...`` — select the Google credential source.
+"""``cadrumo config google credential-source ...`` — select the Google credential source.
 
 Wires the per-profile :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
 persisted by the ``google-sa-impersonation`` core slice
@@ -270,7 +270,7 @@ def google_credential_source_show(
 
 
 def register_google_credential_source_commands(google_app: typer.Typer) -> None:
-    """Mount the ``credential-source`` command group on ``aeat config google``."""
+    """Mount the ``credential-source`` command group on ``cadrumo config google``."""
     google_app.add_typer(credential_source_app, name="credential-source")
 
 

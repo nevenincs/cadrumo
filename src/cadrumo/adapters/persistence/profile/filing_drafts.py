@@ -56,7 +56,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     """
 
     # namespace string preserved across rename to avoid orphaning persisted envelopes
-    namespace: ClassVar[str] = "aeat.domain.filing.drafts"
+    namespace: ClassVar[str] = "cadrumo.domain.filing.drafts"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.FINANCIAL
     schema_version: ClassVar[int] = 1
 

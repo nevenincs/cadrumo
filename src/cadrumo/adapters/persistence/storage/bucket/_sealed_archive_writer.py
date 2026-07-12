@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.product_identity import PRODUCT_IDENTITY
 from ._export_header import ExportArchiveHeader
 from ._sealed_archive_errors import SealedArchiveWriteError
 
@@ -27,6 +28,8 @@ from ._sealed_archive_errors import SealedArchiveWriteError
 HEADER_MEMBER_NAME = "header.json"
 PAYLOAD_MEMBER_NAME = "payload.envelope"
 RECOVERY_WRAP_MEMBER_NAME = "recovery.wrap"
+CADRUMO_BUCKET_BUNDLE_SUFFIX = f".{PRODUCT_IDENTITY.python_package}-bucket.tar.gz"
+FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX = ".aeat-bucket.tar.gz"
 
 _NORMALISED_MODE = 0o400
 _NORMALISED_UID = 0
@@ -88,6 +91,14 @@ def write_sealed_archive(
             header's ``recovery_wrap_present`` flag disagrees with
             ``recovery_wrap_bytes``, or the underlying IO write fails.
     """
+    if target_path.name.endswith(FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX):
+        raise SealedArchiveWriteError(
+            "sealed-archive write refused: former-product bundle suffix is incompatible with Cadrumo",
+        )
+    if not target_path.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
+        raise SealedArchiveWriteError(
+            f"sealed-archive write refused: target must end with {CADRUMO_BUCKET_BUNDLE_SUFFIX!r}",
+        )
     if recovery_wrap_bytes is not None and not header.recovery_wrap_present:
         raise SealedArchiveWriteError(
             "sealed-archive write refused: recovery_wrap_bytes supplied but header.recovery_wrap_present is False",
@@ -120,6 +131,8 @@ def write_sealed_archive(
 
 
 __all__ = [
+    "CADRUMO_BUCKET_BUNDLE_SUFFIX",
+    "FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX",
     "HEADER_MEMBER_NAME",
     "PAYLOAD_MEMBER_NAME",
     "RECOVERY_WRAP_MEMBER_NAME",

@@ -1,4 +1,4 @@
-"""Google Sheets calculation sync commands for ``aeat config google``.
+"""Google Sheets calculation sync commands for ``cadrumo config google``.
 
 Google calc commands resolve a
 :class:`RegistrySnapshot` before exporting

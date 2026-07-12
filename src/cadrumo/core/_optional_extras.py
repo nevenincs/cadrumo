@@ -1,6 +1,6 @@
 """Capability-gated optional package extras and their import guard.
 
-The shipped package is lean: a bare ``pip install aeat`` omits the optional
+The shipped package is lean: a bare ``pip install cadrumo`` omits the optional
 integration stacks (Google export, the live-AEAT browser, the Anthropic-API LLM
 provider). Each maps to a ``[project.optional-dependencies]`` extra and is
 imported lazily, so the core CLI builds and runs without it.
@@ -12,7 +12,7 @@ same :data:`OPTIONAL_EXTRAS` registry through
 :func:`application.provisioning.probe_optional_extra`. :func:`require_optional_extra`
 is the seam every feature boundary calls before its lazy import so a missing
 extra becomes one instructive :class:`MissingOptionalExtraError` naming
-``pip install aeat-cli[<extra>]`` instead of a raw deep-stack
+``pip install cadrumo[<extra>]`` instead of a raw deep-stack
 ``ModuleNotFoundError``.
 
 These records describe package availability only. They do not decide whether an
@@ -63,7 +63,7 @@ class OptionalExtra(BaseModel):
         This is a dependency remediation hint, not a runtime provisioning command
         such as ``playwright install chromium``.
         """
-        return f"pip install aeat-cli[{self.extra}]"
+        return f"pip install cadrumo[{self.extra}]"
 
 
 # The capability-mapped optional extras declared in
@@ -88,7 +88,7 @@ class MissingOptionalExtraError(CoreError, ImportError):
 
     Attributes:
         extra: Optional-extra registry record that failed the spec-only probe.
-        install_hint: Exact ``pip install aeat-cli[<extra>]`` remediation command.
+        install_hint: Exact ``pip install cadrumo[<extra>]`` remediation command.
     """
 
     def __init__(self, extra: OptionalExtra) -> None:

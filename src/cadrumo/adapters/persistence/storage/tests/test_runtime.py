@@ -260,7 +260,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
     assert loaded is not None
     assert loaded.payload == b"runtime-payload"
-    assert (tmp_path / "buckets" / _BUCKET_A_ID / "db" / "aeat.db").exists()
+    assert (tmp_path / "buckets" / _BUCKET_A_ID / "db" / "cadrumo.db").exists()
 
 
 def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path) -> None:
@@ -558,7 +558,7 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
 
 def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Path) -> None:
     settings = Settings(
-        cadrumo_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}",
+        cadrumo_database_url=f"sqlite:///{(tmp_path / 'cadrumo.db').as_posix()}",
         cadrumo_output_language=OutputLanguage.EN,
     )
 

@@ -141,11 +141,11 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
     wraps non-``AeatError`` exceptions into ``ConfigBoundaryError``.
 
     Layout per ``_bucket_session.py``:
-    ``<storage_root>/buckets/<bucket_id>/db/aeat.db``.
+    ``<storage_root>/buckets/<bucket_id>/db/cadrumo.db``.
     """
     dispose_engine()  # flush cached connections so the rewrite is observed
     storage_root = tmp_path / "aeat-storage"
-    db_paths = list(storage_root.glob("buckets/*/db/aeat.db"))
+    db_paths = list(storage_root.glob("buckets/*/db/cadrumo.db"))
     assert db_paths, f"no per-bucket DB found under {storage_root}"
     for db_path in db_paths:
         db_path.write_bytes(b"\x00" * 1024)  # SQLite header is 16 bytes; 1 KiB of NULs is enough

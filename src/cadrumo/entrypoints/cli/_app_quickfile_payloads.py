@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schema for the ``aeat app quickfile`` envelope.
+"""Typed ``--json`` payload schema for the ``cadrumo app quickfile`` envelope.
 
 Projects the application :class:`~application.modelo.QuickfileResult` onto a
 strict :class:`~entrypoints.cli._schemas.OutputSchema` registered under the
@@ -32,7 +32,7 @@ class QuickfileStageOutcomePayload(OutputSchema):
 
 @register_schema("quickfile")
 class QuickfileResultPayload(OutputSchema):
-    """Aggregate ``aeat app quickfile`` result envelope.
+    """Aggregate ``cadrumo app quickfile`` result envelope.
 
     ``completed`` is true only when the terminal local fichero-BOE export
     succeeded. ``stopped_at_stage`` names the stage that refused when the chain

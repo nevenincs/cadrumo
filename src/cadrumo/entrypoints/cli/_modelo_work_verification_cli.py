@@ -206,9 +206,9 @@ def _register_work_verify_command(
                     "modelo.work.verify.next_action_granted",
                     tr(
                         "cli.app.modelo.work.verify_next_action_granted",
-                        default=("Verification passed. Export the filing artefact with `aeat app modelo export`."),
+                        default=("Verification passed. Export the filing artefact with `cadrumo app modelo export`."),
                     ),
-                    suggestion="aeat app modelo export",
+                    suggestion="cadrumo app modelo export",
                 ),
             )
         else:
@@ -219,11 +219,11 @@ def _register_work_verify_command(
                         "cli.app.modelo.work.verify_next_action_incomplete",
                         default=(
                             "Verification found blocking items (see the notices above). "
-                            "Resolve them, recalculate with `aeat app modelo work calculate`, "
-                            "then re-run `aeat app modelo work verify`."
+                            "Resolve them, recalculate with `cadrumo app modelo work calculate`, "
+                            "then re-run `cadrumo app modelo work verify`."
                         ),
                     ),
-                    suggestion=f"aeat app modelo work calculate {selected_revision.work_unit_id}",
+                    suggestion=f"cadrumo app modelo work calculate {selected_revision.work_unit_id}",
                 ),
             )
         notices.extend(

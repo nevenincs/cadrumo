@@ -33,6 +33,12 @@ BUCKET_DEK_FILENAME = "bucket.dek.json"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
+FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
+
+
+def is_former_product_namespace(namespace: str) -> bool:
+    """Return whether ``namespace`` uses a retired product-owned prefix."""
+    return namespace.startswith(FORMER_PRODUCT_NAMESPACE_PREFIXES)
 
 
 class StorageNamespaceScope(StrEnum):
@@ -252,8 +258,8 @@ def secure_object_namespace_logical_path(namespace: str) -> Path:
 
 WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="workflow_state",
-    namespace="aeat.workflow",
-    owner="aeat.application.workflow",
+    namespace="cadrumo.workflow",
+    owner="cadrumo.application.workflow",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="state",
@@ -263,8 +269,8 @@ WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 WORKFLOW_RUN_NAMESPACE = SecureObjectNamespaceDefinition(
     key="workflow_runs",
-    namespace="aeat.application.workflow.runs",
-    owner="aeat.application.workflow",
+    namespace="cadrumo.application.workflow.runs",
+    owner="cadrumo.application.workflow",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{run_id}",
@@ -273,8 +279,8 @@ WORKFLOW_RUN_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 USER_PROFILE_VALUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="user_profile_value",
-    namespace="aeat.application.user_profile.value",
-    owner="aeat.application.user_profile",
+    namespace="cadrumo.application.user_profile.value",
+    owner="cadrumo.application.user_profile",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="user-profile:{profile_id}",
@@ -283,8 +289,8 @@ USER_PROFILE_VALUE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 USER_PROFILE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="user_profile_snapshot",
-    namespace="aeat.application.user_profile.snapshot",
-    owner="aeat.application.user_profile",
+    namespace="cadrumo.application.user_profile.snapshot",
+    owner="cadrumo.application.user_profile",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="user-profile-snapshot:{profile_id}:{snapshot_id}",
@@ -293,8 +299,8 @@ USER_PROFILE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 PROFILE_INVENTORY_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_inventory_ledger",
-    namespace="aeat.persistence.profile.inventory",
-    owner="aeat.adapters.persistence.profile.inventory",
+    namespace="cadrumo.persistence.profile.inventory",
+    owner="cadrumo.adapters.persistence.profile.inventory",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -304,8 +310,8 @@ PROFILE_INVENTORY_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 PROFILE_ASSETS_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_assets_ledger",
-    namespace="aeat.persistence.profile.assets",
-    owner="aeat.adapters.persistence.profile.assets",
+    namespace="cadrumo.persistence.profile.assets",
+    owner="cadrumo.adapters.persistence.profile.assets",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -315,8 +321,8 @@ PROFILE_ASSETS_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_assets_amortization_ledger",
-    namespace="aeat.persistence.profile.assets.amortization",
-    owner="aeat.adapters.persistence.profile.assets",
+    namespace="cadrumo.persistence.profile.assets.amortization",
+    owner="cadrumo.adapters.persistence.profile.assets",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -326,8 +332,8 @@ PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_bienes_inversion_iva_register",
-    namespace="aeat.persistence.profile.bienes_inversion",
-    owner="aeat.adapters.persistence.profile.bienes_inversion",
+    namespace="cadrumo.persistence.profile.bienes_inversion",
+    owner="cadrumo.adapters.persistence.profile.bienes_inversion",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -337,8 +343,8 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
 )
 PROFILE_PRORRATA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_prorrata_register",
-    namespace="aeat.persistence.profile.prorrata_register",
-    owner="aeat.adapters.persistence.profile.prorrata_register",
+    namespace="cadrumo.persistence.profile.prorrata_register",
+    owner="cadrumo.adapters.persistence.profile.prorrata_register",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -348,8 +354,8 @@ PROFILE_PRORRATA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="repair_integrity_decisions",
-    namespace="aeat.application.repair_integrity.decisions",
-    owner="aeat.application.repair_integrity",
+    namespace="cadrumo.application.repair_integrity.decisions",
+    owner="cadrumo.application.repair_integrity",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{decision_id_sha256_hex}",
@@ -360,8 +366,8 @@ REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 APPLICATION_FILING_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="application_filing_history",
-    namespace="aeat.application.filing.history",
-    owner="aeat.application.filing",
+    namespace="cadrumo.application.filing.history",
+    owner="cadrumo.application.filing",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{modelo}",
@@ -370,8 +376,8 @@ APPLICATION_FILING_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 AUTH_APODERADO_CONFIGURATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="auth_apoderado_configuration",
-    namespace="aeat.auth.apoderado",
-    owner="aeat.application.auth",
+    namespace="cadrumo.auth.apoderado",
+    owner="cadrumo.application.auth",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}",
@@ -383,8 +389,8 @@ AUTH_APODERADO_CONFIGURATION_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="calculation_observations",
-    namespace="aeat.calculations.observations",
-    owner="aeat.application.calculations",
+    namespace="cadrumo.calculations.observations",
+    owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{modelo}:{filing_year}:{period}",
@@ -400,8 +406,8 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 # live encrypted at rest, never plaintext (sensitive-financial-data-secure-storage-only).
 RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="retencion_observations",
-    namespace="aeat.retenciones.observations",
-    owner="aeat.application.aggregation",
+    namespace="cadrumo.retenciones.observations",
+    owner="cadrumo.application.aggregation",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     # The perceptor NIF is sha256-hashed in the object key (mirroring the
@@ -413,8 +419,8 @@ RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="withholding_observations",
-    namespace="aeat.withholding.observations",
-    owner="aeat.application.aggregation",
+    namespace="cadrumo.withholding.observations",
+    owner="cadrumo.application.aggregation",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     # The perceptor NIF is sha256-hashed in the object key (mirroring the
@@ -427,8 +433,8 @@ WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_wallet_reconciliation_decisions",
-    namespace="aeat.calculations.iva_wallet.reconciliation_decisions",
-    owner="aeat.application.calculations",
+    namespace="cadrumo.calculations.iva_wallet.reconciliation_decisions",
+    owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="iva-wallet-decision:{sha256(taxpayer_nif,target_year,target_period)}",
@@ -437,8 +443,8 @@ IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_wallet_reconciliation_decision_events",
-    namespace="aeat.calculations.iva_wallet.reconciliation_decision_events",
-    owner="aeat.application.calculations",
+    namespace="cadrumo.calculations.iva_wallet.reconciliation_decision_events",
+    owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="iva-wallet-decision-event:{sha256(decision_identity_and_payload)}",
@@ -447,8 +453,8 @@ IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE = SecureObjectNamespaceDefin
 )
 IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_compensation_history",
-    namespace="aeat.calculations.iva_compensation.history",
-    owner="aeat.application.calculations",
+    namespace="cadrumo.calculations.iva_compensation.history",
+    owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="303:{filing_year}:{period}",
@@ -457,8 +463,8 @@ IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_iva_remote_state_acquisitions",
-    namespace="aeat.application.live.iva_remote_state_acquisitions",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.iva_remote_state_acquisitions",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar=(
@@ -469,8 +475,8 @@ LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 APPLICATION_EVIDENCE_BUNDLE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="application_evidence_bundles",
-    namespace="aeat.application.evidence.bundles",
-    owner="aeat.application.evidence",
+    namespace="cadrumo.application.evidence.bundles",
+    owner="cadrumo.application.evidence",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bundle_id}",
@@ -479,8 +485,8 @@ APPLICATION_EVIDENCE_BUNDLE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_purchase_invoice_evidence",
-    namespace="aeat.application.ledger.purchase_invoice_evidence",
-    owner="aeat.application.ledger",
+    namespace="cadrumo.application.ledger.purchase_invoice_evidence",
+    owner="cadrumo.application.ledger",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}",
@@ -489,8 +495,8 @@ LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_business_operation_invoices",
-    namespace="aeat.application.ledger.business_operation_invoices",
-    owner="aeat.application.ledger",
+    namespace="cadrumo.application.ledger.business_operation_invoices",
+    owner="cadrumo.application.ledger",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}:{source_kind}",
@@ -499,8 +505,8 @@ LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
-    namespace="aeat.ledger.classification.rules",
-    owner="aeat.application.ledger",
+    namespace="cadrumo.ledger.classification.rules",
+    owner="cadrumo.application.ledger",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{rule_id}",
@@ -509,8 +515,8 @@ LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_borrador_100_snapshot",
-    namespace="aeat.application.live.borrador_100_snapshot",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.borrador_100_snapshot",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}",
@@ -519,8 +525,8 @@ LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_m036_declaration",
-    namespace="aeat.application.modelo.m036_declaration",
-    owner="aeat.application.modelo",
+    namespace="cadrumo.application.modelo.m036_declaration",
+    owner="cadrumo.application.modelo",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="m036-declaration:{bucket_id}:{declaration_id}",
@@ -529,8 +535,8 @@ LIVE_M036_DECLARATION_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 M145_COMMUNICATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
     key="m145_communication_record",
-    namespace="aeat.application.modelo.m145_communication_record",
-    owner="aeat.application.modelo",
+    namespace="cadrumo.application.modelo.m145_communication_record",
+    owner="cadrumo.application.modelo",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="m145-communication:{bucket_id}:{communication_record_id}",
@@ -539,8 +545,8 @@ M145_COMMUNICATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_snapshot_base_probe",
-    namespace="aeat.application.live.test_snapshot_base_probe",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.test_snapshot_base_probe",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="snapshot-base-probe:{bucket_id}:{snapshot_id}",
@@ -552,8 +558,8 @@ TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_session_lifecycle",
-    namespace="aeat-test.session.lifecycle",
-    owner="aeat.entrypoints.cli.test_session_lifecycle_roundtrip",
+    namespace="cadrumo-test.session.lifecycle",
+    owner="cadrumo.entrypoints.cli.test_session_lifecycle_roundtrip",
     sensitivity=SensitivityClass.OPERATIONAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="roundtrip-row",
@@ -565,8 +571,8 @@ TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_secure_bound_contract",
-    namespace="aeat-test.envelope.secure_bound_contract",
-    owner="aeat.adapters.persistence.storage.envelope.test_secure_bound_repository_contract",
+    namespace="cadrumo-test.envelope.secure_bound_contract",
+    owner="cadrumo.adapters.persistence.storage.envelope.test_secure_bound_repository_contract",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{id}",
@@ -578,8 +584,8 @@ TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_RUNTIME_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_runtime_profile",
-    namespace="aeat-tests.runtime.profile",
-    owner="aeat-tests.test_secure_sql",
+    namespace="cadrumo-tests.runtime.profile",
+    owner="cadrumo-tests.test_secure_sql",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="runtime-row",
@@ -591,8 +597,8 @@ TEST_RUNTIME_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_expedientes_snapshot",
-    namespace="aeat.application.live.expedientes_snapshot",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.expedientes_snapshot",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="expedientes-snapshot:{bucket_id}:{snapshot_id}",
@@ -601,8 +607,8 @@ LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_notifications_snapshot",
-    namespace="aeat.application.live.notifications_snapshot",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.notifications_snapshot",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="notifications-snapshot:{bucket_id}:{snapshot_id}",
@@ -611,8 +617,8 @@ LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_justificante_capture_snapshot",
-    namespace="aeat.application.live.justificante_capture_snapshot",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.justificante_capture_snapshot",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="justificante-capture-snapshot:{bucket_id}:{snapshot_id}",
@@ -621,8 +627,8 @@ LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LIVE_VERIFY_OBSERVATION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_verify_observations",
-    namespace="aeat.application.live.verify_observations",
-    owner="aeat.application.live",
+    namespace="cadrumo.application.live.verify_observations",
+    owner="cadrumo.application.live",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="verify-observation:{bucket_id}:{observation_id}",
@@ -631,8 +637,8 @@ LIVE_VERIFY_OBSERVATION_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 ATTACHMENT_BLOB_NAMESPACE = SecureObjectNamespaceDefinition(
     key="attachment_blobs",
-    namespace="aeat.domain.attachments.blobs",
-    owner="aeat.adapters.persistence.storage.attachment",
+    namespace="cadrumo.domain.attachments.blobs",
+    owner="cadrumo.adapters.persistence.storage.attachment",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256_hex}",
@@ -641,8 +647,8 @@ ATTACHMENT_BLOB_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 ATTACHMENT_MANIFEST_NAMESPACE = SecureObjectNamespaceDefinition(
     key="attachment_manifests",
-    namespace="aeat.domain.attachments.manifests",
-    owner="aeat.adapters.persistence.storage.attachment",
+    namespace="cadrumo.domain.attachments.manifests",
+    owner="cadrumo.adapters.persistence.storage.attachment",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{attachment_id_sha256_hex}",
@@ -651,8 +657,8 @@ ATTACHMENT_MANIFEST_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_browser_sessions",
-    namespace="aeat.outbound.aeat.auth.sessions",
-    owner="aeat.adapters.outbound.aeat.auth",
+    namespace="cadrumo.outbound.aeat.auth.sessions",
+    owner="cadrumo.adapters.outbound.aeat.auth",
     sensitivity=SensitivityClass.SESSION,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{storage_state_path_posix}",
@@ -661,8 +667,8 @@ AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="clave_movil_diagnostics",
-    namespace="aeat.outbound.aeat.auth.clave_movil.diagnostics",
-    owner="aeat.adapters.outbound.aeat.auth",
+    namespace="cadrumo.outbound.aeat.auth.clave_movil.diagnostics",
+    owner="cadrumo.adapters.outbound.aeat.auth",
     sensitivity=SensitivityClass.SESSION,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{diagnostic_id_or_timestamp_iso}",
@@ -671,8 +677,8 @@ CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="clave_permanente_diagnostics",
-    namespace="aeat.outbound.aeat.auth.clave_permanente.diagnostics",
-    owner="aeat.adapters.outbound.aeat.auth",
+    namespace="cadrumo.outbound.aeat.auth.clave_permanente.diagnostics",
+    owner="cadrumo.adapters.outbound.aeat.auth",
     sensitivity=SensitivityClass.SESSION,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{diagnostic_id_or_timestamp_iso}",
@@ -681,8 +687,8 @@ CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_client",
-    namespace="aeat.google.oauth.client",
-    owner="aeat.adapters.outbound.google",
+    namespace="cadrumo.google.oauth.client",
+    owner="cadrumo.adapters.outbound.google",
     sensitivity=SensitivityClass.SECRET,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
@@ -691,8 +697,8 @@ GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_token",
-    namespace="aeat.google.oauth.token",
-    owner="aeat.adapters.outbound.google",
+    namespace="cadrumo.google.oauth.token",
+    owner="cadrumo.adapters.outbound.google",
     sensitivity=SensitivityClass.SECRET,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
@@ -701,8 +707,8 @@ GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_metadata",
-    namespace="aeat.google.oauth.metadata",
-    owner="aeat.adapters.outbound.google",
+    namespace="cadrumo.google.oauth.metadata",
+    owner="cadrumo.adapters.outbound.google",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
@@ -711,8 +717,8 @@ GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_drive_config",
-    namespace="aeat.google.drive.config",
-    owner="aeat.adapters.outbound.google",
+    namespace="cadrumo.google.drive.config",
+    owner="cadrumo.adapters.outbound.google",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
@@ -721,8 +727,8 @@ GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_credential_source",
-    namespace="aeat.google.credential.source",
-    owner="aeat.adapters.outbound.google",
+    namespace="cadrumo.google.credential.source",
+    owner="cadrumo.adapters.outbound.google",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{profile}",
@@ -731,8 +737,8 @@ GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
-    namespace="aeat.outbound.llm.cache",
-    owner="aeat.adapters.outbound.llm",
+    namespace="cadrumo.outbound.llm.cache",
+    owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.DIAGNOSTIC,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
@@ -741,8 +747,8 @@ LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_usage",
-    namespace="aeat.outbound.llm.usage",
-    owner="aeat.adapters.outbound.llm",
+    namespace="cadrumo.outbound.llm.usage",
+    owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.DIAGNOSTIC,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
@@ -751,8 +757,8 @@ LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_run_telemetry",
-    namespace="aeat.outbound.llm.run_telemetry",
-    owner="aeat.adapters.outbound.llm",
+    namespace="cadrumo.outbound.llm.run_telemetry",
+    owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.DIAGNOSTIC,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{logical_root}|{started_at_iso}|{run_id}|{uuid4_hex}",
@@ -761,8 +767,8 @@ LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_filed_declaration_artefacts",
-    namespace="aeat.outbound.aeat.sede.filed_declaration.artefacts",
-    owner="aeat.adapters.outbound.aeat.sede",
+    namespace="cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
+    owner="cadrumo.adapters.outbound.aeat.sede",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256_hex}",
@@ -771,8 +777,8 @@ AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_filed_declaration_observations",
-    namespace="aeat.outbound.aeat.sede.filed_declaration.observations",
-    owner="aeat.adapters.outbound.aeat.sede",
+    namespace="cadrumo.outbound.aeat.sede.filed_declaration.observations",
+    owner="cadrumo.adapters.outbound.aeat.sede",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256(modelo,ejercicio,period,expediente_id)}",
@@ -781,8 +787,8 @@ AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_iva_wallet_observations",
-    namespace="aeat.outbound.aeat.sede.iva_compensation_wallet.observations",
-    owner="aeat.adapters.outbound.aeat.sede",
+    namespace="cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations",
+    owner="cadrumo.adapters.outbound.aeat.sede",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
@@ -791,8 +797,8 @@ AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_review_package_signing_key",
-    namespace="aeat.application.modelo.review_package_signing_key",
-    owner="aeat.application.modelo",
+    namespace="cadrumo.application.modelo.review_package_signing_key",
+    owner="cadrumo.application.modelo",
     sensitivity=SensitivityClass.SECRET,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="review-package-signing-key:{bucket_id}",
@@ -801,8 +807,8 @@ MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_review_package_recipient_fingerprint_registry",
-    namespace="aeat.application.modelo.review_package_recipient_fingerprint_registry",
-    owner="aeat.application.modelo",
+    namespace="cadrumo.application.modelo.review_package_recipient_fingerprint_registry",
+    owner="cadrumo.application.modelo",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -812,8 +818,8 @@ MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE = SecureObjectNam
 )
 MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_review_package_recipient_replay_guard",
-    namespace="aeat.application.modelo.review_package_recipient_replay_guard",
-    owner="aeat.application.modelo",
+    namespace="cadrumo.application.modelo.review_package_recipient_replay_guard",
+    owner="cadrumo.application.modelo",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -823,8 +829,8 @@ MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE = SecureObjectNamespaceDe
 )
 MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_review_package_recipient_encryption_key",
-    namespace="aeat.application.modelo.review_package_recipient_encryption_key",
-    owner="aeat.application.modelo",
+    namespace="cadrumo.application.modelo.review_package_recipient_encryption_key",
+    owner="cadrumo.application.modelo",
     sensitivity=SensitivityClass.SECRET,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="review-package-recipient-encryption-key:{bucket_id}",
@@ -834,8 +840,8 @@ MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE = SecureObjectNamespace
 
 BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="bucket_event_history",
-    namespace="aeat.domain.buckets.event_history",
-    owner="aeat.domain.buckets",
+    namespace="cadrumo.domain.buckets.event_history",
+    owner="cadrumo.domain.buckets",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="catalogue",
@@ -845,8 +851,8 @@ BUCKET_EVENT_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 SUBMISSION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="submission_records",
-    namespace="aeat.domain.submission.records",
-    owner="aeat.domain.submission",
+    namespace="cadrumo.domain.submission.records",
+    owner="cadrumo.domain.submission",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{submission_id}",
@@ -855,8 +861,8 @@ SUBMISSION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 JUSTIFICANTE_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
     key="justificante_metadata",
-    namespace="aeat.domain.justificante.metadata",
-    owner="aeat.domain.justificante",
+    namespace="cadrumo.domain.justificante.metadata",
+    owner="cadrumo.domain.justificante",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{csv}",
@@ -865,8 +871,8 @@ JUSTIFICANTE_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 FILING_DRAFTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="filing_drafts",
-    namespace="aeat.domain.filing.drafts",
-    owner="aeat.domain.filing",
+    namespace="cadrumo.domain.filing.drafts",
+    owner="cadrumo.domain.filing",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{draft_id}",
@@ -875,8 +881,8 @@ FILING_DRAFTS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 FILING_AMENDMENTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="filing_amendments",
-    namespace="aeat.domain.filing.amendments",
-    owner="aeat.domain.filing",
+    namespace="cadrumo.domain.filing.amendments",
+    owner="cadrumo.domain.filing",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{amendment_id}",
@@ -885,8 +891,8 @@ FILING_AMENDMENTS_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 INVOICE_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="invoice_catalogue",
-    namespace="aeat.domain.invoices",
-    owner="aeat.domain.invoices",
+    namespace="cadrumo.domain.invoices",
+    owner="cadrumo.domain.invoices",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="catalogue",
@@ -896,8 +902,8 @@ INVOICE_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="transaction_catalogue",
-    namespace="aeat.domain.transactions.bucket",
-    owner="aeat.domain.transactions",
+    namespace="cadrumo.domain.transactions.bucket",
+    owner="cadrumo.domain.transactions",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="transaction-catalogue:{bucket_id}",
@@ -906,8 +912,8 @@ TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 USAGE_RATIO_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="usage_ratio_profile",
-    namespace="aeat.domain.usage_ratios",
-    owner="aeat.domain.usage_ratios",
+    namespace="cadrumo.domain.usage_ratios",
+    owner="cadrumo.domain.usage_ratios",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="profile:{bucket_id}",
@@ -916,8 +922,8 @@ USAGE_RATIO_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 MODELO_WORK_UNIT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_work_unit_catalogue",
-    namespace="aeat.domain.modelos.work_units",
-    owner="aeat.domain.modelos",
+    namespace="cadrumo.domain.modelos.work_units",
+    owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="catalogue",
@@ -927,8 +933,8 @@ MODELO_WORK_UNIT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_verification_report_catalogue",
-    namespace="aeat.domain.modelos.verification_reports",
-    owner="aeat.domain.modelos",
+    namespace="cadrumo.domain.modelos.verification_reports",
+    owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="catalogue",
@@ -938,8 +944,8 @@ MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition
 )
 MODELO_FILING_RECORD_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_filing_record_catalogue",
-    namespace="aeat.domain.modelos.filing_records",
-    owner="aeat.domain.modelos",
+    namespace="cadrumo.domain.modelos.filing_records",
+    owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="catalogue",
@@ -949,8 +955,8 @@ MODELO_FILING_RECORD_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="modelo_calculation_revision_catalogue",
-    namespace="aeat.domain.modelos.calculation_revisions",
-    owner="aeat.domain.modelos",
+    namespace="cadrumo.domain.modelos.calculation_revisions",
+    owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="catalogue",
@@ -960,8 +966,8 @@ MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinitio
 )
 TRANSACTION_PARTICIPATION_INDEX_NAMESPACE = SecureObjectNamespaceDefinition(
     key="transaction_participation_index",
-    namespace="aeat.domain.modelos.participation_index",
-    owner="aeat.domain.modelos",
+    namespace="cadrumo.domain.modelos.participation_index",
+    owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{transaction_id}",
@@ -989,76 +995,76 @@ STORAGE_PATH_DEFINITIONS = (
         key="bucket_root",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKETS_DIRNAME,
     ),
     StoragePathDefinition(
         key="bucket_db",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/db/",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKET_DB_DIRNAME,
     ),
     StoragePathDefinition(
         key="bucket_blobs",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/blobs/",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKET_BLOBS_DIRNAME,
     ),
     StoragePathDefinition(
         key="bucket_audit",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/audit/",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKET_AUDIT_DIRNAME,
     ),
     StoragePathDefinition(
         key="bucket_manifest",
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/manifest.toml",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKET_MANIFEST_FILENAME,
     ),
     StoragePathDefinition(
         key="bucket_lock",
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/.lock",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKET_LOCK_FILENAME,
     ),
     StoragePathDefinition(
         key="bucket_output_language_hint",
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/output-language.hint",
-        owner="aeat.adapters.persistence.storage.bucket",
+        owner="cadrumo.adapters.persistence.storage.bucket",
         segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
     ),
     StoragePathDefinition(
         key="keystore_bucket",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/keystore/<bucket_id>/",
-        owner="aeat.adapters.persistence.storage.master_key",
+        owner="cadrumo.adapters.persistence.storage.master_key",
         segment=KEYSTORE_DIRNAME,
     ),
     StoragePathDefinition(
         key="bucket_dek",
         kind=StoragePathKind.FILE,
         grammar="<root>/keystore/<bucket_id>/bucket.dek.json",
-        owner="aeat.adapters.persistence.storage.master_key",
+        owner="cadrumo.adapters.persistence.storage.master_key",
         segment=BUCKET_DEK_FILENAME,
     ),
     StoragePathDefinition(
         key="secure_objects_table",
         kind=StoragePathKind.LOGICAL_SQL,
         grammar="db://secure_objects/<namespace>/<object_key>",
-        owner="aeat.adapters.persistence.storage.sql",
+        owner="cadrumo.adapters.persistence.storage.sql",
     ),
     StoragePathDefinition(
         key="blob_manifest",
         kind=StoragePathKind.BLOB_OBJECT,
         grammar="<root>/blobs/<sha256[:2]>/<sha256>.manifest.json",
-        owner="aeat.adapters.persistence.storage.blob_store",
+        owner="cadrumo.adapters.persistence.storage.blob_store",
         schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
     ),
 )

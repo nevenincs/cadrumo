@@ -1,4 +1,4 @@
-"""JSON-contract payloads for the ``aeat app ledger ratios`` subgroup.
+"""JSON-contract payloads for the ``cadrumo app ledger ratios`` subgroup.
 
 Each result is a strict :class:`OutputSchema` registered through
 :func:`register_schema` and emitted inside :class:`SchemaEnvelope` via
@@ -45,7 +45,7 @@ class RatiosValidateFindingPayload(OutputSchema):
 
 @register_schema("ledger.ratios.list")
 class RatiosListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger ratios list``."""
+    """JSON envelope for ``cadrumo app ledger ratios list``."""
 
     bucket_id: str
     rows: list[RatiosRowPayload]
@@ -55,7 +55,7 @@ class RatiosListResult(OutputSchema):
 
 @register_schema("ledger.ratios.set")
 class RatiosSetResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger ratios set``."""
+    """JSON envelope for ``cadrumo app ledger ratios set``."""
 
     bucket_id: str
     category: str
@@ -64,7 +64,7 @@ class RatiosSetResult(OutputSchema):
 
 @register_schema("ledger.ratios.unset")
 class RatiosUnsetResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger ratios unset``."""
+    """JSON envelope for ``cadrumo app ledger ratios unset``."""
 
     bucket_id: str
     category: str
@@ -73,7 +73,7 @@ class RatiosUnsetResult(OutputSchema):
 
 @register_schema("ledger.ratios.eligible")
 class RatiosEligibleResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger ratios eligible``."""
+    """JSON envelope for ``cadrumo app ledger ratios eligible``."""
 
     bucket_id: str
     rows: list[RatiosEligibleRowPayload]
@@ -82,7 +82,7 @@ class RatiosEligibleResult(OutputSchema):
 
 @register_schema("ledger.ratios.validate")
 class RatiosValidateResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger ratios validate``.
+    """JSON envelope for ``cadrumo app ledger ratios validate``.
 
     Mirrors :meth:`RatiosValidationReport.model_dump` output produced by
     :func:`validate_ratios_for_bucket`.

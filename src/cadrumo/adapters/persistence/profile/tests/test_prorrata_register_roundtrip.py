@@ -1,7 +1,7 @@
 """Strict roundtrip across the cross-period IVA prorrata register repo.
 
 Persists :class:`ProrrataRegister` under
-``aeat.persistence.profile.prorrata_register`` at ``SensitivityClass.FINANCIAL``.
+``cadrumo.persistence.profile.prorrata_register`` at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates every defaultable field across the register
 with non-default values (a fully-settled carried entry carrying its provisional

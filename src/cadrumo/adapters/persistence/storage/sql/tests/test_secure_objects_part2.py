@@ -66,7 +66,7 @@ def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path)
     """Registry-bound row schema drift surfaces as a typed unreadable outcome."""
 
     with _ephemeral_secure_repo(tmp_path, "registry-schema-drift.db") as (_, engine, repo):
-        namespace = "aeat-test.registry.schema"
+        namespace = "cadrumo-test.registry.schema"
         registry = StorageHierarchyRegistry(
             namespaces=(
                 SecureObjectNamespaceDefinition(
@@ -112,7 +112,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
     with _ephemeral_secure_repo(tmp_path, "empty.db") as (_, _, repo):
         items = list(
             repo.iter_records_with_failures(
-                "aeat-test.empty",
+                "cadrumo-test.empty",
                 expected_class=SensitivityClass.FINANCIAL,
                 max_supported_version=1,
             ),
@@ -125,7 +125,7 @@ def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) ->
     from ......core.i18n import tr
 
     with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
-        namespace = "aeat-test.older.schema"
+        namespace = "cadrumo-test.older.schema"
         repo.save(
             namespace=namespace,
             object_key="older-row",
@@ -159,7 +159,7 @@ def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Pa
     """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
 
     with _ephemeral_secure_repo(tmp_path, "bounded-batches.db") as (_, engine, repo):
-        namespace = "aeat-test.bounded.batches"
+        namespace = "cadrumo-test.bounded.batches"
         captured_options: list[dict[str, object]] = []
 
         def capture_listing_execution(
@@ -210,7 +210,7 @@ def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -
         with pytest.raises(StorageValidationError) as raised:
             list(
                 repo.iter_records_with_failures(
-                    "aeat-test.invalid.batch",
+                    "cadrumo-test.invalid.batch",
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
                     batch_size=0,
@@ -226,7 +226,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
 ) -> None:
     """No warning fires on a clean namespace; the warning is gated on real failures."""
     with _ephemeral_secure_repo(tmp_path, "clean.db") as (_, _, repo):
-        namespace = "aeat-test.clean"
+        namespace = "cadrumo-test.clean"
         repo.save(
             namespace=namespace,
             object_key="row-clean",
@@ -257,7 +257,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
     with _ephemeral_secure_repo(tmp_path, "raw.db") as (_, _, repo):
         now = datetime.now(UTC)
         repo.save(
-            namespace="aeat.alpha",
+            namespace="cadrumo.alpha",
             object_key="key-a-1",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -265,7 +265,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
             payload=b"payload-a-1",
         )
         repo.save(
-            namespace="aeat.beta",
+            namespace="cadrumo.beta",
             object_key="key-b-1",
             classification=SensitivityClass.SESSION,
             schema_version=1,
@@ -273,7 +273,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
             payload=b"payload-b-1",
         )
         repo.save(
-            namespace="aeat.alpha",
+            namespace="cadrumo.alpha",
             object_key="key-a-2",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -287,8 +287,8 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
         assert all(isinstance(row, SecureObjectRawRow) for row in rows)
         namespaces = [row.namespace for row in rows]
         # Ordered by (namespace ASC, object_key ASC); the three rows
-        # yield as aeat.alpha (x2) then aeat.beta (x1).
-        assert namespaces == ["aeat.alpha", "aeat.alpha", "aeat.beta"]
+        # yield as cadrumo.alpha (x2) then cadrumo.beta (x1).
+        assert namespaces == ["cadrumo.alpha", "cadrumo.alpha", "cadrumo.beta"]
         for row in rows:
             assert len(row.payload) > 0
             assert row.payload not in (b"payload-a-1", b"payload-a-2", b"payload-b-1"), (
@@ -323,7 +323,7 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
     _seed_under_key(
         db_path=db_path,
         provider=seed_provider,
-        namespace="aeat.rotated",
+        namespace="cadrumo.rotated",
         natural_key="rotated-key",
         payload=b"rotated-payload",
     )
@@ -332,7 +332,7 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
         rows = list(repo.iter_all_records_raw())
         assert len(rows) == 1
         # The ciphertext bytes are returned verbatim; no DecryptionError.
-        assert rows[0].namespace == "aeat.rotated"
+        assert rows[0].namespace == "cadrumo.rotated"
 
 
 def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) -> None:
@@ -346,7 +346,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
 
     seed_provider = EphemeralMasterKeyProvider()
     db_path = tmp_path / "quarantine-metadata.db"
-    namespace = "aeat.quarantine.metadata"
+    namespace = "cadrumo.quarantine.metadata"
     _seed_under_key(
         db_path=db_path,
         provider=seed_provider,
@@ -409,7 +409,7 @@ def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -
         payload = b"revision-integrity-payload"
         written_at = datetime(2026, 5, 22, 13, 0, 0, tzinfo=UTC)
         repo.save(
-            namespace="aeat.revision.write",
+            namespace="cadrumo.revision.write",
             object_key="revision-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=2,
@@ -441,7 +441,7 @@ def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path
     """Overwrites preserve the previous storage revision reference and payload hash."""
 
     with _ephemeral_secure_repo(tmp_path, "revision-overwrite.db") as (db_path, _, repo):
-        namespace = "aeat.revision.overwrite"
+        namespace = "cadrumo.revision.overwrite"
         repo.save(
             namespace=namespace,
             object_key="overwrite-key",
@@ -487,7 +487,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
         repo.save_many(
             (
                 SecureObjectWrite(
-                    namespace="aeat.revision.batch",
+                    namespace="cadrumo.revision.batch",
                     object_key="batch-a",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
@@ -497,7 +497,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
                     source_event_id="batch-event-a",
                 ),
                 SecureObjectWrite(
-                    namespace="aeat.revision.batch",
+                    namespace="cadrumo.revision.batch",
                     object_key="batch-b",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
@@ -513,7 +513,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
             rows = con.execute(
                 "SELECT revision_id, payload_hash, write_provenance, source_event_id, conflict_policy "
                 "FROM secure_objects WHERE namespace = ? ORDER BY source_event_id",
-                ("aeat.revision.batch",),
+                ("cadrumo.revision.batch",),
             ).fetchall()
         assert len(rows) == 2
         assert all(len(row[0]) == 64 for row in rows)
@@ -533,7 +533,7 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
         raw_key = bytes(range(32))
         payload = b"raw-key-revision-payload"
         repo.save_with_raw_key(
-            namespace="aeat.revision.raw",
+            namespace="cadrumo.revision.raw",
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -547,7 +547,7 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
             row = con.execute(
                 "SELECT object_key, revision_id, payload_hash, write_provenance, source_event_id "
                 "FROM secure_objects WHERE namespace = ?",
-                ("aeat.revision.raw",),
+                ("cadrumo.revision.raw",),
             ).fetchone()
         assert row[0] == raw_key
         assert len(row[1]) == 64
@@ -564,7 +564,7 @@ def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists()
             **cast(
                 dict[str, Any],
                 {
-                    "namespace": "aeat.revision.policy",
+                    "namespace": "cadrumo.revision.policy",
                     "object_key": "policy-key",
                     "classification": SensitivityClass.FINANCIAL,
                     "schema_version": 1,
@@ -580,7 +580,7 @@ def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_
     """Expected-revision writes update when the stored revision still matches."""
 
     with _ephemeral_secure_repo(tmp_path, "revision-cas-success.db") as (db_path, _, repo):
-        namespace = "aeat.revision.cas"
+        namespace = "cadrumo.revision.cas"
         repo.save(
             namespace=namespace,
             object_key="cas-key",
@@ -621,7 +621,7 @@ def test_secure_object_save_with_stale_expected_revision_refuses_without_overwri
     """A stale expected revision must not overwrite the current secure object."""
 
     with _ephemeral_secure_repo(tmp_path, "revision-cas-stale.db") as (db_path, _, repo):
-        namespace = "aeat.revision.cas.stale"
+        namespace = "cadrumo.revision.cas.stale"
         repo.save(
             namespace=namespace,
             object_key="cas-key",
@@ -665,7 +665,7 @@ def test_secure_object_save_with_expected_revision_refuses_missing_row(tmp_path:
     """A CAS write must not create a missing object for a stale expected revision."""
 
     with _ephemeral_secure_repo(tmp_path, "revision-cas-missing.db") as (db_path, _, repo):
-        namespace = "aeat.revision.cas.missing"
+        namespace = "cadrumo.revision.cas.missing"
         with pytest.raises(SecureObjectRevisionConflictError) as raised:
             repo.save(
                 namespace=namespace,

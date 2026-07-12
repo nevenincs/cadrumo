@@ -19,7 +19,7 @@ from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 
 _LOGGER = get_logger(__name__)
 # namespace string preserved across rename to avoid orphaning persisted envelopes
-_FILING_NAMESPACE = "aeat.domain.modelos.filing_records"
+_FILING_NAMESPACE = "cadrumo.domain.modelos.filing_records"
 _FILING_OBJECT_KEY = "catalogue"
 _FILING_CATALOGUE_VERSION = 1
 _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence"

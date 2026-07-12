@@ -1,6 +1,6 @@
 """Certificate-source registry CLI command surface.
 
-Mounted on ``config auth`` as ``aeat config auth certificate ...``.
+Mounted on ``config auth`` as ``cadrumo config auth certificate ...``.
 Register, enumerate, select, remove, and check the expiry/rotation
 health of named PKCS#12 certificate sources — the multi-cert slice of
 GitHub issue #591 (a gestor managing several taxpayers registers one
@@ -122,7 +122,7 @@ def certificate_register(
         lines=(
             f"name\t{result.name}",
             f"certificate_path\t{result.certificate_path}",
-            f"next_action\taeat config auth certificate select --name {result.name}",
+            f"next_action\tcadrumo config auth certificate select --name {result.name}",
         ),
     )
 
@@ -160,7 +160,7 @@ def certificate_list(
         active_source=report.active_source,
     )
     if not report.sources:
-        lines = ["sources\t<none>", "next_action\taeat config auth certificate register --name NAME --file PATH"]
+        lines = ["sources\t<none>", "next_action\tcadrumo config auth certificate register --name NAME --file PATH"]
     else:
         lines = [f"active_source\t{report.active_source or '<none>'}"]
         for source in report.sources:
@@ -335,7 +335,7 @@ def certificate_check(
             severity=NoticeSeverity.WARNING,
             code=f"config.auth.certificate.check.{entry.result}",
             message=f"{entry.name}: {entry.summary}",
-            suggestion=f"aeat config auth certificate select --name {entry.name}",
+            suggestion=f"cadrumo config auth certificate select --name {entry.name}",
             context={"name": entry.name, "result": entry.result},
         )
         for entry in report.entries
@@ -343,7 +343,7 @@ def certificate_check(
     ]
 
     if not report.entries:
-        lines = ["sources\t<none>", "next_action\taeat config auth certificate register --name NAME --file PATH"]
+        lines = ["sources\t<none>", "next_action\tcadrumo config auth certificate register --name NAME --file PATH"]
     else:
         lines = []
         for entry in report.entries:

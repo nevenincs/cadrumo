@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -184,6 +185,36 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
     assert "aeat app ledger import" in result.stdout
     assert "Failed to spawn" not in combined_output
     assert "program not found" not in combined_output
+
+
+@pytest.mark.parametrize("arguments", [("--help",), ("config", "--help")])
+def test_installed_console_help_does_not_adopt_former_product_state(
+    tmp_path: Path, arguments: tuple[str, ...]
+) -> None:
+    """Help remains available when Cadrumo correctly refuses legacy state."""
+    aeat_exe = _installed_aeat_executable()
+    former_root = tmp_path / "former-product-state"
+    former_root.mkdir()
+    with sqlite3.connect(former_root / "aeat.db"):
+        pass
+    env = _console_env(tmp_path)
+    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(former_root)
+
+    result = subprocess.run(
+        [aeat_exe, *arguments],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    combined_output = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, combined_output
+    assert "FormerProductStateError" not in combined_output
+    assert "Cadrumo" in result.stdout
 
 
 def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: Path) -> None:

@@ -30,6 +30,11 @@ from ....domain.buckets import (
 )
 from ....domain.user_profile import ProfileExportError, ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
+from ...modelo import (
+    M145CommunicationCreateCommand,
+    create_m145_communication_record,
+    read_m145_communication_record,
+)
 from ...user_profile import RegisterProfileCommand, profile_storage_session
 from ...workflow import read_profile_bucket_by_id
 from .._contracts import ExportBucketCommand, ImportBucketCommand
@@ -129,7 +134,20 @@ def test_sealed_archive_restores_evidence_and_audit_trail_in_fresh_root(
 ) -> None:
     seeded_event_id = seeded_bucket
     sha = AttachmentStore().put_bytes(_EVIDENCE)  # idempotent: returns the digest
-    archive = tmp_path / "exports" / "bucket.aeat-bucket.tar.gz"
+    communication = create_m145_communication_record(
+        M145CommunicationCreateCommand(
+            communication_year=2026,
+            field_values={
+                "perceptor.nif": "12345678Z",
+                "perceptor.primer-apellido": "Garcia",
+                "perceptor.segundo-apellido": "Lopez",
+                "perceptor.nombre": "Ana",
+                "perceptor.anio-nacimiento": "1981",
+            },
+        ),
+        bucket_id=runtime.bucket_id,
+    )
+    archive = tmp_path / "exports" / "bucket.cadrumo-bucket.tar.gz"
 
     BucketMaintenanceService().export(
         ExportBucketCommand(bucket_id=runtime.bucket_id, output_path=archive, recovery_wrap_passphrase=_RECOVERY),
@@ -149,6 +167,11 @@ def test_sealed_archive_restores_evidence_and_audit_trail_in_fresh_root(
             restored = BucketEventHistoryRepository().load()
             assert seeded_event_id in restored.events
             assert BucketEventType.BUCKET_IMPORTED in {e.event_type for e in restored.events.values()}
+            restored_communication = read_m145_communication_record(
+                communication.communication_record_id,
+                bucket_id=runtime.bucket_id,
+            )
+            assert restored_communication == communication
 
 
 def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
@@ -218,7 +241,7 @@ def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path)
         label="Process-local source",
     ) as profile:
         profile.repository.save(
-            namespace="aeat.workflow",  # PROCESS_LOCAL workflow state
+            namespace="cadrumo.workflow",  # PROCESS_LOCAL workflow state
             object_key="state",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -232,8 +255,8 @@ def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path)
             custody_profile=StorageCustodyProfile.FULL,
         )
         # The excluded store is reported in the manifest, never carried.
-        assert "aeat.workflow" in manifest.excluded_namespaces
-        assert all(obj.namespace != "aeat.workflow" for obj in carried)
+        assert "cadrumo.workflow" in manifest.excluded_namespaces
+        assert all(obj.namespace != "cadrumo.workflow" for obj in carried)
 
 
 def test_every_carried_namespace_has_a_natural_key_resolver() -> None:

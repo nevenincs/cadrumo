@@ -53,7 +53,7 @@ _log = get_logger(__name__)
 
 _AMENDMENT_ENVELOPE_VERSION = 1
 # namespace string preserved across rename to avoid orphaning persisted envelopes
-_AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
+_AMENDMENT_NAMESPACE = "cadrumo.domain.filing.amendments"
 
 
 class ModeloAmendmentRepository:

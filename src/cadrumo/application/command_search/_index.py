@@ -9,7 +9,7 @@ cooperating parts, the same shape the corpus grounding search uses (ADR
   above curated OUTCOME ALIASES above the human DESCRIPTION above the per-verb
   HELP, so a homonym token in a low-value column no longer outranks the correct
   command whose key carries it (the ``import`` mis-rank the review found);
-* a model2vec semantic side (behind the capability-gated ``aeat-cli[search]``
+* a model2vec semantic side (behind the capability-gated ``cadrumo[search]``
   extra, reused through the ``corpus_search`` public facade) that embeds the
   command docs and the query into one vector space and cosine-ranks them, so a
   concept query reaches the right verb across a Spanish/English or

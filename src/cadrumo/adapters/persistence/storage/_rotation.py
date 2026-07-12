@@ -407,11 +407,11 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
     return (
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_financial_txs_dir),
-            hkdf_context=b"aeat.domain.transactions.catalogue.v1",
+            hkdf_context=b"cadrumo.domain.transactions.catalogue.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_invoices_dir),
-            hkdf_context=b"aeat.domain.invoices.catalogue.v1",
+            hkdf_context=b"cadrumo.domain.invoices.catalogue.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_attachments_dir) / "manifests",
@@ -424,12 +424,12 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
             # filename rather than relying on the directory walk's
             # default suffix match (which would miss this file).
             store_dir=Path(settings.cadrumo_usage_ratios_path).parent,
-            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
+            hkdf_context=b"cadrumo.domain.usage_ratios.profile.v1",
             target_filename=Path(settings.cadrumo_usage_ratios_path).name,
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_drafts_dir),
-            hkdf_context=b"aeat.application.filing.draft.v1",
+            hkdf_context=b"cadrumo.application.filing.draft.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_submissions_dir),
@@ -444,23 +444,23 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
         # rotation for the corresponding directory's envelopes.
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_submissions_dir) / "amendment-results",
-            hkdf_context=b"aeat.application.filing.amendment.v1",
+            hkdf_context=b"cadrumo.application.filing.amendment.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_submissions_dir) / "amendments",
-            hkdf_context=b"aeat.application.filing.amendment.v1",
+            hkdf_context=b"cadrumo.application.filing.amendment.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_justificantes_dir),
-            hkdf_context=b"aeat.domain.justificante.metadata.v1",
+            hkdf_context=b"cadrumo.domain.justificante.metadata.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_filing_history_dir),
-            hkdf_context=b"aeat.application.filing.history.v1",
+            hkdf_context=b"cadrumo.application.filing.history.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_workflow_runs_dir),
-            hkdf_context=b"aeat.application.workflow.run.v1",
+            hkdf_context=b"cadrumo.application.workflow.run.v1",
         ),
     )
 

@@ -25,13 +25,13 @@ Membership criteria:
 
 The registry is referenced from the CLI root callback at active-gate
 time. The matching is full-path-prefix: a request to
-``aeat config profile create alice`` matches the exempt entry
+``cadrumo config profile create alice`` matches the exempt entry
 ``config profile create``.
 """
 
 from __future__ import annotations
 
-# Bootstrap-exempt verb paths (Tuple[str, ...] — the leading 'aeat' is implicit).
+# Bootstrap-exempt verb paths (Tuple[str, ...] — the leading 'cadrumo' is implicit).
 # Each entry is a space-separated path; matching is prefix-based.
 BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # First-run on-ramp: the operator has no profile yet and must
@@ -83,9 +83,9 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
 
     Matching is prefix-based against
     :data:`BOOTSTRAP_EXEMPT_VERB_PATHS`.
-    The leading ``aeat`` is elided; ``verb_path`` is the dispatched subcommand
+    The leading ``cadrumo`` is elided; ``verb_path`` is the dispatched subcommand
     chain as Typer reports it (e.g. ``"config profile create"`` for the full
-    operator invocation ``aeat config profile create alice``).
+    operator invocation ``cadrumo config profile create alice``).
 
     Args:
         verb_path: Space-separated verb path or ``None`` for the

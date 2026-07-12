@@ -1,4 +1,4 @@
-"""Registered payload for the guided ``aeat app modelo work amend-wizard`` command.
+"""Registered payload for the guided ``cadrumo app modelo work amend-wizard`` command.
 
 The amendment wizard walks an operator through correcting an already-filed
 return in plain language, then calls the same
@@ -39,7 +39,7 @@ class AmendWizardCorrectedCasillaPayload(OutputSchema):
 
 @register_schema("modelo.work.amend_wizard")
 class WorkAmendWizardResult(OutputSchema):
-    """Successful ``aeat app modelo work amend-wizard`` result payload.
+    """Successful ``cadrumo app modelo work amend-wizard`` result payload.
 
     Mirrors the shape of ``WorkAmendResult`` (the wizard composes the exact
     same :func:`~application.modelo.amend_modelo_revision` path) plus the

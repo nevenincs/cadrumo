@@ -20,10 +20,11 @@ _PLUS_ONE = timezone(timedelta(hours=1))
 
 def _header_payload(**overrides: object) -> dict[str, Any]:
     defaults: dict[str, Any] = {
+        "product": "cadrumo",
         "bucket_id": "bucket-001",
         "manifest_digest": _VALID_DIGEST,
         "recovery_wrap_present": True,
-        "archive_schema_version": 1,
+        "archive_schema_version": 3,
         "created_at": _CREATED_AT,
     }
     defaults.update(overrides)
@@ -47,6 +48,11 @@ def test_rejects_unknown_keys() -> None:
     assert "unexpected" in str(excinfo.value)
 
 
+def test_rejects_former_product_marker() -> None:
+    with pytest.raises(ValidationError, match="product must be 'cadrumo'"):
+        _header(product="aeat")
+
+
 def test_header_is_frozen() -> None:
     header = _header()
     with pytest.raises((ValidationError, TypeError), match=r"frozen|Instance is frozen|attribute"):
@@ -54,7 +60,7 @@ def test_header_is_frozen() -> None:
 
 
 def test_rejects_missing_required_header_fields() -> None:
-    for missing_field in ("bucket_id", "manifest_digest"):
+    for missing_field in ("product", "bucket_id", "manifest_digest"):
         payload = _header_payload()
         del payload[missing_field]
 

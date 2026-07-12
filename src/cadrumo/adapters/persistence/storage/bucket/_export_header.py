@@ -1,7 +1,7 @@
 """Strict pydantic v2 record for the sealed-export archive header.
 
 The export archive header is the plaintext frontmatter of every sealed
-export bundle produced by ``aeat config profile export``. The wrapped DEK
+export bundle produced by ``aeat config profile archive export``. The wrapped DEK
 and the recovery wrap travel as separate archive members; the header
 itself carries only the bucket identifier, the manifest digest, the
 recovery-presence flag, the archive schema version, and the export
@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.errors import CoreValidationError
 from .....core.identity import BucketId
+from .....core.product_identity import PRODUCT_IDENTITY
 from .....core.time import validate_utc_aware
 
 _SHA256_HEX_LEN = 64
@@ -28,11 +29,20 @@ class ExportArchiveHeader(BaseModel):
 
     model_config = _STRICT_FROZEN
 
+    product: str = Field(min_length=1)
     bucket_id: BucketId
     manifest_digest: str = Field(min_length=1)
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: datetime
+
+    @field_validator("product")
+    @classmethod
+    def _check_product(cls, value: str) -> str:
+        """Require the canonical product marker with no former-format alias."""
+        if value != PRODUCT_IDENTITY.python_package:
+            raise ValueError(f"product must be {PRODUCT_IDENTITY.python_package!r}")
+        return value
 
     @field_validator("manifest_digest")
     @classmethod

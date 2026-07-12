@@ -318,7 +318,7 @@ def _register_evidence_extract_command() -> None:
         Every field the heuristics could not ground in the extracted text is
         ``null`` rather than guessed. Extracting never mints or persists an
         invoice; confirm the fields, then create the record explicitly with
-        ``aeat app ledger invoice add`` or ``aeat app ledger invoice
+        ``cadrumo app ledger invoice add`` or ``cadrumo app ledger invoice
         catalogue create``.
         """
         if (evidence_id is None) == (attachment_id is None):
@@ -371,7 +371,7 @@ def _register_evidence_extract_command() -> None:
                     default=("This is a best-effort draft; confirm every field before minting an invoice."),
                 ),
                 suggestion=(
-                    "aeat app ledger invoice catalogue create --kind received "
+                    "cadrumo app ledger invoice catalogue create --kind received "
                     f"--counterparty-nif {draft.supplier_tax_id or '<nif>'} "
                     f"--invoice-number {draft.invoice_number or '<number>'} "
                     f"--invoice-date {draft.invoice_date or '<yyyy-mm-dd>'} "
@@ -621,9 +621,9 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.linked_transaction_hint",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_link_hint_message",
-                    default="Link this invoice to a ledger transaction with `aeat app ledger link`.",
+                    default="Link this invoice to a ledger transaction with `cadrumo app ledger link`.",
                 ),
-                suggestion=f"aeat app ledger link <transaction-id> --invoice-id {invoice.invoice_id}",
+                suggestion=f"cadrumo app ledger link <transaction-id> --invoice-id {invoice.invoice_id}",
                 context={"invoice_id": invoice.invoice_id},
             ),
         )

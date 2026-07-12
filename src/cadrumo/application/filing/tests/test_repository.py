@@ -94,7 +94,7 @@ def repo() -> ModeloDraftRepository:
 def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "aeat.db")
+    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "cadrumo.db")
 
 
 class TestEmptyState:

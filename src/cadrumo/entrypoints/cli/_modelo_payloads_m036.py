@@ -29,7 +29,7 @@ from ._schemas import OutputSchema, register_schema
 @register_schema("modelo.m036.modificacion")
 @register_schema("modelo.m036.baja")
 class M036DeclarationRecordResult(OutputSchema):
-    """Envelope payload for the ``aeat app modelo m036 {alta,modificacion,baja}`` verbs.
+    """Envelope payload for the ``cadrumo app modelo m036 {alta,modificacion,baja}`` verbs.
 
     All three verbs share a single typed contract: the result is the
     persisted declaration record's content-address + scope + canonical
@@ -70,7 +70,7 @@ class M036DeclarationRowPayload(OutputSchema):
 
 @register_schema("modelo.m036.list")
 class M036DeclarationListResult(OutputSchema):
-    """Listing returned by ``aeat app modelo m036 list``.
+    """Listing returned by ``cadrumo app modelo m036 list``.
 
     Enumerates the active :obj:`BucketId` bucket's recorded M036 declarations.
     An empty ``declarations`` list is the clean "no declarations recorded yet"
@@ -85,7 +85,7 @@ class M036DeclarationListResult(OutputSchema):
 
 @register_schema("modelo.m036.view")
 class M036DeclarationShowResult(OutputSchema):
-    """Detail returned by ``aeat app modelo m036 view``."""
+    """Detail returned by ``cadrumo app modelo m036 view``."""
 
     operation: str = "modelo.m036.view"
     declaration_id: str
@@ -122,7 +122,7 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
 
 @register_schema("modelo.reconcile.history")
 class ModeloReconciliationHistoryResult(OutputSchema):
-    """Listing returned by ``aeat app modelo reconcile history``.
+    """Listing returned by ``cadrumo app modelo reconcile history``.
 
     Enumerates the active bucket's recorded reconciliations (optionally narrowed
     to one :obj:`WorkUnitId`). An empty ``reconciliations`` list is the clean "no
@@ -138,7 +138,7 @@ class ModeloReconciliationHistoryResult(OutputSchema):
 
 @register_schema("modelo.iva_wallet.correct")
 class IvaWalletCorrectResult(OutputSchema):
-    """Confirmation returned by ``aeat app modelo iva-wallet correct``.
+    """Confirmation returned by ``cadrumo app modelo iva-wallet correct``.
 
     Surfaces the corrected :class:`Period`, the taxpayer, the new opening
     carry-forward amount, the prior amount it replaced, the seeded ``status``,

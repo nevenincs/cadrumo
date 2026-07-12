@@ -27,6 +27,7 @@ from __future__ import annotations
 import logging
 import logging.config
 import re
+import sys
 from collections.abc import Mapping
 from contextvars import ContextVar
 from pathlib import Path
@@ -67,6 +68,22 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "tax_id",
     "token",
 )
+
+
+def _is_aeat_metadata_invocation() -> bool:
+    """Return whether the current ``aeat`` process renders metadata only.
+
+    Help and version rendering must not initialise settings-derived diagnostic
+    logging: an operator may need those state-free surfaces precisely because
+    Cadrumo has refused a former product-state directory. Normal commands keep
+    the existing logging configuration path.
+    """
+    program = Path(sys.argv[0])
+    executable_names = {program.name.lower(), program.parent.name.lower()}
+    if not executable_names.intersection({"aeat", "aeat.exe"}):
+        return False
+    arguments = sys.argv[1:]
+    return any(argument in {"--help", "-h", "--version", "-V"} for argument in arguments)
 _SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
 _SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
@@ -362,7 +379,7 @@ def configure_logging() -> None:
     :func:`get_logger` without duplicating handlers.
     """
     global _CONFIGURED
-    if _CONFIGURED:
+    if _CONFIGURED or _is_aeat_metadata_invocation():
         return
 
     from .config import load_settings

@@ -135,7 +135,7 @@ def justificante_pull(
     else:
         lines.append(
             "modelo_filing_record_import\t"
-            f"aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_live_capture "
+            f"cadrumo app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_live_capture "
             f"--evidence-id {persisted.csv} --set CASILLA=VALUE",
         )
     _emit_envelope(ctx, command="app.live.justificante.pull", result=result, lines=lines)

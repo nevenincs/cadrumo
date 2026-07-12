@@ -41,7 +41,7 @@ from ._codes import ModeloCode
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 
-PARTICIPATION_INDEX_NAMESPACE = "aeat.domain.modelos.participation_index"
+PARTICIPATION_INDEX_NAMESPACE = "cadrumo.domain.modelos.participation_index"
 PARTICIPATION_INDEX_SCHEMA_VERSION = 1
 
 _JustificanteReference = Annotated[

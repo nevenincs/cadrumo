@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted ``LLMCache`` boundary.
 
 ``LLMCache`` persists :class:`CachedEntry` records under the
-``aeat.outbound.llm.cache`` namespace at
+``cadrumo.outbound.llm.cache`` namespace at
 ``SensitivityClass.DIAGNOSTIC``.
 
 Anti-tautology: the fixture populates every defaultable field on

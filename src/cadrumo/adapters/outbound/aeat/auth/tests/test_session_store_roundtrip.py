@@ -23,6 +23,8 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+from ......core.time import now
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
@@ -148,3 +150,58 @@ def test_session_store_rejects_non_json_metadata_before_write(tmp_path: Path) ->
             )
 
         assert _session_store.exists(logical_path) is False
+
+
+def test_cadrumo_session_custody_refuses_former_product_state_without_mutation(tmp_path: Path) -> None:
+    """A former logical session blocks new custody without being read or changed."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        current_path = aeat_auth_session_storage_state_path(_BUCKET_ID, "storage")
+        former_path = Path(".aeat/auth/sessions") / current_path.name
+        repo = secure_object_repository_for_active_bucket()
+        opaque_payload = b"former-encrypted-session-envelope"
+        repo.save(
+            namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
+            object_key=former_path.as_posix(),
+            classification=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
+            schema_version=AEAT_BROWSER_SESSION_NAMESPACE.schema_version,
+            written_at=now(),
+            payload=opaque_payload,
+        )
+
+        with pytest.raises(
+            _session_store.FormerProductAuthSessionStateError,
+            match="will not read, move, re-key, delete, or adopt",
+        ):
+            _session_store.save(
+                current_path,
+                storage_state=_playwright_shaped_storage_state(),
+                metadata={"provider_kind": "certificate"},
+            )
+
+        former_record = repo.load(
+            AEAT_BROWSER_SESSION_NAMESPACE.namespace,
+            former_path.as_posix(),
+            expected_class=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
+            max_supported_version=AEAT_BROWSER_SESSION_NAMESPACE.schema_version,
+        )
+        assert former_record is not None
+        assert former_record.payload == opaque_payload
+        assert repo.exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, current_path.as_posix()) is False
+
+
+def test_session_store_rejects_direct_former_product_paths_before_repository_access(tmp_path: Path) -> None:
+    """Former logical keys cannot be explicitly read, written, or deleted."""
+    former_path = Path(".aeat/auth/sessions/operator-storage.json")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        for operation in (
+            lambda: _session_store.exists(former_path),
+            lambda: _session_store.save(
+                former_path,
+                storage_state=_playwright_shaped_storage_state(),
+                metadata={"provider_kind": "certificate"},
+            ),
+            lambda: _session_store.load(former_path),
+            lambda: _session_store.delete(former_path),
+        ):
+            with pytest.raises(_session_store.FormerProductAuthSessionStateError):
+                operation()

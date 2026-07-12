@@ -53,7 +53,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
             SQL object store composed by the bound repository base.
     """
 
-    namespace: ClassVar[str] = "aeat.domain.submission.records"
+    namespace: ClassVar[str] = "cadrumo.domain.submission.records"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
 

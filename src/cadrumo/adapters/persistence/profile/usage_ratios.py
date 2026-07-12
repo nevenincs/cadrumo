@@ -51,7 +51,7 @@ __all__ = [
 
 _LOGGER = get_logger(__name__)
 _USAGE_RATIO_VERSION = 1
-_USAGE_RATIO_NAMESPACE = "aeat.domain.usage_ratios"
+_USAGE_RATIO_NAMESPACE = "cadrumo.domain.usage_ratios"
 
 
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:

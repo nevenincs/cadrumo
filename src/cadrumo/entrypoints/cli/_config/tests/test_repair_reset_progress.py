@@ -73,7 +73,7 @@ def _seed_workflow_state() -> None:
 
 def _row_exists() -> bool:
     with activate_master_key_provider(get_master_key_provider()):
-        return secure_object_repository_for_active_bucket().exists("aeat.workflow", "state")
+        return secure_object_repository_for_active_bucket().exists("cadrumo.workflow", "state")
 
 
 def _assert_operator_text_avoids_storage_terms(output: str) -> None:

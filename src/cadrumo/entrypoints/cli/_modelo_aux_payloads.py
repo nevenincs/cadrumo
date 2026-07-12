@@ -151,7 +151,7 @@ class WorkflowRunPayload(OutputSchema):
 
 @register_schema("modelo.work.runs")
 class WorkRunsResult(OutputSchema):
-    """Workflow run listing returned by ``aeat app modelo work runs``.
+    """Workflow run listing returned by ``cadrumo app modelo work runs``.
 
     Rows mirror persisted :class:`WorkflowResult` records discovered through
     :func:`list_runs`.

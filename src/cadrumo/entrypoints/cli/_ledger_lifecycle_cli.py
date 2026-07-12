@@ -70,7 +70,7 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
             "cli.ledger.pull_folder.help",
             default=(
                 "Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted "
-                "evidence (unlinked to any transaction; link with 'aeat app ledger attach' or 'link')."
+                "evidence (unlinked to any transaction; link with 'cadrumo app ledger attach' or 'link')."
             ),
         ),
     )(ledger_pull_folder)
@@ -156,7 +156,7 @@ def ledger_attach(
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         attachment_ids=tuple(attachment_ids),
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger attach",
+        source_command="cadrumo app ledger attach",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerAttachResult
@@ -258,7 +258,7 @@ def ledger_doclink(
                     f"Cannot fetch the {attachment_source.value} document for {reference!r}"
                     f"{scope_hint}: evidence must carry the document's encrypted bytes, and a "
                     "link is never stored on its own. Download the document and attach it with "
-                    "'aeat app ledger attach --attachment-id ...', or grant the required Google "
+                    "'cadrumo app ledger attach --attachment-id ...', or grant the required Google "
                     "scope and retry."
                 ),
             ),
@@ -283,7 +283,7 @@ def ledger_doclink(
         transaction_id=resolved_id,
         attachment_ids=(attachment.attachment_id,),
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger doclink",
+        source_command="cadrumo app ledger doclink",
         transaction_repository=transaction_repository,
         attachment_store=store,
     )
@@ -354,7 +354,7 @@ def ledger_pull_folder(
     here. Fetched attachments are content-addressed and deduplicate by
     SHA-256, so re-running the sweep is idempotent. Attachments are stored
     unlinked to any transaction; bind them afterwards with
-    ``aeat app ledger attach --attachment-id`` or ``aeat app ledger link``.
+    ``cadrumo app ledger attach --attachment-id`` or ``cadrumo app ledger link``.
 
     A file the app cannot reach under the ``drive.file`` scope is refused
     individually — evidence bytes are never stored as a link-only pointer,
@@ -493,7 +493,7 @@ def ledger_pull_folder(
                     default=(
                         f"{refused_count} file(s) in this folder could not be fetched under the "
                         "drive.file scope; download them manually and attach with "
-                        "'aeat app ledger attach --attachment-id ...'."
+                        "'cadrumo app ledger attach --attachment-id ...'."
                     ),
                 ),
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},
@@ -526,7 +526,7 @@ def ledger_archive(
         transaction_id=resolved_id,
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
-        source_command="aeat app ledger archive",
+        source_command="cadrumo app ledger archive",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerArchiveResult
@@ -559,7 +559,7 @@ def ledger_stash(
         transaction_id=resolved_id,
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
-        source_command="aeat app ledger stash",
+        source_command="cadrumo app ledger stash",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerStashResult
@@ -607,7 +607,7 @@ def ledger_exclude(
         transaction_id=resolved_id,
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
-        source_command="aeat app ledger exclude",
+        source_command="cadrumo app ledger exclude",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerExcludeResult
@@ -640,7 +640,7 @@ def ledger_restore(
         transaction_id=resolved_id,
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
-        source_command="aeat app ledger restore",
+        source_command="cadrumo app ledger restore",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerRestoreResult
@@ -675,7 +675,7 @@ def ledger_remove(
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         dry_run=dry_run,
-        source_command="aeat app ledger remove",
+        source_command="cadrumo app ledger remove",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerRemoveResult
@@ -710,7 +710,7 @@ def ledger_reset(
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         dry_run=dry_run,
-        source_command="aeat app ledger reset",
+        source_command="cadrumo app ledger reset",
         transaction_repository=transaction_repository,
     )
     from ._ledger_payloads import LedgerResetResult
@@ -820,7 +820,7 @@ def ledger_split(
             transaction_id=resolved_id,
             children=children,
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger split",
+            source_command="cadrumo app ledger split",
             reason=reason,
             transaction_repository=transaction_repository,
         )
@@ -864,7 +864,7 @@ def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerS
     so a persisted split must surface them (audit M11). The short ``display_id``
     is the shortest unique prefix within the child cohort — the same
     display-width convention the ledger list surface uses — so the operator can
-    read or copy either form into ``aeat app ledger merge --child-id ...``.
+    read or copy either form into ``cadrumo app ledger merge --child-id ...``.
     """
     from ._ledger_payloads import LedgerSplitChildIdPayload
 
@@ -896,7 +896,7 @@ def _split_classification_dropped_notices(
                 "cli.ledger.split.classification_dropped",
                 classification=parent_classification.value,
             ),
-            suggestion="aeat app ledger classify",
+            suggestion="cadrumo app ledger classify",
             context={"parent_classification": parent_classification.value},
         ),
     ]
@@ -946,7 +946,7 @@ def _ledger_split_llm(
                 default=(
                     f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
+                    "or run 'cadrumo app ledger providers' to list usable providers."
                 ),
             ),
         )
@@ -1073,7 +1073,7 @@ def ledger_merge(
         bucket_id=transaction_repository.bucket_id,
         child_transaction_ids=resolved_ids,
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger merge",
+        source_command="cadrumo app ledger merge",
         reason=reason,
         transaction_repository=transaction_repository,
     )

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 from .errors import CoreValidationError
+from ._config_state_root import PRODUCT_DATABASE_FILENAME
 
 if TYPE_CHECKING:
     from .config import Settings, StorageRouteClassification
@@ -47,7 +48,7 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
             database_url=database_url,
             database_path=database_path,
         )
-    root_fallback = _normalized_path(settings.cadrumo_local_storage_root / "aeat.db")
+    root_fallback = _normalized_path(settings.cadrumo_local_storage_root / PRODUCT_DATABASE_FILENAME)
     if database_path is not None and _normalized_path(database_path) == root_fallback:
         return StorageRouteClassification(
             kind=StorageRouteKind.ROOT_FALLBACK_DATABASE,
@@ -123,7 +124,7 @@ def _bucket_id_for_route(*, database_path: Path | None, storage_root: Path) -> s
     except ValueError:
         return ""
     parts = relative.parts
-    if len(parts) == 4 and parts[0] == "buckets" and parts[2:] == ("db", "aeat.db"):
+    if len(parts) == 4 and parts[0] == "buckets" and parts[2:] == ("db", PRODUCT_DATABASE_FILENAME):
         return parts[1]
     return ""
 

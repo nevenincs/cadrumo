@@ -641,7 +641,7 @@ DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
 
 #: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
 #: Used by the auth diagnostics service and the persistence namespace registry.
-CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
+CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "cadrumo.outbound.aeat.auth.clave_movil.diagnostics"
 
 #: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
 #: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),

@@ -32,7 +32,13 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
-from .....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
+from .....core.config import (
+    FORMER_PRODUCT_DATABASE_FILENAME,
+    Settings,
+    StorageRouteKind,
+    classify_storage_route,
+    load_settings,
+)
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
@@ -98,6 +104,21 @@ def _ensure_sqlite_parent(url: str) -> None:
     database = parsed.database
     if database and database != ":memory:":
         Path(database).parent.mkdir(parents=True, exist_ok=True)
+
+
+def _refuse_former_product_database_target(url: str) -> None:
+    """Refuse an explicit SQLite target using the retired product filename."""
+    parsed = make_url(url)
+    database = parsed.database
+    if not parsed.drivername.startswith("sqlite") or not database or database == ":memory:":
+        return
+    if Path(database).name != FORMER_PRODUCT_DATABASE_FILENAME:
+        return
+    raise StorageError(
+        "refusing retired product database filename; configure a Cadrumo database target.",
+        context={"route_marker": _route_marker(url)},
+        translated_message="errors.storage.engine.create_failed",
+    )
 
 
 def _attach_sqlite_pragmas(engine: Engine) -> None:
@@ -167,8 +188,11 @@ def create_engine_from_settings(settings: Settings) -> Engine:
         )
     try:
         normalized_url = _normalize_sqlite_url(url)
+        _refuse_former_product_database_target(normalized_url)
         _ensure_sqlite_parent(normalized_url)
         engine = create_engine(normalized_url, future=True)
+    except StorageError:
+        raise
     except Exception as exc:
         raise StorageError(
             "failed to create storage engine.",

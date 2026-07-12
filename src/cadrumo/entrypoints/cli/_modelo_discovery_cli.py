@@ -630,7 +630,7 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                         "(e.g. home-office usage ratio) could not be checked for gaps."
                     ),
                 ),
-                suggestion="aeat config profile create",
+                suggestion="cadrumo config profile create",
                 context={"modelo": str(checklist.modelo)},
             ),
         )
@@ -647,7 +647,7 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                     ),
                     missing=missing,
                 ),
-                suggestion="aeat app ledger ratios set",
+                suggestion="cadrumo app ledger ratios set",
                 context={"modelo": str(checklist.modelo), "missing_bindings": missing},
             ),
         )

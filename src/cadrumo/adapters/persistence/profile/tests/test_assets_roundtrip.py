@@ -1,8 +1,8 @@
 """Strict roundtrip across the assets + amortizacion ledger repos.
 
 Persists :class:`AssetsLedgerDocument` under
-``aeat.persistence.profile.assets`` and :class:`AmortizacionLedger`
-under ``aeat.persistence.profile.assets.amortization``, both at
+``cadrumo.persistence.profile.assets`` and :class:`AmortizacionLedger`
+under ``cadrumo.persistence.profile.assets.amortization``, both at
 ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates every defaultable field on

@@ -793,14 +793,18 @@ def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
 
 def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) -> None:
     """Refuse unsecured activation when the active bucket carries a real profile."""
-    from .....core.config import load_settings
+    from .....core.config import PRODUCT_DATABASE_FILENAME, load_settings
     from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
     from ..crypto import decrypt_encrypted_bytes_column
 
     if session.bucket_id == "unsecured":
         return
     db_path = (
-        load_settings().cadrumo_local_storage_root / BUCKETS_DIRNAME / session.bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
+        load_settings().cadrumo_local_storage_root
+        / BUCKETS_DIRNAME
+        / session.bucket_id
+        / BUCKET_DB_DIRNAME
+        / PRODUCT_DATABASE_FILENAME
     )
     if not db_path.is_file():
         return

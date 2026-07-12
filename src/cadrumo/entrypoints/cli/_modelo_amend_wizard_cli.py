@@ -1,4 +1,4 @@
-"""Typer registration for the guided ``aeat app modelo work amend-wizard`` command.
+"""Typer registration for the guided ``cadrumo app modelo work amend-wizard`` command.
 
 An operator discovers a mistake in an already-filed return and knows "casilla 01 was
 wrong, it should have been 1100" in plain language, not the raw
@@ -16,7 +16,7 @@ record's :class:`~domain.modelos.CalculationRevision`, so the operator
 edits the exact attested figures rather than a re-computed draft.
 
 Once the amendment is filed, the wizard points the operator at the existing
-``aeat app modelo export`` verb for the fichero-BOE artefact; it never writes
+``cadrumo app modelo export`` verb for the fichero-BOE artefact; it never writes
 an export file itself, mirroring how ``work wizard`` hands off to
 ``work calculate`` rather than re-deriving casilla values.
 
@@ -218,7 +218,7 @@ def run_modelo_work_amend_wizard(
             AmendmentEvidenceMissingError(
                 f"filing record {baseline.filing_record_id!r} has no external_evidence; "
                 f"the amendment wizard requires an imported AEAT-attested baseline "
-                f"(`aeat app modelo filing-record import`). Locally-filed returns are "
+                f"(`cadrumo app modelo filing-record import`). Locally-filed returns are "
                 f"corrected through the standard re-file path (calculate -> verify -> file).",
             ),
         ) from None
@@ -472,7 +472,7 @@ def _emit_amend_wizard_result(
         work_unit_id=unit.work_unit_id,
         default=(
             "Amendment filed as a draft internal record. Export the AEAT-importable "
-            "fichero-BOE with `aeat app modelo export {work_unit_id} --output PATH`."
+            "fichero-BOE with `cadrumo app modelo export {work_unit_id} --output PATH`."
         ),
     )
     corrected_payload = tuple(

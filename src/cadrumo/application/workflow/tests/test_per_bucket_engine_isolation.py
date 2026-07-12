@@ -2,7 +2,7 @@
 
 Per the profile-bucket lifecycle contract, the on-disk layout
 puts every bucket's SQLite database under
-``<aeat-root>/buckets/<bucket-id>/db/aeat.db``. The Settings model
+``<aeat-root>/buckets/<bucket-id>/db/cadrumo.db``. The Settings model
 resolves ``cadrumo_database_url`` through the active-profile pointer
 so two distinct buckets address two distinct database files via
 the engine cache.
@@ -48,7 +48,7 @@ def test_two_buckets_persist_into_two_distinct_workflow_histories(tmp_path: Path
     """Writing a WorkflowState in bucket A and bucket B yields two distinct stores.
 
     Each bucket has its own SQLite database under
-    ``<root>/buckets/<bucket-id>/db/aeat.db``. Switching the active
+    ``<root>/buckets/<bucket-id>/db/cadrumo.db``. Switching the active
     bucket switches the engine and therefore the on-disk store the
     repository writes to.
     """
@@ -59,14 +59,14 @@ def test_two_buckets_persist_into_two_distinct_workflow_histories(tmp_path: Path
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
         state_a = _state_for_label("profile-a")
         repo_a.save(state_a)
-        a_db = profile_a.paths.db_dir / "aeat.db"
+        a_db = profile_a.paths.db_dir / "cadrumo.db"
         assert a_db.exists(), "bucket A's per-bucket SQLite database must exist after a save"
 
     with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id=_BUCKET_B_ID) as profile_b:
         repo_b = WorkflowStateRepository(objects=profile_b.repository)
         state_b = _state_for_label("profile-b")
         repo_b.save(state_b)
-        b_db = profile_b.paths.db_dir / "aeat.db"
+        b_db = profile_b.paths.db_dir / "cadrumo.db"
         assert b_db.exists(), "bucket B's per-bucket SQLite database must exist after a save"
 
     assert a_db != b_db
@@ -91,11 +91,11 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
     with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id=_BUCKET_B_ID) as profile_b:
         repo_b = WorkflowStateRepository(objects=profile_b.repository)
         repo_b.save(expected_state)
-        b_db = profile_b.paths.db_dir / "aeat.db"
+        b_db = profile_b.paths.db_dir / "cadrumo.db"
         assert b_db.exists()
 
     # B's engine is disposed on context exit (dispose_engine -> WAL checkpoint
-    # folds the ``-wal`` sidecar into ``aeat.db``), so the main file is now
+    # folds the ``-wal`` sidecar into ``cadrumo.db``), so the main file is now
     # stable. Read the baseline here, AFTER B's own checkpoint, so the
     # comparison isolates A's corruption from B's routine WAL fold.
     b_db_bytes_before = b_db.read_bytes()
@@ -103,11 +103,11 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
     with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id=_BUCKET_A_ID) as profile_a:
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
         repo_a.save(_state_for_label("profile-a"))
-        a_db = profile_a.paths.db_dir / "aeat.db"
+        a_db = profile_a.paths.db_dir / "cadrumo.db"
         assert a_db.exists()
 
     # Corrupt A's database AFTER its engine is disposed. Disposing the engine on
-    # context exit checkpoints A's ``-wal`` sidecar back into ``aeat.db``; writing
+    # context exit checkpoints A's ``-wal`` sidecar back into ``cadrumo.db``; writing
     # the garbage inside the context would be folded over by that checkpoint, so
     # the corruption must land after it to persist and genuinely test isolation.
     a_db.write_bytes(b"corrupted-not-a-real-sqlite-file")

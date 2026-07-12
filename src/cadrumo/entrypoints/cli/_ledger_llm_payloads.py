@@ -25,7 +25,7 @@ from ._schemas import OutputSchema
 
 
 class LedgerClassifyLlmSuggestResult(OutputSchema):
-    """JSON envelope for the ``aeat app ledger classify --llm`` (no ``--apply``) path (D1).
+    """JSON envelope for the ``cadrumo app ledger classify --llm`` (no ``--apply``) path (D1).
 
     Mirrors the review fields from
     :class:`LLMClassificationSuggestion`: model
@@ -52,7 +52,7 @@ class LedgerClassifyLlmSuggestResult(OutputSchema):
 
 
 class LedgerClassifyLlmSaturateResult(OutputSchema):
-    """JSON envelope for the ``aeat app ledger classify --llm --saturate`` path (D1).
+    """JSON envelope for the ``cadrumo app ledger classify --llm --saturate`` path (D1).
 
     Mirrors :class:`LLMSaturatedSuggestion`, extending
     the stage-1 review fields with the model-selected IVA category plus the
@@ -84,7 +84,7 @@ class LedgerClassifyLlmSaturateResult(OutputSchema):
 
 
 class LedgerClassifyLlmRejectResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger classify ... --reject``.
+    """JSON envelope for ``cadrumo app ledger classify ... --reject``.
 
     Projects :class:`LLMSuggestionRejectionResult`
     after :func:`reject_llm_suggestion` records the

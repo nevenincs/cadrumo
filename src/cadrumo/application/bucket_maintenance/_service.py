@@ -34,6 +34,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
 from ...domain.buckets import (
     BucketArchiveRefusedError,
@@ -100,13 +101,13 @@ _ARCHIVE_PAYLOAD_VERSION = 1
 _RESTORE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
-_ARCHIVE_SCHEMA_VERSION = 2
+_ARCHIVE_SCHEMA_VERSION = 3
 
 #: Oldest sealed-archive schema version the import path keeps readable.
 #: Starts at the current version (no released archives exist below it);
 #: moves forward only through a superseding accepted ADR
 #: (``2026-07-08-released-data-durability-adr``).
-_ARCHIVE_DURABILITY_FLOOR = 2
+_ARCHIVE_DURABILITY_FLOOR = 3
 _RECOVERY_WRAP_SALT_BYTES = 16
 
 
@@ -696,6 +697,7 @@ class BucketMaintenanceService:
                 associated_data=_archive_associated_data(command.bucket_id, manifest_digest),
             )
             header = ExportArchiveHeader(
+                product=PRODUCT_IDENTITY.python_package,
                 bucket_id=command.bucket_id,
                 manifest_digest=manifest_digest,
                 recovery_wrap_present=recovery_wrap_passphrase_present(command),
@@ -939,7 +941,7 @@ def recovery_wrap_passphrase_present(command: ExportBucketCommand) -> bool:
 
 
 def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
-    return f"aeat.bucket-maintenance.archive.v2:{bucket_id}:{manifest_digest}".encode()
+    return f"{PRODUCT_IDENTITY.python_package}.bucket-maintenance.archive.v3:{bucket_id}:{manifest_digest}".encode()
 
 
 def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:

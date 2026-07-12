@@ -1,4 +1,4 @@
-"""Per-bucket directory model under ``<aeat-root>/buckets/<bucket-id>/``.
+"""Per-bucket directory model under ``<cadrumo-root>/buckets/<bucket-id>/``.
 
 Pydantic v2 strict records, error types, and filesystem primitives that compose
 the multi-bucket on-disk layout. The facade exposes
@@ -66,9 +66,10 @@ from ._output_language_hint import (
 )
 from ._sealed_archive_errors import SealedArchiveLayoutError
 from ._sealed_archive_reader import SealedArchiveContents, read_sealed_archive
-from ._sealed_archive_writer import write_sealed_archive
+from ._sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX, write_sealed_archive
 
 __all__ = [
+    "CADRUMO_BUCKET_BUNDLE_SUFFIX",
     "MISSING_BUCKET_MANIFEST_MESSAGE",
     "BucketAlreadyPresentError",
     "BucketBusyError",

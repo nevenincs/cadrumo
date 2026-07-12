@@ -56,13 +56,13 @@ def active_profile(tmp_path: Path) -> Iterator[None]:
 def test_storage_state_paths_certificate_uses_storage_stem() -> None:
     result = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
-    assert result.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
+    assert result.storage_state == Path(".cadrumo/auth/sessions/operator-storage.json")
 
 
 def test_storage_state_paths_clave_movil_uses_clave_movil_storage_stem() -> None:
     result = storage_state_paths(AuthProviderKind.CLAVE_MOVIL)
 
-    assert result.storage_state == Path(".aeat/auth/sessions/operator-clave-movil-storage.json")
+    assert result.storage_state == Path(".cadrumo/auth/sessions/operator-clave-movil-storage.json")
 
 
 def test_storage_state_paths_none_defaults_to_certificate() -> None:
@@ -89,8 +89,8 @@ def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path)
     with override_settings(cadrumo_active_profile="other-profile"):
         result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
-    assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
-    assert result_b.storage_state == Path(".aeat/auth/sessions/other-profile-storage.json")
+    assert result_a.storage_state == Path(".cadrumo/auth/sessions/operator-storage.json")
+    assert result_b.storage_state == Path(".cadrumo/auth/sessions/other-profile-storage.json")
     assert result_a.storage_state != result_b.storage_state
 
 
@@ -106,7 +106,7 @@ def test_storage_state_paths_is_independent_of_plaintext_token_dir(tmp_path: Pat
         result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert result_a.storage_state == result_b.storage_state
-    assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
+    assert result_a.storage_state == Path(".cadrumo/auth/sessions/operator-storage.json")
 
 
 def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None:

@@ -1,13 +1,13 @@
 """Recipient-fingerprint registry CLI for review-package collaboration.
 
-Mounts ``aeat config collab recipient add|list|remove`` on the ``config`` root.
+Mounts ``cadrumo config collab recipient add|list|remove`` on the ``config`` root.
 A taxpayer records a trusted recipient (an accountant/gestor) by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band (read
 aloud, compared over a separate channel) before it is trusted -- exactly the
 :class:`~application.modelo.RecipientFingerprintRegistryRepository`
 contract this module wires, never re-implements
 (``composition-service-no-parallel-write-path``). The registered public key is
-what ``aeat app modelo review-package encrypt-for-recipient`` seals a package
+what ``cadrumo app modelo review-package encrypt-for-recipient`` seals a package
 against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
 
 ``add`` is idempotent-guarded to the extent the underlying repository already

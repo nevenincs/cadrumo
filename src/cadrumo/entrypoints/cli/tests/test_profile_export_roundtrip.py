@@ -315,7 +315,7 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
             "cadrumo.domain.modelos.filing_records",
             "cadrumo.domain.modelos.work_units",
             "cadrumo.domain.transactions.bucket",
-            "aeat.workflow",
+            "cadrumo.workflow",
         ],
         "row_counts_by_namespace": {
             "cadrumo.application.user_profile.value": 1,
@@ -324,7 +324,7 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
             "cadrumo.domain.modelos.filing_records": 1,
             "cadrumo.domain.modelos.work_units": 1,
             "cadrumo.domain.transactions.bucket": 2,
-            "aeat.workflow": 1,
+            "cadrumo.workflow": 1,
         },
     }
 
