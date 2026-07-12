@@ -323,7 +323,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "# Re-exports the real session-scoped autouse cache-isolation fixture so this\n"
         "# out-of-tree scratch package, invoked as its own pytest session, is governed\n"
         "# by the identical fixture a real xdist worker's own src/cadrumo test file loads.\n"
-        "from aeat.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
+        "from cadrumo.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
         encoding="utf-8",
     )
     scratch_module_path = scratch_pkg / "test_touch_bundled_registry.py"
