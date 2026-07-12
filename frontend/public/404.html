@@ -299,17 +299,64 @@
     <div class="shape dot" aria-hidden="true"></div>
     <div class="shape dot-2" aria-hidden="true"></div>
     <main>
-      <p class="kicker">ERROR / CASILLA NO ENCONTRADA</p>
+      <p class="kicker" data-i18n="kicker">ERROR / CASILLA NOT FOUND</p>
       <h1>4<span class="zero">0</span>4</h1>
-      <h2>This casilla doesn&rsquo;t exist.</h2>
-      <p class="lead">
+      <h2 data-i18n="heading">This <span lang="es">casilla</span> doesn&rsquo;t exist.</h2>
+      <p class="lead" data-i18n="lead">
         The page you&rsquo;re looking for was never declared — or it has been reconciled away.
         Either way, there&rsquo;s nothing to file here.
       </p>
       <div class="actions">
-        <a class="button button-primary" href="/">Back to Cadrumo</a>
-        <a class="button button-secondary" href="/docs/">Open the docs</a>
+        <a class="button button-primary" href="/" data-i18n="home">Back to Cadrumo</a>
+        <a class="button button-secondary" href="/docs/" data-i18n="docs">Open the docs</a>
       </div>
     </main>
+    <script>
+      ;(function () {
+        var copy = {
+          es: {
+            title: 'Casilla no encontrada — Cadrumo',
+            kicker: 'ERROR / CASILLA NO ENCONTRADA',
+            heading: 'Esta casilla no existe.',
+            lead:
+              'La página que buscas nunca se declaró, o ya se ha conciliado. En cualquier caso, aquí no hay nada que presentar.',
+            home: 'Volver a Cadrumo',
+            docs: 'Abrir la documentación',
+          },
+          ca: {
+            title: 'Casella no trobada — Cadrumo',
+            kicker: 'ERROR / CASELLA NO TROBADA',
+            heading: 'Aquesta casella no existeix.',
+            lead:
+              "La pàgina que busques mai no es va declarar, o ja s'ha conciliat. En qualsevol cas, aquí no hi ha res a presentar.",
+            home: 'Torna a Cadrumo',
+            docs: 'Obre la documentació',
+          },
+        }
+        var lang = null
+        var match = document.cookie.match(/(?:^|;\s*)cadrumo_lang=(en|es|ca)/)
+        if (match) {
+          lang = match[1]
+        } else {
+          var candidates = navigator.languages || [navigator.language]
+          for (var i = 0; i < candidates.length; i++) {
+            var base = (candidates[i] || '').slice(0, 2).toLowerCase()
+            if (base === 'en' || base === 'es' || base === 'ca') {
+              lang = base
+              break
+            }
+          }
+        }
+        var strings = copy[lang]
+        if (!strings) return
+        document.documentElement.lang = lang
+        document.title = strings.title
+        var nodes = document.querySelectorAll('[data-i18n]')
+        for (var j = 0; j < nodes.length; j++) {
+          var key = nodes[j].getAttribute('data-i18n')
+          if (strings[key]) nodes[j].textContent = strings[key]
+        }
+      })()
+    </script>
   </body>
 </html>
