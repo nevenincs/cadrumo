@@ -13,7 +13,7 @@ startup with :func:`register_project_answers`; domain consumers call
 :func:`project_answers` through this core slot and receive
 :class:`ProjectAnswersNotRegisteredError` if startup has not installed it.
 
-The contract mirrors :mod:`aeat.core.wizard_catalogue`: the application layer
+The contract mirrors :mod:`cadrumo.core.wizard_catalogue`: the application layer
 declares the ``SETUP_FLOW`` descriptor, while core exposes the stable answer
 model and the projection hook. Downstream profile construction, including
 ``taxpayer_profile_from_mapping``, therefore stays aligned with wizard
@@ -21,10 +21,10 @@ canonical-token parsing without importing application modules directly.
 
 Domain taxonomy types (``EntityType``, ``IVARegime``, etc.) are imported lazily
 inside validators rather than at module level to break the circular import
-path: ``aeat.core.setup_answers`` -> ``aeat.domain.deadlines._models`` ->
-``aeat.domain.deadlines.__init__`` -> ``aeat.domain.deadlines._profiles`` ->
-``aeat.core.setup_answers``. This mirrors the deferral strategy used in
-``aeat.core.resources._repos.*`` and is the established project pattern.
+path: ``cadrumo.core.setup_answers`` -> ``cadrumo.domain.deadlines._models`` ->
+``cadrumo.domain.deadlines.__init__`` -> ``cadrumo.domain.deadlines._profiles`` ->
+``cadrumo.core.setup_answers``. This mirrors the deferral strategy used in
+``cadrumo.core.resources._repos.*`` and is the established project pattern.
 """
 
 from __future__ import annotations
@@ -97,12 +97,12 @@ class ProjectAnswersNotRegisteredError(CoreError):
 class ProjectAnswersFn(Protocol):
     """Structural type for the project_answers callable.
 
-    Satisfied by ``aeat.application.wizard._persistence.project_answers``.
+    Satisfied by ``cadrumo.application.wizard._persistence.project_answers``.
     Domain code depends only on this protocol.
     """
 
     # KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR:
-    # WizardFlow type lives in aeat.application.wizard; importing here would
+    # WizardFlow type lives in cadrumo.application.wizard; importing here would
     # create circular dependency.
     def __call__(self, flow: Any, values: Mapping[str, str]) -> BaseModel:
         """Project canonical-token values into the typed answers model."""
@@ -116,7 +116,7 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     """Register the concrete project_answers implementation from the application layer.
 
     Call exactly once at application startup (e.g. in
-    ``aeat.application.wizard._persistence`` module body after the function is
+    ``cadrumo.application.wizard._persistence`` module body after the function is
     defined). A second call with an identical callable is a no-op; a second
     call with a different callable raises :class:`ProfileRegistrationError`.
     Domain code should depend on :func:`project_answers`, not on the
@@ -149,15 +149,15 @@ def get_project_answers() -> ProjectAnswersFn:
 
 
 # KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR:
-# WizardFlow type lives in aeat.application.wizard; importing here would create
+# WizardFlow type lives in cadrumo.application.wizard; importing here would create
 # circular dependency.
 def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     """Invoke the registered project_answers implementation.
 
     Delegates to the application-layer function registered via
     :func:`register_project_answers`.  Domain callers import this function from
-    ``aeat.core.setup_answers`` so they never acquire a direct dependency on
-    ``aeat.application.wizard._persistence``.
+    ``cadrumo.core.setup_answers`` so they never acquire a direct dependency on
+    ``cadrumo.application.wizard._persistence``.
 
     Args:
         flow: The wizard flow descriptor identifying which flow to
@@ -179,31 +179,31 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
 #
 # All domain imports are deferred inside validators and accessors below to
 # avoid the circular import:
-#   aeat.core.setup_answers → aeat.domain.deadlines._models
-#   → aeat.domain.deadlines.__init__ → aeat.domain.deadlines._profiles
-#   → aeat.core.setup_answers   (partially initialised → ImportError)
+#   cadrumo.core.setup_answers → cadrumo.domain.deadlines._models
+#   → cadrumo.domain.deadlines.__init__ → cadrumo.domain.deadlines._profiles
+#   → cadrumo.core.setup_answers   (partially initialised → ImportError)
 # ---------------------------------------------------------------------------
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# aeat.domain.deadlines.taxpayer_model module object; a typed return would
+# cadrumo.domain.deadlines.taxpayer_model module object; a typed return would
 # require importing the module at definition time, re-introducing the
 # circular import described in the block comment above.
 def _m() -> Any:
-    """Return the aeat.domain.deadlines.taxpayer_model module (lazy)."""
+    """Return the cadrumo.domain.deadlines.taxpayer_model module (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.deadlines.taxpayer_model")
+    return importlib.import_module("cadrumo.domain.deadlines.taxpayer_model")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# aeat.domain.contribuyente module object; typed return would require importing the
+# cadrumo.domain.contribuyente module object; typed return would require importing the
 # module at definition time, re-introducing the circular import.
 def _p() -> Any:
-    """Return the aeat.domain.contribuyente module (lazy)."""
+    """Return the cadrumo.domain.contribuyente module (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.contribuyente")
+    return importlib.import_module("cadrumo.domain.contribuyente")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the CCAA enum class object;
@@ -213,7 +213,7 @@ def _ccaa() -> Any:
     """Return the CCAA enum class (lazy)."""
     import importlib
 
-    return importlib.import_module("aeat.domain.contribuyente").CCAA
+    return importlib.import_module("cadrumo.domain.contribuyente").CCAA
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +224,7 @@ def _ccaa() -> Any:
 class SetupAnswers(BaseModel):
     """Typed answers collected by the ``setup`` flow.
 
-    Canonical home is :mod:`aeat.core.setup_answers`.  The application wizard layer
+    Canonical home is :mod:`cadrumo.core.setup_answers`.  The application wizard layer
     imports :class:`SetupAnswers` from here; the domain deadline engine likewise
     imports it from here — no layer needs to cross the hexagonal boundary.
 
@@ -240,7 +240,7 @@ class SetupAnswers(BaseModel):
     That ``Any`` is not a loose schema: validators enforce the same invariants
     the original typed annotations carried, reject values outside the declared
     enum / blank-string set, and raise
-    :class:`~aeat.core.errors.ProfileAnswerTypeError`.
+    :class:`~cadrumo.core.errors.ProfileAnswerTypeError`.
     """
 
     model_config = STRICT_FROZEN_CONFIG

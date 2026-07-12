@@ -33,7 +33,7 @@ from ...core.resources import resources
 
 M145_COMMUNICATION_MODELO = Modelo.M145.value
 M145_COMMUNICATION_PERIOD = "comunicacion"
-M145_COMMUNICATION_SERVICE_OWNER = "aeat.application.modelo"
+M145_COMMUNICATION_SERVICE_OWNER = "cadrumo.application.modelo"
 
 
 class M145CommunicationAction(StrEnum):

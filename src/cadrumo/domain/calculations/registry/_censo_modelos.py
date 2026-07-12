@@ -22,7 +22,7 @@ from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 
-CENSO_MODELO_SERVICE_OWNER = "aeat.domain.calculations.registry"
+CENSO_MODELO_SERVICE_OWNER = "cadrumo.domain.calculations.registry"
 CENSO_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
 CENSO_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
 
