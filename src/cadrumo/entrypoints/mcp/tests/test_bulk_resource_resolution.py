@@ -28,8 +28,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_observations_and_evidence_templates_are_advertised() -> None:
     templates = {template.kind: template.uri_template for template in list_harness_resource_templates()}
-    assert templates[HarnessResourceKind.OBSERVATIONS] == "aeat://observations/{name}"
-    assert templates[HarnessResourceKind.EVIDENCE] == "aeat://evidence/{name}"
+    assert templates[HarnessResourceKind.OBSERVATIONS] == "cadrumo://observations/{name}"
+    assert templates[HarnessResourceKind.EVIDENCE] == "cadrumo://evidence/{name}"
 
 
 def test_bucket_scoped_kinds_are_not_concretely_listed() -> None:
@@ -47,4 +47,4 @@ def test_in_process_read_refuses_a_bucket_scoped_resource(kind: HarnessResourceK
 
 def test_resource_uri_round_trips_for_bucket_kinds() -> None:
     for kind in BUCKET_SCOPED_RESOURCE_KINDS:
-        assert resource_uri(kind, "rev-1") == f"aeat://{kind.value}/rev-1"
+        assert resource_uri(kind, "rev-1") == f"cadrumo://{kind.value}/rev-1"
