@@ -311,6 +311,44 @@ product-root documentation references in these files; the remaining qualified
 `aeat.*` values are executable compatibility data intentionally outside this
 documentation-only resolution.
 
+### phase-p03-closure-verification | resolved | High and medium findings are closed at current HEAD
+
+Re-review after `32df6f950f`, `8443c29d04`, `39c3e9ef05`,
+`85498e6ab0`, and `93b3cc09e4` confirms closure of both high findings
+and the medium guidance finding. The package import contract now executes three
+real behaviors: in-process Cadrumo import, fresh-process Cadrumo import, and
+fresh-process refusal of the retired `aeat` root. All three passed. The registry
+cache-isolation file now writes `from cadrumo.conftest ...`; its ten focused
+purge/isolation tests passed through real spawned pytest sessions.
+
+The overlap-provenance entry records the user's explicit authority to preserve
+and cross-commit the seven genuinely baseline-untracked feature files, while
+distinguishing the identity files and Step record from that external feature
+provenance. Targeted residue checks found no old-root import instruction in the
+production files named by either stale-guidance remediation. No compatibility
+package, alias, or fallback was introduced.
+
+### relocated-bytecode-debris-recheck | low | One ignored collision artifact remains
+
+The prior cleanup resolution states that a complete scan found zero collision
+artifacts, but current read-only inspection finds
+`core/__pycache__/__init__.cpython-313.pyc.relocated-aeat-2`. It remains ignored
+by the generic `__pycache__/` rule and cannot load as ordinary bytecode with that
+suffix, so it does not reopen a high-severity import or shim finding. The cleanup
+finding is nevertheless not fully closed: one of the original uniquely suffixed
+collision files remains under the source tree.
+
+### phase-p03-closure-high-findings | high | No high-severity W02.P03 finding remains
+
+Both previously high findings have evidence-backed resolutions at current HEAD.
+The retained bytecode debris is low severity and the historical recommendations
+remain useful process guidance, not open high blockers.
+
+### phase-p03-closure-critical-findings | critical | No critical W02.P03 finding remains
+
+The closure checks found no data loss, authority-evidence corruption, restored
+former import root, or other critical defect.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
@@ -326,3 +364,4 @@ documentation-only resolution.
 11. Record explicit ownership disposition for the fifteen formerly untracked source/data files absorbed by the move commit. Do not rewrite history destructively; use an audit/ownership record so future rollback and feature attribution remain honest.
 12. Remove the ignored `.relocated-aeat` bytecode artifacts through an explicitly authorised, verified cleanup step before packaging acceptance, then prove wheels and source archives contain no such members.
 13. Add a move-integrity manifest for future tree-scale relocations: old relative path, target relative path, byte hash, tracked/dirty/untracked status, and collision disposition. Cardinality plus rename detection is useful but insufficient for a dirty 21,000-file move.
+14. Remove the one remaining `*.pyc.relocated-aeat-2` artifact through the same verified literal-path cleanup discipline, then rerun the exact `fd -HI relocated-aeat src/cadrumo` check before marking the low finding resolved.
