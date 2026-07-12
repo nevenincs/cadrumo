@@ -455,6 +455,37 @@ and every other directly declared Cadrumo production namespace without adding a
 transaction-specific exception, test-only enumeration, compatibility spelling, or
 duplicate namespace authority. The exact formerly failing discovery gate passes.
 
+### phase-p04-remediation-closure-verification | resolved | Custody and namespace integrity gates are green at current HEAD
+
+Independent re-review after `f7419fc449` and `6d862a38b5` confirms both W02.P04
+findings are closed. The exact natural-key completeness gate, the real sealed
+bucket export/import test carrying a registry-valid Modelo 145 communication
+record into a fresh storage root, and the exact production namespace discovery
+gate pass together (`3 passed`). The round trip reads back the same production
+record identity and content; it does not mirror custody logic in the test.
+
+The custody resolver parses the stored envelope as the production
+`M145CommunicationRecord`, checks its bucket against the custody bucket, and
+delegates key construction to the existing production object-key authority. The
+discovery guard derives its accepted prefix from canonical `PRODUCT_IDENTITY`
+instead of admitting the retired product prefix or adding a namespace-specific
+exception. Diff review found no former-product alias, fallback, migration,
+adoption, dual read, duplicate namespace authority, fake, mock, stub, patch,
+monkeypatch, skip, or xfail in either remediation.
+
+### phase-p04-remediation-high-findings | high | No high-severity W02.P04 finding remains
+
+The previously high Modelo 145 custody finding now has a production resolver and
+real fresh-root export/import evidence. The namespace discovery guard is also
+green, and no new high-severity compatibility or persistence defect was found in
+the remediation commits.
+
+### phase-p04-remediation-critical-findings | critical | No critical W02.P04 finding remains
+
+The closure review found no data loss, former-state adoption, cryptographic
+downgrade, authority-identity corruption, or other critical defect. The reviewed
+W02.P04 findings are closed at current HEAD.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
