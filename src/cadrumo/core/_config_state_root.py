@@ -49,9 +49,10 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ._models import STRICT_FROZEN_CONFIG
+from .product_identity import PRODUCT_IDENTITY
 
 # Project-root candidate: four levels up from this module
-# (file → core/ → aeat/ → src/ → REPO_ROOT), mirroring
+# (file → core/ → cadrumo/ → src/ → REPO_ROOT), mirroring
 # :data:`~core.config.PROJECT_ROOT` exactly so the checkout default is
 # byte-identical to the historical value.
 _MODULE_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -60,7 +61,9 @@ _WINDOWS_PLATFORM = "win32"
 _MACOS_PLATFORM = "darwin"
 
 #: Vendor/application directory name appended to the platform user-data base.
-_APP_DIRNAME = "aeat"
+_APP_DIRNAME = PRODUCT_IDENTITY.python_package
+#: Retired product directory inspected only to refuse implicit state adoption.
+_FORMER_PRODUCT_APP_DIRNAME = "aeat"
 #: Storage substrate subdirectory under the resolved installed state root.
 _STORAGE_DIRNAME = "storage"
 #: Checkout state-root layout: ``PROJECT_ROOT / "var" / "storage"``.
@@ -77,6 +80,14 @@ class RunMode(StrEnum):
 
     CHECKOUT = "checkout"
     INSTALLED = "installed"
+
+
+class FormerProductStateError(RuntimeError):
+    """Raised when installed Cadrumo detects the retired product state root.
+
+    Detection is refusal-only. The resolver does not open, read, move, re-key,
+    delete, or adopt anything below the former application directory.
+    """
 
 
 class StateRootInputs(BaseModel):
@@ -163,13 +174,13 @@ def _env_absolute_path(environ: dict[str, str], name: str) -> Path | None:
 
 
 def platform_user_data_root(inputs: StateRootInputs) -> Path:
-    """Resolve the ``aeat`` platform user-data directory for the given inputs.
+    """Resolve the Cadrumo platform user-data directory for the given inputs.
 
     Windows resolves under ``%LOCALAPPDATA%`` (``~/AppData/Local`` when the
     variable is unset or not absolute); macOS under
     ``~/Library/Application Support``; every other platform under
     ``$XDG_DATA_HOME`` (``~/.local/share`` when unset or not absolute). The
-    ``aeat`` application directory name is appended to the resolved base.
+    canonical product application directory name is appended to the resolved base.
     """
     if inputs.platform == _WINDOWS_PLATFORM:
         base = _env_absolute_path(inputs.environ, "LOCALAPPDATA") or inputs.home / "AppData" / "Local"
@@ -180,11 +191,22 @@ def platform_user_data_root(inputs: StateRootInputs) -> Path:
     return base / _APP_DIRNAME
 
 
+def _refuse_former_product_state(user_data_root: Path) -> None:
+    """Refuse a recognizable sibling root left by the retired product identity."""
+    former_root = user_data_root.parent / _FORMER_PRODUCT_APP_DIRNAME
+    if not former_root.exists():
+        return
+    raise FormerProductStateError(
+        "Cadrumo detected incompatible former-product state at "
+        f"{former_root}. Cadrumo will not read, move, re-key, delete, or adopt that state.",
+    )
+
+
 def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
     """Resolve the effective storage state root for the given inputs.
 
     A checkout keeps the historical ``PROJECT_ROOT / "var" / "storage"``
-    default; an installed run lands at ``<platform-user-data>/aeat/storage`` so
+    default; an installed run lands at ``<platform-user-data>/cadrumo/storage`` so
     the encrypted store never resolves inside a virtualenv or uv cache.
     """
     run_mode = detect_run_mode(inputs)
@@ -192,6 +214,7 @@ def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
     if run_mode is RunMode.CHECKOUT:
         storage_root = inputs.project_root_candidate.joinpath(*_CHECKOUT_STATE_SUBDIRS)
     else:
+        _refuse_former_product_state(user_data_root)
         storage_root = user_data_root / _STORAGE_DIRNAME
     return StateRootResolution(
         run_mode=run_mode,
