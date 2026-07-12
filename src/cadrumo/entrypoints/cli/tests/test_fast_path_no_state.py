@@ -1,4 +1,4 @@
-"""Fast-path proof: ``aeat --version`` and ``aeat --help`` never touch state.
+"""Fast-path proof: ``cadrumo --version`` and ``cadrumo --help`` never touch state.
 
 The fast-path contract closes the cold-start 10-minute hang: the
 ``--version`` and ``--help`` surfaces must return without reading
@@ -74,17 +74,17 @@ def _fastest_ms(args: list[str], *, runs: int = 5) -> tuple[float, Result]:
 
 
 def test_version_completes_under_budget_on_clean_root(_clean_storage_root: Path) -> None:
-    """``aeat --version`` returns inside the fast-path budget."""
+    """``cadrumo --version`` returns inside the fast-path budget."""
 
     _warm()
     elapsed_ms, result = _fastest_ms(["--version"])
     assert result.exit_code == 0, result.output
-    assert "aeat" in result.output
+    assert "cadrumo" in result.output
     assert elapsed_ms < _FAST_PATH_BUDGET_MS, f"--version took {elapsed_ms:.1f}ms (budget {_FAST_PATH_BUDGET_MS}ms)"
 
 
 def test_help_completes_under_budget_on_clean_root(_clean_storage_root: Path) -> None:
-    """``aeat --help`` returns inside the fast-path budget."""
+    """``cadrumo --help`` returns inside the fast-path budget."""
 
     _warm()
     elapsed_ms, result = _fastest_ms(["--help"])
@@ -93,7 +93,7 @@ def test_help_completes_under_budget_on_clean_root(_clean_storage_root: Path) ->
 
 
 def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
-    """``aeat --version`` writes nothing under the storage root.
+    """``cadrumo --version`` writes nothing under the storage root.
 
     A registry parse or a state read would create a database file, a
     buckets directory, or an active-profile pointer as a side effect.
@@ -109,7 +109,7 @@ def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
 
 
 def test_help_does_not_provision_storage(_clean_storage_root: Path) -> None:
-    """``aeat --help`` writes nothing under the storage root."""
+    """``cadrumo --help`` writes nothing under the storage root."""
 
     _warm()
     result = invoke_cached_cli(["--help"])

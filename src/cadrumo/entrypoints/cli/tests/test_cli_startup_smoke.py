@@ -36,7 +36,7 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
     )
     token = config_module._settings_override.set(settings)
     try:
-        sys.argv = ["aeat", *cli_args]
+        sys.argv = ["cadrumo", *cli_args]
         from cadrumo.entrypoints.cli import main
 
         main()
@@ -74,7 +74,7 @@ def _assert_no_startup_crash(output: str) -> None:
 
 
 def test_app_modelo_list_starts_without_unlocking_active_profile(tmp_path: Path) -> None:
-    """``aeat app modelo list`` renders bundled registry rows before profile unlock."""
+    """``cadrumo app modelo list`` renders bundled registry rows before profile unlock."""
 
     result = _run_startup_smoke(tmp_path, "app", "modelo", "list")
 
@@ -86,13 +86,13 @@ def test_app_modelo_list_starts_without_unlocking_active_profile(tmp_path: Path)
 
 
 def test_config_repair_integrity_help_starts_without_unlocking_active_profile(tmp_path: Path) -> None:
-    """``aeat config repair integrity --help`` renders command help before profile unlock."""
+    """``cadrumo config repair integrity --help`` renders command help before profile unlock."""
 
     result = _run_startup_smoke(tmp_path, "config", "repair", "integrity", "--help")
 
     output = _combined_output(result)
     assert result.returncode == 0, output
     _assert_no_startup_crash(output)
-    assert "Usage: aeat config repair integrity" in output
+    assert "Usage: cadrumo config repair integrity" in output
     assert "objects" in output
     assert "registry" in output

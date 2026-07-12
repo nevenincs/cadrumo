@@ -869,7 +869,7 @@ def _localise_typer_parse_error_messages() -> None:
     from typer._click import exceptions as _typer_exceptions
     from typer._click import formatting as _typer_formatting
 
-    if getattr(_typer_exceptions, "_aeat_parse_errors_localised", False):
+    if getattr(_typer_exceptions, "_cadrumo_parse_errors_localised", False):
         return
 
     missing_parameter_format_message = _typer_exceptions.MissingParameter.format_message
@@ -920,7 +920,7 @@ def _localise_typer_parse_error_messages() -> None:
     _typer_exceptions.MissingParameter.format_message = localised_missing_parameter_format_message
     _typer_exceptions.BadParameter.format_message = localised_bad_parameter_format_message
     _typer_formatting.HelpFormatter.write_usage = localised_write_usage
-    _typer_exceptions._aeat_parse_errors_localised = True
+    _typer_exceptions._cadrumo_parse_errors_localised = True
 
 
 def main() -> None:
