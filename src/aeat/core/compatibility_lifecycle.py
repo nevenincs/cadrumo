@@ -47,8 +47,9 @@ class CompatibilityRegime(StrEnum):
     #: Pre-release: delete-not-migrate, floors chase current, no
     #: read-tolerance of pre-current shapes. The regime today.
     PRE_RELEASE = "pre_release"
-    #: Released: durability floors frozen at their released values, older
-    #: persisted shapes must remain readable through registered upgraders.
+    #: The released posture: durability floors frozen at their released
+    #: values, older persisted shapes must remain readable through
+    #: registered upgraders.
     RELEASED = "released"
 
 
