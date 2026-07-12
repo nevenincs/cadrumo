@@ -10,11 +10,12 @@ from .smoke_core import (
     _assert_installed_data,
     _assert_wheel_metadata_matches_pyproject,
     _build_wheel,
+    _clean_product_env,
     _executable,
     _manifest_path,
     _run,
     _validate_frozen_exports,
-    _venv_aeat,
+    _venv_bin,
     _venv_python,
     _work_dir,
     _write_smoke_manifest,
@@ -24,7 +25,7 @@ from .smoke_pip_core import _create_pip_venv, _install_target_with_pip
 
 def _install_all_extras_with_pip(work_dir: Path, wheel: Path, venv_path: Path) -> None:
     """Install the built wheel through the public ``all`` extra."""
-    target = f"aeat-cli[all] @ {wheel.resolve().as_uri()}"
+    target = f"cadrumo[all] @ {wheel.resolve().as_uri()}"
     _install_target_with_pip(work_dir, target, venv_path)
 
 
@@ -37,21 +38,34 @@ import googleapiclient.discovery
 import playwright.async_api
 import playwright_stealth
 
-from aeat.core import ANTHROPIC_EXTRA, BROWSER_EXTRA, GOOGLE_EXTRA, require_optional_extra
+from cadrumo.core import ANTHROPIC_EXTRA, BROWSER_EXTRA, GOOGLE_EXTRA, require_optional_extra
 
 for extra in (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA):
     require_optional_extra(extra)
 
 print("all-extra-imports-ok")
 """
-    _run([str(_venv_python(venv_path)), "-c", code], cwd=work_dir)
+    runtime_root = work_dir / "all-extras-import-state"
+    env = {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
+    }
+    _run([str(_venv_python(venv_path)), "-c", code], cwd=work_dir, env=env)
 
 
 def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
     """Verify the installed console script starts in the all-extras venv."""
-    version = _run([str(_venv_aeat(venv_path)), "--version"], cwd=work_dir)
-    if "aeat " not in version.stdout:
-        raise SystemExit(f"unexpected aeat --version output in all-extras venv: {version.stdout!r}")
+    runtime_root = work_dir / "cli-version-state"
+    env = {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
+    }
+    executable = "cadrumo.exe" if sys.platform == "win32" else "cadrumo"
+    version = _run([str(_venv_bin(venv_path) / executable), "--version"], cwd=work_dir, env=env)
+    if "cadrumo " not in version.stdout:
+        raise SystemExit(f"unexpected cadrumo --version output in all-extras venv: {version.stdout!r}")
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -1,4 +1,4 @@
-"""Build and verify the core AEAT wheel in a fresh installed environment."""
+"""Build and verify the core Cadrumo wheel in a fresh installed environment."""
 
 from __future__ import annotations
 
@@ -26,24 +26,27 @@ _REPRESENTATIVE_DATA_LEAVES = (
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
 _TRACKED_DATA_ROOTS = (
-    "src/aeat/_data/corpus",
-    "src/aeat/_data/registry",
-    "src/aeat/_data/terminology",
+    "src/cadrumo/_data/corpus",
+    "src/cadrumo/_data/registry",
+    "src/cadrumo/_data/terminology",
 )
-_SOURCE_DATA_PREFIX = "src/aeat/_data/"
-_WHEEL_DATA_PREFIX = "aeat/_data"
-# Corpus source binaries excluded from the slim ``aeat`` wheel by the wheel-split
-# build config; they ship in the two ``aeat-data-*`` companion distributions. A
+_SOURCE_DATA_PREFIX = "src/cadrumo/_data/"
+_WHEEL_DATA_PREFIX = "cadrumo/_data"
+# Corpus source binaries excluded from the slim ``cadrumo`` wheel by the wheel-split
+# build config; they ship in the two ``cadrumo-data-*`` companion distributions. A
 # tracked source path is one of these when it lives under ``_data/corpus`` and
 # carries a binary suffix, so the wheel-bundling parity check must not expect it
 # in the
-# ``aeat`` archive.
-_CORPUS_SOURCE_PREFIX = "src/aeat/_data/corpus/"
-_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+# ``cadrumo`` archive.
+_CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
+_COMPANION_HOOKS = (
+    "packaging/cadrumo_data_manuals/hatch_build.py",
+    "packaging/cadrumo_data_official/hatch_build.py",
+)
 _RENTA_PDF_ALLOW_LIST = {
-    f"src/aeat/_data/corpus/manuals/renta/{year}/part1/source.pdf"
+    f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
-} | {"src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf"}
+} | {"src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf"}
 _CORE_ABSENT_NAMES = {
     "anthropic",
     "google-api-python-client",
@@ -277,7 +280,7 @@ def _pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
 
 def _optional_extra_registry(repo_root: Path) -> tuple[dict[str, str], set[str]]:
     """Return capability-gated optional extras declared by the core registry."""
-    source = repo_root / "src" / "aeat" / "core" / "_optional_extras.py"
+    source = repo_root / "src" / "cadrumo" / "core" / "_optional_extras.py"
     module = ast.parse(source.read_text(encoding=_UTF_8), filename=str(source))
     records_by_symbol: dict[str, tuple[str, str]] = {}
     tuple_symbols: set[str] = set()
@@ -365,7 +368,7 @@ def _tracked_source_data_paths(repo_root: Path) -> set[str]:
     result = _run(["git", "ls-files", *_TRACKED_DATA_ROOTS], cwd=repo_root, env=_git_env(repo_root))
     tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
     if not tracked:
-        raise SystemExit("git ls-files reported no tracked shipped data under src/aeat/_data")
+        raise SystemExit("git ls-files reported no tracked shipped data under src/cadrumo/_data")
     outside = sorted(path for path in tracked if not path.startswith(_SOURCE_DATA_PREFIX))
     if outside:
         raise SystemExit(f"git ls-files returned paths outside {_SOURCE_DATA_PREFIX}: {outside[:10]!r}")
@@ -382,27 +385,84 @@ def _tracked_source_data_paths(repo_root: Path) -> set[str]:
     return tracked
 
 
-def _is_corpus_source_binary(source_relative: str) -> bool:
+def _configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
+    """Return corpus suffixes excluded by the root wheel configuration."""
+    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    excluded = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
+    prefix = f"{_CORPUS_SOURCE_PREFIX}**/*"
+    suffixes = tuple(sorted({Path(pattern).suffix.lower() for pattern in excluded if pattern.startswith(prefix)}))
+    if not suffixes or "" in suffixes:
+        raise SystemExit("root wheel config declares no precise corpus binary suffix exclusions")
+    return suffixes
+
+
+def _companion_corpus_ownership(repo_root: Path) -> dict[str, frozenset[str]]:
+    """Return top-level corpus partitions and suffixes owned by companion hooks."""
+    ownership: dict[str, frozenset[str]] = {}
+    for relative_hook in _COMPANION_HOOKS:
+        tree = ast.parse((repo_root / relative_hook).read_text(encoding=_UTF_8))
+        literals: dict[str, frozenset[str]] = {}
+        for node in tree.body:
+            if not isinstance(node, ast.Assign) or len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+                continue
+            name = node.targets[0].id
+            if name not in {"_CORPUS_BINARY_SUFFIXES", "_OWNED_SUBDIRS"}:
+                continue
+            value = node.value
+            if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "frozenset":
+                value = value.args[0]
+            literals[name] = frozenset(str(item).lower() for item in ast.literal_eval(value))
+        missing = {"_CORPUS_BINARY_SUFFIXES", "_OWNED_SUBDIRS"} - literals.keys()
+        if missing:
+            raise SystemExit(
+                f"companion hook {relative_hook} is missing literal ownership declarations: {sorted(missing)!r}"
+            )
+        suffixes = literals["_CORPUS_BINARY_SUFFIXES"]
+        for subdir in literals["_OWNED_SUBDIRS"]:
+            if subdir in ownership:
+                raise SystemExit(f"corpus companion ownership overlaps at top-level partition: {subdir}")
+            ownership[str(subdir)] = suffixes
+    return ownership
+
+
+def _is_corpus_source_binary(source_relative: str, suffixes: tuple[str, ...]) -> bool:
     """Return True for a tracked ``_data/corpus`` path that is an excluded source binary."""
-    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(
-        _CORPUS_BINARY_SUFFIXES
-    )
+    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(suffixes)
+
+
+def _assert_split_files_have_companion_owners(repo_root: Path, paths: set[str]) -> None:
+    """Verify every root-excluded corpus file is selected by one companion hook."""
+    ownership = _companion_corpus_ownership(repo_root)
+    unowned: list[str] = []
+    for path in sorted(paths):
+        relative = path.removeprefix(_CORPUS_SOURCE_PREFIX)
+        subdir = relative.partition("/")[0]
+        if Path(path).suffix.lower() not in ownership.get(subdir, frozenset()):
+            unowned.append(path)
+    if unowned:
+        raise SystemExit(
+            f"{len(unowned)} root-excluded corpus binaries have no companion hook owner: {_format_path_sample(unowned)}"
+        )
 
 
 def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
-    """Return expected bundled-data paths inside the slim ``aeat`` wheel archive.
+    """Return expected bundled-data paths inside the slim ``cadrumo`` wheel archive.
 
-    Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
+    Corpus source binaries declared by the root Hatch exclusion list are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
-    two ``aeat-data-*`` companions, so they are legitimately absent from the
+    two ``cadrumo-data-*`` companions, so they are legitimately absent from the
     archive.
     Test modules under a ``_data`` ``tests/`` folder are excluded by the
     data-budget wheel boundary (tests serve no installed consumer) and are
     likewise legitimately absent.
     """
+    tracked = _tracked_source_data_paths(repo_root)
+    suffixes = _configured_corpus_binary_suffixes(repo_root)
+    split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
+    _assert_split_files_have_companion_owners(repo_root, split_owned)
     expected: set[str] = set()
-    for path in _tracked_source_data_paths(repo_root):
-        if _is_corpus_source_binary(path):
+    for path in tracked:
+        if path in split_owned:
             continue
         if "/tests/" in path:
             continue
@@ -449,8 +509,8 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
     """Return normalized package names from a requirements export.
 
     A dependency resolved through a ``[tool.uv.sources]`` path source (the
-    not-yet-published ``aeat-data-*`` companions) exports as a bare local path
-    row (``./packaging/aeat_data_manuals``) rather than a requirement string;
+    not-yet-published ``cadrumo-data-*`` companions) exports as a bare local path
+    row (``./packaging/cadrumo_data_manuals``) rather than a requirement string;
     resolve such a row to the referenced project's own ``[project].name`` so the
     surface checks see the real package name.
     """
@@ -535,20 +595,20 @@ def _venv_python(venv: Path) -> Path:
 
 
 def _venv_aeat(venv: Path) -> Path:
-    """Return the virtualenv AEAT console-script path."""
-    executable = "aeat.exe" if os.name == "nt" else "aeat"
+    """Return the virtualenv Cadrumo console-script path."""
+    executable = "cadrumo.exe" if os.name == "nt" else "cadrumo"
     return _venv_bin(venv) / executable
 
 
 def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the AEAT wheel into the smoke work directory."""
+    """Build the Cadrumo wheel into the smoke work directory."""
     expected_data_paths = _expected_wheel_data_paths(repo_root)
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=repo_root)
-    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
+    wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
     if len(wheels) != 1:
-        raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
+        raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
     _assert_wheel_contains_tracked_data(repo_root, wheels[0], expected_data_paths)
     return wheels[0]
 
@@ -565,7 +625,7 @@ def _install_wheel(
     """Install the built wheel into a fresh virtualenv and return the venv path."""
     venv = work_dir / "venv"
     _run([uv, "venv", str(venv), "--python", python], cwd=repo_root)
-    target = str(wheel) if not extras else f"aeat-cli[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
+    target = str(wheel) if not extras else f"cadrumo[{','.join(extras)}] @ {wheel.resolve().as_uri()}"
     _run(
         [uv, "pip", "install", "--python", str(_venv_python(venv)), target],
         cwd=repo_root,
@@ -588,13 +648,18 @@ def _json_payload(output: str) -> dict[str, Any]:
     return payload
 
 
+def _clean_product_env() -> dict[str, str]:
+    """Return the process environment without host Cadrumo configuration."""
+    return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+
+
 def _assert_installed_data(work_dir: Path, venv: Path) -> None:
     """Verify representative bundled data leaves through the installed package."""
     leaves_literal = repr(list(_REPRESENTATIVE_DATA_LEAVES))
     code = f"""
 from importlib.resources import files
 
-root = files("aeat").joinpath("_data")
+root = files("cadrumo").joinpath("_data")
 missing = []
 for rel in {leaves_literal}:
     if not root.joinpath(*rel.split("/")).is_file():
@@ -603,7 +668,13 @@ if missing:
     raise SystemExit(f"missing installed bundled data leaves: {{missing!r}}")
 print(root)
 """
-    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir)
+    runtime_root = work_dir / "installed-data-state"
+    env = {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
+    }
+    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir, env=env)
 
 
 def _assert_attachment_and_llm_surfaces(work_dir: Path, venv: Path) -> None:
@@ -619,15 +690,15 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aeat.adapters.outbound.llm._client import LLMClient
-from aeat.adapters.outbound.llm._errors import LLMConfigError
-from aeat.adapters.outbound.llm._models import LLMProvider
-from aeat.adapters.persistence.storage.attachment import AttachmentStore
-from aeat.adapters.persistence.storage.master_key import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
-from aeat.core.config import Settings
-from aeat.domain.attachments import (
+from cadrumo.adapters.outbound.llm._client import LLMClient
+from cadrumo.adapters.outbound.llm._errors import LLMConfigError
+from cadrumo.adapters.outbound.llm._models import LLMProvider
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
+from cadrumo.adapters.persistence.storage.master_key import activate_session
+from cadrumo.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
+from cadrumo.core.config import Settings
+from cadrumo.domain.attachments import (
     AttachmentKind,
     AttachmentSource,
     add_attachment_bytes,
@@ -649,7 +720,7 @@ session = BucketSession.open(
     opened_at=datetime.now(UTC).replace(microsecond=0),
     unsecured_backend=True,
 )
-payload = b"%PDF-1.4\\n%aeat-packaging-attachment-smoke\\n"
+payload = b"%PDF-1.4\\n%cadrumo-packaging-attachment-smoke\\n"
 try:
     engine = get_engine(settings)
     with activate_session(session):
@@ -683,26 +754,38 @@ finally:
 try:
     LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
-    if exc.suggestion != "pip install aeat-cli[anthropic]":
+    if exc.suggestion != "pip install cadrumo[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {{exc.suggestion!r}}")
 else:
     raise SystemExit("Anthropic adapter unexpectedly built in a core wheel install")
 
 print("attachment-and-llm-surfaces-ok")
 """
-    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir)
+    env = {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root / "import-state"),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'import-state.db').as_posix()}",
+    }
+    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir, env=env)
 
 
 def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     """Run installed CLI smoke checks against the clean wheel venv."""
-    aeat = str(_venv_aeat(venv))
-    version = _run([aeat, "--version"], cwd=work_dir)
-    if "aeat " not in version.stdout:
-        raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
+    cadrumo = str(_venv_aeat(venv))
+    version = _run([cadrumo, "--version"], cwd=work_dir)
+    if "cadrumo " not in version.stdout:
+        raise SystemExit(f"unexpected cadrumo --version output: {version.stdout!r}")
 
+    default_root = work_dir / "default-check-state"
+    default_env = {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(default_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(default_root / 'cadrumo.db').as_posix()}",
+    }
     default_check = _run(
-        [aeat, "--format", "json", "config", "check"],
+        [cadrumo, "--format", "json", "config", "check"],
         cwd=work_dir,
+        env=default_env,
         expected={1, 2},
     )
     default_payload = _json_payload(default_check.stdout)
@@ -714,14 +797,15 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     storage_root = work_dir / "profile-root"
     storage_root.mkdir(parents=True, exist_ok=True)
     env = {
-        **os.environ,
+        **_clean_product_env(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
     }
     create = _run(
         [
-            aeat,
+            cadrumo,
             "--format",
             "json",
             "config",
@@ -755,7 +839,7 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     if create_payload.get("status") != "success":
         raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-    ready = _run([aeat, "--format", "json", "config", "check"], cwd=work_dir, env=env)
+    ready = _run([cadrumo, "--format", "json", "config", "check"], cwd=work_dir, env=env)
     ready_payload = _json_payload(ready.stdout)
     result = ready_payload.get("result", {})
     if ready_payload.get("status") != "success" or result.get("ok") is not True or result.get("issues") != []:

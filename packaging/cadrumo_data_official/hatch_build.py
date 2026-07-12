@@ -48,7 +48,7 @@ from typing import Any
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
-_CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx"})
+_CORPUS_BINARY_SUFFIXES = frozenset({".docx", ".pdf", ".xls", ".xlsx", ".zip"})
 _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 
 # The corpus top-level subtrees this companion owns. The sibling

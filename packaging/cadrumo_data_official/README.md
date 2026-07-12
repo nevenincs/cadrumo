@@ -1,7 +1,7 @@
 # cadrumo-data-official
 
 Corpus source binaries — the **official** AEAT diseños de registro / workbooks
-and normative PDFs — for the [`cadrumo`](https://github.com/nevenincs/cadrumo)
+and normative PDFs — for the [`cadrumo`](https://github.com/cadrumo/cadrumo)
 Spanish-tax toolkit.
 
 The slim `cadrumo` runtime wheel excludes the corpus source binaries — the AEAT and

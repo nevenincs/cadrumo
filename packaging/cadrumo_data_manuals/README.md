@@ -1,7 +1,7 @@
 # cadrumo-data-manuals
 
 Corpus source binaries — the AEAT/BOE práctico **manuals** — for the
-[`cadrumo`](https://github.com/nevenincs/cadrumo) Spanish-tax toolkit.
+[`cadrumo`](https://github.com/cadrumo/cadrumo) Spanish-tax toolkit.
 
 The slim `cadrumo` runtime wheel excludes the corpus source binaries — the AEAT and
 BOE manuals (`*.pdf`) and workbooks (`*.xls`/`*.xlsx`) — that make up roughly 94%

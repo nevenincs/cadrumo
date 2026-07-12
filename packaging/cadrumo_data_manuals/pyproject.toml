@@ -28,9 +28,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nevenincs/cadrumo"
-Issues = "https://github.com/nevenincs/cadrumo/issues"
-Repository = "https://github.com/nevenincs/cadrumo"
+Homepage = "https://github.com/cadrumo/cadrumo"
+Issues = "https://github.com/cadrumo/cadrumo/issues"
+Repository = "https://github.com/cadrumo/cadrumo"
 
 # This companion ships a subtree of the SAME `cadrumo_data` PEP 420 implicit
 # namespace package as the sibling `cadrumo-data-official`: NEITHER wheel ships

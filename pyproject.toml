@@ -219,8 +219,10 @@ exclude = [
   # this wheel. Excluding only the source binaries keeps the slim `cadrumo` wheel
   # under PyPI's 100 MB cap with no file-size grant on the critical path.
   "src/cadrumo/_data/corpus/**/*.pdf",
+  "src/cadrumo/_data/corpus/**/*.docx",
   "src/cadrumo/_data/corpus/**/*.xls",
   "src/cadrumo/_data/corpus/**/*.xlsx",
+  "src/cadrumo/_data/corpus/**/*.zip",
 ]
 # The recovery-key BIP-39 wordlist is shipped as package data so
 # `importlib.resources.files()` can locate it at runtime in installed

@@ -19,7 +19,7 @@ This test verifies that contract end-to-end by driving the real build pipeline:
    prefix.
 4. The corpus source binaries are asserted ABSENT from the slim wheel; the two
    ``aeat-data-*`` companion distributions are what carry them
-   (``test_aeat_data_distribution`` proves that side).
+   (``test_cadrumo_data_distribution`` proves that side).
 
 No mocks, fakes, or skips. If the worktree is missing the ``uv``
 binary the test fails loudly so the locator's bundling guarantee is
