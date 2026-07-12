@@ -183,9 +183,11 @@ export const en: Copy = {
       body: [
         <>
           This website, <strong>cadrumo.neve.md</strong>, and the <strong>neve.md</strong>{' '}
-          domain are published by <strong>Gergely Wootsch</strong>, the legal entity behind
-          neve.md and the Cadrumo project. This identification is provided for the purposes of
-          Article 10 of Spain’s Ley 34/2002 (LSSI-CE).
+          domain are published by <strong>Gergely Wootsch</strong>, the individual behind
+          neve.md and the Cadrumo project, a non-commercial open-source effort. This
+          identification is provided in view of Article 10 of Spain’s Ley 34/2002 (LSSI-CE)
+          to the extent it applies to a non-commercial project; further identification
+          details are available on request through the contact channel below.
         </>,
         <>
           Contact: <a href="mailto:hello@neve.md">hello@neve.md</a>, or through the project’s

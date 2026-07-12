@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -64,6 +64,34 @@ describe('App', () => {
 
     expect(screen.getByText('DISCLAIMER')).toBeVisible()
     expect(screen.getByText(/not affiliated with the AEAT/i)).toBeVisible()
+  })
+
+  it('elevates the header, tracks scroll progress, and moves the banner parallax', async () => {
+    renderApp()
+
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      configurable: true,
+      value: 2000,
+    })
+    Object.defineProperty(document.documentElement, 'clientHeight', {
+      configurable: true,
+      value: 800,
+    })
+    Object.defineProperty(document.documentElement, 'scrollTop', {
+      configurable: true,
+      value: 600,
+    })
+    window.dispatchEvent(new Event('scroll'))
+
+    await waitFor(() => {
+      expect(document.querySelector('.site-header')).toHaveClass('is-scrolled')
+    })
+    expect(document.querySelector<HTMLElement>('.scroll-progress')?.style.transform).toBe(
+      'scaleX(0.5)',
+    )
+    expect(document.querySelector<HTMLElement>('.banner img')?.style.transform).toBe(
+      'translateY(28px) scale(1.18)',
+    )
   })
 
   it('switches to Spanish through the language picker and persists the choice', async () => {

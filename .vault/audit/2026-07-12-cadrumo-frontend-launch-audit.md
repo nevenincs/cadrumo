@@ -97,6 +97,25 @@ The Figma file is external to the repository; parity claims were exercised
 during the campaign with screenshot validation but cannot be re-verified
 from HEAD. Inherent to the medium.
 
+### honesty-review | closure | Operator disposition and closures
+
+Operator ruling: NIF and address stay private; every other recommendation
+approved. Closed accordingly: the packaging classifier moved to Beta; the
+legal identity paragraphs (three locales, plus the Figma legal frame) now
+name a natural person and assert Article 10 only "to the extent it applies
+to a non-commercial project", offering further identification on request;
+behavioral tests landed for the scroll effects (header elevation, progress
+bar, parallax), the 404 inline localizer (en/es/ca via real script
+execution in jsdom), and the landing head metadata (JSON-LD, canonical,
+hreflang); the `packaging/mcpb/manifest.json` version was aligned to the
+package version with a lockstep gate in `test_build.py`. Deferred to the
+tree-settling pass because the owning files are under a concurrent
+session's live edit: the cache-control split for hashed assets, the
+`dist/assets` error-string and gitignore hardening (already fixed in the
+working tree), and the docs copyright footer (watcher armed). The es/ca
+indexability limitation is accepted as a documented consequence of
+single-URL cookie switching.
+
 ## Recommendations
 
 Close in-repo now: bump the trove classifier to Beta (or downgrade the copy),
