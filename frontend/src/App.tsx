@@ -58,8 +58,12 @@ const calculationSteps = [
     title: 'Classify, filter, split',
   },
   {
-    description:
-      'Computes each modelo grounded in the BOE and the AEAT rules behind every casilla.',
+    description: (
+      <>
+        Computes each <span lang="es">modelo</span> grounded in the BOE and the AEAT rules
+        behind every <span lang="es">casilla</span>.
+      </>
+    ),
     href: `${docsBaseUrl}/explanation/from-records-to-figures.html`,
     icon: stepCalculate,
     number: '03',
@@ -82,8 +86,12 @@ const calculationSteps = [
     title: 'Prepare submission',
   },
   {
-    description:
-      'Reconciles your records against the justificante once a filing has been submitted.',
+    description: (
+      <>
+        Reconciles your records against the <span lang="es">justificante</span> once a filing
+        has been submitted.
+      </>
+    ),
     href: `${docsBaseUrl}/how-to/reconcile.html`,
     icon: stepReconcile,
     number: '06',
@@ -212,7 +220,7 @@ export function App() {
         <span className="scroll-progress" aria-hidden="true" />
         <div className="page-container header-content">
           <a className="brand" href="#top" aria-label="Cadrumo home">
-            <img className="brand-logo" src={logo} alt="" />
+            <img className="brand-logo" src={logo} alt="" aria-hidden="true" />
             <span className="brand-wordmark">CADRUMO</span>
           </a>
           <nav className="header-links" aria-label="Main navigation">
@@ -302,7 +310,9 @@ export function App() {
         </section>
 
         <section className="pillars" aria-label="What makes Cadrumo different">
-          <p className="kicker">What are the steps for preparing a modelo?</p>
+          <p className="kicker">
+            What are the steps for preparing a <span lang="es">modelo</span>?
+          </p>
           <div className="pillars-row">
             {pillars.map((pillar, index) => (
               <article
@@ -321,7 +331,9 @@ export function App() {
 
         <section id="steps" className="steps" aria-labelledby="steps-heading">
           <div className="page-container steps-content">
-            <p className="kicker">What are the steps for preparing a modelo?</p>
+            <p className="kicker">
+            What are the steps for preparing a <span lang="es">modelo</span>?
+          </p>
             <h2 id="steps-heading">The calculation steps.</h2>
             <div className="steps-grid">
               {calculationSteps.map((step, index) => (
@@ -331,7 +343,7 @@ export function App() {
                   data-reveal
                   style={{ transitionDelay: `${(index % 3) * 90}ms` }}
                 >
-                  <img className="step-icon" src={step.icon} alt="" />
+                  <img className="step-icon" src={step.icon} alt="" aria-hidden="true" />
                   <h3 className="step-title">
                     {step.number}{' '}
                     <a href={step.href} target="_blank" rel="noreferrer">
@@ -348,7 +360,7 @@ export function App() {
         <section className="docs-cta" aria-labelledby="docs-heading">
           <div className="docs-cta-intro" data-reveal>
             <p className="kicker kicker-with-icon">
-              <img src={iconDocs} alt="" />
+              <img src={iconDocs} alt="" aria-hidden="true" />
               Documentation
             </p>
             <h2 id="docs-heading">Learn more.</h2>
@@ -358,7 +370,7 @@ export function App() {
             </p>
             <a className="button button-primary" href={docsUrl}>
               Open documentation
-              <img src={iconArrowCta} alt="" />
+              <img src={iconArrowCta} alt="" aria-hidden="true" />
             </a>
           </div>
           <nav className="docs-cta-list" aria-label="Documentation sections">
@@ -374,7 +386,7 @@ export function App() {
                   <span className="docs-link-title">{link.title}</span>
                   <span className="docs-link-description">{link.description}</span>
                 </span>
-                <img src={iconArrowLink} alt="" />
+                <img src={iconArrowLink} alt="" aria-hidden="true" />
               </a>
             ))}
           </nav>
@@ -392,7 +404,7 @@ export function App() {
               </p>
             </div>
             {footerColumns.map((column) => (
-              <div className="footer-column" key={column.heading}>
+              <nav className="footer-column" key={column.heading} aria-label={`${column.heading} links`}>
                 <p className="footer-heading">{column.heading}</p>
                 <ul>
                   {column.links.map(([label, href]) => (
@@ -401,7 +413,7 @@ export function App() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </nav>
             ))}
           </div>
           <div className="footer-legal">
