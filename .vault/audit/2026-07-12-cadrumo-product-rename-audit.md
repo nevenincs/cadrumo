@@ -826,3 +826,28 @@ supersede that decision. The root script metadata was reconciled again after the
 overlap; recommendation 18's `aeat` alternative is rejected, while
 recommendations 20, 21, and 24 remain governed by the canonical `cadrumo` /
 `cadrumo-mcp` pair.
+
+## W03.P07 packaging HIGH resolution
+
+The packaging acceptance blocker is resolved by successful, bounded, real
+installed-artifact runs from isolated Git snapshots:
+
+- Core wheel at `f8169402a7ac4f727cc5aa06fd29fa8c13043223`: exit 0 in
+  192.201 seconds; manifest `ok: true`, lane `core-wheel`; all eight export,
+  payload, metadata, fresh-install, resource, attachment, optional-boundary,
+  and CLI profile/config checks passed. The wheel was 41,883,465 bytes.
+- Split install at `300426cc75d4265b3ef2bb2040fda976e3ad01b8`: exit 0 in
+  426.627 seconds; manifest `ok: true`, lane `split-install`; the slim-only
+  production refusal passed, both companion distributions installed into the
+  joined namespace, and full byte-exact authority verification passed.
+- Docker core at `43777a3f6f4fd97d921c4000fcc50b79a684e621`: exit 0 in
+  102.792 seconds; manifest `ok: true`, lane `docker-core`, backend
+  `wsl:Ubuntu`, image `python:3.13-slim`; installed resources, profile/config,
+  attachment round-trip, and the missing-extra boundary passed.
+
+The remediations were evidence-led: classify Pillow as a legitimate core
+transitive dependency, track the imported operator-progress runtime module,
+let profile bootstrap derive its bucket database route, and provide an explicit
+tax-residence CCAA in the Docker fixture. Recommendation 23 and the P07 HIGH are
+closed. The successful runs used only the accepted `cadrumo` and `cadrumo-mcp`
+product executables; AEAT remains authority terminology.
