@@ -187,10 +187,12 @@ export const ca: Copy = {
       body: [
         <>
           Aquest lloc web, <strong>cadrumo.neve.md</strong>, i el domini{' '}
-          <strong>neve.md</strong> són publicats per <strong>Gergely Wootsch</strong>,
-          l&rsquo;entitat legal darrere de neve.md i del projecte Cadrumo. Aquesta
-          identificació es facilita als efectes de l&rsquo;article 10 de la Llei 34/2002
-          (LSSI-CE).
+          <strong>neve.md</strong> són publicats per <strong>Gergely Wootsch</strong>, la
+          persona física darrere de neve.md i del projecte Cadrumo, una iniciativa de codi
+          obert sense ànim comercial. Aquesta identificació es facilita en atenció a
+          l&rsquo;article 10 de la Llei 34/2002 (LSSI-CE) en la mesura que sigui aplicable a
+          un projecte no comercial; es facilitaran dades identificatives addicionals a
+          petició a través del canal de contacte indicat més avall.
         </>,
         <>
           Contacte: <a href="mailto:hello@neve.md">hello@neve.md</a>, o a través del
