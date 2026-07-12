@@ -1,14 +1,14 @@
-"""Ordered application :class:`~aeat.core.errors.ErrorCode` registry shard.
+"""Ordered application :class:`~cadrumo.core.errors.ErrorCode` registry shard.
 
 Rows map application-layer exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~cadrumo.core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.application.operator_surface._errors.OperatorSurfaceContractError",
+        "cadrumo.application.operator_surface._errors.OperatorSurfaceContractError",
         ErrorCode(
             code="REFUSED_OPERATOR_SURFACE_CONTRACT",
             category=ErrorCategory.REFUSED,
@@ -19,7 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.registry._errors.RegistryApplicationError",
+        "cadrumo.application.registry._errors.RegistryApplicationError",
         ErrorCode(
             code="ERROR_APPLICATION_REGISTRY",
             category=ErrorCategory.ERROR,
@@ -30,7 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.registry._errors.RegistryApplicationInputError",
+        "cadrumo.application.registry._errors.RegistryApplicationInputError",
         ErrorCode(
             code="REFUSED_APPLICATION_REGISTRY_INPUT",
             category=ErrorCategory.REFUSED,
@@ -41,7 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.corpus_search._errors.CorpusSearchError",
+        "cadrumo.application.corpus_search._errors.CorpusSearchError",
         ErrorCode(
             code="ERROR_CORPUS_SEARCH",
             category=ErrorCategory.ERROR,
@@ -52,7 +52,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.corpus_search._errors.CorpusSearchInputError",
+        "cadrumo.application.corpus_search._errors.CorpusSearchInputError",
         ErrorCode(
             code="REFUSED_CORPUS_SEARCH_INPUT",
             category=ErrorCategory.REFUSED,
@@ -63,7 +63,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.corpus_search._errors.CorpusSearchDependencyError",
+        "cadrumo.application.corpus_search._errors.CorpusSearchDependencyError",
         ErrorCode(
             code="REFUSED_CORPUS_SEARCH_DEPENDENCY",
             category=ErrorCategory.REFUSED,
@@ -74,7 +74,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.live._errors.LiveApplicationError",
+        "cadrumo.application.live._errors.LiveApplicationError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE",
             category=ErrorCategory.ERROR,
@@ -85,7 +85,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.live._errors.LiveApplicationInputError",
+        "cadrumo.application.live._errors.LiveApplicationInputError",
         ErrorCode(
             code="REFUSED_APPLICATION_LIVE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -96,7 +96,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.live._errors.LiveIvaSurfaceTimeoutError",
+        "cadrumo.application.live._errors.LiveIvaSurfaceTimeoutError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE_IVA_SURFACE_TIMEOUT",
             category=ErrorCategory.ERROR,
@@ -107,7 +107,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator_results.AuthProviderReservedError",
+        "cadrumo.application.auth._operator_results.AuthProviderReservedError",
         ErrorCode(
             code="REFUSED_AUTH_PROVIDER_RESERVED",
             category=ErrorCategory.REFUSED,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator_results.AuthConfigureNoActiveBucketError",
+        "cadrumo.application.auth._operator_results.AuthConfigureNoActiveBucketError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -129,7 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator_results.AuthConfigureDanglingActiveProfileError",
+        "cadrumo.application.auth._operator_results.AuthConfigureDanglingActiveProfileError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_DANGLING_ACTIVE_PROFILE",
             category=ErrorCategory.REFUSED,
@@ -140,7 +140,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator_results.AuthLoginNotEnabledError",
+        "cadrumo.application.auth._operator_results.AuthLoginNotEnabledError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
             category=ErrorCategory.REFUSED,
@@ -151,7 +151,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator_results.AuthLoginPreconditionError",
+        "cadrumo.application.auth._operator_results.AuthLoginPreconditionError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_PRECONDITION",
             category=ErrorCategory.REFUSED,
@@ -162,7 +162,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator_results.CertificateSourceNotFoundError",
+        "cadrumo.application.auth._operator_results.CertificateSourceNotFoundError",
         ErrorCode(
             code="REFUSED_AUTH_CERTIFICATE_SOURCE_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -173,7 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
+        "cadrumo.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",
             category=ErrorCategory.LOCKED,
@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._errors.AuthDiagnosticPayloadError",
+        "cadrumo.application.auth._errors.AuthDiagnosticPayloadError",
         ErrorCode(
             code="REFUSED_AUTH_DIAGNOSTIC_PAYLOAD",
             category=ErrorCategory.REFUSED,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._errors.AuthDiagnosticPhoneStateError",
+        "cadrumo.application.auth._errors.AuthDiagnosticPhoneStateError",
         ErrorCode(
             code="REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE",
             category=ErrorCategory.REFUSED,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.config_reset.ConfigResetUnconfirmedError",
+        "cadrumo.application.config_reset.ConfigResetUnconfirmedError",
         ErrorCode(
             code="REFUSED_CONFIG_RESET_UNCONFIRMED",
             category=ErrorCategory.REFUSED,
@@ -217,7 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.topics.TopicNotFoundError",
+        "cadrumo.core.topics.TopicNotFoundError",
         ErrorCode(
             code="REFUSED_TOPIC_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._source_mesh.SourceMeshError",
+        "cadrumo.application.aggregation._source_mesh.SourceMeshError",
         ErrorCode(
             code="REFUSED_SOURCE_MESH_INVARIANT",
             category=ErrorCategory.REFUSED,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationConfigError",
+        "cadrumo.application.aggregation._errors.AggregationConfigError",
         ErrorCode(
             code="ERROR_AGGREGATION_CONFIG",
             category=ErrorCategory.ERROR,
@@ -250,7 +250,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationError",
+        "cadrumo.application.aggregation._errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
             category=ErrorCategory.ERROR,
@@ -261,7 +261,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationPeriodError",
+        "cadrumo.application.aggregation._errors.AggregationPeriodError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION_PERIOD",
             category=ErrorCategory.ERROR,
@@ -272,7 +272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationUnsupportedModeloError",
+        "cadrumo.application.aggregation._errors.AggregationUnsupportedModeloError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
             category=ErrorCategory.REFUSED,
@@ -283,7 +283,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationMissingClassificationError",
+        "cadrumo.application.aggregation._errors.AggregationMissingClassificationError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_MISSING_CLASSIFICATION",
             category=ErrorCategory.REFUSED,
@@ -294,7 +294,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationCategoryCoverageError",
+        "cadrumo.application.aggregation._errors.AggregationCategoryCoverageError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_CATEGORY_COVERAGE",
             category=ErrorCategory.REFUSED,
@@ -305,7 +305,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.review._errors.ReviewError",
+        "cadrumo.application.review._errors.ReviewError",
         ErrorCode(
             code="ERROR_REVIEW",
             category=ErrorCategory.ERROR,
@@ -316,7 +316,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.review._errors.ReviewKindReservedError",
+        "cadrumo.application.review._errors.ReviewKindReservedError",
         ErrorCode(
             code="REFUSED_REVIEW_KIND_RESERVED",
             category=ErrorCategory.REFUSED,
@@ -327,7 +327,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.review._errors.ReviewSourceLoadError",
+        "cadrumo.application.review._errors.ReviewSourceLoadError",
         ErrorCode(
             code="FAIL_REVIEW_SOURCE_LOAD",
             category=ErrorCategory.FAIL,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.review._errors.FilterParseError",
+        "cadrumo.application.review._errors.FilterParseError",
         ErrorCode(
             code="REFUSED_REVIEW_FILTER_PARSE",
             category=ErrorCategory.REFUSED,
@@ -349,7 +349,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.review._errors.EditParseError",
+        "cadrumo.application.review._errors.EditParseError",
         ErrorCode(
             code="REFUSED_REVIEW_EDIT_PARSE",
             category=ErrorCategory.REFUSED,
@@ -360,7 +360,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.verification._errors.VerificationError",
+        "cadrumo.application.verification._errors.VerificationError",
         ErrorCode(
             code="INTEGRITY_VERIFICATION",
             category=ErrorCategory.INTEGRITY,
@@ -371,7 +371,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.BootstrapAlreadyCompleteError",
+        "cadrumo.application.workflow._errors.BootstrapAlreadyCompleteError",
         ErrorCode(
             code="REFUSED_BOOTSTRAP_ALREADY_COMPLETE",
             category=ErrorCategory.REFUSED,
@@ -382,7 +382,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.ProfileNameCollisionError",
+        "cadrumo.application.workflow._errors.ProfileNameCollisionError",
         ErrorCode(
             code="REFUSED_PROFILE_NAME_COLLISION",
             category=ErrorCategory.REFUSED,
@@ -393,7 +393,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.ProfileLockedError",
+        "cadrumo.application.workflow._errors.ProfileLockedError",
         ErrorCode(
             code="REFUSED_PROFILE_LOCKED",
             category=ErrorCategory.REFUSED,
@@ -404,7 +404,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.WorkflowAbortedError",
+        "cadrumo.application.workflow._errors.WorkflowAbortedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_ABORTED",
             category=ErrorCategory.REFUSED,
@@ -415,7 +415,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.WorkflowComponentError",
+        "cadrumo.application.workflow._errors.WorkflowComponentError",
         ErrorCode(
             code="ERROR_WORKFLOW_COMPONENT",
             category=ErrorCategory.ERROR,
@@ -426,7 +426,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.WorkflowError",
+        "cadrumo.application.workflow._errors.WorkflowError",
         ErrorCode(
             code="ERROR_WORKFLOW",
             category=ErrorCategory.ERROR,
@@ -437,7 +437,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._resume.WorkflowResumeRefusedError",
+        "cadrumo.application.workflow._resume.WorkflowResumeRefusedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_RESUME",
             category=ErrorCategory.REFUSED,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._resume.WorkflowResumeRunAmbiguousError",
+        "cadrumo.application.workflow._resume.WorkflowResumeRunAmbiguousError",
         ErrorCode(
             code="REFUSED_WORKFLOW_RESUME_RUN_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -459,7 +459,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.live._snapshot_base.SnapshotNotFoundError",
+        "cadrumo.application.live._snapshot_base.SnapshotNotFoundError",
         ErrorCode(
             code="FAIL_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.FAIL,
@@ -470,7 +470,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.repair_integrity.RepairIntegrityError",
+        "cadrumo.application.repair_integrity.RepairIntegrityError",
         ErrorCode(
             code="INTEGRITY_REPAIR_INTEGRITY",
             category=ErrorCategory.INTEGRITY,
@@ -481,7 +481,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.repair_integrity.RepairDecisionNotFoundError",
+        "cadrumo.application.repair_integrity.RepairDecisionNotFoundError",
         ErrorCode(
             code="FAIL_REPAIR_DECISION_NOT_FOUND",
             category=ErrorCategory.FAIL,
@@ -492,7 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.ProfileLabelAmbiguousError",
+        "cadrumo.application.workflow._errors.ProfileLabelAmbiguousError",
         ErrorCode(
             code="REFUSED_PROFILE_LABEL_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -503,7 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.WorkflowAbortSignalError",
+        "cadrumo.application.workflow._errors.WorkflowAbortSignalError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_ABORT_SIGNAL",
             category=ErrorCategory.INTERNAL,
@@ -514,7 +514,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.UnhandledWorkflowError",
+        "cadrumo.application.workflow._errors.UnhandledWorkflowError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_UNHANDLED",
             category=ErrorCategory.INTERNAL,
@@ -525,7 +525,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._sessions.CorruptAuthSessionError",
+        "cadrumo.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="AUTH_SESSION_CORRUPT",
             category=ErrorCategory.AUTH,
@@ -536,7 +536,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._sessions.AuthSessionUnavailableError",
+        "cadrumo.application.auth._sessions.AuthSessionUnavailableError",
         ErrorCode(
             code="AUTH_SESSION_UNAVAILABLE",
             category=ErrorCategory.AUTH,
@@ -547,7 +547,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._sessions.AuthProfileIdentityMismatchError",
+        "cadrumo.application.auth._sessions.AuthProfileIdentityMismatchError",
         ErrorCode(
             code="REFUSED_AUTH_PROFILE_IDENTITY_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._sessions.SessionDeserializationError",
+        "cadrumo.application.auth._sessions.SessionDeserializationError",
         ErrorCode(
             code="AUTH_SESSION_DESERIALIZATION",
             category=ErrorCategory.AUTH,
@@ -569,7 +569,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationValidationError",
+        "cadrumo.application.aggregation._errors.AggregationValidationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -580,7 +580,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing.errors.ModeloApplicationError",
+        "cadrumo.application.filing.errors.ModeloApplicationError",
         ErrorCode(
             code="ERROR_FILING_APPLICATION",
             category=ErrorCategory.ERROR,
@@ -591,7 +591,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.filing.errors.ModeloCalculateError",
+        "cadrumo.application.filing.errors.ModeloCalculateError",
         ErrorCode(
             code="REFUSED_FILING_CALCULATE",
             category=ErrorCategory.REFUSED,
@@ -602,7 +602,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._log_levels.LogLevelResolutionError",
+        "cadrumo.entrypoints.cli._log_levels.LogLevelResolutionError",
         ErrorCode(
             code="REFUSED_CLI_LOG_LEVEL_RESOLUTION",
             category=ErrorCategory.REFUSED,
@@ -613,7 +613,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._tty.NonTtyRefusedError",
+        "cadrumo.entrypoints.cli._tty.NonTtyRefusedError",
         ErrorCode(
             code="REFUSED_CLI_NON_TTY",
             category=ErrorCategory.REFUSED,
@@ -624,7 +624,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._errors.CliValidationBoundaryError",
+        "cadrumo.entrypoints.cli._errors.CliValidationBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_VALIDATION_BOUNDARY",
             category=ErrorCategory.REFUSED,
@@ -635,7 +635,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._errors.CliUnexpectedBoundaryError",
+        "cadrumo.entrypoints.cli._errors.CliUnexpectedBoundaryError",
         ErrorCode(
             code="INTERNAL_CLI_UNEXPECTED_BOUNDARY",
             category=ErrorCategory.INTERNAL,
@@ -646,7 +646,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._errors.CliRefusedBoundaryError",
+        "cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",
             category=ErrorCategory.REFUSED,
@@ -657,7 +657,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardError",
+        "cadrumo.application.wizard._errors.WizardError",
         ErrorCode(
             code="ERROR_WIZARD",
             category=ErrorCategory.ERROR,
@@ -668,7 +668,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardValidationError",
+        "cadrumo.application.wizard._errors.WizardValidationError",
         ErrorCode(
             code="REFUSED_WIZARD_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -679,7 +679,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardScriptUnderflowError",
+        "cadrumo.application.wizard._errors.WizardScriptUnderflowError",
         ErrorCode(
             code="INTERNAL_WIZARD_SCRIPT_UNDERFLOW",
             category=ErrorCategory.INTERNAL,
@@ -690,7 +690,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardScriptOverflowError",
+        "cadrumo.application.wizard._errors.WizardScriptOverflowError",
         ErrorCode(
             code="INTERNAL_WIZARD_SCRIPT_OVERFLOW",
             category=ErrorCategory.INTERNAL,
@@ -701,7 +701,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardMissingFlagError",
+        "cadrumo.application.wizard._errors.WizardMissingFlagError",
         ErrorCode(
             code="REFUSED_WIZARD_MISSING_FLAG",
             category=ErrorCategory.REFUSED,
@@ -712,7 +712,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardCompileError",
+        "cadrumo.application.wizard._errors.WizardCompileError",
         ErrorCode(
             code="ERROR_WIZARD_COMPILE",
             category=ErrorCategory.ERROR,
@@ -723,7 +723,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._errors.WizardAnswerTypeError",
+        "cadrumo.application.wizard._errors.WizardAnswerTypeError",
         ErrorCode(
             code="REFUSED_WIZARD_ANSWER_TYPE",
             category=ErrorCategory.REFUSED,
@@ -734,7 +734,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._prompter.WizardUnsupportedConsoleError",
+        "cadrumo.application.wizard._prompter.WizardUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -750,7 +750,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._prompter.WizardEditUnsupportedConsoleError",
+        "cadrumo.application.wizard._prompter.WizardEditUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_EDIT_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -761,7 +761,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.wizard._status.WizardStatusError",
+        "cadrumo.application.wizard._status.WizardStatusError",
         ErrorCode(
             code="REFUSED_WIZARD_STATUS",
             category=ErrorCategory.REFUSED,
@@ -772,7 +772,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._taxation_comparison.TaxationComparisonError",
+        "cadrumo.application.modelo._taxation_comparison.TaxationComparisonError",
         ErrorCode(
             code="REFUSED_TAXATION_COMPARISON",
             category=ErrorCategory.REFUSED,
@@ -783,7 +783,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._borrador_binding.Modelo100BorradorBindingError",
+        "cadrumo.application.modelo._borrador_binding.Modelo100BorradorBindingError",
         ErrorCode(
             code="REFUSED_MODELO_100_BORRADOR_BINDING",
             category=ErrorCategory.REFUSED,
@@ -794,7 +794,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._profile_binding.ProfileBindingResolutionError",
+        "cadrumo.application.modelo._profile_binding.ProfileBindingResolutionError",
         ErrorCode(
             code="REFUSED_PROFILE_BINDING_RESOLUTION",
             category=ErrorCategory.REFUSED,
@@ -805,7 +805,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloProjectionError",
+        "cadrumo.application.modelo._projection.ModeloProjectionError",
         ErrorCode(
             code="ERROR_MODELO_PROJECTION",
             category=ErrorCategory.ERROR,
@@ -816,7 +816,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloProjectNoM130UnitsError",
+        "cadrumo.application.modelo._projection.ModeloProjectNoM130UnitsError",
         ErrorCode(
             code="ERROR_MODELO_PROJECT_NO_M130_UNITS",
             category=ErrorCategory.ERROR,
@@ -827,7 +827,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloProjectNoM130RevisionsError",
+        "cadrumo.application.modelo._projection.ModeloProjectNoM130RevisionsError",
         ErrorCode(
             code="ERROR_MODELO_PROJECT_NO_M130_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -838,7 +838,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloProjectInvalidDecimalOverrideError",
+        "cadrumo.application.modelo._projection.ModeloProjectInvalidDecimalOverrideError",
         ErrorCode(
             code="REFUSED_MODELO_PROJECT_INVALID_DECIMAL_OVERRIDE",
             category=ErrorCategory.REFUSED,
@@ -849,7 +849,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloCompareNeedTwoYearsError",
+        "cadrumo.application.modelo._projection.ModeloCompareNeedTwoYearsError",
         ErrorCode(
             code="REFUSED_MODELO_COMPARE_NEED_TWO_YEARS",
             category=ErrorCategory.REFUSED,
@@ -860,7 +860,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloCompareNoWorkUnitsError",
+        "cadrumo.application.modelo._projection.ModeloCompareNoWorkUnitsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_WORK_UNITS",
             category=ErrorCategory.ERROR,
@@ -871,7 +871,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloCompareNoRevisionsError",
+        "cadrumo.application.modelo._projection.ModeloCompareNoRevisionsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -882,7 +882,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._projection.ModeloCompareNoUsableRevisionsError",
+        "cadrumo.application.modelo._projection.ModeloCompareNoUsableRevisionsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_USABLE_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -893,7 +893,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._semantic_role_resolution.AmbiguousSemanticRoleCasillaError",
+        "cadrumo.application.modelo._semantic_role_resolution.AmbiguousSemanticRoleCasillaError",
         ErrorCode(
             code="REFUSED_MODELO_AMBIGUOUS_SEMANTIC_ROLE_CASILLA",
             category=ErrorCategory.REFUSED,
@@ -904,7 +904,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
+        "cadrumo.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_EVIDENCE_INVALID",
             category=ErrorCategory.REFUSED,
@@ -915,7 +915,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._reconcile.ReconciliationDeclaracionSourceUnsupportedError",
+        "cadrumo.application.modelo._reconcile.ReconciliationDeclaracionSourceUnsupportedError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED",
             category=ErrorCategory.REFUSED,
@@ -926,7 +926,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._reconcile.ReconciliationCrossBucketRefusedError",
+        "cadrumo.application.modelo._reconcile.ReconciliationCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -937,7 +937,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloWorkSelectorError",
+        "cadrumo.application.modelo._selectors.ModeloWorkSelectorError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR",
             category=ErrorCategory.ERROR,

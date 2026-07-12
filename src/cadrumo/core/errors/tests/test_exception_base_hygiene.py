@@ -1,6 +1,6 @@
 """Static guard for production exception base classes.
 
-User/application-facing AEAT exceptions must derive from
+User/application-facing Cadrumo exceptions must derive from
 :class:`cadrumo.core.errors.AeatError` so they bind to the central error
 registry. A tiny allowlist remains for private implementation sentinels
 and structural mixin bases that are not raised directly.
@@ -15,7 +15,7 @@ from types import ModuleType
 
 import pytest
 
-from .... import __path__ as _aeat_package_path
+from .... import __path__ as _cadrumo_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -84,9 +84,9 @@ _ALLOWLIST = {
 }
 
 
-def _iter_imported_aeat_modules() -> list[ModuleType]:
+def _iter_imported_cadrumo_modules() -> list[ModuleType]:
     modules: list[ModuleType] = []
-    for info in pkgutil.walk_packages(_aeat_package_path, prefix="aeat."):
+    for info in pkgutil.walk_packages(_cadrumo_package_path, prefix="cadrumo."):
         name = info.name
         if ".tests." in name or ".test_" in name or "._test_" in name:
             continue
@@ -105,7 +105,7 @@ def _module_exception_classes(module: ModuleType) -> list[type[BaseException]]:
 
 def test_production_exception_classes_do_not_introduce_unregistered_builtin_roots() -> None:
     violations: list[str] = []
-    for module in _iter_imported_aeat_modules():
+    for module in _iter_imported_cadrumo_modules():
         for error_type in _module_exception_classes(module):
             qualname = f"{error_type.__module__}.{error_type.__qualname__}"
             if qualname in _ALLOWLIST:

@@ -1,14 +1,14 @@
-"""Ordered adapter :class:`~aeat.core.errors.ErrorCode` registry shard.
+"""Ordered adapter :class:`~cadrumo.core.errors.ErrorCode` registry shard.
 
 Rows map adapter-layer exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~cadrumo.core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.adapters.outbound.aeat.auth._errors.AeatLoginAssertionError",
+        "cadrumo.adapters.outbound.aeat.auth._errors.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,
@@ -19,7 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.auth._errors.AeatSessionExpiredError",
+        "cadrumo.adapters.outbound.aeat.auth._errors.AeatSessionExpiredError",
         ErrorCode(
             code="AUTH_AEAT_SESSION_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -30,7 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.export._errors.ExportError",
+        "cadrumo.adapters.outbound.aeat.export._errors.ExportError",
         ErrorCode(
             code="FAIL_EXPORT",
             category=ErrorCategory.FAIL,
@@ -41,7 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.SanitizationError",
+        "cadrumo.adapters.inbound.sanitizer._errors.SanitizationError",
         ErrorCode(
             code="ERROR_SANITIZATION",
             category=ErrorCategory.ERROR,
@@ -52,7 +52,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.FinancialProviderError",
+        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER",
             category=ErrorCategory.ERROR,
@@ -63,7 +63,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.UnsupportedFinancialSourceError",
+        "cadrumo.adapters.inbound.financial.providers._base.UnsupportedFinancialSourceError",
         ErrorCode(
             code="REFUSED_FINANCIAL_PROVIDER_UNSUPPORTED_SOURCE",
             category=ErrorCategory.REFUSED,
@@ -74,7 +74,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.InvalidFinancialSourceError",
+        "cadrumo.adapters.inbound.financial.providers._base.InvalidFinancialSourceError",
         ErrorCode(
             code="REFUSED_FINANCIAL_PROVIDER_INVALID_SOURCE",
             category=ErrorCategory.REFUSED,
@@ -85,7 +85,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.FinancialValidationError",
+        "cadrumo.adapters.inbound.financial.providers._base.FinancialValidationError",
         ErrorCode(
             code="REFUSED_FINANCIAL_PROVIDER_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -96,7 +96,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.BankStatementParseError",
+        "cadrumo.adapters.inbound.financial.providers._base.BankStatementParseError",
         ErrorCode(
             code="REFUSED_FINANCIAL_BANK_STATEMENT_PARSE",
             category=ErrorCategory.REFUSED,
@@ -107,7 +107,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.SanitizerValidationError",
+        "cadrumo.adapters.inbound.sanitizer._errors.SanitizerValidationError",
         ErrorCode(
             code="REFUSED_SANITIZATION_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.SanitizerSourceParseError",
+        "cadrumo.adapters.inbound.sanitizer._errors.SanitizerSourceParseError",
         ErrorCode(
             code="FAIL_SANITIZATION_SOURCE_PARSE",
             category=ErrorCategory.FAIL,
@@ -129,7 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.SignaturePresentError",
+        "cadrumo.adapters.inbound.sanitizer._errors.SignaturePresentError",
         ErrorCode(
             code="REFUSED_SANITIZATION_SIGNATURE_PRESENT",
             category=ErrorCategory.REFUSED,
@@ -140,7 +140,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.AlreadySanitizedError",
+        "cadrumo.adapters.inbound.sanitizer._errors.AlreadySanitizedError",
         ErrorCode(
             code="REFUSED_SANITIZATION_ALREADY_SANITIZED",
             category=ErrorCategory.REFUSED,
@@ -151,7 +151,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.sanitizer._errors.UnknownSurfaceError",
+        "cadrumo.adapters.inbound.sanitizer._errors.UnknownSurfaceError",
         ErrorCode(
             code="REFUSED_SANITIZATION_UNKNOWN_SURFACE",
             category=ErrorCategory.REFUSED,
@@ -162,7 +162,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMError",
+        "cadrumo.adapters.outbound.llm._errors.LLMError",
         ErrorCode(
             code="ERROR_LLM",
             category=ErrorCategory.ERROR,
@@ -173,7 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMProviderError",
+        "cadrumo.adapters.outbound.llm._errors.LLMProviderError",
         ErrorCode(
             code="FAIL_LLM_PROVIDER",
             category=ErrorCategory.FAIL,
@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMPdfRasterisationError",
+        "cadrumo.adapters.outbound.llm._errors.LLMPdfRasterisationError",
         ErrorCode(
             code="FAIL_LLM_PDF_RASTERISATION",
             category=ErrorCategory.FAIL,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMCacheError",
+        "cadrumo.adapters.outbound.llm._errors.LLMCacheError",
         ErrorCode(
             code="FAIL_LLM_CACHE",
             category=ErrorCategory.FAIL,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMRateLimitError",
+        "cadrumo.adapters.outbound.llm._errors.LLMRateLimitError",
         ErrorCode(
             code="FAIL_LLM_RATE_LIMIT",
             category=ErrorCategory.FAIL,
@@ -217,7 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMConfigError",
+        "cadrumo.adapters.outbound.llm._errors.LLMConfigError",
         ErrorCode(
             code="REFUSED_LLM_CONFIG",
             category=ErrorCategory.REFUSED,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.llm._errors.LLMValidationError",
+        "cadrumo.adapters.outbound.llm._errors.LLMValidationError",
         ErrorCode(
             code="REFUSED_LLM_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthError",
         ErrorCode(
             code="AUTH_GOOGLE",
             category=ErrorCategory.AUTH,
@@ -250,7 +250,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthValidationError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthValidationError",
         ErrorCode(
             code="REFUSED_GOOGLE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -261,7 +261,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthClientNotRegisteredError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthClientNotRegisteredError",
         ErrorCode(
             code="AUTH_GOOGLE_CLIENT_NOT_REGISTERED",
             category=ErrorCategory.AUTH,
@@ -272,7 +272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthClientRevokedError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthClientRevokedError",
         ErrorCode(
             code="AUTH_GOOGLE_CLIENT_REVOKED",
             category=ErrorCategory.AUTH,
@@ -283,7 +283,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthRevokedError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthRevokedError",
         ErrorCode(
             code="AUTH_GOOGLE_REVOKED",
             category=ErrorCategory.AUTH,
@@ -294,7 +294,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthExpiredError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthExpiredError",
         ErrorCode(
             code="AUTH_GOOGLE_EXPIRED",
             category=ErrorCategory.AUTH,
@@ -305,7 +305,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthScopeInsufficientError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthScopeInsufficientError",
         ErrorCode(
             code="AUTH_GOOGLE_SCOPE_INSUFFICIENT",
             category=ErrorCategory.AUTH,
@@ -316,7 +316,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthNetworkError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthNetworkError",
         ErrorCode(
             code="FAIL_GOOGLE_NETWORK",
             category=ErrorCategory.FAIL,
@@ -327,7 +327,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthLoopbackBindError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthLoopbackBindError",
         ErrorCode(
             code="FAIL_GOOGLE_LOOPBACK_BIND",
             category=ErrorCategory.FAIL,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthBrowserOpenError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthBrowserOpenError",
         ErrorCode(
             code="FAIL_GOOGLE_BROWSER_OPEN",
             category=ErrorCategory.FAIL,
@@ -349,7 +349,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthNonInteractiveError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthNonInteractiveError",
         ErrorCode(
             code="REFUSED_GOOGLE_NON_INTERACTIVE",
             category=ErrorCategory.REFUSED,
@@ -360,7 +360,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthUnsecuredModeRefusedError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthUnsecuredModeRefusedError",
         ErrorCode(
             code="REFUSED_GOOGLE_UNSECURED_MODE",
             category=ErrorCategory.REFUSED,
@@ -371,7 +371,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthKeychainLockedError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthKeychainLockedError",
         ErrorCode(
             code="LOCKED_GOOGLE_KEYCHAIN",
             category=ErrorCategory.LOCKED,
@@ -382,7 +382,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._errors.GoogleAuthProfileUnboundError",
+        "cadrumo.adapters.outbound.google._errors.GoogleAuthProfileUnboundError",
         ErrorCode(
             code="REFUSED_GOOGLE_PROFILE_UNBOUND",
             category=ErrorCategory.REFUSED,
@@ -393,7 +393,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._impersonation.GoogleAuthAdcUnavailableError",
+        "cadrumo.adapters.outbound.google._impersonation.GoogleAuthAdcUnavailableError",
         ErrorCode(
             code="FAIL_GOOGLE_ADC_UNAVAILABLE",
             category=ErrorCategory.FAIL,
@@ -404,7 +404,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._impersonation.GoogleAuthAdcStaleError",
+        "cadrumo.adapters.outbound.google._impersonation.GoogleAuthAdcStaleError",
         ErrorCode(
             code="FAIL_GOOGLE_ADC_STALE",
             category=ErrorCategory.FAIL,
@@ -415,7 +415,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google._impersonation.GoogleAuthImpersonationRefusedError",
+        "cadrumo.adapters.outbound.google._impersonation.GoogleAuthImpersonationRefusedError",
         ErrorCode(
             code="REFUSED_GOOGLE_IMPERSONATION",
             category=ErrorCategory.REFUSED,
@@ -426,7 +426,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE",
             category=ErrorCategory.FAIL,
@@ -437,7 +437,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageValidationError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageValidationError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageNotFoundError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageNotFoundError",
         ErrorCode(
             code="ERROR_OUTBOUND_STORAGE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -459,7 +459,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageConflictError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageConflictError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -470,7 +470,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStoragePermissionError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStoragePermissionError",
         ErrorCode(
             code="AUTH_OUTBOUND_STORAGE_PERMISSION",
             category=ErrorCategory.AUTH,
@@ -481,7 +481,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStoragePathTooLongError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStoragePathTooLongError",
         ErrorCode(
             code="ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG",
             category=ErrorCategory.ERROR,
@@ -492,7 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageQuotaError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageQuotaError",
         ErrorCode(
             code="REFUSED_OUTBOUND_STORAGE_QUOTA",
             category=ErrorCategory.REFUSED,
@@ -503,7 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageNetworkError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageNetworkError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE_NETWORK",
             category=ErrorCategory.FAIL,
@@ -514,7 +514,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageIntegrityError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageIntegrityError",
         ErrorCode(
             code="INTEGRITY_OUTBOUND_STORAGE",
             category=ErrorCategory.INTEGRITY,
@@ -525,7 +525,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.OutboundStorageUnavailableError",
+        "cadrumo.adapters.outbound.storage._errors.OutboundStorageUnavailableError",
         ErrorCode(
             code="FAIL_OUTBOUND_STORAGE_UNAVAILABLE",
             category=ErrorCategory.FAIL,
@@ -536,7 +536,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.storage._errors.StorageCorruptionError",
+        "cadrumo.adapters.outbound.storage._errors.StorageCorruptionError",
         ErrorCode(
             code="INTEGRITY_OUTBOUND_STORAGE_CORRUPTION",
             category=ErrorCategory.INTEGRITY,
@@ -547,7 +547,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.master_key._active_session.NoActiveBucketSessionError",
+        "cadrumo.adapters.persistence.storage.master_key._active_session.NoActiveBucketSessionError",
         ErrorCode(
             code="REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
             category=ErrorCategory.REFUSED,
@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.BucketError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.BucketError",
         ErrorCode(
             code="ERROR_STORAGE_BUCKET",
             category=ErrorCategory.ERROR,
@@ -569,7 +569,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.NoActiveBucketError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.NoActiveBucketError",
         ErrorCode(
             code="REFUSED_STORAGE_BUCKET_NO_ACTIVE",
             category=ErrorCategory.REFUSED,
@@ -580,7 +580,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.BucketBusyError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.BucketBusyError",
         ErrorCode(
             code="LOCKED_STORAGE_BUCKET_BUSY",
             category=ErrorCategory.LOCKED,
@@ -591,7 +591,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.BucketAlreadyPresentError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.BucketAlreadyPresentError",
         ErrorCode(
             code="REFUSED_STORAGE_BUCKET_ALREADY_PRESENT",
             category=ErrorCategory.REFUSED,
@@ -602,7 +602,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.BucketPathTooLongError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.BucketPathTooLongError",
         ErrorCode(
             code="ERROR_STORAGE_BUCKET_PATH_TOO_LONG",
             category=ErrorCategory.ERROR,
@@ -613,7 +613,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.BucketLockedError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.BucketLockedError",
         ErrorCode(
             code="LOCKED_STORAGE_BUCKET_SESSION",
             category=ErrorCategory.LOCKED,
@@ -624,7 +624,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.BucketValidationError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.BucketValidationError",
         ErrorCode(
             code="INTEGRITY_STORAGE_BUCKET_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -635,7 +635,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.RecoveryUnavailableError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.RecoveryUnavailableError",
         ErrorCode(
             code="FAIL_STORAGE_BUCKET_RECOVERY_UNAVAILABLE",
             category=ErrorCategory.FAIL,
@@ -646,7 +646,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.bucket._errors.RecoveryVerificationError",
+        "cadrumo.adapters.persistence.storage.bucket._errors.RecoveryVerificationError",
         ErrorCode(
             code="AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION",
             category=ErrorCategory.AUTH,
@@ -657,7 +657,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.NamespaceRegistryError",
+        "cadrumo.adapters.persistence.storage.errors.NamespaceRegistryError",
         ErrorCode(
             code="INTEGRITY_STORAGE_NAMESPACE_REGISTRY",
             category=ErrorCategory.INTEGRITY,
@@ -668,7 +668,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.master_key._errors.MasterKeyReentrantError",
+        "cadrumo.adapters.persistence.storage.master_key._errors.MasterKeyReentrantError",
         ErrorCode(
             code="INTERNAL_MASTER_KEY_REENTRANT",
             category=ErrorCategory.INTERNAL,
@@ -679,7 +679,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.master_key._errors.MasterKeyTypeError",
+        "cadrumo.adapters.persistence.storage.master_key._errors.MasterKeyTypeError",
         ErrorCode(
             code="INTERNAL_MASTER_KEY_TYPE",
             category=ErrorCategory.INTERNAL,
@@ -690,7 +690,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.FinancialProviderError",
+        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER",
             category=ErrorCategory.ERROR,
@@ -701,7 +701,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.financial.providers._base.FinancialProviderConfigError",
+        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderConfigError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER_CONFIG",
             category=ErrorCategory.ERROR,

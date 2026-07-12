@@ -1,14 +1,14 @@
-"""Ordered application :class:`~aeat.core.errors.ErrorCode` registry shard.
+"""Ordered application :class:`~cadrumo.core.errors.ErrorCode` registry shard.
 
 Rows map application-layer exception qualnames to stable
-:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+:class:`~cadrumo.core.errors.ErrorCategory` values and locale message keys.
 """
 
 from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.application.modelo._selectors.ModeloWorkNoActiveBucketError",
+        "cadrumo.application.modelo._selectors.ModeloWorkNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -19,7 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloWorkUnitNotFoundError",
+        "cadrumo.application.modelo._selectors.ModeloWorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR_UNIT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -30,7 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloWorkSelectorContradictionError",
+        "cadrumo.application.modelo._selectors.ModeloWorkSelectorContradictionError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_CONTRADICTION",
             category=ErrorCategory.REFUSED,
@@ -41,7 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloWorkVisibleTargetAmbiguousError",
+        "cadrumo.application.modelo._selectors.ModeloWorkVisibleTargetAmbiguousError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -52,7 +52,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloWorkRevisionConflictError",
+        "cadrumo.application.modelo._selectors.ModeloWorkRevisionConflictError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_REVISION_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -63,7 +63,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloCalculationRevisionSelectorError",
+        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_SELECTOR",
             category=ErrorCategory.ERROR,
@@ -74,7 +74,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloCalculationRevisionSelectorNotFoundError",
+        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_SELECTOR_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -85,7 +85,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloCalculationRevisionSelectorStateError",
+        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorStateError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE",
             category=ErrorCategory.REFUSED,
@@ -96,7 +96,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._selectors.ModeloCalculationRevisionSelectorAmbiguousError",
+        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorAmbiguousError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -107,7 +107,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._work_addressing.ModeloWorkAddressNotFoundError",
+        "cadrumo.application.modelo._work_addressing.ModeloWorkAddressNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_ADDRESS_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._work_addressing.ModeloWorkRegistryYearMismatchError",
+        "cadrumo.application.modelo._work_addressing.ModeloWorkRegistryYearMismatchError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -129,7 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._work_addressing.ModeloWorkPeriodTokenError",
+        "cadrumo.application.modelo._work_addressing.ModeloWorkPeriodTokenError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_PERIOD_TOKEN",
             category=ErrorCategory.REFUSED,
@@ -140,7 +140,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._work_addressing.ModeloRevisionPickError",
+        "cadrumo.application.modelo._work_addressing.ModeloRevisionPickError",
         ErrorCode(
             code="REFUSED_MODELO_REVISION_PICK",
             category=ErrorCategory.REFUSED,
@@ -151,7 +151,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -162,7 +162,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateDetailRowsError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateDetailRowsError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_DETAIL_ROWS",
             category=ErrorCategory.REFUSED,
@@ -173,7 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateDecimalInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateDecimalInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_DECIMAL_INPUT",
             category=ErrorCategory.REFUSED,
@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateTextInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateTextInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_TEXT_INPUT",
             category=ErrorCategory.REFUSED,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateCasillaInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateCasillaInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_CASILLA_INPUT",
             category=ErrorCategory.REFUSED,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateBindingInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateBindingInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_BINDING_INPUT",
             category=ErrorCategory.REFUSED,
@@ -217,7 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateRelationInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateRelationInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_RELATION_INPUT",
             category=ErrorCategory.REFUSED,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateShortcutInputError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateShortcutInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_SHORTCUT_INPUT",
             category=ErrorCategory.REFUSED,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._calculate_input.ModeloCalculateSemanticRoleError",
+        "cadrumo.application.modelo._calculate_input.ModeloCalculateSemanticRoleError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_SEMANTIC_ROLE",
             category=ErrorCategory.REFUSED,
@@ -250,7 +250,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._export.ModeloExportCrossBucketRefusedError",
+        "cadrumo.application.modelo._export.ModeloExportCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -261,7 +261,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._export.ModeloExportEvidenceMissingError",
+        "cadrumo.application.modelo._export.ModeloExportEvidenceMissingError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_EVIDENCE_MISSING",
             category=ErrorCategory.REFUSED,
@@ -272,7 +272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._filing_actions.ModeloFilingEvidenceMissingError",
+        "cadrumo.application.modelo._filing_actions.ModeloFilingEvidenceMissingError",
         ErrorCode(
             code="REFUSED_MODELO_FILING_EVIDENCE_MISSING",
             category=ErrorCategory.REFUSED,
@@ -283,7 +283,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._export.ModeloExportNoActiveBucketError",
+        "cadrumo.application.modelo._export.ModeloExportNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -294,7 +294,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._export.ModeloExportUnsupportedError",
+        "cadrumo.application.modelo._export.ModeloExportUnsupportedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_UNSUPPORTED",
             category=ErrorCategory.REFUSED,
@@ -305,7 +305,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._export.ModeloExportOutputPathError",
+        "cadrumo.application.modelo._export.ModeloExportOutputPathError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_OUTPUT_PATH",
             category=ErrorCategory.REFUSED,
@@ -316,7 +316,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.overview._errors.OverviewError",
+        "cadrumo.application.overview._errors.OverviewError",
         ErrorCode(
             code="FAIL_OVERVIEW",
             category=ErrorCategory.FAIL,
@@ -327,7 +327,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.overview._errors.OverviewCalendarError",
+        "cadrumo.application.overview._errors.OverviewCalendarError",
         ErrorCode(
             code="FAIL_OVERVIEW_CALENDAR",
             category=ErrorCategory.FAIL,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.overview._errors.OverviewAgendaError",
+        "cadrumo.application.overview._errors.OverviewAgendaError",
         ErrorCode(
             code="FAIL_OVERVIEW_AGENDA",
             category=ErrorCategory.FAIL,
@@ -349,7 +349,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.overview._errors.OverviewBacklogError",
+        "cadrumo.application.overview._errors.OverviewBacklogError",
         ErrorCode(
             code="FAIL_OVERVIEW_BACKLOG",
             category=ErrorCategory.FAIL,
@@ -360,7 +360,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.overview._errors.OverviewExplainError",
+        "cadrumo.application.overview._errors.OverviewExplainError",
         ErrorCode(
             code="FAIL_OVERVIEW_EXPLAIN",
             category=ErrorCategory.FAIL,
@@ -371,7 +371,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.user_profile._censo_errors.CensoSyncError",
+        "cadrumo.application.user_profile._censo_errors.CensoSyncError",
         ErrorCode(
             code="FAIL_CENSO_SYNC",
             category=ErrorCategory.FAIL,
@@ -382,7 +382,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
+        "cadrumo.application.user_profile._orchestration.ProfileAlreadyRegisteredError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_REGISTERED",
             category=ErrorCategory.REFUSED,
@@ -393,7 +393,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.user_profile._integrity.ProfileIntegrityError",
+        "cadrumo.application.user_profile._integrity.ProfileIntegrityError",
         ErrorCode(
             code="ERROR_PROFILE_CROSS_STORE_DRIFT",
             category=ErrorCategory.ERROR,
@@ -404,7 +404,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.modelos._errors.PensionReduccionError",
+        "cadrumo.domain.modelos._errors.PensionReduccionError",
         ErrorCode(
             code="REFUSED_PENSION_REDUCCION_COMPUTATION",
             category=ErrorCategory.REFUSED,
@@ -415,7 +415,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._errors.IvaCompensationModeloError",
+        "cadrumo.application.calculations._errors.IvaCompensationModeloError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_MODELO",
             category=ErrorCategory.REFUSED,
@@ -426,7 +426,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._errors.BindingPrefillTypeError",
+        "cadrumo.application.calculations._errors.BindingPrefillTypeError",
         ErrorCode(
             code="REFUSED_BINDING_PREFILL_TYPE",
             category=ErrorCategory.REFUSED,
@@ -437,7 +437,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._errors.ObservationKeyError",
+        "cadrumo.application.calculations._errors.ObservationKeyError",
         ErrorCode(
             code="ERROR_OBSERVATION_KEY",
             category=ErrorCategory.ERROR,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._errors.ObservationCasillaReferenceError",
+        "cadrumo.application.calculations._errors.ObservationCasillaReferenceError",
         ErrorCode(
             code="REFUSED_OBSERVATION_CASILLA_REFERENCE",
             category=ErrorCategory.REFUSED,
@@ -459,7 +459,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaWalletReconciliationError",
+        "cadrumo.domain.iva_compensation._errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
             category=ErrorCategory.REFUSED,
@@ -470,7 +470,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaCompensationYearRangeError",
+        "cadrumo.domain.iva_compensation._errors.IvaCompensationYearRangeError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_YEAR_RANGE",
             category=ErrorCategory.REFUSED,
@@ -481,7 +481,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaCompensationDecimalParseError",
+        "cadrumo.domain.iva_compensation._errors.IvaCompensationDecimalParseError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_DECIMAL_PARSE",
             category=ErrorCategory.REFUSED,
@@ -492,7 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaCompensationCasillaReferenceError",
+        "cadrumo.domain.iva_compensation._errors.IvaCompensationCasillaReferenceError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CASILLA_REFERENCE",
             category=ErrorCategory.REFUSED,
@@ -503,7 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaCompensationCarryForwardPolicyError",
+        "cadrumo.domain.iva_compensation._errors.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
             category=ErrorCategory.REFUSED,
@@ -514,7 +514,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaCompensationSeedConflictError",
+        "cadrumo.domain.iva_compensation._errors.IvaCompensationSeedConflictError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_SEED_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -525,7 +525,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva_compensation._errors.IvaCompensationReconciliationInputError",
+        "cadrumo.domain.iva_compensation._errors.IvaCompensationReconciliationInputError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_RECONCILIATION_INPUT",
             category=ErrorCategory.REFUSED,
@@ -536,7 +536,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.storage.calc_sheets._translator.TranslationError",
+        "cadrumo.application.storage.calc_sheets._translator.TranslationError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_TRANSLATION",
             category=ErrorCategory.ERROR,
@@ -547,7 +547,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._multi_year.EnrollmentEvidenceError",
+        "cadrumo.application.calculations._multi_year.EnrollmentEvidenceError",
         ErrorCode(
             code="ERROR_CALCULATIONS_ENROLLMENT_EVIDENCE",
             category=ErrorCategory.ERROR,
@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.user_profile._bundle.UnsupportedBundleSchemaVersionError",
+        "cadrumo.application.user_profile._bundle.UnsupportedBundleSchemaVersionError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",
             category=ErrorCategory.REFUSED,
@@ -569,7 +569,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.WorkflowInputMismatchError",
+        "cadrumo.application.workflow._errors.WorkflowInputMismatchError",
         ErrorCode(
             code="REFUSED_WORKFLOW_INPUT_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -580,7 +580,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._m145_communication_records.M145CommunicationServiceError",
+        "cadrumo.application.modelo._m145_communication_records.M145CommunicationServiceError",
         ErrorCode(
             code="ERROR_M145_COMMUNICATION_SERVICE",
             category=ErrorCategory.ERROR,
@@ -591,7 +591,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordNotFoundError",
+        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordNotFoundError",
         ErrorCode(
             code="ERROR_M145_COMMUNICATION_RECORD_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -602,7 +602,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordAmbiguousError",
+        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordAmbiguousError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -613,7 +613,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordValidationError",
+        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordValidationError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -624,7 +624,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordExportError",
+        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordExportError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_EXPORT",
             category=ErrorCategory.REFUSED,
@@ -635,7 +635,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._m145_communication_records.M145CommunicationRecordTransitionError",
+        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordTransitionError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_TRANSITION",
             category=ErrorCategory.REFUSED,
@@ -646,7 +646,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._action_errors.StoredCalculationDriftError",
+        "cadrumo.application.modelo._action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -657,7 +657,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._action_errors.ModeloApplicabilityFilterError",
+        "cadrumo.application.modelo._action_errors.ModeloApplicabilityFilterError",
         ErrorCode(
             code="REFUSED_MODELO_APPLICABILITY_FILTER",
             category=ErrorCategory.REFUSED,
@@ -668,7 +668,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._action_errors.ModeloProfileReadinessError",
+        "cadrumo.application.modelo._action_errors.ModeloProfileReadinessError",
         ErrorCode(
             code="REFUSED_MODELO_PROFILE_READINESS",
             category=ErrorCategory.REFUSED,
@@ -679,7 +679,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._action_errors.ModeloRequiredBindingsMissingError",
+        "cadrumo.application.modelo._action_errors.ModeloRequiredBindingsMissingError",
         ErrorCode(
             code="REFUSED_MODELO_REQUIRED_BINDINGS_MISSING",
             category=ErrorCategory.REFUSED,
@@ -690,7 +690,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application._errors.DiagnosticModelError",
+        "cadrumo.application._errors.DiagnosticModelError",
         ErrorCode(
             code="REFUSED_DIAGNOSTIC_MODEL_INVARIANT",
             category=ErrorCategory.REFUSED,
@@ -701,7 +701,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.export._errors.ExportFormatError",
+        "cadrumo.application.export._errors.ExportFormatError",
         ErrorCode(
             code="REFUSED_EXPORT_FORMAT",
             category=ErrorCategory.REFUSED,
@@ -712,7 +712,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.export._errors.ExportFieldError",
+        "cadrumo.application.export._errors.ExportFieldError",
         ErrorCode(
             code="REFUSED_EXPORT_FIELD",
             category=ErrorCategory.REFUSED,
@@ -723,7 +723,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.storage.calc_sheets._errors.CalcSheetsEngineError",
+        "cadrumo.application.storage.calc_sheets._errors.CalcSheetsEngineError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_ENGINE",
             category=ErrorCategory.ERROR,
@@ -734,7 +734,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.storage.calc_sheets._errors.CalcSheetsRecordError",
+        "cadrumo.application.storage.calc_sheets._errors.CalcSheetsRecordError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_RECORD",
             category=ErrorCategory.ERROR,
@@ -745,7 +745,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.storage.calc_sheets._errors.CalcSheetsParityError",
+        "cadrumo.application.storage.calc_sheets._errors.CalcSheetsParityError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_PARITY",
             category=ErrorCategory.ERROR,
@@ -756,7 +756,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package.ReviewPackageError",
+        "cadrumo.application.modelo._review_package.ReviewPackageError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE",
             category=ErrorCategory.ERROR,
@@ -767,7 +767,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package.ReviewPackageRevisionStateError",
+        "cadrumo.application.modelo._review_package.ReviewPackageRevisionStateError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_REVISION_STATE",
             category=ErrorCategory.REFUSED,
@@ -778,7 +778,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package.ReviewPackageIntegrityError",
+        "cadrumo.application.modelo._review_package.ReviewPackageIntegrityError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_INTEGRITY",
             category=ErrorCategory.REFUSED,
@@ -789,7 +789,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_signing.ReviewPackageSigningError",
+        "cadrumo.application.modelo._review_package_signing.ReviewPackageSigningError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_SIGNING",
             category=ErrorCategory.ERROR,
@@ -800,7 +800,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_signing.ReviewPackageSigningKeyNotFoundError",
+        "cadrumo.application.modelo._review_package_signing.ReviewPackageSigningKeyNotFoundError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_SIGNING_KEY_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -811,7 +811,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_counter_sign.ReviewPackageCounterSigningError",
+        "cadrumo.application.modelo._review_package_counter_sign.ReviewPackageCounterSigningError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_COUNTER_SIGNING",
             category=ErrorCategory.ERROR,
@@ -822,7 +822,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_registry.RecipientFingerprintRegistryError",
+        "cadrumo.application.modelo._review_package_recipient_registry.RecipientFingerprintRegistryError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_FINGERPRINT_REGISTRY",
             category=ErrorCategory.ERROR,
@@ -833,7 +833,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_registry.RecipientAlreadyRegisteredError",
+        "cadrumo.application.modelo._review_package_recipient_registry.RecipientAlreadyRegisteredError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_ALREADY_REGISTERED",
             category=ErrorCategory.REFUSED,
@@ -844,7 +844,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_registry.RecipientNotRegisteredError",
+        "cadrumo.application.modelo._review_package_recipient_registry.RecipientNotRegisteredError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_NOT_REGISTERED",
             category=ErrorCategory.REFUSED,
@@ -855,7 +855,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_encryption.RecipientEncryptionError",
+        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientEncryptionError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_ENCRYPTION",
             category=ErrorCategory.ERROR,
@@ -866,7 +866,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_encryption.RecipientDecryptionError",
+        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientDecryptionError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_DECRYPTION",
             category=ErrorCategory.REFUSED,
@@ -877,7 +877,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_encryption.RecipientPackageExpiredError",
+        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientPackageExpiredError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_PACKAGE_EXPIRED",
             category=ErrorCategory.REFUSED,
@@ -888,7 +888,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
+        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_ENCRYPTION_KEY_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -899,7 +899,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_replay_guard.RecipientReplayGuardError",
+        "cadrumo.application.modelo._review_package_recipient_replay_guard.RecipientReplayGuardError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",
             category=ErrorCategory.ERROR,
@@ -910,7 +910,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_recipient_replay_guard.RecipientPackageReplayedError",
+        "cadrumo.application.modelo._review_package_recipient_replay_guard.RecipientPackageReplayedError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_PACKAGE_REPLAYED",
             category=ErrorCategory.REFUSED,
@@ -921,7 +921,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceError",
+        "cadrumo.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_ONLY_WORKSPACE",
             category=ErrorCategory.ERROR,
@@ -932,7 +932,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceAuthorityError",
+        "cadrumo.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceAuthorityError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_ONLY_WORKSPACE_AUTHORITY",
             category=ErrorCategory.REFUSED,
@@ -943,7 +943,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_feedback.ReviewPackageFeedbackError",
+        "cadrumo.application.modelo._review_package_feedback.ReviewPackageFeedbackError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_FEEDBACK",
             category=ErrorCategory.ERROR,
@@ -954,7 +954,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._review_package_feedback.FeedbackCounterSignatureInvalidError",
+        "cadrumo.application.modelo._review_package_feedback.FeedbackCounterSignatureInvalidError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_FEEDBACK_COUNTERSIGN_INVALID",
             category=ErrorCategory.REFUSED,
