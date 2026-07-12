@@ -71,11 +71,7 @@ export const ca: Copy = {
   },
   pillars: {
     sectionLabel: 'Què fa diferent Cadrumo',
-    kicker: (
-      <>
-        Quins són els passos per preparar un <span lang="es">modelo</span>?
-      </>
-    ),
+    kicker: 'Què fa diferent Cadrumo?',
     items: [
       {
         label: '01 / EMMAGATZEMATGE SEGUR',
@@ -197,7 +193,8 @@ export const ca: Copy = {
           (LSSI-CE).
         </>,
         <>
-          Contacte: a través del repositori canònic del projecte,{' '}
+          Contacte: <a href="mailto:hello@neve.md">hello@neve.md</a>, o a través del
+          repositori canònic del projecte,{' '}
           <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (allà
           s&rsquo;indiquen els canals d&rsquo;incidències i de seguretat).
         </>,

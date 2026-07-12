@@ -9,8 +9,8 @@ console, and the agent harness), the website at
 
 **Responsible party:** Gergely Wootsch, the legal entity behind
 [neve.md](https://neve.md) and the publisher of the Cadrumo project. Contact:
-the [issue tracker](https://github.com/nevenincs/aeat/issues), or the private
-channel in [`SECURITY.md`](SECURITY.md) for sensitive reports.
+<hello@neve.md>, the [issue tracker](https://github.com/nevenincs/aeat/issues),
+or the private channel in [`SECURITY.md`](SECURITY.md) for sensitive reports.
 
 ## The short version
 

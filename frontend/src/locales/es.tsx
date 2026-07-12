@@ -70,7 +70,7 @@ export const es: Copy = {
   },
   pillars: {
     sectionLabel: 'Qué hace diferente a Cadrumo',
-    kicker: '¿Cuáles son los pasos para preparar un modelo?',
+    kicker: '¿Qué hace diferente a Cadrumo?',
     items: [
       {
         label: '01 / ALMACENAMIENTO SEGURO',
@@ -179,7 +179,8 @@ export const es: Copy = {
           facilita a los efectos del artículo 10 de la Ley 34/2002 (LSSI-CE).
         </>,
         <>
-          Contacto: a través del repositorio canónico del proyecto,{' '}
+          Contacto: <a href="mailto:hello@neve.md">hello@neve.md</a>, o a través del
+          repositorio canónico del proyecto,{' '}
           <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (allí se
           indican los canales de incidencias y de seguridad).
         </>,

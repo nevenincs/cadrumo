@@ -42,3 +42,17 @@ installed `aeat`.
 ## License
 
 Apache-2.0.
+
+## Licence and reuse of official content
+
+The Apache-2.0 licence of this distribution covers the project's packaging,
+file layout, and derived metadata — not the underlying official documents.
+The corpus binaries reproduce official Spanish public-sector documents
+(BOE consolidated legal texts; AEAT manuals, diseños de registro, and
+workbooks). Legal and regulatory texts are excluded from copyright by
+Article 13 TRLPI (Real Decreto Legislativo 1/1996); AEAT/BOE publications
+are reused as public-sector information under Ley 37/2007 and the
+publishing bodies' general reuse terms: sources are identified per document,
+content is unaltered, and no official status or endorsement is claimed.
+This distribution is published by an independent project with no relation
+to the AEAT. See the repository's `THIRD_PARTY_NOTICES.md` and `NOTICE`.

@@ -19,7 +19,7 @@ export const en: Copy = {
     ),
     lead1: (
       <>
-        Cadrumo is a <strong className="accent">AEAT</strong> compatible* Spanish tax
+        Cadrumo is an <strong className="accent">AEAT</strong>-compatible* Spanish tax
         calculation tool. It is a toolset for you and agents, like Claude or Codex and it helps
         you collaboratively file and manage tax obligation, your business ledger and tax
         calendar.
@@ -63,15 +63,11 @@ export const en: Copy = {
     readDocs: 'Read the documentation',
     disclaimerTitle: 'DISCLAIMER',
     disclaimerBody:
-      'Cadrumo is independent software, not affiliated with the AEAT. It does not constitute as tax advice. Cadrumo does not support filing directly to AEAT. It is your responsibility to verify all calculations manually. We’re in beta. Features might change. Tax and modelo support is not complete. We cannot assume liability for wrong calculation, filing errors.',
+      'Cadrumo is independent software, not affiliated with the AEAT. It is not tax advice. Cadrumo does not support filing directly to AEAT. It is your responsibility to verify all calculations manually. We’re in beta. Features might change. Tax and modelo support is not complete. We cannot assume liability for wrong calculations or filing errors.',
   },
   pillars: {
     sectionLabel: 'What makes Cadrumo different',
-    kicker: (
-      <>
-        What are the steps for preparing a <span lang="es">modelo</span>?
-      </>
-    ),
+    kicker: 'What makes Cadrumo different?',
     items: [
       {
         label: '01 / SECURE STORAGE',
@@ -192,7 +188,8 @@ export const en: Copy = {
           Article 10 of Spain’s Ley 34/2002 (LSSI-CE).
         </>,
         <>
-          Contact: through the project’s canonical repository,{' '}
+          Contact: <a href="mailto:hello@neve.md">hello@neve.md</a>, or through the project’s
+          canonical repository,{' '}
           <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (issues and
           security contacts are listed there).
         </>,
