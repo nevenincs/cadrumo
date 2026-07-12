@@ -8,7 +8,7 @@ sibling discovery capability adds completions/list-changed, and this pin flags t
 arrival); and every ``listChanged`` / ``subscribe`` sub-flag is pinned to its
 current value so a future capability shift cannot land silently.
 
-When the ``aeat-cli[agent]`` SDK extra is absent the SDK-dependent build is
+When the ``cadrumo[agent]`` SDK extra is absent the SDK-dependent build is
 asserted to refuse at the optional-dependency boundary — the same
 graceful-degradation contract the sibling handshake tests follow, never a skip.
 """

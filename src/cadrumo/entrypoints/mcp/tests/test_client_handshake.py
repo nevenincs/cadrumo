@@ -4,14 +4,13 @@ The floor beneath the live subagent harness (decision record R7): a real MCP cli
 initialize a session with the real server, list its tools, and round-trip one
 read-only call. The primary test uses the SDK's in-process memory transport
 against ``build_server`` for CI determinism; a second test spawns a true
-``aeat-mcp`` server subprocess and drives it over stdio through the live harness,
+``cadrumo-mcp`` server subprocess and drives it over stdio through the live harness,
 proving the same round-trip over the real transport.
 """
 
 from __future__ import annotations
 
 import asyncio
-import sys
 from collections.abc import Coroutine
 
 import mcp.types as mcp_types
@@ -60,7 +59,7 @@ def test_stdio_subprocess_client_round_trips_a_read_only_call() -> None:
     command_key_by_tool[HARNESS_LOAD_TOOL] = ""
     driver = ScriptedPersonaDriver([LiveCallTool(tool_name=HARNESS_LOAD_TOOL, arguments_json="{}")])
     trajectory = run_live_session(
-        [sys.executable, "-c", "from cadrumo.entrypoints.mcp import main; main()"],
+        ["cadrumo-mcp"],
         persona="verifier",
         session_id="handshake-conformance",
         driver=driver,
