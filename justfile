@@ -444,6 +444,18 @@ docs-check:
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/aeat
 
+# Create or update the private Cadrumo docs stack.
+docs-stack-deploy:
+    uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
+
+# Build and publish the complete Cadrumo docs site.
+docs-deploy:
+    uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
+
+# Build and publish the Cadrumo landing page to the site root.
+frontend-deploy:
+    uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
+
 # ── Database migrations ──────────────────────────────────────────────────────
 
 # Generate a new Alembic database migration file.

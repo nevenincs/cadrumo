@@ -53,6 +53,10 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+::selection {
+  background: rgb(196 85 59 / 0.22);
+}
+
 .site-shell {
   overflow: clip;
 }
@@ -195,6 +199,11 @@ h2 {
   z-index: 10;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-page);
+  transition: box-shadow 0.25s ease;
+}
+
+.site-header.is-scrolled {
+  box-shadow: 0 8px 24px rgb(28 26 23 / 0.07);
 }
 
 .header-content {
@@ -231,11 +240,16 @@ h2 {
 
 /* Banner */
 
+.banner {
+  overflow: clip;
+}
+
 .banner img {
   width: 100%;
   aspect-ratio: 1031 / 342;
   object-fit: cover;
   object-position: 50% 42%;
+  will-change: transform;
 }
 
 /* Hero */
@@ -245,6 +259,32 @@ h2 {
   flex-direction: column;
   gap: 2rem;
   padding: 3rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      translate: 0 1.25rem;
+    }
+
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .hero > * {
+    animation: hero-rise 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  .hero > :nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .hero > :nth-child(3) {
+    animation-delay: 0.3s;
+  }
 }
 
 .hero h1 {
@@ -458,6 +498,13 @@ h2 {
   width: 2.3125rem;
   object-fit: contain;
   object-position: left center;
+  transition: transform 0.25s ease;
+}
+
+@media (hover: hover) {
+  .step-card:hover .step-icon {
+    transform: scale(1.15) rotate(-6deg);
+  }
 }
 
 .step-title {
@@ -519,6 +566,13 @@ h2 {
 .docs-cta-intro .button img {
   width: 1rem;
   height: 1rem;
+  transition: transform 0.2s ease;
+}
+
+@media (hover: hover) {
+  .docs-cta-intro .button:hover img {
+    transform: translateX(3px);
+  }
 }
 
 .docs-cta-list {
@@ -580,6 +634,13 @@ h2 {
   height: 1rem;
   margin-top: 0.25rem;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+@media (hover: hover) {
+  .docs-link:hover > img {
+    transform: translate(2px, -2px);
+  }
 }
 
 /* Footer */
@@ -818,7 +879,11 @@ h2 {
 
   .button,
   .step-card,
+  .step-icon,
   .docs-link,
+  .docs-link > img,
+  .docs-cta-intro .button img,
+  .site-header,
   .is-revealed {
     transition: none;
   }
