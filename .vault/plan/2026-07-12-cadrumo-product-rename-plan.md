@@ -117,7 +117,7 @@ Move the companion projects and shared namespace coherently.
 - [x] `W03.P06.S31` - Move the official companion project directory; `packaging/aeat_data_official to packaging/cadrumo_data_official`.
 - [x] `W03.P06.S32` - Rename official distribution metadata, repository URLs, and companion install guidance; `packaging/cadrumo_data_official/pyproject.toml; packaging/cadrumo_data_official/README.md`.
 - [x] `W03.P06.S33` - Retarget official build mapping and plugin name to cadrumo_data; `packaging/cadrumo_data_official/hatch_build.py`.
-- [ ] `W03.P06.S34` - Retarget runtime companion discovery to the cadrumo_data PEP 420 namespace; `src/cadrumo corpus source locator`.
+- [x] `W03.P06.S34` - Retarget runtime companion discovery exclusively to the `cadrumo_data` PEP 420 namespace and prove byte access across both built wheel portions; `src/cadrumo/core/resources/_boundary.py; src/cadrumo/core/resources/tests/test_corpus_companion_seam.py`.
 - [ ] `W03.P06.S35` - Update real-wheel companion partition and namespace invariants; `dev/packaging/tests/test_cadrumo_data_distribution.py`.
 
 ### Phase `W03.P07` - regenerate and prove artifacts
