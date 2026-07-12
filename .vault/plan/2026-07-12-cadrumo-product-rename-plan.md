@@ -105,7 +105,7 @@ distinct `cadrumo-mcp` command.
 - [ ] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts so the sole human `aeat` command launches Cadrumo and `cadrumo-mcp` launches MCP; `pyproject.toml`.
 - [x] `W03.P05.S25` - Project Cadrumo product identity while retaining `aeat` as the sole human CLI and help-surface command; `src/cadrumo/entrypoints/cli`.
 - [x] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp executable/refusal modules and focused real tests`.
-- [ ] `W03.P05.S27` - Update optional-extra installation guidance to Cadrumo distributions; `src/cadrumo/core/_optional_extras.py`.
+- [x] `W03.P05.S27` - Update the optional-extra authority and every directly generated runtime install remedy to current `cadrumo[...]` metadata, with real degradation tests; `src/cadrumo/core/_optional_extras.py; optional-extra consumers, error registries, agent/MCP/search/corpus degradation surfaces and direct tests`.
 
 ### Phase `W03.P06` - rename both companion projects
 
