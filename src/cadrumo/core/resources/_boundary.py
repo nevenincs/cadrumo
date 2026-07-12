@@ -15,10 +15,10 @@ operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution pat
 for read-only bundled data.
 
 The corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded
-from the slim ``aeat`` runtime wheel and shipped in an optional ``aeat_data``
-companion distribution whose layout mirrors ``aeat/_data``. :func:`resolve_corpus_binary`
+from the slim ``cadrumo`` runtime wheel and shipped in an optional ``cadrumo_data``
+companion distribution whose layout mirrors ``cadrumo/_data``. :func:`resolve_corpus_binary`
 is the single ``importlib.resources`` seam that resolves such a binary from the
-``aeat`` tree first and then the companion, so a full checkout and a split
+``cadrumo`` tree first and then the companion, so a full checkout and a split
 install read a corpus binary uniformly; :func:`resolve_companion_binary`
 resolves the companion side alone. A missing companion is a not-present signal
 (``None``), never an exception leak.
@@ -39,7 +39,7 @@ _PACKAGE_DATA: Traversable = files(PRODUCT_IDENTITY.python_package).joinpath("_d
 _RESOURCE_STACK: ExitStack = ExitStack()
 atexit.register(_RESOURCE_STACK.close)
 
-_COMPANION_PACKAGE = "aeat_data"
+_COMPANION_PACKAGE = PRODUCT_IDENTITY.companion_namespace
 
 
 def packaged_data(*parts: str) -> Traversable:
@@ -114,7 +114,7 @@ def _traversable_is_file(node: Traversable) -> bool:
 
 
 def _companion_root() -> Traversable | None:
-    """Return the ``aeat_data`` companion package root, or ``None`` when it is absent.
+    """Return the ``cadrumo_data`` companion package root, or ``None`` when it is absent.
 
     The companion is an optional distribution; when it is not installed
     ``importlib.resources.files`` raises an import-family error, which this
@@ -128,7 +128,7 @@ def _companion_root() -> Traversable | None:
 
 
 def resolve_companion_binary(*parts: str) -> Path | None:
-    """Resolve a corpus binary from the optional ``aeat_data`` companion alone.
+    """Resolve a corpus binary from the optional ``cadrumo_data`` companion alone.
 
     Args:
         *parts: Segments under the companion's mirrored ``_data`` root
@@ -152,14 +152,14 @@ def resolve_companion_binary(*parts: str) -> Path | None:
 
 
 def resolve_corpus_binary(*parts: str) -> Path | None:
-    """Resolve a bundled corpus binary, the ``cadrumo`` tree first then the ``aeat_data`` companion.
+    """Resolve a bundled corpus binary, the ``cadrumo`` tree first then the ``cadrumo_data`` companion.
 
     ``parts`` are the segments under ``_data`` (e.g. ``"corpus",
     "aeat_official", "disenos_registro", "modelo_100", "files", "dr.xlsx"``).
     The slim Cadrumo wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
-    optional ``aeat_data`` companion carries exactly those binaries under
+    optional ``cadrumo_data`` companion carries exactly those binaries under
     mirrored paths. This is the single ``importlib.resources`` seam that unifies
-    the full-checkout read (binary in the ``aeat`` tree) and the split-install
+    the full-checkout read (binary in the ``cadrumo`` tree) and the split-install
     read (binary in the companion).
 
     Returns:
