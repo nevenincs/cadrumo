@@ -30,6 +30,7 @@ from pydantic_settings import DotEnvSettingsSource, PydanticBaseSettingsSource, 
 from . import _config_live_tests as _live_test_config
 from ._config_integration_fields import AeatIntegrationSettings
 from ._config_state_root import (
+    FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     PRODUCT_DATABASE_FILENAME,
     default_storage_root,
     refuse_former_product_database,
