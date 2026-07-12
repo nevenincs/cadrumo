@@ -442,7 +442,7 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
 
         from ....tests.secure_sql import read_db_at_rest_bytes
 
-        database_bytes = read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db")
+        database_bytes = read_db_at_rest_bytes(profile.paths.db_dir / "cadrumo.db")
         for plaintext in (
             source_profile_id,
             target_profile_id,

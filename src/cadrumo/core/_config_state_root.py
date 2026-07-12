@@ -66,6 +66,10 @@ _APP_DIRNAME = PRODUCT_IDENTITY.python_package
 _FORMER_PRODUCT_APP_DIRNAME = "aeat"
 #: Storage substrate subdirectory under the resolved installed state root.
 _STORAGE_DIRNAME = "storage"
+#: Canonical SQLite filename for Cadrumo-owned application state.
+PRODUCT_DATABASE_FILENAME = f"{PRODUCT_IDENTITY.python_package}.db"
+#: Retired product database filename inspected only for refusal.
+FORMER_PRODUCT_DATABASE_FILENAME = "aeat.db"
 #: Checkout state-root layout: ``PROJECT_ROOT / "var" / "storage"``.
 _CHECKOUT_STATE_SUBDIRS = ("var", "storage")
 
@@ -88,6 +92,25 @@ class FormerProductStateError(RuntimeError):
     Detection is refusal-only. The resolver does not open, read, move, re-key,
     delete, or adopt anything below the former application directory.
     """
+
+
+def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None = None) -> None:
+    """Refuse a recognizable former-product database without opening it.
+
+    Only filesystem metadata is inspected. The former database is never
+    connected to, read, copied, moved, deleted, or adopted.
+    """
+    parent = storage_root
+    if bucket_id:
+        parent = parent / "buckets" / bucket_id / "db"
+    former_database = parent / FORMER_PRODUCT_DATABASE_FILENAME
+    if not former_database.exists():
+        return
+    raise FormerProductStateError(
+        "Cadrumo detected an incompatible former-product database named "
+        f"{FORMER_PRODUCT_DATABASE_FILENAME!r}. Cadrumo will not read, move, "
+        "copy, delete, migrate, or adopt that database.",
+    )
 
 
 class StateRootInputs(BaseModel):

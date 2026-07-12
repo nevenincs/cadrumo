@@ -57,11 +57,11 @@ def repo() -> ModeloHistoryRepository:
 def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "aeat.db")
+    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "cadrumo.db")
 
 
 def _database_payloads(storage_root: Path) -> tuple[bytes, ...]:
-    db_path = storage_root / "buckets" / "filing-test" / "db" / "aeat.db"
+    db_path = storage_root / "buckets" / "filing-test" / "db" / "cadrumo.db"
     with sqlite3.connect(db_path) as connection:
         return tuple(bytes(row[0]) for row in connection.execute("SELECT payload FROM secure_objects"))
 

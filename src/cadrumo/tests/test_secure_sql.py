@@ -71,15 +71,15 @@ def test_isolated_ephemeral_secure_sql_routes_default_engine_to_tmp_database(
             database_rows = connection.exec_driver_sql("PRAGMA database_list").fetchall()
 
     database_paths = {Path(str(row[2])).resolve() for row in database_rows if row[2]}
-    assert (tmp_path / "aeat.db").resolve() in database_paths
+    assert (tmp_path / "cadrumo.db").resolve() in database_paths
     assert not has_active_bucket_session()
 
 
 def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(tmp_path: Path) -> None:
     storage_root = tmp_path / "operator-storage"
-    control_database = storage_root / "buckets" / _CONTROL_BUCKET_ID / "db" / "aeat.db"
+    control_database = storage_root / "buckets" / _CONTROL_BUCKET_ID / "db" / "cadrumo.db"
     isolated_root = tmp_path / "isolated-storage"
-    isolated_database = isolated_root / "aeat.db"
+    isolated_database = isolated_root / "cadrumo.db"
 
     with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
         dispose_engine()
@@ -134,8 +134,8 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     assert profile.runtime.readiness.code is StorageRuntimeReadinessCode.READY
     assert runtime.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert runtime.route_attached_to_active_bucket
-    assert _secure_object_row_count(profile.paths.db_dir / "aeat.db") == 1
-    assert not (profile.storage_root / "aeat.db").exists()
+    assert _secure_object_row_count(profile.paths.db_dir / "cadrumo.db") == 1
+    assert not (profile.storage_root / "cadrumo.db").exists()
     assert not has_active_bucket_session()
 
 
@@ -168,7 +168,7 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
         revisions.save(revisions.load())
 
         active_bucket = workflow_state_repository().load().active_profile_bucket_id()
-        database_path = profile.paths.db_dir / "aeat.db"
+        database_path = profile.paths.db_dir / "cadrumo.db"
 
     assert active_bucket == _CONTROL_BUCKET_ID
     assert work_units.bucket_id == _CONTROL_BUCKET_ID

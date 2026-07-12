@@ -139,7 +139,7 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     # Resolved + missing casilla-id tuples preserve order and content.
     assert loaded_report.resolved_casilla_ids == _IVA_RESOLVED_CASILLA_IDS
     assert loaded_report.missing_required_casilla_ids == _IVA_MISSING_REQUIRED_CASILLA_IDS
-    assert (profile.paths.db_dir / "aeat.db").is_file()
+    assert (profile.paths.db_dir / "cadrumo.db").is_file()
 
 
 def test_verification_report_rejects_legacy_casilla_list_keys() -> None:

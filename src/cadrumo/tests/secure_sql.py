@@ -187,7 +187,7 @@ def reset_secure_object_store(repository: SecureObjectRepository) -> None:
 def isolated_ephemeral_secure_sql(
     *,
     tmp_path: Path,
-    database_name: str = "aeat.db",
+    database_name: str = "cadrumo.db",
 ) -> Iterator[None]:
     """Run test code with a temp SQL database and real ephemeral master key."""
 
