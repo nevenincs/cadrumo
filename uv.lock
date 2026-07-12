@@ -36,7 +36,6 @@ dependencies = [
     { name = "defusedxml" },
     { name = "httpx" },
     { name = "keyring" },
-    { name = "ofxtools" },
     { name = "openpyxl" },
     { name = "pdfplumber" },
     { name = "pikepdf" },
@@ -70,6 +69,7 @@ all = [
     { name = "mcp" },
     { name = "model2vec" },
     { name = "numpy" },
+    { name = "ofxtools" },
     { name = "playwright" },
     { name = "playwright-stealth" },
     { name = "snowballstemmer" },
@@ -89,6 +89,9 @@ google = [
     { name = "google-api-python-client" },
     { name = "google-auth" },
     { name = "google-auth-oauthlib" },
+]
+ofx = [
+    { name = "ofxtools" },
 ]
 search = [
     { name = "model2vec" },
@@ -113,6 +116,7 @@ dev = [
     { name = "import-linter" },
     { name = "interrogate" },
     { name = "myst-parser" },
+    { name = "ofxtools" },
     { name = "pagefind", extra = ["extended"] },
     { name = "playwright" },
     { name = "playwright-stealth" },
@@ -163,6 +167,7 @@ requires-dist = [
     { name = "aeat-cli", extras = ["anthropic"], marker = "extra == 'all'" },
     { name = "aeat-cli", extras = ["browser"], marker = "extra == 'all'" },
     { name = "aeat-cli", extras = ["google"], marker = "extra == 'all'" },
+    { name = "aeat-cli", extras = ["ofx"], marker = "extra == 'all'" },
     { name = "aeat-cli", extras = ["search"], marker = "extra == 'all'" },
     { name = "aeat-data-manuals", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_manuals" },
     { name = "aeat-data-official", marker = "extra == 'corpus-sources'", directory = "packaging/aeat_data_official" },
@@ -180,7 +185,7 @@ requires-dist = [
     { name = "mcp", marker = "extra == 'agent'", specifier = ">=1.12,<2" },
     { name = "model2vec", marker = "extra == 'search'", specifier = ">=0.8,<1" },
     { name = "numpy", marker = "extra == 'search'", specifier = ">=1.26,<3" },
-    { name = "ofxtools", specifier = ">=1.1,<2" },
+    { name = "ofxtools", marker = "extra == 'ofx'", specifier = ">=1.1,<2" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "pdfplumber", specifier = ">=0.11.9,<1" },
     { name = "pikepdf", specifier = ">=10.0.0,<11" },
@@ -203,7 +208,7 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
-provides-extras = ["workbook-windows", "google", "browser", "anthropic", "agent", "search", "corpus-sources", "all"]
+provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "agent", "search", "corpus-sources", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -219,6 +224,7 @@ dev = [
     { name = "import-linter", specifier = ">=2.0" },
     { name = "interrogate", specifier = ">=1.7.0" },
     { name = "myst-parser", specifier = ">=4.0" },
+    { name = "ofxtools", specifier = ">=1.1,<2" },
     { name = "pagefind", extras = ["extended"], specifier = ">=1.5,<2" },
     { name = "playwright", specifier = ">=1.58.0" },
     { name = "playwright-stealth", specifier = ">=2.0.3,<3" },
