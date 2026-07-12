@@ -12,11 +12,13 @@ Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 from __future__ import annotations
 
 import gzip
+import json
 import tarfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
 
+from .....core.product_identity import PRODUCT_IDENTITY
 from ._export_header import ExportArchiveHeader
 from ._sealed_archive_errors import (
     SealedArchiveHeaderError,
@@ -24,6 +26,8 @@ from ._sealed_archive_errors import (
     SealedArchivePayloadError,
 )
 from ._sealed_archive_writer import (
+    CADRUMO_BUCKET_BUNDLE_SUFFIX,
+    FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX,
     HEADER_MEMBER_NAME,
     PAYLOAD_MEMBER_NAME,
     RECOVERY_WRAP_MEMBER_NAME,
@@ -48,6 +52,17 @@ class SealedArchiveContents:
     recovery_wrap_bytes: bytes | None
 
 
+def _read_member_info(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
+    """Read one already-discovered regular tar member."""
+    extracted = archive.extractfile(member)
+    if extracted is None:
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: member {member.name!r} is not a regular file",
+        )
+    with extracted:
+        return extracted.read()
+
+
 def _read_member(archive: tarfile.TarFile, expected_name: str) -> bytes:
     """Read one tar member by name; raise layout error if absent or empty."""
     try:
@@ -56,13 +71,7 @@ def _read_member(archive: tarfile.TarFile, expected_name: str) -> bytes:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: required member {expected_name!r} is missing",
         ) from exc
-    extracted = archive.extractfile(member)
-    if extracted is None:
-        raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: member {expected_name!r} is not a regular file",
-        )
-    with extracted:
-        return extracted.read()
+    return _read_member_info(archive, member)
 
 
 def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
@@ -99,18 +108,43 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
     the archive format (writer + reader change); that hardening is a tracked
     follow-up recorded in the crash-window reference.
     """
+    if source_path.name.endswith(FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX):
+        raise SealedArchiveHeaderError(
+            "sealed-archive read refused: former-product bundle suffix is incompatible with Cadrumo; "
+            "the archive was not opened, migrated, copied, renamed, unpacked, or deleted",
+        )
+    if not source_path.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: source must end with {CADRUMO_BUCKET_BUNDLE_SUFFIX!r}",
+        )
     try:
         with tarfile.open(source_path, mode="r:gz") as archive:
-            member_names = tuple(member.name for member in archive.getmembers())
-            _validate_layout(member_names)
-
-            header_bytes = _read_member(archive, HEADER_MEMBER_NAME)
+            first_member = archive.next()
+            if first_member is None or first_member.name != HEADER_MEMBER_NAME:
+                actual = None if first_member is None else first_member.name
+                raise SealedArchiveLayoutError(
+                    f"sealed-archive read refused: first member must be {HEADER_MEMBER_NAME!r}, got {actual!r}",
+                )
+            header_bytes = _read_member_info(archive, first_member)
+            try:
+                raw_header = json.loads(header_bytes)
+            except (TypeError, ValueError):
+                raw_header = None
+            if not isinstance(raw_header, dict) or raw_header.get("product") != PRODUCT_IDENTITY.python_package:
+                raise SealedArchiveHeaderError(
+                    "sealed-archive read refused: header does not identify the canonical Cadrumo bundle format; "
+                    "payload members were not read and the archive was not migrated, copied, renamed, unpacked, "
+                    "or deleted",
+                )
             try:
                 header = ExportArchiveHeader.model_validate_json(header_bytes)
             except Exception as exc:  # pydantic ValidationError or its subclasses
                 raise SealedArchiveHeaderError(
                     f"sealed-archive read refused: header schema validation failed: {type(exc).__name__}: {exc}",
                 ) from exc
+
+            member_names = tuple(member.name for member in archive.getmembers())
+            _validate_layout(member_names)
 
             payload_bytes = _read_member(archive, PAYLOAD_MEMBER_NAME)
             recovery_wrap_bytes: bytes | None = None

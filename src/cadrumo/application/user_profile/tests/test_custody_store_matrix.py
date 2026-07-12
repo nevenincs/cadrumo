@@ -1036,7 +1036,7 @@ def test_every_carried_store_round_trips_through_recovery(
         payload=(b'{"schema_version":1,"written_at":"2026-06-30T00:00:00Z","classification":"financial","payload":{}}'),
     )
 
-    archive = tmp_path / "exports" / "matrix.aeat-bucket.tar.gz"
+    archive = tmp_path / "exports" / "matrix.cadrumo-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(bucket_id=bucket_id, output_path=archive, recovery_wrap_passphrase=_RECOVERY),
     )

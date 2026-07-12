@@ -123,10 +123,11 @@ def _write_incomplete_profile_archive(path: Path) -> None:
     write_sealed_archive(
         path,
         header=ExportArchiveHeader(
+            product="cadrumo",
             bucket_id=_INCOMPLETE_BUCKET_ID,
             manifest_digest=_MANIFEST_DIGEST,
             recovery_wrap_present=True,
-            archive_schema_version=2,
+            archive_schema_version=3,
             created_at=_INSTANT,
         ),
         payload_envelope_bytes=encrypted.to_wire(),
@@ -173,10 +174,11 @@ def _write_schema_2_profile_archive(path: Path) -> None:
     write_sealed_archive(
         path,
         header=ExportArchiveHeader(
+            product="cadrumo",
             bucket_id=_INCOMPLETE_BUCKET_ID,
             manifest_digest=_MANIFEST_DIGEST,
             recovery_wrap_present=True,
-            archive_schema_version=2,
+            archive_schema_version=3,
             created_at=_INSTANT,
         ),
         payload_envelope_bytes=encrypted.to_wire(),
@@ -188,6 +190,7 @@ def _write_unsupported_schema_archive(path: Path) -> None:
     write_sealed_archive(
         path,
         header=ExportArchiveHeader(
+            product="cadrumo",
             bucket_id=_INCOMPLETE_BUCKET_ID,
             manifest_digest=_MANIFEST_DIGEST,
             recovery_wrap_present=False,
@@ -228,7 +231,7 @@ def test_export_writes_sealed_archive_and_bucket_event(
     tmp_path: Path,
 ) -> None:
     del registered_profile
-    archive_path = tmp_path / "exports" / "profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "exports" / "profile.cadrumo-bucket.tar.gz"
 
     result = BucketMaintenanceService().export(
         ExportBucketCommand(
@@ -245,7 +248,7 @@ def test_export_writes_sealed_archive_and_bucket_event(
     archive_bytes = archive_path.read_bytes()
     assert _LABEL.encode("utf-8") not in archive_bytes
     contents = read_sealed_archive(archive_path)
-    assert contents.header.archive_schema_version == 2
+    assert contents.header.archive_schema_version == 3
 
     catalogue = BucketEventHistoryRepository(objects=runtime.repository).load()
     export_events = tuple(
@@ -253,7 +256,7 @@ def test_export_writes_sealed_archive_and_bucket_event(
     )
     assert len(export_events) == 1
     assert export_events[0].payload["manifest_digest"] == result.manifest_digest
-    assert export_events[0].payload["archive_schema_version"] == "2"
+    assert export_events[0].payload["archive_schema_version"] == "3"
     assert export_events[0].payload["recovery_wrap_present"] == "true"
 
 
@@ -263,7 +266,7 @@ def test_import_recovery_archive_provisions_profile_in_fresh_root(
     tmp_path: Path,
 ) -> None:
     del registered_profile
-    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
     exported = BucketMaintenanceService().export(
         ExportBucketCommand(
             bucket_id=runtime.bucket_id,
@@ -293,7 +296,7 @@ def test_import_recovery_archive_provisions_profile_in_fresh_root(
 
 
 def test_import_refuses_profile_archive_missing_filing_baseline(tmp_path: Path) -> None:
-    archive_path = tmp_path / "incomplete-profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "incomplete-profile.cadrumo-bucket.tar.gz"
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _write_incomplete_profile_archive(archive_path)
 
@@ -313,7 +316,7 @@ def test_import_refuses_profile_archive_missing_filing_baseline(tmp_path: Path) 
 
 
 def test_import_refuses_schema_1_archive(tmp_path: Path) -> None:
-    archive_path = tmp_path / "schema-1.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "schema-1.cadrumo-bucket.tar.gz"
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _write_unsupported_schema_archive(archive_path)
 
@@ -327,7 +330,7 @@ def test_import_refuses_schema_1_archive(tmp_path: Path) -> None:
 
 
 def test_import_refuses_schema_2_bundle_before_bucket_provisioning(tmp_path: Path) -> None:
-    archive_path = tmp_path / "schema-2-bundle.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "schema-2-bundle.cadrumo-bucket.tar.gz"
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _write_schema_2_profile_archive(archive_path)
 
@@ -358,7 +361,7 @@ def test_recovery_wrap_member_records_argon2id_password_kdf(
     """
     import json
 
-    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(
             bucket_id=runtime.bucket_id,
@@ -384,7 +387,7 @@ def test_import_recovery_archive_rejects_wrong_passphrase(
 ) -> None:
     """A wrong recovery passphrase derives the wrong KEK and the import fails closed."""
     del registered_profile
-    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(
             bucket_id=runtime.bucket_id,
@@ -408,7 +411,7 @@ def test_import_refuses_recovery_archive_without_passphrase(
     tmp_path: Path,
 ) -> None:
     del registered_profile
-    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(
             bucket_id=runtime.bucket_id,
@@ -430,7 +433,7 @@ def test_import_refuses_live_bucket_collision_without_force(
     tmp_path: Path,
 ) -> None:
     del registered_profile
-    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(
             bucket_id=runtime.bucket_id,
@@ -462,7 +465,7 @@ def test_inspect_reads_header_without_decrypting_or_opening_session(
     method never opens the AEAD payload.
     """
     del registered_profile
-    archive_path = tmp_path / "inspect-me.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "inspect-me.cadrumo-bucket.tar.gz"
     exported = BucketMaintenanceService().export(
         ExportBucketCommand(
             bucket_id=runtime.bucket_id,
@@ -476,7 +479,7 @@ def test_inspect_reads_header_without_decrypting_or_opening_session(
     assert inspected.bucket_id == exported.bucket_id
     assert inspected.manifest_digest == exported.manifest_digest
     assert inspected.recovery_wrap_present == exported.recovery_wrap_present is True
-    assert inspected.archive_schema_version == 2
+    assert inspected.archive_schema_version == 3
     assert inspected.size_bytes == archive_path.stat().st_size
     assert inspected.size_bytes > 0
 
@@ -488,7 +491,7 @@ def test_inspect_same_host_archive_reports_no_recovery_wrap(
 ) -> None:
     """A same-host archive (no recovery passphrase) inspects as recovery_wrap_present=False."""
     del registered_profile
-    archive_path = tmp_path / "same-host.aeat-bucket.tar.gz"
+    archive_path = tmp_path / "same-host.cadrumo-bucket.tar.gz"
     BucketMaintenanceService().export(
         ExportBucketCommand(bucket_id=runtime.bucket_id, output_path=archive_path),
     )
@@ -507,7 +510,7 @@ def test_inspect_refuses_malformed_archive(tmp_path: Path) -> None:
     """
     from ....adapters.persistence.storage.bucket import SealedArchiveLayoutError
 
-    garbage_path = tmp_path / "not-an-archive.tar.gz"
+    garbage_path = tmp_path / "not-an-archive.cadrumo-bucket.tar.gz"
     garbage_path.write_bytes(b"this is not a gzip tar archive at all")
 
     with pytest.raises(SealedArchiveLayoutError):

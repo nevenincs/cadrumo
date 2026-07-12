@@ -52,10 +52,11 @@ def _write_valid_archive(path: Path, *, payload: bytes = _PAYLOAD, bucket_id: st
     write_sealed_archive(
         path,
         header=ExportArchiveHeader(
+            product="cadrumo",
             bucket_id=bucket_id,
             manifest_digest=_MANIFEST_DIGEST,
             recovery_wrap_present=False,
-            archive_schema_version=2,
+            archive_schema_version=3,
             created_at=_INSTANT,
         ),
         payload_envelope_bytes=payload,
@@ -78,7 +79,7 @@ class TestBundleExportCrashWindow:
         # Anti-tautology: an intact archive round-trips through the reader, so
         # the damage tests' refusals are caused by the damage, not by the
         # archive being unreadable in general.
-        archive = tmp_path / "profile.aeat-bucket.tar.gz"
+        archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
         _write_valid_archive(archive)
 
         contents = read_sealed_archive(archive)
@@ -89,7 +90,7 @@ class TestBundleExportCrashWindow:
         # A torn write that damages the gzip stream (30-80% kept) is caught at
         # read time as the documented typed payload error, never a raw builtin.
         for keep in (0.3, 0.5, 0.8):
-            archive = tmp_path / f"trunc-{keep}.tar.gz"
+            archive = tmp_path / f"trunc-{keep}.cadrumo-bucket.tar.gz"
             _write_valid_archive(archive)
             _truncate(archive, keep_fraction=keep)
             with pytest.raises(BucketImportError):
@@ -98,7 +99,7 @@ class TestBundleExportCrashWindow:
     def test_corrupted_archive_is_rejected_at_read(self, tmp_path: Path) -> None:
         # A member/layout corruption is detected at read time (gzip-CRC / tar
         # layer) and surfaces as a BucketImportError before any decryption.
-        archive = tmp_path / "profile.aeat-bucket.tar.gz"
+        archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
         _write_valid_archive(archive)
         _corrupt_midstream(archive)
 
@@ -109,7 +110,7 @@ class TestBundleExportCrashWindow:
         # Refuse-overwrite is why a torn export never clobbers a prior good
         # archive: a re-export to the same path is refused rather than
         # silently replacing the (possibly good) file.
-        archive = tmp_path / "profile.aeat-bucket.tar.gz"
+        archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
         _write_valid_archive(archive)
 
         with pytest.raises(BucketExportError):
@@ -129,7 +130,7 @@ class TestBundleImportCrashWindow:
         from .....application.bucket_maintenance import BucketMaintenanceService, ImportBucketCommand
         from .....application.workflow import read_profile_bucket_by_id
 
-        archive = tmp_path / "import-source.aeat-bucket.tar.gz"
+        archive = tmp_path / "import-source.cadrumo-bucket.tar.gz"
         _write_valid_archive(archive)
         _corrupt_midstream(archive)
 
@@ -154,7 +155,7 @@ class TestBundleImportCrashWindow:
 
         fresh_id = "12121212-1212-4121-8121-121212121212"
         payload = b"known sealed payload plaintext bytes " * 128
-        archive = tmp_path / "near-complete.aeat-bucket.tar.gz"
+        archive = tmp_path / "near-complete.cadrumo-bucket.tar.gz"
 
         with isolated_runtime_profile(tmp_path=tmp_path) as profile:
             _: TestRuntimeProfile = profile
