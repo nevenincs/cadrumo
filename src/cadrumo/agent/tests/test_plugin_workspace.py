@@ -4,7 +4,7 @@ Asserts the plugin layout re-materialises the single authored harness source as
 a schema-shaped plugin over a real
 filesystem ``tmp_path``: a ``.claude-plugin/plugin.json`` manifest carrying the
 required publication fields, a top-level ``skills/`` and ``agents/`` tree, and an
-``.mcp.json`` declaring the stdio ``aeat-mcp`` server. The agent frontmatter maps
+``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server. The agent frontmatter maps
 to plugin-native fields and never carries the vaultspec ``mode:`` field. Where the
 ``claude`` CLI is on PATH, the emitted tree is additionally asserted to pass
 ``claude plugin validate --strict``; the structural assertions always run so the
@@ -51,10 +51,10 @@ def _agent_frontmatter(path: Path) -> dict[str, object]:
 
 def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:
     manifest = materialise_plugin(tmp_path)
-    assert manifest.plugin_name == "aeat"
+    assert manifest.plugin_name == "cadrumo"
 
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
-    assert document["name"] == "aeat"
+    assert document["name"] == "cadrumo"
     assert document["version"] == manifest.version
     assert document["defaultEnabled"] is False
     assert document["license"] == "Apache-2.0"
@@ -62,6 +62,8 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:
     assert isinstance(document["keywords"], list) and document["keywords"]
     # The one-liner distilled from the mcpb manifest states the never-files boundary.
     assert "never files" in document["description"].lower()
+    assert "Cadrumo Spanish-tax CLI" in document["description"]
+    assert "aeat Spanish-tax CLI" not in document["description"]
 
 
 def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path) -> None:
@@ -121,9 +123,12 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     assert document["userConfig"]["surface"]["default"] == "core"
 
     mcp = json.loads((tmp_path / ".mcp.json").read_text(encoding=_UTF_8))
-    server = mcp["mcpServers"]["aeat"]
+    assert "aeat" not in mcp["mcpServers"]
+    server = mcp["mcpServers"]["cadrumo"]
     assert server["command"] == "uvx"
-    assert server["args"] == ["--from", "aeat-cli[agent]==1.2.3", "aeat-mcp"]
+    assert server["args"] == ["--from", "cadrumo[agent]==1.2.3", "cadrumo-mcp"]
+    assert "aeat-cli[agent]==1.2.3" not in server["args"]
+    assert "aeat-mcp" not in server["args"]
     assert server["env"] == {
         "CADRUMO_MCP_PERSONA": "${user_config.persona}",
         "CADRUMO_MCP_SURFACE": "${user_config.surface}",

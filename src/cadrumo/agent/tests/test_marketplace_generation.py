@@ -39,14 +39,16 @@ def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(tmp_pa
     assert isinstance(document["owner"], dict) and document["owner"]["name"]
     assert document["description"]
     (entry,) = document["plugins"]
-    assert entry["name"] == "aeat"
-    assert entry["source"] == manifest.plugin_source == "./plugins/aeat"
+    assert entry["name"] == "cadrumo"
+    assert entry["source"] == manifest.plugin_source == "./plugins/cadrumo"
+    assert entry["source"] != "./plugins/aeat"
 
     # The relative source resolves, from the marketplace root, to the plugin
     # tree materialised in the same call.
-    served = tmp_path / "plugins" / "aeat"
+    served = tmp_path / "plugins" / "cadrumo"
     assert (served / ".claude-plugin" / "plugin.json").is_file()
     assert (served / ".mcp.json").is_file()
+    assert not (tmp_path / "plugins" / "aeat").exists()
     assert manifest.plugin.skills_written > 0
     assert manifest.plugin.agents_written > 0
 
@@ -58,7 +60,7 @@ def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path) -> 
     materialise_marketplace(marketplace_dir, version="1.2.3")
     materialise_plugin(standalone_dir, version="1.2.3")
 
-    served_root = marketplace_dir / "plugins" / "aeat"
+    served_root = marketplace_dir / "plugins" / "cadrumo"
     served = {p.relative_to(served_root).as_posix(): p for p in sorted(served_root.rglob("*")) if p.is_file()}
     standalone = {p.relative_to(standalone_dir).as_posix(): p for p in sorted(standalone_dir.rglob("*")) if p.is_file()}
     assert served.keys() == standalone.keys()
@@ -83,7 +85,7 @@ def test_emitted_marketplace_passes_claude_validate_strict_when_cli_present(tmp_
     """
     manifest = materialise_marketplace(tmp_path)
     assert (tmp_path / ".claude-plugin" / "marketplace.json").is_file()
-    assert (tmp_path / "plugins" / "aeat" / ".claude-plugin" / "plugin.json").is_file()
+    assert (tmp_path / "plugins" / "cadrumo" / ".claude-plugin" / "plugin.json").is_file()
     assert manifest.plugin.skills_written > 0
 
     claude = shutil.which("claude")
