@@ -39,7 +39,7 @@ from ...domain.buckets import (
 from ._utils import utc_now
 
 SYSTEM_BUCKET_ID: Final[str] = "system"
-WORKFLOW_STATE_OBJECT_ID: Final[str] = "aeat.workflow:state"
+WORKFLOW_STATE_OBJECT_ID: Final[str] = "cadrumo.workflow:state"
 _EVENT_PAYLOAD_VERSION: Final[int] = 1
 
 

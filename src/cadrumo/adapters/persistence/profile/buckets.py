@@ -51,7 +51,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
-_NAMESPACE = "aeat.domain.buckets.event_history"
+_NAMESPACE = "cadrumo.domain.buckets.event_history"
 _OBJECT_KEY = "catalogue"
 _CATALOGUE_VERSION = 1
 

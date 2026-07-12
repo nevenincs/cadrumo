@@ -260,7 +260,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
     """A decrypted record roundtrip must preserve every boundary field."""
 
     with _ephemeral_secure_repo(tmp_path, "record.db") as (db_path, _engine, repo):
-        namespace = "aeat-test.record"
+        namespace = "cadrumo-test.record"
         natural_key = "record-key-non-default"
         written_at = datetime(2026, 5, 21, 10, 30, 0)
         payload = b"strict-record-roundtrip-payload"
@@ -333,7 +333,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
     """A database-side metadata mutation must not still load as the original record."""
 
     with _ephemeral_secure_repo(tmp_path, "record-mutation.db") as (db_path, _engine, repo):
-        namespace = "aeat-test.record.mutation"
+        namespace = "cadrumo-test.record.mutation"
         natural_key = "record-key"
         repo.save(
             namespace=namespace,
@@ -385,7 +385,7 @@ def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) ->
     """A row below the consumer's current version refuses when no upgrade chain is registered."""
 
     with _ephemeral_secure_repo(tmp_path, "record-older-schema.db") as (_db_path, _engine, repo):
-        namespace = "aeat-test.record.older-schema"
+        namespace = "cadrumo-test.record.older-schema"
         natural_key = "record-key"
         repo.save(
             namespace=namespace,
@@ -417,7 +417,7 @@ def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_p
     """Load-time classification failures do not expose natural or lookup keys."""
 
     with _ephemeral_secure_repo(tmp_path, "load-classification-redaction.db") as (db_path, _engine, repo):
-        namespace = "aeat-test.load.classification"
+        namespace = "cadrumo-test.load.classification"
         natural_key = "classification-secret-key"
         repo.save(
             namespace=namespace,
@@ -461,7 +461,7 @@ def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -
 
     with _ephemeral_secure_repo(tmp_path, "raw-key-localized.db") as (_db_path, _engine, repo):
         with pytest.raises(StorageValidationError) as exists_raised:
-            repo.exists_by_raw_key("aeat-test.raw", b"short")
+            repo.exists_by_raw_key("cadrumo-test.raw", b"short")
         assert (
             exists_raised.value.translated_message
             == "errors.integrity.integrity_storage_secure_object_hashed_key_length"
@@ -470,7 +470,7 @@ def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -
 
         with pytest.raises(StorageValidationError) as save_raised:
             repo.save_with_raw_key(
-                namespace="aeat-test.raw",
+                namespace="cadrumo-test.raw",
                 hashed_object_key=b"short",
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
@@ -490,7 +490,7 @@ def test_secure_object_batch_size_validation_error_is_localized(tmp_path: Path) 
         with pytest.raises(StorageValidationError) as raised:
             list(
                 repo.iter_records_with_failures(
-                    "aeat-test.batch",
+                    "cadrumo-test.batch",
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
                     batch_size=0,
@@ -514,7 +514,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
     db_path = tmp_path / "rotated.db"
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
-    namespace = "aeat-test.rotation"
+    namespace = "cadrumo-test.rotation"
 
     # Seed a row under the OLD key, leaving the ciphertext at rest.
     _seed_under_key(
@@ -574,7 +574,7 @@ def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Pat
     """The fail-closed list path buffers all readable rows before yielding."""
 
     with _ephemeral_secure_repo(tmp_path, "metadata-order.db") as (db_path, _engine, repo):
-        namespace = "aeat-test.metadata.order"
+        namespace = "cadrumo-test.metadata.order"
         repo.save(
             namespace=namespace,
             object_key="readable-row",
@@ -603,7 +603,7 @@ def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) 
 
     with _ephemeral_secure_repo(tmp_path, "readable-list.db") as (_db_path, _engine, repo):
         repo.save(
-            namespace="aeat-test.readable.list",
+            namespace="cadrumo-test.readable.list",
             object_key="readable-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -613,7 +613,7 @@ def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) 
 
         yielded = list(
             repo.list_records(
-                "aeat-test.readable.list",
+                "cadrumo-test.readable.list",
                 expected_class=SensitivityClass.FINANCIAL,
                 max_supported_version=1,
             ),
@@ -630,7 +630,7 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
     db_path = tmp_path / "rotated-readable.db"
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
-    namespace = "aeat-test.rotation.readable"
+    namespace = "cadrumo-test.rotation.readable"
 
     _seed_under_key(
         db_path=db_path,
@@ -680,7 +680,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
     db_path = tmp_path / "mixed.db"
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
-    namespace = "aeat-test.mixed"
+    namespace = "cadrumo-test.mixed"
 
     for natural_key, payload in (
         ("row-1-old", b"old-1-plaintext"),
@@ -733,7 +733,7 @@ def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: 
     """Row-level metadata failures surface as typed unreadable outcomes."""
 
     with _ephemeral_secure_repo(tmp_path, "metadata-failures.db") as (db_path, _engine, repo):
-        namespace = "aeat-test.metadata.failures"
+        namespace = "cadrumo-test.metadata.failures"
         repo.save(
             namespace=namespace,
             object_key="classification-row",

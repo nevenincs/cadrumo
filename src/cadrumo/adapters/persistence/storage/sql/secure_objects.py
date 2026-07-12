@@ -16,7 +16,11 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
-from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
+from .._namespace_registry import (
+    SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
+    is_former_product_namespace,
+)
 from .._schema_lineage import ensure_schema_version_readable
 from ..crypto import (
     encrypt_secure_object_payload,
@@ -130,6 +134,11 @@ class SecureObjectRepository:
 
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
         """Return the registry contract for ``namespace`` when policy is bound."""
+        if is_former_product_namespace(namespace):
+            raise StorageValidationError(
+                translated_message="errors.storage.namespace.unregistered",
+                context={"namespace": namespace, "reason": "former_product_namespace"},
+            )
         if self._namespace_registry is None:
             return None
         try:
@@ -204,7 +213,7 @@ class SecureObjectRepository:
             current_version=definition.schema_version,
         )
 
-    def _check_session_freshness(self) -> None:
+    def _check_session_freshness(self, namespace: str | None = None) -> None:
         """Refuse the operation when the active profile session is no longer valid.
 
         Polls :func:`evaluate_idle` against the live
@@ -223,6 +232,9 @@ class SecureObjectRepository:
         construction. No-op when no session is bound and this repository is
         not runtime-bound; bootstrap-exempt verbs rely on that direct mode.
         """
+        if namespace is not None:
+            self._registered_namespace_definition(namespace)
+
         from ..errors import SessionExpiredError
         from ..master_key import current_active_bucket_session, evaluate_idle
         from ..runtime import _runtime_not_ready_error
@@ -255,7 +267,7 @@ class SecureObjectRepository:
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             row_id = session.execute(
                 select(_orm.SecureObjectRow.id).where(
@@ -273,7 +285,7 @@ class SecureObjectRepository:
         master-key constraint as
         :meth:`~adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         if len(hashed_object_key) != 32:
             raise StorageValidationError(
                 context={"length": len(hashed_object_key)},
@@ -418,7 +430,7 @@ class SecureObjectRepository:
         ``aeat config repair`` to surface namespaces holding rows from a
         prior keychain master-key generation.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         return _probe_namespace_integrity(self._engine, namespace, logger=_log)
 
     def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
@@ -429,7 +441,7 @@ class SecureObjectRepository:
         exposes the HMAC lookup digest plus storage metadata needed by repair
         diagnostics.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         yield from _iter_namespace_decryptability(self._engine, namespace)
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
@@ -441,7 +453,7 @@ class SecureObjectRepository:
         :meth:`~adapters.persistence.storage.SecureObjectRepository.list_records`
         and read IDs from decrypted payloads.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(_orm.SecureObjectRow.object_key)
@@ -547,7 +559,7 @@ class SecureObjectRepository:
         namespace scans. ``expected_class`` is the :class:`SensitivityClass`
         every yielded row must be classified under; a mismatch fails closed.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
             expected_class=expected_class,
@@ -631,7 +643,7 @@ class SecureObjectRepository:
         Raises:
             StorageValidationError: When ``batch_size`` is less than 1.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         if batch_size < 1:
             raise StorageValidationError(
                 context={"batch_size": batch_size},
@@ -708,7 +720,7 @@ class SecureObjectRepository:
                 the consumer expects.
             max_supported_version: Highest ``schema_version`` the consumer supports.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
             expected_class=expected_class,
@@ -765,7 +777,7 @@ class SecureObjectRepository:
             source_event_id: Optional opaque domain-event identifier for audit trails.
             expected_revision_id: Optional optimistic-concurrency guard.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         self._save_internal(
             namespace=namespace,
             key=object_key,
@@ -782,13 +794,13 @@ class SecureObjectRepository:
         """Encrypt and upsert several payloads in one SQL unit of work."""
         if not writes:
             return
-        self._check_session_freshness()
         for write in writes:
             self._enforce_registered_write_policy(
                 namespace=write.namespace,
                 classification=write.classification,
                 schema_version=write.schema_version,
             )
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             for write in writes:
                 self._save_internal_in_session(
@@ -816,7 +828,7 @@ class SecureObjectRepository:
         so a caller compares ``secure_object_key_digest(key)`` against these
         keys without decrypting anything.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(
@@ -850,13 +862,15 @@ class SecureObjectRepository:
         """
         if not writes and not deletions:
             return
-        self._check_session_freshness()
         for write in writes:
             self._enforce_registered_write_policy(
                 namespace=write.namespace,
                 classification=write.classification,
                 schema_version=write.schema_version,
             )
+        for removal in deletions:
+            self._registered_namespace_definition(removal.namespace)
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             for write in writes:
                 self._save_internal_in_session(
@@ -925,7 +939,7 @@ class SecureObjectRepository:
             StorageValidationError: When ``hashed_object_key`` is not exactly 32 bytes.
             :exc:`RepositoryError`: On underlying SQL integrity errors.
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         if len(hashed_object_key) != 32:
             raise StorageValidationError(
                 context={"length": len(hashed_object_key)},
@@ -1124,7 +1138,7 @@ class SecureObjectRepository:
         column; callers use this to fingerprint an envelope they intend
         to discard (e.g. the workflow-state reset recovery path).
         """
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         # Resolve the row id through the ORM so the HashedLookup column
         # binding hashes ``object_key`` consistently with the rest of
         # the repository, then read the raw row through ``text()`` so
@@ -1160,7 +1174,7 @@ class SecureObjectRepository:
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""
-        self._check_session_freshness()
+        self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:
             # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a

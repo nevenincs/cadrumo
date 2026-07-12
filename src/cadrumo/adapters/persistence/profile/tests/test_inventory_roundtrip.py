@@ -2,7 +2,7 @@
 
 Persists :class:`InventoryLedgerDocument` (a tuple of
 :class:`InventoryLedger` rows) under
-``aeat.persistence.profile.inventory`` at
+``cadrumo.persistence.profile.inventory`` at
 ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates non-default values on every

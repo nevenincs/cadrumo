@@ -218,7 +218,7 @@ def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path)
         label="Process-local source",
     ) as profile:
         profile.repository.save(
-            namespace="aeat.workflow",  # PROCESS_LOCAL workflow state
+            namespace="cadrumo.workflow",  # PROCESS_LOCAL workflow state
             object_key="state",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
@@ -232,8 +232,8 @@ def test_full_export_tolerates_populated_process_local_namespace(tmp_path: Path)
             custody_profile=StorageCustodyProfile.FULL,
         )
         # The excluded store is reported in the manifest, never carried.
-        assert "aeat.workflow" in manifest.excluded_namespaces
-        assert all(obj.namespace != "aeat.workflow" for obj in carried)
+        assert "cadrumo.workflow" in manifest.excluded_namespaces
+        assert all(obj.namespace != "cadrumo.workflow" for obj in carried)
 
 
 def test_every_carried_namespace_has_a_natural_key_resolver() -> None:

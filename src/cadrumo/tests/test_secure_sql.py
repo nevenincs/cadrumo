@@ -119,7 +119,7 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
         manifest = read_manifest(profile.paths)
         profile.repository.save(
-            namespace="aeat-tests.runtime.profile",
+            namespace="cadrumo-tests.runtime.profile",
             object_key="runtime-row",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,

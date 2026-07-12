@@ -145,18 +145,18 @@ def test_profile_ledger_namespaces_are_registered() -> None:
     amortization = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_assets_amortization_ledger")
 
     assert inventory == PROFILE_INVENTORY_LEDGER_NAMESPACE
-    assert inventory.namespace == "aeat.persistence.profile.inventory"
+    assert inventory.namespace == "cadrumo.persistence.profile.inventory"
     assert inventory.sensitivity is SensitivityClass.FINANCIAL
     assert inventory.schema_version == 1
     assert inventory.require_default_object_key() == "default"
 
     assert assets == PROFILE_ASSETS_LEDGER_NAMESPACE
-    assert assets.namespace == "aeat.persistence.profile.assets"
+    assert assets.namespace == "cadrumo.persistence.profile.assets"
     assert assets.sensitivity is SensitivityClass.FINANCIAL
     assert assets.require_default_object_key() == "default"
 
     assert amortization == PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE
-    assert amortization.namespace == "aeat.persistence.profile.assets.amortization"
+    assert amortization.namespace == "cadrumo.persistence.profile.assets.amortization"
     assert amortization.sensitivity is SensitivityClass.FINANCIAL
     assert amortization.require_default_object_key() == "default"
 
@@ -207,6 +207,53 @@ def test_every_registered_namespace_declares_explicit_custody_disposition() -> N
     )
 
 
+def test_all_67_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
+    definitions = STORAGE_NAMESPACE_REGISTRY.namespaces
+
+    assert len(definitions) == 67
+    assert all(
+        definition.namespace.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
+    )
+    assert all(
+        definition.owner.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
+    )
+    assert not any(
+        definition.namespace.startswith(("aeat.", "aeat-test.", "aeat-tests.")) for definition in definitions
+    )
+    assert {
+        (definition.key, definition.namespace, definition.owner)
+        for definition in definitions
+        if ".aeat." in definition.namespace
+    } == {
+        ("aeat_browser_sessions", "cadrumo.outbound.aeat.auth.sessions", "cadrumo.adapters.outbound.aeat.auth"),
+        (
+            "clave_movil_diagnostics",
+            "cadrumo.outbound.aeat.auth.clave_movil.diagnostics",
+            "cadrumo.adapters.outbound.aeat.auth",
+        ),
+        (
+            "clave_permanente_diagnostics",
+            "cadrumo.outbound.aeat.auth.clave_permanente.diagnostics",
+            "cadrumo.adapters.outbound.aeat.auth",
+        ),
+        (
+            "aeat_filed_declaration_artefacts",
+            "cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
+            "cadrumo.adapters.outbound.aeat.sede",
+        ),
+        (
+            "aeat_filed_declaration_observations",
+            "cadrumo.outbound.aeat.sede.filed_declaration.observations",
+            "cadrumo.adapters.outbound.aeat.sede",
+        ),
+        (
+            "aeat_iva_wallet_observations",
+            "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations",
+            "cadrumo.adapters.outbound.aeat.sede",
+        ),
+    }
+
+
 def test_custody_profile_projection_matches_bucket_custody_worked_examples() -> None:
     full_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(StorageCustodyProfile.FULL)
     structured_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(
@@ -244,67 +291,67 @@ def test_auth_session_cache_remote_namespaces_are_registered() -> None:
     expected_contracts = {
         "aeat_browser_sessions": (
             AEAT_BROWSER_SESSION_NAMESPACE,
-            "aeat.outbound.aeat.auth.sessions",
+            "cadrumo.outbound.aeat.auth.sessions",
             SensitivityClass.SESSION,
             "{storage_state_path_posix}",
         ),
         "clave_movil_diagnostics": (
             CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
-            "aeat.outbound.aeat.auth.clave_movil.diagnostics",
+            "cadrumo.outbound.aeat.auth.clave_movil.diagnostics",
             SensitivityClass.SESSION,
             "{diagnostic_id_or_timestamp_iso}",
         ),
         "google_oauth_client": (
             GOOGLE_OAUTH_CLIENT_NAMESPACE,
-            "aeat.google.oauth.client",
+            "cadrumo.google.oauth.client",
             SensitivityClass.SECRET,
             "{profile}",
         ),
         "google_oauth_token": (
             GOOGLE_OAUTH_TOKEN_NAMESPACE,
-            "aeat.google.oauth.token",
+            "cadrumo.google.oauth.token",
             SensitivityClass.SECRET,
             "{profile}",
         ),
         "google_oauth_metadata": (
             GOOGLE_OAUTH_METADATA_NAMESPACE,
-            "aeat.google.oauth.metadata",
+            "cadrumo.google.oauth.metadata",
             SensitivityClass.FINANCIAL,
             "{profile}",
         ),
         "google_drive_config": (
             GOOGLE_DRIVE_CONFIG_NAMESPACE,
-            "aeat.google.drive.config",
+            "cadrumo.google.drive.config",
             SensitivityClass.FINANCIAL,
             "{profile}",
         ),
         "llm_cache": (
             LLM_CACHE_NAMESPACE,
-            "aeat.outbound.llm.cache",
+            "cadrumo.outbound.llm.cache",
             SensitivityClass.DIAGNOSTIC,
             "{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
         ),
         "llm_usage": (
             LLM_USAGE_NAMESPACE,
-            "aeat.outbound.llm.usage",
+            "cadrumo.outbound.llm.usage",
             SensitivityClass.DIAGNOSTIC,
             "{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
         ),
         "aeat_filed_declaration_artefacts": (
             AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
-            "aeat.outbound.aeat.sede.filed_declaration.artefacts",
+            "cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
             SensitivityClass.FINANCIAL,
             "{sha256_hex}",
         ),
         "aeat_filed_declaration_observations": (
             AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
-            "aeat.outbound.aeat.sede.filed_declaration.observations",
+            "cadrumo.outbound.aeat.sede.filed_declaration.observations",
             SensitivityClass.FINANCIAL,
             "{sha256(modelo,ejercicio,period,expediente_id)}",
         ),
         "aeat_iva_wallet_observations": (
             AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
-            "aeat.outbound.aeat.sede.iva_compensation_wallet.observations",
+            "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations",
             SensitivityClass.FINANCIAL,
             "{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
         ),
@@ -585,11 +632,11 @@ def test_duplicate_registry_entries_raise_namespace_registry_error() -> None:
 def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
     path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
 
-    marker = secure_object_logical_path("aeat.persistence.profile.assets", "default")
+    marker = secure_object_logical_path("cadrumo.persistence.profile.assets", "default")
 
     assert path_definition.kind is StoragePathKind.LOGICAL_SQL
     assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
-    assert marker.as_posix() == "db:/secure_objects/aeat.persistence.profile.assets/default"
+    assert marker.as_posix() == "db:/secure_objects/cadrumo.persistence.profile.assets/default"
 
 
 def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> None:

@@ -55,7 +55,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
     """A CAS conflict in a batch rolls back sibling writes in the unit of work."""
 
     with _ephemeral_secure_repo(tmp_path, "revision-cas-batch.db") as (db_path, _, repo):
-        namespace = "aeat.revision.cas.batch"
+        namespace = "cadrumo.revision.cas.batch"
         repo.save(
             namespace=namespace,
             object_key="existing-key",
@@ -102,7 +102,7 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
 
     with _ephemeral_secure_repo(tmp_path, "revision-cas-raw-key.db") as (db_path, _, repo):
         raw_key = b"x" * 32
-        namespace = "aeat.revision.cas.raw"
+        namespace = "cadrumo.revision.cas.raw"
         repo.save_with_raw_key(
             namespace=namespace,
             hashed_object_key=raw_key,
@@ -143,7 +143,7 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
 
     with _ephemeral_secure_repo(tmp_path, "revision-cas-raw-key-stale.db") as (db_path, _, repo):
         raw_key = b"y" * 32
-        namespace = "aeat.revision.cas.raw.stale"
+        namespace = "cadrumo.revision.cas.raw.stale"
         repo.save_with_raw_key(
             namespace=namespace,
             hashed_object_key=raw_key,
@@ -204,7 +204,7 @@ def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targ
     """Targeted batch load returns the same readable rows as repeated single loads."""
 
     with _ephemeral_secure_repo(tmp_path, "load-many-readable.db") as (_, engine, repo):
-        namespace = "aeat.batch.readable"
+        namespace = "cadrumo.batch.readable"
         rows = {
             "row-a": b"payload-a",
             "row-b": b"payload-b",
@@ -268,7 +268,7 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
     """Targeted batch load keeps readable rows and schema failures visible."""
 
     with _ephemeral_secure_repo(tmp_path, "load-many-failures.db") as (_, _, repo):
-        namespace = "aeat.batch.failures"
+        namespace = "cadrumo.batch.failures"
         repo.save(
             namespace=namespace,
             object_key="readable-row",
@@ -330,7 +330,7 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
     assert unreadable[0].schema_version == 2
     assert unreadable[0].reason == tr(
         "errors.storage.namespace.schema_version_from_future",
-        namespace="aeat.batch.failures",
+        namespace="cadrumo.batch.failures",
         schema_version=2,
         expected=1,
     )
@@ -343,7 +343,7 @@ def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
     saved, and the byte_length must be the non-empty ciphertext size."""
 
     with _ephemeral_secure_repo(tmp_path, "peek.db") as (_, _, repo):
-        namespace = "aeat-test.peek"
+        namespace = "cadrumo-test.peek"
         written_at = datetime(2026, 5, 21, 9, 15, 0)
         repo.save(
             namespace=namespace,
@@ -371,7 +371,7 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
     a cached or hard-coded version, on-disk drift would be invisible."""
 
     with _ephemeral_secure_repo(tmp_path, "peek-drift.db") as (db_path, _, repo):
-        namespace = "aeat-test.peek.drift"
+        namespace = "cadrumo-test.peek.drift"
         repo.save(
             namespace=namespace,
             object_key="drift-key",
@@ -405,7 +405,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
     two divergent ciphertexts under the same logical key."""
 
     with _ephemeral_secure_repo(tmp_path, "converge.db") as (db_path, engine, _):
-        namespace = "aeat-test.converge"
+        namespace = "cadrumo-test.converge"
         natural_key = "shared-object-key"
         SecureObjectRepository(engine=engine).save(
             namespace=namespace,
@@ -450,7 +450,7 @@ def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_p
 
         with pytest.raises(StorageValidationError) as raised:
             repo.save(
-                namespace="aeat-test.unregistered.runtime",
+                namespace="cadrumo-test.unregistered.runtime",
                 object_key="policy-key",
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
@@ -550,3 +550,51 @@ def test_registry_bound_repository_rejects_on_disk_schema_newer_than_registry(tm
                 max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version + 1,
             )
         assert raised.value.translated_message == "errors.storage.namespace.schema_version_from_future"
+
+
+def test_repository_refuses_former_product_namespace_before_read_write_delete_or_list(tmp_path: Path) -> None:
+    """Former product namespaces never reach SQL or mutate current rows."""
+    with _ephemeral_secure_repo(tmp_path, "former-namespace-refusal.db") as (db_path, _, repo):
+        current_namespace = "cadrumo-test.namespace.refusal.current"
+        former_namespace = "aeat-test.namespace.refusal.former"
+        repo.save(
+            namespace=current_namespace,
+            object_key="sentinel",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"current-sentinel-bytes",
+        )
+
+        with pytest.raises(StorageValidationError) as read_error:
+            repo.exists(former_namespace, "sentinel")
+        with pytest.raises(StorageValidationError) as list_error:
+            repo.list_keys(former_namespace)
+        with pytest.raises(StorageValidationError) as write_error:
+            repo.save(
+                namespace=former_namespace,
+                object_key="forbidden",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"must-not-be-written",
+            )
+        with pytest.raises(StorageValidationError) as delete_error:
+            repo.delete(former_namespace, "sentinel")
+
+        for error in (read_error, list_error, write_error, delete_error):
+            assert error.value.translated_message == "errors.storage.namespace.unregistered"
+            assert error.value.context is not None
+            assert error.value.context["reason"] == "former_product_namespace"
+
+        loaded = repo.load(
+            current_namespace,
+            "sentinel",
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=1,
+        )
+        assert loaded is not None
+        assert loaded.payload == b"current-sentinel-bytes"
+        with sqlite3.connect(db_path) as connection:
+            rows = connection.execute("SELECT namespace FROM secure_objects ORDER BY namespace").fetchall()
+        assert rows == [(current_namespace,)]
