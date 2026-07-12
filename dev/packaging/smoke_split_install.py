@@ -1,19 +1,19 @@
 """Prove the split install: slim wheel degrades loudly, companions restore byte-parity.
 
-The split ships the runtime as a slim ``aeat`` wheel with the corpus source
+The split ships the runtime as a slim ``cadrumo`` wheel with the corpus source
 binaries excluded, plus TWO sub-cap companion distributions carrying exactly
-those binaries between them: ``aeat-data-manuals`` (``corpus/manuals``) and
-``aeat-data-official`` (``corpus/aeat_official`` + ``corpus/normatives``). Both
-contribute subtrees to the SAME ``aeat_data`` implicit namespace package, so the
+those binaries between them: ``cadrumo-data-manuals`` (``corpus/manuals``) and
+``cadrumo-data-official`` (``corpus/aeat_official`` + ``corpus/normatives``). Both
+contribute subtrees to the SAME ``cadrumo_data`` implicit namespace package, so the
 corpus seam resolves a binary from either portion. This lane proves both halves
 of the contract in a fresh stdlib venv:
 
 - **Core alone (advisory path):** the registry authority loads and validates
   non-fatally while emitting the loud :class:`CorpusCompanionAdvisory` naming
-  the missing set and the ``aeat-cli[corpus-sources]`` install hint, and the
-  companion-guarded ``aeat app registry verify`` verb refuses instructively.
+  the missing set and the ``cadrumo[corpus-sources]`` install hint, and the
+  companion-guarded ``cadrumo app registry verify`` verb refuses instructively.
 - **With both companions (byte-identical path):** the same venv, after
-  installing the two ``aeat-data-*`` wheels, resolves the binaries through the
+  installing the two ``cadrumo-data-*`` wheels, resolves the binaries through the
   corpus seam over the joined namespace, the advisory disappears, and full
   byte-exact source verification runs clean — behaviour identical to a full
   checkout.
@@ -28,10 +28,11 @@ import zipfile
 from pathlib import Path
 
 from .smoke_core import (
+    _clean_product_env,
     _executable,
     _manifest_path,
     _run,
-    _venv_aeat,
+    _venv_bin,
     _venv_python,
     _work_dir,
     _write_smoke_manifest,
@@ -43,7 +44,7 @@ _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 _ADVISORY_PROBE = """
 import warnings
 
-from aeat.domain.calculations.registry import CorpusCompanionAdvisory, bundled_authority
+from cadrumo.domain.calculations.registry import CorpusCompanionAdvisory, bundled_authority
 
 with warnings.catch_warnings(record=True) as caught:
     warnings.simplefilter("always")
@@ -54,7 +55,7 @@ advisories = [w for w in caught if issubclass(w.category, CorpusCompanionAdvisor
 if not advisories:
     raise SystemExit("expected the loud CorpusCompanionAdvisory in a companion-less split install")
 message = str(advisories[0].message)
-if "aeat-cli[corpus-sources]" not in message:
+if "cadrumo[corpus-sources]" not in message:
     raise SystemExit(f"advisory does not name the install hint: {message!r}")
 print("split-advisory-ok")
 """
@@ -62,7 +63,7 @@ print("split-advisory-ok")
 _CLEAN_PROBE = """
 import warnings
 
-from aeat.domain.calculations.registry import CorpusCompanionAdvisory, bundled_authority
+from cadrumo.domain.calculations.registry import CorpusCompanionAdvisory, bundled_authority
 
 with warnings.catch_warnings(record=True) as caught:
     warnings.simplefilter("always")
@@ -95,18 +96,18 @@ def _head_extract(repo_root: Path, work_dir: Path) -> Path:
 
 
 def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the slim ``aeat`` wheel and assert it sheds every corpus binary."""
+    """Build the slim ``cadrumo`` wheel and assert it sheds every corpus binary."""
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
-    wheels = sorted(wheel_dir.glob("aeat_cli-*.whl"))
+    wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
     if len(wheels) != 1:
-        raise SystemExit(f"expected exactly one aeat wheel in {wheel_dir}; got {[w.name for w in wheels]!r}")
+        raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[w.name for w in wheels]!r}")
     with zipfile.ZipFile(wheels[0]) as bundle:
         leaked = [
             name
             for name in bundle.namelist()
-            if name.startswith("aeat/_data/corpus/") and name.lower().endswith(_CORPUS_BINARY_SUFFIXES)
+            if name.startswith("cadrumo/_data/corpus/") and name.lower().endswith(_CORPUS_BINARY_SUFFIXES)
         ]
     if leaked:
         raise SystemExit(f"slim wheel leaked {len(leaked)} corpus source binaries; first ten: {leaked[:10]!r}")
@@ -115,8 +116,8 @@ def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
 
 # The two corpus companions and the wheel glob each emits, in install order.
 _DATA_COMPANIONS = (
-    ("aeat_data_manuals", "aeat_data_manuals-*.whl"),
-    ("aeat_data_official", "aeat_data_official-*.whl"),
+    ("cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
+    ("cadrumo_data_official", "cadrumo_data_official-*.whl"),
 )
 
 # PyPI's default per-file size cap, in the decimal-MB convention the publish and
@@ -124,8 +125,24 @@ _DATA_COMPANIONS = (
 _PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 
 
+def _venv_cadrumo(venv: Path) -> Path:
+    """Return the installed canonical Cadrumo console script."""
+    executable = "cadrumo.exe" if sys.platform == "win32" else "cadrumo"
+    return _venv_bin(venv) / executable
+
+
+def _runtime_env(work_dir: Path, state_name: str) -> dict[str, str]:
+    """Return a host-independent environment for an installed runtime probe."""
+    state_root = work_dir / state_name
+    return {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(state_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(state_root / 'cadrumo.db').as_posix()}",
+    }
+
+
 def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
-    """Build both ``aeat-data-*`` companion wheels from their in-repo projects.
+    """Build both ``cadrumo-data-*`` companion wheels from their in-repo projects.
 
     Each companion wheel is asserted sub-cap here too: a companion that crossed
     PyPI's 100 MB per-file limit would defeat the entire reason for the split.
@@ -155,14 +172,15 @@ def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
 def _assert_registry_verify_refuses(work_dir: Path, venv_path: Path) -> None:
     """The companion-guarded verification verb refuses instructively without it."""
     completed = subprocess.run(  # noqa: S603 - venv-resolved console script, fixed args
-        [str(_venv_aeat(venv_path)), "app", "registry", "verify"],
+        [str(_venv_cadrumo(venv_path)), "app", "registry", "verify"],
         cwd=work_dir,
         capture_output=True,
         text=True,
         check=False,
+        env=_runtime_env(work_dir, "refusal-state"),
     )
     if completed.returncode == 0:
-        raise SystemExit("aeat app registry verify unexpectedly succeeded without the companion")
+        raise SystemExit("cadrumo app registry verify unexpectedly succeeded without the companion")
     combined = f"{completed.stdout}\n{completed.stderr}"
     if "corpus-sources" not in combined:
         raise SystemExit(f"registry verify refusal does not cite the corpus-sources install hint:\n{combined}")
@@ -170,7 +188,11 @@ def _assert_registry_verify_refuses(work_dir: Path, venv_path: Path) -> None:
 
 def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
     """With the companion installed, full source verification runs clean."""
-    _run([str(_venv_aeat(venv_path)), "app", "registry", "verify"], cwd=work_dir)
+    _run(
+        [str(_venv_cadrumo(venv_path)), "app", "registry", "verify"],
+        cwd=work_dir,
+        env=_runtime_env(work_dir, "clean-verify-state"),
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -192,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     print("extracting pristine HEAD tree for owner-clean wheel builds", flush=True)
     build_root = _head_extract(repo_root, work_dir)
 
-    print("building slim aeat wheel and both aeat-data-* companion wheels", flush=True)
+    print("building slim Cadrumo wheel and both cadrumo-data-* companion wheels", flush=True)
     wheel = _build_slim_wheel(build_root, work_dir, uv)
     data_wheels = _build_data_wheels(build_root, work_dir, uv)
 
@@ -201,15 +223,23 @@ def main(argv: list[str] | None = None) -> int:
     _install_target_with_pip(work_dir, str(wheel.resolve()), venv_path)
 
     print("advisory path: registry load is loud but non-fatal; verify verb refuses", flush=True)
-    _run([str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE], cwd=work_dir)
+    _run(
+        [str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE],
+        cwd=work_dir,
+        env=_runtime_env(work_dir, "advisory-state"),
+    )
     _assert_registry_verify_refuses(work_dir, venv_path)
 
-    print("installing BOTH aeat-data-* companions into the same venv", flush=True)
+    print("installing BOTH cadrumo-data-* companions into the same venv", flush=True)
     for data_wheel in data_wheels:
         _install_target_with_pip(work_dir, str(data_wheel.resolve()), venv_path)
 
     print("byte-identical path: advisory gone; full source verification runs clean", flush=True)
-    _run([str(_venv_python(venv_path)), "-c", _CLEAN_PROBE], cwd=work_dir)
+    _run(
+        [str(_venv_python(venv_path)), "-c", _CLEAN_PROBE],
+        cwd=work_dir,
+        env=_runtime_env(work_dir, "clean-import-state"),
+    )
     _assert_registry_verify_runs_clean(work_dir, venv_path)
 
     manifest = _write_smoke_manifest(
@@ -224,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         checks=(
             "pristine HEAD extract",
             "slim wheel build sheds every corpus binary",
-            "both aeat-data-* companion wheels build sub-cap (< 100 MB each)",
+            "both cadrumo-data-* companion wheels build sub-cap (< 100 MB each)",
             "stdlib venv creation",
             "slim-wheel-only pip install",
             "companion-less registry load emits the loud advisory",
