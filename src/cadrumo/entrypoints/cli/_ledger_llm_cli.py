@@ -110,7 +110,7 @@ def emit_llm_rejection(
                 "LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready."
             ),
         ),
-        suggestion=f"aeat app ledger classify {result.transaction_id} --classification BUSINESS --category-id <id>",
+        suggestion=f"cadrumo app ledger classify {result.transaction_id} --classification BUSINESS --category-id <id>",
         context={"transaction_id": result.transaction_id, "suggestion_kind": result.suggestion_kind},
     )
     lines = [
@@ -131,7 +131,7 @@ def split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | 
     """
     provider_flag = f" --llm {provider.value}" if provider is not None else ""
     command = (
-        f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply{provider_flag}"
+        f"cadrumo app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply{provider_flag}"
     )
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -236,7 +236,7 @@ def dispatch_autosplit(
                 default=(
                     f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
+                    "or run 'cadrumo app ledger providers' to list usable providers."
                 ),
             ),
         )
@@ -426,7 +426,7 @@ def ledger_classify_llm(
     reject: bool = False,
     reason: str = "",
 ) -> None:
-    """Run the LLM suggest / apply / reject loop for ``aeat app ledger classify --llm``.
+    """Run the LLM suggest / apply / reject loop for ``cadrumo app ledger classify --llm``.
 
     Without ``--apply`` the model's suggestion is printed for review and nothing
     is persisted. With ``--apply`` the decision is written via
@@ -475,7 +475,7 @@ def ledger_classify_llm(
                 default=(
                     f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
+                    "or run 'cadrumo app ledger providers' to list usable providers."
                 ),
             ),
         )
@@ -550,7 +550,7 @@ def ledger_classify_llm(
             bucket_id=transaction_repository.bucket_id,
             business_pct=_parse_decimal(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify --llm --apply",
+            source_command="cadrumo app ledger classify --llm --apply",
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
@@ -639,7 +639,7 @@ def ledger_saturate_llm(
                 default=(
                     f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
+                    "or run 'cadrumo app ledger providers' to list usable providers."
                 ),
             ),
         )

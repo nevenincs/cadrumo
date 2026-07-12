@@ -471,7 +471,7 @@ def verification_report_list(
     Each row is a persisted :class:`VerificationReport` projected through
     :class:`VerificationReportListResult` and nested
     :class:`VerificationReportPayload`,
-    preserving the same findings surface as ``aeat app modelo work verify``.
+    preserving the same findings surface as ``cadrumo app modelo work verify``.
     """
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
     result = VerificationReportListResult(
@@ -517,7 +517,7 @@ def verification_report_show(
     :class:`VerificationReportShowResult`,
     so saved report views retain the legal/source-reference
     :class:`FindingPayload` detail emitted
-    by ``aeat app modelo work verify``.
+    by ``cadrumo app modelo work verify``.
     """
     try:
         report = get_verification_report(verification_report_id)

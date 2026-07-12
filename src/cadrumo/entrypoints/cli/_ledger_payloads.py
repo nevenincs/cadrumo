@@ -333,7 +333,7 @@ class LedgerSplitChildIdPayload(OutputSchema):
     """One persisted split-child id, carrying both the full and short forms.
 
     Emitted on the manual / applied split surface so an operator can copy the
-    ids straight into ``aeat app ledger merge --child-id ...`` to undo the split.
+    ids straight into ``cadrumo app ledger merge --child-id ...`` to undo the split.
     ``full_id`` is the 64-char canonical id ``merge`` resolves; ``display_id`` is
     the shortest unique prefix within the child cohort (the same display-width
     convention :class:`LedgerListRowPayload` uses), suitable for human reading.
@@ -386,7 +386,7 @@ class _LedgerMutationResult(OutputSchema):
 
 @register_schema("ledger.add")
 class LedgerAddResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger add``.
+    """JSON envelope for ``cadrumo app ledger add``.
 
     D1: ``add`` joins the uniform mutation quintet by subclassing
     :class:`_LedgerMutationResult`, gaining the ``review_status`` field every
@@ -396,12 +396,12 @@ class LedgerAddResult(_LedgerMutationResult):
 
 @register_schema("ledger.update")
 class LedgerUpdateResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger update``."""
+    """JSON envelope for ``cadrumo app ledger update``."""
 
 
 @register_schema("ledger.classify")
 class LedgerClassifySingleResult(_LedgerMutationResult):
-    """JSON envelope for the single-transaction ``aeat app ledger classify`` path (D1).
+    """JSON envelope for the single-transaction ``cadrumo app ledger classify`` path (D1).
 
     The primary, non-optional mutation quintet: classifying one transaction
     returns the same ``{bucket_id, transaction_id, bucket_event_ids,
@@ -411,7 +411,7 @@ class LedgerClassifySingleResult(_LedgerMutationResult):
 
 
 class LedgerClassifyBulkResult(OutputSchema):
-    """JSON result for the bulk ``aeat app ledger classify --from-csv`` path (D1).
+    """JSON result for the bulk ``cadrumo app ledger classify --from-csv`` path (D1).
 
     A discriminated branch of the single ``classify`` CLI leaf; it shares the
     leaf's registered ``ledger.classify`` command key (the conformance gate maps
@@ -427,13 +427,13 @@ class LedgerClassifyBulkResult(OutputSchema):
 
 @register_schema("ledger.allocate")
 class LedgerAllocateResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger allocate``."""
+    """JSON envelope for ``cadrumo app ledger allocate``."""
 
 
 @register_schema("ledger.attach")
 @register_schema("ledger.doclink")
 class LedgerAttachResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
+    """JSON envelope for ``cadrumo app ledger attach`` and ``ledger doclink``."""
 
 
 class LedgerDocLinkPullFolderFilePayload(OutputSchema):
@@ -455,7 +455,7 @@ class LedgerDocLinkPullFolderFilePayload(OutputSchema):
 
 @register_schema("ledger.pull_folder")
 class LedgerDocLinkPullFolderResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger pull-folder``.
+    """JSON envelope for ``cadrumo app ledger pull-folder``.
 
     Bulk-fetches every PDF/image child of a ``drive.file``-reachable Drive
     folder into encrypted attachment evidence (never a link-only pointer),
@@ -475,22 +475,22 @@ class LedgerDocLinkPullFolderResult(OutputSchema):
 
 @register_schema("ledger.archive")
 class LedgerArchiveResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger archive``."""
+    """JSON envelope for ``cadrumo app ledger archive``."""
 
 
 @register_schema("ledger.stash")
 class LedgerStashResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger stash``."""
+    """JSON envelope for ``cadrumo app ledger stash``."""
 
 
 @register_schema("ledger.restore")
 class LedgerRestoreResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger restore``."""
+    """JSON envelope for ``cadrumo app ledger restore``."""
 
 
 @register_schema("ledger.exclude")
 class LedgerExcludeResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger exclude``.
+    """JSON envelope for ``cadrumo app ledger exclude``.
 
     Marks a reviewed transaction as deliberately excluded from filing; the
     ``review_status`` field carries ``excluded`` and the row stays in the
@@ -500,7 +500,7 @@ class LedgerExcludeResult(_LedgerMutationResult):
 
 @register_schema("ledger.remove")
 class LedgerRemoveResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger remove``.
+    """JSON envelope for ``cadrumo app ledger remove``.
 
     Mirrors :class:`LedgerTransactionRemovalReport`.
     ``blocking_modelo_references`` is the hard finalized-revision guard;
@@ -523,7 +523,7 @@ class LedgerRemoveResult(OutputSchema):
 
 @register_schema("ledger.reset")
 class LedgerResetResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger reset``.
+    """JSON envelope for ``cadrumo app ledger reset``.
 
     Mirrors ``LedgerCatalogueResetReport.model_dump(mode='json')``.
     """
@@ -543,7 +543,7 @@ class LedgerResetResult(OutputSchema):
 
 @register_schema("ledger.split")
 class LedgerSplitResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger split``.
+    """JSON envelope for ``cadrumo app ledger split``.
 
     Covers the manual split (explicit ``--child-amount`` / ``--child-description``)
     and the evidence-driven LLM split (``--llm``). On the LLM preview path
@@ -575,7 +575,7 @@ class LedgerSplitResult(OutputSchema):
 
 @register_schema("ledger.merge")
 class LedgerMergeResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger merge``."""
+    """JSON envelope for ``cadrumo app ledger merge``."""
 
     bucket_id: str
     split_group_id: str
@@ -591,7 +591,7 @@ class LedgerMergeResult(OutputSchema):
 
 
 class LedgerListRowPayload(OutputSchema):
-    """One typed ``aeat app ledger list`` row (D2).
+    """One typed ``cadrumo app ledger list`` row (D2).
 
     Projected from
     :class:`LedgerTransactionReviewPayload` plus the
@@ -651,7 +651,7 @@ class LedgerListRowPayload(OutputSchema):
 
 @register_schema("ledger.list")
 class LedgerListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger list``.
+    """JSON envelope for ``cadrumo app ledger list``.
 
     ``rows`` is the page actually rendered; ``total`` is the full bucket row
     count. When ``--limit`` clips the page, ``truncated`` is ``True`` and
@@ -670,7 +670,7 @@ class LedgerListResult(OutputSchema):
 
 @register_schema("ledger.view")
 class LedgerViewResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger view``.
+    """JSON envelope for ``cadrumo app ledger view``.
 
     Mirrors ``LedgerTransactionResultPayload``.
     """
@@ -683,7 +683,7 @@ class LedgerViewResult(OutputSchema):
 
 @register_schema("ledger.status")
 class LedgerStatusResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger status``.
+    """JSON envelope for ``cadrumo app ledger status``.
 
     Mirrors :class:`LedgerStatusReport`.  With no
     period it is an at-a-glance bucket summary; with ``--period`` it adds the
@@ -711,7 +711,7 @@ class LedgerStatusResult(OutputSchema):
 
 
 class LedgerHistoryEventPayload(OutputSchema):
-    """One bucket event nested in ``aeat app ledger history`` (D2).
+    """One bucket event nested in ``cadrumo app ledger history`` (D2).
 
     Mirrors :class:`BucketEvent`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]`` event shape. The
@@ -733,7 +733,7 @@ class LedgerHistoryEventPayload(OutputSchema):
 
 @register_schema("ledger.history")
 class LedgerHistoryResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger history``."""
+    """JSON envelope for ``cadrumo app ledger history``."""
 
     bucket_id: str
     transaction_id: str
@@ -743,7 +743,7 @@ class LedgerHistoryResult(OutputSchema):
 
 @register_schema("ledger.categories")
 class LedgerCategoriesResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger categories``."""
+    """JSON envelope for ``cadrumo app ledger categories``."""
 
     families: list[SpendingCategoryFamilyPayload]
     category_ids: list[str]
@@ -759,7 +759,7 @@ class LedgerCategoriesResult(OutputSchema):
 
 
 class LedgerExportRowPayload(OutputSchema):
-    """One serialised ledger row nested in ``aeat app ledger export`` (D2).
+    """One serialised ledger row nested in ``cadrumo app ledger export`` (D2).
 
     Mirrors :class:`LedgerExportRow`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
@@ -802,7 +802,7 @@ class LedgerExportRowPayload(OutputSchema):
 
 @register_schema("ledger.export")
 class LedgerExportPayload(OutputSchema):
-    """JSON envelope for ``aeat app ledger export``.
+    """JSON envelope for ``cadrumo app ledger export``.
 
     Distinct from the application
     :class:`LedgerExportResult` (DB-26 S51): the backend
@@ -846,7 +846,7 @@ class LedgerExportPayload(OutputSchema):
 
 @register_schema("ledger.import")
 class LedgerImportPayload(OutputSchema):
-    """JSON envelope for ``aeat app ledger import``.
+    """JSON envelope for ``cadrumo app ledger import``.
 
     Distinct from the application
     :class:`LedgerSourceImportResult` (DB-26 S51): this
@@ -908,7 +908,7 @@ class LedgerImportPayload(OutputSchema):
 
 @register_schema("ledger.participation")
 class LedgerTransactionParticipationPayload(OutputSchema):
-    """JSON envelope for ``aeat app ledger participation <transaction-id>``.
+    """JSON envelope for ``cadrumo app ledger participation <transaction-id>``.
 
     Carries the full
     :class:`TransactionRevisionParticipationIndex` read for
@@ -923,7 +923,7 @@ class LedgerTransactionParticipationPayload(OutputSchema):
 
 @register_schema("ledger.participation.rebuild")
 class LedgerParticipationRebuildResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger participation rebuild``.
+    """JSON envelope for ``cadrumo app ledger participation rebuild``.
 
     Reports the outcome of
     :func:`rebuild_participation_index`, which
@@ -1003,7 +1003,7 @@ class LedgerTrackingPayload(OutputSchema):
 
 @register_schema("ledger.track")
 class LedgerTrackResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger track``.
+    """JSON envelope for ``cadrumo app ledger track``.
 
     ``participated_in`` carries the finalized-revision participations that
     consumed this transaction (the inverse audit trail), or ``None`` when the
@@ -1020,7 +1020,7 @@ class LedgerTrackResult(OutputSchema):
 
 @register_schema("ledger.review")
 class LedgerReviewResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger review``.
+    """JSON envelope for ``cadrumo app ledger review``.
 
     Covers three payload branches:
     - Multi-row list: ``rows`` + ``filters``
@@ -1063,7 +1063,7 @@ class LedgerPreflightIssuePayload(OutputSchema):
 
 @register_schema("ledger.check")
 class LedgerCheckResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger check``.
+    """JSON envelope for ``cadrumo app ledger check``.
 
     ``check`` is a report-only audit over one explicit period or every period the
     ledger touches.  It aggregates
@@ -1080,7 +1080,7 @@ class LedgerCheckResult(OutputSchema):
 
 @register_schema("ledger.preflight")
 class LedgerPreflightResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger preflight``.
+    """JSON envelope for ``cadrumo app ledger preflight``.
 
     Mirrors :class:`LedgerPreflightReport` produced by
     :func:`preflight_ledger_tax_readiness`. ``period``
@@ -1116,7 +1116,7 @@ class LedgerLinkEvidenceUpdatePayload(OutputSchema):
 
 @register_schema("ledger.link")
 class LedgerLinkResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger link``.
+    """JSON envelope for ``cadrumo app ledger link``.
 
     D1: ``link`` now projects the ``transaction`` it mutated (the evidence
     attachment) alongside the link metadata; D2: the former bare-dict

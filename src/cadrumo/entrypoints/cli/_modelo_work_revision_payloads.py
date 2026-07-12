@@ -1,6 +1,6 @@
 """Registered work-revision inspection payloads for modelo CLI commands.
 
-``aeat app modelo work revision`` and ``work observations`` both project a
+``cadrumo app modelo work revision`` and ``work observations`` both project a
 persisted :class:`CalculationRevision` through
 :func:`calculation_revision_payload`.
 They share the nested
@@ -34,7 +34,7 @@ from ._schemas import OutputSchema, register_schema
 
 @register_schema("modelo.work.revision")
 class WorkRevisionResult(OutputSchema):
-    """Single-revision shape returned by ``aeat app modelo work revision``.
+    """Single-revision shape returned by ``cadrumo app modelo work revision``.
 
     Carries the JSON-safe projection of one
     :class:`CalculationRevision`, matching

@@ -647,7 +647,7 @@ def calculation_revision_not_found_bad_parameter(
             "cli.app.modelo.work.id_is_work_unit_not_calc_revision_natural",
             default=(
                 "This id is a work-unit-id, but verify/file need a calculation-revision-id. "
-                "For the common path, run 'aeat app modelo work calculate --modelo %{modelo} "
+                "For the common path, run 'cadrumo app modelo work calculate --modelo %{modelo} "
                 "--year %{year} --period %{period}' and then rerun verify/file for that "
                 "same modelo/year/period. Exact ids remain available as an advanced escape hatch."
             ),
@@ -741,7 +741,9 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.selector_not_found",
-                default="No active work unit matches this modelo/year/period. Run `aeat app modelo work create` first.",
+                default=(
+                    "No active work unit matches this modelo/year/period. Run `cadrumo app modelo work create` first."
+                ),
             ),
         )
     return bad_parameter_from_localized_context(exc)

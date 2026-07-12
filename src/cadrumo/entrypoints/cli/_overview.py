@@ -1,4 +1,4 @@
-"""CLI commands for the ``aeat app overview`` subcommand group.
+"""CLI commands for the ``cadrumo app overview`` subcommand group.
 
 Provides the ``status``, ``calendar``, ``agenda``, ``backlog``, ``explain``,
 ``prepare``, and ``pipeline`` verbs. All verbs are local-only: they never
@@ -297,7 +297,7 @@ def _local_calendar_filing_evidence(
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
         justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
-        filed_observation_store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
+        filed_observation_store = FiledDeclaracionObservationStore(Path("var/cadrumo/filed-declarations"))
         filed_declaration_observations, verified_filed_artefact_csvs = (
             _calendar_verified_filed_declaration_observations(
                 filed_observation_store,
@@ -434,7 +434,7 @@ def overview_status(
     """Emit the overview status payload for readiness or per-period detail.
 
     The deadline-calendar surface that used to live behind `--calendar`
-    is now the first-class `aeat app overview calendar` verb per the
+    is now the first-class `cadrumo app overview calendar` verb per the
     app-overview-shape ADR's Consequences section. No alternate flag path
     remains; callers must use the dedicated verb. The full-status branch projects
     :func:`build_overview_status_report`; the period branch emits only the

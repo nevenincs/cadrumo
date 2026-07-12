@@ -1,4 +1,4 @@
-"""Shared CLI transport helpers used across all ``aeat`` command groups.
+"""Shared CLI transport helpers used across all ``cadrumo`` command groups.
 
 Provides output helpers, period normalisation, and repository accessors
 used by the ledger, modelo, and config command groups. The repository
@@ -21,12 +21,13 @@ preserving the text line iterator unchanged.
 
 Application-layer and domain symbols are imported lazily inside each
 helper to avoid pulling the registry parse into fast-path commands such
-as ``aeat --version``.
+as ``cadrumo --version``.
 """
 
 from __future__ import annotations
 
 import re as _re
+import sys
 from collections.abc import Iterable, Sequence
 from datetime import date as _date
 from decimal import Decimal, InvalidOperation
@@ -42,7 +43,7 @@ from ...core.output_rendering import render_command_output
 # inside the helpers that use them at runtime. A module-level import
 # would pull the application layer — and transitively the registry
 # parse — into every consumer of this transport module, including the
-# ``aeat --version`` / ``aeat --help`` fast paths that import ``_emit``
+# ``cadrumo --version`` / ``cadrumo --help`` fast paths that import ``_emit``
 # but never reach a registry-backed helper. ``from __future__ import
 # annotations`` keeps the type annotations valid as strings without a
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
@@ -73,6 +74,11 @@ __all__ = [
 _FORMAT_TEXT = "text"
 _FORMAT_JSON = "json"
 _FORMAT_TABLE = "table"
+
+
+def _is_metadata_invocation() -> bool:
+    """Return whether the arguments request help or version metadata."""
+    return any(argument in {"--help", "-h", "--version", "-V"} for argument in sys.argv[1:])
 
 
 def _format_of(ctx: typer.Context) -> str:
@@ -144,7 +150,8 @@ def _emit_envelope(
     """
     from ...core.json_contract import emit_json_success
 
-    sandbox_notice = _active_sandbox_notice()
+    metadata_invocation = _is_metadata_invocation()
+    sandbox_notice = None if metadata_invocation else _active_sandbox_notice()
     resolved_notices: tuple[Notice, ...]
     if sandbox_notice is None:
         resolved_notices = tuple(notices) if notices is not None else ()
@@ -153,7 +160,8 @@ def _emit_envelope(
 
     format_name = _format_of(ctx)
     if format_name == _FORMAT_JSON:
-        emit_json_success(command, result, notices=resolved_notices, active_profile=_active_profile_label())
+        active_profile = None if metadata_invocation else _active_profile_label()
+        emit_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
         return
     # Route non-JSON paths through render_command_output so unsupported
     # ``--format`` values (e.g. ``xml``) raise the same refusal contract
@@ -177,7 +185,7 @@ def _active_sandbox_notice() -> Notice | None:
     ``bucket_maintenance`` facades (which pull the registry) — and checks it
     against the reserved sandbox label prefix
     (:data:`~cadrumo.core.external_constants.SANDBOX_LABEL_PREFIX`). This keeps
-    the state-free CLI surface (``aeat`` / ``--help`` / ``--version``, which
+    the state-free CLI surface (``cadrumo`` / ``--help`` / ``--version``, which
     reach this helper via :func:`_emit_envelope`) off the registry-loading
     import path, honouring this module's lazy-import contract. Returns
     ``None`` when no profile is active, the active bucket's manifest is
@@ -191,19 +199,20 @@ def _active_sandbox_notice() -> Notice | None:
     from ...adapters.persistence.storage import StorageValidationError
     from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
     from ...core import resolve_active_bucket_id
+    from ...core._config_state_root import FormerProductStateError
     from ...core.config import load_settings
     from ...core.external_constants import SANDBOX_LABEL_PREFIX
     from ...core.json_contract import Notice, NoticeSeverity
 
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return None
     try:
+        bucket_id = resolve_active_bucket_id()
+        if bucket_id is None:
+            return None
         paths = bucket_paths(load_settings().cadrumo_local_storage_root, bucket_id)
         if not manifest_path(paths).is_file():
             return None
         label = read_manifest(paths).label
-    except (StorageValidationError, ValueError):
+    except (FormerProductStateError, StorageValidationError, ValueError):
         return None
     if not label.startswith(SANDBOX_LABEL_PREFIX):
         return None
@@ -218,7 +227,7 @@ def _active_sandbox_notice() -> Notice | None:
             ),
             label=label,
         ),
-        suggestion="aeat config profile sandbox discard",
+        suggestion="cadrumo config profile sandbox discard",
     )
 
 
@@ -232,10 +241,10 @@ def _active_profile_label() -> str | None:
     same non-secret display name :func:`_active_sandbox_notice` reads,
     never opening the encrypted per-bucket database and never touching the
     redacted profile/bucket UUID. Returns ``None`` when no profile is
-    active or the manifest is absent, unreadable, or fails strict
-    validation, so a non-profile-bound command and a degraded manifest
-    both leave the envelope spine's ``active_profile`` null rather than
-    breaking the emit. This is the identity anchor injected at the CLI
+    active, Cadrumo has rejected a legacy product-state location, or the manifest is
+    absent, unreadable, or fails strict validation, so a non-profile-bound
+    command and a degraded manifest both leave the envelope spine's
+    ``active_profile`` null rather than breaking the emit. This is the identity anchor injected at the CLI
     transport boundary because the ``core`` layer that builds the envelope
     (:func:`~cadrumo.core.json_contract.emit_json_success`) never scans
     profile manifests.
@@ -243,13 +252,14 @@ def _active_profile_label() -> str | None:
     from ...adapters.persistence.storage import StorageValidationError
     from ...application.workflow import read_profile_bucket_by_id
     from ...core import resolve_active_bucket_id
+    from ...core._config_state_root import FormerProductStateError
 
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return None
     try:
+        bucket_id = resolve_active_bucket_id()
+        if bucket_id is None:
+            return None
         pointer = read_profile_bucket_by_id(bucket_id)
-    except StorageValidationError:
+    except (FormerProductStateError, StorageValidationError):
         return None
     return pointer.label if pointer is not None else None
 

@@ -1,4 +1,4 @@
-"""Registered payload for the guided ``aeat app modelo work wizard`` command.
+"""Registered payload for the guided ``cadrumo app modelo work wizard`` command.
 
 The wizard walks an operator through a work unit's outstanding manual-input
 casillas and bindings/relations in plain language, then calls the same
@@ -43,7 +43,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
 
 @register_schema("modelo.work.wizard")
 class WorkWizardResult(OutputSchema):
-    """Successful ``aeat app modelo work wizard`` result payload.
+    """Successful ``cadrumo app modelo work wizard`` result payload.
 
     Mirrors the shape of :class:`~entrypoints.cli._modelo_payloads.WorkCalculateResult`
     (the wizard composes the exact same calculation path) plus the

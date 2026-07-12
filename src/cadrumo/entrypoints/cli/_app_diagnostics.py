@@ -1,4 +1,4 @@
-"""CLI commands for the ``aeat app diagnostics`` subcommand group.
+"""CLI commands for the ``cadrumo app diagnostics`` subcommand group.
 
 Provides the ``run-health``, ``runs``, ``latency``, ``errors``, and
 ``llm-usage`` verbs: local-only, read-only reports over recent LLM
@@ -75,7 +75,7 @@ app = typer.Typer(
 
 @app.callback()
 def _diagnostics_root(ctx: typer.Context) -> None:
-    """Render the ``aeat app diagnostics`` group help when invoked bare.
+    """Render the ``cadrumo app diagnostics`` group help when invoked bare.
 
     A real (non-collapsing) group callback is required here: a Typer
     instance carrying exactly one registered command and no callback is
@@ -214,7 +214,7 @@ def diagnostics_run_health(
                 "cli.diagnostics.run_health.session_stale_message",
                 default="The persisted AEAT session has passed its idle deadline; a live read will re-authenticate.",
             ),
-            suggestion="aeat config auth login",
+            suggestion="cadrumo config auth login",
         )
         notices.append(notice)
         lines.append(
@@ -231,7 +231,7 @@ def diagnostics_run_health(
                 "cli.diagnostics.run_health.no_session_message",
                 default="No persisted AEAT session found on disk.",
             ),
-            suggestion="aeat config auth login",
+            suggestion="cadrumo config auth login",
         )
         notices.append(notice)
 

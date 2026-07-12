@@ -14,7 +14,6 @@ import typer._click.types as typer_click_types
 
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
 from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
-from ....application.modelo import ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
@@ -407,8 +406,9 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
 
     Refuses instructively when the natural key resolves no revision or is
     ambiguous: the refusal names the candidate revisions or points at
-    ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
+    ``cadrumo app modelo describe <modelo>`` rather than emitting a bare error.
     """
+    from ....application.modelo import ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError
     from ....application.modelo import resolve_registry_revision_for_work_target
     from ....domain.calculations.registry import (
         AmbiguousRevisionSelectionError,
@@ -553,7 +553,7 @@ def config_profile_preflight(
         "readiness_scope\tprofile_fields_only",
         (
             "full_modelo_readiness_command\t"
-            f"aeat app modelo readiness --modelo {report.modelo} "
+            f"cadrumo app modelo readiness --modelo {report.modelo} "
             f"--revision-id {report.revision_id} --year {report.filing_year} "
             f"--period {report.period.registry_token}"
         ),
@@ -1087,7 +1087,7 @@ def config_status(
                 "readiness\tblocked",
                 f"identity.tax_id\t{'present' if values.get('identity.tax_id') else 'missing'}",
                 f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
-                f"next_action\taeat config profile edit {active_profile}",
+                f"next_action\tcadrumo config profile edit {active_profile}",
             )
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
@@ -1120,7 +1120,7 @@ def config_status(
         configured=True,
         iva_regime=values.get("iva.regime", ""),
         tax_residence_ccaa=values.get("tax_residence.ccaa", ""),
-        next_action="aeat app overview status",
+        next_action="cadrumo app overview status",
     )
     _emit_envelope(
         ctx,

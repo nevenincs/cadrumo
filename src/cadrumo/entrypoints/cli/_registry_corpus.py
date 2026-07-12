@@ -1,4 +1,4 @@
-"""Read-only ``aeat app registry`` exposure of legal citations and manuals."""
+"""Read-only ``cadrumo app registry`` exposure of legal citations and manuals."""
 
 from __future__ import annotations
 
@@ -77,7 +77,7 @@ def refuse_when_corpus_companion_absent(*, capability: str, missing_advisories: 
 def guard_corpus_companion(*, capability: str, registry_root: Path, source_root: Path) -> None:
     """Scan the corpus source catalogue and refuse when companion binaries are absent.
 
-    The ``aeat app registry`` verification verbs read the bundled corpus source
+    The ``cadrumo app registry`` verification verbs read the bundled corpus source
     binaries. In a split install without the ``aeat_data`` companion those
     binaries are absent; rather than degrade silently or fail with a low-level
     error, the verb refuses with a message naming the capability (a

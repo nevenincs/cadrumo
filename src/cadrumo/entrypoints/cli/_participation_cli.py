@@ -1,4 +1,4 @@
-"""``aeat app ledger participation`` — transaction participation audit surface.
+"""``cadrumo app ledger participation`` — transaction participation audit surface.
 
 Surfaces the inverse of the forward ``source_transaction_ids`` link: which
 finalized modelo revisions, filings, and justificantes consumed a given ledger
@@ -35,7 +35,7 @@ def register_participation_commands(
     *,
     resolve_transaction_id: ResolveTransactionId,
 ) -> None:
-    """Register the ``participation`` subgroup under ``aeat app ledger``.
+    """Register the ``participation`` subgroup under ``cadrumo app ledger``.
 
     The group callback handles ``participation <transaction-id>`` (the inverse
     audit lookup); the ``rebuild`` subcommand calls

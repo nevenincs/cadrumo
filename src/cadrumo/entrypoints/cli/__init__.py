@@ -1,9 +1,9 @@
-"""User-facing ``aeat`` CLI.
+"""User-facing ``cadrumo`` CLI.
 
 The command tree exposes two top-level namespaces:
 
-- ``aeat config`` — local configuration, on-ramp wizard, diagnostics.
-- ``aeat app`` — operational tax work: overview, ledger, modelo,
+- ``cadrumo config`` — local configuration, on-ramp wizard, diagnostics.
+- ``cadrumo app`` — operational tax work: overview, ledger, modelo,
   registry, and review.
 
 Every command in this package is a thin transport over the backend API.
@@ -16,7 +16,11 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import os
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager, nullcontext
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
 import typer
@@ -63,8 +67,8 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
-# Importing every module just to build the ``aeat`` app object made
-# ``aeat --version`` and ``aeat --help`` pay that cost even though they
+# Importing every module just to build the ``cadrumo`` app object made
+# ``cadrumo --version`` and ``cadrumo --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
 # something in the owning subtree (see :mod:`._command_suggestions`).
@@ -77,7 +81,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 
 app = typer.Typer(
-    name="aeat",
+    name="cadrumo",
     help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
@@ -141,7 +145,7 @@ def _root(
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
-        # Fast-path: bare `aeat --version` skips the registry load
+        # Fast-path: bare `cadrumo --version` skips the registry load
         # (disaster ADR Ruling 4 — registry validation must not run
         # on the version surface). The `--detail` variant re-invokes
         # with the registry summary populated. The diagnostics import
@@ -152,9 +156,9 @@ def _root(
         if detail:
             typer.echo(render_cli_version_text(report))
         else:
-            # The short `aeat --version` line is machine-format semver
-            # (e.g. "aeat 1.2.3") consumed by CI tooling and package
-            # managers. AEAT policy treats semver output as machine-format,
+            # The short `cadrumo --version` line is machine-format semver
+            # (e.g. "cadrumo 1.2.3") consumed by CI tooling and package
+            # managers. Cadrumo policy treats semver output as machine-format,
             # not operator text, so tr() wrapping is intentionally omitted.
             typer.echo(f"{report.package_name} {report.package_version}")
         raise typer.Exit()
@@ -167,6 +171,8 @@ def _root(
         typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
         _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
         raise typer.Exit()
+    if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
+        return
     # Defer profile override and bucket-session activation to after the
     # version/help fast-paths (already exited above). Bare invocation
     # (ctx.invoked_subcommand is None) defers the full application-layer
@@ -186,7 +192,16 @@ def _root(
         verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
         explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
         if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
-            _normalize_active_profile_label_to_uuid(ctx)
+            from ...core._config_state_root import FormerProductStateError
+            from ._errors import CliRefusedBoundaryError
+
+            try:
+                _normalize_active_profile_label_to_uuid(ctx)
+            except FormerProductStateError as exc:
+                raise CliRefusedBoundaryError(
+                    str(exc),
+                    suggestion="cadrumo config repair --help",
+                ) from exc
     if ctx.invoked_subcommand is None:
         # The landing surface needs the application operator_surface
         # layer; deferring the import keeps it off the ``--version`` /
@@ -240,8 +255,6 @@ def _root(
     # key, or a newcomer without CADRUMO_SECRET_PASSPHRASE cannot browse
     # the command tree and an unknown-command typo is masked by a
     # master-key refusal instead of the usage error.
-    if _is_introspection_only_invocation(ctx):
-        return
     _activate_active_bucket_session(ctx)
 
 
@@ -370,11 +383,11 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     may not proceed when settings route the primary SQL store to the
     root fallback database.
     ``_full_invocation_verb_path`` returns ``None`` for in-process test
-    runner invocations (``sys.argv[0]`` is not the ``aeat`` console
+    runner invocations (``sys.argv[0]`` is not the ``cadrumo`` console
     script). In that case we fall back to
     :func:`_verb_path_from_context`, which reconstructs the verb chain
     from the typer/click context so the bootstrap-exemption gate sees
-    the same verb path it would on a real ``aeat`` invocation — without
+    the same verb path it would on a real ``cadrumo`` invocation — without
     this fallback an in-process invocation would be misclassified as
     bare and the session would never open.
     """
@@ -553,7 +566,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         if subcommand is None:
             return True
         command = subcommand
-    # A bare subgroup invocation (for example `aeat config profile`) can
+    # A bare subgroup invocation (for example `cadrumo config profile`) can
     # only render that group's help/callback surface. Treat it like help so
     # discovery never asks for the encrypted profile passphrase first.
     return hasattr(command, "list_commands")
@@ -563,7 +576,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     """Recover the verb path from the typer/click context.
 
     Fallback for in-process invocations (e.g. ``CliRunner`` in tests)
-    where ``sys.argv[0]`` is not the ``aeat`` entry-point and the
+    where ``sys.argv[0]`` is not the ``cadrumo`` entry-point and the
     argv-based :func:`_full_invocation_verb_path` returns ``None``.
     The bootstrap-exemption gate treats a ``None`` verb path as
     "bare invocation" (per the bare-invocation ADR), but the caller
@@ -611,7 +624,7 @@ def _full_invocation_verb_path() -> str | None:
     (``--version``, ``--help``, ``--language``, ``--format``, etc.)
     so the returned string is the canonical subcommand chain the
     operator typed: ``"config profile create"`` for
-    ``aeat --quiet config profile create alice``. Returns ``None``
+    ``cadrumo --quiet config profile create alice``. Returns ``None``
     for the bare invocation and for non-entrypoint processes such as
     in-process test runners.
 
@@ -639,12 +652,12 @@ def _full_invocation_verb_path() -> str | None:
 
 
 def _full_invocation_tokens() -> tuple[str, ...]:
-    """Return raw operator argv tokens for real ``aeat`` entrypoint runs."""
+    """Return raw operator argv tokens for real ``cadrumo`` entrypoint runs."""
     import sys
     from pathlib import Path
 
     executable = Path(sys.argv[0]).name.lower()
-    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+    if executable not in {"cadrumo", "cadrumo.exe", "__main__.py"}:
         return ()
     return tuple(sys.argv[1:])
 
@@ -684,7 +697,7 @@ def _missing_dependency_name(error: ModuleNotFoundError) -> str:
 
 
 # ---------------------------------------------------------------------
-# `aeat app` — workflow aggregator
+# `cadrumo app` — workflow aggregator
 # ---------------------------------------------------------------------
 
 
@@ -735,7 +748,7 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
 
     A :exc:`ModuleNotFoundError` from a missing optional dependency is
     converted into a failure-surface Typer that refuses cleanly and
-    points the operator at ``aeat config repair`` — the same behaviour
+    points the operator at ``cadrumo config repair`` — the same behaviour
     the eager startup path produced, now deferred to the first time the
     subtree is actually invoked.
     """
@@ -765,7 +778,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 
 # ---------------------------------------------------------------------
 # Wiring — every heavy subcommand module is registered lazily so the
-# `aeat` app object can be constructed without importing the command
+# `cadrumo` app object can be constructed without importing the command
 # tree (and therefore without the registry parse).
 # ---------------------------------------------------------------------
 
@@ -781,7 +794,7 @@ _lazy("app", "quickfile", "._app_quickfile")
 _lazy("app", "registry", ".registry")
 _lazy("app", "review", "._review")
 
-_lazy("aeat", "config", "._config")
+_lazy("cadrumo", "config", "._config")
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
@@ -790,7 +803,7 @@ def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
     ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
-    kept off the eager import path precisely so constructing the ``aeat``
+    kept off the eager import path precisely so constructing the ``cadrumo``
     app object never pulls the registry-dependent command tree; a
     top-level ``from ._app_contract import command_schema_refs`` (and
     siblings) would defeat that and reintroduce the startup cost
@@ -827,7 +840,7 @@ def _localise_help_section_headers() -> None:
     process from :func:`main` after the language flag has been promoted, always
     sets every header to *this* invocation's locale (never a partial/stale set),
     and is never reached by the in-process test runner (which does not call
-    :func:`main`). Real ``aeat`` runs are one process per invocation, so the
+    :func:`main`). Real ``cadrumo`` runs are one process per invocation, so the
     module-global rebind reflects only the current process's locale.
     """
     import typer.rich_utils as _rich_utils
@@ -913,8 +926,8 @@ def _localise_typer_parse_error_messages() -> None:
 def main() -> None:
     """Console-script entry point.
 
-    Pins ``prog_name`` so Typer's usage lines say ``aeat`` even when the
-    launcher is ``aeat.EXE`` on Windows.
+    Pins ``prog_name`` so Typer's usage lines say ``cadrumo`` even when the
+    launcher is ``cadrumo.EXE`` on Windows.
 
     An explicit ``--language`` / ``--lang`` flag is promoted to
     ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
@@ -925,9 +938,9 @@ def main() -> None:
     """
     import sys
 
-    from ...adapters.outbound.aeat.auth import operator_progress_sink
-
-    _apply_language_argv_to_environment(sys.argv[1:])
+    arguments = sys.argv[1:]
+    metadata_invocation = _is_metadata_invocation(arguments)
+    _apply_language_argv_to_environment(arguments)
     _localise_help_section_headers()
     _localise_typer_parse_error_messages()
     # Route the Cl@ve auth-wait progress banner (which carries the AEAT
@@ -935,8 +948,69 @@ def main() -> None:
     # stderr, so a headless operator sees it during the wait instead of
     # having to read the runtime log. stderr keeps the stdout JSON envelope
     # pure; the code is non-secret operator guidance, not a credential.
-    with _ensure_help_render_width(), operator_progress_sink(_emit_operator_progress):
-        app(prog_name="aeat")
+    progress_sink = nullcontext()
+    if not metadata_invocation:
+        try:
+            _refuse_former_product_state_at_startup()
+        except typer.Exit as exit_request:
+            raise SystemExit(exit_request.exit_code) from None
+        from ...adapters.outbound.aeat._operator_progress import operator_progress_sink
+
+        progress_sink = operator_progress_sink(_emit_operator_progress)
+    with _metadata_state_isolation(arguments), _ensure_help_render_width(), progress_sink:
+        app(prog_name="cadrumo")
+
+
+def _is_metadata_invocation(arguments: list[str]) -> bool:
+    """Return whether the arguments request help or version metadata."""
+    return any(argument in {"--help", "-h", "--version", "-V"} for argument in arguments)
+
+
+def _refuse_former_product_state_at_startup() -> None:
+    """Route a refused legacy product-state root through the typed CLI error boundary."""
+    from ...core._config_state_root import FormerProductStateError
+    from ...core.config import Settings
+    from ._errors import CliRefusedBoundaryError, _emit_error_and_exit
+
+    try:
+        Settings()
+    except FormerProductStateError as error:
+        _emit_error_and_exit(
+            CliRefusedBoundaryError(
+                str(error),
+                suggestion="cadrumo config repair --help",
+            )
+        )
+
+
+@contextmanager
+def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
+    """Keep help and version imports off an operator's legacy product-state root.
+
+    Lazy subgroup construction can import modules that instantiate Settings.
+    Metadata invocations therefore run against a temporary Cadrumo root and
+    database before those imports occur. Normal commands never enter this
+    scope and continue to refuse a legacy product-state root in normal operation.
+    """
+    if not _is_metadata_invocation(arguments):
+        yield
+        return
+
+    keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL", "CADRUMO_ACTIVE_PROFILE")
+    saved = {key: os.environ.get(key) for key in keys}
+    with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
+        root = Path(temporary_root)
+        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / 'cadrumo.db').as_posix()}"
+        os.environ["CADRUMO_ACTIVE_PROFILE"] = "metadata"
+        try:
+            yield
+        finally:
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
 
 
 def _emit_operator_progress(banner: str) -> None:

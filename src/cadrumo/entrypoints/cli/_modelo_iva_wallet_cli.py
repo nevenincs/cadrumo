@@ -377,7 +377,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                     period=period,
                     default=(
                         f"No seeded compensation record exists for {filing_year}/{period}. "
-                        "Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing seed."
+                        "Run 'cadrumo app modelo iva-wallet seed' first; correction overwrites an existing seed."
                     ),
                 ),
             ) from exc

@@ -441,9 +441,9 @@ def _bindings_discovery_command(unit: WorkUnit | None) -> str:
     distinct ``--year`` axis, so only the token belongs after ``--period``.
     """
     if unit is None:
-        return "aeat app modelo bindings list --missing"
+        return "cadrumo app modelo bindings list --missing"
     return (
-        f"aeat app modelo bindings list --modelo {unit.modelo} "
+        f"cadrumo app modelo bindings list --modelo {unit.modelo} "
         f"--year {unit.filing_year} --period {unit.period.registry_token} --missing"
     )
 
@@ -584,7 +584,7 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
             default=(
                 "{base} This value is aggregated from the bucket ledger and "
                 "cannot be supplied with --binding. Add or classify the "
-                "relevant ledger rows, run `aeat app ledger preflight`, then "
+                "relevant ledger rows, run `cadrumo app ledger preflight`, then "
                 "rerun calculate. Run `{discover}` to list every binding the "
                 "calculation still needs."
             ),
@@ -722,7 +722,7 @@ def work_compare_taxation(
             tr(
                 "cli.app.modelo.work.compare_taxation_work_unit_not_found",
                 work_unit_id=work_unit_id or "",
-                default="Work unit {work_unit_id} not found; check 'aeat app modelo work list'.",
+                default="Work unit {work_unit_id} not found; check 'cadrumo app modelo work list'.",
             ),
         ) from exc
     except TaxationComparisonError as exc:
@@ -913,9 +913,9 @@ def work_history(
         "modelo.work.history.next_action",
         tr(
             "cli.app.modelo.work.history_next_action",
-            default="Review this work unit's current state with `aeat app modelo work status`.",
+            default="Review this work unit's current state with `cadrumo app modelo work status`.",
         ),
-        suggestion=f"aeat app modelo work status {history.work_unit_id}",
+        suggestion=f"cadrumo app modelo work status {history.work_unit_id}",
     )
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_action])
 

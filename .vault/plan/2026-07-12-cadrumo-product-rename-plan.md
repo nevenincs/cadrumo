@@ -59,9 +59,9 @@ Establish path ownership and explicit product-versus-authority classification be
 
 Create and test the single Cadrumo identity authority.
 
-- [x] `W01.P02.S05` - Add the immutable canonical Cadrumo tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
+- [ ] `W01.P02.S05` - Add the immutable canonical Cadrumo tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
 - [x] `W01.P02.S06` - Expose the public product identity through the package facade; `src/cadrumo/core/__init__.py`.
-- [x] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
+- [ ] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S08` - Codify that Cadrumo names the product and AEAT names the authority; `.vaultspec/rules/cadrumo-product-authority-names.md`.
 
 ## Wave `W02` - move runtime and persistence at one breaking boundary
@@ -102,8 +102,8 @@ Depends on W02 and produces installable local artifacts before integration regen
 Make the Cadrumo distribution expose the sole human `aeat` command and the
 distinct `cadrumo-mcp` command.
 
-- [x] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts so the sole human `aeat` command launches Cadrumo and `cadrumo-mcp` launches MCP; `pyproject.toml`.
-- [ ] `W03.P05.S25` - Project Cadrumo product identity while retaining `aeat` as the sole human CLI and help-surface command; `src/cadrumo/entrypoints/cli`.
+- [ ] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts so the sole human `aeat` command launches Cadrumo and `cadrumo-mcp` launches MCP; `pyproject.toml`.
+- [x] `W03.P05.S25` - Project Cadrumo product identity while retaining `aeat` as the sole human CLI and help-surface command; `src/cadrumo/entrypoints/cli`.
 - [ ] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp/__init__.py`.
 - [ ] `W03.P05.S27` - Update optional-extra installation guidance to Cadrumo distributions; `src/cadrumo/core/_optional_extras.py`.
 
