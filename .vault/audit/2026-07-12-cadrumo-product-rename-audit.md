@@ -680,6 +680,14 @@ was found.
 The review found no official-evidence loss or mutation, namespace collision,
 former-product compatibility path, or other critical defect.
 
+### companion-hatch-bytecode-resolution | resolved | Ignored build-hook caches removed
+
+The two ignored companion `__pycache__` directories were resolved inside the
+workspace, their files removed individually, and the now-empty directories
+removed non-recursively. A follow-up scan across both companion projects found
+zero `*.pyc` files. The real-wheel evidence already proved these caches were
+never package members.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
