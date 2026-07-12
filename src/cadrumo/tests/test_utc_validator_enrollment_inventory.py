@@ -26,11 +26,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, production_ast_items
+from ._inventory import SRC_CADRUMO, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = SRC_AEAT
+_SRC_ROOT = SRC_CADRUMO
 _CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "_utc.py"
 
 

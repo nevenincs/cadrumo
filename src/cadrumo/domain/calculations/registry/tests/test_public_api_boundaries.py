@@ -4,7 +4,7 @@ The cross-package raw-registry-orchestration check this module carried
 (``test_production_code_does_not_import_raw_registry_orchestration``, guarding
 ``build_snapshot`` / ``load_registry_tree``) is superseded by the
 project-wide ratcheting import-hygiene gate,
-``src/aeat/tests/test_import_hygiene_gate.py`` (backed by
+``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
 ``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
 the ``import-centralization`` decision record's Ruling 8. Its former allowlist
 (``_authority.py``, both package ``__init__.py`` files,
@@ -29,9 +29,9 @@ from ... import registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_PRIVATE_REGISTRY_PREFIX = "aeat.domain.calculations.registry._"
-_REGISTRY_SOURCE_ROOT = PROJECT_ROOT / "src" / "aeat"
-_REGISTRY_TEST_ROOT = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+_PRIVATE_REGISTRY_PREFIX = "cadrumo.domain.calculations.registry._"
+_REGISTRY_SOURCE_ROOT = PROJECT_ROOT / "src" / "cadrumo"
+_REGISTRY_TEST_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",
     "OssIossLedgerObservation",

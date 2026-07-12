@@ -31,7 +31,7 @@ See Also:
     :func:`~domain.calculations.registry.validated_casilla_id`
         Casilla-id constructor used for the 1521/1522/1523/1537/1538/1539
         assertions.
-    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
         Registry formulas for the Fase 1ª product base, Fase 1ª aggregate, and
         Fase 2ª minorado chain.
     ``2026-05-19-schema-hardening-m100-actividad-agraria-audit`` and

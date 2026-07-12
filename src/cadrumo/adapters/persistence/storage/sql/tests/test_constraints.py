@@ -12,7 +12,7 @@ layer rather than at the pydantic record layer:
   revision/hash metadata at the database layer.
 - Repository ``upsert`` resolves by natural key when ``id`` is omitted.
 - Repository ``upsert`` wraps :exc:`sqlalchemy.exc.IntegrityError` as
-  :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`.
+  :exc:`cadrumo.adapters.persistence.storage.errors.RepositoryError`.
 """
 
 from __future__ import annotations

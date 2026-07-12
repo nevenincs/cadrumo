@@ -177,7 +177,7 @@ def test_attachment_store_logical_paths_use_namespace_registry() -> None:
     store = AttachmentStore()
     digest = "a" * 64
 
-    assert store.manifest_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.manifests/{digest}"
+    assert store.manifest_path(digest).as_posix() == f"db:/secure_objects/cadrumo.domain.attachments.manifests/{digest}"
 
 
 def test_attachment_source_read_error_is_localized_without_path_leak(tmp_path: Path) -> None:

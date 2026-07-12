@@ -1,7 +1,7 @@
 """Lock the currency-encoding edge-case matrix.
 
 The CURRENCY encoders in
-:mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` must handle
+:mod:`cadrumo.adapters.outbound.aeat.export._formats._record_spec` must handle
 registry-calculated values across common fixed-width currency field widths,
 and under both the UNSIGNED and INLINE_SIGN conventions. This matrix
 exercises:

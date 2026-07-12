@@ -1,11 +1,11 @@
 """Tax-fact manipulation fidelity (ratchet history).
 
-Builds strict :class:`aeat.domain.transactions.Transaction` records with
+Builds strict :class:`cadrumo.domain.transactions.Transaction` records with
 controlled tax facts and asserts the real aggregation pipelines respond to
 fact changes:
 
 - behavior contract: gross→base/IVA derivation at 21/10/4 routes to M303 soportado with the
-  matching :class:`aeat.domain.iva.IvaCategory`.
+  matching :class:`cadrumo.domain.iva.IvaCategory`.
 - behavior contract: changing ``business_pct`` / per-category usage ratio scales the renta
   deductible base proportionally.
 - behavior contract: reassigning ``irpf_category`` (trabajo↔actividad) flips M130 income

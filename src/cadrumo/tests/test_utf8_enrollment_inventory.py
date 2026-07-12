@@ -11,7 +11,7 @@ protocol-fixed and mechanical substitution adds no value.
 
 Structural prevention (ratchet history)
 --------------------------------
-This test AST-walks **all** Python files under ``src/aeat/`` rather than
+This test AST-walks **all** Python files under ``src/cadrumo/`` rather than
 a fixed allowlist so that new files added by any campaign are automatically
 covered.  The ratchet history regression (``locales/manager.py`` escaping detection
 because it was added after the original test was written) cannot recur.
@@ -159,12 +159,12 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
 
 
 def _all_production_files() -> tuple[Path, ...]:
-    """Return all non-test Python files under src/aeat/, excluding the constant module."""
+    """Return all non-test Python files under src/cadrumo/, excluding the constant module."""
     return non_test_package_python_files(include_data=True, scan_excludes=_SCAN_EXCLUDES)
 
 
 def test_no_bare_utf8_literals_in_production_files() -> None:
-    """New production files under src/aeat/ must not introduce bare UTF-8 literals.
+    """New production files under src/cadrumo/ must not introduce bare UTF-8 literals.
 
     This test uses a ratchet against ``_KNOWN_VIOLATING_FILES``:
 
@@ -196,7 +196,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
         raise AssertionError(
             f"{len(violations)} bare UTF-8 literal(s) found in non-ratcheted production files:\n"
             f"  {joined}\n\n"
-            "Replace with UTF_8_ENCODING from aeat.core.external_constants.\n"
+            "Replace with UTF_8_ENCODING from cadrumo.core.external_constants.\n"
             "Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted.\n"
             f"Scanned {len(production_files)} production files; "
             f"{len(_KNOWN_VIOLATING_FILES)} are ratcheted as known backlog.\n"
@@ -234,12 +234,12 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 # Dev-tooling-tree ratchet (behavior contract — ratchet history)
 # ---------------------------------------------------------------------------
 # The ``dev/`` package is repo tooling; it must not import
-# ``aeat.core.external_constants`` just to satisfy the production UTF-8
+# ``cadrumo.core.external_constants`` just to satisfy the production UTF-8
 # constant rule.  Instead, each module carries a local ``_UTF_8: Final[str]``
 # constant.  This test enforces that the dev tree doesn't drift back to
 # bare literals beyond the pre-existing backlog below.
 #
-# Hash-protocol allowlist: same tokens as the src/aeat/ scan.
+# Hash-protocol allowlist: same tokens as the src/cadrumo/ scan.
 #
 # dev/quality/relative_imports.py was previously fixed and must
 # NOT be re-added to the known-violating set.
@@ -266,7 +266,7 @@ def test_no_bare_utf8_literals_in_dev() -> None:
     Pre-existing violators are ratcheted in ``_DEV_KNOWN_VIOLATING``;
     only the ratchet set may shrink, never grow.
 
-    Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted as in src/aeat/.
+    Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted as in src/cadrumo/.
     """
     violations: list[str] = []
     dev_files = _all_dev_files()

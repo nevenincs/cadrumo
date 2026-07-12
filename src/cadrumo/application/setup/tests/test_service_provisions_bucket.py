@@ -133,7 +133,7 @@ def test_initialize_workspace_logs_reserved_auth_provider_refusal(
 ) -> None:
     """Reserved auth providers remain non-fatal but are observable in debug logs."""
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.setup._service"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.setup._service"):
         result = initialize_workspace(
             InitializeWorkspaceCommand(
                 profile_name="catering",

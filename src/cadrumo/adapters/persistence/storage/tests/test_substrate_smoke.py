@@ -159,7 +159,7 @@ import sys
 import time
 from pathlib import Path
 
-from aeat.core.locks import exclusive_file_lock
+from cadrumo.core.locks import exclusive_file_lock
 
 target = Path(sys.argv[1])
 hold_seconds = float(sys.argv[2])
@@ -191,7 +191,7 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
     slow enough to race the main thread's readiness wait — the
     project's prior skip cited that as "flaky" on Windows.
 
-    The replacement worker just imports ``aeat.core.locks`` (a
+    The replacement worker just imports ``cadrumo.core.locks`` (a
     lightweight module with no transitive heavy imports), acquires
     the lock, prints a ``ready`` sentinel to stdout, sleeps, and
     releases. The main thread blocks on ``stdout.readline()`` until

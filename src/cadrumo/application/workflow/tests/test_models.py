@@ -1,10 +1,10 @@
 """Unit tests for the strict pydantic v2 records in
-:mod:`aeat.application.workflow._models`.
+:mod:`cadrumo.application.workflow._models`.
 
-Exercises :func:`aeat.application.workflow.compute_run_id` hash
-stability and the validators on :class:`aeat.application.workflow.WorkflowStep`,
-:class:`aeat.application.workflow.SiteHealthAlert`, and
-:class:`aeat.application.workflow.WorkflowResult`.
+Exercises :func:`cadrumo.application.workflow.compute_run_id` hash
+stability and the validators on :class:`cadrumo.application.workflow.WorkflowStep`,
+:class:`cadrumo.application.workflow.SiteHealthAlert`, and
+:class:`cadrumo.application.workflow.WorkflowResult`.
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ class TestWorkflowStepValidation:
 
 class TestSiteHealthAlert:
     """Validation invariants on
-    :class:`aeat.application.workflow.SiteHealthAlert`.
+    :class:`cadrumo.application.workflow.SiteHealthAlert`.
     """
 
     def _status(self) -> SiteHealthStatus:

@@ -1,6 +1,6 @@
 """Parity gate: the live TOML parser must reproduce known-correct registry values.
 
-:func:`aeat.core.read_toml` was swapped from stdlib :mod:`tomllib` to the
+:func:`cadrumo.core.read_toml` was swapped from stdlib :mod:`tomllib` to the
 Rust-backed :mod:`rtoml`. This test does NOT compare the
 parser's output against itself or against a second parser's output (either
 shape would pass even if both parsers silently agreed on a WRONG value); it
@@ -33,7 +33,7 @@ _REGISTRY_ROOT = Path(__file__).resolve().parents[2] / "_data" / "registry" / "a
 _MANIFEST_PATH = _REGISTRY_ROOT / "manifest.toml"
 _REVISION_PATH = _REGISTRY_ROOT / "revisions" / "2025-02-03-y-siguientes" / "revision.toml"
 
-# Hand-derived directly from reading src/aeat/_data/registry/aeat/modelos/036/manifest.toml.
+# Hand-derived directly from reading src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml.
 _EXPECTED_MANIFEST: dict[str, object] = {
     "modelo": {
         "id": "036",
@@ -63,7 +63,7 @@ _EXPECTED_MANIFEST: dict[str, object] = {
 }
 
 # Hand-derived directly from reading
-# src/aeat/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml.
+# src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml.
 _EXPECTED_REVISION: dict[str, object] = {
     "revisions": {
         "2025-02-03-y-siguientes": {

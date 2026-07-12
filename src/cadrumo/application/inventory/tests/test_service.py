@@ -1,6 +1,6 @@
 """Real-behavior tests for the _now_utc clock alias in inventory._service.
 
-These tests verify that the canonical ``aeat.core.time.now`` function is
+These tests verify that the canonical ``cadrumo.core.time.now`` function is
 used by the service module rather than a locally-inlined ``datetime.now``
 call.  The clock itself is exercised through a direct import so the test
 is not tautological — it proves the alias round-trips and is UTC-aware.
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_now_utc_alias_is_the_canonical_clock() -> None:
-    """_now_utc in _service must be the same callable as aeat.core.time.now."""
+    """_now_utc in _service must be the same callable as cadrumo.core.time.now."""
     assert _now_utc is now
 
 

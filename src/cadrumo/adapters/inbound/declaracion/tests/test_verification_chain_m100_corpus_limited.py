@@ -26,7 +26,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     """Engine runs against M100 extracted inputs; verifies CORPUS-LIMITED verdict.
 
     GROUNDED authority: real AEAT corpus PDFs (sanitised) committed at
-    src/aeat/tests/fixtures/justificantes/100/2021-0A.pdf (representative
+    src/cadrumo/tests/fixtures/justificantes/100/2021-0A.pdf (representative
     specimen; same sanitisation pattern applies across 2021/2022/2023).
 
     Empirical finding: the M100 corpus PDFs have all amounts replaced with the

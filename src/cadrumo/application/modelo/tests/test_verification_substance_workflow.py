@@ -150,7 +150,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     """The canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
-    aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
+    cadrumo.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
     The validator (in _validate_surfaces) uses it to reject unknown
     operators at registry-load time. The runtime evaluator
     (evaluate_predicate_expression) has its own regex per operator.

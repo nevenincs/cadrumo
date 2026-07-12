@@ -61,7 +61,7 @@ def test_validate_spanish_tax_id_accepts_cif_letter_control() -> None:
     """CIF leaders in PQRSNW must require a letter control from the control table.
 
     ``K`` is excluded: it is a current-spec natural-person NIF prefix, not a
-    CIF kind letter (see ``aeat.core.identity._currentize klm nif validation``).
+    CIF kind letter (see ``cadrumo.core.identity._currentize klm nif validation``).
     """
     values = (
         # body 1234567 → letter-control 'D' ("JABCDEFGHI"[4]).
@@ -272,7 +272,7 @@ def test_validate_iva_number_non_eu_generic_still_rejects_bad_shape() -> None:
 def test_every_eu_member_state_except_spain_has_a_nif_iva_format() -> None:
     """The format table covers every EU Member State (Greece via EL), excluding Spain.
 
-    Anchored to :class:`aeat.domain.iva.EUMemberState` so a future Member State
+    Anchored to :class:`cadrumo.domain.iva.EUMemberState` so a future Member State
     addition or withdrawal fails this gate until the central table is updated.
     Spain is intentionally absent — Spanish identifiers use the checksum
     validator, not a structural pattern.

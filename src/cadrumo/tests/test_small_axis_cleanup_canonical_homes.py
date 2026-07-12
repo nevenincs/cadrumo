@@ -2,13 +2,13 @@
 
 Assertions
 ----------
-(a) ``aeat.application.wizard._setup_answers`` is deleted: the module
+(a) ``cadrumo.application.wizard._setup_answers`` is deleted: the module
     does not exist on disk and cannot be imported.
 (b) ``CounterpartSourceKind`` has a single canonical home in the domain
     layer; the application layer re-exports it from there.
 (c) Every surviving ``_parse_date`` wrapper in sede/_notifications
     and domain/deadlines/_profiles delegates to the
-    canonical ``aeat.core.parsing._dates._parse_date``.
+    canonical ``cadrumo.core.parsing._dates._parse_date``.
 (d) ``ApoderadoService`` has production callers in the CLI entrypoint;
     the module is intact and the service is callable.
 (e) ``FinancialProvider.__init_subclass__`` enforces
@@ -34,11 +34,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_setup_answers_module_not_importable() -> None:
-    """aeat.application.wizard._setup_answers must not exist; SetupAnswers lives in core.profile."""
+    """cadrumo.application.wizard._setup_answers must not exist; SetupAnswers lives in core.profile."""
     # Ensure a prior import by another test does not give a false negative.
-    sys.modules.pop("aeat.application.wizard._setup_answers", None)
+    sys.modules.pop("cadrumo.application.wizard._setup_answers", None)
 
-    spec = importlib.util.find_spec("aeat.application.wizard._setup_answers")
+    spec = importlib.util.find_spec("cadrumo.application.wizard._setup_answers")
     assert spec is None, (
         "_setup_answers.py was found; it should have been deleted. "
         "Confirm the file is gone and no package __init__ re-exports it."
@@ -46,11 +46,11 @@ def test_setup_answers_module_not_importable() -> None:
 
 
 def test_setup_answers_canonical_home_is_core_profile() -> None:
-    """SetupAnswers must be importable from aeat.core.setup_answers and nowhere else."""
+    """SetupAnswers must be importable from cadrumo.core.setup_answers and nowhere else."""
     from ..core.setup_answers import SetupAnswers
 
-    assert SetupAnswers.__module__ == "aeat.core.setup_answers", (
-        f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; expected 'aeat.core.setup_answers'"
+    assert SetupAnswers.__module__ == "cadrumo.core.setup_answers", (
+        f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; expected 'cadrumo.core.setup_answers'"
     )
 
 

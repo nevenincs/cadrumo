@@ -1,11 +1,11 @@
 """Structural gate: ``python -c "import aeat"`` must always succeed.
 
 The 2026-05-19 disaster recovery (Ruling 7) traced the cold-start
-10-minute silent hang to a stale ``aeat.domain.iva`` import that
+10-minute silent hang to a stale ``cadrumo.domain.iva`` import that
 crashed every ``aeat`` console-script invocation after the registry
 validation completed. The crash was masked by a compatibility shim
-at ``aeat.domain.iva.__init__`` that re-exported from
-``aeat.domain.iva``; the shim violated the project's no-shim mandate
+at ``cadrumo.domain.iva.__init__`` that re-exported from
+``cadrumo.domain.iva``; the shim violated the project's no-shim mandate
 and was retired in the same commit as this gate landed.
 
 This test enforces the contract that no rename, no module retire,
@@ -43,7 +43,7 @@ def test_aeat_package_imports_in_process() -> None:
     the eager chain raises here.
     """
 
-    __import__("aeat")
+    __import__("cadrumo")
 
 
 def test_aeat_package_imports_in_subprocess() -> None:

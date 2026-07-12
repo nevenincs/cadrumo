@@ -1,6 +1,6 @@
 """Tests that Settings and ``env/.env.example`` stay fully aligned.
 
-The Settings model in ``aeat.core.config`` is the single source of truth for every
+The Settings model in ``cadrumo.core.config`` is the single source of truth for every
 environment variable the application reads.  These tests enforce that:
 
 1. Every Settings field has a matching line in ``env/.env.example``.
@@ -244,7 +244,7 @@ class TestRepoRelativePathNormalisationCoverage:
         missing = sorted(path_typed_settings - path_validator - self._EXEMPT_PATH_FIELDS)
         assert not missing, (
             "Path-typed Settings fields missing from "
-            "_normalize_repo_relative_paths in src/aeat/config.py: "
+            "_normalize_repo_relative_paths in src/cadrumo/config.py: "
             f"{missing}. Either add each to the validator's field tuple or "
             "add it to TestRepoRelativePathNormalisationCoverage._EXEMPT_PATH_FIELDS "
             "with a documented justification."
@@ -264,7 +264,7 @@ class TestRepoRelativePathNormalisationCoverage:
             assert field_name in path_validator, (
                 f"{field_name} was flagged by the security audit as missing from "
                 "_normalize_repo_relative_paths but is still not in the validator. "
-                "Re-add it to the field tuple in src/aeat/config.py."
+                "Re-add it to the field tuple in src/cadrumo/config.py."
             )
 
     def test_relative_audit_flagged_paths_resolve_under_project_root(self, tmp_path: Path) -> None:

@@ -96,7 +96,7 @@ class TestEmptyState:
         assert repo.load("missing-id") is None
 
     def test_object_marker_identifies_secure_backend(self, repo: SubmissionRepository) -> None:
-        assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
+        assert repo.envelope_path_for("abc123").as_posix().endswith("cadrumo.domain.submission.records/abc123")
 
     def test_list_submission_ids_empty(self, repo: SubmissionRepository) -> None:
         assert repo.list_submission_ids() == ()
@@ -213,7 +213,7 @@ class TestClassificationGate:
         )
         with pytest.raises(ClassificationError):
             runtime_profile.repository.save(
-                namespace="aeat.domain.submission.records",
+                namespace="cadrumo.domain.submission.records",
                 object_key=filing.submission_id,
                 classification=SensitivityClass.OPERATIONAL,
                 schema_version=1,
@@ -239,5 +239,5 @@ class TestPerSubmissionLockIsolation:
         assert a != b
         assert a.parent == b.parent
         assert a.parent == repo.store_dir
-        assert a.as_posix().endswith("aeat.domain.submission.records/sub-a.lock")
-        assert b.as_posix().endswith("aeat.domain.submission.records/sub-b.lock")
+        assert a.as_posix().endswith("cadrumo.domain.submission.records/sub-a.lock")
+        assert b.as_posix().endswith("cadrumo.domain.submission.records/sub-b.lock")

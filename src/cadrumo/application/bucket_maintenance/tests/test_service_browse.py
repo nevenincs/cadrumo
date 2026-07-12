@@ -69,8 +69,8 @@ def _write_object(runtime: TestRuntimeProfile, namespace: str, object_key: str) 
 
 # Use already-registered domain namespaces so the registry-validated
 # repository accepts the writes without ad-hoc namespace registration.
-_EVENT_HISTORY_NAMESPACE = "aeat.domain.buckets.event_history"
-_INVOICE_NAMESPACE = "aeat.domain.invoices"
+_EVENT_HISTORY_NAMESPACE = "cadrumo.domain.buckets.event_history"
+_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
 
 
 def test_browse_returns_one_row_per_namespace_with_counts(runtime: TestRuntimeProfile) -> None:

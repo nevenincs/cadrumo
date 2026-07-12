@@ -192,7 +192,7 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+    caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_A_ID):
         assert secure_object_unreadable_total() == 0
@@ -205,7 +205,7 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+    caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_A_ID),

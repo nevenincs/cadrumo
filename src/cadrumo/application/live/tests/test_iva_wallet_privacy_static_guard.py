@@ -12,10 +12,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 _VALID_LOOKING_SPANISH_TAX_ID = re.compile(r"\b(?:[XYZ][0-9]{7}|[0-9]{8}|[ABCDEFGHJKLMNPQRSUVW][0-9]{7})[A-Z0-9]\b")
 _LIVE_IVA_WALLET_SURFACES = (
-    "src/aeat/application/live/__init__.py",
-    "src/aeat/application/live/*iva_wallet*.py",
-    "src/aeat/application/live/*iva_remote_state*.py",
-    "src/aeat/adapters/outbound/aeat/sede/*iva_compensation_wallet*.py",
+    "src/cadrumo/application/live/__init__.py",
+    "src/cadrumo/application/live/*iva_wallet*.py",
+    "src/cadrumo/application/live/*iva_remote_state*.py",
+    "src/cadrumo/adapters/outbound/aeat/sede/*iva_compensation_wallet*.py",
     ".vault/plan/2026-05-19-live-iva-compensation-wallet-plan.md",
     ".vault/audit/*live-iva-compensation-wallet*.md",
     ".vault/audit/*iva-wallet-live-history*.md",

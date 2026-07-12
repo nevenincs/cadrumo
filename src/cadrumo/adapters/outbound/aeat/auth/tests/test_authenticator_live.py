@@ -1,10 +1,10 @@
 """Live AEAT authenticator verification — gated on env vars.
 
 Asserts end-to-end that the operator's configured PKCS#12 bundle, when
-fed through :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`,
-produces a valid :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
+fed through :class:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator`,
+produces a valid :class:`cadrumo.adapters.outbound.aeat.auth.AeatSession`
 and that
-:meth:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
+:meth:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
 returns ``is_valid=True`` against the configured verify URL.
 
 The test uses the configured certificate and live verification URL directly.

@@ -1,6 +1,6 @@
 """Persistence tests for the encrypted asset and amortizacion ledgers.
 
-Verifies that :mod:`aeat.adapters.persistence.profile.assets` round-trips
+Verifies that :mod:`cadrumo.adapters.persistence.profile.assets` round-trips
 records through encrypted FINANCIAL-class envelopes (no plaintext leakage),
 that amortizacion is persisted to a real ledger, and that recording is
 idempotent for an already-amortized year.

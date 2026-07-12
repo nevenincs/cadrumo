@@ -131,13 +131,13 @@ def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> N
 
     ``renta-2024-profile-descendientes-minimos-aggregate`` used to select
     ``family.descendientes_minimos_aggregate_2024``, a profile-model attribute
-    that :class:`~aeat.domain.contribuyente.family.RentaFamilyProfile` never
+    that :class:`~cadrumo.domain.contribuyente.family.RentaFamilyProfile` never
     declared (no formula or bound casilla consumed it either) -- a dangling
     selector per ``no-dormant-source-resolvers``. The Option B interim removed
     the binding outright. Option A's computed engine retires the gap for real:
     the user-profile schema field ``renta_family.descendientes_minimos_aggregate_2024``
     is now populated by
-    :func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`
+    :func:`~cadrumo.application.modelo.inject_derived_minimo_descendientes_facts`
     and consumed by the binding ``renta-2024-profile-minimo-descendientes-estatal``,
     which feeds casillas 0513/0514 via a live formula.
     """

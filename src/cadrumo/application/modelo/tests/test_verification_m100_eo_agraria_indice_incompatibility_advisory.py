@@ -29,7 +29,7 @@ See Also:
     :mod:`~application.modelo._verification_predicates`
         Implements the ``at_most_one_positive`` predicate form used by these
         incompatibility guards.
-    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/verification_expectations/0002-verification_predicates.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/verification_expectations/0002-verification_predicates.toml``
         Registry-authored 2025 EO agraria incompatibility predicate declarations
         under test.
 """

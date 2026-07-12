@@ -164,7 +164,7 @@ def test_storage_validation_error_is_value_error_subclass() -> None:
 
 
 def test_storage_package_public_surface_keeps_factory_and_manifest_helpers_private_backends_hidden() -> None:
-    module = importlib.import_module("aeat.adapters.outbound.storage")
+    module = importlib.import_module("cadrumo.adapters.outbound.storage")
 
     for public_symbol in (
         "StorageProvider",

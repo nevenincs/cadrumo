@@ -18,7 +18,7 @@ The whole mechanism is DORMANT today: the regime is ``PRE_RELEASE``,
 ``RELEASED_FORMAT_FLOORS`` is ``None``, the fixture corpus is empty, and every
 assertion below is either the live pre-release truth or vacuously green.
 
-Reads only the public ``aeat.core`` compatibility-lifecycle policy — never a
+Reads only the public ``cadrumo.core`` compatibility-lifecycle policy — never a
 tier's private floor/version constants, which stay intra-package.
 
 The compatibility-lifecycle policy governs this gate.

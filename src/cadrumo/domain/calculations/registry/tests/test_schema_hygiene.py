@@ -284,9 +284,9 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     """Renta bindings that bridge a closed-membership substrate axis must declare `typed_enum`.
 
     The CCAA binding declares ``typed_enum = "CCAA"`` (the canonical enum in
-    :mod:`aeat.domain.contribuyente._ccaa`).  The estimacion-directa binding
+    :mod:`cadrumo.domain.contribuyente._ccaa`).  The estimacion-directa binding
     declares ``typed_enum = "EstimacionDirectaModalidad"`` (from
-    :mod:`aeat.domain.renta`).  Each binding whose id suffix matches a
+    :mod:`cadrumo.domain.renta`).  Each binding whose id suffix matches a
     known typed-bridge anchor MUST declare the correct ``typed_enum`` so
     consumers can route through the closed-set contract instead of parsing
     free-form strings at runtime.
@@ -311,7 +311,7 @@ def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:
     """F8: every binding's ``typed_enum`` is the narrowed enum member, not a bare str.
 
     The field was a stringly-typed pointer; F8 narrowed it to
-    :class:`~aeat.core.aggregation.BindingTypedEnumKind`. The loader coerces the
+    :class:`~cadrumo.core.aggregation.BindingTypedEnumKind`. The loader coerces the
     raw TOML token to its member at the boundary, so every committed binding that
     declares a ``typed_enum`` exposes a member (which still equals its string
     value, keeping the ``str`` consumers byte-compatible).

@@ -82,14 +82,14 @@ def test_fallback_language_is_default_output_language() -> None:
 def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureFixture) -> None:
     """A missing locale file falls back, but leaves a debug traceback."""
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.core.i18n._render"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n._render"):
         rendered = _render._lookup_translation("not-supported-locale", "cli.missing.key", default="fallback")
 
     assert rendered == "fallback"
     records = [
         record
         for record in caplog.records
-        if record.name == "aeat.core.i18n._render" and "unable to load locale" in record.getMessage()
+        if record.name == "cadrumo.core.i18n._render" and "unable to load locale" in record.getMessage()
     ]
     assert records
     assert records[-1].exc_info is not None
@@ -108,7 +108,7 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
 
     try:
         _render.register_profile_language_resolver(raising_resolver)
-        with caplog.at_level(logging.DEBUG, logger="aeat.core.i18n._render"):
+        with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n._render"):
             resolved = _render._active_profile_output_language()
     finally:
         _render._profile_language_resolver = prior_resolver
@@ -117,7 +117,7 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
     records = [
         record
         for record in caplog.records
-        if record.name == "aeat.core.i18n._render" and "active-profile output language" in record.getMessage()
+        if record.name == "cadrumo.core.i18n._render" and "active-profile output language" in record.getMessage()
     ]
     assert records
     message = records[-1].getMessage()
@@ -129,7 +129,7 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
 def test_interpolation_failure_is_logged_without_values(caplog: pytest.LogCaptureFixture) -> None:
     """Format failures preserve fallback output and do not log interpolation values."""
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.core.i18n._render"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n._render"):
         rendered = _render._interpolate(
             "test.format.failure",
             "{amount:.2f}",
@@ -140,7 +140,7 @@ def test_interpolation_failure_is_logged_without_values(caplog: pytest.LogCaptur
     records = [
         record
         for record in caplog.records
-        if record.name == "aeat.core.i18n._render" and "unable to interpolate locale key" in record.getMessage()
+        if record.name == "cadrumo.core.i18n._render" and "unable to interpolate locale key" in record.getMessage()
     ]
     assert records
     message = records[-1].getMessage()

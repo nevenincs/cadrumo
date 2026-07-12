@@ -2,7 +2,7 @@
 
 Rule
 ----
-Production modules under ``src/aeat/`` must not contain:
+Production modules under ``src/cadrumo/`` must not contain:
 
 1. ``date.fromisoformat(`` — direct bare invocations bypassing the canonical
    ``_parse_iso8601_date`` or ``_parse_ddmmyyyy_date`` helpers.
@@ -12,8 +12,8 @@ Production modules under ``src/aeat/`` must not contain:
 Exclusions
 ----------
 - ``test_*.py`` files: test suites verify the helpers and may use direct calls.
-- ``src/aeat/core/parsing/_dates.py``: the canonical implementation itself.
-- ``src/aeat/core/parsing/_utils.py``: the canonical bool-parsing implementation.
+- ``src/cadrumo/core/parsing/_dates.py``: the canonical implementation itself.
+- ``src/cadrumo/core/parsing/_utils.py``: the canonical bool-parsing implementation.
 
 See Also:
     :mod:`~tests._inventory`
@@ -40,11 +40,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, production_ast_items, repo_relative
+from ._inventory import SRC_CADRUMO, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = SRC_AEAT
+_SRC_ROOT = SRC_CADRUMO
 
 # Canonical modules that are allowed to use these primitives directly.
 _CANONICAL_MODULES: frozenset[str] = frozenset(
@@ -167,7 +167,7 @@ def test_no_bare_date_fromisoformat(source_tree_ast: Mapping[Path, ast.AST]) -> 
     """Zero ``date.fromisoformat(`` calls survive in production modules.
 
     All date parsing must go through ``_parse_iso8601_date`` or
-    ``_parse_ddmmyyyy_date`` from ``aeat.core.parsing._dates``.
+    ``_parse_ddmmyyyy_date`` from ``cadrumo.core.parsing._dates``.
 
     Consumes the shared production AST cache so the per-file parse cost
     is amortised across the full ratchet suite.
@@ -177,7 +177,7 @@ def test_no_bare_date_fromisoformat(source_tree_ast: Mapping[Path, ast.AST]) -> 
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} bare date.fromisoformat() call(s) found in production code:\n  {joined}\n\n"
-            "Replace with _parse_iso8601_date() or _parse_ddmmyyyy_date() from aeat.core.parsing._dates.",
+            "Replace with _parse_iso8601_date() or _parse_ddmmyyyy_date() from cadrumo.core.parsing._dates.",
         )
 
 
@@ -185,12 +185,12 @@ def test_no_inline_bool_lower_comparison(source_tree_ast: Mapping[Path, ast.AST]
     """Zero ``value.lower() == \"true\"/\"false\"`` patterns survive in production modules.
 
     All boolean string parsing must go through ``_parse_bool`` from
-    ``aeat.core.parsing._utils``.
+    ``cadrumo.core.parsing._utils``.
     """
     violations = _collect_inline_bool_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} inline bool-parsing pattern(s) found in production code:\n  {joined}\n\n"
-            "Replace with _parse_bool() from aeat.core.parsing._utils.",
+            "Replace with _parse_bool() from cadrumo.core.parsing._utils.",
         )

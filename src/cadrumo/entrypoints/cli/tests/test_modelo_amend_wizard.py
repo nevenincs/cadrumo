@@ -7,7 +7,7 @@ real bucket-scoped storage the CLI runs against in every other integration
 test -- no mocks, stubs, or patches. Every assertion compares the wizard's
 persisted amendment against ``work amend``'s hand-built equivalent
 (``composition-service-no-parallel-write-path``): both must call the exact
-same :func:`~aeat.application.modelo.amend_modelo_revision` composition path,
+same :func:`~cadrumo.application.modelo.amend_modelo_revision` composition path,
 never a parallel one.
 """
 

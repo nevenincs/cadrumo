@@ -86,7 +86,7 @@ class TestEmptyState:
         assert repo.load("DOESNOTEXIST") is None
 
     def test_object_marker_identifies_secure_backend(self, repo: JustificanteRepository) -> None:
-        assert repo.envelope_path_for("CSV1234").as_posix().endswith("aeat.domain.justificante.metadata/CSV1234")
+        assert repo.envelope_path_for("CSV1234").as_posix().endswith("cadrumo.domain.justificante.metadata/CSV1234")
 
 
 class TestSaveLoad:
@@ -164,7 +164,7 @@ class TestClassificationGate:
         )
         with pytest.raises(ClassificationError):
             runtime_profile.repository.save(
-                namespace="aeat.domain.justificante.metadata",
+                namespace="cadrumo.domain.justificante.metadata",
                 object_key=record.csv,
                 classification=SensitivityClass.OPERATIONAL,
                 schema_version=1,

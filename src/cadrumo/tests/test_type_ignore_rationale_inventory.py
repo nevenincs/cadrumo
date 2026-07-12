@@ -3,7 +3,7 @@
 Rule
 ----
 Every ``# type: ignore`` (with or without an ``[error-code]`` suffix) in a
-non-test production module under ``src/aeat/`` must carry one of the following
+non-test production module under ``src/cadrumo/`` must carry one of the following
 marker token prefixes either INLINE on the same line OR within 3 lines
 immediately preceding:
 
@@ -26,7 +26,7 @@ Every ``# type: ignore`` in production code must carry a
 
 Structural prevention (ratchet history)
 ---------------------------------
-This test AST-free line-walks **all** production Python files under ``src/aeat/``
+This test AST-free line-walks **all** production Python files under ``src/cadrumo/``
 (excluding test files: names starting with ``test_`` or ending with ``_test.py``).
 For each ``# type: ignore`` line, it checks the same line and up to 3 preceding
 lines for any of the recognised marker token prefixes.
@@ -90,7 +90,7 @@ _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
 
 # ---------------------------------------------------------------------------
 # Known pre-existing violating sites (ratchet history backlog — 99 sites).
-# Each entry is (relative-posix-path-from-src/aeat/, 1-based line number).
+# Each entry is (relative-posix-path-from-src/cadrumo/, 1-based line number).
 # DO NOT add new sites — add a rationale marker instead.
 # Remove an entry after adding its marker to lock that site at zero.
 # ---------------------------------------------------------------------------

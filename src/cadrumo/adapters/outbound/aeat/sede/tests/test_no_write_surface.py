@@ -1,4 +1,4 @@
-"""Write-surface checks for aeat.adapters.outbound.aeat.sede.
+"""Write-surface checks for cadrumo.adapters.outbound.aeat.sede.
 
 The sede adapter is a read-only boundary. These checks reject mutation
 verbs in call contexts and reject non-read boundary record modes while
@@ -26,12 +26,12 @@ def _load_forbidden_verbs() -> tuple[str, ...]:
 
 
 def _iter_sede_sources() -> tuple[Path, ...]:
-    """Every .py file under aeat.adapters.outbound.aeat.sede (includes this test module)."""
+    """Every .py file under cadrumo.adapters.outbound.aeat.sede (includes this test module)."""
     return tuple(p for p in _SEDE_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
 
 
 class TestNoCallContextWriteVerbs:
-    """Forbidden verbs must never appear as a call-site in aeat.adapters.outbound.aeat.sede."""
+    """Forbidden verbs must never appear as a call-site in cadrumo.adapters.outbound.aeat.sede."""
 
     @pytest.mark.parametrize("verb", _load_forbidden_verbs())
     def test_verb_never_called(self, verb: str) -> None:
@@ -54,7 +54,7 @@ class TestNoCallContextWriteVerbs:
                 if pattern.search(line):
                     offenders.append(f"{source.relative_to(_SEDE_ROOT)}:{line_no}: {line.strip()}")
         assert not offenders, (
-            f"Forbidden write verb {verb!r} used in a call context inside aeat.adapters.outbound.aeat.sede:\n"
+            f"Forbidden write verb {verb!r} used in a call context inside cadrumo.adapters.outbound.aeat.sede:\n"
             + "\n".join(offenders)
         )
 

@@ -47,7 +47,7 @@ def _find_language_axis_fields(src: str) -> list[tuple[int, str]]:
 
 
 def test_settings_layer_output_language_typed_or_exempt() -> None:
-    """Settings field at src/aeat/core/config.py must consume OutputLanguage."""
+    """Settings field at src/cadrumo/core/config.py must consume OutputLanguage."""
     config_file = Path(__file__).resolve().parents[2] / "config.py"
     src = _read_file(config_file)
 
@@ -78,7 +78,7 @@ def test_cli_sites_output_language_typed_or_exempt() -> None:
 def test_no_new_bare_str_language_fields() -> None:
     """Regression gate: forbid new bare-str language fields on public surfaces.
 
-    Sweep src/aeat/ (excluding tests and internal helpers) for new output_language
+    Sweep src/cadrumo/ (excluding tests and internal helpers) for new output_language
     references in bare str form. The gate is a grep-based check that surfaces drift
     at test time.
     """

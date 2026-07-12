@@ -15,9 +15,9 @@ from dev.docs.preprocess import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# src/aeat/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
+# src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[5]
-_CORPUS_ROOT = _REPO_ROOT / "src" / "aeat" / "_data" / "corpus"
+_CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _PART_SUFFIX = re.compile(r"\.part-\d+$")
 
 
@@ -58,5 +58,5 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
         elif text_path.read_text(encoding="utf-8") != output.render_text():
             failures.append(f"{rel_json}: text sidecar does not match rendered schema payload")
 
-    assert sidecars, "no committed extraction sidecars found under src/aeat/_data/corpus"
+    assert sidecars, "no committed extraction sidecars found under src/cadrumo/_data/corpus"
     assert not failures, f"{len(failures)} stale or malformed extraction sidecars: {failures[:20]!r}"

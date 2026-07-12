@@ -46,7 +46,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
     """Engine recomputes M180 annual closure casillas from M115 relations and binding values.
 
     GROUNDED authority: synthetic M180 fixture at
-    src/aeat/tests/fixtures/justificantes/180/2024-0A.pdf, derived from
+    src/cadrumo/tests/fixtures/justificantes/180/2024-0A.pdf, derived from
     AEAT Orden HAP/1732/2014 printed form structure.  The fixture prints:
       decl.total-perceptores = 3       (dedicated annual perceptor binding)
       decl.base-total        = 12000.00 (sum of M115 casilla 02 across 4 quarters)

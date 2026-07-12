@@ -335,7 +335,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 ) -> None:
     """Diagnostics degrade to an empty report and log unavailable storage runtime."""
 
-    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+    caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
@@ -355,7 +355,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
 ) -> None:
     """Diagnostics do not silently swallow active-session route mismatches."""
 
-    caplog.set_level("DEBUG", logger="aeat.application.diagnostics")
+    caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings,
@@ -552,7 +552,7 @@ def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) ->
 def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -> None:
     """Importing ``diagnostics`` stays off the heavy adapter import graph.
 
-    The ``aeat --version`` fast path imports ``aeat.application.
+    The ``aeat --version`` fast path imports ``cadrumo.application.
     diagnostics`` solely for ``build_cli_version_report`` /
     ``render_cli_version_text``. Disaster rollback contract mandates that
     surface return fast on cold start. The browser adapter and the
@@ -572,12 +572,12 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
         [
             sys.executable,
             "-c",
-            "import sys; import aeat.application.diagnostics; "
+            "import sys; import cadrumo.application.diagnostics; "
             "print(','.join(m for m in ("
-            "'aeat.adapters.outbound.aeat.browser', "
-            "'aeat.domain.calculations.registry', "
-            "'aeat.application.workflow', "
-            "'aeat.application.wizard._status') if m in sys.modules))",
+            "'cadrumo.adapters.outbound.aeat.browser', "
+            "'cadrumo.domain.calculations.registry', "
+            "'cadrumo.application.workflow', "
+            "'cadrumo.application.wizard._status') if m in sys.modules))",
         ],
         capture_output=True,
         text=True,

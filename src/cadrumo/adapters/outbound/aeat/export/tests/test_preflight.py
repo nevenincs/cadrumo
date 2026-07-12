@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.domain.submission.Preflight`."""
+"""Unit tests for :class:`cadrumo.domain.submission.Preflight`."""
 
 from __future__ import annotations
 

@@ -2,7 +2,7 @@
 
 Drives the full simulated prompt sequence for a Modelo 130 draft against real
 ledger-seeded income/expense rows and asserts the wizard composes the exact
-same :func:`~aeat.application.modelo.calculate_modelo_work_revision` path
+same :func:`~cadrumo.application.modelo.calculate_modelo_work_revision` path
 ``work calculate`` uses — never a parallel calculation surface
 (``composition-service-no-parallel-write-path``). No mocks, stubs, or
 patches: the scripted prompter drives the real registry engine, the real

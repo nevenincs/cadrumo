@@ -1,6 +1,6 @@
 """Inventory gate for canonical Decimal rounding and coercion.
 
-Production modules under ``src/aeat/`` must not use:
+Production modules under ``src/cadrumo/`` must not use:
 
 1. ``value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)`` inline.
    All callers must delegate to :func:`~core.money.round_to_cents`.
@@ -28,11 +28,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, leaf_name, production_ast_items, repo_relative
+from ._inventory import SRC_CADRUMO, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = SRC_AEAT
+_SRC_ROOT = SRC_CADRUMO
 
 # Canonical modules exempt from their own rules.
 _ROUNDING_MODULE = _SRC_ROOT / "core" / "money" / "__init__.py"
@@ -107,7 +107,7 @@ def _collect_decimal_str_violations(source_tree_ast: Mapping[Path, ast.AST]) -> 
 def test_no_inline_quantize_round_half_up(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Inline ``value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)`` must be zero.
 
-    All known sites use ``round_to_cents`` from ``aeat.core.money``.
+    All known sites use ``round_to_cents`` from ``cadrumo.core.money``.
     Any new inline call is a regression.
     """
     violations = _collect_quantize_violations(source_tree_ast)
@@ -116,7 +116,7 @@ def test_no_inline_quantize_round_half_up(source_tree_ast: Mapping[Path, ast.AST
         raise AssertionError(
             f"{len(violations)} inline quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)"
             f" call(s) found in production code:\n  {joined}\n\n"
-            "Replace each call with round_to_cents() from aeat.core.money.",
+            "Replace each call with round_to_cents() from cadrumo.core.money.",
         )
 
 
@@ -132,5 +132,5 @@ def test_no_bare_decimal_str_coercion(source_tree_ast: Mapping[Path, ast.AST]) -
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} bare Decimal(str()) coercion call(s) found in production code:\n  {joined}\n\n"
-            "Replace each call with coerce_decimal() from aeat.core.decimal.",
+            "Replace each call with coerce_decimal() from cadrumo.core.decimal.",
         )

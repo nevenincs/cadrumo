@@ -2,7 +2,7 @@
 
 :class:`ModeloBindingValue` carries the regulatory grounding of a bound
 casilla at parity with the casilla half (:class:`ModeloCasillaProvenance`):
-a typed :class:`~aeat.core.BindingSourceKind` ``source`` plus ``legal_refs``
+a typed :class:`~cadrumo.core.BindingSourceKind` ``source`` plus ``legal_refs``
 and ``source_refs`` populated from the registry binding definition. Those
 values ride inside the encrypted :class:`ModeloDraft` persisted through the
 FINANCIAL-classified :class:`ModeloDraftRepository`.

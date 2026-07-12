@@ -18,7 +18,7 @@ authoritative ``core-not-outer`` import-linter contract
 * ``TYPE_CHECKING``-guarded imports — evaluated only by static type
   checkers, never at runtime.
 * Function- and method-scoped (deferred) imports — evaluated only when
-  the enclosing callable runs. ``aeat.core`` uses this pattern
+  the enclosing callable runs. ``cadrumo.core`` uses this pattern
   deliberately (for example :mod:`~core.config` and the resource
   repositories) so a core primitive can call into a higher layer
   lazily without a load-time dependency.
@@ -47,15 +47,15 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import SRC_AEAT, production_ast_items, production_python_files, repo_relative
+from ...tests import SRC_CADRUMO, production_ast_items, production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _FORBIDDEN_CORE_PREFIXES = (
-    "aeat.adapters",
-    "aeat.application",
-    "aeat.domain",
-    "aeat.entrypoints",
+    "cadrumo.adapters",
+    "cadrumo.application",
+    "cadrumo.domain",
+    "cadrumo.entrypoints",
 )
 
 
@@ -68,7 +68,7 @@ def _absolute_import_name(module: str | None, names: list[ast.alias]) -> str:
 
 
 def _resolve_relative_import(path: Path, level: int, module: str | None) -> str:
-    package_parts = list(path.with_suffix("").relative_to(SRC_AEAT.parent).parts)
+    package_parts = list(path.with_suffix("").relative_to(SRC_CADRUMO.parent).parts)
     package_parts = package_parts[:-1]
     if level:
         package_parts = package_parts[: len(package_parts) - level + 1]
@@ -146,7 +146,7 @@ def test_core_production_modules_do_not_import_outer_layers(source_tree_ast: Map
     for path, tree in production_ast_items(source_tree_ast):
         assert isinstance(tree, ast.Module), f"Expected a module AST for {path}, got {type(tree).__name__}"
         relative_path = repo_relative(path)
-        if not relative_path.startswith("src/aeat/core/"):
+        if not relative_path.startswith("src/cadrumo/core/"):
             continue
         for imported in _iter_import_time_imports(path, tree):
             if imported.startswith(_FORBIDDEN_CORE_PREFIXES):

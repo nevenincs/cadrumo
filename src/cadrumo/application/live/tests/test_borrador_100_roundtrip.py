@@ -1,7 +1,7 @@
 """Strict roundtrip across the Modelo 100 borrador snapshot repository.
 
 Persists :class:`Borrador100Snapshot` records under
-``aeat.application.live.borrador_100_snapshot`` at
+``cadrumo.application.live.borrador_100_snapshot`` at
 ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates ``binding_values`` with one

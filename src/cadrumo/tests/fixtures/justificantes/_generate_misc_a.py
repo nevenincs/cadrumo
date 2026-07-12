@@ -16,7 +16,7 @@ class _Modelo349Fixture:
     """Sanitized M349 declaracion-resumen fixture.
 
     Labels are taken verbatim from the AEAT-published instructions PDF at
-    src/aeat/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
+    src/cadrumo/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
     pages 8-9 (CUMPLIMENTACIÃ“N DE LA HOJA-RESUMEN).
 
     AEAT text (verbatim):
@@ -122,7 +122,7 @@ class _Modelo180Fixture:
     """Sanitized M180 resumen-anual declaracion fixture.
 
     Labels are taken verbatim from the AEAT-published printed-form template at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_180/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/
         02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf
     Page 1, REGISTRO DE TIPO 1 (REGISTRO DE DECLARANTE) printed layout.
 
@@ -252,7 +252,7 @@ class _Modelo369Fixture:
       https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
         DR_300_399/archivos_21/DR369e21.xlsx
     Saved at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/
         Descripcion_PresentacionFichero369_v1.pdf
 
     Source 2 â€” AEAT online manual, section "2. Ejercicio y periodo":
@@ -263,7 +263,7 @@ class _Modelo369Fixture:
         manuales-ayuda-presentacion/modelo-369/presentacion-regimen-union/
         2-ejercicio-periodo.html
     Saved at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/
         2-ejercicio-periodo.html
 
     The fixture renders "Ejercicio:" and "Periodo:" labels (matching the DR field names
@@ -347,7 +347,7 @@ class _Modelo193Fixture:
     """Sanitized M193 resumen-anual declaracion fixture.
 
     Labels are taken verbatim from the AEAT-published DiseÃ±o de Registro at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_193/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/
         03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf
     Pages 5-6, Tipo de registro 1 (Registro de Declarante):
       136-144: "NÃšMERO TOTAL DE PERCEPTORES"
@@ -469,7 +469,7 @@ class _Modelo115Fixture:
     """Sanitized M115 quarterly retenciones-arrendamientos autoliquidacion fixture.
 
     Labels are taken verbatim from the AEAT-published DiseÃ±o de Registro (DR) XLS at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_115/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_115/files/
         01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls
     Sheet "DR 11501", rows 16-20 (field descriptions, Windows-1252 decoded):
       row 16: "Retenciones e ingresos a cuenta. NÃºmero perceptores [01]"
@@ -603,7 +603,7 @@ class _Modelo720Fixture:
       https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
         DR_Resto_Mod/archivos/modelo_720.pdf
     Downloaded 2026-05-27 and saved at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_720/files/
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_720/files/
         modelo-720-aeat-dr.pdf
 
     The record-type-1 field at positions 5-8 is named "EJERCICIO" in the record
@@ -712,7 +712,7 @@ class _Modelo036Fixture:
       "Causas de presentaciÃ³n de la declaraciÃ³n"
     Source: sede.agenciatributaria.gob.es/.../cumplimentacion-modelo/pagina-1.html
     Fetched 2026-05-27 and saved at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_036/files/
         instrucciones-cumplimentacion-pagina-1.html
 
     The named_label parser matches label_pattern against this heading and captures

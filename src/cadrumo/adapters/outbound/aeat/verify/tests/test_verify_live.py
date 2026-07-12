@@ -1,4 +1,4 @@
-"""Live CSV verification test for :func:`aeat.adapters.outbound.aeat.verify.verify_csv`.
+"""Live CSV verification test for :func:`cadrumo.adapters.outbound.aeat.verify.verify_csv`.
 
 This test is **opt-in**: it is deselected unless
 ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the environment. It spins up a

@@ -1,6 +1,6 @@
 """Unit tests for the XLSX financial ingestion provider.
 
-Verifies :class:`aeat.adapters.inbound.financial.providers.XlsxProvider`
+Verifies :class:`cadrumo.adapters.inbound.financial.providers.XlsxProvider`
 correctly auto-detects the header row of a synthetic worksheet and that
 malformed workbooks fail validation cleanly without leaking pikepdf /
 openpyxl exceptions.

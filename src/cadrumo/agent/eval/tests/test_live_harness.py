@@ -104,7 +104,7 @@ def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
     # the one-call trajectory does not cover the scenario's expected trajectory.
     driver = ScriptedPersonaDriver([LiveCallTool(tool_name="aeat_harness_load", arguments_json="{}")])
     trajectory = run_live_session(
-        [sys.executable, "-c", "from aeat.entrypoints.mcp import main; main()"],
+        [sys.executable, "-c", "from cadrumo.entrypoints.mcp import main; main()"],
         persona="verifier",
         session_id="live-capture",
         driver=driver,

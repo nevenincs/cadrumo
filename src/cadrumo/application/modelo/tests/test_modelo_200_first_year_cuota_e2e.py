@@ -1,7 +1,7 @@
 """IS-3 full-stack E2E: a first-year modalidad-cuota M200 calculates, drafts, and verifies.
 
 The companion unit tests
-(``aeat.application.calculations.tests.test_modelo_200_202_pagos_fraccionados_fold``)
+(``cadrumo.application.calculations.tests.test_modelo_200_202_pagos_fraccionados_fold``)
 prove the IS-3 fix at the resolver boundary: with ``modelo_202_first_year_cuota``
 set, ``resolve_relations_from_local_store`` resolves an otherwise-unresolved M202
 fold-in relation to ``Decimal(0)`` instead of ``None`` (the value that crashed the
@@ -79,7 +79,7 @@ def _register_wizard_catalogue() -> None:
     ``taxpayer_profile_from_mapping``, which reads ``get_setup_flow()`` and
     fail-closes (flag -> False) on :class:`WizardCatalogueNotRegisteredError`. The
     production CLI registers the catalogue at startup; importing
-    ``aeat.application.wizard._catalogue`` triggers the same registration as an
+    ``cadrumo.application.wizard._catalogue`` triggers the same registration as an
     import-time side effect. Without it the first-year zero-resolution silently
     never fires - precisely the live plumbing this E2E must exercise.
     """

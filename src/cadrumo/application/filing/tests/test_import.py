@@ -1,8 +1,8 @@
-"""Unit tests for :mod:`aeat.application.filing._import`.
+"""Unit tests for :mod:`cadrumo.application.filing._import`.
 
-Exercises :func:`aeat.application.filing.import_filing_from_justificante`
+Exercises :func:`cadrumo.application.filing.import_filing_from_justificante`
 end-to-end against local justificante fixture PDFs under
-``src/aeat/tests/fixtures/justificantes/``.
+``src/cadrumo/tests/fixtures/justificantes/``.
 """
 
 from __future__ import annotations

@@ -44,7 +44,7 @@ from .._taxation_comparison import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Importing the renta package registers the first-slice routing check.
-importlib.import_module("aeat.domain.renta")
+importlib.import_module("cadrumo.domain.renta")
 
 
 @pytest.fixture(scope="module")
@@ -335,7 +335,7 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     Envelope round-trip: instantiates the exception, builds an ErrorEnvelope
     via build_error_envelope, and asserts the envelope fields carry the
     expected stable values. The expected code string is derived from the
-    registry declaration in aeat.core.errors.registry._application, not
+    registry declaration in cadrumo.core.errors.registry._application, not
     hand-computed.
     """
     from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
@@ -362,14 +362,14 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
 
 
 def test_taxation_comparison_module_imports_cleanly() -> None:
-    """aeat.application.modelo._taxation_comparison must import without error.
+    """cadrumo.application.modelo._taxation_comparison must import without error.
 
     Exercises that the module's top-level imports and TYPE_CHECKING block
     clean-up (contract) did not break the production import path.
     """
     import importlib
 
-    mod = importlib.import_module("aeat.application.modelo._taxation_comparison")
+    mod = importlib.import_module("cadrumo.application.modelo._taxation_comparison")
     assert hasattr(mod, "compare_taxation_modes")
     assert hasattr(mod, "TaxationComparisonResult")
     assert hasattr(mod, "TaxationComparisonError")

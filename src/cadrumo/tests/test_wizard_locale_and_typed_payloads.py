@@ -280,8 +280,8 @@ def test_parse_invoice_payload_end_to_end_json() -> None:
 @pytest.mark.parametrize(
     "module_name",
     [
-        "aeat.application.storage",
-        "aeat.domain.calculations",
+        "cadrumo.application.storage",
+        "cadrumo.domain.calculations",
     ],
 )
 def test_namespace_init_modules_document_intent_without_reexports(module_name: str) -> None:

@@ -125,7 +125,7 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
         with session_scope(engine) as session:
             target_row = session.execute(
                 select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == "aeat.domain.attachments.blobs",
+                    SecureObjectRow.namespace == "cadrumo.domain.attachments.blobs",
                     SecureObjectRow.object_key == attachment.attachment_id,
                 ),
             ).scalar_one()

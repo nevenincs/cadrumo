@@ -1,4 +1,4 @@
-"""Real-behavior tests for :mod:`aeat.core.time._clock`."""
+"""Real-behavior tests for :mod:`cadrumo.core.time._clock`."""
 
 from __future__ import annotations
 

@@ -7,7 +7,7 @@ import the whole tree — so ``aeat --version`` and ``aeat --help`` paid
 the full registry cost even though neither dispatches into a
 subcommand.
 
-:mod:`aeat.entrypoints.cli._command_suggestions` now registers heavy
+:mod:`cadrumo.entrypoints.cli._command_suggestions` now registers heavy
 subcommand groups through :class:`LazySubcommand` loaders that import
 their module only when the subtree is first resolved. These tests are
 the structural guard for that contract:
@@ -46,18 +46,18 @@ _COLD_START_BUDGET_S = 2.0
 # surface runs. The registry parse is the headline cost; the heavy
 # command modules are the eager-import vector that used to drag it in.
 _FORBIDDEN_MODULE_PREFIXES = (
-    "aeat.domain.calculations.registry",
-    "aeat.application.workflow",
-    "aeat.application.overview",
+    "cadrumo.domain.calculations.registry",
+    "cadrumo.application.workflow",
+    "cadrumo.application.overview",
 )
 _FORBIDDEN_COMMAND_MODULES = (
-    "aeat.entrypoints.cli._overview",
-    "aeat.entrypoints.cli._ledger",
-    "aeat.entrypoints.cli._app_live",
-    "aeat.entrypoints.cli._modelo",
-    "aeat.entrypoints.cli.registry",
-    "aeat.entrypoints.cli._review",
-    "aeat.entrypoints.cli._config",
+    "cadrumo.entrypoints.cli._overview",
+    "cadrumo.entrypoints.cli._ledger",
+    "cadrumo.entrypoints.cli._app_live",
+    "cadrumo.entrypoints.cli._modelo",
+    "cadrumo.entrypoints.cli.registry",
+    "cadrumo.entrypoints.cli._review",
+    "cadrumo.entrypoints.cli._config",
 )
 
 
@@ -86,7 +86,7 @@ def test_version_cold_start_completes_under_budget() -> None:
     code = """
         import sys
         sys.argv = ["aeat", "--version"]
-        from aeat.entrypoints.cli import main
+        from cadrumo.entrypoints.cli import main
         try:
             main()
         except SystemExit as exit_:
@@ -105,7 +105,7 @@ def test_version_cold_start_completes_under_budget() -> None:
 
 
 def test_importing_cli_package_does_not_import_registry() -> None:
-    """Importing ``aeat.entrypoints.cli`` must not import the registry.
+    """Importing ``cadrumo.entrypoints.cli`` must not import the registry.
 
     Constructing the ``aeat`` app object is import-only work. If it
     pulls the registry or a heavy command module, every CLI surface —
@@ -116,7 +116,7 @@ def test_importing_cli_package_does_not_import_registry() -> None:
     completed = _run_python(
         f"""
         import sys
-        import aeat.entrypoints.cli  # noqa: F401
+        import cadrumo.entrypoints.cli  # noqa: F401
         forbidden = {forbidden!r}
         leaked = sorted(
             name
@@ -152,7 +152,7 @@ def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
         import sys
         from click.exceptions import Exit as ClickExit
         from typer.main import get_command
-        from aeat.entrypoints.cli import app
+        from cadrumo.entrypoints.cli import app
 
         stdout = StringIO()
         stderr = StringIO()
@@ -198,10 +198,10 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
         import sys
         from click.exceptions import Exit as ClickExit
         from typer.main import get_command
-        from aeat.entrypoints.cli import app
+        from cadrumo.entrypoints.cli import app
 
         command = get_command(app)
-        assert "aeat.entrypoints.cli._modelo" not in sys.modules
+        assert "cadrumo.entrypoints.cli._modelo" not in sys.modules
 
         stdout = StringIO()
         stderr = StringIO()
@@ -213,7 +213,7 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
         else:
             exit_code = result if isinstance(result, int) else 0
         assert exit_code == 0, stdout.getvalue() + stderr.getvalue()
-        print("loaded" if "aeat.entrypoints.cli._modelo" in sys.modules else "missing")
+        print("loaded" if "cadrumo.entrypoints.cli._modelo" in sys.modules else "missing")
         """,
     )
 

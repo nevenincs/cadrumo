@@ -15,7 +15,7 @@ failure. Two structural causes, both fixed and pinned here:
 - Click usage errors and crashes never reached the error boundary at all:
   Typer's standalone ``main`` rendered them as Rich text / raw
   tracebacks. The root group's terminal funnel
-  (:mod:`aeat.entrypoints.cli._terminal_errors`) now re-implements the
+  (:mod:`cadrumo.entrypoints.cli._terminal_errors`) now re-implements the
   standalone handling with a JSON-aware branch.
 
 Honest boundary (documented, not hidden): an argv so malformed that the
@@ -163,7 +163,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         textwrap.dedent(
             """
             import typer
-            from aeat.entrypoints.cli._command_suggestions import AeatTyperGroup
+            from cadrumo.entrypoints.cli._command_suggestions import AeatTyperGroup
 
             app = typer.Typer(cls=AeatTyperGroup)
 

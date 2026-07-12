@@ -41,9 +41,9 @@ See Also:
     :mod:`~domain.calculations.registry.tests.test_modelo_100_eo_agraria_indices_correctores`
         Fase 3ª índice-corrector suite whose casilla 1548 result this test
         continues from.
-    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0294-renta-2025-eo-agraria-reducciones-fase-4a.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0294-renta-2025-eo-agraria-reducciones-fase-4a.toml``
         Registry-authored Fase 4ª formula chain under test.
-    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0295-renta-2025-eo-agraria-reduccion-irregularidad.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0295-renta-2025-eo-agraria-reduccion-irregularidad.toml``
         Registry-authored Fase 5ª irregularidad reduction chain under test.
 """
 

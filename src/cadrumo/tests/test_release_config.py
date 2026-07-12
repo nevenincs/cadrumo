@@ -6,10 +6,10 @@ These tests validate the project-meta files that drive `just release`:
 - ``.release-please-manifest.json``
 - ``CHANGELOG.md``
 - the three version surfaces (``pyproject.toml``,
-  ``src/aeat/__init__.py``, ``.release-please-manifest.json``)
+  ``src/cadrumo/__init__.py``, ``.release-please-manifest.json``)
   agree.
 
-The test lives in ``src/aeat/tests/`` rather than alongside any
+The test lives in ``src/cadrumo/tests/`` rather than alongside any
 ``aeat.*`` runtime subpackage because it validates project-meta
 files that do not belong to a runtime module.
 
@@ -49,7 +49,7 @@ CONFIG_PATH = repo_path("release-please-config.json")
 MANIFEST_PATH = repo_path(".release-please-manifest.json")
 CHANGELOG_PATH = repo_path("CHANGELOG.md")
 PYPROJECT_PATH = repo_path("pyproject.toml")
-INIT_PATH = repo_path("src/aeat/__init__.py")
+INIT_PATH = repo_path("src/cadrumo/__init__.py")
 RELEASE_CHECKLIST_PATH = repo_path("docs/_release_checklist.yaml")
 RELEASE_NOTES_TEMPLATE_PATH = repo_path("docs/_release_notes_template.md")
 RELEASING_PATH = repo_path("RELEASING.md")
@@ -214,7 +214,7 @@ def test_release_please_config_is_well_formed() -> None:
     root_pkg = config.packages["."]
     assert root_pkg.package_name == "aeat"
     assert root_pkg.release_type == "python"
-    assert "src/aeat/__init__.py" in root_pkg.extra_files
+    assert "src/cadrumo/__init__.py" in root_pkg.extra_files
 
     types = {section.type for section in config.changelog_sections}
     # The project-relevant commit types must all have a rendering decision

@@ -1,6 +1,6 @@
 """AST-backed integrity audit for the hexagonal test-marker taxonomy.
 
-Walks every source-controlled test module under ``src/aeat/`` and ``docs/`` and asserts that each
+Walks every source-controlled test module under ``src/cadrumo/`` and ``docs/`` and asserts that each
 carries a single top-level ``pytestmark = [...]`` assignment containing
 exactly one execution-scope marker (``unit`` / ``integration`` /
 ``aeat_live``) and exactly one ``hex_*`` marker.
@@ -8,7 +8,7 @@ exactly one execution-scope marker (``unit`` / ``integration`` /
 The walker uses :mod:`ast` only; it does not import the test modules.
 The file self-validates because the discovery glob includes itself.
 
-See charter ``#116`` and ``src/aeat/tests/README.md`` for the taxonomy
+See charter ``#116`` and ``src/cadrumo/tests/README.md`` for the taxonomy
 contract.
 """
 
@@ -29,13 +29,13 @@ from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_AEAT = Path(__file__).resolve().parents[1]
-_REPO_ROOT = _SRC_AEAT.parents[1]
+_SRC_CADRUMO = Path(__file__).resolve().parents[1]
+_REPO_ROOT = _SRC_CADRUMO.parents[1]
 _TEST_MODULE_ROOTS = (
-    _SRC_AEAT,
+    _SRC_CADRUMO,
     _REPO_ROOT / "docs",
 )
-_TEST_TOPOLOGY_ROOTS = (_SRC_AEAT, *PROJECT_TEST_ROOTS)
+_TEST_TOPOLOGY_ROOTS = (_SRC_CADRUMO, *PROJECT_TEST_ROOTS)
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 _HEX_MARKERS = frozenset(
     {
@@ -110,17 +110,17 @@ _LIVE_ENV_NAME = "AEAT_LIVE_TESTS_ENABLED"
 _LIVE_TEST_OPT_IN_TOKENS = ("AEAT_LIVE_TESTS_ENABLED", "aeat_live_tests_enabled")
 _LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
     {
-        Path("src/aeat/core/_config_live_tests.py"),
-        Path("src/aeat/core/config.py"),
-        Path("src/aeat/core/access_gate/__init__.py"),
-        Path("src/aeat/core/access_gate/_errors.py"),
+        Path("src/cadrumo/core/_config_live_tests.py"),
+        Path("src/cadrumo/core/config.py"),
+        Path("src/cadrumo/core/access_gate/__init__.py"),
+        Path("src/cadrumo/core/access_gate/_errors.py"),
     },
 )
 _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
-    _SRC_AEAT / "adapters",
-    _SRC_AEAT / "application",
-    _SRC_AEAT / "core",
-    _SRC_AEAT / "entrypoints",
+    _SRC_CADRUMO / "adapters",
+    _SRC_CADRUMO / "application",
+    _SRC_CADRUMO / "core",
+    _SRC_CADRUMO / "entrypoints",
 )
 
 
@@ -584,23 +584,23 @@ def _expected_hex_marker_for_path(path: Path) -> str | None:
         return "hex_entrypoint"
     if path_text.startswith("docs/"):
         return "hex_core"
-    if parts[:3] == ("src", "aeat", "entrypoints"):
+    if parts[:3] == ("src", "cadrumo", "entrypoints"):
         return "hex_entrypoint"
-    if parts[:3] == ("src", "aeat", "application"):
+    if parts[:3] == ("src", "cadrumo", "application"):
         return "hex_application"
-    if parts[:3] == ("src", "aeat", "domain"):
+    if parts[:3] == ("src", "cadrumo", "domain"):
         return "hex_domain"
-    if parts[:4] == ("src", "aeat", "adapters", "inbound"):
+    if parts[:4] == ("src", "cadrumo", "adapters", "inbound"):
         return "hex_inbound_adapter"
-    if parts[:4] == ("src", "aeat", "adapters", "outbound"):
+    if parts[:4] == ("src", "cadrumo", "adapters", "outbound"):
         return "hex_outbound_adapter"
-    if parts[:4] == ("src", "aeat", "adapters", "persistence"):
+    if parts[:4] == ("src", "cadrumo", "adapters", "persistence"):
         return "hex_persistence_adapter"
-    if parts[:3] == ("src", "aeat", "core"):
+    if parts[:3] == ("src", "cadrumo", "core"):
         return "hex_core"
-    if parts[:3] == ("src", "aeat", "_data"):
+    if parts[:3] == ("src", "cadrumo", "_data"):
         return "hex_domain"
-    if path_text.startswith("src/aeat/tests/fixtures/"):
+    if path_text.startswith("src/cadrumo/tests/fixtures/"):
         return "hex_inbound_adapter"
     return None
 

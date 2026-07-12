@@ -1,6 +1,6 @@
 """Strict roundtrip across the encrypted browser-session boundary.
 
-The :mod:`aeat.adapters.outbound.aeat.auth._session_store` module
+The :mod:`cadrumo.adapters.outbound.aeat.auth._session_store` module
 persists Playwright ``storage_state`` payloads encrypted at
 ``SensitivityClass.SESSION`` through :class:`SecureObjectRepository`.
 This test asserts the save / load cycle preserves every key inside

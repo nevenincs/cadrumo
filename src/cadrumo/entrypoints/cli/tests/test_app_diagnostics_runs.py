@@ -1,10 +1,10 @@
 """Real-behavior CLI tests for ``aeat app diagnostics runs``.
 
 Exercises the listing verb end to end against the real CLI, the real
-:func:`~aeat.application.diagnostics_run_health.list_recent_runs` projection,
+:func:`~cadrumo.application.diagnostics_run_health.list_recent_runs` projection,
 and real encrypted SQLite persistence in an isolated storage root. No test
 doubles: LLM run telemetry is seeded through its production writer
-(:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`), the exact same
+(:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`), the exact same
 recorder ``run-health`` reads, and the verb reports it back typed.
 """
 
@@ -56,7 +56,7 @@ def _seed_runs() -> None:
     recorder.record(
         LLMRunRecord(
             run_id="run-1",
-            caller="aeat.application.ledger.llm_classification",
+            caller="cadrumo.application.ledger.llm_classification",
             provider="llm:claude:test-model",
             model="test-model",
             duration_ms=1200,
@@ -67,7 +67,7 @@ def _seed_runs() -> None:
     recorder.record(
         LLMRunRecord(
             run_id="run-2",
-            caller="aeat.application.ledger.llm_classification",
+            caller="cadrumo.application.ledger.llm_classification",
             provider="llm:claude:test-model",
             model="test-model",
             duration_ms=45000,
@@ -79,7 +79,7 @@ def _seed_runs() -> None:
     recorder.record(
         LLMRunRecord(
             run_id="run-3",
-            caller="aeat.application.ledger.llm_classification",
+            caller="cadrumo.application.ledger.llm_classification",
             provider="llm:codex:test-model",
             model="test-model",
             duration_ms=800,

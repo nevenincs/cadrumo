@@ -4,7 +4,7 @@ Grounds every assertion against the two *real* Modelo 303 registry revisions
 shipped in the bundled tree (``2009-y-siguientes`` covering 2009-2022,
 ``2023-y-siguientes`` covering 2023 onward); the expected identifiers were
 read directly off the diff service against this known real revision pair, per
-:mod:`aeat.application.registry.tests.test_diff`.
+:mod:`cadrumo.application.registry.tests.test_diff`.
 """
 
 from __future__ import annotations

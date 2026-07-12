@@ -2,7 +2,7 @@
 
 Extends the coverage :mod:`test_reconcile_declaracion_casillas` established for
 Modelo 130 to the five modelos enrolled in
-:data:`aeat.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
+:data:`cadrumo.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
 in the same slice: Modelo 100 (IRPF annual, printed Renta casilla ids), Modelo
 303 (IVA autoliquidación, compound ``iva.*`` primitive/result casilla ids),
 Modelo 390 (IVA resumen anual, compound ``iva.anual.*`` ids), Modelo 111
@@ -12,14 +12,14 @@ Modelo 390 (IVA resumen anual, compound ``iva.anual.*`` ids), Modelo 111
 
 Each modelo's ``declaracion_pdf`` extraction profile has been confirmed (by
 reading the registry TOML alongside
-:meth:`~aeat.domain.calculations.registry.RegistrySnapshot.verification_policy`)
+:meth:`~cadrumo.domain.calculations.registry.RegistrySnapshot.verification_policy`)
 to target the exact casilla-id vocabulary its verification expectations
 reconcile — the same parity Modelo 130 established first. Real-PDF
 ``bbox_anchored``/``named_label`` extraction stays Tier-R and out of scope
 here (tracked separately, blocked on #332-337); this suite tests the
 ``_reconcile_parsed_declaracion`` seam directly with a synthetically
 constructed
-:class:`~aeat.adapters.inbound.declaracion.InboundDeclaracionObservation`,
+:class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`,
 mirroring the pattern ``test_reconcile_declaracion_casillas.py`` uses for
 Modelo 130. The synthetic fixture data is declared ``synthetic_generated``
 (not derived from a real AEAT filing) per the fixture-provenance discipline.
@@ -169,7 +169,7 @@ def _synthetic_declaracion(
 
     Bypasses real PDF extraction entirely (declared ``synthetic_generated``
     provenance): constructs the same typed
-    :class:`~aeat.adapters.inbound.declaracion.InboundDeclaracionObservation`
+    :class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`
     the parser would return, with an explicit registry snapshot ref matching
     the seeded work unit's law-determined revision.
     """

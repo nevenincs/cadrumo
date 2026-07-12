@@ -1,6 +1,6 @@
 """CI gate: production code reads the clock through the seam, not a bare ``datetime.now``.
 
-Walks every production module under ``src/aeat`` (tests excluded) and fails if a
+Walks every production module under ``src/cadrumo`` (tests excluded) and fails if a
 bare ``datetime.now(...)`` / ``datetime.utcnow(...)`` call appears — the wall-clock
 read that bypasses the deterministic-output seam
 (:func:`~core.time.now` / :func:`~core.time.frozen_clock`). A call site that
@@ -52,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
 
 #: Injectable live-AEAT sites permitted to fall back to a bare ``datetime.now``.
-#: Keyed by ``src/aeat``-relative POSIX path → reason. Each accepts an explicit
+#: Keyed by ``src/cadrumo``-relative POSIX path → reason. Each accepts an explicit
 #: ``now=`` parameter (so tests inject a fixed instant) and reads wall-clock only as
 #: the default; the deterministic seam is deliberately barred on the live path (it
 #: refuses under ``AEAT_LIVE_TESTS_ENABLED``), so the fallback is load-bearing, not a
@@ -149,13 +149,13 @@ def test_no_bare_wall_clock_reads_in_production(source_tree_ast: Mapping[Path, a
                 used_allowlist.add(rel)
                 continue
             offenders.append(
-                f"src/aeat/{rel}:{node.lineno}: bare datetime clock read; "
-                "use aeat.core.time.now() so the frozen-clock seam can pin it",
+                f"src/cadrumo/{rel}:{node.lineno}: bare datetime clock read; "
+                "use cadrumo.core.time.now() so the frozen-clock seam can pin it",
             )
 
     assert not offenders, (
         "Bare wall-clock reads found in production code; route them through "
-        "aeat.core.time.now() (the deterministic-output seam) instead:\n" + "\n".join(offenders)
+        "cadrumo.core.time.now() (the deterministic-output seam) instead:\n" + "\n".join(offenders)
     )
     stale = set(_ALLOWLIST) - used_allowlist
     assert not stale, "Stale _ALLOWLIST entries no longer read a bare clock; remove them:\n" + "\n".join(

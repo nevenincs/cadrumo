@@ -25,7 +25,7 @@ Wire layout:
   Total: 1146 bytes
 
 Source authority: Orden HAP/72/2013 Anexo (Diseño de registro para el modelo 720).
-Registry binding sources: src/aeat/_data/registry/aeat/modelos/720/revisions/
+Registry binding sources: src/cadrumo/_data/registry/aeat/modelos/720/revisions/
   2013-y-siguientes/bindings/0001-bindings.toml + 0002-bindings.toml
 
 The golden SHA below was obtained by running export_draft against the fixed inputs

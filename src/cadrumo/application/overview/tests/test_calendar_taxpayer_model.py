@@ -644,7 +644,7 @@ def test_calendar_benign_no_windows_year_still_degrades(caplog: pytest.LogCaptur
     result rather than propagating the error."""
 
     rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.overview"):
         cal = build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine())
 
     assert isinstance(cal, OverviewCalendar)

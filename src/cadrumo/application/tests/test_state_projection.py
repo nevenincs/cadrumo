@@ -492,7 +492,7 @@ def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
         period=Period.from_year_and_code(2026, "1T"),
     )
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.state_projection"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.state_projection"):
         required = modelo_requires_ledger_preflight(request)
 
     assert required is False
@@ -584,7 +584,7 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
 ) -> None:
     sensitive_provider = "client-tax-id-12345678Z-private-note"
 
-    with caplog.at_level(logging.WARNING, logger="aeat.application.state_projection"):
+    with caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"):
         projection = build_operator_state_projection(
             requested_provider=sensitive_provider,
             probe_live_backend=True,

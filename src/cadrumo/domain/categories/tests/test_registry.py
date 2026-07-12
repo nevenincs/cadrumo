@@ -1,7 +1,7 @@
-"""Unit tests for :data:`~aeat.domain.categories._PROFILES_2025`.
+"""Unit tests for :data:`~cadrumo.domain.categories._PROFILES_2025`.
 
 Verifies the curated 2025 registry covers every
-:class:`~aeat.domain.categories.SpendingCategory`, that every profile
+:class:`~cadrumo.domain.categories.SpendingCategory`, that every profile
 carries at least one citation, and that the manual-loader entry point returns
 the curated registry surface.
 

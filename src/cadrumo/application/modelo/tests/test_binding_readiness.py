@@ -155,7 +155,7 @@ def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
 
 def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog: pytest.LogCaptureFixture) -> None:
     """Invalid registry scopes return no resolved bindings and emit debug diagnostics."""
-    caplog.set_level(logging.DEBUG, logger="aeat.application.modelo._binding_readiness")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo._binding_readiness")
 
     resolved = profile_resolvable_binding_ids(
         modelo="not-a-modelo",
@@ -176,7 +176,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Explicit Period scopes use the typed registry token at the snapshot boundary."""
-    caplog.set_level(logging.DEBUG, logger="aeat.application.modelo._binding_readiness")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo._binding_readiness")
 
     resolved = profile_resolvable_binding_ids(
         modelo="not-a-modelo",

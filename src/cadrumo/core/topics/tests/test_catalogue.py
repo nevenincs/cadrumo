@@ -158,7 +158,7 @@ def test_topic_catalogue_package_has_no_cli_or_rendering_surface(capsys: pytest.
     bound_entrypoint_modules = {
         name: value.__name__
         for name, value in vars(topics_module).items()
-        if inspect.ismodule(value) and value.__name__.startswith("aeat.entrypoints")
+        if inspect.ismodule(value) and value.__name__.startswith("cadrumo.entrypoints")
     }
 
     catalogue = resources().topics.singleton

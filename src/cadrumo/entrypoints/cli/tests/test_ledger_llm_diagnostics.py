@@ -1,12 +1,12 @@
 """Real-behavior CLI tests for ``aeat app ledger llm-diagnostics``.
 
 Exercises the diagnostics verb end to end against the real CLI, the real
-:func:`~aeat.application.ledger.build_llm_diagnostics_report` aggregator, and
+:func:`~cadrumo.application.ledger.build_llm_diagnostics_report` aggregator, and
 real encrypted SQLite persistence in an isolated storage root. No test doubles:
 the two existing metric stores are seeded through their production writers —
-:class:`~aeat.adapters.outbound.llm.UsageRecorder` for the usage/cost log and
-:func:`~aeat.domain.transactions.set_classification` +
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` for the
+:class:`~cadrumo.adapters.outbound.llm.UsageRecorder` for the usage/cost log and
+:func:`~cadrumo.domain.transactions.set_classification` +
+:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository` for the
 classification-confidence stamped on ledger transactions — and the verb reports
 them back typed.
 """

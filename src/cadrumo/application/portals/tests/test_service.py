@@ -105,13 +105,13 @@ class TestNoLiveOrWriteSurface:
         script = """
 import sys
 
-from aeat.application.portals import PortalsService
+from cadrumo.application.portals import PortalsService
 
 service = PortalsService()
 service.list_portals()
 
 for module_name in sys.modules:
-    if module_name.startswith("aeat.adapters.outbound.aeat.browser"):
+    if module_name.startswith("cadrumo.adapters.outbound.aeat.browser"):
         raise SystemExit(f"imported browser module: {module_name}")
 """
         result = subprocess.run(  # noqa: S603 - fixed interpreter and literal script for import isolation.

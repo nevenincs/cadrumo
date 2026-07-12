@@ -4,7 +4,7 @@ The C2 ledger-evidence campaign deleted the link-only ``add_link_attachment``
 path that recorded a Gmail/Drive/URL reference as a ``text/uri-list`` manifest
 without ever fetching the document. This gate proves the invariant the deletion
 established: every manifest the byte-bearing
-:func:`aeat.domain.attachments.add_attachment_bytes` path writes carries the
+:func:`cadrumo.domain.attachments.add_attachment_bytes` path writes carries the
 real ``sha256`` of the stored bytes and a concrete document ``mime_type`` — never
 ``text/uri-list`` — over a real SQLite-backed :class:`AttachmentStore`.
 

@@ -1,11 +1,11 @@
 """Real-behavior tests asserting canonical home and import purity for
-aeat.core.setup_answers.SetupAnswers and the project_answers registration slot.
+cadrumo.core.setup_answers.SetupAnswers and the project_answers registration slot.
 
 These tests verify:
-- SetupAnswers is defined in aeat.core.setup_answers (not aeat.application.wizard).
-- aeat.application.wizard._setup_answers.SetupAnswers is the same class object.
-- aeat.domain.deadlines._profiles imports SetupAnswers and project_answers from
-  aeat.core.setup_answers — no deferred upward application imports survive.
+- SetupAnswers is defined in cadrumo.core.setup_answers (not cadrumo.application.wizard).
+- cadrumo.application.wizard._setup_answers.SetupAnswers is the same class object.
+- cadrumo.domain.deadlines._profiles imports SetupAnswers and project_answers from
+  cadrumo.core.setup_answers — no deferred upward application imports survive.
 - The project_answers registration slot raises before registration and
   dispatches correctly after.
 - SetupAnswers field validation exercises real enum coercion (not mocks).
@@ -40,20 +40,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_setup_answers_canonical_module() -> None:
-    """SetupAnswers.__module__ must be aeat.core.setup_answers."""
+    """SetupAnswers.__module__ must be cadrumo.core.setup_answers."""
     from ..setup_answers import SetupAnswers
 
-    assert SetupAnswers.__module__ == "aeat.core.setup_answers", (
-        f"SetupAnswers is defined in {SetupAnswers.__module__!r}; expected 'aeat.core.setup_answers'"
+    assert SetupAnswers.__module__ == "cadrumo.core.setup_answers", (
+        f"SetupAnswers is defined in {SetupAnswers.__module__!r}; expected 'cadrumo.core.setup_answers'"
     )
 
 
 def test_setup_answers_catalogue_uses_core_class() -> None:
-    """SETUP_FLOW.answers_model must be aeat.core.setup_answers.SetupAnswers.
+    """SETUP_FLOW.answers_model must be cadrumo.core.setup_answers.SetupAnswers.
 
     The wizard catalogue is the authoritative binding between the flow descriptor
     and the typed-answers class.  It must reference the core class so that
-    project_answers returns instances that domain code (aeat.domain.deadlines._profiles)
+    project_answers returns instances that domain code (cadrumo.domain.deadlines._profiles)
     can check with ``isinstance(typed, SetupAnswers)`` where SetupAnswers is the
     core class.
     """
@@ -64,7 +64,7 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     setup_flow = get_setup_flow()
     assert setup_flow is catalogue.SETUP_FLOW
     assert setup_flow.answers_model is SetupAnswers, (
-        f"SETUP_FLOW.answers_model is {setup_flow.answers_model!r}; expected aeat.core.setup_answers.SetupAnswers"
+        f"SETUP_FLOW.answers_model is {setup_flow.answers_model!r}; expected cadrumo.core.setup_answers.SetupAnswers"
     )
 
 
@@ -74,7 +74,7 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
 
 
 def test_profiles_imports_setup_answers_from_core() -> None:
-    """aeat.domain.deadlines._profiles must import SetupAnswers from aeat.core.setup_answers."""
+    """cadrumo.domain.deadlines._profiles must import SetupAnswers from cadrumo.core.setup_answers."""
     from ...domain.deadlines import _profiles as profiles_mod
 
     # SetupAnswers in the profiles module namespace should be the core class.
@@ -82,7 +82,7 @@ def test_profiles_imports_setup_answers_from_core() -> None:
     assert sa is not None, "_profiles module does not expose SetupAnswers"
     from ..setup_answers import SetupAnswers
 
-    assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not aeat.core.setup_answers.SetupAnswers"
+    assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not cadrumo.core.setup_answers.SetupAnswers"
 
 
 def test_profiles_import_purity_uses_core_projection_slot() -> None:
@@ -95,12 +95,12 @@ def test_profiles_import_purity_uses_core_projection_slot() -> None:
         import importlib
         import sys
 
-        profiles = importlib.import_module("aeat.domain.deadlines._profiles")
-        from aeat.core.setup_answers import SetupAnswers, project_answers
+        profiles = importlib.import_module("cadrumo.domain.deadlines._profiles")
+        from cadrumo.core.setup_answers import SetupAnswers, project_answers
 
         assert profiles.SetupAnswers is SetupAnswers
         assert profiles.project_answers is project_answers
-        leaked = sorted(name for name in sys.modules if name.startswith("aeat.application.wizard"))
+        leaked = sorted(name for name in sys.modules if name.startswith("cadrumo.application.wizard"))
         assert leaked == [], leaked
     """)
     result = subprocess.run(
@@ -131,7 +131,7 @@ def test_project_answers_raises_before_registration() -> None:
     import textwrap
 
     script = textwrap.dedent("""\
-        from aeat.core.setup_answers import get_project_answers, ProjectAnswersNotRegisteredError
+        from cadrumo.core.setup_answers import get_project_answers, ProjectAnswersNotRegisteredError
         raised = False
         try:
             get_project_answers()
@@ -153,7 +153,7 @@ def test_project_answers_raises_before_registration() -> None:
 def test_project_answers_registered_after_persistence_import() -> None:
     """Importing _persistence registers project_answers in the core slot."""
     # Importing _persistence triggers the module-level registration call.
-    importlib.import_module("aeat.application.wizard._persistence")
+    importlib.import_module("cadrumo.application.wizard._persistence")
 
     from ..setup_answers import _PROJECT_ANSWERS_SLOT, get_project_answers
 

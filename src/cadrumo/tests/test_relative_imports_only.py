@@ -1,9 +1,9 @@
-"""Architecture gate: intra-package imports under ``src/aeat`` are relative.
+"""Architecture gate: intra-package imports under ``src/cadrumo`` are relative.
 
 Code inside the ``aeat`` package must reach its siblings through relative
 imports (``from . import x``, ``from ..core import y``), never by re-importing
-the package through its absolute path (``import aeat.core`` or
-``from aeat.core import y``). Absolute self-imports make a module's position in
+the package through its absolute path (``import cadrumo.core`` or
+``from cadrumo.core import y``). Absolute self-imports make a module's position in
 the package implicit, defeat straightforward relocation, and blur the layering
 the hexagonal structure depends on.
 
@@ -40,16 +40,16 @@ def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name == "aeat" or alias.name.startswith("aeat."):
+                if alias.name == "cadrumo" or alias.name.startswith("aeat."):
                     hits.append((node.lineno, f"import {alias.name}"))
         elif isinstance(node, ast.ImportFrom):
-            if node.level == 0 and node.module and (node.module == "aeat" or node.module.startswith("aeat.")):
+            if node.level == 0 and node.module and (node.module == "cadrumo" or node.module.startswith("aeat.")):
                 hits.append((node.lineno, f"from {node.module} import ..."))
     return hits
 
 
 def test_no_absolute_self_imports_in_aeat_package(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    """No source file under ``src/aeat`` may import the ``aeat`` package absolutely."""
+    """No source file under ``src/cadrumo`` may import the ``aeat`` package absolutely."""
     violations: list[str] = []
     for path, tree in package_ast_items(source_tree_ast):
         rel = repo_relative(path).removeprefix("src/")

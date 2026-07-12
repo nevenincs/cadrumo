@@ -1,4 +1,4 @@
-"""Shared test fixtures for the aeat.adapters.outbound.aeat.auth package."""
+"""Shared test fixtures for the cadrumo.adapters.outbound.aeat.auth package."""
 
 from __future__ import annotations
 

@@ -350,12 +350,12 @@ def test_live_command_tree_rejects_pull_all_and_capture_all_aliases() -> None:
 
 def test_live_pull_help_locale_keys_do_not_use_capture_all_names() -> None:
     checked_paths = (
-        Path("src/aeat/entrypoints/cli/_app_live.py"),
-        Path("src/aeat/entrypoints/cli/_app_live_expedientes_cli.py"),
-        Path("src/aeat/locales/en.yml"),
-        Path("src/aeat/locales/es.yml"),
-        Path("src/aeat/locales/ca.yml"),
-        Path("src/aeat/locales/hu.yml"),
+        Path("src/cadrumo/entrypoints/cli/_app_live.py"),
+        Path("src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py"),
+        Path("src/cadrumo/locales/en.yml"),
+        Path("src/cadrumo/locales/es.yml"),
+        Path("src/cadrumo/locales/ca.yml"),
+        Path("src/cadrumo/locales/hu.yml"),
     )
 
     assert all("capture_all_modelo_help" not in path.read_text(encoding="utf-8") for path in checked_paths)

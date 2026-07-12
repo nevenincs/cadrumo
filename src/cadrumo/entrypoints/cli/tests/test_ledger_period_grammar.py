@@ -13,7 +13,7 @@ hybrid are **removed** — they now refuse.
 
 These are real-behaviour tests: the resolution and refusal cases exercise the
 production ``_canonical_period`` normaliser (which consumes the registry
-period-union validator at :mod:`aeat.core`), and the end-to-end cases
+period-union validator at :mod:`cadrumo.core`), and the end-to-end cases
 drive ``aeat app ledger preflight`` / ``status`` against a real isolated
 encrypted bucket and the real ledger backend.
 """

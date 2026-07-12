@@ -3,7 +3,7 @@
 The registry validator runs peer-domain referential-integrity checks
 through the abstract ``CrossDomainSnapshotCheck`` Protocol. The concrete
 renta first-slice routing check lives in
-``aeat.domain.renta._first_slice_routing_integrity`` and registers itself
+``cadrumo.domain.renta._first_slice_routing_integrity`` and registers itself
 as an import side effect.
 
 That registration must NOT depend on import order. ``_build_validated_snapshot``
@@ -14,7 +14,7 @@ imports ``renta`` statically (that would reverse the dependency direction
 the cross-domain dependency fix, defect F7) -- it owns only the list of peer
 module names. A Modelo 100 snapshot therefore validates the BOE-prescribed
 first-slice routing gate regardless of whether the importing process ever
-imported ``aeat.domain.renta`` first.
+imported ``cadrumo.domain.renta`` first.
 
 These tests run in fresh subprocesses so the registry's module-level
 ``_CROSS_DOMAIN_SNAPSHOT_CHECKS`` list reflects exactly the import path
@@ -54,23 +54,23 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
     """An M100 build registers the renta gate without ``renta`` pre-imported.
 
     The subprocess imports only the registry -- it never imports
-    ``aeat.domain.renta`` itself -- and confirms zero cross-domain checks
+    ``cadrumo.domain.renta`` itself -- and confirms zero cross-domain checks
     are registered up front. Building a Modelo 100 snapshot then runs
     ``_install_cross_domain_snapshot_checks`` during snapshot construction,
     which imports the peer-domain check module by name. The build must
     succeed with the renta first-slice routing check registered, proving
     the registration is import-order-independent rather than a side effect
-    of some upstream ``import aeat.domain.renta``.
+    of some upstream ``import cadrumo.domain.renta``.
     """
 
     result = _run_python(
         """
         import sys
 
-        from aeat.core.resources import resources
-        from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.core.resources import resources
+        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
-        assert "aeat.domain.renta" not in sys.modules, (
+        assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported before the snapshot build on this path"
         )
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS == [], (
@@ -96,17 +96,17 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
 
     Companion to the loud-failure case: it proves the guard is satisfied
     by the registration side effect rather than by a blanket refusal to
-    build M100. The subprocess imports ``aeat.domain.renta`` before
+    build M100. The subprocess imports ``cadrumo.domain.renta`` before
     building, so the first-slice routing check is registered and the
     committed M100 snapshot passes the referential-integrity gate.
     """
 
     result = _run_python(
         """
-        import aeat.domain.renta  # noqa: F401  -- registration side effect
+        import cadrumo.domain.renta  # noqa: F401  -- registration side effect
 
-        from aeat.core.resources import resources
-        from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.core.resources import resources
+        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "importing renta must register at least one cross-domain check"
@@ -136,10 +136,10 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         """
         import sys
 
-        from aeat.core.resources import resources
-        from aeat.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.core.resources import resources
+        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
-        assert "aeat.domain.renta" not in sys.modules, (
+        assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported on this path"
         )
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS == [], (

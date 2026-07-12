@@ -1,7 +1,7 @@
-"""Unit tests for the EU IVA rate table exposed by :mod:`aeat.domain.iva`.
+"""Unit tests for the EU IVA rate table exposed by :mod:`cadrumo.domain.iva`.
 
 Covers the 27-state coverage invariant, the Spanish multi-tier expansion, the
-:func:`aeat.domain.iva.lookup_rate` happy and error paths, and the per-record
+:func:`cadrumo.domain.iva.lookup_rate` happy and error paths, and the per-record
 window well-orderedness invariant.
 """
 

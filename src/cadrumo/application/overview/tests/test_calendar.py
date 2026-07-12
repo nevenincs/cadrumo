@@ -297,7 +297,7 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
     expected_field: str,
     expected_error_type: str,
 ) -> None:
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.overview"):
         advisories = build_filing_obligation_advisories(profile_values)
 
     assert advisories == ()
@@ -854,7 +854,7 @@ def test_build_threads_shift_metadata_onto_every_entry() -> None:
 
     The contract: ``adjusted_closes_on`` is populated, ``shift_reason``
     is one of the closed set returned by
-    :func:`aeat.domain.deadlines.shift_deadline`, and the adjusted date
+    :func:`cadrumo.domain.deadlines.shift_deadline`, and the adjusted date
     never precedes the original close.
     """
     accepted_reasons = {

@@ -6,7 +6,7 @@ render its formula trace inline as ``op(refs) = op(values) = value`` - the
 review moment is the highest-value place for the trace, and it must be sourced
 from the already-computed engine entries on the revision rather than a second
 compute command path. ``--verbose`` additionally exposes the full per-casilla
-:class:`~aeat.domain.calculations.registry.CasillaObservation` (op, formula_id,
+:class:`~cadrumo.domain.calculations.registry.CasillaObservation` (op, formula_id,
 operand refs and operand values). Input / bound casillas without a formula keep
 rendering their value only.
 

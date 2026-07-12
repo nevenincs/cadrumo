@@ -4,7 +4,7 @@ Exercises the shareable-artefact surface (:func:`build_review_package`,
 :func:`verify_review_package`, :func:`assert_review_package_verifies`) end to
 end against a real filesystem and a real zip archive, mirroring the
 established corpus-bundle test pattern
-(``src/aeat/core/corpus_manifest/tests/test_bundle.py``): build a package,
+(``src/cadrumo/core/corpus_manifest/tests/test_bundle.py``): build a package,
 verify it clean, then corrupt/remove/add a member and confirm the verifier
 names the exact affected member in every case. No calculation tautologies are
 involved; these are structural/contract assertions on the checksum-manifest

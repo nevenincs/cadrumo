@@ -1,9 +1,9 @@
 """Unit tests for the model-capability tier system.
 
-Exercises :func:`aeat.domain.transactions._model_tier.resolve_profile`
+Exercises :func:`cadrumo.domain.transactions._model_tier.resolve_profile`
 against the per-provider catalogue, the :data:`MINIMUM_CLASSIFICATION_TIER`
 floor, and frozen-dataclass invariants on
-:class:`aeat.domain.transactions._model_tier.ModelProfile`.
+:class:`cadrumo.domain.transactions._model_tier.ModelProfile`.
 """
 
 from __future__ import annotations

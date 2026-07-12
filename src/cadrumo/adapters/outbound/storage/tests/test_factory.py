@@ -55,11 +55,11 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
                 import json
                 import sys
 
-                import aeat.adapters.outbound.storage._factory
+                import cadrumo.adapters.outbound.storage._factory
 
                 watched = (
-                    "aeat.adapters.outbound.storage._google_drive",
-                    "aeat.adapters.outbound.storage._local",
+                    "cadrumo.adapters.outbound.storage._google_drive",
+                    "cadrumo.adapters.outbound.storage._local",
                 )
                 print(json.dumps({name: name in sys.modules for name in watched}, sort_keys=True))
                 """
@@ -72,8 +72,8 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
 
     assert probe.returncode == 0, probe.stderr
     assert json.loads(probe.stdout) == {
-        "aeat.adapters.outbound.storage._google_drive": False,
-        "aeat.adapters.outbound.storage._local": False,
+        "cadrumo.adapters.outbound.storage._google_drive": False,
+        "cadrumo.adapters.outbound.storage._local": False,
     }
 
 

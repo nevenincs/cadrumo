@@ -541,7 +541,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
             )
 
             with (
-                caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.sql.secure_objects"),
+                caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.sql.secure_objects"),
                 pytest.raises(SecureObjectUnreadableError) as raised,
             ):
                 list(

@@ -225,6 +225,6 @@ def test_modelo_145_export_link_remains_local_communication_export() -> None:
     assert {layout.id for layout in revision.export_layouts} == {"modelo-145-dr-v20-fixed-width"}
     assert support_entry.has_fixed_width_export is True
     assert export_link.surface == "export"
-    assert export_link.consumer == "aeat.application.modelo"
+    assert export_link.consumer == "cadrumo.application.modelo"
     assert export_link.requires_snapshot is True
     assert export_link.source_refs == ("aeat-dr-145-v20",)

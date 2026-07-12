@@ -36,8 +36,8 @@ def _holder_script(bucket_dir: Path, hold_seconds: float, ready_path: Path) -> s
         import sys, time
         from pathlib import Path
         sys.path.insert(0, {str(Path(__file__).resolve().parents[5])!r})
-        from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
-        from aeat.adapters.persistence.storage.bucket._lockfile import (
+        from cadrumo.adapters.persistence.storage.bucket._layout import bucket_paths
+        from cadrumo.adapters.persistence.storage.bucket._lockfile import (
             acquire_lock,
             release_lock,
         )
@@ -176,7 +176,7 @@ def test_malformed_lockfile_pid_is_reclaimed_with_debug_log(
     target = lock_path(paths)
     target.write_text("not-a-pid\n", encoding=UTF_8_ENCODING)
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.bucket._lockfile"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.bucket._lockfile"):
         acquire_lock(paths)
     try:
         assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == os.getpid()
@@ -194,7 +194,7 @@ def test_release_is_idempotent_when_lock_absent(
 ) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.bucket._lockfile"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.bucket._lockfile"):
         release_lock(paths)  # No-op; must not raise.
 
     assert "bucket lockfile release skipped missing lockfile" in caplog.text

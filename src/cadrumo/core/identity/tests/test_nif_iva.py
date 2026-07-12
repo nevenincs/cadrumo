@@ -1,6 +1,6 @@
 """Tests for the EU NIF-IVA per-country format authority.
 
-Exercises the central :data:`aeat.core.identity.NIF_IVA_FORMATS` table and its
+Exercises the central :data:`cadrumo.core.identity.NIF_IVA_FORMATS` table and its
 resolution helpers: every Member State accepts a well-formed VAT number and
 rejects a structurally malformed one, the Greek ISO/VAT prefix mismatch
 (``GR`` -> ``EL``) resolves correctly, and non-EU / Spanish codes carry no

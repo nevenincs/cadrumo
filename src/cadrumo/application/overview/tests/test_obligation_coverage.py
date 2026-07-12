@@ -5,7 +5,7 @@ obligation reaches the default calendar only when it has BOTH a deadline window
 AND a positive applicability verdict; a modelo failing either was historically
 dropped without a trace, so an operator would under-file. These tests pin the
 invariant that closes that gap: every
-:func:`~aeat.application.modelo.registry_modelo_codes` code is partitioned into
+:func:`~cadrumo.application.modelo.registry_modelo_codes` code is partitioned into
 exactly one disposition — surfaced, confidently excluded, advised (investigate),
 or explicitly out of scope — so nothing can vanish silently.
 

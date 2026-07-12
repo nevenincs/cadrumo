@@ -7,7 +7,7 @@ the hook uses (``_env_loader``), repo-meta tests (release config,
 ``fixtures/`` tree consumed by colocated tests across the package.
 
 Colocated unit tests live next to the modules they exercise (rust-style
-``src/aeat/<subpkg>/test_*.py``); only repo-meta and fixture-bearing
+``src/cadrumo/<subpkg>/test_*.py``); only repo-meta and fixture-bearing
 content lives here. The shared source-inventory helpers
 (:func:`ast_for_path`, :func:`package_python_files`, and friends) and the
 committed-justificante parse cache are re-exported here as the canonical
@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 from ._env import temporary_env
 from ._inventory import (
     REPO_ROOT,
-    SRC_AEAT,
+    SRC_CADRUMO,
     aeat_relative,
     ast_for_path,
     discover_test_control_modules,
@@ -49,7 +49,7 @@ FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
 __all__ = [
     "FIXTURES_DIR",
     "REPO_ROOT",
-    "SRC_AEAT",
+    "SRC_CADRUMO",
     "aeat_relative",
     "ast_for_path",
     "discover_test_control_modules",
@@ -75,14 +75,14 @@ def __getattr__(name: str) -> object:
 
     Deferred (not a module-level import) so that reaching any OTHER name on
     this facade -- the pure, domain-free AST/path inventory helpers most
-    consumers want -- never drags ``aeat.adapters.inbound.justificante`` /
-    ``aeat.domain.justificante`` into a ``aeat.core`` test's import graph.
+    consumers want -- never drags ``cadrumo.adapters.inbound.justificante`` /
+    ``cadrumo.domain.justificante`` into a ``cadrumo.core`` test's import graph.
     Mirrors the PEP 562 pattern :mod:`application.user_profile` already uses
     for the same reason.
     """
     if name == "parse_committed_justificante_fixture":
         import importlib
 
-        module = importlib.import_module("aeat.tests._justificante_parse_cache")
+        module = importlib.import_module("cadrumo.tests._justificante_parse_cache")
         return module.parse_committed_justificante_fixture
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

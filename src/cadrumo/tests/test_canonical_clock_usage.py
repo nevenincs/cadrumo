@@ -1,6 +1,6 @@
 """Production modules must obtain UTC time via :func:`~core.time.now`.
 
-No production module under ``src/aeat/`` may call ``datetime.now(UTC)``
+No production module under ``src/cadrumo/`` may call ``datetime.now(UTC)``
 or ``datetime.now(tz=UTC)`` inline. All call-sites delegate to the public
 :mod:`~core.time` clock facade so the production clock is uniform, traceable,
 and compatible with :func:`~core.time.frozen_clock` replay.
@@ -26,11 +26,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, leaf_name, production_ast_items, repo_relative
+from ._inventory import SRC_CADRUMO, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = SRC_AEAT
+_SRC_ROOT = SRC_CADRUMO
 _CLOCK_MODULE = _SRC_ROOT / "core" / "time" / "_clock.py"
 _TEST_INFRA_MODULES: frozenset[Path] = frozenset(
     {
@@ -124,7 +124,7 @@ def test_no_inline_datetime_now_utc(source_tree_ast: Mapping[Path, ast.AST]) -> 
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} inline datetime.now(UTC) call(s) outside the canonical clock module:\n  {joined}\n\n"
-            "Replace each call with now() from aeat.core.time. The only permitted\n"
+            "Replace each call with now() from cadrumo.core.time. The only permitted\n"
             "inline pattern is the documented escape hatch:\n"
             "    timestamp = now if now is not None else datetime.now(UTC)\n"
             "on signatures that already accept an injectable ``now`` argument.",

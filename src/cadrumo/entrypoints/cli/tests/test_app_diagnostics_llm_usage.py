@@ -1,10 +1,10 @@
 """Real-behavior CLI tests for ``aeat app diagnostics llm-usage``.
 
 Exercises the verb end to end against the real CLI, the real
-:func:`~aeat.application.diagnostics_run_health.build_llm_usage_report`
+:func:`~cadrumo.application.diagnostics_run_health.build_llm_usage_report`
 aggregator, and real encrypted SQLite persistence in an isolated storage
 root. No test doubles: LLM run telemetry is seeded through its production
-writer (:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the
+writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the
 verb reports the run-count/duration/success-rate summary back typed, grouped
 by provider and, within each provider, by model.
 """
@@ -73,7 +73,7 @@ def _seed_runs() -> None:
         recorder.record(
             LLMRunRecord(
                 run_id=run_id,
-                caller="aeat.application.ledger.llm_classification",
+                caller="cadrumo.application.ledger.llm_classification",
                 provider=provider,
                 model=model,
                 duration_ms=duration_ms,

@@ -1,7 +1,7 @@
 """Unit tests for the LIRPF art. 23.1.f amortización 3 % ledger.
 
-Exercises :func:`aeat.domain.fincas.compute_amortization_for_year` and
-:func:`aeat.domain.fincas.computation_to_ledger_entry` across single-
+Exercises :func:`cadrumo.domain.fincas.compute_amortization_for_year` and
+:func:`cadrumo.domain.fincas.computation_to_ledger_entry` across single-
 year accruals, multi-year cumulative threading, partial / full clamp
 at the cost-basis cap, and the strict-mode overflow path.
 """

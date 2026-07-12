@@ -68,7 +68,7 @@ def test_create_m145_communication_record_persists_bucket_scoped_registry_record
     assert isinstance(record, M145CommunicationRecord)
     assert record.bucket_id == runtime.bucket_id
     assert record.modelo == "145"
-    assert record.service_owner == "aeat.application.modelo"
+    assert record.service_owner == "cadrumo.application.modelo"
     assert record.communication_year == 2026
     assert record.period_token is M145CommunicationPeriod.COMMUNICATION
     assert record.revision_id == "2012-01-31-y-siguientes"

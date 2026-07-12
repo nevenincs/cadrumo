@@ -12,7 +12,7 @@ import pytest
 from .....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
 from .....locales.manager import LocaleManager
 from .....tests import (
-    SRC_AEAT,
+    SRC_CADRUMO,
     ast_for_path,
     leaf_name,
     package_ast_items,
@@ -25,53 +25,53 @@ from ..errors import SecureStorageError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _HARDENING_TEST_SURFACES = (
-    "src/aeat/adapters/persistence/storage/blob_store/tests/test_materialisation.py",
-    "src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py",
-    "src/aeat/adapters/persistence/storage/tests/test_runtime.py",
-    "src/aeat/adapters/persistence/storage/master_key/tests/test_kdf_params.py",
-    "src/aeat/application/user_profile/tests/test_profile_repository.py",
-    "src/aeat/core/tests/test_storage_route_classification.py",
-    "src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py",
+    "src/cadrumo/adapters/persistence/storage/blob_store/tests/test_materialisation.py",
+    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py",
+    "src/cadrumo/adapters/persistence/storage/tests/test_runtime.py",
+    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_kdf_params.py",
+    "src/cadrumo/application/user_profile/tests/test_profile_repository.py",
+    "src/cadrumo/core/tests/test_storage_route_classification.py",
+    "src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py",
 )
 
 _ALLOWED_ENV_KEYS_BY_SURFACE: dict[str, set[str]] = {}
 _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
-    "src/aeat/adapters/persistence/storage/runtime.py",
-    "src/aeat/adapters/persistence/storage/runtime_repository.py",
+    "src/cadrumo/adapters/persistence/storage/runtime.py",
+    "src/cadrumo/adapters/persistence/storage/runtime_repository.py",
 }
 _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
-    "src/aeat/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py",
-    "src/aeat/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
-    "src/aeat/adapters/persistence/storage/envelope/_repository_test_suite.py",
-    "src/aeat/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_apply_batch.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_constraints.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_engine.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_repository.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_secure_objects_schema_lineage.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/_secure_objects_support.py",
-    "src/aeat/adapters/persistence/storage/sql/tests/test_session.py",
-    "src/aeat/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py",
-    "src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py",
-    "src/aeat/adapters/persistence/storage/tests/test_runtime.py",
-    "src/aeat/application/tests/test_diagnostics.py",
-    "src/aeat/application/modelo/tests/test_export_iva_wallet.py",
-    "src/aeat/application/tests/test_repair_integrity.py",
-    "src/aeat/application/tests/test_state_projection.py",
-    "src/aeat/application/tests/test_storage_write_policy.py",
-    "src/aeat/application/user_profile/tests/test_repository.py",
-    "src/aeat/application/workflow/tests/test_runtime_defaults.py",
-    "src/aeat/core/tests/test_storage_route_classification.py",
-    "src/aeat/entrypoints/cli/tests/test_cold_start_no_profile.py",
-    "src/aeat/entrypoints/cli/tests/test_repair_bootstrap_exempt.py",
-    "src/aeat/entrypoints/cli/tests/test_root_fallback_write_guard.py",
-    "src/aeat/tests/secure_sql.py",
-    "src/aeat/tests/test_config.py",
-    "src/aeat/tests/test_secure_sql.py",
+    "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py",
+    "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
+    "src/cadrumo/adapters/persistence/storage/envelope/_repository_test_suite.py",
+    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_apply_batch.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_constraints.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_engine.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_repository.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_schema_lineage.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py",
+    "src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py",
+    "src/cadrumo/adapters/persistence/storage/tests/test_hardening_convention_guards.py",
+    "src/cadrumo/adapters/persistence/storage/tests/test_runtime.py",
+    "src/cadrumo/application/tests/test_diagnostics.py",
+    "src/cadrumo/application/modelo/tests/test_export_iva_wallet.py",
+    "src/cadrumo/application/tests/test_repair_integrity.py",
+    "src/cadrumo/application/tests/test_state_projection.py",
+    "src/cadrumo/application/tests/test_storage_write_policy.py",
+    "src/cadrumo/application/user_profile/tests/test_repository.py",
+    "src/cadrumo/application/workflow/tests/test_runtime_defaults.py",
+    "src/cadrumo/core/tests/test_storage_route_classification.py",
+    "src/cadrumo/entrypoints/cli/tests/test_cold_start_no_profile.py",
+    "src/cadrumo/entrypoints/cli/tests/test_repair_bootstrap_exempt.py",
+    "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py",
+    "src/cadrumo/tests/secure_sql.py",
+    "src/cadrumo/tests/test_config.py",
+    "src/cadrumo/tests/test_secure_sql.py",
 }
 
 
@@ -103,7 +103,7 @@ def hardening_inventory() -> _HardeningInventory:
 
 
 def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
-    path = repo_path("src/aeat/adapters/persistence/storage/master_key/_bucket_session.py")
+    path = repo_path("src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py")
     function = _function_named(path, "_dispose_engine")
     segment = _source_segment(path, function)
 
@@ -115,8 +115,8 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers()
 
 
 def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> None:
-    runtime_path = repo_path("src/aeat/adapters/persistence/storage/runtime.py")
-    route_path = repo_path("src/aeat/core/_config_storage_route.py")
+    runtime_path = repo_path("src/cadrumo/adapters/persistence/storage/runtime.py")
+    route_path = repo_path("src/cadrumo/core/_config_storage_route.py")
 
     runtime_text = runtime_path.read_text(encoding="utf-8")
     assert "__pydantic_fields_set__" not in runtime_text
@@ -129,7 +129,7 @@ def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> N
 
 
 def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() -> None:
-    path = repo_path("src/aeat/application/user_profile/_profile_repository.py")
+    path = repo_path("src/cadrumo/application/user_profile/_profile_repository.py")
     function = _function_named(path, "_default_kdf_params")
     calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
 
@@ -269,9 +269,9 @@ def _secure_object_repository_module_aliases(tree: ast.AST) -> set[str]:
                 )
             )
         if isinstance(node, ast.ImportFrom) and node.module in {
-            "aeat.adapters.persistence.storage",
-            "aeat.adapters.persistence.storage.sql",
-            "aeat.adapters.persistence.storage.sql.secure_objects",
+            "cadrumo.adapters.persistence.storage",
+            "cadrumo.adapters.persistence.storage.sql",
+            "cadrumo.adapters.persistence.storage.sql.secure_objects",
         }:
             aliases.update(
                 alias.asname or alias.name for alias in node.names if alias.name in {"sql", "secure_objects"}
@@ -511,9 +511,9 @@ def _is_environ_target(node: ast.expr, os_aliases: set[str], environ_aliases: se
 
 def _import_secure_storage_error_modules() -> None:
     for module_name in (
-        "aeat.adapters.persistence.storage.bucket._errors",
-        "aeat.adapters.persistence.storage.errors",
-        "aeat.adapters.persistence.storage.master_key._active_session",
+        "cadrumo.adapters.persistence.storage.bucket._errors",
+        "cadrumo.adapters.persistence.storage.errors",
+        "cadrumo.adapters.persistence.storage.master_key._active_session",
     ):
         importlib.import_module(module_name)
 
@@ -527,8 +527,8 @@ def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
 
 
 def _locale_key_map() -> dict[str, set[str]]:
-    locales_dir = SRC_AEAT / "locales"
-    manager = LocaleManager(SRC_AEAT, locales_dir)
+    locales_dir = SRC_CADRUMO / "locales"
+    manager = LocaleManager(SRC_CADRUMO, locales_dir)
     return {
         locale_path.name: manager.get_yaml_keys(manager.load_locale(locale_path))
         for locale_path in sorted(locales_dir.glob("*.yml"))

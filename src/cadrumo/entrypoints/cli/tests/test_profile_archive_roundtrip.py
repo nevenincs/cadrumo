@@ -1,9 +1,9 @@
 """Real-CLI roundtrip for the sealed bucket-archive backup/restore surface.
 
 ``config profile archive export`` / ``import`` / ``inspect`` compose
-:class:`~aeat.application.bucket_maintenance.BucketMaintenanceService` (the
+:class:`~cadrumo.application.bucket_maintenance.BucketMaintenanceService` (the
 same primitive the roundtrip and anti-tautology tests in
-:mod:`aeat.application.bucket_maintenance.tests.test_service_import_export`
+:mod:`cadrumo.application.bucket_maintenance.tests.test_service_import_export`
 exercise). This module proves the CLI wiring itself: a real operator
 invocation exports a sealed, AEAD-encrypted archive, ``inspect`` reads its
 header without decrypting it, and ``import`` restores it into a fresh

@@ -1,5 +1,5 @@
-"""Unit tests for :class:`aeat.domain.usage_ratios.UsageRatioProfile` and the
-:func:`aeat.domain.usage_ratios.resolve_user_ratio` helper.
+"""Unit tests for :class:`cadrumo.domain.usage_ratios.UsageRatioProfile` and the
+:func:`cadrumo.domain.usage_ratios.resolve_user_ratio` helper.
 
 Covers strict bound checks, eligibility enforcement, frozen-attribute
 semantics, the non-mutating builder methods, and the canonical key ordering
@@ -133,9 +133,9 @@ def test_consumer_fallback_pattern_documentation() -> None:
 
     This is a documentation test, not a regression guard for shipped code.
     It pins the pattern the deductibility-compute service in
-    :mod:`aeat.domain.deductibility` is expected to use: prefer
+    :mod:`cadrumo.domain.deductibility` is expected to use: prefer
     :func:`resolve_user_ratio` and fall back to the statutory
-    :attr:`aeat.domain.categories.ProportionalityRule.default_ratio` when the
+    :attr:`cadrumo.domain.categories.ProportionalityRule.default_ratio` when the
     profile carries no override. When that service ships, its own tests
     become authoritative and this one can be retired.
     """

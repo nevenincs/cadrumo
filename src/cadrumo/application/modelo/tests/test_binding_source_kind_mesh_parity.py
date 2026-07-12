@@ -2,7 +2,7 @@
 
 This is the application-layer half of the source-kind taxonomy parity gate. The
 domain-layer half (``test_binding_source_kind_taxonomy.py``) binds
-:class:`aeat.core.BindingSourceKind` to the compiled registry; this half binds the
+:class:`cadrumo.core.BindingSourceKind` to the compiled registry; this half binds the
 same enum to the **application resolver mesh** — the owned/deferred source sets and
 the novel-source boundary gate that drive live calculation.
 

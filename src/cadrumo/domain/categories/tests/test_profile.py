@@ -1,4 +1,4 @@
-"""Unit tests for :class:`~aeat.domain.categories.CategoryProfile` validation.
+"""Unit tests for :class:`~cadrumo.domain.categories.CategoryProfile` validation.
 
 Exercises the profile-level invariants: authoritative Spanish label
 required on the display label and proportionality citations. The factory

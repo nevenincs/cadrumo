@@ -574,7 +574,7 @@ def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
 
 
 def test_no_parallel_prorrata_implementation_exists() -> None:
-    """Only ``aeat.domain.iva._prorrata`` owns prorrata semantics.
+    """Only ``cadrumo.domain.iva._prorrata`` owns prorrata semantics.
 
     Walk the source tree and assert that ``compute_prorrata_general``,
     ``classify_input_deduction``, ``is_especial_mandatory``, and
@@ -587,7 +587,7 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
     from pathlib import Path
 
     repo_root = Path(__file__).resolve().parents[4]
-    source_root = repo_root / "src" / "aeat"
+    source_root = repo_root / "src" / "cadrumo"
     canonical_module = source_root / "domain" / "iva" / "_prorrata.py"
 
     canonical_symbols = (
@@ -606,12 +606,12 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
             assert f"def {symbol}" not in text, (
                 f"shadow prorrata implementation detected: "
                 f"{py_file} defines `def {symbol}`; the canonical "
-                f"owner is `aeat.domain.iva._prorrata`."
+                f"owner is `cadrumo.domain.iva._prorrata`."
             )
 
 
 def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
-    """``domain.usage_ratios`` and ``aeat.domain.iva._prorrata`` are
+    """``domain.usage_ratios`` and ``cadrumo.domain.iva._prorrata`` are
     distinct concepts. No module may translate usage-ratios values into
     prorrata percentages: usage-ratios is the proportional-expense
     allocation surface (LIRPF deductibility), prorrata is the LIVA
@@ -622,13 +622,13 @@ def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
     from pathlib import Path
 
     repo_root = Path(__file__).resolve().parents[4]
-    source_root = repo_root / "src" / "aeat"
+    source_root = repo_root / "src" / "cadrumo"
 
     forbidden_patterns = (
         # An import that pulls both modules together is a structural
         # signal that the importer is about to bridge them.
-        ("from aeat.domain.usage_ratios", "ProrrataInputs"),
-        ("from aeat.domain.usage_ratios", "ProrrataResult"),
+        ("from cadrumo.domain.usage_ratios", "ProrrataInputs"),
+        ("from cadrumo.domain.usage_ratios", "ProrrataResult"),
         ("from ...domain.usage_ratios", "ProrrataInputs"),
         ("from ...domain.usage_ratios", "ProrrataResult"),
         ("from ..usage_ratios", "ProrrataInputs"),
@@ -665,7 +665,7 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
     from pathlib import Path
 
     repo_root = Path(__file__).resolve().parents[4]
-    cli_root = repo_root / "src" / "aeat" / "entrypoints" / "cli"
+    cli_root = repo_root / "src" / "cadrumo" / "entrypoints" / "cli"
 
     forbidden_command_decorations = (
         '@app.command("prorrata"',

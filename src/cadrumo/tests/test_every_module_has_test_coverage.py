@@ -1,7 +1,7 @@
 """Audit gate: every production module is reachable from a test.
 
 Walks the static import graph rooted at every `test_*.py` /
-`conftest.py` under `src/aeat/`, resolves relative imports to absolute
+`conftest.py` under `src/cadrumo/`, resolves relative imports to absolute
 `aeat.*` dotted paths, and computes the transitive closure of
 production modules reachable from any test. A production module is
 considered covered if it sits inside that closure — either directly
@@ -38,11 +38,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, ast_for_path, module_name, package_python_files, repo_relative
+from ._inventory import SRC_CADRUMO, ast_for_path, module_name, package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = SRC_AEAT
+_SRC_ROOT = SRC_CADRUMO
 
 # Modules exempted from the pairing requirement.  Each entry is a
 # POSIX path relative to PROJECT_ROOT.  Add a one-line justification
@@ -53,43 +53,43 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # Fixtures / conftest modules are test-support infrastructure.
         # _playwright.py requires a running browser; browser integration tests
         # live in a separate live-test suite.
-        "src/aeat/adapters/outbound/aeat/_playwright.py",
+        "src/cadrumo/adapters/outbound/aeat/_playwright.py",
         # Locale scaffold tooling; exercised via CLI integration tests.
-        "src/aeat/locales/scaffold.py",
+        "src/cadrumo/locales/scaffold.py",
         # Typer subcommand modules registered via _lazy(...) in
         # entrypoints/cli/__init__.py (importlib.import_module on a
         # string arg); the AST walker cannot follow dynamic dispatch.
         # Each is exercised end-to-end via the CLI surface tests under
         # entrypoints/cli/test_*.py that invoke `aeat app <verb> ...`.
-        "src/aeat/entrypoints/cli/_exit_codes.py",
-        "src/aeat/entrypoints/cli/_registry_corpus.py",
-        "src/aeat/entrypoints/cli/_review.py",
-        "src/aeat/entrypoints/cli/registry.py",
+        "src/cadrumo/entrypoints/cli/_exit_codes.py",
+        "src/cadrumo/entrypoints/cli/_registry_corpus.py",
+        "src/cadrumo/entrypoints/cli/_review.py",
+        "src/cadrumo/entrypoints/cli/registry.py",
         # aeat app quickfile / aeat app agent: same _lazy(...) dispatch as
         # above; each has a dedicated entrypoints/cli/tests/test_app_*.py
         # driving the real CLI end-to-end, and its payload module is only
         # reachable through that same dynamically-dispatched command module.
-        "src/aeat/entrypoints/cli/_app_quickfile.py",
-        "src/aeat/entrypoints/cli/_app_quickfile_payloads.py",
-        "src/aeat/entrypoints/cli/_app_agent_workspace.py",
-        "src/aeat/entrypoints/cli/_app_agent_workspace_payloads.py",
+        "src/cadrumo/entrypoints/cli/_app_quickfile.py",
+        "src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py",
+        "src/cadrumo/entrypoints/cli/_app_agent_workspace.py",
+        "src/cadrumo/entrypoints/cli/_app_agent_workspace_payloads.py",
         # Registry payload modules are imported by CLI/schema registration
         # paths that are exercised by docs-tool conformance gates outside the
         # production package. They must not be pulled into coverage only by a
         # production-embedded documentation generator.
-        "src/aeat/entrypoints/cli/_registry_corpus_payloads.py",
-        "src/aeat/entrypoints/cli/_registry_payloads.py",
+        "src/cadrumo/entrypoints/cli/_registry_corpus_payloads.py",
+        "src/cadrumo/entrypoints/cli/_registry_payloads.py",
         # `python -m` entry point; not pytest-importable surface.
         # locales/__main__ dispatches into locales/scaffold.py.
-        "src/aeat/locales/__main__.py",
+        "src/cadrumo/locales/__main__.py",
         # aeat app diagnostics: same _lazy(...) dispatch as the CLI verb
         # modules above; only reachable via the dynamically-dispatched
         # `_app_diagnostics` command module. Each is exercised end-to-end via
         # the dedicated entrypoints/cli/tests/test_app_diagnostics_*.py suite
         # driving the real CLI (invoke_cached_cli), not by direct import.
-        "src/aeat/entrypoints/cli/_app_diagnostics.py",
-        "src/aeat/entrypoints/cli/_app_diagnostics_telemetry.py",
-        "src/aeat/entrypoints/cli/_diagnostics_payloads.py",
+        "src/cadrumo/entrypoints/cli/_app_diagnostics.py",
+        "src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py",
+        "src/cadrumo/entrypoints/cli/_diagnostics_payloads.py",
     },
 )
 
@@ -114,7 +114,7 @@ def _is_exempt(rel: str) -> bool:
 
 
 def _collect_production_modules() -> list[Path]:
-    """Return every non-test, non-exempt Python module under src/aeat/."""
+    """Return every non-test, non-exempt Python module under src/cadrumo/."""
     return [
         p
         for p in package_python_files(include_data=True)
@@ -127,7 +127,7 @@ def _collect_production_modules() -> list[Path]:
 # ---------------------------------------------------------------------------
 
 
-_AEAT_PACKAGE = "aeat"
+_CADRUMO_PACKAGE = "aeat"
 
 
 def _module_path_for_dotted(dotted: str) -> Path | None:
@@ -138,7 +138,7 @@ def _module_path_for_dotted(dotted: str) -> Path | None:
     (e.g. ``from .foo import bar`` where ``bar`` is a re-exported name
     in ``foo``'s namespace and not a submodule).
     """
-    if not dotted.startswith(_AEAT_PACKAGE):
+    if not dotted.startswith(_CADRUMO_PACKAGE):
         return None
     parts = dotted.split(".")
     base = _SRC_ROOT.parent  # src/
@@ -152,7 +152,7 @@ def _module_path_for_dotted(dotted: str) -> Path | None:
 
 
 def _file_to_dotted(file_path: Path) -> str:
-    """Convert a file under ``src/aeat/`` to its dotted module name."""
+    """Convert a file under ``src/cadrumo/`` to its dotted module name."""
     return module_name(file_path)
 
 
@@ -160,7 +160,7 @@ def _resolve_relative(current_dotted: str, level: int, module: str | None) -> st
     """Resolve a relative-import target to an absolute dotted name.
 
     ``current_dotted`` is the dotted name of the file containing the
-    ``from ... import`` statement (e.g. ``aeat.domain.portals._registry``).
+    ``from ... import`` statement (e.g. ``cadrumo.domain.portals._registry``).
     ``level`` is the number of leading dots in the relative import.
     ``module`` is the module name after the dots, or ``None`` for
     ``from . import x``.
@@ -169,10 +169,10 @@ def _resolve_relative(current_dotted: str, level: int, module: str | None) -> st
         return module
     parts = current_dotted.split(".")
     # __init__-style files are represented without the trailing __init__,
-    # so the file at aeat.domain.portals (init) treats `.foo` as
-    # aeat.domain.portals.foo. A submodule file like
-    # aeat.domain.portals._registry treats `.foo` as
-    # aeat.domain.portals.foo (level=1 strips _registry).
+    # so the file at cadrumo.domain.portals (init) treats `.foo` as
+    # cadrumo.domain.portals.foo. A submodule file like
+    # cadrumo.domain.portals._registry treats `.foo` as
+    # cadrumo.domain.portals.foo (level=1 strips _registry).
     init_path = _SRC_ROOT.parent.joinpath(*parts, "__init__.py")
     is_init = init_path.is_file()
     if is_init:
@@ -188,7 +188,7 @@ def _resolve_relative(current_dotted: str, level: int, module: str | None) -> st
     return ".".join(ancestor)
 
 
-def _aeat_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[str]:
+def _cadrumo_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[str]:
     """Return absolute ``aeat.*`` dotted names imported by ``file_path``.
 
     For ``from X import Y, Z`` the returned set includes ``X``, ``X.Y``,
@@ -204,11 +204,11 @@ def _aeat_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name.startswith(_AEAT_PACKAGE):
+                if alias.name.startswith(_CADRUMO_PACKAGE):
                     found.add(alias.name)
         elif isinstance(node, ast.ImportFrom):
             base = _resolve_relative(current_dotted, node.level, node.module)
-            if base is None or not base.startswith(_AEAT_PACKAGE):
+            if base is None or not base.startswith(_CADRUMO_PACKAGE):
                 continue
             found.add(base)
             for alias in node.names:
@@ -219,7 +219,7 @@ def _aeat_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | 
 
 
 def _collect_test_entrypoints() -> list[Path]:
-    """Return every ``test_*.py`` and ``conftest.py`` under ``src/aeat/``."""
+    """Return every ``test_*.py`` and ``conftest.py`` under ``src/cadrumo/``."""
     return [
         p
         for p in package_python_files(include_data=True)
@@ -239,7 +239,7 @@ def _transitively_reachable_from_tests(source_tree_ast: Mapping[Path, ast.AST] |
     queue: deque[Path] = deque(_collect_test_entrypoints())
     while queue:
         current = queue.popleft()
-        for dotted in _aeat_imports_in(current, source_tree_ast):
+        for dotted in _cadrumo_imports_in(current, source_tree_ast):
             target = _module_path_for_dotted(dotted)
             if target is None or target in seen:
                 continue
@@ -280,7 +280,7 @@ def test_import_graph_helper_recognises_aggregator_pattern() -> None:
     assert portal_modules, "expected portal_*.py entries to exist"
     reached = [p for p in portal_modules if p in reachable]
     assert reached, (
-        "import-graph helper failed to reach any portal entry via aeat.domain.portals._registry aggregator imports"
+        "import-graph helper failed to reach any portal entry via cadrumo.domain.portals._registry aggregator imports"
     )
 
 
@@ -294,7 +294,7 @@ def test_import_graph_helper_skips_orphan_modules() -> None:
 def test_every_production_module_is_reachable_from_a_test() -> None:
     """Canonical coverage gate. No allowlist.
 
-    Every production module under ``src/aeat/`` (minus the narrow
+    Every production module under ``src/cadrumo/`` (minus the narrow
     ``_EXEMPTIONS`` set) must be statically reachable from at least
     one ``test_*.py`` / ``conftest.py`` entrypoint through the import
     graph. Reachable means the AST walker rooted at any test file

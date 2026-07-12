@@ -7,15 +7,15 @@ to an operator who cannot tell it apart from a real one.
 
 This module dispatches a REAL ``modelo.work.calculate`` for M130 through the
 actual CLI command handling (the identical transport
-:func:`aeat.entrypoints.mcp._dispatch.tool_request_argv` projects the
+:func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects the
 ``aeat_modelo_work_calculate`` MCP tool call onto, mirroring
 ``test_response_provenance_golden.py``'s category-3 dispatch), seeds the exact
 AEAT DR 130 Instrucciones worked-example inputs (ingresos 12.000, gastos 4.000)
 so casilla 07 resolves to the same 1.600,00 EUR oracle figure
 ``test_modelo_130_value_oracle.py`` grounds, runs the real
-``aeat.entrypoints.mcp._faithfulness.faithfulness_check`` against real narration
+``cadrumo.entrypoints.mcp._faithfulness.faithfulness_check`` against real narration
 text and the captured calculate JSON, and feeds the verdict into
-:func:`aeat.agent.eval.run_golden_scenario` via its
+:func:`cadrumo.agent.eval.run_golden_scenario` via its
 ``narration_faithfulness_checks`` parameter so the pass/fail composition itself
 proves the two-part posture: advisory off the handoff path, hard block on it.
 

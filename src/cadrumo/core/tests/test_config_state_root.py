@@ -1,10 +1,10 @@
 """Tests for the installed-vs-checkout storage state-root resolution.
 
-The :mod:`aeat.core._config_state_root` seam decides where
-:attr:`~aeat.core.config.Settings.aeat_local_storage_root` defaults: a source
+The :mod:`cadrumo.core._config_state_root` seam decides where
+:attr:`~cadrumo.core.config.Settings.aeat_local_storage_root` defaults: a source
 checkout keeps ``PROJECT_ROOT / "var" / "storage"`` while an installed
 distribution roots under the platform user-data directory. These tests exercise
-the real resolver and the real :class:`~aeat.core.config.Settings` validator
+the real resolver and the real :class:`~cadrumo.core.config.Settings` validator
 chain — no mocks, no monkeypatching of the unit under test. The
 ``StateRootInputs`` seam injects an ``installed`` or ``checkout`` context
 deterministically, and env-provided base directories use the host-absolute

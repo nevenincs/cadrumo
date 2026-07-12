@@ -1,9 +1,9 @@
-"""End-to-end redaction tests for :class:`aeat.core.observability._sink.JsonlRunSink`.
+"""End-to-end redaction tests for :class:`cadrumo.core.observability._sink.JsonlRunSink`.
 
-The sink writes :class:`aeat.core.observability.RunEvent` records that
+The sink writes :class:`cadrumo.core.observability.RunEvent` records that
 may carry casilla form-fill values, AEAT navigation URLs, and free-form
 error messages. The emit path runs every record through
-:func:`aeat.adapters.persistence.storage.redact_structured` against the
+:func:`cadrumo.adapters.persistence.storage.redact_structured` against the
 DIAGNOSTIC-class default rule set so the JSONL never carries a
 plaintext NIF / token / URL path even if a caller forgets to scrub
 upstream.

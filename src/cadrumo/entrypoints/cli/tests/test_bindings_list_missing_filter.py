@@ -13,7 +13,7 @@ PROPER subset of Modelo 100's formula-consumed ``source = "profile"``
 bindings, ``--missing`` must return STRICTLY FEWER rows than the
 unfiltered listing, and the rows it removes must be EXACTLY the
 profile-resolved binding ids — no more, no fewer. No mocks: a real
-:class:`~aeat.domain.user_profile.UserProfileRecord` is persisted to a
+:class:`~cadrumo.domain.user_profile.UserProfileRecord` is persisted to a
 real bucket and the real registry authority resolves the bindings.
 """
 

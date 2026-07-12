@@ -1,7 +1,7 @@
 """Unit tests for the LIRPF Art. 85 imputación-regime discriminator.
 
-Pins :attr:`aeat.domain.fincas.Finca.imputed_under_art_85` against
-every :class:`aeat.domain.fincas.UseType` member, anchoring the
+Pins :attr:`cadrumo.domain.fincas.Finca.imputed_under_art_85` against
+every :class:`cadrumo.domain.fincas.UseType` member, anchoring the
 regime-mapping invariant declared in the docstrings of
 :class:`Finca` and :class:`UseType`.
 """

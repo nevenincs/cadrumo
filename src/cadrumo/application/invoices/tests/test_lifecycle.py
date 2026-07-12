@@ -3,7 +3,7 @@
 The reconciliation catalogue gained ``create`` and ``list`` verbs but no way
 to inspect or delete a single record. :func:`resolve_catalogue_invoice` (and
 its repository-loading sibling) resolve a full id or an unambiguous prefix to
-one :class:`~aeat.domain.invoices.Invoice`; :func:`remove_catalogue_invoice`
+one :class:`~cadrumo.domain.invoices.Invoice`; :func:`remove_catalogue_invoice`
 deletes one record, refusing an invoice that still carries
 ``linked_transaction_ids`` so the bidirectional link recorded on the
 transaction side is never silently orphaned. These tests exercise the services

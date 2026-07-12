@@ -56,7 +56,7 @@ def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> 
     record_today = _record(
         today,
         run_id="run-today",
-        caller="aeat.application.ledger.llm_classification",
+        caller="cadrumo.application.ledger.llm_classification",
         provider="claude",
         duration_ms=4200,
         succeeded=True,
@@ -64,7 +64,7 @@ def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> 
     record_yesterday = _record(
         yesterday,
         run_id="run-yesterday",
-        caller="aeat.application.ledger.llm_classification",
+        caller="cadrumo.application.ledger.llm_classification",
         provider="codex",
         duration_ms=118000,
         succeeded=False,

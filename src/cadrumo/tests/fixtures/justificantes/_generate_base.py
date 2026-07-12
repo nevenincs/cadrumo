@@ -2,14 +2,14 @@
 
 This script produces deterministic synthetic *justificantes de presentacion*
 for Modelo 130, Modelo 303, Modelo 100, and Modelo 840 under
-``src/aeat/tests/fixtures/justificantes/``. The PDFs are hand-modelled on the public
+``src/cadrumo/tests/fixtures/justificantes/``. The PDFs are hand-modelled on the public
 AEAT receipt layout (header, modelo/periodo/ejercicio block, NIF, CSV, URL,
 totals) but every identifier is fictitious â€” the fixtures contain no real
 taxpayer data.
 
 The M840 fixture reproduces the Apartado II label layout from the AEAT-published
 printed form at:
-  src/aeat/_data/corpus/aeat_official/forms/modelo_840/files/
+  src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/
     01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
 pdfplumber extracts the label lines as "14Ejercicio: <value>" and
 "15Declaracion de: <value>" â€” the fixture uses the same casilla-number-prefixed
@@ -17,7 +17,7 @@ format so the named_label parser can locate and extract the values.
 
 The PDFs are **committed** to the repo. This script exists as a reference so
 they can be regenerated deterministically; it is not executed by the test
-suite. Run manually with ``uv run python src/aeat/tests/fixtures/justificantes/_generate.py``.
+suite. Run manually with ``uv run python src/cadrumo/tests/fixtures/justificantes/_generate.py``.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Public surface regressions for ``aeat.domain.contribuyente``."""
+"""Public surface regressions for ``cadrumo.domain.contribuyente``."""
 
 from __future__ import annotations
 

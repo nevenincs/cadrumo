@@ -207,7 +207,7 @@ class TestRunSinkScrubbing:
     """Real-behavior tests: JSONL sink records are scrubbed before persistence.
 
     The :func:`attach_run_sink` helper (contract) installs a
-    :class:`aeat.core.logging.SecretScrubbingFilter` on the sink before
+    :class:`cadrumo.core.logging.SecretScrubbingFilter` on the sink before
     attaching it to the root logger.  The JSONL serialiser also applies
     the DIAGNOSTIC-class redaction rule set, which SHA256-prefixes any
     NIF-shaped value.  Both layers must fire before bytes hit disk.

@@ -1,11 +1,11 @@
 """Real-behavior CLI tests for ``aeat app diagnostics run-health``.
 
 Exercises the diagnose verb end to end against the real CLI, the real
-:func:`~aeat.application.diagnostics_run_health.build_run_health_report`
+:func:`~cadrumo.application.diagnostics_run_health.build_run_health_report`
 aggregator, real encrypted SQLite persistence in an isolated storage root, and
-the real :func:`~aeat.application.auth.test_operator_auth` session probe. No
+the real :func:`~cadrumo.application.auth.test_operator_auth` session probe. No
 test doubles: LLM run telemetry is seeded through its production writer
-(:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the verb
+(:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the verb
 reports it back typed, alongside a real auth-session staleness verdict for a
 profile with no configured auth provider.
 """
@@ -58,7 +58,7 @@ def _seed_runs() -> None:
     recorder.record(
         LLMRunRecord(
             run_id="run-1",
-            caller="aeat.application.ledger.llm_classification",
+            caller="cadrumo.application.ledger.llm_classification",
             provider="llm:claude:test-model",
             model="test-model",
             duration_ms=1200,
@@ -69,7 +69,7 @@ def _seed_runs() -> None:
     recorder.record(
         LLMRunRecord(
             run_id="run-2",
-            caller="aeat.application.ledger.llm_classification",
+            caller="cadrumo.application.ledger.llm_classification",
             provider="llm:claude:test-model",
             model="test-model",
             duration_ms=45000,
@@ -81,7 +81,7 @@ def _seed_runs() -> None:
     recorder.record(
         LLMRunRecord(
             run_id="run-3",
-            caller="aeat.application.ledger.llm_classification",
+            caller="cadrumo.application.ledger.llm_classification",
             provider="llm:codex:test-model",
             model="test-model",
             duration_ms=800,

@@ -8,7 +8,7 @@ boundary).
 
 Real adapters only, no test doubles: the real registry schema provider, the real
 :func:`export_draft` serialiser, and the real
-:func:`aeat.domain.calculations.registry.parse_export_payload` /
+:func:`cadrumo.domain.calculations.registry.parse_export_payload` /
 :func:`verify_export` deserialiser drive every assertion. Non-default, mutually
 distinct casilla values are populated so a save-drops-field or field-swap
 regression is visible at the boundary. Each modelo also carries an anti-tautology

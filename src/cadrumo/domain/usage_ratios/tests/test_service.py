@@ -141,7 +141,7 @@ def test_load_malformed_secure_object_raises_persistence_error(
 ) -> None:
     """Malformed encrypted payload bytes stay on the domain persistence surface."""
     _runtime_profile.repository.save(
-        namespace="aeat.domain.usage_ratios",
+        namespace="cadrumo.domain.usage_ratios",
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
@@ -165,7 +165,7 @@ def test_load_inner_classification_mismatch_raises_persistence_error(
         payload=UsageRatioProfile(),
     )
     _runtime_profile.repository.save(
-        namespace="aeat.domain.usage_ratios",
+        namespace="cadrumo.domain.usage_ratios",
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
@@ -186,7 +186,7 @@ def test_load_inner_schema_version_mismatch_raises_persistence_error(
         payload=UsageRatioProfile(),
     )
     _runtime_profile.repository.save(
-        namespace="aeat.domain.usage_ratios",
+        namespace="cadrumo.domain.usage_ratios",
         object_key=usage_ratios_object_key(_BUCKET_A_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,

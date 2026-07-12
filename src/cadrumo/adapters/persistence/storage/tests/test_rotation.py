@@ -43,8 +43,8 @@ from ..errors import DecryptionError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NIF_CANARY = "12345678Z"
-_HKDF_CONTEXT_TX = b"aeat.domain.transactions.catalogue.v1"
-_HKDF_CONTEXT_DRAFT = b"aeat.application.filing.draft.v1"
+_HKDF_CONTEXT_TX = b"cadrumo.domain.transactions.catalogue.v1"
+_HKDF_CONTEXT_DRAFT = b"cadrumo.application.filing.draft.v1"
 
 
 class _Sample(BaseModel):
@@ -323,7 +323,7 @@ class TestErrorHandling:
         store.mkdir(parents=True)
         target = store / "bogus.envelope.json"
         target.write_text("not json", encoding=UTF_8_ENCODING)
-        caplog.set_level(logging.WARNING, logger="aeat.adapters.persistence.storage._rotation")
+        caplog.set_level(logging.WARNING, logger="cadrumo.adapters.persistence.storage._rotation")
 
         summary = rotate_master_key(
             (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_TX),),
@@ -645,7 +645,7 @@ class TestRotationLockTargetAlignment:
                 "single-file-with-suffix-convention",
                 RotationPlanEntry(
                     store_dir=Path("/store"),
-                    hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
+                    hkdf_context=b"cadrumo.domain.usage_ratios.profile.v1",
                     target_filename="usage-ratios.json",
                 ),
                 Path("/store/usage-ratios.json"),
@@ -719,7 +719,7 @@ class TestRotationLockTargetAlignment:
         writer_lock_target = envelope_path.with_suffix(".lock")
         entry = RotationPlanEntry(
             store_dir=store,
-            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
+            hkdf_context=b"cadrumo.domain.usage_ratios.profile.v1",
             target_filename="usage-ratios.json",
         )
         rotation_lock_target = entry.lock_path_for(envelope_path)

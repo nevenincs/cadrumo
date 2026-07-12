@@ -21,8 +21,8 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
     import sys
     from pathlib import Path
 
-    from aeat.core import config as config_module
-    from aeat.core.config import Settings
+    from cadrumo.core import config as config_module
+    from cadrumo.core.config import Settings
 
     storage_root = Path(sys.argv[1])
     cli_args = sys.argv[2:]
@@ -37,7 +37,7 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
     token = config_module._settings_override.set(settings)
     try:
         sys.argv = ["aeat", *cli_args]
-        from aeat.entrypoints.cli import main
+        from cadrumo.entrypoints.cli import main
 
         main()
     finally:

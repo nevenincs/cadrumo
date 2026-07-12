@@ -378,8 +378,8 @@ class TestIvaRemoteStateCliSurface:
             import asyncio
             import sys
 
-            from aeat.application.live import LiveIvaSurfaceTimeoutError
-            from aeat.entrypoints.cli._app_live import _run_live_iva_evidence_pull_command
+            from cadrumo.application.live import LiveIvaSurfaceTimeoutError
+            from cadrumo.entrypoints.cli._app_live import _run_live_iva_evidence_pull_command
 
             async def slow_read():
                 await asyncio.sleep(30)

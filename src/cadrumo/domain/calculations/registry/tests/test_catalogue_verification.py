@@ -92,7 +92,7 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
         if len(parts) < 5 or parts[:3] != ("corpus", "aeat_official", "disenos_registro"):
             continue
         # corpus_path is stored relative to the bundled corpus root
-        # (src/aeat/_data/), so resolve via bundled_path rather than
+        # (src/cadrumo/_data/), so resolve via bundled_path rather than
         # PROJECT_ROOT to find the on-disk manifest.
         modelo_dir = bundled_path(*parts[:4])
         manifest_path = modelo_dir / "manifest.json"

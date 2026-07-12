@@ -1,7 +1,7 @@
-"""Unit tests for :mod:`aeat.adapters.inbound.justificante`.
+"""Unit tests for :mod:`cadrumo.adapters.inbound.justificante`.
 
 These tests exercise the parser end-to-end against the committed fixture
-PDFs under ``src/aeat/tests/fixtures/justificantes/``. They use real PDF
+PDFs under ``src/cadrumo/tests/fixtures/justificantes/``. They use real PDF
 files and real pdfplumber.
 """
 
@@ -154,7 +154,7 @@ class TestParseJustificante:
         modelo_130_pdf: Path,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.justificante._parser"):
+        with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.justificante._parser"):
             parse_justificante(modelo_130_pdf)
 
         rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
@@ -164,7 +164,7 @@ class TestParseJustificante:
 
 
 def _real_corpus_pdfs() -> list[Path]:
-    """Every sanitised real-PDF fixture under src/aeat/tests/fixtures/justificantes/{modelo}/.
+    """Every sanitised real-PDF fixture under src/cadrumo/tests/fixtures/justificantes/{modelo}/.
 
     Mirrors what ``aeat sanitize check`` runs at sanitisation time, but
     pinned in the unit suite so a parser regression on the wider corpus

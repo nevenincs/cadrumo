@@ -1,6 +1,6 @@
 """Unit tests for the record-level log secret scrubber.
 
-Exercises :class:`aeat.core.logging.SecretScrubbingFilter` end-to-end
+Exercises :class:`cadrumo.core.logging.SecretScrubbingFilter` end-to-end
 through the standard :mod:`logging` pipeline: tuple ``%``-args, dict
 ``extra=`` payloads, exception tracebacks, and inline secrets in the
 record's message format string. The tests verify that key-paired

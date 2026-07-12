@@ -108,7 +108,7 @@ def test_registry_disk_cache_enabled_without_pytest_markers() -> None:
             sys.executable,
             "-c",
             (
-                "from aeat.domain.calculations.registry._loader import registry_disk_cache_enabled; "
+                "from cadrumo.domain.calculations.registry._loader import registry_disk_cache_enabled; "
                 "print(registry_disk_cache_enabled())"
             ),
         ],
@@ -237,8 +237,8 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
                 sys.executable,
                 "-c",
                 (
-                    "from aeat.domain.calculations.registry._loader import load_registry_tree\n"
-                    "from aeat.core.resources import bundled_path\n"
+                    "from cadrumo.domain.calculations.registry._loader import load_registry_tree\n"
+                    "from cadrumo.core.resources import bundled_path\n"
                     "root = bundled_path('registry', 'aeat').resolve()\n"
                     "modelos, _ = load_registry_tree(root)\n"
                     "print(len(modelos))\n"
@@ -276,7 +276,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     """The per-session cache-isolation fixture must not purge the bundled disk pickle.
 
     Regression proof for a real defect: an earlier version of
-    ``_isolate_registry_caches`` (``src/aeat/conftest.py``) purged EVERY
+    ``_isolate_registry_caches`` (``src/cadrumo/conftest.py``) purged EVERY
     ``aeat_registry_*.pkl`` unconditionally at session start. Under
     pytest-xdist, ``scope="session"`` means "per worker process" -- there is
     no single controlling session spanning all workers -- so every worker's
@@ -290,7 +290,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     This test proves it through TWO REAL, SEPARATE ``pytest`` subprocess
     invocations (not simulated via env vars, and not the same process
     twice) against a throwaway scratch package materialised under this
-    test's OWN ``tmp_path`` -- never under the tracked ``src/aeat`` tree,
+    test's OWN ``tmp_path`` -- never under the tracked ``src/cadrumo`` tree,
     which every source-tree AST gate (``dev/import_hygiene_scan.py``, the
     codebase-size and layering ratchets) walks and reads live. An earlier
     version of this proof wrote its scratch module directly into this real
@@ -298,7 +298,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     window raced a sibling worker's AST scan of the same directory,
     surfacing as a transient ``FileNotFoundError`` in an unrelated gate. The
     scratch package instead carries its OWN ``conftest.py`` re-exporting the
-    real ``src/aeat/conftest.py`` autouse fixture by absolute import, so the
+    real ``src/cadrumo/conftest.py`` autouse fixture by absolute import, so the
     spawned session is still governed by the SAME fixture a real xdist
     worker's own test file would load -- the proof is unweakened, only its
     location moved off the walked tree.
@@ -322,7 +322,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "\n"
         "# Re-exports the real session-scoped autouse cache-isolation fixture so this\n"
         "# out-of-tree scratch package, invoked as its own pytest session, is governed\n"
-        "# by the identical fixture a real xdist worker's own src/aeat test file loads.\n"
+        "# by the identical fixture a real xdist worker's own src/cadrumo test file loads.\n"
         "from aeat.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
         encoding="utf-8",
     )
@@ -332,8 +332,8 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "\n"
         "import pytest\n"
         "\n"
-        "from aeat.core.resources import bundled_path\n"
-        "from aeat.domain.calculations.registry._loader import load_registry_tree\n"
+        "from cadrumo.core.resources import bundled_path\n"
+        "from cadrumo.domain.calculations.registry._loader import load_registry_tree\n"
         "\n"
         "pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]\n"
         "\n"

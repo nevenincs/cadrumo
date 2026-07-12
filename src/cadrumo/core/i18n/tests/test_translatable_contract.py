@@ -20,12 +20,12 @@ from typing import override
 
 import pytest
 
-from ....tests import SRC_AEAT, package_ast_items, repo_relative
+from ....tests import SRC_CADRUMO, package_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TRANSLATABLE_EXPORT = SRC_AEAT / "core" / "i18n" / "__init__.py"
-_TRANSLATION_RENDERER = SRC_AEAT / "core" / "i18n" / "_render.py"
+_TRANSLATABLE_EXPORT = SRC_CADRUMO / "core" / "i18n" / "__init__.py"
+_TRANSLATION_RENDERER = SRC_CADRUMO / "core" / "i18n" / "_render.py"
 
 
 def _location(path: Path, node: ast.AST, message: str) -> str:

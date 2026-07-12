@@ -439,7 +439,7 @@ class TestRevisionViewSurfacesDetailRows:
             os.environ["AEAT_SECRET_STORE_DIR"] = {str(storage_root / "secrets")!r}
             os.environ["AEAT_SECRET_PASSPHRASE"] = "row-flag-revision-view-passphrase"
             sys.argv = ["aeat", *{argv!r}]
-            from aeat.entrypoints.cli import main
+            from cadrumo.entrypoints.cli import main
 
             try:
                 main()

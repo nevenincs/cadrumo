@@ -3,7 +3,7 @@
 Exercises the exact composition ``aeat app ledger doclink pull-folder``
 performs — :func:`list_drive_folder_documents` to enumerate the folder's
 PDF/image children, then :func:`resolve_document_link` +
-:func:`~aeat.domain.attachments.add_attachment_bytes` to fetch-and-encrypt
+:func:`~cadrumo.domain.attachments.add_attachment_bytes` to fetch-and-encrypt
 each one — with the storage and manifest path REAL (a real
 :class:`AttachmentStore` over real SQLite) and the Drive requests executed
 through real ``google-api-python-client`` resources pointed at local HTTP

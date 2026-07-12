@@ -3,8 +3,8 @@
 The harness operating layer is reviewed product data under ``aeat/_data/agent/``.
 It ships in the wheel through the same hatch tracked-file inclusion that ships the
 corpus, registry, and terminology trees, and it is read through the same
-bundled-data boundary (``importlib.resources`` via ``aeat.core.resources``). This
-probe asserts the tree resolves through that boundary and the ``aeat.agent``
+bundled-data boundary (``importlib.resources`` via ``cadrumo.core.resources``). This
+probe asserts the tree resolves through that boundary and the ``cadrumo.agent``
 accessor reads the shipped rules, so a packaging or accessor regression that would
 leave the harness empty at install time fails here rather than at operator runtime.
 """

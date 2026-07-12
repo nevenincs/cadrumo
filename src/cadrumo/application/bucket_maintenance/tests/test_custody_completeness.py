@@ -168,7 +168,7 @@ def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:
             bucket_id=multi.primary.bucket_id,
             profile=StorageCustodyProfile.FULL,
         )
-        blob = next(o for o in carried if o.namespace == "aeat.domain.attachments.blobs")
+        blob = next(o for o in carried if o.namespace == "cadrumo.domain.attachments.blobs")
         tampered = blob.model_copy(
             update={"payload_b64": base64.b64encode(b"tampered-not-the-evidence").decode("ascii")},
         )
@@ -189,8 +189,8 @@ def test_full_custody_coverage_gate_refuses_unclassified_namespace() -> None:
 
     with pytest.raises(ProfileExportError) as excinfo:
         _assert_full_custody_coverage(
-            populated_namespaces=("aeat.domain.buckets.event_history", "aeat.surprise.new_store"),
-            covered_namespaces=frozenset({"aeat.domain.buckets.event_history"}),
+            populated_namespaces=("cadrumo.domain.buckets.event_history", "aeat.surprise.new_store"),
+            covered_namespaces=frozenset({"cadrumo.domain.buckets.event_history"}),
         )
     assert excinfo.value.context is not None
     assert "aeat.surprise.new_store" in str(excinfo.value.context["unclassified_namespaces"])

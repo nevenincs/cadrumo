@@ -33,22 +33,22 @@ def test_application_overview_applicability_shim_is_absent() -> None:
     """The application.overview._applicability re-export shim must not exist.
 
     The cross-domain continuity contract ratified the
-    removal of ``aeat.application.overview._applicability`` — the
+    removal of ``cadrumo.application.overview._applicability`` — the
     application layer consumes the domain rules through the public
-    registry surface directly (``aeat.domain.calculations.registry``)
+    registry surface directly (``cadrumo.domain.calculations.registry``)
     and the standalone re-export shim has no remaining caller. This
     test replaces the old identity-re-export check: a recurrence of
     the shim (an accidental restore) must be flagged at the structural
     boundary, not silently re-introduced.
     """
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("aeat.application.overview._applicability")
+        importlib.import_module("cadrumo.application.overview._applicability")
 
 
 def test_facade_reexport_is_identity_equal_to_domain() -> None:
     """The domain facade re-export resolves to the same object as the implementation."""
-    domain_mod = importlib.import_module("aeat.domain.calculations.registry._applicability")
-    facade_mod = importlib.import_module("aeat.domain.calculations.registry.applicability")
+    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry._applicability")
+    facade_mod = importlib.import_module("cadrumo.domain.calculations.registry.applicability")
     assert facade_mod.derive_modelo_applicability is domain_mod.derive_modelo_applicability, (
         "domain facade applicability.derive_modelo_applicability is not the same object as the domain implementation"
     )
@@ -56,8 +56,8 @@ def test_facade_reexport_is_identity_equal_to_domain() -> None:
 
 def test_annual_withholding_summary_applicability_uses_art_108_not_art_109() -> None:
     """M180/M190 filing duty is RIRPF art. 108, not pago-fraccionado art. 109."""
-    domain_mod = importlib.import_module("aeat.domain.calculations.registry._applicability")
-    core_mod = importlib.import_module("aeat.core")
+    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry._applicability")
+    core_mod = importlib.import_module("cadrumo.core")
     rules_by_modelo = {rule.modelo: rule for rule in domain_mod.iter_modelo_applicability_rules()}
 
     for modelo in (core_mod.Modelo.M180, core_mod.Modelo.M190):

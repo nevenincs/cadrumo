@@ -165,17 +165,17 @@ def test_operator_surface_application_package_has_no_typer_dependency() -> None:
         import sys
 
         for module_name in (
-            "aeat.application.operator_surface",
-            "aeat.application.operator_surface._contract",
-            "aeat.application.operator_surface._help",
-            "aeat.application.operator_surface._models",
+            "cadrumo.application.operator_surface",
+            "cadrumo.application.operator_surface._contract",
+            "cadrumo.application.operator_surface._help",
+            "cadrumo.application.operator_surface._models",
         ):
             importlib.import_module(module_name)
 
         leaked = sorted(
             name
             for name in sys.modules
-            if name == "typer" or name.startswith("typer.") or name.startswith("aeat.entrypoints.cli")
+            if name == "typer" or name.startswith("typer.") or name.startswith("cadrumo.entrypoints.cli")
         )
         assert leaked == [], leaked
     """)
@@ -211,7 +211,7 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     assert MountedCommandDomain.FIRST_RUN not in by_domain
     assert by_domain[MountedCommandDomain.PROFILE].root is RootSurfaceName.CONFIG
     assert by_domain[MountedCommandDomain.PROFILE].child == "profile"
-    assert by_domain[MountedCommandDomain.PROFILE].service_owner == "aeat.application.user_profile"
+    assert by_domain[MountedCommandDomain.PROFILE].service_owner == "cadrumo.application.user_profile"
     assert {"create", "edit", "show", "delete", "status"}.issubset(by_domain[MountedCommandDomain.PROFILE].commands)
     custody_commands = {
         command
@@ -226,8 +226,8 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     assert MountedCommandDomain.BUCKET not in by_domain
     assert "history" in by_domain[MountedCommandDomain.PROFILE].commands
     assert by_domain[MountedCommandDomain.OVERVIEW].mutability is OperatorMutability.READ_ONLY
-    assert by_domain[MountedCommandDomain.LEDGER].service_owner == "aeat.application.transactions"
-    assert by_domain[MountedCommandDomain.REVIEW].service_owner == "aeat.application.review"
+    assert by_domain[MountedCommandDomain.LEDGER].service_owner == "cadrumo.application.transactions"
+    assert by_domain[MountedCommandDomain.REVIEW].service_owner == "cadrumo.application.review"
 
     mounted_pairs = {(family.root.value, family.child) for family in contract.command_families}
     assert ("config", "auth") in mounted_pairs

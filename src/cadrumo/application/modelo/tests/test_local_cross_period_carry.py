@@ -24,7 +24,7 @@ The four behaviours under test:
 * D3 (303 exclusion): the carry resolver never emits the M303 IVA-compensation
   binding (the iva-wallet decision owns it).
 * D4 (grupo fan-in non-goal): documented as out of scope in
-  :mod:`aeat.application.modelo._filed_revision_observation`; no test asserts member
+  :mod:`cadrumo.application.modelo._filed_revision_observation`; no test asserts member
   fan-in for the local-filing flow.
 """
 

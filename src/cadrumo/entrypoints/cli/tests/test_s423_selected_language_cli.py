@@ -26,7 +26,7 @@ os.environ["AEAT_SECRET_STORE_BACKEND"] = "file"
 os.environ["AEAT_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
-from aeat.entrypoints.cli import main
+from cadrumo.entrypoints.cli import main
 
 try:
     main()
@@ -46,9 +46,9 @@ os.environ["AEAT_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["AEAT_SECRET_STORE_BACKEND"] = "file"
 os.environ["AEAT_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 
-from aeat.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from aeat.application.user_profile import profile_storage_session
-from aeat.core import resolve_active_bucket_id
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.application.user_profile import profile_storage_session
+from cadrumo.core import resolve_active_bucket_id
 
 bucket_id = resolve_active_bucket_id()
 assert bucket_id is not None

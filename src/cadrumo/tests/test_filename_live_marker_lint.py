@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import REPO_ROOT, SRC_AEAT
+from ._inventory import REPO_ROOT, SRC_CADRUMO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -106,8 +106,8 @@ def _live_filename_violation(path: Path) -> str | None:
 
 
 def _live_prefixed_test_modules() -> list[Path]:
-    """Return every source-controlled ``test_live_*.py`` module under ``src/aeat``."""
-    return sorted(path for path in SRC_AEAT.glob("**/test_live_*.py") if path.name != "__init__.py")
+    """Return every source-controlled ``test_live_*.py`` module under ``src/cadrumo``."""
+    return sorted(path for path in SRC_CADRUMO.glob("**/test_live_*.py") if path.name != "__init__.py")
 
 
 _LIVE_MODULES = _live_prefixed_test_modules()

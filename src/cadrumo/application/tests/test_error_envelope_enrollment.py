@@ -1,13 +1,13 @@
 """Real-behavior enrollment test for application-layer regression error classes.
 
 Asserts that every error class promoted by the codebase-solidification
-campaign is enrolled in :data:`aeat.core.errors.ERROR_REGISTRY` and
-produces a valid :class:`aeat.core.errors.ErrorEnvelope` through
-:func:`aeat.core.errors.build_error_envelope`.
+campaign is enrolled in :data:`cadrumo.core.errors.ERROR_REGISTRY` and
+produces a valid :class:`cadrumo.core.errors.ErrorEnvelope` through
+:func:`cadrumo.core.errors.build_error_envelope`.
 
 No mocks, no skips. The test imports the real error classes, raises them,
 and calls the real registry machinery. A missing registration causes a
-hard failure in :func:`~aeat.core.errors.get_registered_error_code`
+hard failure in :func:`~cadrumo.core.errors.get_registered_error_code`
 (which the campaign guards against) — the test will surface it rather
 than silently return a placeholder.
 """

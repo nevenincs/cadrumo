@@ -1,6 +1,6 @@
 """Unit tests for the N26 PDF financial ingestion provider.
 
-Exercises :class:`aeat.adapters.inbound.financial.providers.PdfN26Provider`
+Exercises :class:`cadrumo.adapters.inbound.financial.providers.PdfN26Provider`
 end-to-end against committed N26 statement fixtures. Each fixture is paired
 with a manually transcribed expected-row JSON so the test asserts that the
 provider's parsed transactions match the human-verified ground truth.
@@ -103,7 +103,7 @@ def test_pdf_n26_provider_invalid_pdf_does_not_expose_filename(
     source = tmp_path / "12345678Z-private-account-statement.pdf"
     source.write_bytes(b"not a valid PDF document")
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.financial.providers._pdf_n26"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.financial.providers._pdf_n26"):
         validation = PdfN26Provider().validate_source(source)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

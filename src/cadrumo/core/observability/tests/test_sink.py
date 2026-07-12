@@ -3,12 +3,12 @@
 Covers:
 
 * Append-then-load round-trip through
-  :func:`aeat.core.observability.save_events_append` /
-  :func:`aeat.core.observability.load_events`, including the
+  :func:`cadrumo.core.observability.save_events_append` /
+  :func:`cadrumo.core.observability.load_events`, including the
   DIAGNOSTIC-class URL host-only redaction property.
-* :exc:`aeat.core.observability.RunTraceValidationError` on a corrupted
+* :exc:`cadrumo.core.observability.RunTraceValidationError` on a corrupted
   JSONL line.
-* :class:`aeat.core.observability._sink.JsonlRunSink` rejecting events
+* :class:`cadrumo.core.observability._sink.JsonlRunSink` rejecting events
   whose ``run_id`` does not match its bound id, and skipping records
   that carry no ``run_event`` extra (without creating the file).
 * Strict ``run_id`` validation across :func:`load_trace`,
@@ -58,7 +58,7 @@ class TestJsonlStoreRoundTrip:
                 navigation=NavigationPayload(url=f"https://example.test/{ordinal}"),
             ),
             timestamp=datetime(2026, 4, 14, 0, 0, ordinal, tzinfo=UTC),
-            module="aeat.core.observability.test_sink",
+            module="cadrumo.core.observability.test_sink",
         )
 
     def test_append_and_load(self, tmp_path: Path) -> None:
@@ -104,7 +104,7 @@ class TestJsonlRunSinkRunIdFilter:
                 navigation=NavigationPayload(url=f"https://example.test/{ordinal}"),
             ),
             timestamp=datetime(2026, 4, 14, 0, 0, ordinal, tzinfo=UTC),
-            module="aeat.core.observability.test_sink",
+            module="cadrumo.core.observability.test_sink",
         )
 
     def _emit(self, sink: JsonlRunSink, event: RunEvent) -> None:
@@ -266,7 +266,7 @@ class TestStorePersistenceErrors:
         (runs_root / "0123456789abcdef").mkdir()
         settings = Settings(aeat_runs_dir=runs_root)
 
-        caplog.set_level(logging.DEBUG, logger="aeat.core.observability._store")
+        caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability._store")
 
         assert list(iter_runs(settings=settings)) == []
         messages = [record.getMessage() for record in caplog.records]
@@ -287,7 +287,7 @@ class TestIterEvents:
                 navigation=NavigationPayload(url=f"https://example.test/{ordinal}"),
             ),
             timestamp=datetime(2026, 4, 14, 0, 0, ordinal, tzinfo=UTC),
-            module="aeat.core.observability.test_sink",
+            module="cadrumo.core.observability.test_sink",
         )
 
     def test_bad_run_id_raises_at_call_site(
@@ -366,7 +366,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
                 navigation=NavigationPayload(url="https://example.test/1"),
             ),
             timestamp=datetime(2026, 4, 14, 0, 0, 0, tzinfo=UTC),
-            module="aeat.core.observability.test_sink",
+            module="cadrumo.core.observability.test_sink",
         )
 
     def test_emit_failure_warning_scrubs_sensitive_exc_text(
@@ -397,7 +397,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
             )
             record.run_event = self._event(run_id)
 
-            with caplog.at_level(logging.WARNING, logger="aeat.core.observability._sink"):
+            with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability._sink"):
                 sink.emit(record)
         finally:
             sink.close()
@@ -405,7 +405,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert warning_records, "sink must emit a WARNING when the write fails"
         warn = warning_records[0]
-        assert warn.name == "aeat.core.observability._sink"
+        assert warn.name == "cadrumo.core.observability._sink"
         # The record must have been processed by SecretScrubbingFilter:
         # exc_text is set by the filter (it formats exc_info into text and
         # scrubs it).  We assert the raw bearer/token placeholder is absent

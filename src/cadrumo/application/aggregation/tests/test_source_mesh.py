@@ -526,7 +526,7 @@ def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
 ) -> None:
     error = DecryptionError("ciphertext authentication failed")
 
-    with caplog.at_level("DEBUG", logger="aeat.application.aggregation._source_mesh"):
+    with caplog.at_level("DEBUG", logger="cadrumo.application.aggregation._source_mesh"):
         resolution = storage_degradation_resolution(
             resolver_id="ledger-iva",
             owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),

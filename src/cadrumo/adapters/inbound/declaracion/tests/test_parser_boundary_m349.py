@@ -32,7 +32,7 @@ def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
     """Round-trip the sanitized M349 synthetic fixture through the parser.
 
     Ground truth is the AEAT-published instructions PDF at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
     pages 8-9, CUMPLIMENTACION DE LA HOJA-RESUMEN. The fixture prints those
     source labels so the named_label parser captures the trailing value token
     on each line.

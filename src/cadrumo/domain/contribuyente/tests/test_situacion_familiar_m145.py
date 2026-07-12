@@ -56,7 +56,7 @@ def test_disjoint_from_situacion_familiar_art82() -> None:
 
 
 def test_reachable_via_contribuyente_package_boundary() -> None:
-    """The enum re-exports through ``aeat.domain.contribuyente``."""
+    """The enum re-exports through ``cadrumo.domain.contribuyente``."""
     from ... import contribuyente
 
     assert contribuyente.SituacionFamiliarM145 is SituacionFamiliarM145

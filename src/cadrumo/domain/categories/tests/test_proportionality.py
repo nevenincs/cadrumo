@@ -1,4 +1,4 @@
-"""Unit tests for :class:`~aeat.domain.categories.ProportionalityRule` validation.
+"""Unit tests for :class:`~cadrumo.domain.categories.ProportionalityRule` validation.
 
 Verifies the cross-field invariants on the rule shape: fixed-percentage
 rules require ``fixed_pct``; statutory-cap rules require a cap value

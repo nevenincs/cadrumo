@@ -862,7 +862,7 @@ def test_bare_invoice_source_kind_is_not_constructible() -> None:
     """The retired bare ``invoice`` alias is outside the binding schema.
 
     The ``source`` field is the single canonical
-    :class:`~aeat.core.BindingSourceKind` enum, so an unknown token is rejected
+    :class:`~cadrumo.core.BindingSourceKind` enum, so an unknown token is rejected
     by the before-validator with a ``not a valid BindingSourceKind`` value error.
     """
 

@@ -2,10 +2,10 @@
 
 Audit M17 found the documented ``invoice add`` -> ``link --invoice-id`` chain
 unreachable: ``invoice add`` writes the slim
-:class:`~aeat.application.ledger.BusinessOperationInvoice` (no
+:class:`~cadrumo.application.ledger.BusinessOperationInvoice` (no
 ``linked_transaction_ids``), while ``link --invoice-id`` resolves the rich
-:class:`~aeat.domain.invoices.Invoice` in the
-:class:`~aeat.domain.invoices.InvoiceCatalogue`. Per the accepted
+:class:`~cadrumo.domain.invoices.Invoice` in the
+:class:`~cadrumo.domain.invoices.InvoiceCatalogue`. Per the accepted
 ``2026-06-10-ledger-invoice-unification`` the two stores stay distinct, so
 the gap is closed by giving the operator a verb that mints a rich *linkable*
 invoice: ``aeat app ledger invoice catalogue create``.

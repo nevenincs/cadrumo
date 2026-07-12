@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO_303 = "303"
 
 # Mirror ``RegistryValidator._justificante_corpus_root``: bundled_path() resolves
-# to src/aeat/_data; the fixture tree lives one level up under tests/fixtures.
+# to src/cadrumo/_data; the fixture tree lives one level up under tests/fixtures.
 _JUSTIFICANTE_CORPUS_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "justificantes"
 
 

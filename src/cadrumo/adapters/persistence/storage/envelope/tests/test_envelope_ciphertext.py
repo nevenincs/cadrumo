@@ -1,6 +1,6 @@
 """Ciphertext-payload-at-rest tests for the substrate envelope.
 
-Exercises the ciphertext path of :mod:`aeat.adapters.persistence.storage.envelope`
+Exercises the ciphertext path of :mod:`cadrumo.adapters.persistence.storage.envelope`
 end-to-end. Each test in the module asserts one invariant of the
 at-rest encryption contract:
 
@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NIF_CANARY = "12345678Z"
 _AMOUNT_CANARY = "987654.32"
-_HKDF_CONTEXT_TEST = b"aeat.adapters.persistence.storage.test.envelope.v1"
+_HKDF_CONTEXT_TEST = b"cadrumo.adapters.persistence.storage.test.envelope.v1"
 
 
 class _SamplePayload(BaseModel):
@@ -203,7 +203,7 @@ class TestAadBinding:
                 Envelope[_SamplePayload],
                 expected_class=SensitivityClass.FINANCIAL,
                 master_key_provider=provider,
-                hkdf_context=b"aeat.adapters.persistence.storage.test.envelope.OTHER",
+                hkdf_context=b"cadrumo.adapters.persistence.storage.test.envelope.OTHER",
                 max_supported_version=1,
             )
         assert str(tmp_path) not in str(excinfo.value)

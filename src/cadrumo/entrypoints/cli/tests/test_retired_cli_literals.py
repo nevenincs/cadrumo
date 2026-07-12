@@ -8,7 +8,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 RUNTIME_SURFACES = (
-    PROJECT_ROOT / "src" / "aeat",
+    PROJECT_ROOT / "src" / "cadrumo",
     PROJECT_ROOT / "env",
 )
 TEXT_SUFFIXES = {".py", ".yml", ".yaml", ".example"}

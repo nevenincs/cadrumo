@@ -2,7 +2,7 @@
 
 The tests run against a real in-memory SQLAlchemy session bound to
 a deliberately-isolated declarative base so we never touch the live
-``aeat.adapters.persistence.storage._orm`` schema. The master key is supplied by an
+``cadrumo.adapters.persistence.storage._orm`` schema. The master key is supplied by an
 :class:`EphemeralMasterKeyProvider` whose ``__enter__`` activates a
 :class:`BucketSession` for the duration of the test.
 """
@@ -213,7 +213,7 @@ class TestHashedLookup:
     def test_short_plaintext_digest_does_not_emit_runtime_warning(self, caplog: pytest.LogCaptureFixture) -> None:
         caplog.set_level(
             logging.WARNING,
-            logger="aeat.adapters.persistence.storage.crypto._encrypted_columns",
+            logger="cadrumo.adapters.persistence.storage.crypto._encrypted_columns",
         )
 
         digest = HashedLookup.compute("alpha")
@@ -222,7 +222,7 @@ class TestHashedLookup:
         assert not [
             record
             for record in caplog.records
-            if record.name == "aeat.adapters.persistence.storage.crypto._encrypted_columns"
+            if record.name == "cadrumo.adapters.persistence.storage.crypto._encrypted_columns"
         ]
 
     def test_round_trip_via_sqlalchemy(self, session: Session) -> None:

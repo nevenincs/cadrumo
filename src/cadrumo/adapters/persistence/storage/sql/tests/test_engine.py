@@ -1,6 +1,6 @@
 """Unit tests for the SQLAlchemy engine factory.
 
-Exercises :func:`aeat.adapters.persistence.storage.sql.create_engine_from_settings`
+Exercises :func:`cadrumo.adapters.persistence.storage.sql.create_engine_from_settings`
 covering the round-trip happy path, parent-directory creation, the
 storage-root fallback derivation, and the project-root anchoring of
 relative SQLite URLs.
@@ -24,7 +24,7 @@ from ...errors import StorageError
 from .. import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-_ENGINE_LOGGER_NAME = "aeat.adapters.persistence.storage.sql.engine"
+_ENGINE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.engine"
 
 
 def _settings_for(url: str) -> Settings:

@@ -67,7 +67,7 @@ def _retenciones_contract() -> PerModeloAggregationContributorContract:
     return PerModeloAggregationContributorContract(
         provider=PerModeloAggregationContributor.RETENCIONES,
         modelos=("111", "115", "123", "180", "190", "193"),
-        service_owner="aeat.application.aggregation",
+        service_owner="cadrumo.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
 
@@ -76,7 +76,7 @@ def _counterpart_contract() -> PerModeloAggregationContributorContract:
     return PerModeloAggregationContributorContract(
         provider=PerModeloAggregationContributor.COUNTERPART,
         modelos=("347", "349"),
-        service_owner="aeat.application.aggregation",
+        service_owner="cadrumo.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
 
@@ -85,7 +85,7 @@ def _foreign_assets_contract() -> PerModeloAggregationContributorContract:
     return PerModeloAggregationContributorContract(
         provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
         modelos=("720",),
-        service_owner="aeat.application.aggregation",
+        service_owner="cadrumo.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
 
@@ -96,7 +96,7 @@ def test_site1_provider_contract_rejects_duplicate_modelos() -> None:
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.RETENCIONES,
             modelos=("111", "111"),  # duplicate
-            service_owner="aeat.application.aggregation",
+            service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         )
     causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
@@ -110,7 +110,7 @@ def test_site2_contract_rejects_duplicate_providers() -> None:
     retenciones_dup = PerModeloAggregationContributorContract(
         provider=PerModeloAggregationContributor.RETENCIONES,
         modelos=("193",),
-        service_owner="aeat.application.aggregation",
+        service_owner="cadrumo.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
     retenciones_base = _retenciones_contract()
@@ -130,7 +130,7 @@ def test_site3_contract_rejects_modelo_owned_by_multiple_providers() -> None:
     counterpart_with_extra = PerModeloAggregationContributorContract(
         provider=PerModeloAggregationContributor.COUNTERPART,
         modelos=("347", "349", "111"),  # 111 also claimed by retenciones
-        service_owner="aeat.application.aggregation",
+        service_owner="cadrumo.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
     with pytest.raises(ValidationError) as exc_info:

@@ -38,7 +38,7 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_LOGGER_NAME = "aeat.application.modelo._m145_communication_records"
+_LOGGER_NAME = "cadrumo.application.modelo._m145_communication_records"
 _FORBIDDEN_LOG_TERMS = (
     "file",
     "filing",

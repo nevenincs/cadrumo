@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted workflow-runs boundary.
 
 ``save_run`` / ``load_run`` persist :class:`WorkflowResult` records at
-``SensitivityClass.FINANCIAL`` under the ``aeat.application.workflow.runs``
+``SensitivityClass.FINANCIAL`` under the ``cadrumo.application.workflow.runs``
 namespace.
 
 Anti-tautology discipline: final_stage flipped to ABORTED so

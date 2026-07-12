@@ -103,14 +103,14 @@ def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[Ig
     application_adapter_edges = tuple(
         edge
         for edge in layered_edges
-        if edge.source.startswith("aeat.application.") and edge.target.startswith("aeat.adapters")
+        if edge.source.startswith("cadrumo.application.") and edge.target.startswith("cadrumo.adapters")
     )
     blanket_edges = tuple(
         edge
         for edge in application_adapter_edges
-        if edge.source == "aeat.application.**" and edge.target == "aeat.adapters.**"
+        if edge.source == "cadrumo.application.**" and edge.target == "cadrumo.adapters.**"
     )
-    source_module_edges = tuple(edge for edge in application_adapter_edges if edge.target == "aeat.adapters.**")
+    source_module_edges = tuple(edge for edge in application_adapter_edges if edge.target == "cadrumo.adapters.**")
 
     assert not blanket_edges
     assert len(application_adapter_edges) <= _APPLICATION_TO_ADAPTERS_BASELINE
@@ -121,7 +121,7 @@ def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreE
     domain_adapter_edges = tuple(
         edge
         for edge in layered_edges
-        if edge.source.startswith("aeat.domain.") and edge.target.startswith("aeat.adapters")
+        if edge.source.startswith("cadrumo.domain.") and edge.target.startswith("cadrumo.adapters")
     )
 
     assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
@@ -139,8 +139,8 @@ def test_zero_production_domain_to_adapters_edges(ignore_edges: tuple[IgnoreEdge
     production_domain_adapter_edges = tuple(
         edge
         for edge in ignore_edges
-        if edge.source.startswith("aeat.domain.")
-        and edge.target.startswith("aeat.adapters")
+        if edge.source.startswith("cadrumo.domain.")
+        and edge.target.startswith("cadrumo.adapters")
         and ".tests." not in edge.source
         and not edge.source.endswith(".conftest")
     )

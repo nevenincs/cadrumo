@@ -1,6 +1,6 @@
 """Parser tests against real AEAT HTML captures (identity-redacted).
 
-The fixtures under ``src/aeat/tests/fixtures/aeat-sede/`` are live
+The fixtures under ``src/cadrumo/tests/fixtures/aeat-sede/`` are live
 captures from a real sede with NIF, name, expediente sequence, and CSV
 redacted to synthetic but schema-valid placeholders.
 """

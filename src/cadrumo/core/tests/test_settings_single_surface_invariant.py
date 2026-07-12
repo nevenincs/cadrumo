@@ -10,7 +10,7 @@ Direct reads bypass:
   - The ``.env`` + ``os.environ`` merge order Pydantic-settings enforces.
   - The :func:`override_settings` context manager used by tests.
 
-This test walks every ``.py`` file under ``src/aeat/`` (excluding the
+This test walks every ``.py`` file under ``src/cadrumo/`` (excluding the
 test module itself), parses it into an AST, and reports any expression
 that reads ``os.environ`` / ``os.getenv`` with an ``"AEAT_*"`` literal
 key. The check is purely structural: a string literal inside a
@@ -40,12 +40,12 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import SRC_AEAT, aeat_relative, ast_for_path, production_ast_items
+from ...tests import SRC_CADRUMO, aeat_relative, ast_for_path, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-# Files (relative to src/aeat/) where direct os.environ access to an
+# Files (relative to src/cadrumo/) where direct os.environ access to an
 # AEAT-prefixed variable is the only legitimate option. Each entry must
 # carry its rationale inline in the source — when reviewing this list,
 # verify the rationale matches "no Settings write API exists for this".
@@ -269,14 +269,14 @@ def test_no_direct_aeat_env_reads_outside_allowlist(source_tree_ast: Mapping[Pat
             offences.append(f"{rel}:{lineno}  reads {key!r} via {snippet}")
     assert not offences, (
         "Direct os.environ / os.getenv reads of AEAT_* variables outside the allowlist. "
-        "Route every read through aeat.core.config.load_settings() instead.\n"
+        "Route every read through cadrumo.core.config.load_settings() instead.\n"
         + "\n".join(f"  - {line}" for line in offences)
     )
 
 
 def test_allowlisted_paths_actually_exist() -> None:
     """Allowlist must not carry stale entries that bypass the check vacuously."""
-    missing = [entry for entry in _ALLOWLIST if not (SRC_AEAT / entry).exists()]
+    missing = [entry for entry in _ALLOWLIST if not (SRC_CADRUMO / entry).exists()]
     assert not missing, f"Allowlist entries no longer exist on disk: {missing}"
 
 
@@ -290,7 +290,7 @@ def test_allowlisted_paths_still_contain_aeat_env_reads(source_tree_ast: Mapping
     """
     stale: list[str] = []
     for entry in _ALLOWLIST:
-        path = SRC_AEAT / entry
+        path = SRC_CADRUMO / entry
         if not path.exists():
             continue  # caught by the other test
         tree = ast_for_path(path, source_tree_ast)

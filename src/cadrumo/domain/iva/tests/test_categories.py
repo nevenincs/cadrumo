@@ -1,4 +1,4 @@
-"""Unit tests for the closed IVA enumerations exposed by :mod:`aeat.domain.iva`.
+"""Unit tests for the closed IVA enumerations exposed by :mod:`cadrumo.domain.iva`.
 
 Pins membership and round-trip semantics for :class:`IvaCategory`,
 :class:`EUMemberState` and :class:`IvaRateKind` so accidental additions or

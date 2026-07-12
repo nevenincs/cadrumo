@@ -1,4 +1,4 @@
-"""Real-behaviour tests for :mod:`aeat.core.parsing._dates`.
+"""Real-behaviour tests for :mod:`cadrumo.core.parsing._dates`.
 
 Contract under test (contract / contract):
 

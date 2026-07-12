@@ -1,19 +1,19 @@
 """Structural guard: resources() is the only resource-access surface.
 
 The resource-management API contract mandates a single resource-access
-boundary at ``src/aeat/core/resources/``. This test enforces the
-invariant by scanning every production module under ``src/aeat/``
+boundary at ``src/cadrumo/core/resources/``. This test enforces the
+invariant by scanning every production module under ``src/cadrumo/``
 for unauthorised parallel-locator patterns.
 
 Allow-listed exceptions:
 
-* Files under ``src/aeat/core/resources/`` define the boundary itself.
+* Files under ``src/cadrumo/core/resources/`` define the boundary itself.
 * Tests (``test_*.py``, ``_test_*.py``, ``conftest.py``) may use
   ``bundled_path`` directly to verify the bundled data-tree SHAPE
   rather than the Repository surface, as documented in the plan's
   Proposed Changes section.
 * The corpus-registry-packaging wheel guard
-  (``src/aeat/tests/test_wheel_bundles_corpus_and_registry.py``)
+  (``src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py``)
   legitimately greps the data tree.
 
 See Also:
@@ -35,11 +35,11 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import SRC_AEAT, package_python_files, production_python_files, repo_path, repo_relative
+from ....tests import SRC_CADRUMO, package_python_files, production_python_files, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_RESOURCES_PKG = SRC_AEAT / "core" / "resources"
+_RESOURCES_PKG = SRC_CADRUMO / "core" / "resources"
 
 
 def _is_production_module(path: Path) -> bool:
@@ -62,8 +62,8 @@ _PENDING_RETIREMENT_ALLOWLIST: frozenset[Path] = frozenset()
 """Allow-list of files allowed to declare a ``_DEFAULT_*_ROOT`` constant.
 
 The allow-list is empty: every production module under
-``src/aeat/`` routes resource resolution through
-``aeat.core.resources`` exclusively. The companion test
+``src/cadrumo/`` routes resource resolution through
+``cadrumo.core.resources`` exclusively. The companion test
 :func:`test_allowlist_only_contains_files_that_actually_offend`
 enforces that the allow-list cannot grow without the addition
 of a corresponding offending constant; the structural guard
@@ -78,7 +78,7 @@ def test_no_default_root_constants_in_production() -> None:
 
     The allow-list ratchets down as P09 retirement lands; the
     final structural invariant is that no production file outside
-    ``src/aeat/core/resources/`` defines such a constant.
+    ``src/cadrumo/core/resources/`` defines such a constant.
     """
 
     pattern = re.compile(r"^_DEFAULT_[A-Z_]+_ROOT\s*=\s*bundled_path", re.MULTILINE)
@@ -96,7 +96,7 @@ def test_no_default_root_constants_in_production() -> None:
     assert not offenders, (
         "production files outside the allow-list defining "
         "_DEFAULT_*_ROOT = bundled_path(...) found; these must "
-        f"route through aeat.core.resources.resources() instead: {offenders}"
+        f"route through cadrumo.core.resources.resources() instead: {offenders}"
     )
 
 
@@ -126,7 +126,7 @@ _PROJECT_ROOT_IMPORT_RE = re.compile(
 
 
 def test_no_dead_project_root_imports() -> None:
-    """Every file importing ``PROJECT_ROOT`` from ``aeat.core.paths`` must reference it.
+    """Every file importing ``PROJECT_ROOT`` from ``cadrumo.core.paths`` must reference it.
 
     ``PROJECT_ROOT`` is the legitimate resolver for ``var/``
     operator outputs and ``env/.env`` operator config (and for
@@ -156,7 +156,7 @@ def test_no_dead_project_root_imports() -> None:
     assert not dead_imports, (
         "modules that import PROJECT_ROOT but never reference it "
         "(drop the dead import; bundled-data reads go through "
-        f"aeat.core.resources.bundled_path instead): {dead_imports}"
+        f"cadrumo.core.resources.bundled_path instead): {dead_imports}"
     )
 
 

@@ -2,7 +2,7 @@
 
 Exercises :func:`create_sandbox`, :func:`discard_sandbox`,
 :func:`archive_sandbox`, and :func:`restore_sandbox`
-(``aeat.application.bucket_maintenance``) against real per-bucket encrypted
+(``cadrumo.application.bucket_maintenance``) against real per-bucket encrypted
 storage. The full create -> seed -> switch -> discard round trip (and the
 archive -> restore round trip) is covered end to end at the CLI layer
 (``entrypoints.cli.tests.test_config_profile_sandbox``); this module covers

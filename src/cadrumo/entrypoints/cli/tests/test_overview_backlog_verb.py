@@ -81,7 +81,7 @@ def test_backlog_help_advertises_local_only() -> None:
 
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
+_WORK_UNIT_NAMESPACE = "cadrumo.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
 
 

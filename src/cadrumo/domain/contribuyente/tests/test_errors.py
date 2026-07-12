@@ -1,9 +1,9 @@
 """Unit tests for the tax-residence profile error hierarchy.
 
-Verifies that :class:`aeat.domain.contribuyente.TaxResidenceProfileError` and
+Verifies that :class:`cadrumo.domain.contribuyente.TaxResidenceProfileError` and
 its subclasses register stable error codes through the
-:mod:`aeat.core.errors` registry, and that the foral-regime detector
-trips :class:`aeat.domain.contribuyente.ForalRegimeError` for every accented
+:mod:`cadrumo.core.errors` registry, and that the foral-regime detector
+trips :class:`cadrumo.domain.contribuyente.ForalRegimeError` for every accented
 and underscored alias.
 """
 

@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, module_name, production_ast_items
+from ._inventory import SRC_CADRUMO, module_name, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -36,37 +36,37 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 # a real, single class definition so the set cannot silently rot as the code
 # moves. Extend this mapping to bring more of the spine under the gate.
 CORE_STRUCTS: dict[str, str] = {
-    "ValidatedRegistryAuthority": "aeat.domain.calculations.registry._authority",
-    "RegistrySnapshot": "aeat.domain.calculations.registry._schema",
-    "ModeloDefinition": "aeat.domain.calculations.registry._schema",
-    "ModeloRevision": "aeat.domain.calculations.registry._schema",
-    "CasillaObservation": "aeat.domain.calculations.registry._bindings",
-    "CalculationRevision": "aeat.domain.modelos._calculation_revision",
-    "OutputSchema": "aeat.core.json_contract",
-    "SchemaEnvelope": "aeat.core.json_contract",
-    "SecureObjectRepository": "aeat.adapters.persistence.storage.sql.secure_objects",
+    "ValidatedRegistryAuthority": "cadrumo.domain.calculations.registry._authority",
+    "RegistrySnapshot": "cadrumo.domain.calculations.registry._schema",
+    "ModeloDefinition": "cadrumo.domain.calculations.registry._schema",
+    "ModeloRevision": "cadrumo.domain.calculations.registry._schema",
+    "CasillaObservation": "cadrumo.domain.calculations.registry._bindings",
+    "CalculationRevision": "cadrumo.domain.modelos._calculation_revision",
+    "OutputSchema": "cadrumo.core.json_contract",
+    "SchemaEnvelope": "cadrumo.core.json_contract",
+    "SecureObjectRepository": "cadrumo.adapters.persistence.storage.sql.secure_objects",
     # Security + classification
-    "SensitivityClass": "aeat.core.classification",
-    "Envelope": "aeat.adapters.persistence.storage.envelope._envelope",
-    "MasterKeyProvider": "aeat.adapters.persistence.storage.master_key._master_key",
+    "SensitivityClass": "cadrumo.core.classification",
+    "Envelope": "cadrumo.adapters.persistence.storage.envelope._envelope",
+    "MasterKeyProvider": "cadrumo.adapters.persistence.storage.master_key._master_key",
     # Portal registry
-    "Portal": "aeat.domain.portals._codes",
-    "PortalMetadata": "aeat.domain.portals._metadata",
-    "PortalCategory": "aeat.domain.portals._categories",
+    "Portal": "cadrumo.domain.portals._codes",
+    "PortalMetadata": "cadrumo.domain.portals._metadata",
+    "PortalCategory": "cadrumo.domain.portals._categories",
     # Financial-input aggregates and their repositories
-    "TransactionCatalogue": "aeat.domain.transactions._models",
-    "TransactionCatalogueRepository": "aeat.adapters.persistence.profile.transactions",
-    "InvoiceCatalogue": "aeat.domain.invoices._models",
+    "TransactionCatalogue": "cadrumo.domain.transactions._models",
+    "TransactionCatalogueRepository": "cadrumo.adapters.persistence.profile.transactions",
+    "InvoiceCatalogue": "cadrumo.domain.invoices._models",
     # Profile, deadlines, and filing records
-    "TaxpayerProfile": "aeat.domain.deadlines._models",
-    "Schedule": "aeat.domain.deadlines._models",
-    "UserProfileRecord": "aeat.domain.user_profile._values",
-    "ModeloDraft": "aeat.domain.filing._schema",
-    "ModeloRecord": "aeat.domain.modelos._filing_record",
+    "TaxpayerProfile": "cadrumo.domain.deadlines._models",
+    "Schedule": "cadrumo.domain.deadlines._models",
+    "UserProfileRecord": "cadrumo.domain.user_profile._values",
+    "ModeloDraft": "cadrumo.domain.filing._schema",
+    "ModeloRecord": "cadrumo.domain.modelos._filing_record",
 }
 
 # A Sphinx cross-reference role capturing the referenced symbol's final segment,
-# e.g. ``:class:`aeat.domain.filing.ModeloRevision``` -> ``ModeloRevision``.
+# e.g. ``:class:`cadrumo.domain.filing.ModeloRevision``` -> ``ModeloRevision``.
 _ROLE = re.compile(r":(?:mod|class|func|meth|obj|data|attr|exc|paramref):`[^`]*?([A-Za-z_][A-Za-z0-9_]*)`")
 
 
@@ -105,7 +105,7 @@ def test_core_struct_anchors_are_unambiguous() -> None:
     """Every declared anchor resolves to exactly one class at its canonical module."""
     problems: list[str] = []
     for name, dotted in CORE_STRUCTS.items():
-        base = SRC_AEAT.parent / Path(*dotted.split("."))
+        base = SRC_CADRUMO.parent / Path(*dotted.split("."))
         # A canonical home is either a module file or a package __init__.
         path = base.with_suffix(".py")
         if not path.is_file():

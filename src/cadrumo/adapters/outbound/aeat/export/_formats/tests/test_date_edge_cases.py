@@ -15,8 +15,8 @@ The suite locks three properties:
 * Invalid bytes (non-numeric, wrong length) raise at decode time rather than
   producing a garbage date object.
 
-Targets :func:`aeat.adapters.outbound.aeat.export._formats._record_spec.encode_date`
-and :func:`aeat.adapters.outbound.aeat.export._formats._deserialise._decode_date`.
+Targets :func:`cadrumo.adapters.outbound.aeat.export._formats._record_spec.encode_date`
+and :func:`cadrumo.adapters.outbound.aeat.export._formats._deserialise._decode_date`.
 """
 
 from __future__ import annotations

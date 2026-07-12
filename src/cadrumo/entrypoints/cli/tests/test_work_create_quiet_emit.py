@@ -8,7 +8,7 @@ confirmation prose while leaving the machine surface (the
 These tests drive the exact emit boundary the flag flows through
 (:func:`_emit_work_create_result`) and the shared transport it relies on
 (:func:`_emit_envelope`) with a real
-:class:`~aeat.domain.modelos.WorkUnit`, a real registered result model,
+:class:`~cadrumo.domain.modelos.WorkUnit`, a real registered result model,
 and a real Typer/Click context, capturing stdout. No mocks, stubs, or
 skips.
 

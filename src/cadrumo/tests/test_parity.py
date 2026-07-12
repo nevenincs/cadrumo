@@ -259,7 +259,7 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     """A broken module is debug-logged and does not hide valid locale keys nearby."""
 
     (tmp_path / "valid_surface.py").write_text(
-        "from aeat.core.i18n import tr\n"
+        "from cadrumo.core.i18n import tr\n"
         "\n"
         "def render(reason):\n"
         "    return tr('cli.locales.app_help') + tr(f'wizard.errors.{reason}')\n",
@@ -267,7 +267,7 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     )
     (tmp_path / "broken_surface.py").write_text("def broken(:\n", encoding="utf-8")
 
-    caplog.set_level(logging.DEBUG, logger="aeat.locales._ast_scanner")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.locales._ast_scanner")
 
     assert "cli.locales.app_help" in scan_source_tree(tmp_path)
     assert "wizard.errors.*" in scan_namespace_markers(tmp_path)
@@ -498,7 +498,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
             )
     if errors:
         pytest.fail(
-            "\n".join(errors) + "\nRun `python -m aeat.locales scaffold` to insert missing placeholder entries.",
+            "\n".join(errors) + "\nRun `python -m cadrumo.locales scaffold` to insert missing placeholder entries.",
         )
 
 

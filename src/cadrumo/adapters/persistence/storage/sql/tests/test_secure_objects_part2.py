@@ -236,7 +236,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
             payload=b"clean-plaintext",
         )
 
-        with caplog.at_level(logging.WARNING, logger="aeat.adapters.persistence.storage.sql.secure_objects"):
+        with caplog.at_level(logging.WARNING, logger="cadrumo.adapters.persistence.storage.sql.secure_objects"):
             yielded = list(
                 repo.list_records(
                     namespace,

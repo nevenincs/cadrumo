@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted ModeloRecordCatalogueRepository.
 
 Persists :class:`ModeloRecordCatalogue` under
-``aeat.domain.modelos.filing_records`` at
+``cadrumo.domain.modelos.filing_records`` at
 ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates two filing records on the same

@@ -144,7 +144,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
     A parameter counts as referenced when it is consumed either by a
     formula expression tree (``{ parameter = "..." }`` arg) or by an
     in-tree ``read_parameter("100", revision, parameter_id, ...)`` call
-    in :mod:`aeat.domain.*` Python source. The latter is the
+    in :mod:`cadrumo.domain.*` Python source. The latter is the
     out-of-formula consumption pattern used by the rental tier resolver
     and any future cross-module readers.
 
@@ -307,10 +307,10 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # out-of-formula pattern as the estatal mínimo-por-descendientes
         # parameters above: the application-layer injector
         # ``_minimo_descendientes_parameter`` / ``_resolved_minimo_descendientes_
-        # tranches`` (``src/aeat/application/modelo/_profile_binding.py``) reads
+        # tranches`` (``src/cadrumo/application/modelo/_profile_binding.py``) reads
         # these by manually iterating ``snapshot.revision.parameters`` rather
         # than calling ``read_parameter(...)``, and lives under
-        # ``src/aeat/application/`` rather than ``src/aeat/domain/`` — outside
+        # ``src/cadrumo/application/`` rather than ``src/cadrumo/domain/`` — outside
         # both branches this gate's AST scan can see. Verified consumed by
         # ``test_minimo_descendientes_engine.py``'s Madrid-tranche tests.
         "renta-2020-minimo-descendientes-madrid-tercer-hijo-2020",
@@ -419,14 +419,14 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
     The orphan-detection test treats a parameter as referenced when
     either (a) a formula expression tree consumes it via
     ``{ parameter = "..." }`` or (b) Python source under
-    ``src/aeat/domain/`` calls
+    ``src/cadrumo/domain/`` calls
     ``read_parameter(modelo_id, <revision>, <parameter_id>, ...)``.
     Branch (b) covers the rental tier resolver and any other
     cross-module reader that drives the registry's parameter index
     outside the formula evaluator.
 
     The scan walks the AST of every ``.py`` file under
-    ``src/aeat/domain/`` and harvests:
+    ``src/cadrumo/domain/`` and harvests:
 
     - constant string literals passed as the third positional argument
       to a ``read_parameter`` call whose first positional argument is
@@ -443,7 +443,7 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
     to register the orphan via the formula tree to satisfy the gate.
     """
     refs: set[str] = set()
-    domain_root = PROJECT_ROOT / "src" / "aeat" / "domain"
+    domain_root = PROJECT_ROOT / "src" / "cadrumo" / "domain"
     for path in domain_root.rglob("*.py"):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -487,7 +487,7 @@ def _modelo_arg_code(node: ast.expr) -> str | None:
     """Return the three-digit modelo code a ``read_parameter`` first arg denotes.
 
     Recognises the bare literal (``"100"``) and the canonical
-    :class:`aeat.core.Modelo` enum references that replaced it during the
+    :class:`cadrumo.core.Modelo` enum references that replaced it during the
     modelo-enum-hardening sweep: the member ``Modelo.M100`` and its
     ``Modelo.M100.value`` form. Any other expression yields ``None`` (the
     call is treated as not statically analysable for this modelo).

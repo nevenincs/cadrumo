@@ -96,20 +96,20 @@ def _min_arg_literal_offenders(
 
 _DEFAULT_IVA_IMPORT_CASES: tuple[tuple[str, str], ...] = (
     (
-        "aeat.application.inventory._service",
-        "_service must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+        "cadrumo.application.inventory._service",
+        "_service must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
     ),
     (
-        "aeat.entrypoints.cli._ledger_inventory_cli",
-        "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+        "cadrumo.entrypoints.cli._ledger_inventory_cli",
+        "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.contribuyente.assets",
-        "aeat.domain.contribuyente.assets must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+        "cadrumo.domain.contribuyente.assets",
+        "cadrumo.domain.contribuyente.assets must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.contribuyente.inventory",
-        "contribuyente.inventory must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+        "cadrumo.domain.contribuyente.inventory",
+        "contribuyente.inventory must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
     ),
 )
 _DEFAULT_IVA_IMPORT_IDS = (
@@ -121,17 +121,17 @@ _DEFAULT_IVA_IMPORT_IDS = (
 
 _IVA_DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str], ...] = (
     (
-        "src/aeat/application/inventory/_service.py",
+        "src/cadrumo/application/inventory/_service.py",
         "_service.py",
         "DEFAULT_IVA_GENERAL_RATE_PCT",
     ),
     (
-        "src/aeat/domain/contribuyente/assets/__init__.py",
+        "src/cadrumo/domain/contribuyente/assets/__init__.py",
         "assets/__init__.py",
         "DEFAULT_IVA_GENERAL_RATE_PCT",
     ),
     (
-        "src/aeat/domain/contribuyente/inventory/__init__.py",
+        "src/cadrumo/domain/contribuyente/inventory/__init__.py",
         "inventory/__init__.py",
         "DEFAULT_IVA_GENERAL_RATE_PCT",
     ),
@@ -148,49 +148,49 @@ _MODELO_GROUP_IDS = ("retenciones", "counterpart", "foreign-asset", "iva-regime"
 
 _MODELO_GROUP_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
-        "aeat.application.aggregation._service",
+        "cadrumo.application.aggregation._service",
         "_RETENCIONES_MODELOS",
         "RETENCIONES_MODELOS",
-        "_service must alias RETENCIONES_MODELOS from aeat.core.external_constants",
+        "_service must alias RETENCIONES_MODELOS from cadrumo.core.external_constants",
     ),
     (
-        "aeat.application.aggregation._service",
+        "cadrumo.application.aggregation._service",
         "_COUNTERPART_MODELOS",
         "COUNTERPART_MODELOS",
-        "_service must alias COUNTERPART_MODELOS from aeat.core.external_constants",
+        "_service must alias COUNTERPART_MODELOS from cadrumo.core.external_constants",
     ),
     (
-        "aeat.application.aggregation._service",
+        "cadrumo.application.aggregation._service",
         "_FOREIGN_ASSET_MODELOS",
         "FOREIGN_ASSET_MODELOS",
-        "_service must alias FOREIGN_ASSET_MODELOS from aeat.core.external_constants",
+        "_service must alias FOREIGN_ASSET_MODELOS from cadrumo.core.external_constants",
     ),
     (
-        "aeat.application.overview._calendar",
+        "cadrumo.application.overview._calendar",
         "_IVA_REGIME_MODELOS",
         "IVA_REGIME_MODELOS",
-        "_calendar must alias IVA_REGIME_MODELOS from aeat.core.external_constants",
+        "_calendar must alias IVA_REGIME_MODELOS from cadrumo.core.external_constants",
     ),
 )
 
 _MODELO_GROUP_LITERAL_CASES: tuple[tuple[str, tuple[str, ...], str], ...] = (
     (
-        "src/aeat/application/aggregation/_service.py",
+        "src/cadrumo/application/aggregation/_service.py",
         ("111", "115", "123", "180", "190", "193"),
         "Bare retenciones-modelos tuple literal found in _service.py; use RETENCIONES_MODELOS from core",
     ),
     (
-        "src/aeat/application/aggregation/_service.py",
+        "src/cadrumo/application/aggregation/_service.py",
         ("347", "349"),
         "Bare counterpart-modelos tuple literal found in _service.py; use COUNTERPART_MODELOS from core",
     ),
     (
-        "src/aeat/application/aggregation/_service.py",
+        "src/cadrumo/application/aggregation/_service.py",
         ("720",),
         "Bare foreign-asset-modelos tuple literal found in _service.py; use FOREIGN_ASSET_MODELOS from core",
     ),
     (
-        "src/aeat/application/overview/_calendar.py",
+        "src/cadrumo/application/overview/_calendar.py",
         ("303", "390"),
         "Bare IVA-regime-modelos tuple literal found in _calendar.py; use IVA_REGIME_MODELOS from core",
     ),
@@ -205,34 +205,34 @@ _IRPF_INT_CONSTANT_IDS = ("maternidad-mensual", "maternidad-anual-cap", "guarder
 
 _IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
-        "aeat.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente._deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
         "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente._deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.contribuyente.family",
+        "cadrumo.domain.contribuyente.family",
         "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
         "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
-        "family must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants",
+        "family must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.contribuyente.family",
+        "cadrumo.domain.contribuyente.family",
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "family must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants",
+        "family must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.contribuyente.family",
+        "cadrumo.domain.contribuyente.family",
         "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
         "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
-        "family must import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR from aeat.core.external_constants",
+        "family must import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR from cadrumo.core.external_constants",
     ),
 )
 _IRPF_INT_ALIAS_IDS = (
@@ -245,21 +245,21 @@ _IRPF_INT_ALIAS_IDS = (
 
 _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
     (
-        "src/aeat/domain/contribuyente/family.py",
+        "src/cadrumo/domain/contribuyente/family.py",
         "family.py",
         1200,
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "Bare 1200 maternidad cap literals found in family.py",
     ),
     (
-        "src/aeat/domain/contribuyente/_deduccion_maternidad.py",
+        "src/cadrumo/domain/contribuyente/_deduccion_maternidad.py",
         "_deduccion_maternidad.py",
         1200,
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py",
     ),
     (
-        "src/aeat/domain/contribuyente/family.py",
+        "src/cadrumo/domain/contribuyente/family.py",
         "family.py",
         1000,
         "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
@@ -277,36 +277,36 @@ _DECIMAL_CONSTANT_IDS = ("default-iva-general-rate", "amortizacion-inmueble-rate
 
 _DECIMAL_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
-        "aeat.domain.fincas._amortization_ledger",
+        "cadrumo.domain.fincas._amortization_ledger",
         "AMORTIZACION_INMUEBLE_RATE",
         "AMORTIZACION_INMUEBLE_RATE",
-        "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from aeat.core.external_constants",
+        "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from cadrumo.core.external_constants",
     ),
     (
-        "aeat.domain.fincas._amortization_ledger",
+        "cadrumo.domain.fincas._amortization_ledger",
         "ART_23_1_F_RATE",
         "AMORTIZACION_INMUEBLE_RATE",
         "_amortization_ledger must expose ART_23_1_F_RATE alias",
     ),
     (
-        "aeat.domain.renta._maritime_exemption",
+        "cadrumo.domain.renta._maritime_exemption",
         "REBECA_MARITIME_EXEMPTION_FRACTION",
         "REBECA_MARITIME_EXEMPTION_FRACTION",
-        "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from aeat.core.external_constants",
+        "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from cadrumo.core.external_constants",
     ),
 )
 _DECIMAL_ALIAS_IDS = ("amortization-rate", "amortization-art-23-alias", "rebeca-fraction")
 
 _DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
     (
-        "src/aeat/domain/fincas/_amortization_ledger.py",
+        "src/cadrumo/domain/fincas/_amortization_ledger.py",
         "_amortization_ledger.py",
         "0.03",
         "AMORTIZACION_INMUEBLE_RATE",
         "Bare Decimal('0.03') amortization literals found",
     ),
     (
-        "src/aeat/domain/renta/_maritime_exemption.py",
+        "src/cadrumo/domain/renta/_maritime_exemption.py",
         "_maritime_exemption.py",
         "0.50",
         "REBECA_MARITIME_EXEMPTION_FRACTION",

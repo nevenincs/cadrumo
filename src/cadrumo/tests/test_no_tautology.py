@@ -1,7 +1,7 @@
 """Static guard: zero tautological assertions in production tests.
 
 Walks every deterministic test, test-support, and ``conftest.py`` module under
-``src/aeat/`` via AST and asserts that none contain assertions that are
+``src/cadrumo/`` via AST and asserts that none contain assertions that are
 structurally guaranteed to pass regardless of the code under test.
 
 Tautological patterns detected:
@@ -190,7 +190,7 @@ def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> 
 
     Uses the shared test-control module inventory so the existing fixtures-dir
     exclusion stays intact. The session AST cache amortises parse cost for the
-    ``src/aeat`` test-control surface; project-level test controls outside that
+    ``src/cadrumo`` test-control surface; project-level test controls outside that
     tree still fall back to per-path parsing.
     """
     modules = all_test_control_modules()

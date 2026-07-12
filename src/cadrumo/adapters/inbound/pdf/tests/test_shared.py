@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`aeat.adapters.inbound.pdf._shared`.
+"""Unit tests for :mod:`cadrumo.adapters.inbound.pdf._shared`.
 
 Exercises the strict + frozen invariants of :class:`ExtractedCasilla`
 (value-type tolerance, frozen attributes, source-page bounds,

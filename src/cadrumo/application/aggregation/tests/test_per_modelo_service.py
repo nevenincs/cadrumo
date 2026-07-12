@@ -154,7 +154,7 @@ def _asset_obs(
 def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> None:
     contract = get_per_modelo_aggregation_contract()
 
-    assert contract.service_owner == "aeat.application.aggregation"
+    assert contract.service_owner == "cadrumo.application.aggregation"
     assert contract.accepted_source_kinds == ACCEPTED_SOURCE_KINDS
     assert contract.error_codes == AggregationErrorCodes
     by_provider = {provider.provider: provider for provider in contract.providers}
@@ -168,7 +168,7 @@ def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> N
     )
     assert by_provider[PerModeloAggregationContributor.COUNTERPART].modelos == ("347", "349")
     assert by_provider[PerModeloAggregationContributor.FOREIGN_ASSETS].modelos == ("720",)
-    assert all(provider.service_owner == "aeat.application.aggregation" for provider in contract.providers)
+    assert all(provider.service_owner == "cadrumo.application.aggregation" for provider in contract.providers)
 
 
 def test_command_contract_is_strict_and_immutable() -> None:
@@ -800,15 +800,15 @@ def test_service_surface_has_no_cli_dependency() -> None:
         import sys
 
         for module_name in (
-            "aeat.application.aggregation",
-            "aeat.application.aggregation._service",
+            "cadrumo.application.aggregation",
+            "cadrumo.application.aggregation._service",
         ):
             importlib.import_module(module_name)
 
         leaked = sorted(
             name
             for name in sys.modules
-            if name == "typer" or name.startswith("typer.") or name.startswith("aeat.entrypoints.cli")
+            if name == "typer" or name.startswith("typer.") or name.startswith("cadrumo.entrypoints.cli")
         )
         assert leaked == [], leaked
     """)

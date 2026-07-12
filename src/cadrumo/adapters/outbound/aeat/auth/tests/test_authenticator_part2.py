@@ -18,7 +18,7 @@ GitHub issue #590 (deferred from the #193 access-gate cohesion close):
   ``AeatAccessGate.require_live_write()`` and
   ``SubmissionEngine._submit_with_transport()`` — is obsolete:
   ``_submit_with_transport`` no longer exists anywhere in the codebase. See
-  ``src/aeat/adapters/outbound/aeat/export/tests/test_engine.py`` for the
+  ``src/cadrumo/adapters/outbound/aeat/export/tests/test_engine.py`` for the
   reframed structural proof.)
 """
 

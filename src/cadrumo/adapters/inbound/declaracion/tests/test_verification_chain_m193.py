@@ -46,7 +46,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     """Engine recomputes M193 annual closure casillas from M123 relations and binding values.
 
     GROUNDED authority: synthetic M193 fixture at
-    src/aeat/tests/fixtures/justificantes/193/2024-0A.pdf.  The fixture prints:
+    src/cadrumo/tests/fixtures/justificantes/193/2024-0A.pdf.  The fixture prints:
       decl.total-perceptores = 2      (dedicated annual perceptor binding)
       decl.base-total        = 8000.00 (sum of M123 casilla 06 across 4 quarters)
       decl.retenciones-total = 1520.00 (sum of M123 casilla 09 across 4 quarters)

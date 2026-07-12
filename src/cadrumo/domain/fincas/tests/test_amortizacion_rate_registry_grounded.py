@@ -7,7 +7,7 @@ registry parameter under Modelo 100 / each ejercicio (id pattern
 acquisition cost or the cadastral value, excluding the land) plus
 ``ley-35-2006:art-23`` as the substantive base. The ledger's
 ``_resolve_amortizacion_inmueble_rate(period_year)`` reads it via
-``aeat.domain.calculations.registry.read_parameter`` and threads the value into
+``cadrumo.domain.calculations.registry.read_parameter`` and threads the value into
 ``compute_amortization_for_year``.
 
 These tests confirm:

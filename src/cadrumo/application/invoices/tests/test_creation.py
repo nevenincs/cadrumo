@@ -1,7 +1,7 @@
 """Tests for the rich catalogue-invoice creation application service.
 
 :func:`create_catalogue_invoice` mints a linkable
-:class:`~aeat.domain.invoices.Invoice` (the only aggregate carrying
+:class:`~cadrumo.domain.invoices.Invoice` (the only aggregate carrying
 ``linked_transaction_ids``) so the documented ``invoice catalogue create`` ->
 ``link --invoice-id`` flow has an operator entry point. These tests exercise the
 service against the real encrypted :class:`InvoiceCatalogueRepository` (real

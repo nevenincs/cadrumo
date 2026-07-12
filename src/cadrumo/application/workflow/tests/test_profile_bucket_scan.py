@@ -20,7 +20,7 @@ def test_profile_bucket_scan_reports_malformed_manifest_without_live_surface_lea
     bucket_dir.mkdir(parents=True)
     (bucket_dir / "manifest.toml").write_text("bucket_id = [\n", encoding="utf-8")
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.workflow._profile_bucket_scan"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.workflow._profile_bucket_scan"):
         pointers = list_profile_buckets(root=tmp_path)
 
     issues = list_profile_bucket_scan_issues(root=tmp_path)

@@ -1,4 +1,4 @@
-"""Gate tests for :class:`aeat.core.Modelo`.
+"""Gate tests for :class:`cadrumo.core.Modelo`.
 
 These tests bind the canonical :class:`Modelo` StrEnum to the registry authority
 and the domain-level shape validator, ensuring the enum cannot drift from the
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_modelo_registry_backed_members_match_registry() -> None:
     """The registry-backed :class:`Modelo` members are exactly the registry codes.
 
-    Uses the real registry via :func:`aeat.application.modelo.registry_modelo_codes`
+    Uses the real registry via :func:`cadrumo.application.modelo.registry_modelo_codes`
     (no mocks).  The enum is the full identifier taxonomy; subtracting the
     documented :data:`NON_REGISTRY_MODELOS` (retired codes with no registry
     definition, e.g. M037) must leave exactly the registry directory listing.
@@ -78,7 +78,7 @@ def test_non_registry_modelos_have_no_registry_source_paths() -> None:
 
 
 def test_modelo_members_are_valid_modelo_codes() -> None:
-    """Every :class:`Modelo` value passes the :class:`~aeat.domain.modelos.ModeloCode` shape validator."""
+    """Every :class:`Modelo` value passes the :class:`~cadrumo.domain.modelos.ModeloCode` shape validator."""
     from ...domain.modelos import ModeloCode
 
     for member in Modelo:

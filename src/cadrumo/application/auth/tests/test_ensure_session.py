@@ -107,7 +107,7 @@ def test_scripted_provider_satisfies_auth_provider_protocol() -> None:
     """
     assert isinstance(_ScriptedAuthProvider(), AuthProvider), (
         "_ScriptedAuthProvider does not satisfy the AuthProvider runtime-checkable protocol; "
-        "update it to match the protocol definition in aeat.application.auth"
+        "update it to match the protocol definition in cadrumo.application.auth"
     )
 
 

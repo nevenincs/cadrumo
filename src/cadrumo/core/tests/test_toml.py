@@ -1,4 +1,4 @@
-"""Behaviour tests for the shared TOML helpers exported by :mod:`aeat.core`."""
+"""Behaviour tests for the shared TOML helpers exported by :mod:`cadrumo.core`."""
 
 from __future__ import annotations
 

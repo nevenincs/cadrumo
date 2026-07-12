@@ -276,7 +276,7 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     """iva_rate_percentage must derive its values from registry/aeat/iva/rates.toml.
 
     The helper carries no hardcoded ``RATE_21 -> 0.21`` literal; every
-    numeric slot is resolved against :func:`aeat.domain.iva.lookup_rate`
+    numeric slot is resolved against :func:`cadrumo.domain.iva.lookup_rate`
     for Spain at a given date.
     """
     from ...iva import EUMemberState, IvaRateKind, lookup_rate

@@ -49,7 +49,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     """Engine recomputes M123 closure casillas from leaf inputs.
 
     GROUNDED authority: synthetic fixtures from AEAT-published Diseno de Registro
-    committed at src/aeat/tests/fixtures/justificantes/123/.
+    committed at src/cadrumo/tests/fixtures/justificantes/123/.
 
     2023-1T (2019-2023 revision):
       06 = 03 + 05  (total liquidacion)

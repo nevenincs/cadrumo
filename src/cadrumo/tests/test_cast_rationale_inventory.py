@@ -3,7 +3,7 @@
 Rule
 ----
 For every ``cast(`` occurrence in a non-test production module under
-``src/aeat/``, either:
+``src/cadrumo/``, either:
 
 - the same line contains ``CAST-RATIONALE-``, OR
 - scanning upward through immediately adjacent comment / blank lines reaches

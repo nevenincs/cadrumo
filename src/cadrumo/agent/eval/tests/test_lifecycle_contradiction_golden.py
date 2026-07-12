@@ -6,7 +6,7 @@ of ``.vault/audit/2026-05-21-persona-fleet-round2-findings-audit.md``: "``modelo
 readiness`` for the same modelo reports ``ready: True`` - a direct cross-surface
 contradiction" against a blocked ``work`` verb. This is the enforcement surface for the
 ``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/aeat/_data/agent/rules/operator-lifecycle-ordering.md``).
+a retry" section (``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``).
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347

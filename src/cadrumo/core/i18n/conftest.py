@@ -1,4 +1,4 @@
-"""pytest configuration for the aeat.core.i18n test scope.
+"""pytest configuration for the cadrumo.core.i18n test scope.
 
 Activates strict-placeholder mode for every test in this package so that
 ``tr()`` calls with unmatched ``{name}`` tokens raise

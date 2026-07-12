@@ -1,4 +1,4 @@
-"""Live test for :func:`aeat.adapters.outbound.aeat.sede.walk_declarations_register` (#239).
+"""Live test for :func:`cadrumo.adapters.outbound.aeat.sede.walk_declarations_register` (#239).
 
 Drives the *Consultar declaraciones presentadas* form against
 the real AEAT sede with a Cl@ve-móvil session. It is deselected when:
@@ -10,7 +10,7 @@ the real AEAT sede with a Cl@ve-móvil session. It is deselected when:
 After live opt-in, unavailable sessions or missing account data are failures.
 
 The test is read-only by construction — every public surface in
-:mod:`aeat.adapters.outbound.aeat.sede._declarations` is structurally incapable of
+:mod:`cadrumo.adapters.outbound.aeat.sede._declarations` is structurally incapable of
 mutating AEAT state under the outbound write guard.
 """
 

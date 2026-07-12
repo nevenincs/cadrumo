@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted TransactionCatalogueRepository.
 
 Persists :class:`TransactionCatalogue` under
-``aeat.domain.transactions.bucket`` (per profile bucket) at
+``cadrumo.domain.transactions.bucket`` (per profile bucket) at
 ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: builds a two-transaction catalogue with non-default

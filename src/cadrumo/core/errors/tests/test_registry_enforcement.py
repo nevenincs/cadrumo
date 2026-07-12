@@ -118,7 +118,7 @@ def test_every_aeat_error_subclass_has_a_registered_code() -> None:
 def test_modelo_calculate_input_errors_have_registered_codes() -> None:
     """The public calculate CLI imports this module before handling overrides."""
 
-    module = importlib.import_module("aeat.application.modelo._calculate_input")
+    module = importlib.import_module("cadrumo.application.modelo._calculate_input")
     concrete_errors = [
         error_type
         for _, error_type in inspect.getmembers(module, inspect.isclass)

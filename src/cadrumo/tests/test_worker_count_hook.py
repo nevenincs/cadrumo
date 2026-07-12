@@ -1,6 +1,6 @@
 """Real-subprocess proof of the ``AEAT_PYTEST_WORKERS`` conftest hook.
 
-:mod:`aeat.tests._worker_count_hook` is a ``pytest_xdist_auto_num_workers``
+:mod:`cadrumo.tests._worker_count_hook` is a ``pytest_xdist_auto_num_workers``
 hook, consulted by pytest-xdist only during ``-n auto`` resolution (not
 during collection of the outer suite itself), so its behavior cannot be
 proven by importing and calling the function directly -- that would only
@@ -10,7 +10,7 @@ pytest subprocess against a throwaway fixture tree wired to the real hook
 (the exact module under test, not a reimplementation) and asserts the
 ACTUAL resolved worker count via a file the probe test writes from inside
 each xdist worker process, following the same real-subprocess idiom already
-established by :mod:`aeat.tests.test_acceptance_wall_catalogue`.
+established by :mod:`cadrumo.tests.test_acceptance_wall_catalogue`.
 
 No mocks: every run below is a genuine ``pytest -n auto`` boot of the real
 pytest-xdist plugin plus the real hook module.
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SUBPROCESS_TIMEOUT_SECONDS = 60
 
 _PROBE_CONFTEST = (
-    "from aeat.tests._worker_count_hook import resolve_auto_num_workers as pytest_xdist_auto_num_workers\n"
+    "from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as pytest_xdist_auto_num_workers\n"
 )
 _PROBE_TEST = """
 import os
@@ -54,7 +54,7 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
     """Run the real probe fixture in a fresh pytest subprocess.
 
     Writes a throwaway ``conftest.py`` delegating to the real
-    :func:`aeat.tests._worker_count_hook.resolve_auto_num_workers` and a
+    :func:`cadrumo.tests._worker_count_hook.resolve_auto_num_workers` and a
     probe test that records the worker count xdist actually resolved
     (``PYTEST_XDIST_WORKER_COUNT``, set by xdist inside every worker
     process) to a sentinel file.

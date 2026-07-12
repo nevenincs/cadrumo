@@ -1,9 +1,9 @@
-"""Real-behavior tests for :func:`aeat.application.diagnostics_run_health.build_run_health_report`.
+"""Real-behavior tests for :func:`cadrumo.application.diagnostics_run_health.build_run_health_report`.
 
 Exercises the aggregator against a real
-:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder` (real encrypted
+:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder` (real encrypted
 secure-object persistence, no mocks). The auth-session half is verified with
-an injected :class:`~aeat.application.auth.AuthTestResult` -- ``auth_probe``
+an injected :class:`~cadrumo.application.auth.AuthTestResult` -- ``auth_probe``
 is a first-class dependency-injection seam the function accepts precisely so
 callers can supply a real, previously-constructed probe result without
 re-invoking the live probe on every call; this keeps the test independent of

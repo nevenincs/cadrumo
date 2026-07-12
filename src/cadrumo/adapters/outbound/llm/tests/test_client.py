@@ -1,8 +1,8 @@
 """Unit tests for the public LLM client.
 
-Exercises :class:`aeat.adapters.outbound.llm.LLMClient` against the
+Exercises :class:`cadrumo.adapters.outbound.llm.LLMClient` against the
 deterministic provider adapter to verify cache reuse, error surfacing, and
-that secret material configured via :class:`aeat.core.config.Settings` never
+that secret material configured via :class:`cadrumo.core.config.Settings` never
 leaks through ``repr`` or JSON serialization.
 """
 

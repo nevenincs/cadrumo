@@ -1,5 +1,5 @@
 """Unit tests for the .env file reader and writer in
-:mod:`aeat.core.env_io`.
+:mod:`cadrumo.core.env_io`.
 
 Locks down the parsing rules (key=value, comment skipping, blank lines,
 malformed-line detection) and the in-place rewrite semantics that
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 class TestReadEnvFile:
-    """Behaviour of :func:`aeat.core.env_io.read_env_file`."""
+    """Behaviour of :func:`cadrumo.core.env_io.read_env_file`."""
 
     def test_returns_empty_for_missing_file(self, tmp_path: Path) -> None:
         assert read_env_file(tmp_path / "missing.env") == {}
@@ -45,8 +45,8 @@ class TestReadEnvFile:
 
 
 class TestWriteEnvVars:
-    """Behaviour of :func:`aeat.core.env_io.write_env_var` and
-    :func:`aeat.core.env_io.write_env_vars`.
+    """Behaviour of :func:`cadrumo.core.env_io.write_env_var` and
+    :func:`cadrumo.core.env_io.write_env_vars`.
     """
 
     def test_write_env_var_materializes_and_updates_file(self, tmp_path: Path) -> None:

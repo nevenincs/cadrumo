@@ -1,13 +1,13 @@
-"""Producer-side lazy-import boundary probe for ``aeat.domain.user_profile``.
+"""Producer-side lazy-import boundary probe for ``cadrumo.domain.user_profile``.
 
 The CLI-side gate at
-:mod:`aeat.entrypoints.cli.test_lazy_command_tree` enforces that the
+:mod:`cadrumo.entrypoints.cli.test_lazy_command_tree` enforces that the
 state-free CLI surfaces do not transitively load the calculation
 registry. The application-side mirror at
-:mod:`aeat.application.user_profile.test_lazy_boundary` pins the same
+:mod:`cadrumo.application.user_profile.test_lazy_boundary` pins the same
 contract one layer up. This module pins it at the *domain*-package
-boundary: importing :mod:`aeat.domain.user_profile` alone, in a fresh
-interpreter, MUST NOT place any ``aeat.domain.calculations.registry*``
+boundary: importing :mod:`cadrumo.domain.user_profile` alone, in a fresh
+interpreter, MUST NOT place any ``cadrumo.domain.calculations.registry*``
 module in ``sys.modules``.
 
 The domain package's only registry-coupled re-export is
@@ -44,11 +44,11 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_importing_domain_user_profile_does_not_load_registry() -> None:
-    """``import aeat.domain.user_profile`` must not pull the registry.
+    """``import cadrumo.domain.user_profile`` must not pull the registry.
 
     The domain package re-exports :class:`UserProfilePortableExport`
     whose field types pull the calculation registry through
-    ``aeat.domain.modelos._calculation_revision``. Re-exporting it
+    ``cadrumo.domain.modelos._calculation_revision``. Re-exporting it
     eagerly drags the full ~69-submodule registry into every consumer
     that touches the boundary, including the state-free CLI surfaces.
     The boundary MUST therefore route the portable-export symbol
@@ -59,13 +59,13 @@ def test_importing_domain_user_profile_does_not_load_registry() -> None:
     completed = _run_python(
         """
         import sys
-        import aeat.domain.user_profile  # noqa: F401
+        import cadrumo.domain.user_profile  # noqa: F401
 
         leaked = sorted(
             name
             for name in sys.modules
-            if name == "aeat.domain.calculations.registry"
-            or name.startswith("aeat.domain.calculations.registry.")
+            if name == "cadrumo.domain.calculations.registry"
+            or name.startswith("cadrumo.domain.calculations.registry.")
         )
         print("\\n".join(leaked))
         """,
@@ -73,7 +73,7 @@ def test_importing_domain_user_profile_does_not_load_registry() -> None:
 
     assert completed.returncode == 0, completed.stderr
     leaked = [line for line in completed.stdout.splitlines() if line.strip()]
-    assert leaked == [], f"import aeat.domain.user_profile leaked registry submodules into sys.modules: {leaked}"
+    assert leaked == [], f"import cadrumo.domain.user_profile leaked registry submodules into sys.modules: {leaked}"
 
 
 def test_portable_export_resolves_on_demand_via_getattr() -> None:
@@ -89,18 +89,18 @@ def test_portable_export_resolves_on_demand_via_getattr() -> None:
     completed = _run_python(
         """
         import sys
-        import aeat.domain.user_profile as pkg
+        import cadrumo.domain.user_profile as pkg
 
         before = sum(
             1 for n in sys.modules
-            if n == "aeat.domain.calculations.registry"
-            or n.startswith("aeat.domain.calculations.registry.")
+            if n == "cadrumo.domain.calculations.registry"
+            or n.startswith("cadrumo.domain.calculations.registry.")
         )
         cls = pkg.UserProfilePortableExport
         after = sum(
             1 for n in sys.modules
-            if n == "aeat.domain.calculations.registry"
-            or n.startswith("aeat.domain.calculations.registry.")
+            if n == "cadrumo.domain.calculations.registry"
+            or n.startswith("cadrumo.domain.calculations.registry.")
         )
         print(cls.__name__, before, after)
         """,

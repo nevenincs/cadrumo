@@ -19,7 +19,7 @@ happens to run ``just test-integration`` locally.
 
 This module is the catalogue half of the fix: a small, typed, explicit binding
 from a closed acceptance-wall issue to the exact test module + test function
-that guards it. :mod:`aeat.tests.test_acceptance_wall_catalogue` is the gate
+that guards it. :mod:`cadrumo.tests.test_acceptance_wall_catalogue` is the gate
 half: it walks this catalogue and proves, by real pytest collection, that
 every enrolled wall's guarding test still exists and still collects.
 
@@ -63,7 +63,7 @@ class AcceptanceWallEntry(BaseModel):
         capability: One sentence naming the capability this wall protects.
         test_module: Repository-relative path to the guarding test module,
             POSIX-separated (e.g.
-            ``"src/aeat/entrypoints/cli/tests/test_ledger_exclude_journey.py"``).
+            ``"src/cadrumo/entrypoints/cli/tests/test_ledger_exclude_journey.py"``).
         test_function: The guarding test function name inside ``test_module``.
     """
 
@@ -102,13 +102,13 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
     AcceptanceWallEntry(
         issue=220,
         capability=("A stored draft revision renders the formula and operand values inline when reviewed."),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_revision_trace.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_revision_trace.py",
         test_function="test_work_revision_renders_inline_formula_trace_for_computed_casilla",
     ),
     AcceptanceWallEntry(
         issue=224,
         capability="A transaction can be marked 'reviewed and intentionally excluded'.",
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_exclude_journey.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_exclude_journey.py",
         test_function="test_exclude_returns_quintet_and_marks_row_excluded",
     ),
     AcceptanceWallEntry(
@@ -116,25 +116,25 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         capability=(
             "An operator who stashed half their ledger rows by mistake can restore them without a whole-ledger reset."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_restore_journey.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_restore_journey.py",
         test_function="test_bulk_stash_recovery_restores_every_row_without_a_reset",
     ),
     AcceptanceWallEntry(
         internal_reference="ledger-fx-conversion (persona-surfaced HIGH defect)",
         capability="Foreign-currency bank rows import converted to EUR, not silently unconverted.",
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_fx_import.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_fx_import.py",
         test_function="test_cli_import_converts_foreign_rows_to_eur",
     ),
     AcceptanceWallEntry(
         issue=529,
         capability="--output-language is available on every user-facing verb, not just some of them.",
-        test_module="src/aeat/entrypoints/cli/tests/test_output_language_parity.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_output_language_parity.py",
         test_function="test_modelo_work_commands_accept_output_language",
     ),
     AcceptanceWallEntry(
         internal_reference="autonoma-persona-1t-2025-close (autonoma quarterly-close testimonial)",
         capability=("A freelance/autónoma filer can import, classify, and close a full quarter end-to-end."),
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_persona_autonoma_close.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_persona_autonoma_close.py",
         test_function="test_autonoma_closes_1t_2025_end_to_end",
     ),
     AcceptanceWallEntry(
@@ -142,7 +142,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         capability=(
             "The operator records WHY when classifying a transaction, via a --reason flag that persists to notes."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_classify_ux.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_classify_ux.py",
         test_function="test_classify_reason_persists_to_transaction_notes",
     ),
     AcceptanceWallEntry(
@@ -151,13 +151,13 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "The operator filters their transaction catalogue by an AEAT period token plus year, "
             "not a bespoke calendar grammar."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py",
         test_function="test_aeat_token_plus_year_resolves_to_period",
     ),
     AcceptanceWallEntry(
         issue=260,
         capability="One command walks the data-prep workflow and shows which step the operator is on.",
-        test_module="src/aeat/entrypoints/cli/tests/test_overview_prepare_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_overview_prepare_verb.py",
         test_function="test_prepare_shows_import_step_pending_on_fresh_profile",
     ),
     AcceptanceWallEntry(
@@ -166,7 +166,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "The operator asks what data is needed for a given modelo and period and gets a "
             "registry-grounded checklist."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_requires_data_inventory.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_requires_data_inventory.py",
         test_function="test_requires_classifies_m130_casillas_against_live_registry_no_active_profile",
     ),
     AcceptanceWallEntry(
@@ -175,19 +175,19 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "The operator backs up their local catalogue to an archive and restores it on a fresh "
             "machine without data loss."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_profile_archive_roundtrip.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_profile_archive_roundtrip.py",
         test_function="test_archive_export_import_recovery_wrap_roundtrip",
     ),
     AcceptanceWallEntry(
         issue=219,
         capability=("A Modelo 130 draft is built through a guided wizard instead of hand-writing casilla-code JSON."),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_work_wizard.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py",
         test_function="test_wizard_drives_m130_draft_through_full_prompt_sequence",
     ),
     AcceptanceWallEntry(
         issue=217,
         capability="Hundreds of transactions bulk-classify from a CSV instead of one-by-one.",
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_bulk_classify.py",
         test_function="test_classify_from_csv_applies_all_valid_rows",
     ),
     AcceptanceWallEntry(
@@ -195,7 +195,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         capability=(
             "A late-night filing completes in one command via aeat quickfile, all the way to an exported fichero."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_app_quickfile.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_app_quickfile.py",
         test_function="test_quickfile_runs_full_chain_to_exported_fichero",
     ),
     AcceptanceWallEntry(
@@ -203,7 +203,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         capability=(
             "An Autoliquidacion Rectificativa IVA correction on Modelo 303 files through the guided amend wizard."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_amend_wizard.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
         test_function="test_amend_wizard_drives_full_prompt_sequence_and_files_correction",
     ),
     AcceptanceWallEntry(
@@ -212,7 +212,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "Actionable post-filing AEAT events (requerimientos, propuestas, devoluciones) surface "
             "as a single warning notice."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_overview_post_filing_notices.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_overview_post_filing_notices.py",
         test_function="test_actionable_events_emit_single_warning_notice",
     ),
     AcceptanceWallEntry(
@@ -221,7 +221,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "The operator sets their own home-office/mileage/phone usage ratio once via "
             "`aeat app ledger ratios set`, and it sticks -- never re-entered."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_ratios_verbs.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ratios_verbs.py",
         test_function="test_ratios_set_persists_and_list_reflects",
     ),
     AcceptanceWallEntry(
@@ -231,7 +231,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "reconciles a local work unit against it without any AEAT certificate authentication -- "
             "`aeat app modelo reconcile file --file`."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_happy_path",
     ),
     AcceptanceWallEntry(
@@ -241,7 +241,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "no AEAT certificate, and those values feed the cross-period `previous_filing` prefill "
             "for a later calculation."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_local_observation_spreadsheet_cli.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_local_observation_spreadsheet_cli.py",
         test_function="test_observe_local_from_csv_spreadsheet_persists_non_official_observation",
     ),
     AcceptanceWallEntry(
@@ -250,7 +250,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "A spending category is assigned to a transaction at classification time, and the "
             "category persists on the transaction record."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_ledger_validation_paths.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_ledger_validation_paths.py",
         test_function="test_ledger_classify_persists_professional_service_paid_net_of_irpf_withholding",
     ),
     AcceptanceWallEntry(
@@ -260,7 +260,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "income and expenses aggregate into the registry-computed resultado parcial casilla, "
             "not a hand-maintained spreadsheet."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
         test_function="test_modelo_130_resultado_apartado_i_direct_estimation",
     ),
     AcceptanceWallEntry(
@@ -269,7 +269,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "Modelo 200 (Impuesto sobre Sociedades) micro-empresa cuota integra computes correctly "
             "against the AEAT Manual Practico rate, not just a formula that happens to run."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
         test_function="test_modelo_200_micro_empresa_pyme_cuota_2024",
     ),
     AcceptanceWallEntry(
@@ -278,7 +278,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "Modelo 202 pago fraccionado (Art. 40.2 LIS lane) computes the 18% cuota against the "
             "prior period's base correctly for a taxpayer below the INCN threshold."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py",
         test_function="test_modelo_202_art_40_2_cuota_incn_below_threshold",
     ),
     AcceptanceWallEntry(
@@ -288,7 +288,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "calculation, not just a stored preference: classified ledger expenses aggregate into the "
             "registry-computed M100 casilla at the ratio-adjusted amount."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py",
         test_function="test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses",
     ),
     AcceptanceWallEntry(
@@ -299,7 +299,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "printed casilla against the computed revision and reports a real casilla-level "
             "divergence, not a header-only compare."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_catches_casilla_divergence",
     ),
     AcceptanceWallEntry(
@@ -310,7 +310,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "disagrees with the filed declaración is caught as a real divergence, not a silent "
             "identity match."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_m130_catches_casilla_divergence",
     ),
     AcceptanceWallEntry(
@@ -322,7 +322,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "parse succeed, and a computed casilla that disagrees with the filed declaración is "
             "still caught as a real divergence."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_m111_catches_casilla_divergence",
     ),
     AcceptanceWallEntry(
@@ -333,7 +333,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "IVA anual casilla that disagrees with the filed declaración is caught as a real "
             "divergence."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_m390_catches_casilla_divergence",
     ),
     AcceptanceWallEntry(
@@ -345,14 +345,14 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "declaración is caught as a real divergence, the Tier-S summary return "
             "calc-verify-roundtrip claim."
         ),
-        test_module="src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
+        test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py",
         test_function="test_reconcile_file_kind_declaration_m190_catches_casilla_divergence",
     ),
 )
 """The enrolled representative subset of closed acceptance walls.
 
 Append new entries here as later work enrolls the remaining closed
-``acceptance-journey`` issues; :mod:`aeat.tests.test_acceptance_wall_catalogue`
+``acceptance-journey`` issues; :mod:`cadrumo.tests.test_acceptance_wall_catalogue`
 re-derives its assertions from this tuple, so no gate code changes are needed
 to enroll more walls.
 """

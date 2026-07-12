@@ -369,14 +369,14 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
         "portal",
     }.issubset(links_by_surface)
     assert all(link.requires_snapshot is True for link in snapshot.revision.application_links)
-    assert links_by_surface["calculation"].consumer == "aeat.domain.calculations.registry.calculate_registry_snapshot"
-    assert links_by_surface["export"].consumer == "aeat.application.filing.export_draft"
-    assert links_by_surface["filing"].consumer == "aeat.application.filing"
-    assert links_by_surface["verification"].consumer == "aeat.application.verification"
-    assert links_by_surface["review"].consumer == "aeat.application.filing.review"
-    assert links_by_surface["approval"].consumer == "aeat.application.filing.approval"
-    assert links_by_surface["reconciliation"].consumer == "aeat.application.modelo.modelo_reconcile"
-    assert links_by_surface["workflow"].consumer == "aeat.application.workflow"
+    assert links_by_surface["calculation"].consumer == "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+    assert links_by_surface["export"].consumer == "cadrumo.application.filing.export_draft"
+    assert links_by_surface["filing"].consumer == "cadrumo.application.filing"
+    assert links_by_surface["verification"].consumer == "cadrumo.application.verification"
+    assert links_by_surface["review"].consumer == "cadrumo.application.filing.review"
+    assert links_by_surface["approval"].consumer == "cadrumo.application.filing.approval"
+    assert links_by_surface["reconciliation"].consumer == "cadrumo.application.modelo.modelo_reconcile"
+    assert links_by_surface["workflow"].consumer == "cadrumo.application.workflow"
 
 
 def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:

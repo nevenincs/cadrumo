@@ -546,15 +546,15 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
 
 class TestVerdictJsonRoundTrip:
     """JSON serialisation invariants for
-    :class:`aeat.application.verification.VerificationVerdict`.
+    :class:`cadrumo.application.verification.VerificationVerdict`.
     """
 
     def test_verdict_is_json_serialisable(self) -> None:
         """Verify a verdict survives ``model_dump_json`` round-trip.
 
         The ``period`` field serialises as ``{"filing_year": 2025, "code": "1T"}``
-        (the canonical :class:`~aeat.core.Period` JSON shape) and is
-        reconstituted to the same :class:`~aeat.core.Period` on reload.
+        (the canonical :class:`~cadrumo.core.Period` JSON shape) and is
+        reconstituted to the same :class:`~cadrumo.core.Period` on reload.
         """
         verdict = VerificationVerdict(
             modelo="130",

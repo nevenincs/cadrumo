@@ -8,7 +8,7 @@ This test applies two complementary checks across dedicated roundtrip test files
 (``test_*roundtrip*.py`` and ``test_*anti_tautology*.py``):
 
 1. **Snapshot integrity**: the builder-function inventory committed to
-   ``src/aeat/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt``
+   ``src/cadrumo/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt``
    is consistent with the current file tree — every listed file still exists.
    This catches renames or deletions that silently invalidate the audit.
 
@@ -44,7 +44,7 @@ _REPO_ROOT = _AEAT_ROOT.parent.parent
 
 # Waivers: builder functions exempt from the saturation marker check.
 # Format: "path:lineno:function_name" -> "rationale"
-# Paths are relative to the repository src/aeat root (POSIX separators).
+# Paths are relative to the repository src/cadrumo root (POSIX separators).
 _WAIVERS: dict[str, str] = {
     # _populated_snapshot in test_borrador_100_roundtrip.py is waived
     # pending verification of snapshot-model optional-field coverage.
@@ -129,17 +129,17 @@ def test_snapshot_files_still_exist() -> None:
         line = raw_line.strip()
         if not line or line.startswith("#"):
             continue
-        # Format: "src/aeat/path/to/file.py:lineno func_name NOTE"
+        # Format: "src/cadrumo/path/to/file.py:lineno func_name NOTE"
         parts = line.split()
         if not parts:
             continue
         path_lineno = parts[0]
-        # path_lineno is like "src/aeat/adapters/.../file.py:42"
+        # path_lineno is like "src/cadrumo/adapters/.../file.py:42"
         colon_idx = path_lineno.rfind(":")
         if colon_idx == -1:
             continue
         rel_path = path_lineno[:colon_idx]
-        # rel_path starts with "src/aeat/"; strip to get relative-to-repo
+        # rel_path starts with "src/cadrumo/"; strip to get relative-to-repo
         abs_path = _REPO_ROOT / Path(rel_path)
         if not abs_path.exists():
             missing.append(rel_path)
@@ -148,7 +148,7 @@ def test_snapshot_files_still_exist() -> None:
         joined = "\n  ".join(missing)
         raise AssertionError(
             f"S223 audit snapshot references {len(missing)} file(s) that no longer exist:\n  {joined}\n"
-            "Update the snapshot in src/aeat/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt.",
+            "Update the snapshot in src/cadrumo/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt.",
         )
 
 

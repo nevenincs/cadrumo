@@ -38,7 +38,7 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
 
     GROUNDED authority: synthetic fixture generated from AEAT-published Diseno de
     Registro DR xls (aeat-dr-115-2019-v13) committed at
-    src/aeat/tests/fixtures/justificantes/115/2024-1T.pdf.
+    src/cadrumo/tests/fixtures/justificantes/115/2024-1T.pdf.
 
     Chain:
       1. parse_declaracion -> extracted casillas 01 (perceptores), 02 (base),

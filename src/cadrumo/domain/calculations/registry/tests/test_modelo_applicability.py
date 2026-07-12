@@ -52,7 +52,7 @@ _NON_IMPATRIADO_SPECIAL_REGIMES = (None, IrpfSpecialRegime.GENERAL)
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     """The seed rules are exposed by the registry package."""
 
-    assert derive_modelo_applicability.__module__ == ("aeat.domain.calculations.registry._applicability")
+    assert derive_modelo_applicability.__module__ == ("cadrumo.domain.calculations.registry._applicability")
     rules = iter_modelo_applicability_rules()
     assert {rule.modelo for rule in rules} == {
         "100",

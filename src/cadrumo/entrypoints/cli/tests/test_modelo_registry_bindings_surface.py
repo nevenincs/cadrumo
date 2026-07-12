@@ -141,7 +141,7 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
     """M200 missing-input discovery names the feeding relation id of each relation-fed binding.
 
     The guidance is registry-derived (each
-    :class:`~aeat.domain.calculations.registry.RelationDefinition` declares
+    :class:`~cadrumo.domain.calculations.registry.RelationDefinition` declares
     its ``target_binding``), so the discovery generalises to any modelo
     rather than enumerating a hardcoded M200 channel table.
     """
@@ -388,7 +388,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
 
     from ....core.paths import PROJECT_ROOT
 
-    cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     canonical = cli_root / "_modelo.py"
     forbidden_patterns = (
         'typer.Typer(\n    name="bindings"',
@@ -416,7 +416,7 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
 
     from ....core.paths import PROJECT_ROOT
 
-    canonical_text = (PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
+    canonical_text = (PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
     forbidden_emitters = (
         "emit_bucket_event",
         "append_bucket_event",

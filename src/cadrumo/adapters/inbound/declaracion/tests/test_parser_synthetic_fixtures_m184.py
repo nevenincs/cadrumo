@@ -29,7 +29,7 @@ def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
     AEAT-published diseño de registro DR_Modelo_184_2025.pdf, downloaded 2026-05-27
     from the configured AEAT Sede static corpus source.
     Saved at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
         01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf
     Registro de tipo 1, positions 5-8: "EJERCICIO"
       "Las cuatro cifras del ejercicio fiscal al que corresponde la declaracion"

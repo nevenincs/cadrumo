@@ -23,7 +23,7 @@ from .. import _app_contract
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_MISSING_PAYLOAD_PACKAGE = "aeat.entrypoints.cli.tests._missing_payload_package"
+_MISSING_PAYLOAD_PACKAGE = "cadrumo.entrypoints.cli.tests._missing_payload_package"
 
 
 def _payload_packages_with_missing_probe() -> tuple[str, ...]:

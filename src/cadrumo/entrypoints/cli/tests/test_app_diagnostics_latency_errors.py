@@ -1,11 +1,11 @@
 """Real-behavior CLI tests for ``aeat app diagnostics latency`` and ``errors``.
 
 Exercises both verbs end to end against the real CLI, the real
-:func:`~aeat.application.diagnostics_run_health.build_latency_report` and
-:func:`~aeat.application.diagnostics_run_health.build_error_breakdown`
+:func:`~cadrumo.application.diagnostics_run_health.build_latency_report` and
+:func:`~cadrumo.application.diagnostics_run_health.build_error_breakdown`
 aggregators, and real encrypted SQLite persistence in an isolated storage
 root. No test doubles: LLM run telemetry is seeded through its production
-writer (:class:`~aeat.adapters.outbound.llm.LLMRunTelemetryRecorder`) and both
+writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and both
 verbs report it back typed.
 """
 
@@ -58,7 +58,7 @@ def _seed_latency_runs() -> None:
         recorder.record(
             LLMRunRecord(
                 run_id=f"lat-{index}",
-                caller="aeat.application.ledger.llm_classification",
+                caller="cadrumo.application.ledger.llm_classification",
                 provider="llm:claude:test-model",
                 model="test-model",
                 duration_ms=duration_ms,
@@ -81,7 +81,7 @@ def _seed_error_runs() -> None:
         recorder.record(
             LLMRunRecord(
                 run_id=f"err-{index}",
-                caller="aeat.application.ledger.llm_classification",
+                caller="cadrumo.application.ledger.llm_classification",
                 provider=provider,
                 model="test-model",
                 duration_ms=100,

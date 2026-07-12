@@ -1,6 +1,6 @@
 """End-to-end roundtrip tests through the encrypted secure-object store.
 
-The :mod:`aeat.domain.calculations.registry.test_cross_boundary_roundtrip`
+The :mod:`cadrumo.domain.calculations.registry.test_cross_boundary_roundtrip`
 suite asserts pydantic ``model_dump_json``/``model_validate_json``
 identity. That covers the in-process JSON boundary but does not exercise
 the encrypted persistence boundary: encrypt -> SQL row -> decrypt ->

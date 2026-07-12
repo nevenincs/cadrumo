@@ -1,4 +1,4 @@
-"""Real-behavior tests for :func:`aeat.core.decimal.coerce_decimal`.
+"""Real-behavior tests for :func:`cadrumo.core.decimal.coerce_decimal`.
 
 Expected values are derived from the Python :class:`decimal.Decimal`
 specification and the three caller contracts consolidated in contract:
@@ -82,7 +82,7 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
 ) -> None:
     raw_value = "not-a-decimal-secret"
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.core.decimal._coerce"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.core.decimal._coerce"):
         assert coerce_decimal(raw_value) is None
 
     relevant = [

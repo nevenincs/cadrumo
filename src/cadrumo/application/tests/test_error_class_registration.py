@@ -1,9 +1,9 @@
 """Real-behavior tests for application error-class registration.
 
 Asserts that every application-facing error class in this module is:
-  - a registered :class:`~aeat.core.errors.AeatError` subclass
-  - bound in :data:`~aeat.core.errors.ERROR_REGISTRY`
-  - round-trips through :func:`~aeat.core.errors.build_error_envelope`
+  - a registered :class:`~cadrumo.core.errors.AeatError` subclass
+  - bound in :data:`~cadrumo.core.errors.ERROR_REGISTRY`
+  - round-trips through :func:`~cadrumo.core.errors.build_error_envelope`
     producing a non-empty ``error_code`` field
 
 Also asserts that selected narrow exception paths remain importable without

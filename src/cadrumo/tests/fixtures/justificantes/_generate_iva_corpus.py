@@ -63,8 +63,8 @@ class _Modelo303CorpusFixture:
     The new closure chain (boxes 64/66/71) applies only for new_template=True.
 
     Registry source:
-      src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml
-      src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml
+      src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml
+      src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml
     """
 
     filename: str
@@ -672,7 +672,7 @@ class _Modelo130CorpusFixture:
 
     All other casillas (01, 02, 05, 06, 08, 10, 15, 16, 18) are absent (zero by default).
 
-    Registry source: src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/
+    Registry source: src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/
       formulas/0001-formulas.toml, formulas/0002-formulas.toml, parameters/0001-parameters.toml
     """
 
@@ -960,7 +960,7 @@ class _Modelo390CorpusFixture:
     No intracomunitaria (box26=0) in the simple-case fixture.
     No compensation carry-forwards (97/662 = 0).
 
-    Registry source: src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/
+    Registry source: src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/
       formulas/0001-formulas.toml (modelo-390-iva-anual-cuota-devengada-total,
       modelo-390-iva-anual-cuota-deducible-total,
       modelo-390-iva-anual-resultado-regimen-general)

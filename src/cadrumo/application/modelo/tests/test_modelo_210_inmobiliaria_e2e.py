@@ -21,12 +21,12 @@ back as ``text_values``.
 The silent-zero scenario: for M210 2025 with ``tipo_renta = "inmobiliaria"``,
 ``base_imponible = valor_catastral * coeficiente_imputacion_inmobiliaria *
 (dias_imputacion / days_in_filing_year)`` (``_evaluate_m210_resolve_base_imponible``
-in ``aeat.domain.calculations.registry._formula_runtime``). The formula runtime
+in ``cadrumo.domain.calculations.registry._formula_runtime``). The formula runtime
 validates ``dias_imputacion`` to a strictly positive integer in
 ``[1, days_in_year]`` and the coefficient to equal one of the two
 registry-authored LIRPF art. 85 rates — ``0.011`` (recent revision) or ``0.02``
 (old/no revision), declared in
-``src/aeat/_data/registry/aeat/modelos/210/revisions/2025/parameters/0003-m210-imputacion-inmobiliaria-2025.toml``
+``src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0003-m210-imputacion-inmobiliaria-2025.toml``
 — so a zero ``dias_imputacion`` is refused outright rather than silently producing
 a zero base. The genuine silent-zero this module exercises instead is a positive,
 VALID ``dias_imputacion`` (1 day) applied against a small ``valor_catastral`` (EUR
@@ -91,7 +91,7 @@ def _register_wizard_catalogue() -> None:
     projection reads ``get_setup_flow()`` and raises
     ``WizardCatalogueNotRegisteredError`` unless the production wizard catalogue
     has been registered. The production CLI registers it at startup; importing
-    ``aeat.application.wizard._catalogue`` triggers the same registration as an
+    ``cadrumo.application.wizard._catalogue`` triggers the same registration as an
     import-time side effect.
     """
     from ...wizard import _catalogue  # noqa: F401  (import for registration side effect)
@@ -109,7 +109,7 @@ _BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("base_imponible", surf
 # The LIRPF art. 85 imputation-rate parameters declare exactly two valid
 # coefficients for the inmobiliaria branch; 0.011 is the "recent revision"
 # rate (m210-imputacion-rate-recent-revision-2025). Read from
-# src/aeat/_data/registry/aeat/modelos/210/revisions/2025/parameters/0003-m210-imputacion-inmobiliaria-2025.toml.
+# src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0003-m210-imputacion-inmobiliaria-2025.toml.
 _VALID_IMPUTACION_COEFFICIENT = Decimal("0.011")
 
 # Grounds both the M210 inmobiliaria base-imponible formula and the

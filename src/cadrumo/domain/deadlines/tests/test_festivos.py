@@ -343,14 +343,14 @@ def test_ccaa_enum_has_19_members_covering_17_autonomies_plus_2_cities() -> None
 
 
 def test_no_parallel_festivos_implementation_exists() -> None:
-    """Only ``aeat.domain.deadlines._festivos`` owns festivos /
+    """Only ``cadrumo.domain.deadlines._festivos`` owns festivos /
     business-day semantics. Any other module defining functions with
     these names is a duplicate that re-introduces drift."""
 
     from pathlib import Path
 
     repo_root = Path(__file__).resolve().parents[4]
-    source_root = repo_root / "src" / "aeat"
+    source_root = repo_root / "src" / "cadrumo"
     canonical_module = source_root / "domain" / "deadlines" / "_festivos.py"
 
     canonical_symbols = (
@@ -368,7 +368,7 @@ def test_no_parallel_festivos_implementation_exists() -> None:
             assert f"def {symbol}" not in text, (
                 f"shadow festivos implementation detected: "
                 f"{py_file} defines `def {symbol}`; the canonical "
-                f"owner is `aeat.domain.deadlines._festivos`."
+                f"owner is `cadrumo.domain.deadlines._festivos`."
             )
 
 
@@ -380,7 +380,7 @@ def test_no_hardcoded_festivos_table_in_cli() -> None:
     from pathlib import Path
 
     repo_root = Path(__file__).resolve().parents[4]
-    cli_root = repo_root / "src" / "aeat" / "entrypoints" / "cli"
+    cli_root = repo_root / "src" / "cadrumo" / "entrypoints" / "cli"
 
     forbidden_dates = (
         "2025-01-01",
@@ -398,5 +398,5 @@ def test_no_hardcoded_festivos_table_in_cli() -> None:
                 f"hardcoded festivos data detected in CLI file {py_file}: "
                 f"`{needle}`. Holiday data must live in "
                 f"`registry/aeat/calendars/` and reach the CLI through "
-                f"`aeat.domain.deadlines`."
+                f"`cadrumo.domain.deadlines`."
             )

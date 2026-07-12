@@ -54,11 +54,11 @@ _STRING_CONSTANT_CASES = (
 _STRING_CONSTANT_IDS = tuple(name.lower() for name, _ in _STRING_CONSTANT_CASES)
 
 _M347_PUBLIC_FACADE_CONSUMERS = (
-    ("src/aeat/application/aggregation/_counterpart.py", 3),
-    ("src/aeat/application/modelo/_calculate_input.py", 3),
-    ("src/aeat/domain/modelos/_row_models.py", 3),
-    ("src/aeat/domain/calculations/registry/_counterpart_bindings.py", 4),
-    ("src/aeat/domain/calculations/registry/_invoice_bindings.py", 4),
+    ("src/cadrumo/application/aggregation/_counterpart.py", 3),
+    ("src/cadrumo/application/modelo/_calculate_input.py", 3),
+    ("src/cadrumo/domain/modelos/_row_models.py", 3),
+    ("src/cadrumo/domain/calculations/registry/_counterpart_bindings.py", 4),
+    ("src/cadrumo/domain/calculations/registry/_invoice_bindings.py", 4),
 )
 
 
@@ -154,13 +154,13 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
     from ..external_constants import BINARY_MIME_TYPE
 
     _assert_module_constant_identity(
-        module_name="aeat.adapters.outbound.storage._google_drive",
+        module_name="cadrumo.adapters.outbound.storage._google_drive",
         attr_name="_BINARY_MIME_TYPE",
         expected=BINARY_MIME_TYPE,
-        import_message="_google_drive must import BINARY_MIME_TYPE from aeat.core.external_constants",
+        import_message="_google_drive must import BINARY_MIME_TYPE from cadrumo.core.external_constants",
     )
     _assert_module_constant_identity(
-        module_name="aeat.adapters.outbound.aeat.sede._declarations",
+        module_name="cadrumo.adapters.outbound.aeat.sede._declarations",
         attr_name="_BINARY_MIME_TYPE",
         expected=BINARY_MIME_TYPE,
         import_message="_declarations must import BINARY_MIME_TYPE under the alias _BINARY_MIME_TYPE",
@@ -168,7 +168,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 
     sig = inspect.signature(EncryptedBlobStore.put)
     assert sig.parameters["content_type"].default == BINARY_MIME_TYPE
-    declarations = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
+    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations")
     assert declarations._BINARY_MIME_TYPE == "application/octet-stream"
 
 
@@ -185,17 +185,17 @@ def test_default_currency_consumers_alias_core_constant() -> None:
 
     for module_name, attr_name, message in (
         (
-            "aeat.application.ledger._models",
+            "cadrumo.application.ledger._models",
             "DEFAULT_CURRENCY",
             "_models module must import DEFAULT_CURRENCY from external_constants",
         ),
         (
-            "aeat.domain.currency._service",
+            "cadrumo.domain.currency._service",
             "DEFAULT_CURRENCY",
             "_service module must import DEFAULT_CURRENCY from external_constants",
         ),
         (
-            "aeat.application.aggregation._currency_predicates",
+            "cadrumo.application.aggregation._currency_predicates",
             "DEFAULT_CURRENCY",
             "_currency_predicates must import DEFAULT_CURRENCY from external_constants",
         ),
@@ -223,18 +223,18 @@ def test_classified_by_manual_consumers_alias_core_constant() -> None:
     """Application/domain consumers import or re-export ``CLASSIFIED_BY_MANUAL`` from core.
 
     The application layer must not define a local copy; it must import the
-    canonical constant from ``aeat.core.external_constants`` and expose it
+    canonical constant from ``cadrumo.core.external_constants`` and expose it
     through the package ``__init__``.
     """
 
     from ..external_constants import CLASSIFIED_BY_MANUAL
 
     for module_name, message in (
-        ("aeat.application.ledger", "aeat.application.ledger must expose CLASSIFIED_BY_MANUAL"),
-        ("aeat.application.ledger._models", "_models must import CLASSIFIED_BY_MANUAL from core"),
+        ("cadrumo.application.ledger", "cadrumo.application.ledger must expose CLASSIFIED_BY_MANUAL"),
+        ("cadrumo.application.ledger._models", "_models must import CLASSIFIED_BY_MANUAL from core"),
         (
-            "aeat.domain.transactions._service",
-            "_service must import CLASSIFIED_BY_MANUAL from aeat.core.external_constants",
+            "cadrumo.domain.transactions._service",
+            "_service must import CLASSIFIED_BY_MANUAL from cadrumo.core.external_constants",
         ),
     ):
         _assert_module_constant_identity(
@@ -252,7 +252,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain(source_tr
 
     This is the regression guard against the pattern removed in contract/contract:
     ``_MANUAL_CLASSIFIED_BY = "manual"`` or ``CLASSIFIED_BY_MANUAL = "manual"`` defined
-    locally instead of imported from ``aeat.core.external_constants``.
+    locally instead of imported from ``cadrumo.core.external_constants``.
     """
 
     # Names that signal a classified_by sentinel re-definition.
@@ -261,7 +261,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain(source_tr
     offenders: list[str] = []
     for py_file, tree in package_ast_items(source_tree_ast):
         relative_path = repo_relative(py_file)
-        if not relative_path.startswith(("src/aeat/application/", "src/aeat/domain/")):
+        if not relative_path.startswith(("src/cadrumo/application/", "src/cadrumo/domain/")):
             continue
         for node in ast.walk(tree):
             # Look for module-level or function-level simple assignments:
@@ -279,12 +279,12 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain(source_tr
                     offenders.append(
                         f"{relative_path}:{node.lineno}: "
                         f"local classified_by sentinel '{target.id} = \"manual\"'; "
-                        f"import CLASSIFIED_BY_MANUAL from aeat.core.external_constants",
+                        f"import CLASSIFIED_BY_MANUAL from cadrumo.core.external_constants",
                     )
 
     assert offenders == [], (
         "Local classified_by manual sentinels found; "
-        "import CLASSIFIED_BY_MANUAL from aeat.core.external_constants instead:\n" + "\n".join(offenders)
+        "import CLASSIFIED_BY_MANUAL from cadrumo.core.external_constants instead:\n" + "\n".join(offenders)
     )
 
 
@@ -300,25 +300,25 @@ def test_export_mime_consumers_alias_core_constants() -> None:
 
     for module_name, attr_name, constant_name, message in (
         (
-            "aeat.adapters.outbound.aeat.sede._declarations",
+            "cadrumo.adapters.outbound.aeat.sede._declarations",
             "_JSON_MIME_TYPE",
             "JSON_MIME_TYPE",
             "_declarations must import JSON_MIME_TYPE under the alias _JSON_MIME_TYPE",
         ),
         (
-            "aeat.application.export._tabular",
+            "cadrumo.application.export._tabular",
             "_CSV_MIME_TYPE",
             "CSV_MIME_TYPE",
             "_tabular must import CSV_MIME_TYPE under the alias _CSV_MIME_TYPE",
         ),
         (
-            "aeat.application.export._tabular",
+            "cadrumo.application.export._tabular",
             "_JSONL_MIME_TYPE",
             "JSONL_MIME_TYPE",
             "_tabular must import JSONL_MIME_TYPE under the alias _JSONL_MIME_TYPE",
         ),
         (
-            "aeat.application.export._tabular",
+            "cadrumo.application.export._tabular",
             "_XLSX_MIME_TYPE",
             "XLSX_MIME_TYPE",
             "_tabular must import XLSX_MIME_TYPE under the alias _XLSX_MIME_TYPE",
@@ -331,8 +331,8 @@ def test_export_mime_consumers_alias_core_constants() -> None:
             import_message=message,
         )
 
-    declarations = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
-    tabular = importlib.import_module("aeat.application.export._tabular")
+    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations")
+    tabular = importlib.import_module("cadrumo.application.export._tabular")
     assert declarations._JSON_MIME_TYPE == "application/json"
     assert tabular._CSV_MIME_TYPE == "text/csv"
 
@@ -346,8 +346,8 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping
 
     offenders: list[str] = []
     for relative_path, literal, replacement in (
-        ("src/aeat/adapters/outbound/aeat/sede/_declarations.py", "application/json", "_JSON_MIME_TYPE"),
-        ("src/aeat/application/export/_tabular.py", "text/csv", "_CSV_MIME_TYPE"),
+        ("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py", "application/json", "_JSON_MIME_TYPE"),
+        ("src/cadrumo/application/export/_tabular.py", "text/csv", "_CSV_MIME_TYPE"),
     ):
         offenders.extend(
             _string_literal_offenders(
@@ -377,52 +377,52 @@ def test_threshold_consumers_alias_core_constants() -> None:
 
     for module_name, attr_name, constant_name, message in (
         (
-            "aeat.application.aggregation._counterpart",
+            "cadrumo.application.aggregation._counterpart",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
-            "_counterpart must import M347_THRESHOLD_EUR from aeat.core",
+            "_counterpart must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "aeat.application.modelo._calculate_input",
+            "cadrumo.application.modelo._calculate_input",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
-            "_calculate_input must import M347_THRESHOLD_EUR from aeat.core",
+            "_calculate_input must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "aeat.domain.modelos._row_models",
+            "cadrumo.domain.modelos._row_models",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
-            "_row_models must import M347_THRESHOLD_EUR from aeat.core",
+            "_row_models must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "aeat.domain.calculations.registry._counterpart_bindings",
+            "cadrumo.domain.calculations.registry._counterpart_bindings",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
-            "_counterpart_bindings must import M347_THRESHOLD_EUR from aeat.core",
+            "_counterpart_bindings must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "aeat.domain.calculations.registry._invoice_bindings",
+            "cadrumo.domain.calculations.registry._invoice_bindings",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
-            "_invoice_bindings must import M347_THRESHOLD_EUR from aeat.core",
+            "_invoice_bindings must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "aeat.domain.renta._maritime_exemption",
+            "cadrumo.domain.renta._maritime_exemption",
             "ART_7P_EXEMPTION_CAP_EUR",
             "ART_7P_EXEMPTION_CAP_EUR",
-            "_maritime_exemption must import ART_7P_EXEMPTION_CAP_EUR from aeat.core.external_constants",
+            "_maritime_exemption must import ART_7P_EXEMPTION_CAP_EUR from cadrumo.core.external_constants",
         ),
         (
-            "aeat.domain.renta",
+            "cadrumo.domain.renta",
             "ART_7P_EXEMPTION_CAP_EUR",
             "ART_7P_EXEMPTION_CAP_EUR",
-            "aeat.domain.renta must re-export ART_7P_EXEMPTION_CAP_EUR",
+            "cadrumo.domain.renta must re-export ART_7P_EXEMPTION_CAP_EUR",
         ),
         (
-            "aeat.domain.deadlines._models",
+            "cadrumo.domain.deadlines._models",
             "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
             "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
-            "_models must import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR from aeat.core.external_constants",
+            "_models must import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR from cadrumo.core.external_constants",
         ),
     ):
         _assert_module_constant_identity(
@@ -455,7 +455,7 @@ def test_m347_consumers_use_public_core_facade_in_source(source_tree_ast: Mappin
         assert len(facade_imports) == 1, relative_path
         assert private_leaf_imports == [], relative_path
 
-    row_models_tree = _read_ast(repo_path("src/aeat/domain/modelos/_row_models.py"), source_tree_ast)
+    row_models_tree = _read_ast(repo_path("src/cadrumo/domain/modelos/_row_models.py"), source_tree_ast)
     export_assignments = [
         node
         for node in row_models_tree.body
@@ -475,11 +475,11 @@ def test_no_bare_threshold_decimal_literals_in_consumers(source_tree_ast: Mappin
 
     offenders: list[str] = []
     for relative_path, literal, replacement in (
-        ("src/aeat/application/aggregation/_counterpart.py", "3005.06", "M347_THRESHOLD_EUR"),
-        ("src/aeat/application/aggregation/_foreign_assets.py", "50000.00", "MODELO_720_REPORTING_THRESHOLD_EUR"),
-        ("src/aeat/domain/renta/_maritime_exemption.py", "60100", "ART_7P_EXEMPTION_CAP_EUR"),
+        ("src/cadrumo/application/aggregation/_counterpart.py", "3005.06", "M347_THRESHOLD_EUR"),
+        ("src/cadrumo/application/aggregation/_foreign_assets.py", "50000.00", "MODELO_720_REPORTING_THRESHOLD_EUR"),
+        ("src/cadrumo/domain/renta/_maritime_exemption.py", "60100", "ART_7P_EXEMPTION_CAP_EUR"),
         (
-            "src/aeat/domain/deadlines/_models.py",
+            "src/cadrumo/domain/deadlines/_models.py",
             "1500",
             "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
         ),

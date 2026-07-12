@@ -1,6 +1,6 @@
 """Tests for the registry-grounded EU member state validators.
 
-Country code validation anchors to :class:`aeat.domain.iva.EUMemberState`
+Country code validation anchors to :class:`cadrumo.domain.iva.EUMemberState`
 rather than a hand-maintained list, and the
 :func:`assert_eu_member_state_code` helper rejects non-EU codes for
 callers (e.g. Modelo 369 binding selectors) that need an EU-only

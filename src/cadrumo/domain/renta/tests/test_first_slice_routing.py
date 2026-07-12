@@ -160,7 +160,7 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
     The check is scoped to a revision's OWN
     ``ledger_renta_expense_aggregation`` binding targets (never the
     universal :func:`first_slice_target_casillas` codomain) -- see
-    :mod:`aeat.domain.renta._first_slice_routing_integrity` for why a
+    :mod:`cadrumo.domain.renta._first_slice_routing_integrity` for why a
     revision that declares no such bindings has a legitimately empty
     required set.
     """
