@@ -7,7 +7,7 @@ modified: '2026-07-12'
 tier: L4
 related:
   - '[[2026-07-12-cadrumo-product-rename-research]]'
-  - '[[2026-07-12-cadrumo-cli-executable-adr]]'
+  - '[[2026-07-12-cadrumo-product-rename-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -31,7 +31,7 @@ the Spanish authority, its portals, protocols, credentials, legal provenance,
 official corpus, registry taxonomy, citations, hashes, and historical evidence.
 
 The plan introduces no import, executable, environment, plugin, MCP, namespace,
-or persisted-state compatibility shim. The sole human command is `aeat`;
+or persisted-state compatibility shim. The sole human command is `cadrumo`;
 `cadrumo-mcp` remains the distinct MCP command.
 Generated surfaces follow their authored
 authorities, public publication remains blocked on evidenced external-name
@@ -99,11 +99,11 @@ Depends on W02 and produces installable local artifacts before integration regen
 
 ### Phase `W03.P05` - rename root distribution and scripts
 
-Make the Cadrumo distribution expose the sole human `aeat` command and the
+Make the Cadrumo distribution expose the sole human `cadrumo` command and the
 distinct `cadrumo-mcp` command.
 
-- [x] `W03.P05.S24` - Rename root metadata, package selection, extras, and URLs to Cadrumo; `expose `aeat` and `cadrumo-mcp` scripts; `pyproject.toml`.
-- [x] `W03.P05.S25` - Retain the `aeat` CLI program identity while renaming version and help product surfaces to Cadrumo; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
+- [x] `W03.P05.S24` - Rename root metadata, package selection, extras, and URLs to Cadrumo; `expose `cadrumo` and `cadrumo-mcp` scripts; `pyproject.toml`.
+- [x] `W03.P05.S25` - Rename the CLI program identity, version, and help product surfaces to Cadrumo; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
 - [x] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp executable/refusal modules and focused real tests`.
 - [x] `W03.P05.S27` - Update the optional-extra authority and every directly generated runtime install remedy to current `cadrumo[...]` metadata, with real degradation tests; `src/cadrumo/core/_optional_extras.py; optional-extra consumers, error registries, agent/MCP/search/corpus degradation surfaces and direct tests`.
 
@@ -253,8 +253,8 @@ permitted.
 
 1. `import cadrumo` succeeds from source and installed wheel, `import aeat`
    fails, and the wheel contains no former product import root.
-2. `aeat --version` and `cadrumo-mcp` work from clean installs. There is no
-   `cadrumo` human CLI alias or `aeat` Python import package.
+2. `cadrumo --version` and `cadrumo-mcp` work from clean installs. There is no
+   `aeat` human CLI or Python import package.
 3. The root and companion wheels share a version, remain within size budgets,
    install together, expose only `cadrumo_data`, preserve disjoint corpus
    ownership, and retain byte-exact official evidence.
