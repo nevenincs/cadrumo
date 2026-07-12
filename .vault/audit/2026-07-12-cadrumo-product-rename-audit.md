@@ -806,3 +806,23 @@ preserved official bytes, resolving the installed-runtime blocker.
 22. Prevent or sweep the two companion `__pycache__/hatch_build.cpython-313.pyc` files immediately before final artifact inspection; verify by literal companion-directory scans and do not treat their temporary removal as durable across builds.
 23. Re-run the corrected core, split-install, and Docker core probes with bounded per-stage diagnostics and enough outer budget to write their manifests. Keep S37, S39, and S40—and therefore W03.P07—open until those post-fix runs complete successfully.
 24. Quarantine or resolve the concurrent `aeat` script/ADR work before any further build or lock commit. Verify `git show HEAD:pyproject.toml` and the actual build input both expose only `cadrumo` plus `cadrumo-mcp`.
+
+## 2026-07-12 packaging remediation provenance
+
+The split-install sequencing remediation was committed as
+`121ca96c080886a987bf21cf6a8a184cc102cc1e`. During concurrent work, that commit
+was created by amending the immediately preceding dev-container commit
+`274c6c75208967a71026f66f1eb8346099306fe2`. The resulting commit therefore
+couples `.devcontainer/devcontainer.json`, `Dockerfile`,
+`dev/packaging/smoke_split_install.py`, and
+`dev/packaging/tests/test_smoke_split_install_sequence.py`. Both bodies of work
+remain present, and the original dev-container commit object remains available,
+but their feature provenance is coupled in the branch history. No reset, rebase,
+or further history rewrite was used to disguise or split the collision.
+
+The accepted product-identity ADR and the user-approved plan define `cadrumo` as
+the sole human CLI. A concurrent, unapproved ADR proposing `aeat` does not
+supersede that decision. The root script metadata was reconciled again after the
+overlap; recommendation 18's `aeat` alternative is rejected, while
+recommendations 20, 21, and 24 remain governed by the canonical `cadrumo` /
+`cadrumo-mcp` pair.
