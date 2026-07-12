@@ -32,7 +32,7 @@ export const ca: Copy = {
       <>
         * «Compatible amb l&rsquo;AEAT» descriu únicament que Cadrumo calcula d&rsquo;acord amb
         els models i regles publicats per l&rsquo;Agencia Estatal de Administración Tributaria.
-        Cadrumo és un projecte independent sense cap relació amb l&rsquo;AEAT — consulta
+        Cadrumo és un projecte independent sense cap relació amb l&rsquo;AEAT; consulta
         l&rsquo;<a href="#/legal">avís legal</a>.
       </>
     ),
@@ -324,7 +324,7 @@ export const ca: Copy = {
     message: (
       <>
         Aquest lloc no instal·la rastrejadors ni recull dades. Una galeta funcional desa el
-        teu idioma — només si en tries un.
+        teu idioma, i només si en tries un.
       </>
     ),
     details: 'Avís legal i privadesa',

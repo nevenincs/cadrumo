@@ -31,7 +31,7 @@ export const en: Copy = {
       <>
         * “AEAT compatible” describes only that Cadrumo computes against the published forms and
         rules of the Agencia Estatal de Administración Tributaria. Cadrumo is an independent
-        project with no relation to the AEAT — see the <a href="#/legal">legal notice</a>.
+        project with no relation to the AEAT; see the <a href="#/legal">legal notice</a>.
       </>
     ),
   },
@@ -309,7 +309,7 @@ export const en: Copy = {
     message: (
       <>
         This site sets no trackers and collects no data. One functional cookie stores your
-        language — only if you pick one.
+        language, and only if you pick one.
       </>
     ),
     details: 'Legal & privacy',
