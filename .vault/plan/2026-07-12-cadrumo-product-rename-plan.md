@@ -49,7 +49,7 @@ Delivers the executable classification and single identity source on which every
 Establish path ownership and explicit product-versus-authority classification before mutation.
 
 - [x] `W01.P01.S01` - Inventory dirty and untracked paths and record path ownership before rename edits; `shared worktree ownership ledger`.
-- [ ] `W01.P01.S02` - Classify every public environment variable as product-owned or authority-owned; `product and authority environment-variable matrix`.
+- [x] `W01.P01.S02` - Classify every public environment variable as product-owned or authority-owned; `product and authority environment-variable matrix`.
 - [ ] `W01.P01.S03` - Classify every persistence root, database, namespace, session directory, and bundle suffix; `persistence identity matrix`.
 - [ ] `W01.P01.S04` - Classify external package, repository, marketplace, executable, domain, and trademark reservations; `issue #476 external reservation register`.
 
