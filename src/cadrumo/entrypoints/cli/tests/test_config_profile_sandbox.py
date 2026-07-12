@@ -448,7 +448,7 @@ def test_sandbox_archive_moves_sandbox_off_live_surface_but_data_survives() -> N
     pointer = read_profile_bucket_by_id(bucket_id)
     assert pointer is not None
     assert pointer.status is BucketLifecycleStatus.TOMBSTONED
-    paths = bucket_paths(load_settings().aeat_local_storage_root, bucket_id)
+    paths = bucket_paths(load_settings().cadrumo_local_storage_root, bucket_id)
     assert manifest_path(paths).is_file()
 
     # main is unaffected.
@@ -843,7 +843,7 @@ def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_m
 
     Exercises :func:`~cadrumo.entrypoints.cli._common._active_sandbox_notice`
     directly against a bucket whose manifest is torn/corrupt AND is the
-    currently active bucket (``AEAT_ACTIVE_PROFILE`` points at it). This
+    currently active bucket (``CADRUMO_ACTIVE_PROFILE`` points at it). This
     isolates the indicator's own defensive handling: the helper must
     return ``None`` rather than propagate the storage-validation failure,
     independent of how any particular CLI command's *other* pre-existing
@@ -861,11 +861,11 @@ def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_m
 
     live_pointer = read_profile_bucket("sandbox:torn")
     assert live_pointer is not None
-    paths = bucket_paths(load_settings().aeat_local_storage_root, live_pointer.bucket_id)
+    paths = bucket_paths(load_settings().cadrumo_local_storage_root, live_pointer.bucket_id)
     manifest_file = manifest_path(paths)
     manifest_file.write_text("not = [valid toml", encoding="utf-8")
 
-    with override_settings(aeat_active_profile=live_pointer.bucket_id):
+    with override_settings(cadrumo_active_profile=live_pointer.bucket_id):
         assert _active_sandbox_notice() is None
 
 
@@ -887,7 +887,7 @@ def test_sandbox_active_indicator_absent_when_a_non_active_sandbox_manifest_is_c
     assert live_pointer is not None
     assert _invoke(("config", "switch", "main")).exit_code == 0
 
-    paths = bucket_paths(load_settings().aeat_local_storage_root, live_pointer.bucket_id)
+    paths = bucket_paths(load_settings().cadrumo_local_storage_root, live_pointer.bucket_id)
     manifest_file = manifest_path(paths)
     manifest_file.write_text("not = [valid toml", encoding="utf-8")
 

@@ -4,11 +4,11 @@ A first-contact operator runs a profile-scoped command before any
 profile exists. The command must refuse with the same translated
 ``profile create`` guidance regardless of which surface it lands on —
 ``modelo work`` and ``ledger`` must not disagree, and no path may leak
-the raw internal ``aeat_database_url is empty`` config error or a
+the raw internal ``cadrumo_database_url is empty`` config error or a
 low-level ``NoActiveBucketSession`` decryption failure.
 
 These tests invoke each cold-start verb against a fresh
-``AEAT_LOCAL_STORAGE_ROOT`` with no profile pointer and assert a clean,
+``CADRUMO_LOCAL_STORAGE_ROOT`` with no profile pointer and assert a clean,
 consistent refusal. The CLI is invoked in-process through the cached
 Click command, the same harness every other CLI test uses.
 """
@@ -65,8 +65,8 @@ _COLD_START_VERBS: tuple[tuple[str, ...], ...] = (
 
 # Internal plumbing strings that must never reach the operator.
 _LEAK_MARKERS: tuple[str, ...] = (
-    "aeat_database_url is empty",
-    "AEAT_DATABASE_URL",
+    "cadrumo_database_url is empty",
+    "CADRUMO_DATABASE_URL",
     "NoActiveBucketSession",
     "Traceback",
     "StorageError",
@@ -81,7 +81,7 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
     locale-resolved CLI output stays deterministic for assertions.
     """
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
             yield storage_root
 
@@ -95,7 +95,7 @@ def test_cold_start_verbs_refuse_without_leaks_and_surface_profile_guidance(tmp_
 
     for index, verb in enumerate(_COLD_START_VERBS):
         label = _verb_label(verb)
-        with override_settings(aeat_output_language="en"):
+        with override_settings(cadrumo_output_language="en"):
             with isolated_sessionless_storage_root(tmp_path=tmp_path / f"cold-start-{index}"):
                 result = invoke_cached_cli(list(verb))
 
@@ -111,7 +111,7 @@ def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: P
 
     The disaster-recovery testimony flagged the two surfaces disagreeing:
     ``ledger list`` gave a clean refusal while ``modelo work list`` leaked
-    the raw ``aeat_database_url is empty`` error. The cold-start contract
+    the raw ``cadrumo_database_url is empty`` error. The cold-start contract
     is that every profile-scoped surface produces the same refusal.
     """
 

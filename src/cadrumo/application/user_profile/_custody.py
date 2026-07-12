@@ -94,7 +94,7 @@ def _settings(settings: Settings | None = None) -> Settings:
 
 def recovery_wrap_path(settings: Settings | None = None) -> Path:
     """Return the configured persisted recovery-wrapper path."""
-    return Path(_settings(settings).aeat_secret_store_dir) / _RECOVERY_WRAP_FILENAME
+    return Path(_settings(settings).cadrumo_secret_store_dir) / _RECOVERY_WRAP_FILENAME
 
 
 def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecoveryStatus:
@@ -111,7 +111,7 @@ def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
     active_profile = resolve_active_bucket_id()
     if active_profile is None:
         return
-    paths = bucket_paths(Path(settings.aeat_local_storage_root), active_profile)
+    paths = bucket_paths(Path(settings.cadrumo_local_storage_root), active_profile)
     manifest = read_manifest(paths)
     if manifest.recovery_enrolled:
         return
@@ -155,7 +155,7 @@ def _file_provider_for_new_passphrase(
     new_passphrase: str,
 ) -> FileFallbackMasterKeyProvider:
     return FileFallbackMasterKeyProvider(
-        store_dir=Path(settings.aeat_secret_store_dir),
+        store_dir=Path(settings.cadrumo_secret_store_dir),
         passphrase_callback=lambda: new_passphrase,
     )
 
@@ -174,7 +174,7 @@ def rekey_secret_store(
     new_provider.complete_recovery(master_key)
     with activate_master_key_provider(new_provider):
         pass
-    return CustodyRekeyResult(secret_store_dir=Path(resolved.aeat_secret_store_dir), rekeyed=True)
+    return CustodyRekeyResult(secret_store_dir=Path(resolved.cadrumo_secret_store_dir), rekeyed=True)
 
 
 def recover_secret_store(
@@ -194,7 +194,7 @@ def recover_secret_store(
         pass
     return CustodyRecoverResult(
         recovery_path=path,
-        secret_store_dir=Path(resolved.aeat_secret_store_dir),
+        secret_store_dir=Path(resolved.cadrumo_secret_store_dir),
         recovered=True,
     )
 

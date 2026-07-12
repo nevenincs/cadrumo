@@ -110,7 +110,7 @@ _WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
-_LIBREOFFICE_EXECUTABLE_ENV = "AEAT_LIBREOFFICE_EXECUTABLE"
+_LIBREOFFICE_EXECUTABLE_ENV = "CADRUMO_LIBREOFFICE_EXECUTABLE"
 _BINARY_XLS_CONVERSION_BYTES_CACHE: dict[tuple[str, int, str], bytes] = {}
 
 
@@ -132,7 +132,7 @@ class _BinaryXlsConversionContext:
 class WorkbookScanOptions:
     """Controls for bounded workbook discovery."""
 
-    per_file_timeout_seconds: float = _PARITY_DEFAULTS.aeat_workbook_parity_per_file_timeout_s
+    per_file_timeout_seconds: float = _PARITY_DEFAULTS.cadrumo_workbook_parity_per_file_timeout_s
     max_formula_refs: int = 500
 
 
@@ -346,7 +346,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     """
     from ....core.config import load_settings
 
-    settings_configured = load_settings().aeat_libreoffice_executable
+    settings_configured = load_settings().cadrumo_libreoffice_executable
     if settings_configured is not None:
         runner = _resolve_libreoffice_runner(str(settings_configured))
         return WorkbookRunnerAvailability(
@@ -426,7 +426,7 @@ def run_workbook_with_libreoffice(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=_PARITY_DEFAULTS.aeat_workbook_parity_recalc_timeout_s,
+                timeout=_PARITY_DEFAULTS.cadrumo_workbook_parity_recalc_timeout_s,
             )
         except subprocess.TimeoutExpired as exc:
             raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
@@ -575,7 +575,7 @@ def _converted_binary_xls_path(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=_PARITY_DEFAULTS.aeat_workbook_parity_libreoffice_timeout_s,
+                timeout=_PARITY_DEFAULTS.cadrumo_workbook_parity_libreoffice_timeout_s,
             )
         except subprocess.TimeoutExpired as exc:
             raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
@@ -726,7 +726,7 @@ def _resolve_libreoffice_runner(executable: str | None) -> Path:
     if executable is None:
         from ....core.config import load_settings
 
-        configured = load_settings().aeat_libreoffice_executable
+        configured = load_settings().cadrumo_libreoffice_executable
         found = str(configured) if configured is not None else (shutil.which("soffice") or shutil.which("libreoffice"))
         if not found:
             raise RegistryValidationError(

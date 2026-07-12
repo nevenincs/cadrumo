@@ -227,7 +227,7 @@ def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
 
 
 def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
-    with override_settings(aeat_output_language="ca"):
+    with override_settings(cadrumo_output_language="ca"):
         clear_output_language_cache()
         try:
             rendered = _calendar_shift_reason_text("sabado + Todos los Santos + domingo")
@@ -238,7 +238,7 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
     assert "sabado" not in rendered
     assert "domingo" not in rendered
 
-    with override_settings(aeat_output_language="es"):
+    with override_settings(cadrumo_output_language="es"):
         clear_output_language_cache()
         try:
             accented = _calendar_shift_reason_text("sabado + business_day")

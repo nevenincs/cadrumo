@@ -125,7 +125,7 @@ def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> N
     config_function = _function_named(route_path, "settings_for_bucket_route")
     config_segment = _source_segment(route_path, config_function)
     assert "__pydantic_fields_set__" in config_segment
-    assert "aeat_database_url" in config_segment
+    assert "cadrumo_database_url" in config_segment
 
 
 def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() -> None:
@@ -179,12 +179,12 @@ def test_explicit_database_route_detector_ignores_env_absence_and_flags_real_rou
     absent_tree = ast.parse(
         """
 env = {
-    "AEAT_DATABASE_URL": None,
+    "CADRUMO_DATABASE_URL": None,
 }
 """
     )
-    keyword_tree = ast.parse('Settings(aeat_database_url="sqlite:///explicit.db")')
-    env_tree = ast.parse('env = {"AEAT_DATABASE_URL": "sqlite:///explicit.db"}')
+    keyword_tree = ast.parse('Settings(cadrumo_database_url="sqlite:///explicit.db")')
+    env_tree = ast.parse('env = {"CADRUMO_DATABASE_URL": "sqlite:///explicit.db"}')
 
     assert not _uses_explicit_database_route(absent_tree)
     assert _uses_explicit_database_route(keyword_tree)
@@ -296,7 +296,7 @@ def _uses_explicit_database_route(tree: ast.AST) -> bool:
     for node in ast.walk(tree):
         if id(node) in docstring_constant_ids:
             continue
-        if isinstance(node, ast.keyword) and node.arg == "aeat_database_url":
+        if isinstance(node, ast.keyword) and node.arg == "cadrumo_database_url":
             return not _is_none_literal(node.value)
         if isinstance(node, ast.Dict) and _dict_sets_explicit_database_route(node):
             return True
@@ -305,7 +305,7 @@ def _uses_explicit_database_route(tree: ast.AST) -> bool:
 
 def _dict_sets_explicit_database_route(node: ast.Dict) -> bool:
     for key, value in zip(node.keys, node.values, strict=True):
-        if _literal_string(key) in {"AEAT_DATABASE_URL", "aeat_database_url"} and not _is_none_literal(value):
+        if _literal_string(key) in {"CADRUMO_DATABASE_URL", "cadrumo_database_url"} and not _is_none_literal(value):
             return True
     return False
 

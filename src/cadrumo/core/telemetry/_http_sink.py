@@ -16,11 +16,11 @@ consent gate
 Two additional invariants beyond the consent gate keep this sink safe:
 
 1. **No configured endpoint means no send, unconditionally.** A sink built
-   without :attr:`~core.config.Settings.aeat_telemetry_endpoint` set (the
+   without :attr:`~core.config.Settings.cadrumo_telemetry_endpoint` set (the
    ADR's documented default -- ``None``, scaffolded but read by no transport
    in the prior slice) is a no-op, mirroring
    :class:`~core.telemetry.LocalNoopTelemetrySink`'s inertness. This
-   protects a deployment that flips ``aeat_telemetry_opt_in`` and a tier on
+   protects a deployment that flips ``cadrumo_telemetry_opt_in`` and a tier on
    without ever configuring where to send data.
 2. **A transport failure never escapes.** Telemetry is best-effort diagnostic
    signal, never a load-bearing part of any command's outcome; a connection
@@ -69,7 +69,7 @@ class HttpTelemetrySink:
     Attributes:
         endpoint: The remote telemetry collector URL, or ``None``. When
             ``None`` (the default-off posture's natural value for
-            ``settings.aeat_telemetry_endpoint``),
+            ``settings.cadrumo_telemetry_endpoint``),
             :meth:`~core.telemetry.HttpTelemetrySink.send` is a pure no-op --
             the sink never dials out.
     """
@@ -80,7 +80,7 @@ class HttpTelemetrySink:
         Args:
             endpoint: The remote telemetry collector URL to POST to, or
                 ``None`` to construct a permanently-inert sink. Callers should
-                pass ``settings.aeat_telemetry_endpoint`` directly.
+                pass ``settings.cadrumo_telemetry_endpoint`` directly.
             timeout_s: Per-request HTTP timeout in seconds. Telemetry is
                 best-effort and must never block a command for long; the
                 default is deliberately short.

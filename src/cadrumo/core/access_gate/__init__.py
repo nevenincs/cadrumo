@@ -80,7 +80,7 @@ class AeatGateEnvSnapshot(BaseModel):
     absent vars materialise as the empty string.
 
     Attributes:
-        aeat_live_tests_enabled: Value of ``AEAT_LIVE_TESTS_ENABLED``.
+        cadrumo_live_tests_enabled: Value of ``CADRUMO_LIVE_TESTS_ENABLED``.
         pytest_current_test: Value of ``PYTEST_CURRENT_TEST`` (pytest
             sets this automatically during a test run; presence alone
             is the signal - the value is recorded for traceability).
@@ -88,7 +88,7 @@ class AeatGateEnvSnapshot(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    aeat_live_tests_enabled: str
+    cadrumo_live_tests_enabled: str
     pytest_current_test: str
 
 
@@ -113,7 +113,7 @@ class AeatAccessGate:
     def live_read_requires_test_opt_in(self, *, pytest_current_test: str | None = None) -> bool:
         """Return whether the current live read is executing under pytest.
 
-        ``AEAT_LIVE_TESTS_ENABLED`` is a test runner opt-in, not an
+        ``CADRUMO_LIVE_TESTS_ENABLED`` is a test runner opt-in, not an
         operational CLI switch. A live read in a normal operator shell
         still passes through auth/profile/read-only guards, but it is
         not refused by the pytest-only environment variable.
@@ -126,7 +126,7 @@ class AeatAccessGate:
         """Refuse pytest-driven live AEAT reads unless the test opt-in is on.
 
         Routes the check through :class:`core.config.Settings`
-        (specifically the ``aeat_live_tests_enabled`` field) so
+        (specifically the ``cadrumo_live_tests_enabled`` field) so
         every config read in the codebase flows through a single
         validated surface. Outside pytest this method deliberately
         permits the read to continue to the operational auth/profile
@@ -134,7 +134,7 @@ class AeatAccessGate:
 
         Raises:
             AeatLiveReadNotEnabledError: During pytest execution, when
-                ``Settings.aeat_live_tests_enabled`` is not ``"1"``.
+                ``Settings.cadrumo_live_tests_enabled`` is not ``"1"``.
         """
         if self.live_read_requires_test_opt_in(pytest_current_test=pytest_current_test) and (
             not self.settings.live_tests_enabled
@@ -142,7 +142,7 @@ class AeatAccessGate:
             raise AeatLiveReadNotEnabledError(
                 f"pytest live AEAT reads require {_LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
                 f"value 1 (the exact string '1', not 'true'/'yes'/'on'); "
-                f"current value: {self.settings.aeat_live_tests_enabled!r}",
+                f"current value: {self.settings.cadrumo_live_tests_enabled!r}",
             )
 
     def require_live_write(self) -> None:
@@ -184,7 +184,7 @@ class AeatAccessGate:
         """
         resolved_pytest = self._pytest_current_test_value(pytest_current_test)
         return AeatGateEnvSnapshot(
-            aeat_live_tests_enabled=self.settings.aeat_live_tests_enabled,
+            cadrumo_live_tests_enabled=self.settings.cadrumo_live_tests_enabled,
             pytest_current_test=resolved_pytest,
         )
 

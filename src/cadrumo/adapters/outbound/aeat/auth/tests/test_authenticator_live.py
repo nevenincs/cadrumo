@@ -92,7 +92,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
 
     profile = Profile(
         name="live-auth-gate",
-        storage_state_path=settings.aeat_token_dir / "live_auth_gate_state.json",
+        storage_state_path=settings.cadrumo_token_dir / "live_auth_gate_state.json",
     )
 
     async def factory(_settings: Any) -> Any:

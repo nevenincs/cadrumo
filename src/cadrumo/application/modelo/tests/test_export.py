@@ -199,7 +199,7 @@ def test_export_refuses_when_no_active_bucket(
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
 
-    with pytest.raises(ModeloExportNoActiveBucketError) as exc_info, override_settings(aeat_active_profile=None):
+    with pytest.raises(ModeloExportNoActiveBucketError) as exc_info, override_settings(cadrumo_active_profile=None):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id="0" * 64,

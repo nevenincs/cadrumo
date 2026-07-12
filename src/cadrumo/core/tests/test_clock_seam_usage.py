@@ -20,7 +20,7 @@ The seam implementation itself (``core/time/_clock.py``) is the one production s
 that legitimately calls ``datetime.now(tz=UTC)`` — it is the fallback the seam
 returns when unfrozen — and is skipped. The injectable live-AEAT sites, which accept
 an explicit ``now=`` parameter and fall back to real wall-clock only when the seam is
-deliberately barred (the seam refuses under ``AEAT_LIVE_TESTS_ENABLED``), are recorded
+deliberately barred (the seam refuses under ``CADRUMO_LIVE_TESTS_ENABLED``), are recorded
 in :data:`_ALLOWLIST` with a stated per-entry reason.
 
 This is the clock-seam companion to the AST gates in ``test_modelo_string_usage.py``
@@ -55,13 +55,13 @@ _SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
 #: Keyed by ``src/cadrumo``-relative POSIX path → reason. Each accepts an explicit
 #: ``now=`` parameter (so tests inject a fixed instant) and reads wall-clock only as
 #: the default; the deterministic seam is deliberately barred on the live path (it
-#: refuses under ``AEAT_LIVE_TESTS_ENABLED``), so the fallback is load-bearing, not a
+#: refuses under ``CADRUMO_LIVE_TESTS_ENABLED``), so the fallback is load-bearing, not a
 #: mute button.
 _ALLOWLIST: dict[str, str] = {
     "application/auth/_acquisition_lock.py": (
         "Injectable live-AEAT site: the auth acquisition-lock staleness check accepts "
         "an explicit `now=` and falls back to wall-clock only on the live path, where "
-        "the frozen-clock seam is barred under AEAT_LIVE_TESTS_ENABLED."
+        "the frozen-clock seam is barred under CADRUMO_LIVE_TESTS_ENABLED."
     ),
     "adapters/outbound/aeat/auth/certificate.py": (
         "Injectable live-AEAT site: certificate validity/expiry evaluators accept an "

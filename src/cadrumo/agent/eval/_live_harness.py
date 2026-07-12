@@ -307,7 +307,7 @@ async def run_live_session_async(
             ``("uv", "run", "--no-sync", "aeat-mcp")``); it is spawned as a
             subprocess and spoken to over stdio.
         persona: The harness persona the driver plays; exported to the server
-            via ``AEAT_MCP_PERSONA`` so the persona-scope gate is live.
+            via ``CADRUMO_MCP_PERSONA`` so the persona-scope gate is live.
         session_id: Caller-supplied stable session identity (clock-free).
         driver: The persona driver (scripted or model-backed).
         command_key_by_tool: Caller-built mapping from advertised tool name to
@@ -356,7 +356,7 @@ async def run_live_session_async(
     # StdioServerParameters.env REPLACES the subprocess environment; a bare
     # override dict would strip PATH and friends and the spawn hangs or dies.
     # Merge the parent environment with the caller's additions instead.
-    merged_env = {**os.environ, **(env or {}), "AEAT_MCP_PERSONA": persona}
+    merged_env = {**os.environ, **(env or {}), "CADRUMO_MCP_PERSONA": persona}
     params = StdioServerParameters(
         command=server_command[0],
         args=list(server_command[1:]),

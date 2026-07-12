@@ -52,7 +52,7 @@ def test_register_active_profile_writes_pointer_file() -> None:
     with profile_create_storage_span("12121212-1212-4121-8121-121212121212"):
         register_minimal_profile(WorkflowState(), profile_id="12121212-1212-4121-8121-121212121212")
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     pointer = read_pointer(root)
     assert pointer is not None
     assert pointer.bucket_id == "12121212-1212-4121-8121-121212121212"
@@ -69,7 +69,7 @@ def test_select_profile_updates_pointer_file() -> None:
     with profile_storage_session("12121212-1212-4121-8121-121212121212"):
         state = select_profile(state, profile_id="12121212-1212-4121-8121-121212121212")
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     pointer = read_pointer(root)
     assert pointer is not None
     assert pointer.bucket_id == "12121212-1212-4121-8121-121212121212"
@@ -82,7 +82,7 @@ def test_remove_active_profile_clears_pointer_file() -> None:
     with profile_create_storage_span("12121212-1212-4121-8121-121212121212"):
         state = register_minimal_profile(state, profile_id="12121212-1212-4121-8121-121212121212")
 
-        root = load_settings().aeat_local_storage_root
+        root = load_settings().cadrumo_local_storage_root
         assert read_pointer(root) is not None
 
         remove_active_profile(state)

@@ -140,7 +140,7 @@ class DriveConfig(BaseModel):
     persists the operator's chosen ``aeat-vault/`` parent folder id.
     :func:`adapters.outbound.storage.get_storage_provider` reads it after
     :class:`core.config.Settings`; the
-    ``AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID`` setting remains an override for
+    ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` setting remains an override for
     one-off and CI runs.
     """
 

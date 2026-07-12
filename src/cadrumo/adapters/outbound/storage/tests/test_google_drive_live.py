@@ -1,9 +1,9 @@
 """Live-gated tests for `GoogleDriveProvider`.
 
-Deselect unless `AEAT_LIVE_TESTS_ENABLED=1` AND the operator has
+Deselect unless `CADRUMO_LIVE_TESTS_ENABLED=1` AND the operator has
 pre-registered an OAuth client + token for the named test profile
 (`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`) AND
-`aeat_google_drive_root_folder_id` is configured in the environment.
+`cadrumo_google_drive_root_folder_id` is configured in the environment.
 
 The tests exercise three real Drive paths:
 
@@ -63,13 +63,13 @@ def _require_drive_configured() -> None:
     from .....core.config import load_settings
 
     settings = load_settings()
-    if settings.aeat_storage_provider_kind != "google_drive":
+    if settings.cadrumo_storage_provider_kind != "google_drive":
         pytest.fail(
-            "aeat_storage_provider_kind is not google_drive; "
-            "set AEAT_STORAGE_PROVIDER_KIND=google_drive after live Google opt-in",
+            "cadrumo_storage_provider_kind is not google_drive; "
+            "set CADRUMO_STORAGE_PROVIDER_KIND=google_drive after live Google opt-in",
         )
-    if not settings.aeat_google_drive_root_folder_id:
-        pytest.fail("aeat_google_drive_root_folder_id is not configured after live Google opt-in")
+    if not settings.cadrumo_google_drive_root_folder_id:
+        pytest.fail("cadrumo_google_drive_root_folder_id is not configured after live Google opt-in")
 
 
 @contextmanager

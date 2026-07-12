@@ -196,7 +196,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
     would touch both.
 
     Isolated onto a test-owned cache directory via
-    ``AEAT_REGISTRY_DISK_CACHE_DIR`` (propagated to the child process's own
+    ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` (propagated to the child process's own
     ``env=``, not just this process's ``os.environ``): this test's
     exclusive-state assertions ("exactly one file", "mtime unchanged") would
     otherwise be confused by a SIBLING pytest-xdist worker concurrently
@@ -304,7 +304,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     location moved off the walked tree.
 
     Isolated onto a test-owned cache directory via
-    ``AEAT_REGISTRY_DISK_CACHE_DIR`` (set in this process's own environment,
+    ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` (set in this process's own environment,
     which both spawned ``pytest`` subprocesses inherit): otherwise a SIBLING
     pytest-xdist worker concurrently touching the real shared bundled-root
     pickle in the real OS temp directory under a parallel ``-n`` run could

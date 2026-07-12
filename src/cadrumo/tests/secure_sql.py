@@ -125,7 +125,7 @@ def dev_test_database_password(settings: Settings | None = None) -> str:
     """Return the shared dev/test password for database-backed storage tests."""
 
     source = settings or load_settings()
-    return source.aeat_dev_test_database_password.get_secret_value()
+    return source.cadrumo_dev_test_database_password.get_secret_value()
 
 
 def read_db_at_rest_bytes(db_path: Path) -> bytes:
@@ -193,8 +193,8 @@ def isolated_ephemeral_secure_sql(
 
     database_url = f"sqlite:///{(tmp_path / database_name).as_posix()}"
     with override_settings(
-        aeat_database_url=database_url,
-        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+        cadrumo_database_url=database_url,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
     ) as settings:
         dispose_engine(settings)
         with EphemeralMasterKeyProvider():
@@ -216,7 +216,7 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     """
 
     storage_root = tmp_path / "aeat-storage"
-    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=None) as settings:
+    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield storage_root
@@ -229,7 +229,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     """Run profile-bootstrap tests against an empty real storage root.
 
     Unlike :func:`isolated_runtime_profile`, this helper does not
-    provision a bucket or activate an ``aeat_active_profile`` route.
+    provision a bucket or activate an ``cadrumo_active_profile`` route.
     It is for tests that exercise the profile creation path itself,
     where the system under test must create the bucket directory,
     manifest, pointer, and per-bucket database.
@@ -237,18 +237,18 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     The file backend is configured with the dev-test passphrase so
     ``get_master_key_provider()`` calls inside ``profile create`` and
     related verbs resolve a working provider without needing
-    ``AEAT_SECRET_STORE_BACKEND=unsecured``.
+    ``CADRUMO_SECRET_STORE_BACKEND=unsecured``.
     """
 
     storage_root = tmp_path / "aeat-storage"
     secret_store_dir = tmp_path / "secrets"
-    passphrase = load_settings().aeat_dev_test_database_password
+    passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
-        aeat_local_storage_root=storage_root,
-        aeat_active_profile=None,
-        aeat_secret_store_backend="file",
-        aeat_secret_store_dir=secret_store_dir,
-        aeat_secret_passphrase=passphrase,
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=None,
+        cadrumo_secret_store_backend="file",
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
         try:
@@ -280,15 +280,15 @@ def isolated_runtime_profile(
 
     storage_root = tmp_path / "aeat-storage"
     secret_store_dir = tmp_path / "secrets"
-    passphrase = load_settings().aeat_dev_test_database_password
+    passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
 
     with override_settings(
-        aeat_local_storage_root=storage_root,
-        aeat_active_profile=bucket_id,
-        aeat_secret_store_backend="file",
-        aeat_secret_store_dir=secret_store_dir,
-        aeat_secret_passphrase=passphrase,
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=bucket_id,
+        cadrumo_secret_store_backend="file",
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
         session, paths = _provision_bucket_dek_v1_session(
@@ -321,7 +321,7 @@ def isolated_runtime_profile(
 class MultiBucketTestRuntime:
     """Two co-existing test runtime profiles for active-vs-target scenarios.
 
-    ``primary`` is ``aeat_active_profile`` when the fixture yields.
+    ``primary`` is ``cadrumo_active_profile`` when the fixture yields.
     ``secondary`` is provisioned with its own bucket directory,
     manifest, keystore, and secure-object repository but its
     session is held in this dataclass for the
@@ -348,7 +348,7 @@ class MultiBucketTestRuntime:
         need direct repository access against the secondary.
         """
         with (
-            override_settings(aeat_active_profile=self.secondary.bucket_id),
+            override_settings(cadrumo_active_profile=self.secondary.bucket_id),
             activate_session(self._secondary_session),
         ):
             yield
@@ -384,15 +384,15 @@ def isolated_two_bucket_runtime(
     """
     storage_root = tmp_path / "aeat-storage"
     secret_store_dir = tmp_path / "secrets"
-    passphrase = load_settings().aeat_dev_test_database_password
+    passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
 
     with override_settings(
-        aeat_local_storage_root=storage_root,
-        aeat_active_profile=primary_bucket_id,
-        aeat_secret_store_backend="file",
-        aeat_secret_store_dir=secret_store_dir,
-        aeat_secret_passphrase=passphrase,
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=primary_bucket_id,
+        cadrumo_secret_store_backend="file",
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
         primary_session, primary_paths = _provision_bucket_dek_v1_session(
@@ -420,7 +420,7 @@ def isolated_two_bucket_runtime(
             )
             # Resolve the secondary's repository under its session so
             # tests can hold a direct handle without re-activating.
-            with override_settings(aeat_active_profile=secondary_bucket_id) as secondary_settings:
+            with override_settings(cadrumo_active_profile=secondary_bucket_id) as secondary_settings:
                 dispose_engine(secondary_settings)
                 with activate_session(secondary_session):
                     secondary_runtime = inspect_storage_runtime(secondary_settings)
@@ -464,11 +464,11 @@ def isolated_cli_runtime_profile(
 
     with (
         override_settings(
-            aeat_runs_dir=tmp_path / "runs",
-            aeat_drafts_dir=tmp_path / "drafts",
-            aeat_token_dir=tmp_path / "tokens",
-            aeat_financial_txs_dir=tmp_path / "txs",
-            aeat_invoices_dir=tmp_path / "invoices",
+            cadrumo_runs_dir=tmp_path / "runs",
+            cadrumo_drafts_dir=tmp_path / "drafts",
+            cadrumo_token_dir=tmp_path / "tokens",
+            cadrumo_financial_txs_dir=tmp_path / "txs",
+            cadrumo_invoices_dir=tmp_path / "invoices",
         ),
         isolated_runtime_profile(
             tmp_path=tmp_path,

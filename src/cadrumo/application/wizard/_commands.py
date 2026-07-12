@@ -932,7 +932,7 @@ def _enter_requested_output_language(kwargs: dict[str, object], language_stack: 
 
     requested_language = kwargs.get("output_language")
     if isinstance(requested_language, str) and requested_language in SUPPORTED_OUTPUT_LANGUAGES:
-        language_stack.enter_context(override_settings(aeat_output_language=requested_language))
+        language_stack.enter_context(override_settings(cadrumo_output_language=requested_language))
 
 
 def _render_error_inside_language_override(exc: AeatError) -> None:
@@ -978,13 +978,13 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
 
 
 def _seed_output_language_from_environment(canonical: dict[str, str]) -> None:
-    """Use AEAT_OUTPUT_LANGUAGE when the operator omitted the explicit flag."""
+    """Use CADRUMO_OUTPUT_LANGUAGE when the operator omitted the explicit flag."""
     from ...core.config import load_settings
 
     if "output-language" in canonical:
         return
 
-    env_lang = load_settings().aeat_output_language
+    env_lang = load_settings().cadrumo_output_language
     if isinstance(env_lang, str) and env_lang in SUPPORTED_OUTPUT_LANGUAGES:
         canonical["output-language"] = env_lang
 

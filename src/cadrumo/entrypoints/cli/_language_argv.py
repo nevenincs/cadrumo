@@ -5,14 +5,14 @@ command output (operator-surface ADR decision D6,
 ``2026-06-10-cli-operator-surface-adr``). Help strings are rendered by
 ``tr(...)`` at module-import time and the profile-owned output-language resolver
 (``2026-05-13-cli-workflow-redesign-profile-output-language-adr``) reads
-``AEAT_OUTPUT_LANGUAGE`` *before* import. The root Typer callback's
+``CADRUMO_OUTPUT_LANGUAGE`` *before* import. The root Typer callback's
 ``override_settings`` ran too late for help text — and was never reached at all
 for a leaf ``SUB --help`` (click short-circuits the leaf ``--help`` before the
 root group callback body runs).
 
 The cheapest honest fix that keeps the import-time i18n model intact is to read
 the flag from raw ``argv`` in the console entry point and promote it to
-``AEAT_OUTPUT_LANGUAGE`` before the lazily imported subcommand modules render
+``CADRUMO_OUTPUT_LANGUAGE`` before the lazily imported subcommand modules render
 their ``tr(...)``-bound help. This module owns that pure, dependency-free
 pre-parse so it can be unit-tested in isolation and imported without dragging in
 the full CLI command tree.
@@ -68,13 +68,13 @@ def _language_from_argv(argv: list[str]) -> str | None:
 def apply_language_argv_to_environment(argv: list[str]) -> None:
     """Promote an explicit ``--language`` flag to the help-rendering env var.
 
-    Sets ``AEAT_OUTPUT_LANGUAGE`` from ``argv`` so help strings rendered by
+    Sets ``CADRUMO_OUTPUT_LANGUAGE`` from ``argv`` so help strings rendered by
     ``tr(...)`` at module-import time honour the flag, making ``--language``
     genuinely localise help text (the highest-honesty D6 outcome) by feeding the
     existing import-time resolver rather than intercepting help rendering.
 
     An explicit ``--language`` on the invocation is the most specific operator
-    intent, so it wins over an ambient ``AEAT_OUTPUT_LANGUAGE`` for that run; the
+    intent, so it wins over an ambient ``CADRUMO_OUTPUT_LANGUAGE`` for that run; the
     profile-owned precedence and the env override for sessions without
     ``--language`` are untouched.
     """

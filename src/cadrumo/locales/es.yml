@@ -186,7 +186,7 @@ adapters:
             <path>` primero.
           google_token_missing: No hay ningun token OAuth de Google persistido para
             el perfil activo. Ejecuta `aeat config google login` primero.
-          kind_empty: AEAT_STORAGE_PROVIDER_KIND esta vacio.
+          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacio.
           kind_unhandled: El tipo de proveedor de almacenamiento {kind} no esta gestionado
             por la factoria.
           kind_unknown: El tipo de proveedor de almacenamiento {value} no se reconoce;
@@ -238,7 +238,7 @@ adapters:
             estar vacio.
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
-            ruta de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta
+            ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
             o habilite LongPathsEnabled (véase `aeat config check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
@@ -258,7 +258,7 @@ adapters:
             del objeto.
           payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
             carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
-            Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config check`).'
           payload_write_permission: El almacenamiento local no pudo escribir el payload
             del objeto.
@@ -270,7 +270,7 @@ adapters:
             del objeto.
           sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
-            Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config check`).'
   persistence:
     profile:
@@ -3705,7 +3705,7 @@ cli:
       app_help: Inspecciona y controla el nivel de telemetría remota, desactivado
         por defecto y opcional.
       bad_tier: '--tier debe ser uno de: %{accepted}; se recibió %{value!r}.'
-      endpoint_help: Previsualiza/envía como si AEAT_TELEMETRY_ENDPOINT fuera esta
+      endpoint_help: Previsualiza/envía como si CADRUMO_TELEMETRY_ENDPOINT fuera esta
         URL solo para esta ejecución; omítelo para usar el endpoint configurado realmente
         en el despliegue.
       flush:
@@ -3723,9 +3723,9 @@ cli:
         header: 'Carga útil de telemetría (simulacro, no se envió nada):'
         help: Construye la carga útil agregada de telemetría local y, salvo --dry-run,
           la envía.
-        no_endpoint_notice: 'No se envió nada: no hay ningún AEAT_TELEMETRY_ENDPOINT
+        no_endpoint_notice: 'No se envió nada: no hay ningún CADRUMO_TELEMETRY_ENDPOINT
           configurado.'
-      opt_in_help: Previsualiza/envía como si AEAT_TELEMETRY_OPT_IN tuviera este valor
+      opt_in_help: Previsualiza/envía como si CADRUMO_TELEMETRY_OPT_IN tuviera este valor
         solo para esta ejecución; omítelo para usar el ajuste configurado realmente
         en el despliegue.
       status:
@@ -3733,9 +3733,9 @@ cli:
         help: Informa de la postura de consentimiento de telemetría remota. Nunca
           emite nada.
         off_hint: La telemetría permanece totalmente local por defecto. Para activarla,
-          define AEAT_TELEMETRY_OPT_IN=true y AEAT_TELEMETRY_TIER a crash_only o full
+          define CADRUMO_TELEMETRY_OPT_IN=true y CADRUMO_TELEMETRY_TIER a crash_only o full
           en env/.env.
-      tier_help: Previsualiza/envía como si AEAT_TELEMETRY_TIER tuviera este valor
+      tier_help: Previsualiza/envía como si CADRUMO_TELEMETRY_TIER tuviera este valor
         (off / crash_only / full) solo para esta ejecución; omítelo para usar el nivel
         configurado realmente.
     version:
@@ -4385,7 +4385,7 @@ cli:
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
-      invalid_env_value: 'AEAT_LOG_LEVEL debe ser uno de: %{allowed}; valor recibido:
+      invalid_env_value: 'CADRUMO_LOG_LEVEL debe ser uno de: %{allowed}; valor recibido:
         %{value}.'
   operator_surface:
     errors:
@@ -4456,8 +4456,8 @@ cli:
         paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
           persiste entre sesiones.
         paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
-          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
-          y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
+          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
+          y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
@@ -4502,8 +4502,8 @@ cli:
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
         paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
-          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
-          y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
+          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
+          y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
         paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
           de declaracion y ''config'' para configuracion y diagnostico.'
@@ -5386,7 +5386,7 @@ errors:
     error_sede_navigation: Falló un paso de navegación en la Sede de la AEAT.
     error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
     error_storage_bucket_path_too_long: La ruta del directorio del bucket supera el
-      límite MAX_PATH de Windows. Traslade AEAT_LOCAL_STORAGE_ROOT a una ruta más
+      límite MAX_PATH de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más
       corta o habilite LongPathsEnabled (véase `aeat config check`).
     error_submission_validation: Un modelo de envío no superó la validación.
     error_telemetry_schema: Una clave de métrica de telemetría no está registrada

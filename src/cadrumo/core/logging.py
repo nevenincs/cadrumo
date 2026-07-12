@@ -304,18 +304,18 @@ class _DropRunEventFilter(logging.Filter):
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs.
 
-    The diagnostic log is rooted under ``aeat_log_dir``, which the
+    The diagnostic log is rooted under ``cadrumo_log_dir``, which the
     :class:`~cadrumo.core.config.Settings` validator derives from
-    ``<aeat_local_storage_root>/logs`` when no explicit ``AEAT_LOG_DIR``
+    ``<cadrumo_local_storage_root>/logs`` when no explicit ``CADRUMO_LOG_DIR``
     override is supplied — so the log stays isolated per workspace
     rather than mixing every session's records into a single
     system-wide file.
     """
     from .config import load_settings
 
-    log_dir = load_settings().aeat_log_dir
+    log_dir = load_settings().cadrumo_log_dir
     if log_dir is None:  # pragma: no cover - validator always populates the field
-        log_dir = load_settings().aeat_local_storage_root / "logs"
+        log_dir = load_settings().cadrumo_local_storage_root / "logs"
     return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
@@ -327,7 +327,7 @@ def _prepare_log_directory(log_file: Path) -> str | None:
     an :exc:`OSError`.
 
     File logging is a best-effort diagnostic channel, not the operator result
-    contract. An ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR`` that the
+    contract. An ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR`` that the
     process cannot create — an inaccessible Windows path the operator's
     account may not write, a path routed under a non-directory, a
     ``PermissionError`` — MUST degrade to stderr-only logging rather than
@@ -354,7 +354,7 @@ def configure_logging() -> None:
     persist them through secure-object repositories.
 
     When the diagnostic log directory cannot be created (an inaccessible
-    ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR``), logging degrades to
+    ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR``), logging degrades to
     stderr-only and records an instructive diagnostic naming the likely
     remedy — it never crashes CLI startup with a raw traceback.
 
@@ -374,7 +374,7 @@ def configure_logging() -> None:
     settings = load_settings()
     configured_handlers: dict[str, dict[str, Any]] = {
         "stderr": {
-            "level": settings.aeat_log_stderr_level,
+            "level": settings.cadrumo_log_stderr_level,
             "formatter": "standard",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
@@ -384,7 +384,7 @@ def configure_logging() -> None:
     root_handlers = ["stderr"]
     if file_logging_enabled:
         configured_handlers["file"] = {
-            "level": settings.aeat_log_file_level,
+            "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
             "class": "logging.FileHandler",
             "filename": str(log_file),
@@ -405,7 +405,7 @@ def configure_logging() -> None:
             "handlers": configured_handlers,
             "root": {
                 "handlers": root_handlers,
-                "level": settings.aeat_log_root_level,
+                "level": settings.cadrumo_log_root_level,
             },
             "loggers": {
                 "alembic.runtime.plugins": {
@@ -447,9 +447,9 @@ def configure_logging() -> None:
         # import-time traceback this degrade replaces.
         logging.getLogger(__name__).error(
             "Diagnostic file logging disabled: cannot create the log directory %s (%s). "
-            "Continuing with stderr-only logging. Ensure AEAT_LOCAL_STORAGE_ROOT / AEAT_LOG_DIR "
+            "Continuing with stderr-only logging. Ensure CADRUMO_LOCAL_STORAGE_ROOT / CADRUMO_LOG_DIR "
             "points at a path your account can write; on Windows check the folder's permissions, "
-            "run from a directory you own, or set AEAT_LOCAL_STORAGE_ROOT to a writable location.",
+            "run from a directory you own, or set CADRUMO_LOCAL_STORAGE_ROOT to a writable location.",
             log_file.parent,
             log_directory_failure,
         )

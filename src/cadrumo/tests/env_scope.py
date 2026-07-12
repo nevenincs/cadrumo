@@ -14,7 +14,7 @@ A small set of tests legitimately need to manipulate *real*
   override above the env layer would defeat the test.
 * The model-validator-derives-default tests in
   :mod:`cadrumo.core.test_token_dir_state_root` must observe an unset
-  ``AEAT_TOKEN_DIR`` so the validator runs.
+  ``CADRUMO_TOKEN_DIR`` so the validator runs.
 * CLI runtime infrastructure that AEAT does not own (the pytest
   runner's ``PYTEST_CURRENT_TEST`` flag, Rich's ``COLUMNS`` width
   read, ``sys.argv``) is read directly by tightly scoped helpers in

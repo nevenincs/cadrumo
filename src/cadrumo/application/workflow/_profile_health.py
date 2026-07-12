@@ -100,8 +100,8 @@ _MANIFEST_HEALTH_EXCEPTIONS = (
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
     """Return a redacted, non-secret :class:`ActiveProfileHealth` projection for the active profile."""
     settings = load_settings()
-    override = (settings.aeat_active_profile or "").strip()
-    pointer = None if override else read_pointer(settings.aeat_local_storage_root)
+    override = (settings.cadrumo_active_profile or "").strip()
+    pointer = None if override else read_pointer(settings.cadrumo_local_storage_root)
     active_profile = override or (pointer.bucket_id if pointer is not None else None)
     source: ProfileSource = "env_override" if override else ("pointer" if pointer is not None else "none")
     total_keys = len(list_profile_key_records())
@@ -133,7 +133,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
         )
     registered = registered_pointer is not None
@@ -148,7 +148,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset AEAT_ACTIVE_PROFILE or set it to a registered profile"
+                else "unset CADRUMO_ACTIVE_PROFILE or set it to a registered profile"
             ),
         )
 
@@ -168,7 +168,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
         )
     try:
@@ -187,7 +187,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
         )
     if record is None:
@@ -201,7 +201,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
             ),
         )
 
@@ -237,7 +237,7 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
     if not clear_active or not confirmed or not should_clear:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
-    target = pointer_path(load_settings().aeat_local_storage_root)
+    target = pointer_path(load_settings().cadrumo_local_storage_root)
     if target.is_file():
         target.unlink()
     return ActiveProfileRepairResult(

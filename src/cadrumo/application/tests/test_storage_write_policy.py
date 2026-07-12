@@ -36,7 +36,7 @@ def test_profile_bound_write_refuses_root_fallback_route(tmp_path: Path) -> None
     decision = inspect_storage_write_policy(
         "app ledger add",
         bootstrap_exempt=False,
-        settings=Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN),
+        settings=Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN),
     )
 
     assert decision.allowed is False
@@ -51,9 +51,9 @@ def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> 
         "config google login",
         bootstrap_exempt=False,
         settings=Settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-            aeat_output_language=OutputLanguage.EN,
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+            cadrumo_output_language=OutputLanguage.EN,
         ),
     )
 
@@ -66,15 +66,15 @@ def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> 
     assert "database route is not attached to an active profile bucket" in rendered
     context = decision.refusal_context()
     assert context is not None
-    assert "AEAT_DATABASE_URL" in context["recovery"]
-    assert "AEAT_LOCAL_STORAGE_ROOT" in context["recovery"]
+    assert "CADRUMO_DATABASE_URL" in context["recovery"]
+    assert "CADRUMO_LOCAL_STORAGE_ROOT" in context["recovery"]
 
 
 def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "app modelo work calculate work-1",
         bootstrap_exempt=False,
-        settings=Settings(aeat_local_storage_root=tmp_path, aeat_active_profile="operator"),
+        settings=Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
     )
 
     assert decision.allowed is True
@@ -84,7 +84,7 @@ def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:
 
 
 def test_profile_bound_write_allows_pointer_route_from_stale_settings(tmp_path: Path) -> None:
-    settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
+    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN)
     write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
 
     decision = inspect_storage_write_policy(
@@ -100,7 +100,7 @@ def test_profile_bound_write_allows_pointer_route_from_stale_settings(tmp_path: 
 
 
 def test_stub_only_work_create_delegates_to_leaf_refusal_before_root_route_guard(tmp_path: Path) -> None:
-    settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
+    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN)
 
     decision = inspect_storage_write_policy(
         "app modelo work create",
@@ -124,7 +124,7 @@ def test_stub_only_work_create_delegates_to_leaf_refusal_before_root_route_guard
 
 
 def test_stub_only_work_create_delegates_when_real_argv_reconstruction_appends_values(tmp_path: Path) -> None:
-    settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
+    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN)
 
     decision = inspect_storage_write_policy(
         "app modelo work create 210 2025 EVENT-1 2025",
@@ -158,9 +158,9 @@ def test_m210_live_engine_work_create_stays_under_root_write_guard(tmp_path: Pat
         "app modelo work create",
         bootstrap_exempt=False,
         settings=Settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_output_language=OutputLanguage.EN,
-            aeat_m210_engine_live=True,
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_output_language=OutputLanguage.EN,
+            cadrumo_m210_engine_live=True,
         ),
         argv_tokens=("app", "modelo", "work", "create", "--modelo=210", "--year", "2025", "--period", "1T"),
     )
@@ -174,8 +174,8 @@ def test_bootstrap_exemption_short_circuits_route_policy(tmp_path: Path) -> None
         "config profile create operator",
         bootstrap_exempt=True,
         settings=Settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
         ),
     )
 
@@ -188,7 +188,7 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
     decision = inspect_storage_write_policy(
         "config switch does-not-exist",
         bootstrap_exempt=False,
-        settings=Settings(aeat_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_local_storage_root=tmp_path),
     )
 
     assert decision.allowed is True

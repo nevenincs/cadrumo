@@ -228,7 +228,7 @@ class WorkflowState(BaseModel):
     need to enumerate registered profiles call
     :func:`cadrumo.application.workflow._profile_bucket_scan.list_profile_buckets`
     or :func:`read_profile_bucket` directly; both scan
-    ``<aeat_local_storage_root>/buckets/*/manifest.toml`` and never
+    ``<cadrumo_local_storage_root>/buckets/*/manifest.toml`` and never
     open an encrypted database. The active profile resolves via the
     precedence chain (Settings override > plaintext pointer file).
     """

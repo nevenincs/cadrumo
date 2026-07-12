@@ -45,11 +45,11 @@ def demo_environment() -> dict[str, str]:
     environment = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     environment.update(
         {
-            "AEAT_LOCAL_STORAGE_ROOT": str(DEMO_ROOT),
-            "AEAT_OUTPUT_LANGUAGE": "en",
-            "AEAT_SECRET_PASSPHRASE": DEMO_PASSPHRASE,
-            "AEAT_SECRET_STORE_BACKEND": "file",
-            "AEAT_SECRET_STORE_DIR": str(DEMO_ROOT / "secrets"),
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(DEMO_ROOT),
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_SECRET_PASSPHRASE": DEMO_PASSPHRASE,
+            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            "CADRUMO_SECRET_STORE_DIR": str(DEMO_ROOT / "secrets"),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
         },

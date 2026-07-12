@@ -126,8 +126,8 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestR
     )
     unreachable_settings = load_settings().model_copy(
         update={
-            "aeat_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
-            "aeat_llm_vision_read_timeout_s": 1,
+            "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
+            "cadrumo_llm_vision_read_timeout_s": 1,
         },
     )
     classifier = LocalVisionLLMClassifier(

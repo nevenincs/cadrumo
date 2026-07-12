@@ -5,7 +5,7 @@ to be honest about help text: it must not silently fail to do what it advertises
 Per the accepted ordering (work, then remove, then warn), the feasibility spike
 found the highest outcome —
 *make it work* — was cheaply achievable by promoting an explicit ``--language``
-flag to ``AEAT_OUTPUT_LANGUAGE`` in the console entry point, before the lazily
+flag to ``CADRUMO_OUTPUT_LANGUAGE`` in the console entry point, before the lazily
 imported subcommand modules render their ``tr(...)``-bound help. These tests pin
 that contract against the real installed ``aeat`` console.
 
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
-    """Build a clean subprocess env with no ambient ``AEAT_OUTPUT_LANGUAGE``.
+    """Build a clean subprocess env with no ambient ``CADRUMO_OUTPUT_LANGUAGE``.
 
     Strips every ``AEAT_*`` variable so the only language signal reaching the
     console is the ``--language`` flag under test (or, when ``language`` is set,
@@ -42,18 +42,18 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
-            "AEAT_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
-            "AEAT_SECRET_PASSPHRASE": dev_test_database_password(),
-            "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "AEAT_TOKEN_DIR": str(tmp_path / "tokens"),
-            "AEAT_RUNS_DIR": str(tmp_path / "runs"),
-            "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-            "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
-            "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
+            "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+            "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+            "CADRUMO_TOKEN_DIR": str(tmp_path / "tokens"),
+            "CADRUMO_RUNS_DIR": str(tmp_path / "runs"),
+            "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
+            "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
+            "CADRUMO_DRAFTS_DIR": str(tmp_path / "drafts"),
         },
     )
     if language is not None:
-        env["AEAT_OUTPUT_LANGUAGE"] = language
+        env["CADRUMO_OUTPUT_LANGUAGE"] = language
     return env
 
 
@@ -123,7 +123,7 @@ def test_lang_alias_localises_leaf_help(tmp_path: Path) -> None:
 
 
 def test_explicit_language_flag_overrides_ambient_env(tmp_path: Path) -> None:
-    """An explicit ``--language en`` wins over an ambient ``AEAT_OUTPUT_LANGUAGE=es``.
+    """An explicit ``--language en`` wins over an ambient ``CADRUMO_OUTPUT_LANGUAGE=es``.
 
     The flag is the most specific operator intent for the invocation, so it must
     override an ambient environment language for that run's help text.
@@ -139,7 +139,7 @@ def test_explicit_language_flag_overrides_ambient_env(tmp_path: Path) -> None:
 
 
 def test_env_var_still_controls_help_without_flag(tmp_path: Path) -> None:
-    """The ``AEAT_OUTPUT_LANGUAGE`` override path is unchanged when no flag is given.
+    """The ``CADRUMO_OUTPUT_LANGUAGE`` override path is unchanged when no flag is given.
 
     The fix corrects only the eager flag's silent-failure-on-help behaviour; the
     profile-owned precedence and the env override must keep working untouched.

@@ -2,7 +2,7 @@
 
 Pinning the override flow at the call site documents that the
 language-resolution pipeline picks up the override exactly the way it
-used to pick up ``AEAT_OUTPUT_LANGUAGE`` env writes. No env-var
+used to pick up ``CADRUMO_OUTPUT_LANGUAGE`` env writes. No env-var
 manipulation here — the test exercises the in-process override only.
 """
 
@@ -20,11 +20,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_output_language_observes_explicit_override() -> None:
-    """An ``override_settings(aeat_output_language=...)`` value beats
+    """An ``override_settings(cadrumo_output_language=...)`` value beats
     the default Spanish fallback and is treated as an explicit
     operator choice — matching the previous env-var-based precedence."""
 
-    with override_settings(aeat_output_language="ca"):
+    with override_settings(cadrumo_output_language="ca"):
         assert output_language() == "ca"
 
 
@@ -33,7 +33,7 @@ def test_output_language_ignores_invalid_override_then_falls_back() -> None:
     not-set; the resolver continues to the profile / settings-default
     fallback chain rather than returning the invalid code."""
 
-    with override_settings(aeat_output_language="zz"):
+    with override_settings(cadrumo_output_language="zz"):
         # "zz" is not in SUPPORTED_OUTPUT_LANGUAGES; the explicit
         # branch normalises to None and falls through. The final
         # branch hits the default fallback (Spanish) when no profile
@@ -68,13 +68,13 @@ def test_default_output_language_exported_in_all() -> None:
 def test_fallback_language_is_default_output_language() -> None:
     """When output_language() falls back, it returns DEFAULT_OUTPUT_LANGUAGE.
 
-    An invalid ``aeat_output_language`` that normalises to None must
+    An invalid ``cadrumo_output_language`` that normalises to None must
     still produce a result equal to DEFAULT_OUTPUT_LANGUAGE so the
     constant is the single source of truth for the fallback code.
     """
     from .._render import DEFAULT_OUTPUT_LANGUAGE
 
-    with override_settings(aeat_output_language="zz"):
+    with override_settings(cadrumo_output_language="zz"):
         result = output_language()
     assert result == DEFAULT_OUTPUT_LANGUAGE
 

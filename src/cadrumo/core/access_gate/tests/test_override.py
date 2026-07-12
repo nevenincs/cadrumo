@@ -1,7 +1,7 @@
 """Settings-override seam coverage for the live-read access gate.
 
 Per the settings dependency-injection contract: the migrated access-gate read of
-``aeat_live_tests_enabled`` (formerly a direct ``os.environ`` read)
+``cadrumo_live_tests_enabled`` (formerly a direct ``os.environ`` read)
 must observe ``override_settings`` ContextVar values without any test
 manipulating the actual environment. This file proves that contract.
 
@@ -33,7 +33,7 @@ def test_live_read_override_allows_literal_one_or_operator_context() -> None:
         ("literal-one", "1", None),
         ("operator-context", "0", ""),
     ):
-        with override_settings(aeat_live_tests_enabled=enabled):
+        with override_settings(cadrumo_live_tests_enabled=enabled):
             _build_gate().require_live_read(pytest_current_test=pytest_current_test)
 
 
@@ -46,7 +46,7 @@ def test_live_read_override_blocks_non_one_values_during_pytest() -> None:
         ("zero-hidden-env", "0", False),
         ("true-string", "true", True),
     ):
-        with override_settings(aeat_live_tests_enabled=enabled), pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
+        with override_settings(cadrumo_live_tests_enabled=enabled), pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
             if use_default_current_test:
                 _build_gate().require_live_read()
             else:
@@ -56,23 +56,23 @@ def test_live_read_override_blocks_non_one_values_during_pytest() -> None:
 
 def test_override_restoration_after_block_exits() -> None:
     """Leaving the override scope restores the previous-context behaviour."""
-    baseline = load_settings().aeat_live_tests_enabled
-    with override_settings(aeat_live_tests_enabled="1"):
+    baseline = load_settings().cadrumo_live_tests_enabled
+    with override_settings(cadrumo_live_tests_enabled="1"):
         pass
-    assert load_settings().aeat_live_tests_enabled == baseline
+    assert load_settings().cadrumo_live_tests_enabled == baseline
 
 
 def test_live_write_is_permanently_forbidden_regardless_of_override() -> None:
     """Per AEAT safety-and-legal-gates: live writes are forbidden, no override unlocks them."""
-    with override_settings(aeat_live_tests_enabled="1"), pytest.raises(LiveSubmitForbiddenError):
+    with override_settings(cadrumo_live_tests_enabled="1"), pytest.raises(LiveSubmitForbiddenError):
         _build_gate().require_live_write()
 
 
 def test_snapshot_reflects_overridden_value() -> None:
     """The audit-snapshot helper reads from the same Settings surface as the gate check."""
-    with override_settings(aeat_live_tests_enabled="diagnostic-marker"):
+    with override_settings(cadrumo_live_tests_enabled="diagnostic-marker"):
         snapshot = _build_gate().snapshot_env(pytest_current_test=None)
-    assert snapshot.aeat_live_tests_enabled == "diagnostic-marker"
+    assert snapshot.cadrumo_live_tests_enabled == "diagnostic-marker"
 
 
 def test_override_does_not_mutate_os_environ() -> None:
@@ -80,11 +80,11 @@ def test_override_does_not_mutate_os_environ() -> None:
     import os
 
     sentinel = "settings-di-test-do-not-set-this"
-    os.environ.pop("AEAT_LIVE_TESTS_ENABLED", None)
-    with override_settings(aeat_live_tests_enabled=sentinel):
-        assert os.environ.get("AEAT_LIVE_TESTS_ENABLED") is None
-        assert load_settings().aeat_live_tests_enabled == sentinel
-    assert os.environ.get("AEAT_LIVE_TESTS_ENABLED") is None
+    os.environ.pop("CADRUMO_LIVE_TESTS_ENABLED", None)
+    with override_settings(cadrumo_live_tests_enabled=sentinel):
+        assert os.environ.get("CADRUMO_LIVE_TESTS_ENABLED") is None
+        assert load_settings().cadrumo_live_tests_enabled == sentinel
+    assert os.environ.get("CADRUMO_LIVE_TESTS_ENABLED") is None
 
 
 # Defensive re-import to surface a circular-import regression early.

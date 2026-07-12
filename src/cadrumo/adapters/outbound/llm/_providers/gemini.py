@@ -95,7 +95,7 @@ class GeminiAdapter(_ProviderAdapter):
             LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
-            msg = "AEAT_LLM_GEMINI_API_KEY must be set for the Gemini provider."
+            msg = "CADRUMO_LLM_GEMINI_API_KEY must be set for the Gemini provider."
             raise LLMConfigError(msg)
         self._api_key = api_key
         self._timeout_s = timeout_s
@@ -118,7 +118,7 @@ class GeminiAdapter(_ProviderAdapter):
         if request.system is not None:
             parts.append({"text": f"System instruction:\n{request.system}"})
         parts.append({"text": request.prompt})
-        endpoint = load_settings().aeat_llm_gemini_generate_content_template.format(model=request.model)
+        endpoint = load_settings().cadrumo_llm_gemini_generate_content_template.format(model=request.model)
         try:
             async with httpx.AsyncClient(timeout=self._timeout_s) as client:
                 response = await client.post(

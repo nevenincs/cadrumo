@@ -1,7 +1,7 @@
 """Encrypted, classification-aware blob store.
 
 Blobs are persisted under a content-addressed layout rooted at
-:attr:`Settings.aeat_blob_store_dir`. Each blob carries a sidecar
+:attr:`Settings.cadrumo_blob_store_dir`. Each blob carries a sidecar
 :class:`BlobManifest` :class:`Envelope` that pins the sensitivity
 classification, the wire-format SHA-256 (plaintext for CORPUS; ciphertext for
 every other class), the optional wrapped data-encryption key, the AEAD nonce,

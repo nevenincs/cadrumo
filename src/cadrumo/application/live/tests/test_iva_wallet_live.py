@@ -47,11 +47,11 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
             capture_iva_compensation_wallet(
                 target_year=target_year,
                 target_period=target_filing_period,
-                output_root=settings.aeat_audit_dir / "live" / "iva-wallet",
+                output_root=settings.cadrumo_audit_dir / "live" / "iva-wallet",
             ),
         )
         observation = FiledDeclaracionObservationStore(
-            settings.aeat_audit_dir / "live" / "iva-wallet",
+            settings.cadrumo_audit_dir / "live" / "iva-wallet",
         ).load_iva_wallet_observation(Path(report.observation_path))
         decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_filing_period)
         history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_filing_period)

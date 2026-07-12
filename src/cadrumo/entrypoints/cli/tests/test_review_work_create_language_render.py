@@ -42,7 +42,7 @@ def _rendered(language: str | None) -> str:
     """
     if language is None:
         return "\n".join(_queue_lines(_EMPTY_REPORT))
-    with override_settings(aeat_output_language=language):
+    with override_settings(cadrumo_output_language=language):
         return "\n".join(_queue_lines(_EMPTY_REPORT))
 
 
@@ -52,8 +52,8 @@ def _clean_install(tmp_path: Path) -> Iterator[None]:
 
     The clean-install output-language default is Spanish, resolved from the
     settings default when no profile preference, no override, and no
-    ``AEAT_OUTPUT_LANGUAGE`` env var apply. The test/CI shell exports
-    ``AEAT_OUTPUT_LANGUAGE=en``, and a session-leaked active profile could
+    ``CADRUMO_OUTPUT_LANGUAGE`` env var apply. The test/CI shell exports
+    ``CADRUMO_OUTPUT_LANGUAGE=en``, and a session-leaked active profile could
     carry an English preference, so both influences are stripped: the env
     var is removed and storage is a sessionless isolated root.
     """

@@ -151,7 +151,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
 
     Args:
         settings: Application :class:`~core.config.Settings` carrying
-            ``aeat_database_url``.
+            ``cadrumo_database_url``.
 
     Returns:
         A new SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
@@ -159,7 +159,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     Raises:
         StorageError: When the configured URL is empty or cannot be parsed.
     """
-    url = settings.aeat_database_url
+    url = settings.cadrumo_database_url
     if not url:
         raise StorageError(
             "configured database URL is empty.",
@@ -190,9 +190,9 @@ def _engine_cache_key(settings: Settings) -> _EngineCacheKey:
     """
     route = classify_storage_route(settings)
     if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and route.bucket_id:
-        root = str(settings.aeat_local_storage_root.expanduser().resolve())
+        root = str(settings.cadrumo_local_storage_root.expanduser().resolve())
         return ("bucket", root, route.bucket_id)
-    return ("url", "", settings.aeat_database_url)
+    return ("url", "", settings.cadrumo_database_url)
 
 
 def get_engine(settings: Settings | None = None) -> Engine:

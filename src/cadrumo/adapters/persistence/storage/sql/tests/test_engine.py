@@ -28,7 +28,7 @@ _ENGINE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.engine"
 
 
 def _settings_for(url: str) -> Settings:
-    return Settings(aeat_database_url=url)
+    return Settings(cadrumo_database_url=url)
 
 
 @contextmanager
@@ -158,21 +158,21 @@ def test_engine_create_failure_does_not_expose_database_path(tmp_path: Path) -> 
 def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> None:
     """An absent database URL derives a root-level SQLite fallback.
 
-    With no explicit ``aeat_database_url`` and no selected profile, the
+    With no explicit ``cadrumo_database_url`` and no selected profile, the
     settings layer derives ``sqlite:///<storage-root>/aeat.db`` rather
     than leaving the URL empty; the engine factory then builds a working
     engine against that fallback file. This is the engine-boundary
     counterpart of the config layer's database-URL derivation, and
     guards the operator cold-start path where only
-    ``aeat_local_storage_root`` is set.
+    ``cadrumo_local_storage_root`` is set.
     """
     storage_root = tmp_path / "derived-storage-root"
     settings = Settings(
-        aeat_active_profile=None,
-        aeat_local_storage_root=storage_root,
+        cadrumo_active_profile=None,
+        cadrumo_local_storage_root=storage_root,
     )
     fallback_db = storage_root / "aeat.db"
-    assert settings.aeat_database_url == f"sqlite:///{fallback_db.as_posix()}"
+    assert settings.cadrumo_database_url == f"sqlite:///{fallback_db.as_posix()}"
     with _engine_for(settings) as engine:
         with engine.connect() as conn:
             assert conn.execute(text("select 5")).scalar_one() == 5

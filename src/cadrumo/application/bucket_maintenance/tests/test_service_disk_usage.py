@@ -121,12 +121,12 @@ def test_disk_usage_measures_a_non_active_bucket_without_opening_a_session(
     non-active sandbox.
     """
     other_bucket_id = "bucket-maintenance-disk-usage-other"
-    other_paths = provision_bucket_directory(runtime.settings.aeat_local_storage_root, other_bucket_id)
+    other_paths = provision_bucket_directory(runtime.settings.cadrumo_local_storage_root, other_bucket_id)
     (other_paths.blobs_dir / "other-artefact.bin").write_bytes(b"\x01" * 512)
 
     # Confirm bucket_paths resolves identically (no drift between the
     # provisioning call and the service's internal resolution).
-    resolved = bucket_paths(runtime.settings.aeat_local_storage_root, other_bucket_id)
+    resolved = bucket_paths(runtime.settings.cadrumo_local_storage_root, other_bucket_id)
     assert resolved.blobs_dir == other_paths.blobs_dir
 
     result = BucketMaintenanceService().disk_usage(DiskUsageBucketCommand(bucket_id=other_bucket_id))

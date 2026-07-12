@@ -76,7 +76,7 @@ class GoogleAuthNonInteractiveError(GoogleAuthError):
 
 
 class GoogleAuthUnsecuredModeRefusedError(GoogleAuthError):
-    """Raised on OAuth attempts under ``aeat_secret_store_backend=unsecured`` with a real NIF profile."""
+    """Raised on OAuth attempts under ``cadrumo_secret_store_backend=unsecured`` with a real NIF profile."""
 
 
 class GoogleAuthKeychainLockedError(GoogleAuthError):

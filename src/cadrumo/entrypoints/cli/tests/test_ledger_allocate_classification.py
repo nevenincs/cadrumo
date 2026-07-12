@@ -118,7 +118,7 @@ def _allocate_raw(transaction_id: str, business_pct: str) -> Result:
             "--business-pct",
             business_pct,
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
 

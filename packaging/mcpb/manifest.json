@@ -15,7 +15,7 @@
       "command": "aeat-mcp",
       "args": [],
       "env": {
-        "AEAT_MCP_PERSONA": "${user_config.persona}"
+        "CADRUMO_MCP_PERSONA": "${user_config.persona}"
       }
     }
   },

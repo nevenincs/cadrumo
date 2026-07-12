@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @pytest.fixture
 def _active_cli_profile(tmp_path: Path) -> Iterator[None]:
-    with override_settings(aeat_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path):
+    with override_settings(cadrumo_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path):
         yield
 
 

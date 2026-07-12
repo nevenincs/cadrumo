@@ -378,4 +378,4 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"SECURE-A1" in record.payload
-        assert not (secure_engine.settings.aeat_ledgers_dir / "inventory" / f"{secure_engine.bucket_id}.json").exists()
+        assert not (secure_engine.settings.cadrumo_ledgers_dir / "inventory" / f"{secure_engine.bucket_id}.json").exists()

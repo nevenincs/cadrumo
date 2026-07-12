@@ -40,8 +40,8 @@ _HANDOFF = "modelo.export"
 
 @contextmanager
 def _output_language(language: str) -> Iterator[None]:
-    """Pin ``aeat_output_language`` and flush the resolver cache on both edges."""
-    with override_settings(aeat_output_language=language):
+    """Pin ``cadrumo_output_language`` and flush the resolver cache on both edges."""
+    with override_settings(cadrumo_output_language=language):
         clear_output_language_cache()
         try:
             yield

@@ -151,7 +151,7 @@ def _resolve_replay_of() -> str | None:
     from ..config import load_settings
 
     try:
-        replay_of_env = load_settings().aeat_replay_active or None
+        replay_of_env = load_settings().cadrumo_replay_active or None
     except (KeyError, ValueError, AttributeError):
         _log.debug(
             "run_context: replay marker resolution failed; replay_of omitted",

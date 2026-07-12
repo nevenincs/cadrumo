@@ -46,7 +46,7 @@ def test_not_applicable_verify_finding_localizes_binding_kv_guidance() -> None:
         dependencies=(evidence,),
     )
 
-    with override_settings(aeat_output_language="hu"):
+    with override_settings(cadrumo_output_language="hu"):
         findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     assert len(findings) == 1

@@ -8,7 +8,7 @@ recovery verb crashed with ``NoActiveBucketSessionError`` from the
 same cold-start gap it was meant to recover from.
 
 These tests invoke each repair verb against a fresh
-``AEAT_LOCAL_STORAGE_ROOT`` with no profile pointer, no encrypted
+``CADRUMO_LOCAL_STORAGE_ROOT`` with no profile pointer, no encrypted
 database, and no buckets directory, and assert a clean exit. A verb
 that re-introduces a session requirement, or that crashes on the
 absent per-bucket database URL, fails loudly here.
@@ -54,7 +54,7 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
 
     from ....core.config import override_settings
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
             yield storage_root
 
@@ -120,7 +120,7 @@ def test_quarantine_on_fresh_root_reports_nothing_to_quarantine(_fresh_storage_r
 
     assert result.exit_code == 0, result.output
     assert "quarantined\t0" in result.output
-    assert "aeat_database_url is empty" not in result.output
+    assert "cadrumo_database_url is empty" not in result.output
 
 
 def test_reset_progress_on_fresh_root_reports_nothing_to_reset(_fresh_storage_root: Path) -> None:

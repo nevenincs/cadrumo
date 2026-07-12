@@ -50,7 +50,7 @@ class _RecordingSink:
 
 
 def _permitted_settings() -> Settings:
-    return Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.FULL)
+    return Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
 
 
 # ── command-invocation producer ──────────────────────────────────────────
@@ -162,9 +162,9 @@ def test_llm_run_permitted_dispatches_the_allowlisted_payload() -> None:
 
 def test_llm_run_gestor_mode_never_emits_even_fully_opted_in() -> None:
     settings = Settings(
-        aeat_telemetry_opt_in=True,
-        aeat_telemetry_tier=TelemetryTier.FULL,
-        aeat_telemetry_gestor_mode=True,
+        cadrumo_telemetry_opt_in=True,
+        cadrumo_telemetry_tier=TelemetryTier.FULL,
+        cadrumo_telemetry_gestor_mode=True,
     )
     sink = _RecordingSink()
     result = emit_llm_run_telemetry(

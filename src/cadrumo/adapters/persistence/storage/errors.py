@@ -210,8 +210,8 @@ class UnsecuredModeRefusedError(SecretStoreError):
 
     Two refusal classes:
 
-    1. The unsecured backend was selected (``aeat_secret_store_backend=unsecured``)
-       but the operator did not set ``AEAT_ALLOW_UNENCRYPTED=1``. The hostile-
+    1. The unsecured backend was selected (``cadrumo_secret_store_backend=unsecured``)
+       but the operator did not set ``CADRUMO_ALLOW_UNENCRYPTED=1``. The hostile-
        named env var is the legible-and-embarrassing opt-out gate.
     2. The unsecured backend is active AND the operator profile carries a
        real NIF/NIE/CIF (NIF-canary). Real tax data is incompatible with a

@@ -273,8 +273,8 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     settings = Settings(
         aeat_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
         aeat_certificate_password_secret=SecretStr(_PKCS12_TEST_TEXT),
-        aeat_cert_warn_days=10,
-        aeat_cert_critical_days=30,
+        cadrumo_cert_warn_days=10,
+        cadrumo_cert_critical_days=30,
     )
 
     with pytest.raises(AeatError, match=r"warn_days.*critical_days") as exc_info:

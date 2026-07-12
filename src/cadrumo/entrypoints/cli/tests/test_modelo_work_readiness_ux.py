@@ -170,7 +170,7 @@ def test_m210_engine_live_work_create_refuses_legacy_non_eea_irnr_missing_repres
     _create_gb_non_resident_profile()
     _remove_representante_fields_from_operator_profile()
 
-    with override_settings(aeat_m210_engine_live=True):
+    with override_settings(cadrumo_m210_engine_live=True):
         result = _invoke(
             [
                 "--format", "json",

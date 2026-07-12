@@ -1080,8 +1080,8 @@ class WorkflowEngine:
                 cert_severity, days_until_expiry = _classify_cert_expiry(
                     not_after=certificate.expires_on,
                     today=today,
-                    warn_days=self._settings.aeat_cert_warn_days,
-                    critical_days=self._settings.aeat_cert_critical_days,
+                    warn_days=self._settings.cadrumo_cert_warn_days,
+                    critical_days=self._settings.cadrumo_cert_critical_days,
                 )
                 cert_details["cert_not_after"] = certificate.expires_on.isoformat()
                 cert_details["cert_severity"] = cert_severity

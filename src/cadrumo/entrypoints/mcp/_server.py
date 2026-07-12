@@ -20,7 +20,7 @@ SDK without the stdio transport.
 Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
 :func:`serve` resolves the active persona once, at startup, from the
-``AEAT_MCP_PERSONA`` environment variable via
+``CADRUMO_MCP_PERSONA`` environment variable via
 :func:`~entrypoints.mcp._persona_scope.active_persona`. When a persona is
 active, ``_list_tools`` advertises only that persona's in-scope tools
 (:func:`filter_descriptors_for_persona`) and ``_call_tool`` refuses an
@@ -168,7 +168,7 @@ def emit_missing_sdk_refusal() -> None:
 def serve() -> None:
     """Run the ``aeat-mcp`` stdio server, or refuse if the SDK is not installed.
 
-    Resolves the active persona from ``AEAT_MCP_PERSONA`` before touching the
+    Resolves the active persona from ``CADRUMO_MCP_PERSONA`` before touching the
     SDK, so an invalid persona value fails with the instructive
     :func:`~entrypoints.mcp._persona_scope.active_persona` error
     regardless of whether the optional SDK is installed.

@@ -71,7 +71,7 @@ def test_default_off_settings_never_touch_the_sink() -> None:
 
 
 def test_opted_in_but_not_acknowledged_never_touches_the_sink() -> None:
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.CRASH_ONLY)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.CRASH_ONLY)
     sink = _RecordingSink()
     result = emit_telemetry_event(_payload(), settings=settings, acknowledged=False, sink=sink)
     assert result is False
@@ -80,9 +80,9 @@ def test_opted_in_but_not_acknowledged_never_touches_the_sink() -> None:
 
 def test_gestor_mode_never_touches_the_sink_even_when_fully_opted_in() -> None:
     settings = Settings(
-        aeat_telemetry_opt_in=True,
-        aeat_telemetry_tier=TelemetryTier.FULL,
-        aeat_telemetry_gestor_mode=True,
+        cadrumo_telemetry_opt_in=True,
+        cadrumo_telemetry_tier=TelemetryTier.FULL,
+        cadrumo_telemetry_gestor_mode=True,
     )
     sink = _RecordingSink()
     result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True, sink=sink)
@@ -91,7 +91,7 @@ def test_gestor_mode_never_touches_the_sink_even_when_fully_opted_in() -> None:
 
 
 def test_fully_permitted_invocation_dispatches_the_exact_payload_to_the_sink() -> None:
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.FULL)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
     sink = _RecordingSink()
     payload = _payload()
     result = emit_telemetry_event(payload, settings=settings, acknowledged=True, sink=sink)
@@ -106,7 +106,7 @@ def test_default_sink_is_the_local_noop_and_produces_no_observable_side_effect()
     permits emission, the payload is discarded rather than sent anywhere --
     there is no HTTP client, no file write, no state mutation to observe.
     """
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.FULL)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
     result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True)
     assert result is True  # the gate permitted it; the noop sink accepted it
 

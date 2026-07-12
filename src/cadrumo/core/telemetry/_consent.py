@@ -37,11 +37,11 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     exception. A remote emission is permitted only when every one of the
     following holds:
 
-    1. Gestor/professional mode is OFF (``settings.aeat_telemetry_gestor_mode``
+    1. Gestor/professional mode is OFF (``settings.cadrumo_telemetry_gestor_mode``
        is ``False``). This is an absolute, categorical bar: a gestor
        deployment never transmits telemetry regardless of the other three
        conditions.
-    2. The deployment has opted in (``settings.aeat_telemetry_opt_in`` is
+    2. The deployment has opted in (``settings.cadrumo_telemetry_opt_in`` is
        ``True``).
     3. The configured tier is not :attr:`~core.telemetry.TelemetryTier.OFF`.
     4. The operator acknowledged this specific invocation
@@ -58,10 +58,10 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     Returns:
         ``True`` only when all four conditions above hold.
     """
-    if settings.aeat_telemetry_gestor_mode:
+    if settings.cadrumo_telemetry_gestor_mode:
         return False
-    if not settings.aeat_telemetry_opt_in:
+    if not settings.cadrumo_telemetry_opt_in:
         return False
-    if settings.aeat_telemetry_tier is TelemetryTier.OFF:
+    if settings.cadrumo_telemetry_tier is TelemetryTier.OFF:
         return False
     return acknowledged

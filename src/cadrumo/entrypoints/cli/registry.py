@@ -109,7 +109,7 @@ def _resolve_source_root(value: Path | None) -> Path:
 
 
 def _resolve_parity_store_root(value: Path | None) -> Path:
-    return value if value is not None else load_settings().aeat_registry_parity_store_dir
+    return value if value is not None else load_settings().cadrumo_registry_parity_store_dir
 
 
 @app.command("inspect", help=tr("cli.registry.inspect_help"))

@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() -> None:
     """An unreachable Ollama endpoint yields unavailable + a `serve` remediation, never an exception."""
     # Port 1 is reserved/closed — the connection is refused fast.
-    with override_settings(aeat_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
         status = probe_ollama_vision()
     assert isinstance(status, DependencyStatus)
     assert status.service == "ollama-vision"

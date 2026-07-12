@@ -35,7 +35,7 @@ def test_resolve_confidence_threshold_accepts_none_and_in_range_values() -> None
 def test_resolve_confidence_threshold_rejects_out_of_range_naming_bounds() -> None:
     failures: list[str] = []
     for value in _REJECTED_THRESHOLDS:
-        with override_settings(aeat_output_language="en"):
+        with override_settings(cadrumo_output_language="en"):
             try:
                 _resolve_confidence_threshold(value)
             except typer.BadParameter as exc:

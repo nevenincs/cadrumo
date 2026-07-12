@@ -184,7 +184,7 @@ adapters:
             primer.
           google_token_missing: No hi ha cap token OAuth de Google persistit per al
             perfil actiu. Executa `aeat config google login` primer.
-          kind_empty: AEAT_STORAGE_PROVIDER_KIND esta buit.
+          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta buit.
           kind_unhandled: El tipus de proveidor d emmagatzematge {kind} no esta gestionat
             per la factoria.
           kind_unknown: El tipus de proveidor d emmagatzematge {value} no es reconeix;
@@ -233,7 +233,7 @@ adapters:
           namespace_blank: L espai de noms d emmagatzematge local no pot estar buit.
           namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
             l''espai de noms {namespace}: el camí supera el límit de longitud de camí
-            de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o activa
             LongPathsEnabled (vegeu `aeat config check`).'
           namespace_create_permission: L emmagatzematge local no ha pogut crear l
             espai de noms {namespace}.
@@ -253,7 +253,7 @@ adapters:
             de l objecte.
           payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             la càrrega de l''objecte: el camí supera el límit de longitud de camí
-            de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o activa
             LongPathsEnabled (vegeu `aeat config check`).'
           payload_write_permission: L emmagatzematge local no ha pogut escriure el
             payload de l objecte.
@@ -265,7 +265,7 @@ adapters:
             de l objecte.
           sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
-            de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt o activa
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o activa
             LongPathsEnabled (vegeu `aeat config check`).'
   persistence:
     profile:
@@ -3661,7 +3661,7 @@ cli:
       app_help: Inspecciona i controla el nivell de telemetria remota, desactivat
         per defecte i opcional.
       bad_tier: '--tier ha de ser un de: %{accepted}; s''ha rebut %{value!r}.'
-      endpoint_help: Previsualitza/envia com si AEAT_TELEMETRY_ENDPOINT fos aquesta
+      endpoint_help: Previsualitza/envia com si CADRUMO_TELEMETRY_ENDPOINT fos aquesta
         URL només per aquesta execució; omet-ho per usar l'endpoint configurat realment
         al desplegament.
       flush:
@@ -3679,9 +3679,9 @@ cli:
         header: 'Càrrega útil de telemetria (simulacre, no s''ha enviat res):'
         help: Construeix la càrrega útil agregada de telemetria local i, llevat de
           --dry-run, l'envia.
-        no_endpoint_notice: 'No s''ha enviat res: no hi ha cap AEAT_TELEMETRY_ENDPOINT
+        no_endpoint_notice: 'No s''ha enviat res: no hi ha cap CADRUMO_TELEMETRY_ENDPOINT
           configurat.'
-      opt_in_help: Previsualitza/envia com si AEAT_TELEMETRY_OPT_IN tingués aquest
+      opt_in_help: Previsualitza/envia com si CADRUMO_TELEMETRY_OPT_IN tingués aquest
         valor només per aquesta execució; omet-ho per usar l'ajust configurat realment
         al desplegament.
       status:
@@ -3689,9 +3689,9 @@ cli:
         help: Informa de la postura de consentiment de telemetria remota. Mai emet
           res.
         off_hint: La telemetria roman totalment local per defecte. Per activar-la,
-          defineix AEAT_TELEMETRY_OPT_IN=true i AEAT_TELEMETRY_TIER a crash_only o
+          defineix CADRUMO_TELEMETRY_OPT_IN=true i CADRUMO_TELEMETRY_TIER a crash_only o
           full a env/.env.
-      tier_help: Previsualitza/envia com si AEAT_TELEMETRY_TIER tingués aquest valor
+      tier_help: Previsualitza/envia com si CADRUMO_TELEMETRY_TIER tingués aquest valor
         (off / crash_only / full) només per aquesta execució; omet-ho per usar el
         nivell configurat realment.
     version:
@@ -4339,7 +4339,7 @@ cli:
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
-      invalid_env_value: 'AEAT_LOG_LEVEL ha de ser un de: %{allowed}; valor rebut:
+      invalid_env_value: 'CADRUMO_LOG_LEVEL ha de ser un de: %{allowed}; valor rebut:
         %{value}.'
   operator_surface:
     errors:
@@ -4409,8 +4409,8 @@ cli:
         paragraph_durable_state: L'estat durador (perfil, autenticacio, llibre) persisteix
           entre sessions.
         paragraph_storage_isolation: Per a una execucio aillada des de zero, definiu
-          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
-          i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
+          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
+          i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
@@ -4454,8 +4454,8 @@ cli:
         modelo_list: Llistar els models fiscals disponibles.
         modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
         paragraph_storage_isolation: Per a una execucio aillada des de zero, definiu
-          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
-          i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
+          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
+          i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
         paragraph_two_roots: 'Dues superficies principals: ''app'' per a operacions
           de declaracio i ''config'' per a configuracio i diagnostic.'
@@ -5332,7 +5332,7 @@ errors:
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
-      límit MAX_PATH de Windows. Trasllada AEAT_LOCAL_STORAGE_ROOT a un camí més curt
+      límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt
       o activa LongPathsEnabled (vegeu `aeat config check`).
     error_submission_validation: Un model d'enviament no ha superat la validació.
     error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a

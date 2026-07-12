@@ -195,7 +195,7 @@ class DiskUsageBucketCommand(BaseModel):
     """Operator request to measure a bucket's on-disk footprint.
 
     Reads only filesystem metadata (``os.stat`` sizes) under
-    ``<aeat_local_storage_root>/buckets/<bucket_id>/``; it never opens the
+    ``<cadrumo_local_storage_root>/buckets/<bucket_id>/``; it never opens the
     encrypted SQLite database or decrypts a secure-object payload, so no
     master key or active-bucket session is required. This makes the
     measurement safe to run against a non-active, even archived, bucket —

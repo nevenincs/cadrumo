@@ -16,10 +16,10 @@ from ...tests.secure_sql import dev_test_database_password
 @pytest.fixture(autouse=True)
 def _file_backed_review_storage(tmp_path: Path) -> Iterator[None]:
     with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+        cadrumo_local_storage_root=tmp_path,
+        cadrumo_active_profile=None,
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_passphrase=SecretStr(dev_test_database_password()),
     ) as settings:
         dispose_engine(settings)
         try:

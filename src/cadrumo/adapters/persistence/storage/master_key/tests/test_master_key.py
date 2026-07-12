@@ -123,7 +123,7 @@ class TestTornStateGate:
     def store_dir(self, tmp_path: Path):
         store = tmp_path / "secrets"
         store.mkdir()
-        with override_settings(aeat_secret_passphrase="torn-state-passphrase"):
+        with override_settings(cadrumo_secret_passphrase="torn-state-passphrase"):
             yield store
 
     def test_single_artifact_torn_states_raise(
@@ -181,11 +181,11 @@ class TestSecurityHardening:
         from ......core.config import load_settings
         from .._master_key import _default_passphrase_callback
 
-        with override_settings(aeat_secret_passphrase="smoke-passphrase"):
+        with override_settings(cadrumo_secret_passphrase="smoke-passphrase"):
             assert _default_passphrase_callback() == "smoke-passphrase"
             # The Settings entry must survive — subsequent callbacks
             # resolve consistently against the same value.
-            stored = load_settings().aeat_secret_passphrase
+            stored = load_settings().cadrumo_secret_passphrase
             assert stored is not None
             assert stored.get_secret_value() == "smoke-passphrase"
             assert _default_passphrase_callback() == "smoke-passphrase"
@@ -193,10 +193,10 @@ class TestSecurityHardening:
     def test_passphrase_callback_sanitizes_settings_value(self) -> None:
         from .._master_key import _default_passphrase_callback
 
-        with override_settings(aeat_secret_passphrase="value-with-newline\n"):
+        with override_settings(cadrumo_secret_passphrase="value-with-newline\n"):
             assert _default_passphrase_callback() == "value-with-newline"
 
-        with override_settings(aeat_secret_passphrase="\r\n"), pytest.raises(SecretStoreError):
+        with override_settings(cadrumo_secret_passphrase="\r\n"), pytest.raises(SecretStoreError):
             _default_passphrase_callback()
 
     def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
@@ -323,7 +323,7 @@ class TestFactory:
         # fresh file-fallback master key that would diverge from
         # whatever the keychain holds. Refuse and surface the lock
         # state so the operator unlocks-and-retries OR explicitly
-        # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
+        # switches to ``CADRUMO_SECRET_STORE_BACKEND=file``.
         from keyring.errors import KeyringError
 
         from ...errors import MasterKeyKeychainLockedError
@@ -389,19 +389,19 @@ class TestUnsecuredProvider:
         assert first.startswith(b"AEAT_UNSECURED_TEST_KEY")
 
     def test_factory_unsecured_backend_requires_explicit_gate(self, tmp_path: Path) -> None:
-        # AEAT_ALLOW_UNENCRYPTED=1 is the hostile-named opt-out gate.
+        # CADRUMO_ALLOW_UNENCRYPTED=1 is the hostile-named opt-out gate.
         refused_settings = Settings(
-            aeat_secret_store_dir=tmp_path / "secrets",
-            aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
-            aeat_allow_unencrypted="",  # not "1": kill-switch refuses
+            cadrumo_secret_store_dir=tmp_path / "secrets",
+            cadrumo_secret_store_backend=SecretStoreBackend.UNSECURED,
+            cadrumo_allow_unencrypted="",  # not "1": kill-switch refuses
         )
-        with pytest.raises(UnsecuredModeRefusedError, match="AEAT_ALLOW_UNENCRYPTED"):
+        with pytest.raises(UnsecuredModeRefusedError, match="CADRUMO_ALLOW_UNENCRYPTED"):
             get_master_key_provider(settings_override=refused_settings)
 
         allowed_settings = Settings(
-            aeat_secret_store_dir=tmp_path / "secrets",
-            aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
-            aeat_allow_unencrypted="1",  # literal "1" enables the unsecured backend
+            cadrumo_secret_store_dir=tmp_path / "secrets",
+            cadrumo_secret_store_backend=SecretStoreBackend.UNSECURED,
+            cadrumo_allow_unencrypted="1",  # literal "1" enables the unsecured backend
         )
         provider = get_master_key_provider(settings_override=allowed_settings)
         assert isinstance(provider, UnsecuredMasterKeyProvider)

@@ -136,7 +136,7 @@ def _root(
     if language is not None:
         from ...core.config import override_settings
 
-        ctx.with_resource(override_settings(aeat_output_language=language))
+        ctx.with_resource(override_settings(cadrumo_output_language=language))
     _apply_to_root_logger(_resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
@@ -176,7 +176,7 @@ def _root(
         _activate_profile_override(ctx, profile)
     else:
         # No explicit --profile: the active profile comes from the
-        # AEAT_ACTIVE_PROFILE env override / pointer. Normalize a display-name
+        # CADRUMO_ACTIVE_PROFILE env override / pointer. Normalize a display-name
         # value to its UUID so the core storage-route resolver (UUID-only)
         # resolves it — an operator only knows the label, never the UUID.
         # Bootstrap-exempt recovery verbs must not read bucket manifests here:
@@ -237,7 +237,7 @@ def _root(
     # path to keep it out of the state-free surfaces (--version,
     # --help, bare invocation). Help and usage-error renderings are
     # introspection surfaces too: they must never require the master
-    # key, or a newcomer without AEAT_SECRET_PASSPHRASE cannot browse
+    # key, or a newcomer without CADRUMO_SECRET_PASSPHRASE cannot browse
     # the command tree and an unknown-command typo is masked by a
     # master-key refusal instead of the usage error.
     if _is_introspection_only_invocation(ctx):
@@ -280,16 +280,16 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
             translated_message="cli.config.profile.unknown_profile",
             context={"name": requested},
         )
-    ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
+    ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
 def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
-    """Normalize a display-name ``AEAT_ACTIVE_PROFILE`` to its UUID bucket id.
+    """Normalize a display-name ``CADRUMO_ACTIVE_PROFILE`` to its UUID bucket id.
 
     An operator addresses a profile by the label they chose at ``profile
     create``; the immutable UUID bucket id is never surfaced to them. When no
     ``--profile`` flag is given, the active profile is resolved from the
-    ``AEAT_ACTIVE_PROFILE`` env override (the highest-precedence rung): if that
+    ``CADRUMO_ACTIVE_PROFILE`` env override (the highest-precedence rung): if that
     value is a display LABEL rather than a UUID bucket directory, the core
     storage-route resolver — which keys directly on ``buckets/<value>`` — would
     hard-miss with a "no registered bucket manifest" refusal on every
@@ -345,7 +345,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.
         return
-    ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
+    ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
 
 def _activate_active_bucket_session(ctx: typer.Context) -> None:
@@ -501,7 +501,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
 
     Two introspection shapes never execute a verb body and therefore must
     not open the encrypted bucket session (which demands the master key and,
-    without ``AEAT_SECRET_PASSPHRASE`` on a non-interactive stdin, refuses):
+    without ``CADRUMO_SECRET_PASSPHRASE`` on a non-interactive stdin, refuses):
 
     - A help request: a ``--help`` / ``-h`` token anywhere in the unparsed
       remainder. Click's eager help callback (or the curated subgroup help
@@ -917,7 +917,7 @@ def main() -> None:
     launcher is ``aeat.EXE`` on Windows.
 
     An explicit ``--language`` / ``--lang`` flag is promoted to
-    ``AEAT_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
+    ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
     render their ``tr(...)``-bound help, so the flag genuinely localises help
     text per operator-surface ADR decision D6 (see :mod:`._language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved

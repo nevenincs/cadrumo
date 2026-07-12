@@ -48,9 +48,9 @@ class _InMemoryKeyringClient:
 
 def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:
     return Settings(
-        aeat_local_storage_root=tmp_path / "state",
-        aeat_secret_store_dir=tmp_path / "secrets",
-        aeat_secret_store_backend=backend,
+        cadrumo_local_storage_root=tmp_path / "state",
+        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_secret_store_backend=backend,
     )
 
 

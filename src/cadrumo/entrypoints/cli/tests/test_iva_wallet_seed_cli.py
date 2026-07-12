@@ -126,7 +126,7 @@ def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
         _store_profile_with_nif(_NIF)
         result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "seed", "--filing-year", "2024", "--period", "4T", "--amount", "1200.00"],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0
@@ -152,7 +152,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
                 "1200.50",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
         repo = IvaCompensationHistoryRepository()
@@ -193,7 +193,7 @@ def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) ->
                 "local M303 1T-2025 filed revision",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code == 0, result.output
@@ -229,7 +229,7 @@ def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
                 "--evidence-locator",
                 "y",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0
@@ -257,7 +257,7 @@ def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
                 "   ",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0
@@ -281,7 +281,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
                 "1200.00",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
         assert first_result.exit_code == 0, first_result.output
         result = invoke_cached_cli(
@@ -298,7 +298,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
                 "500.00",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0
@@ -325,7 +325,7 @@ def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="help-text-test"):
         result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "seed", "--help"],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code == 0, result.output

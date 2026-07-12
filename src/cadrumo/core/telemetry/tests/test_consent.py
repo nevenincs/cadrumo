@@ -29,20 +29,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_default_posture_refuses_telemetry_even_when_acknowledged() -> None:
     settings = Settings()
-    assert settings.aeat_telemetry_opt_in is False
-    assert settings.aeat_telemetry_gestor_mode is False
-    assert settings.aeat_telemetry_tier is TelemetryTier.OFF
+    assert settings.cadrumo_telemetry_opt_in is False
+    assert settings.cadrumo_telemetry_gestor_mode is False
+    assert settings.cadrumo_telemetry_tier is TelemetryTier.OFF
     assert telemetry_emit_permitted(settings, acknowledged=True) is False
 
 
 def test_opted_in_deployment_still_requires_a_non_off_tier() -> None:
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.OFF)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.OFF)
     # Opted in but tier still 'off' -> refused regardless of acknowledgement.
     assert telemetry_emit_permitted(settings, acknowledged=True) is False
 
 
 def test_opted_in_deployment_still_requires_per_invocation_acknowledgement() -> None:
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.CRASH_ONLY)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.CRASH_ONLY)
     # Not acknowledged this invocation -> refused (no sticky enable).
     assert telemetry_emit_permitted(settings, acknowledged=False) is False
     # Acknowledged this invocation -> permitted.
@@ -50,16 +50,16 @@ def test_opted_in_deployment_still_requires_per_invocation_acknowledgement() -> 
 
 
 def test_full_tier_also_requires_opt_in_and_acknowledgement() -> None:
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.FULL)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
     assert telemetry_emit_permitted(settings, acknowledged=True) is True
     assert telemetry_emit_permitted(settings, acknowledged=False) is False
 
 
 def test_gestor_mode_bars_telemetry_absolutely() -> None:
     settings = Settings(
-        aeat_telemetry_opt_in=True,
-        aeat_telemetry_tier=TelemetryTier.FULL,
-        aeat_telemetry_gestor_mode=True,
+        cadrumo_telemetry_opt_in=True,
+        cadrumo_telemetry_tier=TelemetryTier.FULL,
+        cadrumo_telemetry_gestor_mode=True,
     )
     # Gestor mode overrides the deployment opt-in, the tier, and per-invocation consent.
     assert telemetry_emit_permitted(settings, acknowledged=True) is False
@@ -70,7 +70,7 @@ def test_acknowledgement_is_never_sticky_across_calls() -> None:
     must diverge -- proving the gate re-reads the flag every time rather than
     caching a prior permit.
     """
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.CRASH_ONLY)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.CRASH_ONLY)
     first = telemetry_emit_permitted(settings, acknowledged=True)
     second = telemetry_emit_permitted(settings, acknowledged=False)
     assert first is True

@@ -141,7 +141,7 @@ def test_citation_show_preserves_current_legislative_decree_kind_for_trlirnr() -
 
 
 def test_topic_projection_resolves_central_output_language_override() -> None:
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025))
 
     topics = {topic.slug: topic for topic in report.topics}

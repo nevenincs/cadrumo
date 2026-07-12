@@ -23,7 +23,7 @@ from ._store import load_trace
 
 # Marker environment variable set for the duration of ``replay_run``'s
 # re-entered CLI call so run_context can label the child trace.
-REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
+REPLAY_ACTIVE_ENV_VAR = "CADRUMO_REPLAY_ACTIVE"
 
 # Flag tokens the replay scrubber strips from a recorded command so the
 # replayed invocation cannot promote a dry run into a live write.
@@ -206,7 +206,7 @@ def replay_run(
     # the "every AEAT-prefixed config flows through Settings" mandate.
     # This is subprocess-IPC, not config: ``invoke(argv)`` re-enters the
     # CLI which on next ``load_settings()`` reads
-    # ``Settings.aeat_replay_active`` — and the value comes from the
+    # ``Settings.cadrumo_replay_active`` — and the value comes from the
     # os.environ mutation we perform below. Settings is read-only, so
     # the write side has no Settings equivalent.
     previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)

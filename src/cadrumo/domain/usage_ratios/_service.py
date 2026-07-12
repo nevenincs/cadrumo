@@ -64,13 +64,13 @@ def _usage_ratio_lock_target(bucket_id: str) -> Path:
     if not trimmed:
         raise UsageRatioPersistenceError("bucket_id must not be blank")
     settings = load_settings()
-    if "aeat_database_url" in settings.model_fields_set:
+    if "cadrumo_database_url" in settings.model_fields_set:
         # Explicit-database route (test/bootstrap): the route already names the
         # storage authority; scope the lock to that database's directory.
         route = classify_storage_route(settings)
     else:
         route = classify_storage_route(settings_for_active_profile_bucket(trimmed, settings))
-    base = route.database_path.parent if route.database_path is not None else settings.aeat_local_storage_root
+    base = route.database_path.parent if route.database_path is not None else settings.cadrumo_local_storage_root
     safe = "".join(ch if (ch.isalnum() or ch in "-_") else "_" for ch in trimmed)
     return base / f"usage-ratios.{safe}.lock"
 
@@ -101,7 +101,7 @@ def usage_ratio_bucket_lock(bucket_id: str) -> Iterator[None]:
 
     Raises:
         LockAcquisitionError: When the per-bucket lock cannot be acquired within
-            the configured ``aeat_file_lock_timeout_s`` budget.
+            the configured ``cadrumo_file_lock_timeout_s`` budget.
     """
     from ...core.locks import exclusive_file_lock
 

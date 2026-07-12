@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -36,23 +37,37 @@ def _invoke(args: list[str]):
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
     base_settings = Settings.model_validate({})
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.upper().startswith(("AEAT_", "CADRUMO_"))
+    }
     setting_env = str.upper
     env.update(
         {
-            setting_env("aeat_secret_store_backend"): SecretStoreBackend.FILE.value,
-            setting_env("aeat_secret_passphrase"): (base_settings.aeat_dev_test_database_password.get_secret_value()),
-            setting_env("aeat_secret_store_dir"): str(tmp_path / "storage" / "secrets"),
-            setting_env("aeat_local_storage_root"): str(tmp_path / "storage"),
-            setting_env("aeat_token_dir"): str(tmp_path / "tokens"),
-            setting_env("aeat_runs_dir"): str(tmp_path / "runs"),
-            setting_env("aeat_financial_txs_dir"): str(tmp_path / "txs"),
-            setting_env("aeat_invoices_dir"): str(tmp_path / "invoices"),
-            setting_env("aeat_drafts_dir"): str(tmp_path / "drafts"),
-            setting_env("aeat_output_language"): "en",
+            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.FILE.value,
+            setting_env("cadrumo_secret_passphrase"): (base_settings.cadrumo_dev_test_database_password.get_secret_value()),
+            setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "secrets"),
+            setting_env("cadrumo_local_storage_root"): str(tmp_path / "storage"),
+            setting_env("cadrumo_token_dir"): str(tmp_path / "tokens"),
+            setting_env("cadrumo_runs_dir"): str(tmp_path / "runs"),
+            setting_env("cadrumo_financial_txs_dir"): str(tmp_path / "txs"),
+            setting_env("cadrumo_invoices_dir"): str(tmp_path / "invoices"),
+            setting_env("cadrumo_drafts_dir"): str(tmp_path / "drafts"),
+            setting_env("cadrumo_output_language"): "en",
         },
     )
+    scripts_dir = str(Path(sys.executable).parent)
+    env["PATH"] = os.pathsep.join((scripts_dir, env.get("PATH", "")))
     return env
+
+
+def _installed_aeat_executable() -> Path:
+    """Return the CLI script installed beside the active test interpreter."""
+    suffix = ".exe" if os.name == "nt" else ""
+    executable = Path(sys.executable).with_name(f"aeat{suffix}")
+    assert executable.is_file(), f"the aeat console script must be installed at {executable}"
+    return executable
 
 
 def _command_path_for_help_probe(command: str) -> list[str] | None:
@@ -77,9 +92,9 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert retired_init not in result.output
     assert "aeat app overview status" in result.output
     assert "aeat app live filed list" in result.output
-    assert "AEAT_LOCAL_STORAGE_ROOT" in result.output
-    assert "AEAT_SECRET_STORE_DIR" in result.output
-    assert "AEAT_SECRET_PASSPHRASE" in result.output
+    assert "CADRUMO_LOCAL_STORAGE_ROOT" in result.output
+    assert "CADRUMO_SECRET_STORE_DIR" in result.output
+    assert "CADRUMO_SECRET_PASSPHRASE" in result.output
     assert "aeat config bucket" not in result.output
 
 
@@ -91,8 +106,8 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert config.exit_code == 0, config.output
     assert "aeat config - profile, auth, diagnostics" in config.output
     assert "aeat config profile create NAME" in config.output
-    assert "AEAT_LOCAL_STORAGE_ROOT" in config.output
-    assert "AEAT_SECRET_STORE_BACKEND=file" in config.output
+    assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
+    assert "CADRUMO_SECRET_STORE_BACKEND=file" in config.output
     assert "aeat config profile show [NAME]" in config.output
     assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
@@ -121,8 +136,7 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
 
 
 def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -> None:
-    aeat_exe = shutil.which("aeat")
-    assert aeat_exe is not None
+    aeat_exe = _installed_aeat_executable()
 
     result = subprocess.run(
         [aeat_exe],
@@ -173,8 +187,7 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
 
 
 def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: Path) -> None:
-    aeat_exe = shutil.which("aeat")
-    assert aeat_exe is not None
+    aeat_exe = _installed_aeat_executable()
     env = _console_env(tmp_path)
 
     create = subprocess.run(
@@ -250,8 +263,7 @@ def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: 
 
 
 def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_path: Path) -> None:
-    aeat_exe = shutil.which("aeat")
-    assert aeat_exe is not None
+    aeat_exe = _installed_aeat_executable()
 
     result = subprocess.run(
         [aeat_exe, "config", "profile", "create", "operator"],

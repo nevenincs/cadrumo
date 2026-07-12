@@ -135,7 +135,7 @@ def _write_active_profile_pointer(bucket_id: str) -> None:
 
     settings = load_settings()
     write_pointer(
-        settings.aeat_local_storage_root,
+        settings.cadrumo_local_storage_root,
         BucketPointer(bucket_id=bucket_id, schema_version=1),
     )
 
@@ -162,7 +162,7 @@ def profile_create_storage_span(profile_id: str):
     )
     from ...core.config import override_settings
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     paths = bucket_paths(root, profile_id)
     dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
     bucket_dir_existed = paths.bucket_dir.exists()
@@ -180,7 +180,7 @@ def profile_create_storage_span(profile_id: str):
             except SecretAlreadyExistsError:
                 _log.debug("master key already provisioned while opening create span for profile %s", profile_id)
         with (
-            override_settings(aeat_active_profile=profile_id),
+            override_settings(cadrumo_active_profile=profile_id),
             activate_master_key_provider(
                 provider,
                 fallback_bucket_id=profile_id,
@@ -209,7 +209,7 @@ def _remove_create_span_artifacts(
     """Best-effort cleanup of artifacts minted by a failed create span."""
     import shutil
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     if not bucket_dir_existed:
         try:
             remove_profile_bucket_directory(profile_id)
@@ -246,7 +246,7 @@ def profile_storage_session(profile_id: str):
     from ...core.config import override_settings
 
     with (
-        override_settings(aeat_active_profile=profile_id),
+        override_settings(cadrumo_active_profile=profile_id),
         activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=profile_id),
     ):
         yield profile_id
@@ -263,7 +263,7 @@ def _clear_active_profile_pointer() -> None:
     from ...core.config import load_settings
 
     settings = load_settings()
-    target = pointer_path(settings.aeat_local_storage_root)
+    target = pointer_path(settings.cadrumo_local_storage_root)
     if target.is_file():
         target.unlink()
 
@@ -463,7 +463,7 @@ def capture_active_profile_pointer() -> str | None:
     """
     from ...core import pointer_path
 
-    target = pointer_path(load_settings().aeat_local_storage_root)
+    target = pointer_path(load_settings().cadrumo_local_storage_root)
     if not target.is_file():
         return None
     return target.read_text(encoding=_UTF_8_ENCODING)
@@ -480,7 +480,7 @@ def restore_active_profile_pointer(prior_text: str | None) -> None:
     """
     from ...core import pointer_path
 
-    target = pointer_path(load_settings().aeat_local_storage_root)
+    target = pointer_path(load_settings().cadrumo_local_storage_root)
     if prior_text is None:
         if target.is_file():
             target.unlink()
@@ -553,7 +553,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     from ...adapters.persistence.storage.master_key import current_active_bucket_session
     from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     target = bucket_paths(root, profile_id).bucket_dir
     if not target.exists():
         return

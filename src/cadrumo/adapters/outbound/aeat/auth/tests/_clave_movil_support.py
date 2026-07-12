@@ -325,8 +325,8 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
     unexpected = set(env_overrides) - expected_keys
     assert unexpected == set()
     return Settings(
-        aeat_token_dir=tmp_path,
-        aeat_local_storage_root=tmp_path / "storage",
+        cadrumo_token_dir=tmp_path,
+        cadrumo_local_storage_root=tmp_path / "storage",
         aeat_clave_prefer_non_qr=_bool_setting(env_overrides.get("aeat_clave_prefer_non_qr")),
         aeat_clave_movil_dni_nie=_secret_or_none(env_overrides.get("aeat_clave_movil_dni_nie")),
         aeat_clave_movil_dni_fecha=env_overrides.get("aeat_clave_movil_dni_fecha"),

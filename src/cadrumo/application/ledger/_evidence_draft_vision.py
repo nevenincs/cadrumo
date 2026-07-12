@@ -228,7 +228,7 @@ class LocalVisionInvoiceFieldExtractor:
 
     Args:
         model: Local Ollama vision model identifier; defaults to
-            ``Settings.aeat_llm_ollama_vision_model``.
+            ``Settings.cadrumo_llm_ollama_vision_model``.
         client: Injected :class:`~adapters.outbound.llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
@@ -243,11 +243,11 @@ class LocalVisionInvoiceFieldExtractor:
         settings: Settings | None = None,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
-        self._model = model if model is not None else resolved_settings.aeat_llm_ollama_vision_model
+        self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model
         # A local vision model on consumer hardware can take minutes; give the
         # vision read its own (longer) timeout, mirroring LocalVisionLLMClassifier.
         vision_settings = resolved_settings.model_copy(
-            update={"aeat_llm_default_timeout_s": resolved_settings.aeat_llm_vision_read_timeout_s},
+            update={"cadrumo_llm_default_timeout_s": resolved_settings.cadrumo_llm_vision_read_timeout_s},
         )
         self._client = (
             client

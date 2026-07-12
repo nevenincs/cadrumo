@@ -60,7 +60,7 @@ def test_archive_bundle_round_trips_three_rows(tmp_path: Path) -> None:
     with provider:
         db_path = tmp_path / "archive-bundle.db"
         engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+            Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
         Base.metadata.create_all(engine)
         try:

@@ -74,7 +74,7 @@ class TestEnvExampleAlignment:
         with _isolated_aeat_env():
             settings = settings_without_env_file()
         assert settings.aeat_base_url == load_external_constants().aeat.domains.sede
-        assert settings.aeat_output_language == "es"
+        assert settings.cadrumo_output_language == "es"
 
 
 class TestAuthProviderEnum:
@@ -169,7 +169,7 @@ class TestStatusDetailUrlTemplate:
         """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
         env_path = tmp_path / ".env"
         env_path.write_text(
-            "AEAT_WORKFLOW_RUNS_DIR=env/workflow/runs\n",
+            "CADRUMO_WORKFLOW_RUNS_DIR=env/workflow/runs\n",
             encoding="utf-8",
         )
 
@@ -184,7 +184,7 @@ class TestStatusDetailUrlTemplate:
 
         with _isolated_aeat_env():
             settings = RelativeEnvSettings()
-        assert settings.aeat_workflow_runs_dir == PROJECT_ROOT / "env" / "workflow" / "runs"
+        assert settings.cadrumo_workflow_runs_dir == PROJECT_ROOT / "env" / "workflow" / "runs"
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
@@ -194,10 +194,10 @@ class TestStatusDetailUrlTemplate:
 
     def test_blank_optional_secret_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional secret env vars must normalize to ``None``."""
-        with _isolated_aeat_env(AEAT_CERTIFICATE_PASSWORD_SECRET="", AEAT_LLM_OPENAI_API_KEY=""):
+        with _isolated_aeat_env(AEAT_CERTIFICATE_PASSWORD_SECRET="", CADRUMO_LLM_OPENAI_API_KEY=""):
             settings = settings_without_env_file()
         assert settings.aeat_certificate_password_secret is None
-        assert settings.aeat_llm_openai_api_key is None
+        assert settings.cadrumo_llm_openai_api_key is None
 
 
 class TestRepoRelativePathNormalisationCoverage:
@@ -253,14 +253,14 @@ class TestRepoRelativePathNormalisationCoverage:
     def test_audit_flagged_drift_settings_are_normalised(self) -> None:
         """Three Settings fields surfaced by a security audit MUST be normalised.
 
-        ``aeat_invoices_dir``, ``aeat_attachments_dir``, ``aeat_runs_dir``
+        ``cadrumo_invoices_dir``, ``cadrumo_attachments_dir``, ``cadrumo_runs_dir``
         all carry user-supplied filesystem paths that the rest of the
         codebase joins with ``Path()``; without normalisation a relative
         value would resolve against the process CWD and silently leak
         files outside the configured local store.
         """
         path_validator = self._validator_field_set("_normalize_repo_relative_paths")
-        for field_name in ("aeat_invoices_dir", "aeat_attachments_dir", "aeat_runs_dir"):
+        for field_name in ("cadrumo_invoices_dir", "cadrumo_attachments_dir", "cadrumo_runs_dir"):
             assert field_name in path_validator, (
                 f"{field_name} was flagged by the security audit as missing from "
                 "_normalize_repo_relative_paths but is still not in the validator. "
@@ -274,9 +274,9 @@ class TestRepoRelativePathNormalisationCoverage:
         env_path.write_text(
             "\n".join(
                 (
-                    "AEAT_INVOICES_DIR=var/financial/invoices",
-                    "AEAT_ATTACHMENTS_DIR=var/financial/attachments",
-                    "AEAT_RUNS_DIR=var/runs",
+                    "CADRUMO_INVOICES_DIR=var/financial/invoices",
+                    "CADRUMO_ATTACHMENTS_DIR=var/financial/attachments",
+                    "CADRUMO_RUNS_DIR=var/runs",
                 ),
             )
             + "\n",
@@ -294,18 +294,18 @@ class TestRepoRelativePathNormalisationCoverage:
 
         with _isolated_aeat_env():
             settings = RelativeAuditSettings()
-        assert settings.aeat_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
-        assert settings.aeat_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
-        assert settings.aeat_runs_dir == PROJECT_ROOT / "var" / "runs"
+        assert settings.cadrumo_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
+        assert settings.cadrumo_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
+        assert settings.cadrumo_runs_dir == PROJECT_ROOT / "var" / "runs"
 
 
 class TestDatabaseUrlDerivation:
-    """``aeat_database_url`` must stay coherent with ``aeat_local_storage_root``.
+    """``cadrumo_database_url`` must stay coherent with ``cadrumo_local_storage_root``.
 
-    Setting ``AEAT_LOCAL_STORAGE_ROOT`` alone — with no explicit
-    ``AEAT_DATABASE_URL`` and no active profile — must never leave the
+    Setting ``CADRUMO_LOCAL_STORAGE_ROOT`` alone — with no explicit
+    ``CADRUMO_DATABASE_URL`` and no active profile — must never leave the
     URL empty. An empty URL made first-contact CLI commands exit-5 with
-    a raw internal ``aeat_database_url is empty`` error instead of the
+    a raw internal ``cadrumo_database_url is empty`` error instead of the
     clean no-active-profile refusal.
     """
 
@@ -328,7 +328,7 @@ class TestDatabaseUrlDerivation:
         storage_root = tmp_path / "aeat-state"
         env_path = tmp_path / ".env"
         env_path.write_text(
-            f"AEAT_LOCAL_STORAGE_ROOT={storage_root.as_posix()}\n",
+            f"CADRUMO_LOCAL_STORAGE_ROOT={storage_root.as_posix()}\n",
             encoding="utf-8",
         )
 
@@ -336,18 +336,18 @@ class TestDatabaseUrlDerivation:
             settings = self._isolated(env_path)()
 
         expected = f"sqlite:///{(storage_root / 'aeat.db').as_posix()}"
-        assert settings.aeat_database_url == expected
-        assert settings.aeat_database_url, "URL must never be empty when the storage root is set"
+        assert settings.cadrumo_database_url == expected
+        assert settings.cadrumo_database_url, "URL must never be empty when the storage root is set"
 
     def test_explicit_database_url_overrides_storage_root_derivation(self, tmp_path: Path) -> None:
-        """An explicit ``AEAT_DATABASE_URL`` wins over the derived fallback."""
+        """An explicit ``CADRUMO_DATABASE_URL`` wins over the derived fallback."""
         explicit_url = f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}"
         env_path = tmp_path / ".env"
         env_path.write_text(
             "\n".join(
                 (
-                    f"AEAT_LOCAL_STORAGE_ROOT={(tmp_path / 'aeat-state').as_posix()}",
-                    f"AEAT_DATABASE_URL={explicit_url}",
+                    f"CADRUMO_LOCAL_STORAGE_ROOT={(tmp_path / 'aeat-state').as_posix()}",
+                    f"CADRUMO_DATABASE_URL={explicit_url}",
                 ),
             )
             + "\n",
@@ -357,7 +357,7 @@ class TestDatabaseUrlDerivation:
         with _isolated_aeat_env():
             settings = self._isolated(env_path)()
 
-        assert settings.aeat_database_url == explicit_url
+        assert settings.cadrumo_database_url == explicit_url
 
     def test_active_profile_derives_per_bucket_url(self, tmp_path: Path) -> None:
         """An active profile still derives the per-bucket SQLite URL; the
@@ -367,8 +367,8 @@ class TestDatabaseUrlDerivation:
         env_path.write_text(
             "\n".join(
                 (
-                    f"AEAT_LOCAL_STORAGE_ROOT={storage_root.as_posix()}",
-                    "AEAT_ACTIVE_PROFILE=acme",
+                    f"CADRUMO_LOCAL_STORAGE_ROOT={storage_root.as_posix()}",
+                    "CADRUMO_ACTIVE_PROFILE=acme",
                 ),
             )
             + "\n",
@@ -379,4 +379,4 @@ class TestDatabaseUrlDerivation:
             settings = self._isolated(env_path)()
 
         expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'aeat.db').as_posix()}"
-        assert settings.aeat_database_url == expected
+        assert settings.cadrumo_database_url == expected

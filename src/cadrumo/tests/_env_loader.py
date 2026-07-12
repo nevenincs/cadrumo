@@ -2,7 +2,7 @@
 
 This module is test-infrastructure (not a production module) and is
 imported by the repo-root ``conftest.py`` to populate ``os.environ``
-from ``env/.env`` so the ``AEAT_LIVE_TESTS_ENABLED`` gate matches the
+from ``env/.env`` so the ``CADRUMO_LIVE_TESTS_ENABLED`` gate matches the
 value the rest of the project's pydantic-settings stack reads.
 
 Pure: no I/O beyond reading the file passed in. No shell expansion,

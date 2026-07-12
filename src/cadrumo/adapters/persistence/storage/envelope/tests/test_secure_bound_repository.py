@@ -68,7 +68,7 @@ def _bound_repo_with_engine(tmp_path: Path) -> tuple[_RoundtripRepository, Engin
 
     db_path = tmp_path / "secure-bound-roundtrip.db"
     engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"),
     )
     Base.metadata.create_all(engine)
     objects = SecureObjectRepository(engine=engine)
@@ -128,8 +128,8 @@ def test_secure_bound_repository_default_refuses_active_profile_without_session(
 
     with (
         override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile="secure-bound-bucket",
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_active_profile="secure-bound-bucket",
         ),
         pytest.raises(StorageValidationError, match="no active bucket session"),
     ):

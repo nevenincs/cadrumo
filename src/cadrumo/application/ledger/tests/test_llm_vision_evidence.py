@@ -47,7 +47,7 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
     # Gestor mode ON and cloud upload NOT permitted: the on-host vision path must
     # still resolve (no cloud consent needed) -- this is the gestor read path.
     gestor: Settings = profile.settings.model_copy(
-        update={"aeat_evidence_gestor_mode": True, "aeat_evidence_cloud_upload_permitted": False},
+        update={"cadrumo_evidence_gestor_mode": True, "cadrumo_evidence_cloud_upload_permitted": False},
     )
     resolved = _resolve_evidence(
         _transaction(evidence_id),

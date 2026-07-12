@@ -12,7 +12,7 @@ for identity (the flywheel's dedup needs that) without storing a single
 figure; the full payloads exist only inside the eval harness's own in-memory
 :class:`~agent.eval.LiveTrajectory` during a measurement run.
 
-Records append as JSON lines to ``<aeat_local_storage_root>/telemetry/
+Records append as JSON lines to ``<cadrumo_local_storage_root>/telemetry/
 <session_id>.jsonl``, following the same state-root derivation the diagnostic
 log uses, so each workspace's telemetry stays isolated.
 
@@ -83,7 +83,7 @@ def content_sha256(text: str) -> str:
 
 def telemetry_dir() -> Path:
     """The workspace-scoped telemetry directory under the local storage root."""
-    return load_settings().aeat_local_storage_root / _TELEMETRY_DIRNAME
+    return load_settings().cadrumo_local_storage_root / _TELEMETRY_DIRNAME
 
 
 class TelemetryRetention(BaseModel):

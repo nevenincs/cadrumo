@@ -129,7 +129,7 @@ def test_consent_off_refuses_text_layer_evidence_read(profile: TestRuntimeProfil
 def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfile, tmp_path: Path) -> None:
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
-    consenting: Settings = profile.settings.model_copy(update={"aeat_evidence_cloud_upload_permitted": True})
+    consenting: Settings = profile.settings.model_copy(update={"cadrumo_evidence_cloud_upload_permitted": True})
 
     # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
     resolved = _resolve_evidence(
@@ -166,7 +166,7 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     repository.save(TransactionCatalogue.from_transactions((txn,)))
 
     # Default posture: cloud upload not permitted AND not acknowledged.
-    assert profile.settings.aeat_evidence_cloud_upload_permitted is False
+    assert profile.settings.cadrumo_evidence_cloud_upload_permitted is False
     classifier = SubprocessLLMClassifier(
         name="test-provider",
         command=(sys.executable, "-c", _NO_EVIDENCE_CLASSIFIER_SCRIPT),

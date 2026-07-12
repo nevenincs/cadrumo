@@ -74,7 +74,7 @@ def test_describe_label_keys_distinguish_locales() -> None:
 def test_describe_output_contains_localized_labels_in_english() -> None:
     """``modelo describe 303`` text output contains English label strings.
 
-    The conftest pins AEAT_OUTPUT_LANGUAGE=en for the test suite.
+    The conftest pins CADRUMO_OUTPUT_LANGUAGE=en for the test suite.
     Each label in the output must match the English catalogue entry
     so a reader can confirm the tr() wiring is live end-to-end.
     """

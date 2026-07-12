@@ -57,11 +57,11 @@ def test_missing_required_casilla_finding_uses_active_profile_output_language(tm
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         _save_active_profile_language(runtime, "ca")
-        with override_settings(aeat_output_language=None):
+        with override_settings(cadrumo_output_language=None):
             catalan_message = _missing_required_message()
 
         _save_active_profile_language(runtime, "es")
-        with override_settings(aeat_output_language=None):
+        with override_settings(cadrumo_output_language=None):
             spanish_message = _missing_required_message()
 
     assert catalan_message != spanish_message

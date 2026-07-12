@@ -53,7 +53,7 @@ _ALLOWLIST: frozenset[str] = frozenset(
     {
         # WRITE side of REPLAY_ACTIVE_ENV_VAR (subprocess-IPC). The READ
         # side flows through Settings (see _context.py — already routed
-        # via load_settings().aeat_replay_active). Settings is read-only
+        # via load_settings().cadrumo_replay_active). Settings is read-only
         # so the WRITE has no Settings equivalent; the os.environ mutation
         # is observed by the child invocation's subsequent Settings load.
         "core/observability/_replay.py",

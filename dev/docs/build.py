@@ -304,7 +304,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     docs_root = repo_root / "docs"
     targets = plan.targets
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", "auto"]
-    env = {**os.environ, "AEAT_DOCS_PROJECT_ROOT": str(repo_root)}
+    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
     if strict:
         command.extend(["-n", "-W"])
         env["AEAT_DOCS_OFFLINE"] = "1"

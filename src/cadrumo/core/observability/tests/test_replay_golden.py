@@ -105,7 +105,7 @@ def _emit_into_replay(*, label: str = "ok", snapshot_id: str = "snap-A"):
 
 class TestReplayEnvelopeAssertion:
     def test_matches_identical_replay(self, tmp_path: Path) -> None:
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             trace = _save_replay_fixture("0123456789abcdef", snapshot_id="snap-A")
 
             result = replay_run(
@@ -117,7 +117,7 @@ class TestReplayEnvelopeAssertion:
 
     def test_masked_field_divergence_still_matches(self, tmp_path: Path) -> None:
         """A differing ``snapshot_id`` is masked, so replay still passes."""
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             trace = _save_replay_fixture("1111222233334444", snapshot_id="snap-A")
 
             # Re-entry emits a DIFFERENT snapshot_id — the opaque surrogate
@@ -129,7 +129,7 @@ class TestReplayEnvelopeAssertion:
             )
 
     def test_unmasked_divergence_raises(self, tmp_path: Path) -> None:
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             trace = _save_replay_fixture("aaaabbbbccccdddd", label="ok")
 
             with pytest.raises(GoldenReplayMismatchError) as excinfo:
@@ -141,7 +141,7 @@ class TestReplayEnvelopeAssertion:
             assert any("label" in path for path in excinfo.value.differing_paths)
 
     def test_no_emitted_envelope_raises(self, tmp_path: Path) -> None:
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             trace = _save_replay_fixture("deadbeefcafe0001")
 
             def _silent(_argv: list[str]) -> None:
@@ -151,7 +151,7 @@ class TestReplayEnvelopeAssertion:
                 replay_run(trace.run_id, invoke=_silent, assert_envelope=True)
 
     def test_missing_golden_artifact_raises(self, tmp_path: Path) -> None:
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             trace = _save_replay_fixture("0f0f0f0f0f0f0f0f", with_envelope=False)
             with pytest.raises(RunTraceValidationError, match=r"envelope\.json not found"):
                 replay_run(
@@ -162,7 +162,7 @@ class TestReplayEnvelopeAssertion:
 
     def test_assert_envelope_off_is_backward_compatible(self, tmp_path: Path) -> None:
         """Default ``assert_envelope=False`` replays without needing a golden artifact."""
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             trace = _save_replay_fixture("ccccddddeeeeffff", with_envelope=False)
             result = replay_run(trace.run_id, invoke=_emit_into_replay())
             assert result.run_id == trace.run_id
@@ -190,7 +190,7 @@ class TestRunContextPersistsEnvelope:
     def test_emitted_envelope_is_persisted(self, tmp_path: Path) -> None:
         import io
 
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             with run_context(entrypoint="aeat golden demo", arguments=()) as info:
                 run_id = info.run_id
                 emit_json_success(_COMMAND, _result(snapshot_id="snap-run"), stream=io.StringIO())
@@ -200,7 +200,7 @@ class TestRunContextPersistsEnvelope:
             assert persisted["result"]["snapshot_id"] == "snap-run"
 
     def test_run_without_emit_persists_no_envelope(self, tmp_path: Path) -> None:
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             with run_context(entrypoint="aeat golden demo", arguments=()) as info:
                 run_id = info.run_id
             # No JSON emitted → no golden artifact written.

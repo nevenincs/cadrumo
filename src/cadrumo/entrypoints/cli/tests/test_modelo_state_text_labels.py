@@ -88,7 +88,7 @@ def _work_unit(*, filed_revision_id: str | None = None) -> WorkUnit:
 def test_calculation_revision_text_lines_render_human_state_label_but_payload_keeps_token() -> None:
     revision = _verified_revision()
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         lines = calculation_revision_lines(revision)
         observation_lines = calculation_observation_lines(revision)
 
@@ -102,7 +102,7 @@ def test_calculation_revision_text_lines_render_human_state_label_but_payload_ke
 def test_work_unit_text_lines_render_human_state_label_but_payload_keeps_token() -> None:
     unit = _work_unit()
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         lines = work_unit_lines(unit)
         list_lines = work_unit_list_lines((unit,), bucket_id=None, include_discarded=False)
 
@@ -117,7 +117,7 @@ def test_filed_work_unit_text_state_uses_profile_language_without_changing_paylo
     revision = _verified_revision()
     unit = _work_unit(filed_revision_id=revision.calculation_revision_id)
 
-    with override_settings(aeat_output_language="hu"):
+    with override_settings(cadrumo_output_language="hu"):
         lines = work_unit_lines(unit)
 
     assert "state\tBeadva" in lines

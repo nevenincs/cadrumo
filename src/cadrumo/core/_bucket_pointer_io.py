@@ -2,7 +2,7 @@
 
 The pointer file lives at ``<aeat-root>/active-profile`` and is the on-disk
 default after the per-invocation / per-shell override path. The CLI ``--profile``
-flag is normalised into ``Settings.aeat_active_profile``, so this module's
+flag is normalised into ``Settings.cadrumo_active_profile``, so this module's
 runtime branches are settings override first and pointer file second. The write
 path uses the write-then-rename pattern so a crashed switch never produces a
 truncated pointer; the read path returns ``None`` only when the pointer is
@@ -82,8 +82,8 @@ def resolve_active_bucket_id() -> str | None:
 
     Precedence, highest wins:
 
-    1. ``Settings.aeat_active_profile`` — surfaced from the
-       ``AEAT_ACTIVE_PROFILE`` environment variable (or an active
+    1. ``Settings.cadrumo_active_profile`` — surfaced from the
+       ``CADRUMO_ACTIVE_PROFILE`` environment variable (or an active
        :func:`~core.config.override_settings` block in tests).
        Per-shell override useful for CI, headless invocations, and the
        CLI ``--profile`` flag.
@@ -95,7 +95,7 @@ def resolve_active_bucket_id() -> str | None:
 
     The CLI ``--profile`` flag, when supplied per-invocation, runs the
     process under an :func:`~core.config.override_settings` block
-    that sets ``aeat_active_profile`` so rung one handles it without a
+    that sets ``cadrumo_active_profile`` so rung one handles it without a
     fourth precedence rung.
 
     This resolver lives in the core layer: it reads only the settings
@@ -112,10 +112,10 @@ def resolve_active_bucket_id() -> str | None:
     from .config import load_settings
 
     settings = load_settings()
-    override = (settings.aeat_active_profile or "").strip()
+    override = (settings.cadrumo_active_profile or "").strip()
     if override:
         return override
-    pointer = read_pointer(settings.aeat_local_storage_root)
+    pointer = read_pointer(settings.cadrumo_local_storage_root)
     if pointer is not None:
         return pointer.bucket_id
     return None

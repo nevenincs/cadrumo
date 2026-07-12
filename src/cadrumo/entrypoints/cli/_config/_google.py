@@ -400,7 +400,7 @@ def google_sync_probe(
     """Build a real `GoogleDriveProvider` and execute `probe()` against `drive.googleapis.com`.
 
     Confirms that the per-profile OAuth records persisted by `login`
-    yield usable credentials, the configured `aeat_google_drive_root_folder_id`
+    yield usable credentials, the configured `cadrumo_google_drive_root_folder_id`
     resolves to a real folder, and (when `--no-read-only`) a sentinel
     file round-trips into `_probe/`.
     """
@@ -421,13 +421,13 @@ def google_sync_probe(
         raise _google_refusal(exc) from exc
 
     settings = load_settings()
-    # The factory uses Settings.aeat_storage_provider_kind to pick the
+    # The factory uses Settings.cadrumo_storage_provider_kind to pick the
     # backend. For the operator-driven probe we override to Google Drive
     # explicitly so the probe always exercises the Drive path regardless
     # of how the operator's environment is configured. The folder id
     # itself is resolved by the factory via the canonical precedence
     # (env var > persisted DriveConfig record); no separate gate here.
-    drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
+    drive_settings = settings.model_copy(update={"cadrumo_storage_provider_kind": "google_drive"})
 
     try:
         provider = get_storage_provider(settings=drive_settings)
@@ -838,7 +838,7 @@ def google_sync_push(
         raise _google_refusal(exc) from exc
 
     settings = load_settings()
-    drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
+    drive_settings = settings.model_copy(update={"cadrumo_storage_provider_kind": "google_drive"})
 
     try:
         provider = get_storage_provider(settings=drive_settings)

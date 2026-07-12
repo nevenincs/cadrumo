@@ -119,8 +119,8 @@ def test_prune_defaults_come_from_centralized_settings(tmp_path: Path) -> None:
     recorder.record(_record(400, run_id="ancient", anchor=anchor))
 
     with override_settings(
-        aeat_llm_run_telemetry_retention_days=30,
-        aeat_llm_run_telemetry_max_records=1000,
+        cadrumo_llm_run_telemetry_retention_days=30,
+        cadrumo_llm_run_telemetry_max_records=1000,
     ):
         removed = recorder.prune()
 

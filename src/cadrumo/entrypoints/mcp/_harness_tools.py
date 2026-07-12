@@ -125,7 +125,7 @@ class HarnessFloorPayload(BaseModel):
     interaction. ``operator_rules`` is the concatenated shipped operator
     operating-rule text - the always-on operating contract every session carries.
     ``active_persona`` is the persona document resolved from the session's
-    ``AEAT_MCP_PERSONA`` scope, or ``None`` for an un-personified session (the
+    ``CADRUMO_MCP_PERSONA`` scope, or ``None`` for an un-personified session (the
     full, unscoped surface). ``identity`` is the same active-taxpayer block the
     ``whoami`` tool returns, so session orientation (this floor tool's job)
     carries WHO is active; it is ``None`` when the caller does not inject it (the

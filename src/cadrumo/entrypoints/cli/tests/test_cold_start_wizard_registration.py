@@ -85,9 +85,9 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
-            setting_env("aeat_local_storage_root"): str(storage_root),
-            setting_env("aeat_secret_store_backend"): SecretStoreBackend.FILE.value,
-            setting_env("aeat_secret_passphrase"): base_settings.aeat_dev_test_database_password.get_secret_value(),
+            setting_env("cadrumo_local_storage_root"): str(storage_root),
+            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.FILE.value,
+            setting_env("cadrumo_secret_passphrase"): base_settings.cadrumo_dev_test_database_password.get_secret_value(),
         },
     )
     return subprocess.run(
