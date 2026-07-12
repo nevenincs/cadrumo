@@ -1,15 +1,15 @@
 """Encrypted SQL repository for verification reports.
 
-:class:`~aeat.domain.modelos.VerificationReportCatalogueRepository` persists
+:class:`~cadrumo.domain.modelos.VerificationReportCatalogueRepository` persists
 and loads :class:`VerificationReport` entries in a
 :class:`VerificationReportCatalogue` via
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`.
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~cadrumo.adapters.persistence.storage.SensitivityClass`.
 The catalogue is stored as a single encrypted BLOB per profile bucket and
-wrapped in :class:`~aeat.adapters.persistence.storage.Envelope` before
+wrapped in :class:`~cadrumo.adapters.persistence.storage.Envelope` before
 serialisation.
 The storage contract is declared by
-:data:`aeat.adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`;
+:data:`cadrumo.adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`;
 its default object key is the singleton ``catalogue`` row.
 """
 
@@ -35,7 +35,7 @@ class VerificationReportPersistenceError(ModeloError):
     """Raised when the verification-report catalogue cannot be persisted or loaded.
 
     This wraps storage-boundary failures from
-    :class:`~aeat.domain.modelos.VerificationReportCatalogueRepository` while
+    :class:`~cadrumo.domain.modelos.VerificationReportCatalogueRepository` while
     preserving translated recovery context for callers.
     """
 
