@@ -291,7 +291,7 @@ def _register_m036_readback_commands(
                     value=declaration_id,
                     default=(
                         f"No M036 declaration matches {declaration_id!r}. "
-                        "Run 'aeat app modelo m036 list' to see recorded declarations."
+                        "Run 'cadrumo app modelo m036 list' to see recorded declarations."
                     ),
                 ),
             ) from exc

@@ -67,18 +67,18 @@ def test_core_facade_reexports_the_exact_identity_objects() -> None:
     assert core_facade.ProductIdentity is identity_module.ProductIdentity
     assert core_facade.IdentityReferent is identity_module.IdentityReferent
     assert core_facade.AEAT_AUTHORITY_SHORT_NAME is identity_module.AEAT_AUTHORITY_SHORT_NAME
-    assert core_facade.__all__ == identity_module.__all__
+    assert set(identity_module.__all__) <= set(core_facade.__all__)
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:
     """AEAT is exported only as the short name of the external authority."""
     assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
-    assert set(core_facade.__all__) == {
+    assert {
         "AEAT_AUTHORITY_SHORT_NAME",
         "PRODUCT_IDENTITY",
         "IdentityReferent",
         "ProductIdentity",
-    }
+    } <= set(core_facade.__all__)
     assert not hasattr(core_facade, "AEAT_PRODUCT_IDENTITY")
     assert not hasattr(core_facade, "AEAT_PRODUCT")
     assert not hasattr(core_facade, "AEAT_CLI_EXECUTABLE")

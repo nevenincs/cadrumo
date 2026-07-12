@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for ``aeat app registry diff-revisions``.
+"""Typed ``--json`` payload schemas for ``cadrumo app registry diff-revisions``.
 
 Each class declared here is a strict
 :class:`~entrypoints.cli._schemas.OutputSchema` subclass and is decorated
@@ -82,7 +82,7 @@ class BindingDiffPayload(OutputSchema):
 
 @register_schema("registry.diff_revisions")
 class RegistryDiffRevisionsResult(OutputSchema):
-    """JSON envelope for ``aeat app registry diff-revisions``.
+    """JSON envelope for ``cadrumo app registry diff-revisions``.
 
     Mirrors :class:`~application.registry.RegistryRevisionDiffReport`
     returned by :func:`~application.registry.diff_registry_revisions`.

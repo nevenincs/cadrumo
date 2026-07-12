@@ -232,7 +232,7 @@ class OverviewCalendarProfilePayload(OutputSchema):
 
 @register_schema("overview.status")
 class OverviewStatusResult(OutputSchema):
-    """JSON envelope result for ``aeat app overview status``.
+    """JSON envelope result for ``cadrumo app overview status``.
 
     The full-status branch accepts the JSON form of
     :class:`OverviewStatusReport`; the period branch uses
@@ -263,7 +263,7 @@ class OverviewStatusResult(OutputSchema):
 
 @register_schema("overview.calendar")
 class OverviewCalendarResult(OutputSchema):
-    """JSON envelope for ``aeat app overview calendar``.
+    """JSON envelope for ``cadrumo app overview calendar``.
 
     Covers both the single-profile mode (``entries``/``warnings``/
     ``suppressed_entries`` populated) and the ``--all-profiles`` mode
@@ -289,7 +289,7 @@ class OverviewCalendarResult(OutputSchema):
 
 @register_schema("overview.agenda")
 class OverviewAgendaResult(OutputSchema):
-    """JSON envelope result for ``aeat app overview agenda``.
+    """JSON envelope result for ``cadrumo app overview agenda``.
 
     Accepts the JSON form of :class:`OverviewAgenda` so the application read
     model remains the payload authority. That model reuses
@@ -307,7 +307,7 @@ class OverviewAgendaResult(OutputSchema):
 
 @register_schema("overview.backlog")
 class OverviewBacklogResult(OutputSchema):
-    """JSON envelope result for ``aeat app overview backlog``.
+    """JSON envelope result for ``cadrumo app overview backlog``.
 
     Accepts the JSON form of :class:`OverviewBacklog` while the CLI controls
     only envelope registration and rendering. The backlog read model is a
@@ -323,7 +323,7 @@ class OverviewBacklogResult(OutputSchema):
 
 @register_schema("overview.explain")
 class OverviewExplainResult(OutputSchema):
-    """JSON envelope result for ``aeat app overview explain``.
+    """JSON envelope result for ``cadrumo app overview explain``.
 
     Accepts the JSON form of :class:`OverviewExplain`, including the
     applicability verdict, legal references, and profile facts. The verdict is
@@ -341,11 +341,11 @@ class OverviewExplainResult(OutputSchema):
 
 
 class OverviewPrepareStepPayload(OutputSchema):
-    """One ordered row in the ``aeat app overview prepare`` checklist.
+    """One ordered row in the ``cadrumo app overview prepare`` checklist.
 
     Mirrors :class:`~cadrumo.application.overview.DataPrepStep`: a closed step
     identifier, its current readiness state, a human-readable progress
-    summary, and the exact next ``aeat`` command to run.
+    summary, and the exact next ``cadrumo`` command to run.
     """
 
     step_id: str
@@ -356,7 +356,7 @@ class OverviewPrepareStepPayload(OutputSchema):
 
 @register_schema("overview.prepare")
 class OverviewPrepareResult(OutputSchema):
-    """JSON envelope result for ``aeat app overview prepare``.
+    """JSON envelope result for ``cadrumo app overview prepare``.
 
     Wraps :class:`~cadrumo.application.overview.DataPrepWalkthrough`: the ordered
     data-prep checklist for one ``(modelo, filing_year, period)`` scope,
@@ -390,7 +390,7 @@ class OverviewPipelineModeloPayload(OutputSchema):
 
 @register_schema("overview.pipeline")
 class OverviewPipelineResult(OutputSchema):
-    """JSON envelope result for ``aeat app overview pipeline``.
+    """JSON envelope result for ``cadrumo app overview pipeline``.
 
     Wraps :class:`~cadrumo.application.overview.PipelineHealthReport`: the
     cross-domain pipeline health dashboard for one ``(filing_year, period)``

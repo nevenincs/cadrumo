@@ -18,8 +18,8 @@ command".
 The same group class also owns **lazy subcommand loading**. The AEAT
 command tree is wide: every leaf command module pulls the application
 layer and, transitively, the ~0.6 s registry parse. Importing the
-whole tree just to construct the ``aeat`` app object made
-``aeat --version`` and ``aeat --help`` pay that cost even though they
+whole tree just to construct the ``cadrumo`` app object made
+``cadrumo --version`` and ``cadrumo --help`` pay that cost even though they
 never dispatch into a subcommand.
 
 Heavy subcommand groups therefore register a
@@ -131,7 +131,7 @@ class LazySubcommand:
 #: :func:`register_lazy_subcommand`
 #: populate the table
 #: at module-import time and lets every materialized group instance of
-#: that name read it back. AEAT group names (``aeat``, ``app``,
+#: that name read it back. Cadrumo group names (``cadrumo``, ``app``,
 #: ``config``) are unique, so the keying is unambiguous.
 _LAZY_REGISTRY: dict[str, dict[str, LazySubcommand]] = {}
 
@@ -166,7 +166,7 @@ class AeatTyperGroup(TyperGroup):
     * **Lazy subcommands.** Subcommands registered through
       :func:`register_lazy_subcommand`
       import their command module only when first resolved, keeping the
-      construction of the ``aeat`` app object free of the registry parse.
+      construction of the ``cadrumo`` app object free of the registry parse.
     * **Remainder capture.** Click empties ``ctx.args`` and the
       protected list before running the group callback, so the callback
       cannot see the tokens that follow the group name.

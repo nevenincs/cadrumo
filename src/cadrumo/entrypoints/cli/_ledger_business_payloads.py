@@ -84,27 +84,27 @@ class BusinessInvoiceListResult(OutputSchema):
 
 @register_schema("ledger.invoice.add")
 class InvoiceAddResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice add``."""
+    """JSON envelope for ``cadrumo app ledger invoice add``."""
 
 
 @register_schema("ledger.invoice.view")
 class InvoiceViewResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice view``."""
+    """JSON envelope for ``cadrumo app ledger invoice view``."""
 
 
 @register_schema("ledger.invoice.update")
 class InvoiceUpdateResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice update``."""
+    """JSON envelope for ``cadrumo app ledger invoice update``."""
 
 
 @register_schema("ledger.invoice.remove")
 class InvoiceRemoveResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice remove``."""
+    """JSON envelope for ``cadrumo app ledger invoice remove``."""
 
 
 @register_schema("ledger.invoice.list")
 class InvoiceListResult(BusinessInvoiceListResult):
-    """JSON envelope for ``aeat app ledger invoice list``."""
+    """JSON envelope for ``cadrumo app ledger invoice list``."""
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +165,7 @@ class InventoryListRowPayload(InventoryLedgerPayload):
 
 @register_schema("ledger.inventory.list")
 class InventoryListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger inventory list``."""
+    """JSON envelope for ``cadrumo app ledger inventory list``."""
 
     bucket_id: str
     rows: list[InventoryListRowPayload]
@@ -174,17 +174,17 @@ class InventoryListResult(OutputSchema):
 
 @register_schema("ledger.inventory.create")
 class InventoryCreateResult(InventoryLedgerPayload):
-    """JSON envelope for ``aeat app ledger inventory create``."""
+    """JSON envelope for ``cadrumo app ledger inventory create``."""
 
 
 @register_schema("ledger.inventory.movement.add")
 class InventoryMovementAddResult(InventoryLedgerPayload):
-    """JSON envelope for ``aeat app ledger inventory movement add``."""
+    """JSON envelope for ``cadrumo app ledger inventory movement add``."""
 
 
 @register_schema("ledger.inventory.valuation.preview")
 class InventoryValuationPreviewPayload(OutputSchema):
-    """JSON envelope for ``aeat app ledger inventory valuation preview``.
+    """JSON envelope for ``cadrumo app ledger inventory valuation preview``.
 
     Distinct from the application wrapper
     :class:`InventoryValuationPreviewResult` (DB-26
@@ -252,27 +252,27 @@ class EvidenceRecordPayload(OutputSchema):
 
 @register_schema("ledger.evidence.add")
 class EvidenceAddResult(EvidenceRecordPayload):
-    """JSON envelope for ``aeat app ledger evidence add``."""
+    """JSON envelope for ``cadrumo app ledger evidence add``."""
 
 
 @register_schema("ledger.evidence.view")
 class EvidenceViewResult(EvidenceRecordPayload):
-    """JSON envelope for ``aeat app ledger evidence view``."""
+    """JSON envelope for ``cadrumo app ledger evidence view``."""
 
 
 @register_schema("ledger.evidence.update")
 class EvidenceUpdateResult(EvidenceRecordPayload):
-    """JSON envelope for ``aeat app ledger evidence update``."""
+    """JSON envelope for ``cadrumo app ledger evidence update``."""
 
 
 @register_schema("ledger.evidence.remove")
 class EvidenceRemoveResult(EvidenceRecordPayload):
-    """JSON envelope for ``aeat app ledger evidence remove``."""
+    """JSON envelope for ``cadrumo app ledger evidence remove``."""
 
 
 @register_schema("ledger.evidence.list")
 class EvidenceListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence list``."""
+    """JSON envelope for ``cadrumo app ledger evidence list``."""
 
     bucket_id: str
     count: int
@@ -281,13 +281,13 @@ class EvidenceListResult(OutputSchema):
 
 @register_schema("ledger.evidence.extract")
 class EvidenceExtractResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence extract``.
+    """JSON envelope for ``cadrumo app ledger evidence extract``.
 
     Mirrors ``InvoiceDraft.model_dump(mode='json')`` (the on-host best-effort
     extraction) plus the resolved reference id the operator supplied. This is a
     reviewable draft only: extracting never mints or persists an
     ``cadrumo.domain.invoices.Invoice`` -- the operator confirms the fields (via
-    ``aeat app ledger invoice add`` / ``invoice catalogue create``) before any
+    ``cadrumo app ledger invoice add`` / ``invoice catalogue create``) before any
     invoice record is created.
     """
 
@@ -306,7 +306,7 @@ class EvidenceExtractResult(OutputSchema):
 
 @register_schema("ledger.evidence.confirm")
 class EvidenceConfirmResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence extract --confirm``.
+    """JSON envelope for ``cadrumo app ledger evidence extract --confirm``.
 
     Reports the persisted (or already-existing, on a guarded no-op) rich
     catalogue :class:`~domain.invoices.Invoice` -- mirroring

@@ -1,7 +1,7 @@
 """Modelo 145 local communication payload schemas.
 
 Strict :class:`~entrypoints.cli._schemas.OutputSchema` projections for the
-``aeat app modelo m145`` commands. The payloads translate application DTOs into
+``cadrumo app modelo m145`` commands. The payloads translate application DTOs into
 stable JSON envelopes while preserving registry legal/source references and
 local communication state.
 

@@ -1,6 +1,6 @@
 """User-facing ledger and transaction management CLI commands.
 
-Provides the ``aeat app ledger`` command group for importing, reviewing, and
+Provides the ``cadrumo app ledger`` command group for importing, reviewing, and
 exporting financial transaction data. Transaction records are accessed through
 :class:`TransactionCatalogueRepository` and invoice
 records through :class:`InvoiceCatalogueRepository`.
@@ -397,7 +397,7 @@ def ledger_add(
                 "cli.ledger.add.system_state_not_assignable",
                 value=business_classification.value,
                 default=(
-                    f"Classification '{business_classification.value}' is set automatically by aeat "
+                    f"Classification '{business_classification.value}' is set automatically by cadrumo "
                     "and cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED, or "
                     "omit --classification to leave the row unclassified."
                 ),
@@ -447,7 +447,7 @@ def ledger_add(
             attachment_ids=tuple(attachment_ids),
             notes=notes,
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger add",
+            source_command="cadrumo app ledger add",
             idempotency_key=idempotency_key,
             source_jurisdiction=resolved_source_jurisdiction,
         )
@@ -593,7 +593,7 @@ def ledger_update(
                 group_label=group,
             ),
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger update",
+            source_command="cadrumo app ledger update",
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
@@ -624,6 +624,7 @@ _FromCsvOpt = Annotated[
         ),
     ),
 ]
+
 
 @app.command("classify", help=tr("cli.ledger.classify.help"))
 def ledger_classify(
@@ -812,7 +813,7 @@ def ledger_classify(
             transaction_id=resolved_id,
             patch=patch,
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify",
+            source_command="cadrumo app ledger classify",
             reaffirm=reaffirm,
             transaction_repository=transaction_repository,
         )
@@ -900,7 +901,7 @@ def ledger_allocate(
                 prorrata_reference=prorrata_reference,
             ),
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger allocate",
+            source_command="cadrumo app ledger allocate",
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
@@ -1020,7 +1021,7 @@ def ledger_link(
             transaction_id=resolved_id,
             patch=evidence_patch,
             actor=actor_label,
-            source_command="aeat app ledger link",
+            source_command="cadrumo app ledger link",
         )
         evidence_result_payload = ledger_transaction_result_payload(evidence_result)
 

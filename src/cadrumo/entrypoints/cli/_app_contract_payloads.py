@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schema for the ``aeat app contract`` command.
+"""Typed ``--json`` payload schema for the ``cadrumo app contract`` command.
 
 The contract command emits the operator-surface capability manifest under the
 stable ``contract`` envelope key. Like the root group-callback payloads, the
@@ -16,7 +16,7 @@ from ._schemas import OutputSchema, register_schema
 
 @register_schema("contract")
 class ContractManifestResult(OutputSchema):
-    """JSON envelope for ``aeat app contract`` - the capability manifest.
+    """JSON envelope for ``cadrumo app contract`` - the capability manifest.
 
     This strict :class:`OutputSchema` subclass wraps the
     :class:`OperatorSurfaceManifest` produced by

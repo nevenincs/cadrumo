@@ -2,7 +2,7 @@
 
 Split from :mod:`_ledger` to keep each module within the line budget. These are
 stateless input-coercion and error-shaping utilities consumed by the
-``aeat app ledger`` command bodies, including :class:`TransactionCatalogueRepository`
+``cadrumo app ledger`` command bodies, including :class:`TransactionCatalogueRepository`
 id resolution.
 """
 
@@ -162,7 +162,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
     field, so an operator can miscategorise rows all year and only
     discover the drift when modelo calculations are wrong. Validating
     here refuses an unknown id immediately and points at
-    ``aeat app ledger categories`` for the recognised catalogue.
+    ``cadrumo app ledger categories`` for the recognised catalogue.
     """
     if category_id is None:
         return None
@@ -233,7 +233,7 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
 
     The generic CLI error boundary wraps every leaked
     :exc:`pydantic.ValidationError` into the opaque "command input
-    failed validation. Run ``aeat config repair``" message, discarding
+    failed validation. Run ``cadrumo config repair``" message, discarding
     the real cause. The ledger command models raise precise validator
     messages (for example "business_pct must be None unless
     classification is MIXED"); this helper extracts those messages so

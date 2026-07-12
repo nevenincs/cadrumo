@@ -44,6 +44,7 @@ import click
 import typer
 from pydantic import ValidationError
 
+from ...core._config_state_root import FormerProductStateError
 from ...core.click_context import json_output_requested
 from ...core.errors import (
     AeatError,
@@ -89,8 +90,8 @@ class CliValidationBoundaryError(AeatError):
     an invalid argument or body).  It is distinct from
     :exc:`CliStoredDataValidationBoundaryError`,
     which handles schema drift on persisted records and legitimately suggests
-    ``aeat config repair``.
-    Suggesting ``aeat config repair`` here would be misleading: repair
+    ``cadrumo config repair``.
+    Suggesting ``cadrumo config repair`` here would be misleading: repair
     diagnoses local configuration state and cannot fix an application
     schema mismatch or an invalid CLI argument.
 
@@ -108,7 +109,7 @@ class CliValidationBoundaryError(AeatError):
         super().__init__(
             translated_message="errors.refused.refused_cli_validation_boundary",
             context={},
-            suggestion="aeat --help",
+            suggestion="cadrumo --help",
         )
         self.original_exception: ValidationError = error
 
@@ -144,9 +145,9 @@ class CliUnexpectedBoundaryError(AeatError):
         super().__init__(
             translated_message="errors.internal.internal_cli_unexpected_boundary",
             context={
-                "recovery": "aeat config repair logs",
+                "recovery": "cadrumo config repair logs",
             },
-            suggestion="aeat config repair logs",
+            suggestion="cadrumo config repair logs",
         )
         self.original_exception: Exception = error
 
@@ -180,9 +181,9 @@ class CliStoredDataValidationBoundaryError(AeatError):
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
             context={
-                "recovery": "aeat config repair --help",
+                "recovery": "cadrumo config repair --help",
             },
-            suggestion="aeat config repair --help",
+            suggestion="cadrumo config repair --help",
         )
         self.original_exception: ValidationError = error
 
@@ -258,6 +259,15 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
             if _UNDER_TEST.get():
                 raise
             _emit_error_and_exit(CliStoredDataValidationBoundaryError(error.original_exception))
+        except FormerProductStateError as error:
+            if _UNDER_TEST.get():
+                raise
+            _emit_error_and_exit(
+                CliRefusedBoundaryError(
+                    str(error),
+                    suggestion="cadrumo config repair --help",
+                )
+            )
         except AeatError as error:
             if _UNDER_TEST.get():
                 raise
@@ -289,7 +299,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
             # the refusal verbatim — otherwise the no-session refusal
             # is mis-classified as an unexpected internal error and a
             # full traceback is written to the log file, where
-            # `aeat config repair logs` later echoes it back at the
+            # `cadrumo config repair logs` later echoes it back at the
             # operator as if it were a live crash.
             wrapped = _unwrap_aeat_error(error)
             if wrapped is not None:

@@ -34,7 +34,7 @@ def test_core_validation_error_catch_surface_is_well_defined() -> None:
 
     caught_as_aeat: AeatError | None = None
     try:
-        raise CoreValidationError("aeat catch")
+        raise CoreValidationError("cadrumo catch")
     except AeatError as exc:
         caught_as_aeat = exc
     assert isinstance(caught_as_aeat, CoreError)

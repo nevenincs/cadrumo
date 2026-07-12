@@ -339,7 +339,7 @@ class FormulaPayload(OutputSchema):
 
 @register_schema("modelo.work.create")
 class WorkCreateResult(OutputSchema):
-    """Creation result returned by ``aeat app modelo work create``.
+    """Creation result returned by ``cadrumo app modelo work create``.
 
     Mirrors :class:`WorkUnitPayload` after the application/modelo lifecycle
     service resolves the registry revision and active bucket profile, then adds
@@ -378,7 +378,7 @@ class WorkCreateResult(OutputSchema):
 
 @register_schema("modelo.work.list")
 class WorkListResult(OutputSchema):
-    """Work-unit listing result returned by ``aeat app modelo work list``.
+    """Work-unit listing result returned by ``cadrumo app modelo work list``.
 
     The list contains :class:`WorkUnitPayload` rows for the selected bucket and
     filters.  Discarded work units stay preserved in storage for audit history
@@ -394,7 +394,7 @@ class WorkListResult(OutputSchema):
 
 @register_schema("modelo.work.status")
 class WorkStatusResult(OutputSchema):
-    """Status projection returned by ``aeat app modelo work status``.
+    """Status projection returned by ``cadrumo app modelo work status``.
 
     Reports one :class:`WorkUnit` lifecycle root together
     with the current calculation, filed calculation, and filing-record pointers
@@ -427,7 +427,7 @@ class WorkStatusResult(OutputSchema):
 
 @register_schema("modelo.work.rename")
 class WorkRenameResult(OutputSchema):
-    """Rename confirmation returned by ``aeat app modelo work rename``.
+    """Rename confirmation returned by ``cadrumo app modelo work rename``.
 
     A rename preserves the :obj:`WorkUnitId`, registry
     revision, and stored calculation / filing pointers while updating only
@@ -460,7 +460,7 @@ class WorkRenameResult(OutputSchema):
 
 @register_schema("modelo.work.discard")
 class WorkDiscardResult(OutputSchema):
-    """Work-unit discard confirmation returned by ``aeat app modelo work discard``.
+    """Work-unit discard confirmation returned by ``cadrumo app modelo work discard``.
 
     The discard is an audit-grade transition on the
     :class:`WorkUnit` lifecycle root: the record is
@@ -536,7 +536,7 @@ class WorkCalculateResult(OutputSchema):
 
 @register_schema("modelo.work.revisions")
 class WorkRevisionsResult(OutputSchema):
-    """Calculation-revision listing returned by ``aeat app modelo work revisions``.
+    """Calculation-revision listing returned by ``cadrumo app modelo work revisions``.
 
     Each entry in ``revisions`` is a
     :class:`CalculationRevisionPayload`
@@ -552,7 +552,7 @@ class WorkRevisionsResult(OutputSchema):
 
 @register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
-    """Verification report returned by ``aeat app modelo work verify``.
+    """Verification report returned by ``cadrumo app modelo work verify``.
 
     The command delegates to
     :func:`verify_modelo_revision` and returns the
@@ -594,7 +594,7 @@ class WorkDependenciesResult(OutputSchema):
 
 @register_schema("modelo.work.file")
 class WorkFileResult(OutputSchema):
-    """Internal-filing confirmation returned by ``aeat app modelo work file``.
+    """Internal-filing confirmation returned by ``cadrumo app modelo work file``.
 
     The command delegates to
     :func:`file_modelo_revision` and returns the
@@ -626,7 +626,7 @@ class WorkFileResult(OutputSchema):
 
 @register_schema("modelo.work.amend")
 class WorkAmendResult(OutputSchema):
-    """Amendment filing confirmation returned by ``aeat app modelo work amend``.
+    """Amendment filing confirmation returned by ``cadrumo app modelo work amend``.
 
     The command delegates to
     :func:`amend_modelo_revision` and returns the
@@ -661,7 +661,7 @@ class WorkAmendResult(OutputSchema):
 
 @register_schema("modelo.filing_record.list")
 class ModeloRecordListResult(OutputSchema):
-    """Filing-record listing returned by ``aeat app modelo filing-record list``."""
+    """Filing-record listing returned by ``cadrumo app modelo filing-record list``."""
 
     operation: str = "modelo.filing_record.list"
     bucket_id_filter: str | None = None
@@ -673,7 +673,7 @@ class ModeloRecordListResult(OutputSchema):
 
 @register_schema("modelo.filing_record.view")
 class ModeloRecordShowResult(OutputSchema):
-    """Filing-record detail returned by ``aeat app modelo filing-record view``."""
+    """Filing-record detail returned by ``cadrumo app modelo filing-record view``."""
 
     operation: str = "modelo.filing_record.show"
     filing_record_id: FilingRecordId
@@ -722,7 +722,7 @@ class VerificationReportShowResult(OutputSchema):
     :class:`VerificationReport` with the same
     :class:`FindingPayload`
     legal/source-reference detail emitted by
-    ``aeat app modelo work verify``.
+    ``cadrumo app modelo work verify``.
     """
 
     operation: str = "modelo.verification_report.show"
@@ -750,7 +750,7 @@ class FormulasResult(OutputSchema):
 
 @register_schema("modelo.filing_record.import")
 class FilingRecordImportResult(OutputSchema):
-    """Result emitted by ``aeat app modelo filing-record import``.
+    """Result emitted by ``cadrumo app modelo filing-record import``.
 
     The command delegates to
     :func:`import_external_filing_evidence` and returns
@@ -785,7 +785,7 @@ class FilingRecordImportResult(OutputSchema):
 
 @register_schema("modelo.filing_record.observe_local")
 class FilingRecordLocalObservationResult(OutputSchema):
-    """Result emitted by ``aeat app modelo filing-record observe-local``.
+    """Result emitted by ``cadrumo app modelo filing-record observe-local``.
 
     The payload mirrors
     :class:`ModeloLocalObservationResult`:
@@ -812,7 +812,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
 
 @register_schema("modelo.casilla")
 class ModeloCasillaResult(OutputSchema):
-    """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
+    """Single-casilla semantic detail returned by ``cadrumo app modelo casilla``.
 
     Projects
     :class:`ModeloCasillaDetailReport`
@@ -891,7 +891,7 @@ class DataInventoryCasillaPayload(OutputSchema):
 
 @register_schema("modelo.requires")
 class ModeloRequiresResult(OutputSchema):
-    """Data-inventory checklist result returned by ``aeat app modelo requires``.
+    """Data-inventory checklist result returned by ``cadrumo app modelo requires``.
 
     Composes the registry snapshot for one ``(modelo, filing_year, period)``
     into the operator-facing "what data do I need" checklist: casillas the

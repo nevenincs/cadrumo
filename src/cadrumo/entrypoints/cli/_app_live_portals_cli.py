@@ -1,4 +1,4 @@
-"""Portal registry command registration for ``aeat app live portals``.
+"""Portal registry command registration for ``cadrumo app live portals``.
 
 The list verb accepts :class:`PortalCategory` filters and projects local
 :class:`PortalMetadata` records from :data:`PORTAL_REGISTRY` into

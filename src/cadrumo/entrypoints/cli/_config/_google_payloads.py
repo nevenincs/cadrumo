@@ -38,7 +38,7 @@ from .._schemas import OutputSchema, register_schema
 
 @register_schema("config.google.register")
 class GoogleRegisterResult(OutputSchema):
-    """JSON envelope for ``aeat config google register``.
+    """JSON envelope for ``cadrumo config google register``.
 
     Projects the operator-imported
     :class:`OAuthClient` after
@@ -55,7 +55,7 @@ class GoogleRegisterResult(OutputSchema):
 
 @register_schema("config.google.login")
 class GoogleLoginResult(OutputSchema):
-    """JSON envelope for ``aeat config google login``.
+    """JSON envelope for ``cadrumo config google login``.
 
     The ``consent`` branch mirrors the
     :class:`OAuthMetadata` returned with an
@@ -74,7 +74,7 @@ class GoogleLoginResult(OutputSchema):
 
 @register_schema("config.google.status")
 class GoogleStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config google status``.
+    """JSON envelope for ``cadrumo config google status``.
 
     Combines stored :class:`OAuthClient`
     presence with the non-secret
@@ -97,7 +97,7 @@ class GoogleStatusResult(OutputSchema):
 
 @register_schema("config.google.logout")
 class GoogleLogoutResult(OutputSchema):
-    """JSON envelope for ``aeat config google logout``.
+    """JSON envelope for ``cadrumo config google logout``.
 
     Reports the result of
     :func:`delete_session`: token
@@ -120,7 +120,7 @@ class GoogleLogoutResult(OutputSchema):
 
 @register_schema("config.google.folder.set")
 class GoogleFolderSetResult(OutputSchema):
-    """JSON envelope for ``aeat config google folder set``.
+    """JSON envelope for ``cadrumo config google folder set``.
 
     Mirrors the :class:`DriveConfig` written by
     :func:`save_drive_config` for
@@ -135,7 +135,7 @@ class GoogleFolderSetResult(OutputSchema):
 
 @register_schema("config.google.folder.get")
 class GoogleFolderGetResult(OutputSchema):
-    """JSON envelope for ``aeat config google folder get``.
+    """JSON envelope for ``cadrumo config google folder get``.
 
     Projects the optional
     :class:`DriveConfig` loaded from the active
@@ -156,7 +156,7 @@ class GoogleFolderGetResult(OutputSchema):
 
 @register_schema("config.google.sync.probe")
 class GoogleSyncProbeResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync probe``.
+    """JSON envelope for ``cadrumo config google sync probe``.
 
     Adapts :class:`ProviderProbeReport` from
     the resolved Google Drive :class:`StorageProvider`.
@@ -215,7 +215,7 @@ class GoogleSyncDegradedManifestPayload(OutputSchema):
 
 @register_schema("config.google.sync.push")
 class GoogleSyncPushResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync push``.
+    """JSON envelope for ``cadrumo config google sync push``.
 
     Summarizes the ciphertext mirror pass over the active bucket's secure-object
     rows. Object uploads return
@@ -253,7 +253,7 @@ class GoogleSyncPushResult(OutputSchema):
 
 @register_schema("config.google.sync.calc.export")
 class GoogleSyncCalcExportResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync calc export``.
+    """JSON envelope for ``cadrumo config google sync calc export``.
 
     Projects :class:`CalcSheetsApplyResult`
     after :func:`build_export_plan` creates
@@ -297,7 +297,7 @@ class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):
 
 @register_schema("config.google.sync.calc.verify")
 class GoogleSyncCalcVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync calc verify``.
+    """JSON envelope for ``cadrumo config google sync calc verify``.
 
     Projects the :class:`ParityReport`
     returned by
@@ -353,7 +353,7 @@ class GoogleSyncCalcComputeCasillaPayload(OutputSchema):
 
 @register_schema("config.google.sync.calc.pull")
 class GoogleSyncCalcPullResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync calc pull``.
+    """JSON envelope for ``cadrumo config google sync calc pull``.
 
     Projects the :class:`PullResult`
     returned by
@@ -394,7 +394,7 @@ class GoogleSyncCalcPullResult(OutputSchema):
 
 @register_schema("config.google.sync.calc.compute")
 class GoogleSyncCalcComputeResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync calc compute``.
+    """JSON envelope for ``cadrumo config google sync calc compute``.
 
     Pulls operator-edited cells through
     :func:`pull_operator_edits`,
