@@ -32,13 +32,13 @@ def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
       Row 14: "2. Ejercicio y período. Ejercicio"
       Row 16: "2. Ejercicio y período. Periodo"
     Saved at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/
         Descripcion_PresentacionFichero369_v1.pdf
 
     Source 2 — AEAT online manual "Presentación régimen de la Unión", section 2:
       Section heading: "2. Ejercicio y periodo"
     Saved at:
-      src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/
         2-ejercicio-periodo.html
 
     The synthetic fixture prints:

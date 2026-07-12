@@ -1,7 +1,7 @@
 """Tests for the official Modelo 210 tipo-de-renta code axis and projection.
 
-Grounds the code-to-:class:`~aeat.core.TipoRentaIrnr` projection declared in
-:mod:`aeat.core._irnr` against the M210 IRNR implementation decision: the
+Grounds the code-to-:class:`~cadrumo.core.TipoRentaIrnr` projection declared in
+:mod:`cadrumo.core._irnr` against the M210 IRNR implementation decision: the
 code list is the bundled Orden EHA/3316/2010 HOJA INFORMATIVA 210, and only the
 rate-concept-grounded codes are declared (the fetch-gated special-rate codes are
 absent by design, not by omission).

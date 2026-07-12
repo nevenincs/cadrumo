@@ -53,7 +53,7 @@ from ..master_key import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_HKDF_CONTEXT_TX = b"aeat.domain.transactions.catalogue.v1"
+_HKDF_CONTEXT_TX = b"cadrumo.domain.transactions.catalogue.v1"
 _ENVELOPE_CANARY = "12345678Z"
 _BLOB_PAYLOAD = b"per-blob financial payload bytes"
 _KEYSTORE_BUCKET_ID = "44444444-4444-4444-8444-444444444444"

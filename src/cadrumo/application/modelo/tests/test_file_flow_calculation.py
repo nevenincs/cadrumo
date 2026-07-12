@@ -266,7 +266,7 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
     tmp_path: Path,
 ) -> None:
     """The registry root resolves via ``PROJECT_ROOT`` from
-    ``aeat.core.config``, not via a CWD-relative ``"registry/aeat"``
+    ``cadrumo.core.config``, not via a CWD-relative ``"registry/aeat"``
     string. Running the action from any other directory must still
     work — production deploys, background daemons, and wheel
     installs all run from non-repo CWDs.

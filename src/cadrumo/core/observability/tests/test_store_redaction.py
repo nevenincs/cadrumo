@@ -1,7 +1,7 @@
 """Regression tests for run-trace and event-log on-disk redaction.
 
-Locks the contract that :func:`aeat.core.observability.save_trace` and
-:func:`aeat.core.observability.save_events_append` must redact every
+Locks the contract that :func:`cadrumo.core.observability.save_trace` and
+:func:`cadrumo.core.observability.save_events_append` must redact every
 in-scope sensitive value (NIF, bearer token, sensitive URL path) before
 the structured payload reaches the on-disk store. Tracks the original
 TRACE-001 regression: plaintext NIF and OAuth tokens were observed in
@@ -106,7 +106,7 @@ def test_save_events_append_redacts_url_path(
             kind=RunEventKind.NAVIGATION,
             payload=RunEventPayload(navigation=NavigationPayload(url=_URL_CANARY)),
             timestamp=_FINISHED_AT,
-            module="aeat.core.observability.test_store_redaction",
+            module="cadrumo.core.observability.test_store_redaction",
         )
         save_events_append(event.run_id, event)
         on_disk = (runs_dir() / event.run_id / _EVENTS_FILENAME).read_text(encoding="utf-8")

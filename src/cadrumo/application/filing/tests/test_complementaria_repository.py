@@ -1,9 +1,9 @@
-"""Tests for the governed-persistence :class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
+"""Tests for the governed-persistence :class:`~cadrumo.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
 
 Exercises the round-trip save/load API, list/iter/delete behaviour,
 the AUDIT classification gate, the unsafe-id rejection, the
 per-amendment lock isolation of
-:class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
+:class:`~cadrumo.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`.
 """
 
 from __future__ import annotations
@@ -119,7 +119,7 @@ class TestEmptyState:
         assert repo.load("missing-id") is None
 
     def test_object_marker_identifies_secure_backend(self, repo: ModeloAmendmentRepository) -> None:
-        assert repo.envelope_path_for("xyz").as_posix().endswith("aeat.domain.filing.amendments/xyz")
+        assert repo.envelope_path_for("xyz").as_posix().endswith("cadrumo.domain.filing.amendments/xyz")
 
 
 class TestSaveLoad:
@@ -173,7 +173,7 @@ class TestClassificationGate:
             payload=amendment,
         )
         SecureObjectRepository().save(
-            namespace="aeat.domain.filing.amendments",
+            namespace="cadrumo.domain.filing.amendments",
             object_key=amendment.amendment_id,
             classification=SensitivityClass.OPERATIONAL,
             schema_version=1,

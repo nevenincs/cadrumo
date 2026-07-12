@@ -1,4 +1,4 @@
-"""Unit tests for the :func:`aeat.adapters.persistence.storage.sql.session.session_scope` unit-of-work helper.
+"""Unit tests for the :func:`cadrumo.adapters.persistence.storage.sql.session.session_scope` unit-of-work helper.
 
 Validates commit-on-success and rollback-on-exception semantics by
 running statements through real SQLAlchemy sessions backed by SQLite.
@@ -21,7 +21,7 @@ from .. import create_engine_from_settings, session_scope
 from .._orm import Base
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-_SESSION_LOGGER_NAME = "aeat.adapters.persistence.storage.sql.session"
+_SESSION_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.session"
 
 
 @contextmanager

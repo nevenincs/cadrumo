@@ -98,7 +98,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     declaration = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_m036_declaration")
 
     assert declaration == LIVE_M036_DECLARATION_NAMESPACE
-    assert declaration.namespace == "aeat.application.modelo.m036_declaration"
+    assert declaration.namespace == "cadrumo.application.modelo.m036_declaration"
     assert declaration.sensitivity is SensitivityClass.IDENTITY
     assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
 
@@ -110,7 +110,7 @@ def test_secure_object_registry_names_m145_communication_record_namespace() -> N
     record = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("m145_communication_record")
 
     assert record == M145_COMMUNICATION_RECORD_NAMESPACE
-    assert record.namespace == "aeat.application.modelo.m145_communication_record"
+    assert record.namespace == "cadrumo.application.modelo.m145_communication_record"
     assert record.sensitivity is SensitivityClass.FINANCIAL
     assert record.object_key_grammar == "m145-communication:{bucket_id}:{communication_record_id}"
     assert record.scope is StorageNamespaceScope.BUCKET_LOCAL
@@ -123,7 +123,7 @@ def test_secure_object_registry_names_live_justificante_capture_namespace() -> N
     capture = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_justificante_capture_snapshot")
 
     assert capture == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
-    assert capture.namespace == "aeat.application.live.justificante_capture_snapshot"
+    assert capture.namespace == "cadrumo.application.live.justificante_capture_snapshot"
     assert capture.sensitivity is SensitivityClass.FINANCIAL
     assert capture.object_key_grammar == "justificante-capture-snapshot:{bucket_id}:{snapshot_id}"
     assert capture.scope is StorageNamespaceScope.BUCKET_LOCAL
@@ -185,8 +185,8 @@ def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
 def test_transaction_participation_index_namespace_is_registered() -> None:
     registered = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("transaction_participation_index")
 
-    assert registered.namespace == "aeat.domain.modelos.participation_index"
-    assert registered.owner == "aeat.domain.modelos"
+    assert registered.namespace == "cadrumo.domain.modelos.participation_index"
+    assert registered.owner == "cadrumo.domain.modelos"
     assert registered.sensitivity is SensitivityClass.FINANCIAL
     assert registered.scope is StorageNamespaceScope.PROFILE_LOCAL
     assert registered.schema_version == 1
@@ -310,43 +310,43 @@ def test_auth_session_cache_remote_namespaces_are_registered() -> None:
         ),
         "application_evidence_bundles": (
             APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
-            "aeat.application.evidence.bundles",
+            "cadrumo.application.evidence.bundles",
             SensitivityClass.AUDIT,
             "{bundle_id}",
         ),
         "ledger_purchase_invoice_evidence": (
             LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
-            "aeat.application.ledger.purchase_invoice_evidence",
+            "cadrumo.application.ledger.purchase_invoice_evidence",
             SensitivityClass.FINANCIAL,
             "{bucket_id}",
         ),
         "ledger_business_operation_invoices": (
             LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
-            "aeat.application.ledger.business_operation_invoices",
+            "cadrumo.application.ledger.business_operation_invoices",
             SensitivityClass.FINANCIAL,
             "{bucket_id}:{source_kind}",
         ),
         "live_expedientes_snapshot": (
             LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
-            "aeat.application.live.expedientes_snapshot",
+            "cadrumo.application.live.expedientes_snapshot",
             SensitivityClass.FINANCIAL,
             "expedientes-snapshot:{bucket_id}:{snapshot_id}",
         ),
         "live_notifications_snapshot": (
             LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
-            "aeat.application.live.notifications_snapshot",
+            "cadrumo.application.live.notifications_snapshot",
             SensitivityClass.FINANCIAL,
             "notifications-snapshot:{bucket_id}:{snapshot_id}",
         ),
         "live_verify_observations": (
             LIVE_VERIFY_OBSERVATION_NAMESPACE,
-            "aeat.application.live.verify_observations",
+            "cadrumo.application.live.verify_observations",
             SensitivityClass.IDENTITY,
             "verify-observation:{bucket_id}:{observation_id}",
         ),
         "test_snapshot_base_probe": (
             TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
-            "aeat.application.live.test_snapshot_base_probe",
+            "cadrumo.application.live.test_snapshot_base_probe",
             SensitivityClass.FINANCIAL,
             "snapshot-base-probe:{bucket_id}:{snapshot_id}",
         ),
@@ -595,11 +595,11 @@ def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
 def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> None:
     path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
 
-    marker = secure_object_namespace_logical_path("aeat.domain.attachments.blobs")
+    marker = secure_object_namespace_logical_path("cadrumo.domain.attachments.blobs")
 
     assert path_definition.kind is StoragePathKind.LOGICAL_SQL
     assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
-    assert marker.as_posix() == "db:/secure_objects/aeat.domain.attachments.blobs"
+    assert marker.as_posix() == "db:/secure_objects/cadrumo.domain.attachments.blobs"
 
 
 def test_every_discovered_production_secure_object_namespace_is_registered() -> None:
@@ -610,7 +610,7 @@ def test_every_discovered_production_secure_object_namespace_is_registered() -> 
         ATTACHMENT_BLOB_NAMESPACE.namespace,
         GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace,
         WORKFLOW_STATE_NAMESPACE.namespace,
-        "aeat.domain.transactions.bucket",
+        "cadrumo.domain.transactions.bucket",
         AEAT_BROWSER_SESSION_NAMESPACE.namespace,
     } <= discovered
     assert sorted(discovered - registered) == []
@@ -668,7 +668,7 @@ def _is_test_surface(path: Path) -> bool:
         path.name.startswith("test_")
         or path.name == "conftest.py"
         or "/test_" in relative
-        or relative.startswith("src/aeat/tests/")
+        or relative.startswith("src/cadrumo/tests/")
     )
 
 
@@ -719,7 +719,7 @@ def _namespace_values_from_assignments(tree: ast.AST, bindings: dict[str, str]) 
 
 
 def _collect_imported_registry_namespace_bindings(tree: ast.AST) -> dict[str, str]:
-    storage_exports = __import__("aeat.adapters.persistence.storage", fromlist=["*"])
+    storage_exports = __import__("cadrumo.adapters.persistence.storage", fromlist=["*"])
     namespace_by_export = {
         name: value.namespace
         for name, value in vars(storage_exports).items()
@@ -737,8 +737,8 @@ def _collect_imported_registry_namespace_bindings(tree: ast.AST) -> dict[str, st
 
 def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
     return node.module in {
-        "aeat.adapters.persistence.storage",
-        "aeat.adapters.persistence.storage._namespace_registry",
+        "cadrumo.adapters.persistence.storage",
+        "cadrumo.adapters.persistence.storage._namespace_registry",
         "_namespace_registry",
     } or (
         node.level > 0

@@ -1,7 +1,7 @@
 """Static guard: zero skip / xfail shortcuts in deterministic production tests.
 
 Walks every deterministic test, test-support, and ``conftest.py`` module under
-``src/aeat/`` via AST and asserts that deterministic modules carry no pytest
+``src/cadrumo/`` via AST and asserts that deterministic modules carry no pytest
 skip/xfail markers or shortcut calls. Import-time skips and
 ``unittest.SkipTest`` raises are forbidden as well, including pytest alias forms.
 
@@ -52,9 +52,9 @@ _FORBIDDEN_CALLS = frozenset({f"pytest.{name}" for name in _FORBIDDEN_CALL_NAMES
 _FORBIDDEN_EXCEPTIONS = frozenset({"SkipTest", "unittest.SkipTest", "unittest.case.SkipTest"})
 _LIVE_EXECUTION_MARKER = "aeat_live"
 _UNIT_EXECUTION_MARKER = "unit"
-_LIVE_GATE_SUPPORT_RELATIVE = "src/aeat/tests/live_gate.py"
+_LIVE_GATE_SUPPORT_RELATIVE = "src/cadrumo/tests/live_gate.py"
 _LIVE_GATE_HELPERS = frozenset({"requires_live_enabled", "requires_live_google_enabled"})
-_LIVE_CONFTST_RELATIVE = "src/aeat/tests/conftest.py"
+_LIVE_CONFTST_RELATIVE = "src/cadrumo/tests/conftest.py"
 _LIVE_COLLECTION_HOOK = "pytest_collection_modifyitems"
 
 
@@ -829,7 +829,7 @@ pytestmark = [pytest.mark.aeat_live]
 def test_live_service():
     pytest.skip("service unavailable")
 """
-    inventory = _skip_policy_inventory_for_source("src/aeat/application/live/tests/test_service_live.py", source)
+    inventory = _skip_policy_inventory_for_source("src/cadrumo/application/live/tests/test_service_live.py", source)
 
     assert _shortcut_violation_name_counts(inventory.shortcut_violations) == Counter({"pytest.skip": 1})
 
@@ -914,7 +914,7 @@ def test_augmented_live_unit():
 
 
 def test_project_tests_outside_source_tree_do_not_skip() -> None:
-    """Project tests outside ``src/aeat`` must not self-skip or xfail."""
+    """Project tests outside ``src/cadrumo`` must not self-skip or xfail."""
     violations: list[str] = []
     for module_path in project_test_control_modules():
         tree = ast_for_path(module_path)
@@ -923,7 +923,7 @@ def test_project_tests_outside_source_tree_do_not_skip() -> None:
         relative = repo_relative(module_path)
         for lineno, marker_or_call_name in _forbidden_project_marker_sites_for_relative(relative, tree):
             violations.append(f"{relative}:{lineno}: {marker_or_call_name}")
-    assert not violations, "Project tests outside src/aeat cannot skip or xfail:\n" + "\n".join(violations)
+    assert not violations, "Project tests outside src/cadrumo cannot skip or xfail:\n" + "\n".join(violations)
 
 
 def test_unit_skip_detector_ignores_integration_only_skip_sites() -> None:

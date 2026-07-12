@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 def _record(days_ago: int, *, run_id: str, anchor: datetime) -> LLMRunRecord:
     return LLMRunRecord(
         run_id=run_id,
-        caller="aeat.application.ledger.llm_classification",
+        caller="cadrumo.application.ledger.llm_classification",
         provider="claude",
         model="claude-opus-4-7",
         duration_ms=1000,

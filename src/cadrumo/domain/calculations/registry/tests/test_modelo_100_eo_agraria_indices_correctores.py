@@ -28,7 +28,7 @@ See Also:
     :mod:`~domain.calculations.registry.tests.test_modelo_100_eo_agraria_reducciones_fase_4a`
         Fase 4ª/5ª reduction suite that continues from this test's casilla
         1548 result.
-    ``src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
         Registry-authored Fase 1ª-3ª formula chain under test.
 """
 

@@ -1,7 +1,7 @@
 """Real-behavior tests for censo-derived home-office usage ratios.
 
 Locks the contract that
-:func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_censo`
+:func:`cadrumo.domain.usage_ratios.derive_home_office_ratios_from_censo`
 turns the operator's vivienda afectación ratio into a
 :class:`UsageRatioProfile` carrying one entry per HOME_OFFICE_SUMINISTROS
 and HOME_OFFICE_OWNERSHIP category, with each entry equal to the raw

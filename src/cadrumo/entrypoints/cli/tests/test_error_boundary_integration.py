@@ -11,7 +11,7 @@ representative errors render with the correct grep-stable prefix
 (REFUSED, AUTH, INTEGRITY …) for all :class:`ErrorCategory` values.
 
 This module verifies the *boundary mechanism itself*: that the decorator
-wired at import time in :mod:`aeat.entrypoints.cli.__init__` catches the
+wired at import time in :mod:`cadrumo.entrypoints.cli.__init__` catches the
 error, looks it up in the live registry, and terminates with the
 category-registered exit code — not merely that the registry has entries.
 

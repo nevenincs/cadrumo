@@ -388,7 +388,7 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     ``corpus/manual_oracles/modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json``
     evidence. This test proves the OTHER end of the wire: that the
     declaration actually reaches the live, VALIDATED
-    :class:`~aeat.domain.calculations.registry.RegistryVerificationPolicy` fold,
+    :class:`~cadrumo.domain.calculations.registry.RegistryVerificationPolicy` fold,
     so 00562/00592/00611 raise ``independently_grounded_fraction`` above zero
     for M200 rather than sitting inert in TOML. Not tautological: the
     grounded set and the fraction are read from the registry's own declared

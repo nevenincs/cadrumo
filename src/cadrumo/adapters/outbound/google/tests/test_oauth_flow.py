@@ -103,8 +103,8 @@ _LOGIN_PROBE = textwrap.dedent(
     """
     import sys
 
-    from aeat.adapters.outbound.google._oauth_flow import require_interactive_terminal
-    from aeat.adapters.outbound.google._errors import GoogleAuthNonInteractiveError
+    from cadrumo.adapters.outbound.google._oauth_flow import require_interactive_terminal
+    from cadrumo.adapters.outbound.google._errors import GoogleAuthNonInteractiveError
 
     if sys.stdin.isatty():
         print("UNEXPECTED_TTY")

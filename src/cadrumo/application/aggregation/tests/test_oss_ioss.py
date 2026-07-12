@@ -384,14 +384,14 @@ def test_aggregator_returns_zero_when_no_candidates_match_a_binding() -> None:
 
 def test_no_parallel_oss_ioss_aggregator_exists() -> None:
     """The application aggregator at
-    ``src/aeat/application/aggregation/_oss_ioss.py`` is the sole
+    ``src/cadrumo/application/aggregation/_oss_ioss.py`` is the sole
     surface that consumes
     :func:`resolve_ledger_oss_aggregation_binding_values` outside the
     registry's own tests. Any other module that hand-rolls an OSS /
     IOSS aggregation pipeline competes with the canonical wrapper and
     must be removed."""
 
-    source_root = PROJECT_ROOT / "src" / "aeat"
+    source_root = PROJECT_ROOT / "src" / "cadrumo"
     canonical = source_root / "application" / "aggregation" / "_oss_ioss.py"
     forbidden_pattern = "resolve_ledger_oss_aggregation_binding_values"
     offenders: list[Path] = []
@@ -412,7 +412,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
             offenders.append(py_file)
     assert offenders == [], (
         "Parallel OSS/IOSS aggregation surfaces detected outside the canonical "
-        "`aeat.application.aggregation._oss_ioss` module: "
+        "`cadrumo.application.aggregation._oss_ioss` module: "
         + ", ".join(str(p.relative_to(source_root)) for p in offenders)
     )
 
@@ -423,7 +423,7 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
     register an ``oss``, ``ioss``, ``aeat oss``, ``aeat ioss``,
     ``app iva oss``, or ``app iva ioss`` command."""
 
-    cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     forbidden_command_names = (
         '"oss"',
         '"ioss"',

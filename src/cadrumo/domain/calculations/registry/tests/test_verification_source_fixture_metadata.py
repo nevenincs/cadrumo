@@ -46,8 +46,8 @@ from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# bundled_path() resolves to src/aeat/_data; the fixture tree lives one level
-# up at src/aeat/tests/fixtures/justificantes — mirror the derivation in
+# bundled_path() resolves to src/cadrumo/_data; the fixture tree lives one level
+# up at src/cadrumo/tests/fixtures/justificantes — mirror the derivation in
 # RegistryValidator._justificante_corpus_root.
 _FIXTURE_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "justificantes"
 

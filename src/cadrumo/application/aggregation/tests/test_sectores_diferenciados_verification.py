@@ -1,7 +1,7 @@
 """End-to-end verification of the sectores-diferenciados prorrata (LIVA arts. 9.1.c / 101).
 
 No bundled AEAT worked-example oracle for a two-sector differentiated-sectors
-prorrata ships in ``src/aeat/_data/corpus/manual_oracles/`` (that pool carries
+prorrata ships in ``src/cadrumo/_data/corpus/manual_oracles/`` (that pool carries
 only the WHOLE-ENTITY Modelo 303 prorrata-general regularización example and
 unrelated modelos). Per the ``no-tautological-calculation-tests`` rule, this
 verification uses a hand-constructed register with structural anti-tautology

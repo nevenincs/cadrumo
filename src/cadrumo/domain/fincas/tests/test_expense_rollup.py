@@ -1,6 +1,6 @@
 """Unit tests for the LIRPF art. 23.1 expense rollup.
 
-Exercises :func:`aeat.domain.fincas.compute_gastos_for_year` against the
+Exercises :func:`cadrumo.domain.fincas.compute_gastos_for_year` against the
 per-category aggregation, the LIRPF art. 23.1.a) cap, and the
 4-year carry-forward consumption / expiration rules.
 """
@@ -31,7 +31,7 @@ def _expense(category: ExpenseCategory, amount: Decimal, *, year: int = 2025) ->
 
 
 class TestPerCategoryAggregation:
-    """Per-:class:`aeat.domain.fincas.ExpenseCategory` aggregation behaviour."""
+    """Per-:class:`cadrumo.domain.fincas.ExpenseCategory` aggregation behaviour."""
 
     def test_sums_per_category(self) -> None:
         ibi_a = Decimal("420.00")
@@ -116,7 +116,7 @@ class TestArt2311aCap:
 
 
 class TestCarryForwardConsumption:
-    """4-year :class:`aeat.domain.fincas.CarryForwardEntry` consumption + expiry."""
+    """4-year :class:`cadrumo.domain.fincas.CarryForwardEntry` consumption + expiry."""
 
     def test_carry_consumed_against_remaining_capacity(self) -> None:
         """Year-1 originated 500 carry; year-2 capped subtotal 7 000, ingresos

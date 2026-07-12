@@ -2,7 +2,7 @@
 
 Closes #292 (typer cp1252 UnicodeEncodeError) and #389 (review queue
 + iva rates list crashes on Windows cp1252). The guard runs at the
-top of :mod:`aeat.entrypoints.cli` before any echo / log / Rich
+top of :mod:`cadrumo.entrypoints.cli` before any echo / log / Rich
 console runs, so unicode characters such as ``→`` (U+2192) used in
 the review queue table, ``§`` (U+00A7) used in some IVA-rate
 citations, and the emoji / CJK fragments operators may type into
@@ -380,7 +380,7 @@ def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     root logger.
 
     The ``_stdio`` module deliberately uses stdlib ``logging.getLogger`` (not
-    ``aeat.core.logging.get_logger``) because it runs before settings are loaded
+    ``cadrumo.core.logging.get_logger``) because it runs before settings are loaded
     — see the constraint comment in ``_stdio.py`` at the ``_LOGGER`` definition.
     Scrubbing still applies because the stdlib logger propagates to the root
     logger, and ``configure_logging()`` installs ``SecretScrubbingFilter`` on
@@ -397,7 +397,7 @@ def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     root_logger.setLevel(logging.DEBUG)
     try:
         # Emit through the same logger the _stdio module uses.
-        stdio_logger = logging.getLogger("aeat.entrypoints.cli._stdio")
+        stdio_logger = logging.getLogger("cadrumo.entrypoints.cli._stdio")
         nif_canary = "12345678Z"
         stdio_logger.debug("stream reconfigure skipped for nif=%s", nif_canary)
     finally:

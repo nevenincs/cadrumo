@@ -21,12 +21,12 @@ Legal grounding:
         (cuota liquida = cuota integra - deducciones)
 
 Corpus values are anchored to the registry's committed bracket tables
-(src/aeat/_data/registry/aeat/modelos/100/revisions/<year>/formulas/).
+(src/cadrumo/_data/registry/aeat/modelos/100/revisions/<year>/formulas/).
 A formula regression in the registry WILL cause the verification chain test
 to fail, which is the intended safety gate.
 
 Usage (regenerate committed PDFs):
-    uv run --no-sync python src/aeat/tests/fixtures/borrador/_generate.py
+    uv run --no-sync python src/cadrumo/tests/fixtures/borrador/_generate.py
 """
 
 from __future__ import annotations

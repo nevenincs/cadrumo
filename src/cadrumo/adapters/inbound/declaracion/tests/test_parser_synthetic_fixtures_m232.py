@@ -39,7 +39,7 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
     """Round-trip the sanitized M232 synthetic fixtures through both revisions.
 
     Ground truth is the AEAT-published Diseño de Registro for Modelo 232:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_232/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_232/files/
         01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx
         02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx
 

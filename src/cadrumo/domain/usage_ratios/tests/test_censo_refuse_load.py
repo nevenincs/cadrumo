@@ -1,7 +1,7 @@
 """Real-behavior tests for the censo refuse-load guard.
 
 Locks the contract that
-:func:`aeat.domain.usage_ratios.load_usage_ratios_with_censo_guard`
+:func:`cadrumo.domain.usage_ratios.load_usage_ratios_with_censo_guard`
 refuses on every disagreement path between the persisted
 :class:`UsageRatioProfile` and the bound censo, with no auto-migration
 and no silent coercion (per the modelo-036-037 foundation contract

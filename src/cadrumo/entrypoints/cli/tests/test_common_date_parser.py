@@ -2,7 +2,7 @@
 
 Exercises the real :func:`_parse_iso_date` / :func:`_parse_iso_date_str` /
 :func:`_parse_optional_iso_date_str` helpers in
-:mod:`aeat.entrypoints.cli._common` — the single owned ISO gate every
+:mod:`cadrumo.entrypoints.cli._common` — the single owned ISO gate every
 date-typed CLI input (including ``--invoice-date`` on the business-invoice and
 evidence commands, research F5) now routes through. No mocks, no skips: each
 case drives ``date.fromisoformat`` and asserts a concrete ``date`` or a real

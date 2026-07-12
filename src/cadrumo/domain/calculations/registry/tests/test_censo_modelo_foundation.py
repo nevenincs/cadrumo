@@ -43,7 +43,7 @@ def test_censo_foundation_owner_is_registry_domain() -> None:
 
     assert {record.modelo for record in records} == {"036", "037"}
     assert {record.service_owner for record in records} == {CENSO_MODELO_SERVICE_OWNER}
-    assert CENSO_MODELO_SERVICE_OWNER == "aeat.domain.calculations.registry"
+    assert CENSO_MODELO_SERVICE_OWNER == "cadrumo.domain.calculations.registry"
 
 
 def test_censo_foundation_contract_records_service_error_codes() -> None:
@@ -338,7 +338,7 @@ def test_censo_foundation_log_fields_are_strict_and_immutable() -> None:
 def test_resolve_censo_modelo_foundation_emits_structured_debug_log(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._censo_modelos")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.domain.calculations.registry._censo_modelos")
 
     resolve_censo_modelo_foundation(
         CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.MODIFICACION),

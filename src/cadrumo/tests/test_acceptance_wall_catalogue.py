@@ -16,7 +16,7 @@ This module is itself marked ``unit`` (so it always runs in the CI lane that
 does execute today) and is the structural half of the fix:
 
 1. :func:`test_catalogue_is_non_empty_and_entries_are_well_formed` proves the
-   catalogue in :mod:`aeat.tests.acceptance_wall_catalogue` is real, non-empty,
+   catalogue in :mod:`cadrumo.tests.acceptance_wall_catalogue` is real, non-empty,
    and every entry resolves to a real file on disk (an AST-level existence
    check, not a name lookup against a hand-maintained list).
 2. :func:`test_every_catalogued_wall_test_is_collectible_and_passes` proves,

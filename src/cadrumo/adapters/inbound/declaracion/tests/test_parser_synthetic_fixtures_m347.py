@@ -27,7 +27,7 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
 
     Ground truth for the ejercicio label pattern is the AEAT-published Diseño de
     Registro for Modelo 347 (Orden HAC/1431/2025):
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_347/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/
         01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf
       Page 1, TIPO DE REGISTRO 1, positions 5-8:
         "EJERCICIO — Las cuatro cifras del ejercicio fiscal al que corresponde la declaración."

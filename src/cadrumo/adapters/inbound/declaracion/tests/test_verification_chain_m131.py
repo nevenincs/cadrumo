@@ -29,7 +29,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     """Engine recomputes M131 closure casillas from leaf inputs.
 
     GROUNDED authority: synthetic fixture committed at
-    src/aeat/tests/fixtures/justificantes/131/2024-1T.pdf.
+    src/cadrumo/tests/fixtures/justificantes/131/2024-1T.pdf.
     The fixture encodes filing year 2026 (detected from PDF header).
     Registry revision '2026' is used.
 

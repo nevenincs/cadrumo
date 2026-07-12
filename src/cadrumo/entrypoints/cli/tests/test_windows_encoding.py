@@ -1,12 +1,12 @@
 """Windows encoding regression tests for CLI stderr emission.
 
 Pins the contract that
-:func:`aeat.entrypoints.cli._errors.write_stderr` never raises when
+:func:`cadrumo.entrypoints.cli._errors.write_stderr` never raises when
 the underlying stream uses the Windows default ``cp1252`` codec, even
-when :func:`aeat.core.errors.render_error_text` produces non-ASCII
+when :func:`cadrumo.core.errors.render_error_text` produces non-ASCII
 characters under the operator's configured language.
 
-Also pins that :func:`aeat.entrypoints.cli._stdio.configure_stdio_for_utf8`
+Also pins that :func:`cadrumo.entrypoints.cli._stdio.configure_stdio_for_utf8`
 emits bytes that are valid UTF-8 regardless of the ambient console code
 page, and that :func:`_set_windows_console_utf8` runs without error on
 all platforms (including non-Windows where it is a no-op).
@@ -30,7 +30,7 @@ def _output_language(language: str):
     """Pin ``aeat_output_language`` for the duration of a test.
 
     Delegates to the canonical Settings override API
-    (:func:`aeat.core.config.override_settings`); the production
+    (:func:`cadrumo.core.config.override_settings`); the production
     locale resolver reads through ``load_settings`` so the ContextVar
     layer is reached.
     """

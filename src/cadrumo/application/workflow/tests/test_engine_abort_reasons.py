@@ -1,4 +1,4 @@
-"""Abort-reason coverage for :class:`aeat.application.workflow.WorkflowEngine`."""
+"""Abort-reason coverage for :class:`cadrumo.application.workflow.WorkflowEngine`."""
 
 from __future__ import annotations
 

@@ -1,10 +1,10 @@
 """Contract tests for the CLI-facing error registry.
 
 Asserts that every suggestion string in
-:data:`aeat.core.errors.ERROR_REGISTRY` parses as a valid CLI command,
+:data:`cadrumo.core.errors.ERROR_REGISTRY` parses as a valid CLI command,
 that representative exceptions render with the grep-stable prefix
 expected by operators, and that every
-:class:`aeat.core.errors.ErrorCategory` (other than the generic
+:class:`cadrumo.core.errors.ErrorCategory` (other than the generic
 ``ERROR``) is exercised by a probe.
 """
 
@@ -87,7 +87,7 @@ def test_rendered_prefixes_are_grep_stable(
 
 
 def test_every_error_category_has_a_cli_prefix_probe() -> None:
-    """Every :class:`~aeat.core.errors.ErrorCategory` member except ``ERROR`` is exercised above."""
+    """Every :class:`~cadrumo.core.errors.ErrorCategory` member except ``ERROR`` is exercised above."""
     probed = {
         ErrorCategory.LOCKED,
         ErrorCategory.REFUSED,

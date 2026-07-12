@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # envelope schema version). Duplicated here as plain literals rather than
 # imported, since those names are private to their owning adapter module and
 # this test lives in a different package.
-_INVOICE_NAMESPACE = "aeat.domain.invoices"
+_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
 _INVOICE_OBJECT_KEY = "catalogue"
 _INVOICE_CATALOGUE_VERSION = 1
 

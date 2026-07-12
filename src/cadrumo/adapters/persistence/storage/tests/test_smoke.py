@@ -1,6 +1,6 @@
 """Smoke tests for the storage subpackage's public surface.
 
-Verifies that :mod:`aeat.adapters.persistence.storage` is importable,
+Verifies that :mod:`cadrumo.adapters.persistence.storage` is importable,
 exposes the expected error hierarchy, and that every name in
 ``__all__`` resolves on the package root.
 """

@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # Child process: does its own isolated setup + full M200/2024 first-year calculate
-# WITHOUT ever importing aeat.application.wizard._catalogue, so the wizard SETUP_FLOW
+# WITHOUT ever importing cadrumo.application.wizard._catalogue, so the wizard SETUP_FLOW
 # catalogue is unregistered in this process. argv[1] is a tmp dir for the bucket.
 _CHILD_SCRIPT = r"""
 import sys
@@ -48,7 +48,7 @@ from decimal import Decimal
 from pathlib import Path
 
 # Discriminating precondition: the wizard catalogue must NOT be registered here.
-from aeat.core.wizard_catalogue import WizardCatalogueNotRegisteredError, get_setup_flow
+from cadrumo.core.wizard_catalogue import WizardCatalogueNotRegisteredError, get_setup_flow
 
 try:
     get_setup_flow()
@@ -57,20 +57,20 @@ try:
 except WizardCatalogueNotRegisteredError:
     print("CATALOGUE:UNREGISTERED")
 
-from aeat.application.calculations._relation_prefill import (
+from cadrumo.application.calculations._relation_prefill import (
     _activity_start_date_for_bucket,
     _first_year_modalidad_cuota_no_m202,
 )
-from aeat.core import Period
-from aeat.core.resources import resources
-from aeat.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from aeat.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from aeat.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from aeat.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat.tests.secure_sql import isolated_runtime_profile
-from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.application.modelo import (
+from cadrumo.core import Period
+from cadrumo.core.resources import resources
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord
+from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.user_profile import UserProfileLifecycleRepository
+from cadrumo.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
 )

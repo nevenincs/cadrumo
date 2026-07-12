@@ -85,8 +85,8 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
         full_namespaces = {o.namespace for o in full}
         # The full-custody-only FINANCIAL byte store is carried by the sealed
         # profile but never by the cleartext structured profile.
-        assert "aeat.domain.attachments.blobs" in full_namespaces
-        assert "aeat.domain.attachments.blobs" not in structured_namespaces
+        assert "cadrumo.domain.attachments.blobs" in full_namespaces
+        assert "cadrumo.domain.attachments.blobs" not in structured_namespaces
 
 
 def _seed_attachment_manifest(sha: str) -> None:
@@ -153,9 +153,9 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
         carried = serialize_carried_objects(bucket_id=source_bucket, profile=StorageCustodyProfile.FULL)
 
         carried_namespaces = {obj.namespace for obj in carried}
-        assert "aeat.domain.attachments.blobs" in carried_namespaces
-        assert "aeat.domain.buckets.event_history" in carried_namespaces
-        assert "aeat.domain.justificante.metadata" in carried_namespaces
+        assert "cadrumo.domain.attachments.blobs" in carried_namespaces
+        assert "cadrumo.domain.buckets.event_history" in carried_namespaces
+        assert "cadrumo.domain.justificante.metadata" in carried_namespaces
 
         with runtime.switch_to_secondary():
             # The recipient bucket starts without the evidence or the audit event.

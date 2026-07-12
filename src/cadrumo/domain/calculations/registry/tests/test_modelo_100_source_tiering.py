@@ -11,8 +11,8 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ROOT = Path(__file__).resolve().parents[6]
-_LEGAL_IRPF = _ROOT / "src/aeat/_data/registry/aeat/legal/irpf.toml"
-_MODELO_100_ROOT = _ROOT / "src/aeat/_data/registry/aeat/modelos/100"
+_LEGAL_IRPF = _ROOT / "src/cadrumo/_data/registry/aeat/legal/irpf.toml"
+_MODELO_100_ROOT = _ROOT / "src/cadrumo/_data/registry/aeat/modelos/100"
 _BOE_FORM_SOURCES = frozenset(f"boe-modelo-100-{year}-form" for year in range(2020, 2026))
 
 

@@ -1,4 +1,4 @@
-"""Unit tests for the read-only :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`.
+"""Unit tests for the read-only :class:`cadrumo.adapters.outbound.aeat.export.SubmissionEngine`.
 
 Exercises preflight-only behaviour, transport-refusal guards, and the
 historical-records loader. The engine never opens a write transport;
@@ -152,7 +152,7 @@ class TestTransportRefusal:
         ``_submit_with_transport`` method this item was written against no
         longer exists anywhere in the codebase (excised by the live-write
         removal that predates this engine's current read-only shape — see
-        :mod:`aeat.adapters.outbound.aeat.export._submitters`), so there is no
+        :mod:`cadrumo.adapters.outbound.aeat.export._submitters`), so there is no
         transport code path left to compare against
         :meth:`AeatAccessGate.require_live_write`. The durable, re-checkable
         assertion is structural: the engine's entire public surface is free of

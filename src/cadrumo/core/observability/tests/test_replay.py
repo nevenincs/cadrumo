@@ -1,4 +1,4 @@
-"""Tests for :func:`aeat.core.observability.replay_run` and its refusal modes.
+"""Tests for :func:`cadrumo.core.observability.replay_run` and its refusal modes.
 
 Covers:
 

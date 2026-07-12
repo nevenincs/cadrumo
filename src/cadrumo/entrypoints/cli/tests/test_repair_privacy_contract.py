@@ -139,7 +139,7 @@ def test_config_repair_list_operator_surface_is_retired() -> None:
 
     _create_operator_profile()
 
-    result = invoke_cached_cli(["config", "repair", "list", "aeat.domain.transactions.bucket", "--all"])
+    result = invoke_cached_cli(["config", "repair", "list", "cadrumo.domain.transactions.bucket", "--all"])
 
     assert result.exit_code != 0
     assert "rows_total" not in result.output

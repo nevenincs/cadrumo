@@ -215,7 +215,7 @@ def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
 
     # A distinct NIF must succeed despite the torn profile — the warn-and-continue
     # path does not let a torn bucket block a new taxpayer registration.
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.user_profile._profile_repository"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.user_profile._profile_repository"):
         new_profile = _create(repository, label="Different NIF", facts=_SECOND_FACTS)
 
     assert new_profile.label == "Different NIF"

@@ -337,15 +337,15 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
     """Live AEAT executable code must read volatile routes from the registry."""
 
     checked_paths = (
-        repo_path("src/aeat/core/config.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/auth/_clave_movil.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/sede/_groi_check.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/sede/_declarations.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/sede/_parse.py"),
-        repo_path("src/aeat/adapters/outbound/aeat/verify/__init__.py"),
-        repo_path("src/aeat/domain/manuals/_fetch.py"),
+        repo_path("src/cadrumo/core/config.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_nif_iva_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_parse.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/verify/__init__.py"),
+        repo_path("src/cadrumo/domain/manuals/_fetch.py"),
     )
 
     offenders = _token_literal_offenders(
@@ -404,12 +404,12 @@ def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
     """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
 
     volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS
-    allowed_files = {"src/aeat/domain/portals/_hosts.py"}
+    allowed_files = {"src/cadrumo/domain/portals/_hosts.py"}
 
     offenders: list[str] = []
     for path, tree in package_ast_items(source_tree_ast):
         relative_path = repo_relative(path)
-        if not relative_path.startswith("src/aeat/domain/portals/"):
+        if not relative_path.startswith("src/cadrumo/domain/portals/"):
             continue
         if "/tests/" in relative_path or relative_path in allowed_files:
             continue
@@ -433,10 +433,10 @@ def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures
     """Remote guard/parity/oracle tests must import configured URLs or declared canaries."""
 
     checked_paths = (
-        repo_path("src/aeat/domain/calculations/registry/tests/test_remote_state_guard.py"),
-        repo_path("src/aeat/domain/calculations/registry/tests/test_live_parity.py"),
-        repo_path("src/aeat/domain/calculations/registry/tests/test_groi_oracle.py"),
-        repo_path("src/aeat/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py"),
+        repo_path("src/cadrumo/domain/calculations/registry/tests/test_remote_state_guard.py"),
+        repo_path("src/cadrumo/domain/calculations/registry/tests/test_live_parity.py"),
+        repo_path("src/cadrumo/domain/calculations/registry/tests/test_groi_oracle.py"),
+        repo_path("src/cadrumo/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py"),
     )
     offenders = _token_literal_offenders(
         files=((path, _tree_for_path(path, source_tree_ast)) for path in checked_paths),
@@ -451,7 +451,7 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared(source_tree_
 
     allowed_files = {
         repo_relative(Path(__file__).resolve()),
-        "src/aeat/tests/aeat_literal_fixtures.py",
+        "src/cadrumo/tests/aeat_literal_fixtures.py",
     }
     volatile_tokens = tuple(
         dict.fromkeys(

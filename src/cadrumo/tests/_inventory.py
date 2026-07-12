@@ -8,13 +8,13 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
 from pathlib import Path
 
-SRC_AEAT: Path = Path(__file__).resolve().parents[1]
-"""Root of the ``src/aeat`` package tree."""
+SRC_CADRUMO: Path = Path(__file__).resolve().parents[1]
+"""Root of the ``src/cadrumo`` package tree."""
 
-REPO_ROOT: Path = SRC_AEAT.parents[1]
-"""Repository root that owns ``src/aeat``."""
+REPO_ROOT: Path = SRC_CADRUMO.parents[1]
+"""Repository root that owns ``src/cadrumo``."""
 
-FIXTURES_DIR: Path = SRC_AEAT / "tests" / "fixtures"
+FIXTURES_DIR: Path = SRC_CADRUMO / "tests" / "fixtures"
 """Bundled fixture tree excluded from production-test ratchets."""
 
 CAST_RATIONALE_MARKER = "CAST-RATIONALE-"
@@ -32,15 +32,15 @@ UTF8_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md
 
 _TEST_MODULE_GLOBS: tuple[str, ...] = ("**/test_*.py", "**/_test_*.py")
 PROJECT_TEST_ROOTS: tuple[Path, ...] = (REPO_ROOT / "dev", REPO_ROOT / "docs")
-"""Project-level test roots outside the ``src/aeat`` package tree."""
+"""Project-level test roots outside the ``src/cadrumo`` package tree."""
 
 
 @cache
 def discover_test_modules() -> tuple[Path, ...]:
-    """Return production test modules under ``src/aeat`` excluding fixture payloads."""
+    """Return production test modules under ``src/cadrumo`` excluding fixture payloads."""
     collected: set[Path] = set()
     for glob in _TEST_MODULE_GLOBS:
-        for path in SRC_AEAT.glob(glob):
+        for path in SRC_CADRUMO.glob(glob):
             if path.name == "__init__.py" or _is_relative_to(path, FIXTURES_DIR):
                 continue
             collected.add(path)
@@ -54,7 +54,7 @@ def discover_test_control_modules() -> tuple[Path, ...]:
     for path in package_python_files():
         if path.name == "__init__.py" or _is_relative_to(path, FIXTURES_DIR):
             continue
-        relative_parts = path.relative_to(SRC_AEAT).parts
+        relative_parts = path.relative_to(SRC_CADRUMO).parts
         if path.name == "conftest.py" or "tests" in relative_parts:
             modules.add(path)
     return tuple(sorted(modules))
@@ -62,7 +62,7 @@ def discover_test_control_modules() -> tuple[Path, ...]:
 
 @cache
 def project_test_modules() -> tuple[Path, ...]:
-    """Return project-level ``test_*.py`` modules outside ``src/aeat``."""
+    """Return project-level ``test_*.py`` modules outside ``src/cadrumo``."""
     collected: set[Path] = set()
     for root in PROJECT_TEST_ROOTS:
         if not root.exists():
@@ -75,7 +75,7 @@ def project_test_modules() -> tuple[Path, ...]:
 
 @cache
 def project_test_control_modules() -> tuple[Path, ...]:
-    """Return project-level tests plus support/conftest modules outside ``src/aeat``."""
+    """Return project-level tests plus support/conftest modules outside ``src/cadrumo``."""
     modules = set(project_test_modules())
     for root in PROJECT_TEST_ROOTS:
         if not root.exists():
@@ -96,7 +96,7 @@ def all_test_control_modules() -> tuple[Path, ...]:
 
 @cache
 def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
-    """Return package ``.py`` files under ``src/aeat``.
+    """Return package ``.py`` files under ``src/cadrumo``.
 
     By default, the bundled ``_data`` fixture/corpus tree is excluded because it
     is not consistently importable package code. Pass ``include_data=True`` only
@@ -104,20 +104,20 @@ def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     """
     return tuple(
         path
-        for path in sorted(SRC_AEAT.rglob("*.py"))
-        if "__pycache__" not in path.parts and (include_data or "_data" not in path.relative_to(SRC_AEAT).parts)
+        for path in sorted(SRC_CADRUMO.rglob("*.py"))
+        if "__pycache__" not in path.parts and (include_data or "_data" not in path.relative_to(SRC_CADRUMO).parts)
     )
 
 
 @cache
 def production_python_files() -> tuple[Path, ...]:
-    """Return production ``.py`` files under ``src/aeat``.
+    """Return production ``.py`` files under ``src/cadrumo``.
 
     Test modules/packages, ``conftest.py`` files, and the bundled ``_data`` tree
     are excluded so structural production ratchets share one definition of their
     scan surface.
     """
-    return tuple(path for path in sorted(SRC_AEAT.rglob("*.py")) if _is_production_python_file(path))
+    return tuple(path for path in sorted(SRC_CADRUMO.rglob("*.py")) if _is_production_python_file(path))
 
 
 def non_test_package_python_files(
@@ -152,7 +152,7 @@ def non_test_python_files_under(root: Path, *, include_data: bool = True) -> tup
 
 def module_name(path: Path) -> str:
     """Return the importable aeat module name for a source file path."""
-    rel = path.relative_to(SRC_AEAT.parent).with_suffix("")
+    rel = path.relative_to(SRC_CADRUMO.parent).with_suffix("")
     parts = list(rel.parts)
     if parts[-1] == "__init__":
         parts = parts[:-1]
@@ -170,8 +170,8 @@ def repo_relative(path: Path) -> str:
 
 
 def aeat_relative(path: Path) -> str:
-    """Return *path* relative to ``src/aeat`` using POSIX separators."""
-    return path.relative_to(SRC_AEAT).as_posix()
+    """Return *path* relative to ``src/cadrumo`` using POSIX separators."""
+    return path.relative_to(SRC_CADRUMO).as_posix()
 
 
 def ast_for_path(path: Path, cache: Mapping[Path, ast.AST] | None = None) -> ast.AST | None:
@@ -251,10 +251,10 @@ def package_ast_items(
         sorted(
             path
             for path in cache
-            if _is_relative_to(path, SRC_AEAT)
+            if _is_relative_to(path, SRC_CADRUMO)
             and path.suffix == ".py"
             and "__pycache__" not in path.parts
-            and (include_data or "_data" not in path.relative_to(SRC_AEAT).parts)
+            and (include_data or "_data" not in path.relative_to(SRC_CADRUMO).parts)
         )
         if cache is not None
         else package_python_files(include_data=include_data)
@@ -397,9 +397,9 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
 
 
 def _is_production_python_file(path: Path) -> bool:
-    if not _is_relative_to(path, SRC_AEAT):
+    if not _is_relative_to(path, SRC_CADRUMO):
         return False
-    relative_parts = path.relative_to(SRC_AEAT).parts
+    relative_parts = path.relative_to(SRC_CADRUMO).parts
     return not (
         path.name.startswith("test_")
         or path.name.endswith("_test.py")
@@ -410,9 +410,9 @@ def _is_production_python_file(path: Path) -> bool:
 
 
 def _is_non_test_package_python_file(path: Path, *, exclude_conftest: bool = False) -> bool:
-    if not _is_relative_to(path, SRC_AEAT):
+    if not _is_relative_to(path, SRC_CADRUMO):
         return False
-    relative_parts = path.relative_to(SRC_AEAT).parts
+    relative_parts = path.relative_to(SRC_CADRUMO).parts
     return not (
         path.name.startswith("test_")
         or path.name.startswith("_test_")

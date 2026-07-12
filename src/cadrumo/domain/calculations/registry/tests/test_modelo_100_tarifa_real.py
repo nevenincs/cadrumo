@@ -416,7 +416,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
     Option A engine) is supplied here as its resolved binding value
     (7,900 EUR = 2,400 first-tranche + 2,700 second-tranche + 2,800 menor-3
     supplement, from the real 2024 registry parameters — the application-layer
-    :func:`~aeat.application.modelo.inject_derived_minimo_descendientes_facts`
+    :func:`~cadrumo.application.modelo.inject_derived_minimo_descendientes_facts`
     derives this same value from the profile's descendientes facts; this
     low-level formula-runtime test supplies the already-resolved binding
     directly, matching the file's existing binding-supply convention).

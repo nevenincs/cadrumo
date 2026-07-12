@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.adapters.persistence.storage.secret_store.SecretStore`.
+"""Unit tests for :class:`cadrumo.adapters.persistence.storage.secret_store.SecretStore`.
 
 Exercises the put/get/delete/rotate API, the index encryption
 invariants, the retention-policy gate, and the blob-cleanup behaviour
@@ -32,7 +32,7 @@ from ...master_key import EphemeralMasterKeyProvider
 from .._secret_store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-_STORE_LOGGER_NAME = "aeat.adapters.persistence.storage.secret_store._secret_store"
+_STORE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.secret_store._secret_store"
 
 _SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)

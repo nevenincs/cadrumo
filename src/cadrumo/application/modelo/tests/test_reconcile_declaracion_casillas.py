@@ -2,9 +2,9 @@
 
 These lock the ``reconcile-declaration-casillas`` contract (GitHub issue #438,
 first slice): a filed declaración PDF is compared casilla-by-casilla against the
-persisted computed :class:`~aeat.domain.modelos.CalculationRevision`, not only
+persisted computed :class:`~cadrumo.domain.modelos.CalculationRevision`, not only
 at the header / total level. Modelo 130 is the first modelo enrolled in
-:data:`aeat.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
+:data:`cadrumo.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
 because its ``declaracion_pdf`` extraction profile targets registry casilla ids
 ``"01"``..``"19"`` directly.
 
@@ -12,9 +12,9 @@ Real-PDF declaración extraction (the ``bbox_anchored`` pdfplumber word-position
 primitive) is Tier-R and out of scope here (tracked separately alongside the
 remaining not-yet-enrolled modelos and blocked on #332-337). This suite tests
 the ``_reconcile_parsed_declaracion`` seam directly with a synthetically
-constructed :class:`~aeat.adapters.inbound.declaracion.InboundDeclaracionObservation`
+constructed :class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`
 — the same seam-testing pattern ``test_reconcile_value_comparison.py`` uses for
-the justificante-total reconcile (a synthetic :class:`~aeat.domain.justificante.Justificante`
+the justificante-total reconcile (a synthetic :class:`~cadrumo.domain.justificante.Justificante`
 built via ``model_copy``), applied here to the declaración side. The synthetic
 fixture data is declared ``synthetic_generated`` (not derived from a real AEAT
 filing) per the fixture-provenance discipline.
@@ -172,7 +172,7 @@ def _synthetic_declaracion(
 
     Bypasses real PDF extraction entirely (declared ``synthetic_generated``
     provenance): constructs the same typed
-    :class:`~aeat.adapters.inbound.declaracion.InboundDeclaracionObservation`
+    :class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`
     the parser would return, with an explicit registry snapshot ref matching
     the seeded work unit's law-determined revision.
     """

@@ -1,6 +1,6 @@
 """Shared pytest fixtures and collection-time guards for the AEAT test suite.
 
-See ``src/aeat/tests/README.md`` for the marker taxonomy and pytest
+See ``src/cadrumo/tests/README.md`` for the marker taxonomy and pytest
 posture this module enforces.
 
 This module enforces the following invariants at collection time:
@@ -8,7 +8,7 @@ This module enforces the following invariants at collection time:
 1. The hexagonal marker taxonomy contract via the
    shared helper in :mod:`aeat-tests._marker_hook`. Also hosted from the
    repo-root ``conftest.py`` so items collected anywhere under
-   ``src/aeat/`` pass through the same enforcement surface; double
+   ``src/cadrumo/`` pass through the same enforcement surface; double
    invocation is safe because the helper enforces invariants on items
    it receives and filters in-place.
 2. No file containing an ``aeat_live`` item may import
@@ -23,7 +23,7 @@ Banned-import hits are hard ``pytest.exit`` rather than warnings.
 
 The ``source_tree_ast`` session-scoped fixture is consumed by ratchet
 tests throughout the relocated ``tests/`` folders and lives at
-``src/aeat/conftest.py`` rather than here so pytest can discover it
+``src/cadrumo/conftest.py`` rather than here so pytest can discover it
 from every source test subtree.
 """
 
@@ -169,7 +169,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     if live_paths:
         import_violations = _check_banned_live_imports(live_paths)
         if import_violations:
-            header = "Banned import in live-marked file (see src/aeat/tests/README.md):"
+            header = "Banned import in live-marked file (see src/cadrumo/tests/README.md):"
             message = header + "\n  " + "\n  ".join(import_violations)
             pytest.exit(message, returncode=2)
 

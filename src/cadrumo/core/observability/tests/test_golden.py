@@ -3,13 +3,13 @@
 Covers the capture sink, the canonicalise/mask/compare primitive, the
 typed re-validation boundary, and — the central honesty gate — the
 anti-tautology proof that the declared mask
-(:data:`aeat.core.observability.GOLDEN_MASK_FIELDS`) is exactly the
+(:data:`cadrumo.core.observability.GOLDEN_MASK_FIELDS`) is exactly the
 residual non-deterministic field set once the clock seam is frozen and
 ``profile_id`` is injected, no broader.
 
 These exercise the real emit path
-(:func:`aeat.core.json_contract.emit_json_success`), the real clock seam
-(:func:`aeat.core.time.frozen_clock`), and the real identity helpers, so
+(:func:`cadrumo.core.json_contract.emit_json_success`), the real clock seam
+(:func:`cadrumo.core.time.frozen_clock`), and the real identity helpers, so
 a captured ``--format json`` run genuinely replays byte-identical after
 masking.
 """

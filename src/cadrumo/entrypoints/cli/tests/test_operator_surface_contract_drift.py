@@ -2,7 +2,7 @@
 
 The companion of :func:`test_every_cli_leaf_has_a_registered_schema`. That gate
 proves every CLI leaf has a registered JSON schema; this one proves the
-:class:`~aeat.application.operator_surface.OperatorSurfaceContract` — the source
+:class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` — the source
 the ``aeat app contract`` capability manifest (and, later, the MCP ``tools/list``)
 is built from — declares *exactly* the mounted command families and their
 sub-verbs.

@@ -1,8 +1,8 @@
 """Unit tests for usage recording.
 
-Verifies that :class:`aeat.adapters.outbound.llm.UsageRecorder` round-trips
+Verifies that :class:`cadrumo.adapters.outbound.llm.UsageRecorder` round-trips
 records through encrypted secure-object storage and produces accurate
-aggregate summaries via :meth:`aeat.adapters.outbound.llm.UsageRecorder.summarize`.
+aggregate summaries via :meth:`cadrumo.adapters.outbound.llm.UsageRecorder.summarize`.
 """
 
 from __future__ import annotations

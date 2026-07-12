@@ -39,7 +39,7 @@ _VALID_130 = """
 modelo = "130"
 renta_years = [2025, 2026]
 evidence_class = "calculation"
-enrolling_test = "src/aeat/application/calculations/test_modelo_130_carry_forward_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/test_modelo_130_carry_forward_continuity.py"
 """
 
 _VALID_303 = """
@@ -47,7 +47,7 @@ _VALID_303 = """
 modelo = "303"
 renta_years = [2025, 2026]
 evidence_class = "calculation"
-enrolling_test = "src/aeat/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/test_modelo_303_compensacion_carry_forward_continuity.py"
 """
 
 

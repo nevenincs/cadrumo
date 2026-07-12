@@ -49,7 +49,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     """Engine recomputes casilla 28 (total retenciones) and 30 (resultado) from leaf inputs.
 
     GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
-    set committed at src/aeat/tests/fixtures/justificantes/111/.
+    set committed at src/cadrumo/tests/fixtures/justificantes/111/.
     """
     extracted = _parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M111)

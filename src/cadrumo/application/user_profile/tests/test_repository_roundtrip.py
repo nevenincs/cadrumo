@@ -2,9 +2,9 @@
 
 Two IDENTITY-class encrypted namespaces are exercised:
 
-- ``aeat.application.user_profile.value`` — live aggregate keyed by
+- ``cadrumo.application.user_profile.value`` — live aggregate keyed by
   the immutable UUIDv4 ``profile_id`` (one record per bucket).
-- ``aeat.application.user_profile.snapshot`` — immutable filing
+- ``cadrumo.application.user_profile.snapshot`` — immutable filing
   snapshot per ``(profile_id, snapshot_id)``.
 
 The profile identity is a generated UUIDv4, fully decoupled from the

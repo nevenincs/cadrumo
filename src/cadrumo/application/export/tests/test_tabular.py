@@ -106,8 +106,8 @@ def test_export_format_error_registry_uses_distinct_application_and_adapter_clas
         if qualname.split(".")[-1].endswith("ExportFormatError")
     ]
     assert export_format_rows == [
-        ("aeat.adapters.outbound.aeat.export._errors.AeatExportFormatError", "FAIL_EXPORT_FORMAT"),
-        ("aeat.application.export._errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
+        ("cadrumo.adapters.outbound.aeat.export._errors.AeatExportFormatError", "FAIL_EXPORT_FORMAT"),
+        ("cadrumo.application.export._errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
     ]
 
 
@@ -173,7 +173,7 @@ def test_export_error_locale_keys_present_in_catalogue(locale_key: str, locale_c
 
     import yaml
 
-    locale_dir = pathlib.Path(str(importlib.resources.files("aeat.locales")))
+    locale_dir = pathlib.Path(str(importlib.resources.files("cadrumo.locales")))
     text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
     data = yaml.safe_load(text)
     value = data.get("errors", {}).get("refused", {}).get(locale_key)

@@ -1,8 +1,8 @@
 """Shared pytest collection hook enforcing the hexagonal marker taxonomy.
 
 This module is test-infrastructure, not a production module. It is imported
-from both the repo-root ``conftest.py`` and ``src/aeat/tests/conftest.py``
-so that items collected anywhere under ``src/aeat/`` pass through the same
+from both the repo-root ``conftest.py`` and ``src/cadrumo/tests/conftest.py``
+so that items collected anywhere under ``src/cadrumo/`` pass through the same
 enforcement surface.
 
 Contract enforced by :func:`apply` on every collected item:
@@ -13,7 +13,7 @@ Contract enforced by :func:`apply` on every collected item:
 - Each item must carry exactly one accepted ``hex_*`` marker at module level.
 
 Double-invocation tolerance: the repo-root ``conftest.py`` and the
-package-scoped ``src/aeat/tests/conftest.py`` both delegate to
+package-scoped ``src/cadrumo/tests/conftest.py`` both delegate to
 :func:`apply`. Items may pass through the hook twice; this is safe
 because :func:`apply` enforces invariants on items it receives and
 filters ``items`` in-place. A second pass over already-validated items

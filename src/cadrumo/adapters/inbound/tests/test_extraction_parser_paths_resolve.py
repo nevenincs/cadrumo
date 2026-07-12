@@ -6,7 +6,7 @@ stays free of any ``adapters`` coupling (the ports-inversion boundary: the domai
 must not name or import a parser module, even by string). This gate enforces the
 other half: every ``parser =`` path declared anywhere in the bundled
 registry resolves to a real callable under a sanctioned parser authority — from
-the adapter layer, where importing ``aeat.adapters.inbound`` parsers is legal.
+the adapter layer, where importing ``cadrumo.adapters.inbound`` parsers is legal.
 
 The registry is bundled, shipped data, so a CI gate is the authoritative
 resolution check: a ``parser =`` path that is structurally valid but names a
@@ -40,9 +40,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 # Sanctioned parser authorities: the two inbound-PDF parser packages, plus the
 # registry's own in-tree export-payload parser (a domain-internal callable).
 _ALLOWED_PARSER_AUTHORITY_PREFIXES: tuple[str, ...] = (
-    "aeat.adapters.inbound.borrador",
-    "aeat.adapters.inbound.declaracion",
-    "aeat.domain.calculations.registry",
+    "cadrumo.adapters.inbound.borrador",
+    "cadrumo.adapters.inbound.declaracion",
+    "cadrumo.domain.calculations.registry",
 )
 
 _REGISTRY_ROOT = Path(__file__).parents[3] / "_data" / "registry"

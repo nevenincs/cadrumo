@@ -108,7 +108,7 @@ class TestIntracomFieldsPersistence:
         assert records == (result.record,)
         assert not (isolated_settings.aeat_invoices_dir / "payable_invoice" / f"{_BUCKET_ID}.jsonl").exists()
         raw_records = tuple(secure_objects.iter_all_records_raw())
-        assert any(row.namespace == "aeat.application.ledger.business_operation_invoices" for row in raw_records)
+        assert any(row.namespace == "cadrumo.application.ledger.business_operation_invoices" for row in raw_records)
 
     def test_anti_tautology_intracom_fields_actually_differ(
         self,

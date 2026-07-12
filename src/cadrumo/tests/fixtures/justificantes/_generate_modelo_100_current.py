@@ -8,7 +8,7 @@ text (deaccented for the ASCII-safe pdfplumber extraction path, consistent
 with the M232/M349/M840/M036/M180/M369/M720 fixture conventions) verbatim
 for the target casilla, sourced from:
 
-    src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_100/files/
+    src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/
         08-100-diccionario-declaracion-individual-ejercicio-2024-...properties
         01-100-diccionario-declaracion-individual-ejercicio-2025-...properties
 

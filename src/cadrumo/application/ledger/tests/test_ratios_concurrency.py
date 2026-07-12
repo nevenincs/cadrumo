@@ -14,7 +14,7 @@ repository (no mocks) and assert that every distinct-category override survives,
 and that the guarding lock is a real mutual-exclusion primitive rather than a
 silent no-op. Run against the pre-fix (lock-free) code path the survival test
 fails (only one of N categories survives, plus transaction-conflict errors);
-with the per-bucket :func:`aeat.domain.usage_ratios.usage_ratio_bucket_lock`
+with the per-bucket :func:`cadrumo.domain.usage_ratios.usage_ratio_bucket_lock`
 held across the load-modify-save the writers serialise and all survive.
 """
 

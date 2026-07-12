@@ -34,7 +34,7 @@ from .._snapshot_base import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_PROBE_NAMESPACE = "aeat.application.live.test_snapshot_base_probe"
+_PROBE_NAMESPACE = "cadrumo.application.live.test_snapshot_base_probe"
 _PROBE_VERSION = 1
 _BUCKET_ID = "52525252-5252-4252-8252-525252525252"
 _OTHER_BUCKET_ID = "53535353-5353-4353-8353-535353535353"

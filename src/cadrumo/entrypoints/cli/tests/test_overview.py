@@ -1,8 +1,8 @@
 """Real-behavior tests for the overview module logger.
 
 Verifies that the module-level ``logger`` obtained via
-:func:`aeat.core.logging.get_logger` carries a
-:class:`~aeat.core.logging.SecretScrubbingFilter` that scrubs
+:func:`cadrumo.core.logging.get_logger` carries a
+:class:`~cadrumo.core.logging.SecretScrubbingFilter` that scrubs
 NIF-shaped strings before the record reaches any handler.
 """
 

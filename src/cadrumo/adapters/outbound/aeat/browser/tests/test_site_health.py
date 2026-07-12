@@ -1,8 +1,8 @@
 """Colocated unit tests for site-health models and parsers.
 
-Drives :func:`aeat.adapters.outbound.aeat.browser.evaluate_response` and the
+Drives :func:`cadrumo.adapters.outbound.aeat.browser.evaluate_response` and the
 underlying :mod:`._site_health_parsers` against real HTML strings loaded off disk
-under ``src/aeat/tests/fixtures/site_health/``. No test doubles — the parsers are exercised
+under ``src/cadrumo/tests/fixtures/site_health/``. No test doubles — the parsers are exercised
 end-to-end so a fixture-side regression surfaces here first.
 
 The module is marked ``unit`` / ``hex_outbound_adapter`` so it stays inside

@@ -33,10 +33,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Modules that publish resolver symbols through their ``__all__`` surface.
 _RESOLVER_MODULES = (
-    "aeat.application.aggregation",
-    "aeat.application.calculations",
-    "aeat.application.invoices",
-    "aeat.application.modelo",
+    "cadrumo.application.aggregation",
+    "cadrumo.application.calculations",
+    "cadrumo.application.invoices",
+    "cadrumo.application.modelo",
 )
 
 # The structural members that define the source-mesh resolver protocol.
@@ -44,7 +44,7 @@ _SOURCE_MESH_MEMBERS = ("resolver_id", "owned_sources", "resolve")
 
 # The protocol class itself carries the members and is exported; it is the
 # contract, not a concrete resolver, so it is excluded from the enrolled sweep.
-_PROTOCOL_QUALNAME = "aeat.application.aggregation.ModeloSourceResolver"
+_PROTOCOL_QUALNAME = "cadrumo.application.aggregation.ModeloSourceResolver"
 
 # Concrete source-mesh resolvers that are live on the production calculate path.
 # Sixteen are wired into the ``merge_source_resolutions`` tuple inside
@@ -53,25 +53,25 @@ _PROTOCOL_QUALNAME = "aeat.application.aggregation.ModeloSourceResolver"
 # gate). All nineteen are enrolled — none may resolve to a silent blank.
 _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
     {
-        "aeat.application.aggregation.AtribucionMemberSourceResolver",
-        "aeat.application.aggregation.ForeignAssetsAggregationSourceResolver",
-        "aeat.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
-        "aeat.application.aggregation.LedgerIvaAggregationSourceResolver",
-        "aeat.application.aggregation.LedgerRentaExpenseAggregationSourceResolver",
-        "aeat.application.aggregation.LedgerRentaGastoAggregationSourceResolver",
-        "aeat.application.aggregation.LedgerRentaIncomeAggregationSourceResolver",
-        "aeat.application.aggregation.OssIossLedgerSourceResolver",
-        "aeat.application.aggregation.ProfileSourceResolver",
-        "aeat.application.aggregation.RetencionesAggregationSourceResolver",
-        "aeat.application.aggregation.WithholdingSourceResolver",
-        "aeat.application.calculations.BienesInversionRegularizacionSourceResolver",
-        "aeat.application.calculations.IvaCompensationAnnualPartitionSourceResolver",
-        "aeat.application.calculations.IvaWalletDecisionSourceResolver",
-        "aeat.application.calculations.PreviousFilingSourceResolver",
-        "aeat.application.calculations.ProrrataRegularizacionSourceResolver",
-        "aeat.application.calculations.RelationPrefillSourceResolver",
-        "aeat.application.invoices.InvoiceCatalogueSourceResolver",
-        "aeat.application.modelo.Modelo100BorradorSourceResolver",
+        "cadrumo.application.aggregation.AtribucionMemberSourceResolver",
+        "cadrumo.application.aggregation.ForeignAssetsAggregationSourceResolver",
+        "cadrumo.application.aggregation.LedgerImpatriadoIncomeAggregationSourceResolver",
+        "cadrumo.application.aggregation.LedgerIvaAggregationSourceResolver",
+        "cadrumo.application.aggregation.LedgerRentaExpenseAggregationSourceResolver",
+        "cadrumo.application.aggregation.LedgerRentaGastoAggregationSourceResolver",
+        "cadrumo.application.aggregation.LedgerRentaIncomeAggregationSourceResolver",
+        "cadrumo.application.aggregation.OssIossLedgerSourceResolver",
+        "cadrumo.application.aggregation.ProfileSourceResolver",
+        "cadrumo.application.aggregation.RetencionesAggregationSourceResolver",
+        "cadrumo.application.aggregation.WithholdingSourceResolver",
+        "cadrumo.application.calculations.BienesInversionRegularizacionSourceResolver",
+        "cadrumo.application.calculations.IvaCompensationAnnualPartitionSourceResolver",
+        "cadrumo.application.calculations.IvaWalletDecisionSourceResolver",
+        "cadrumo.application.calculations.PreviousFilingSourceResolver",
+        "cadrumo.application.calculations.ProrrataRegularizacionSourceResolver",
+        "cadrumo.application.calculations.RelationPrefillSourceResolver",
+        "cadrumo.application.invoices.InvoiceCatalogueSourceResolver",
+        "cadrumo.application.modelo.Modelo100BorradorSourceResolver",
     }
 )
 

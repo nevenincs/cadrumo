@@ -1,6 +1,6 @@
 """Boundary test: SQLAlchemy-wrapped AeatError is forwarded as a clean refusal.
 
-When an :class:`aeat.core.errors.AeatError` is raised inside SQLAlchemy
+When an :class:`cadrumo.core.errors.AeatError` is raised inside SQLAlchemy
 bind-param processing (an encrypted-column codec that needs an unlocked
 session), SQLAlchemy catches it and re-raises it wrapped in a
 :class:`sqlalchemy.exc.StatementError`, with the original on ``orig``.
@@ -93,7 +93,7 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
     wrapped = command_error_boundary(_callback)
 
     with (
-        caplog.at_level(logging.ERROR, logger="aeat.entrypoints.cli._errors"),
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli._errors"),
         pytest.raises(typer.Exit) as exit_info,
     ):
         wrapped()
@@ -124,7 +124,7 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     wrapped = command_error_boundary(_callback)
 
     with (
-        caplog.at_level(logging.ERROR, logger="aeat.entrypoints.cli._errors"),
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli._errors"),
         pytest.raises(typer.Exit),
     ):
         wrapped()

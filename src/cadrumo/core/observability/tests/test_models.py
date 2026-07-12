@@ -1,4 +1,4 @@
-"""Strict-validation tests for the :mod:`aeat.core.observability._models` records.
+"""Strict-validation tests for the :mod:`cadrumo.core.observability._models` records.
 
 Covers:
 
@@ -42,7 +42,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _RUN_ID = "0123456789abcdef"
-_MODULE = "aeat.core.observability.test_models"
+_MODULE = "cadrumo.core.observability.test_models"
 _AWARE_STARTED_AT = datetime(2026, 4, 14, tzinfo=UTC)
 _AWARE_FINISHED_AT = datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC)
 _NAIVE_STARTED_AT = datetime(2026, 4, 14)

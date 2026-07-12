@@ -14,8 +14,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ENUMS = ("ProrrataProvisionalProvenance", "ProrrataRegisterRegime")
 _FACADES = (
-    ("aeat.domain.prorrata_register", "src/aeat/domain/prorrata_register/__init__.py"),
-    ("aeat.application.prorrata_register", "src/aeat/application/prorrata_register/__init__.py"),
+    ("cadrumo.domain.prorrata_register", "src/cadrumo/domain/prorrata_register/__init__.py"),
+    ("cadrumo.application.prorrata_register", "src/cadrumo/application/prorrata_register/__init__.py"),
 )
 
 
@@ -30,8 +30,8 @@ def test_prorrata_register_enums_are_public_only_from_core(source_tree_ast: Mapp
     from .. import __all__ as core_exports
 
     assert set(_ENUMS) <= set(core_exports)
-    assert ProrrataProvisionalProvenance.__module__ == "aeat.core._prorrata_register"
-    assert ProrrataRegisterRegime.__module__ == "aeat.core._prorrata_register"
+    assert ProrrataProvisionalProvenance.__module__ == "cadrumo.core._prorrata_register"
+    assert ProrrataRegisterRegime.__module__ == "cadrumo.core._prorrata_register"
 
     for module_name, relative_path in _FACADES:
         facade = importlib.import_module(module_name)

@@ -134,7 +134,7 @@ def test_corpus_root_derived_from_bundled_path() -> None:
 
     This exercises the production code path where justificante_corpus_root is
     NOT injected directly.  The derivation must resolve to
-    src/aeat/tests/fixtures/justificantes, which exists on disk, so
+    src/cadrumo/tests/fixtures/justificantes, which exists on disk, so
     justificante_corpus_root must not be None.
     """
     _modelo, catalogues = _committed_130()

@@ -1,6 +1,6 @@
 """Async-context-safe Settings overrides for test fixtures.
 
-``aeat.core.config.override_settings`` is the canonical entry point
+``cadrumo.core.config.override_settings`` is the canonical entry point
 for pinning Settings field values inside a synchronous ``with`` block.
 It uses :meth:`contextvars.ContextVar.reset` with a token captured at
 enter time, which is the standard pattern for ``contextmanager``-based

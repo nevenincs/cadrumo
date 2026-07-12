@@ -1,11 +1,11 @@
-"""Producer-side lazy-import boundary probe for ``aeat.application.user_profile``.
+"""Producer-side lazy-import boundary probe for ``cadrumo.application.user_profile``.
 
 The CLI-side gate at
-:mod:`aeat.entrypoints.cli.test_lazy_command_tree` enforces that the
+:mod:`cadrumo.entrypoints.cli.test_lazy_command_tree` enforces that the
 state-free CLI surfaces do not transitively load the registry. This
 module pins the same contract at the *producer* boundary: importing
-:mod:`aeat.application.user_profile` alone, in a fresh interpreter,
-MUST NOT place any ``aeat.domain.calculations.registry*`` module in
+:mod:`cadrumo.application.user_profile` alone, in a fresh interpreter,
+MUST NOT place any ``cadrumo.domain.calculations.registry*`` module in
 ``sys.modules``. A regression that re-introduces an eager
 domain-record import at the package boundary reds here before it reds
 the CLI-level gate, so the diagnosis points at the boundary rather
@@ -34,7 +34,7 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_importing_application_user_profile_does_not_load_registry() -> None:
-    """``import aeat.application.user_profile`` must not pull the registry.
+    """``import cadrumo.application.user_profile`` must not pull the registry.
 
     The application-layer boundary aggregates Pydantic command and
     result records whose field types are domain records. Those domain
@@ -49,13 +49,13 @@ def test_importing_application_user_profile_does_not_load_registry() -> None:
     completed = _run_python(
         """
         import sys
-        import aeat.application.user_profile  # noqa: F401
+        import cadrumo.application.user_profile  # noqa: F401
 
         leaked = sorted(
             name
             for name in sys.modules
-            if name == "aeat.domain.calculations.registry"
-            or name.startswith("aeat.domain.calculations.registry.")
+            if name == "cadrumo.domain.calculations.registry"
+            or name.startswith("cadrumo.domain.calculations.registry.")
         )
         print("\\n".join(leaked))
         """,
@@ -63,4 +63,4 @@ def test_importing_application_user_profile_does_not_load_registry() -> None:
 
     assert completed.returncode == 0, completed.stderr
     leaked = [line for line in completed.stdout.splitlines() if line.strip()]
-    assert leaked == [], f"import aeat.application.user_profile leaked registry submodules into sys.modules: {leaked}"
+    assert leaked == [], f"import cadrumo.application.user_profile leaked registry submodules into sys.modules: {leaked}"

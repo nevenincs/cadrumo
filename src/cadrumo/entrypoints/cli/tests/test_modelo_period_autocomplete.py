@@ -66,7 +66,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         module-level state by temporarily replacing the ``resources`` import target
         in the function's closure. Instead, we verify the logger wiring:
         that ``_log`` is bound to the
-        ``aeat.entrypoints.cli._modelo`` logger name and DEBUG records are captured.
+        ``cadrumo.entrypoints.cli._modelo`` logger name and DEBUG records are captured.
 
         The structural test: the ``except Exception`` arm writes a DEBUG record
         containing ``_declared_period_tokens`` context. We verify the arm exists
@@ -82,7 +82,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         assert hasattr(_modelo_module, "_log")
         logger = _modelo_module._log
         # The logger name must be rooted at the module path.
-        assert "aeat.entrypoints.cli._modelo" in logger.name
+        assert "cadrumo.entrypoints.cli._modelo" in logger.name
 
         # Now trigger the non-AeatError arm directly: we subclass RuntimeError
         # (not AeatError) and verify it is swallowed and logged. We do this by
@@ -90,7 +90,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         # Since "XXXXXX" raises an AeatError (RegistryValidationError), this
         # path verifies the DEBUG capture wiring without replacing runtime
         # dependencies.
-        with caplog.at_level(logging.DEBUG, logger="aeat.entrypoints.cli._modelo"):
+        with caplog.at_level(logging.DEBUG, logger="cadrumo.entrypoints.cli._modelo"):
             # The unknown modelo exercises the AeatError arm — no DEBUG record.
             from .._modelo import _declared_period_tokens
 

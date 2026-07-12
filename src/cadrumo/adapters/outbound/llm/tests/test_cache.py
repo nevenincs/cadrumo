@@ -1,7 +1,7 @@
 """Unit tests for the encrypted LLM cache.
 
 Covers cache key determinism, hit/miss accounting, statistics, and the
-defensive containment checks in :class:`aeat.adapters.outbound.llm.LLMCache`
+defensive containment checks in :class:`cadrumo.adapters.outbound.llm.LLMCache`
 that prevent operator-supplied model identifiers from composing unsafe logical
 cache paths.
 """

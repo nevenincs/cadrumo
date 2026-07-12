@@ -36,7 +36,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
                 import json
                 import sys
 
-                from aeat.adapters.outbound.storage._google_drive import GoogleDriveProvider
+                from cadrumo.adapters.outbound.storage._google_drive import GoogleDriveProvider
 
                 provider = GoogleDriveProvider(
                     credentials=object(),

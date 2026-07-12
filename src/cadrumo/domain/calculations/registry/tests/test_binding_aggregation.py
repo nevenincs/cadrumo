@@ -16,7 +16,7 @@ round-trip cannot pass while the typed boundary is broken.
 
 The op member set (``sum``, ``rows``, ``copy``, ``count_distinct``,
 ``prior_pagos_fraccionados``) is the complete set declared on a binding
-``aggregation`` table across ``src/aeat/_data/registry`` (confirmed by sweep);
+``aggregation`` table across ``src/cadrumo/_data/registry`` (confirmed by sweep);
 relation aggregation and formula-expression ops are a separate, unrelated axis.
 """
 

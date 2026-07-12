@@ -135,7 +135,7 @@ def test_emit_progress_routes_through_logger_not_stdout(
 
     prompter = QuestionaryPrompter()
 
-    with caplog.at_level(logging.INFO, logger="aeat.application.wizard._prompter"):
+    with caplog.at_level(logging.INFO, logger="cadrumo.application.wizard._prompter"):
         prompter.emit_progress("Sección 1 de 3")
 
     captured = capsys.readouterr()
@@ -155,7 +155,7 @@ def test_emit_progress_log_record_carries_text(caplog: pytest.LogCaptureFixture)
 
     prompter = QuestionaryPrompter()
 
-    with caplog.at_level(logging.INFO, logger="aeat.application.wizard._prompter"):
+    with caplog.at_level(logging.INFO, logger="cadrumo.application.wizard._prompter"):
         prompter.emit_progress("Hello wizard progress")
 
     records = [r for r in caplog.records if "wizard.progress" in r.message]

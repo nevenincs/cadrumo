@@ -19,10 +19,10 @@ The gate has two jobs:
 - **Enforce enrollment validity.** For every manifest entry it asserts the
   claim is real and un-fakeable: the modelo is in the canonical fleet, the
   ``renta_years`` claim spans at least two distinct years (also guaranteed at
-  the :class:`aeat.core.access_gate.ModeloAuthorizationEntry` type boundary),
+  the :class:`cadrumo.core.access_gate.ModeloAuthorizationEntry` type boundary),
   the named ``enrolling_test`` file exists, and that test actually drives the
   enrollment recorder's cross-check
-  (:func:`aeat.application.calculations.assert_enrollment_matches_manifest`) so
+  (:func:`cadrumo.application.calculations.assert_enrollment_matches_manifest`) so
   a stub or single-year test cannot claim authorization.
 
 CRITICAL DESIGN: the gate is GREEN at partial rollout. An empty manifest yields
@@ -102,7 +102,7 @@ def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:
     """The canonical fleet — the gate's denominator — is exactly 73 distinct ids.
 
     62 is the count of registry-loadable modelo directories under
-    ``src/aeat/_data/registry/aeat/modelos/`` today (verified against the live
+    ``src/cadrumo/_data/registry/aeat/modelos/`` today (verified against the live
     registry by :func:`test_canonical_fleet_covers_every_loadable_modelo` below,
     which asserts zero drift in either direction). A prior worktree-consolidation
     commit (``c955c0496d``) accidentally dropped the registry TOML for six
@@ -112,20 +112,20 @@ def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:
     ``47e63c7797``, ``395ea08329``), while leaving this assertion bumped to a
     ``66`` that was never actually achieved. The registry TOML for those six
     modelos has been restored (byte-identical to the pre-consolidation commit)
-    and they were removed from :data:`aeat.core.UNMODELED_OBLIGATIONS`
+    and they were removed from :data:`cadrumo.core.UNMODELED_OBLIGATIONS`
     accordingly. 45 was the honest, registry-verified count once the accidental
     data loss was corrected; it became 46 when Modelo 182 (donativos, donaciones
     y aportaciones recibidas, Orden EHA/3021/2007) was promoted from
-    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
+    :data:`cadrumo.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
     became 47 when Modelo 216 (IRNR retenciones e ingresos a cuenta, Orden
     EHA/3290/2008 approval + trimestral plazo art 4, current layout Orden
     HAC/56/2024) was likewise promoted from
-    :data:`aeat.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
+    :data:`cadrumo.core.UNMODELED_OBLIGATIONS` to a real registry definition. It
     became 49 when Modelo 222 (pago fraccionado IS en régimen de consolidación
     fiscal, Orden HFP/227/2017 art 2 approval + art 5 trimestral plazo) and
     Modelo 220 (declaración anual IS del grupo fiscal, Orden HAC/657/2025 +
     art. 124 LIS plazo) were promoted together from
-    :data:`aeat.core.UNMODELED_OBLIGATIONS` to real registry definitions. It
+    :data:`cadrumo.core.UNMODELED_OBLIGATIONS` to real registry definitions. It
     became 55 when six M182-template annual/monthly informativas were promoted
     together, each grounded in its bundled approving orden's approval + plazo
     articles: Modelo 165 (Orden HAP/2455/2013), 233 (HAC/1400/2018) and 156
@@ -149,7 +149,7 @@ def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:
     new-tax autoliquidaciones 490 (IDSD, Orden HAC/590/2021), 604 (ITF, Orden
     HAC/510/2021) and 763 (juego, Orden EHA/1881/2011) were promoted, extending
     the core TaxDomain enum with idsd/itf/juego/plastico/iedmt; and 72 — with
-    :data:`aeat.core.UNMODELED_OBLIGATIONS` reaching EMPTY — when the final tail
+    :data:`cadrumo.core.UNMODELED_OBLIGATIONS` reaching EMPTY — when the final tail
     592 (envases de plástico, Orden HFP/1314/2022), 576 (IEDMT, Orden
     EHA/3851/2007), 121 and 122 (cesión/regularización de la deducción por familia
     numerosa/discapacidad, Orden HFP/105/2017) were promoted windowless. It

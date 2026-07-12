@@ -71,7 +71,7 @@ class TestEmptyState:
         assert repo.load("130") is None
 
     def test_object_marker_identifies_secure_backend(self, repo: ModeloHistoryRepository) -> None:
-        assert repo.envelope_path_for("130").as_posix().endswith("aeat.application.filing.history/130")
+        assert repo.envelope_path_for("130").as_posix().endswith("cadrumo.application.filing.history/130")
 
 
 class TestSaveLoad:
@@ -144,7 +144,7 @@ class TestClassificationGate:
         )
         repo = ModeloHistoryRepository()
         SecureObjectRepository().save(
-            namespace="aeat.application.filing.history",
+            namespace="cadrumo.application.filing.history",
             object_key="130",
             classification=SensitivityClass.OPERATIONAL,
             schema_version=1,
@@ -169,5 +169,5 @@ class TestPerModeloLockIsolation:
         assert a != b
         assert a.parent == b.parent
         assert a.parent == repo.store_dir
-        assert a.as_posix().endswith("aeat.application.filing.history/130.lock")
-        assert b.as_posix().endswith("aeat.application.filing.history/303.lock")
+        assert a.as_posix().endswith("cadrumo.application.filing.history/130.lock")
+        assert b.as_posix().endswith("cadrumo.application.filing.history/303.lock")

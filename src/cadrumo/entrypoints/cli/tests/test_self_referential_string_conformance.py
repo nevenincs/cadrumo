@@ -15,7 +15,7 @@ long/short option they cite MUST be a real parameter of that command (or a root
 global). The authoritative sources walked here are:
 
 - the error registry's ``ErrorCode.default_suggestion`` rows
-  (``aeat.core.errors.ERROR_REGISTRY``) - the copy-paste recovery commands the
+  (``cadrumo.core.errors.ERROR_REGISTRY``) - the copy-paste recovery commands the
   CLI error boundary prints;
 - the locale catalogue's ``cli.*`` leaf strings that embed an ``aeat app`` /
   ``aeat config`` invocation - help text, refusal messages, and next-action
@@ -104,13 +104,13 @@ def _has_params(value: object) -> TypeGuard[_CommandWithParams]:
 # gate asserts each resolves; a rename of the cited command reds this list, which
 # is exactly the protection the rename safety net depends on.
 _LITERAL_HINT_STRINGS: tuple[str, ...] = (
-    # aeat.application.workflow._engine: draft-build-refused next_action.
+    # cadrumo.application.workflow._engine: draft-build-refused next_action.
     "aeat app modelo work calculate",
-    # aeat.application.workflow._engine: draft-has-errors next_action.
+    # cadrumo.application.workflow._engine: draft-has-errors next_action.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
-    # aeat.entrypoints.cli._modelo_rendering: verify report next_action line.
+    # cadrumo.entrypoints.cli._modelo_rendering: verify report next_action line.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
-    # aeat.entrypoints.cli._modelo_rendering: local-finish-line guidance.
+    # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
     "aeat app modelo export",
     "aeat app modelo work file",
 )

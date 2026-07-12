@@ -85,7 +85,7 @@ def test_transaction_repository_logs_bucket_fields(
 ) -> None:
     repo = TransactionCatalogueRepository(bucket_id=runtime_profile.bucket_id)
 
-    with caplog.at_level("INFO", logger="aeat.adapters.persistence.profile.transactions"):
+    with caplog.at_level("INFO", logger="cadrumo.adapters.persistence.profile.transactions"):
         repo.save(repo.load())
 
     messages = [record.getMessage() for record in caplog.records]

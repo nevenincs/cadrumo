@@ -1,7 +1,7 @@
 """Static guard: no monkeypatch use in production tests.
 
 Walks every deterministic test, test-support, and ``conftest.py`` module under
-``src/aeat/`` via AST and rejects pytest ``monkeypatch`` fixture arguments,
+``src/cadrumo/`` via AST and rejects pytest ``monkeypatch`` fixture arguments,
 mutation calls, and explicit ``pytest.MonkeyPatch`` / ``_pytest.monkeypatch``
 imports, references, and contexts. Process-global isolation should use local
 context managers or injectable runtime boundaries instead.

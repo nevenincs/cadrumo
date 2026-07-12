@@ -1,6 +1,6 @@
 """Real-behavior tests for the _utc_now clock alias in calc_sheets._records.
 
-These tests verify that the canonical ``aeat.core.time.now`` function is
+These tests verify that the canonical ``cadrumo.core.time.now`` function is
 re-exported as ``_utc_now`` from ``_records`` rather than a locally-inlined
 ``datetime.now`` call.
 """
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_utc_now_alias_is_the_canonical_clock() -> None:
-    """_utc_now exported from _records must be the same callable as aeat.core.time.now."""
+    """_utc_now exported from _records must be the same callable as cadrumo.core.time.now."""
     assert _utc_now is now
 
 

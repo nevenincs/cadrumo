@@ -3,7 +3,7 @@
 ``WithholdingObservation.clave`` was a free-form ``str`` (1-2 chars) gated only by an
 uppercase check, so a typo'd / invalid clave shipped clean -- weakening the #28
 percepciones = (perceptor, clave/subclave) granularity contract. It is now typed as
-:class:`aeat.core.aggregation.RetencionClave`, the closed Modelo 190 / 193 perceptor
+:class:`cadrumo.core.aggregation.RetencionClave`, the closed Modelo 190 / 193 perceptor
 clave catalogue (A-L), and ``subclave`` is a numeric validated string. The M349 / M347
 operation "clave" is a DISTINCT taxonomy (:class:`OperationKind349`) and is untouched.
 

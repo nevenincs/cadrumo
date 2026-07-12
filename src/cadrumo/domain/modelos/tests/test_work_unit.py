@@ -556,13 +556,13 @@ def test_work_unit_schema_requires_discard_metadata_on_discarded_state() -> None
 
 
 def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
-    """``WorkUnit`` lives in ``aeat.domain.modelos._work_unit``. Any
+    """``WorkUnit`` lives in ``cadrumo.domain.modelos._work_unit``. Any
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
     from ....core.paths import PROJECT_ROOT
 
-    source_root = PROJECT_ROOT / "src" / "aeat"
+    source_root = PROJECT_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
     forbidden = "class WorkUnit("
     offenders = []
@@ -578,13 +578,13 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
 
 def test_no_parallel_work_unit_storage_namespace() -> None:
     """The work-unit catalogue persists under the
-    ``aeat.domain.modelos.work_units`` namespace. Any other
+    ``cadrumo.domain.modelos.work_units`` namespace. Any other
     module referencing a competing namespace string is a shadow
     storage location."""
 
     from ....core.paths import PROJECT_ROOT
 
-    source_root = PROJECT_ROOT / "src" / "aeat"
+    source_root = PROJECT_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
     # _namespace_registry.py is the centralised namespace declaration table;
     # it legitimately holds every storage namespace string as a registry entry
@@ -608,7 +608,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
         custody_carry_manifest,
         work_unit_catalogue_adapter,
     }
-    forbidden_namespace = '"aeat.domain.modelos.work_units"'
+    forbidden_namespace = '"cadrumo.domain.modelos.work_units"'
     offenders = []
     for py_file in source_root.rglob("*.py"):
         if py_file in allowlisted:

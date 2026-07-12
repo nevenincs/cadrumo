@@ -11,7 +11,7 @@ import pytest
 from ._inventory import (
     FIXTURES_DIR,
     REPO_ROOT,
-    SRC_AEAT,
+    SRC_CADRUMO,
     aeat_relative,
     ast_for_path,
     bare_utf8_literal_violations,
@@ -43,7 +43,7 @@ def test_discover_test_modules_returns_real_source_tests_and_excludes_fixtures()
     modules = discover_test_modules()
 
     assert Path(__file__).resolve() in modules
-    assert repo_path("src/aeat/tests/test_marker_integrity.py") in modules
+    assert repo_path("src/cadrumo/tests/test_marker_integrity.py") in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 
 
@@ -52,14 +52,14 @@ def test_discover_test_control_modules_includes_support_and_conftest_files() -> 
     modules = discover_test_control_modules()
 
     assert Path(__file__).resolve() in modules
-    assert repo_path("src/aeat/tests/_inventory.py") in modules
-    assert repo_path("src/aeat/application/conftest.py") in modules
+    assert repo_path("src/cadrumo/tests/_inventory.py") in modules
+    assert repo_path("src/cadrumo/application/conftest.py") in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 
 
 def test_repo_relative_uses_posix_paths() -> None:
     """Repository-relative rendering is stable on Windows and POSIX."""
-    assert repo_relative(Path(__file__).resolve()) == "src/aeat/tests/test_test_inventory.py"
+    assert repo_relative(Path(__file__).resolve()) == "src/cadrumo/tests/test_test_inventory.py"
 
 
 def test_aeat_relative_uses_posix_package_paths() -> None:
@@ -80,10 +80,10 @@ def test_production_python_files_excludes_tests_conftest_and_data() -> None:
     """Production source inventory has one shared scan surface."""
     files = production_python_files()
 
-    assert repo_path("src/aeat/core/config.py") in files
-    assert repo_path("src/aeat/conftest.py") not in files
-    assert all("tests" not in path.relative_to(repo_path("src/aeat")).parts for path in files)
-    assert all("_data" not in path.relative_to(repo_path("src/aeat")).parts for path in files)
+    assert repo_path("src/cadrumo/core/config.py") in files
+    assert repo_path("src/cadrumo/conftest.py") not in files
+    assert all("tests" not in path.relative_to(repo_path("src/cadrumo")).parts for path in files)
+    assert all("_data" not in path.relative_to(repo_path("src/cadrumo")).parts for path in files)
 
 
 def test_package_python_files_includes_tests_but_excludes_data_by_default() -> None:
@@ -91,12 +91,12 @@ def test_package_python_files_includes_tests_but_excludes_data_by_default() -> N
     files = package_python_files()
 
     assert Path(__file__).resolve() in files
-    assert repo_path("src/aeat/core/config.py") in files
-    assert all("_data" not in path.relative_to(repo_path("src/aeat")).parts for path in files)
+    assert repo_path("src/cadrumo/core/config.py") in files
+    assert all("_data" not in path.relative_to(repo_path("src/cadrumo")).parts for path in files)
 
 
 def test_project_test_modules_discovers_dev_docs_tests_outside_source_tree() -> None:
-    """Project-level test discovery includes dev/docs tests outside ``src/aeat``."""
+    """Project-level test discovery includes dev/docs tests outside ``src/cadrumo``."""
     modules = project_test_modules()
 
     assert repo_path("dev/docs/tests/test_docs.py") in modules
@@ -150,25 +150,25 @@ def test_non_test_package_python_files_excludes_test_tree_and_scan_excludes() ->
     """Non-test package inventory keeps conftest by default and honors rel excludes."""
     files = non_test_package_python_files(include_data=True, scan_excludes={"core/config.py"})
 
-    assert repo_path("src/aeat/core/config.py") not in files
-    assert repo_path("src/aeat/conftest.py") in files
+    assert repo_path("src/cadrumo/core/config.py") not in files
+    assert repo_path("src/cadrumo/conftest.py") in files
     assert all(not path.name.startswith("test_") for path in files)
-    assert all("tests" not in path.relative_to(SRC_AEAT).parts for path in files)
+    assert all("tests" not in path.relative_to(SRC_CADRUMO).parts for path in files)
 
 
 def test_non_test_python_files_under_handles_direct_files_and_package_dirs() -> None:
     """Scoped non-test inventory supports file and directory inputs."""
-    config_path = repo_path("src/aeat/core/config.py")
-    tests_dir = repo_path("src/aeat/tests")
+    config_path = repo_path("src/cadrumo/core/config.py")
+    tests_dir = repo_path("src/cadrumo/tests")
 
     assert non_test_python_files_under(config_path) == (config_path,)
     assert non_test_python_files_under(tests_dir) == ()
-    assert config_path in non_test_python_files_under(repo_path("src/aeat/core"))
+    assert config_path in non_test_python_files_under(repo_path("src/cadrumo/core"))
 
 
 def test_production_ast_items_filters_cache_to_production_package_files(tmp_path: Path) -> None:
     """Production AST iteration shares the production-file surface."""
-    config_path = repo_path("src/aeat/core/config.py")
+    config_path = repo_path("src/cadrumo/core/config.py")
     config_tree = ast_for_path(config_path)
     assert config_tree is not None
     test_tree = ast.parse("def test_example(): pass")
@@ -188,7 +188,7 @@ def test_package_ast_items_reuses_cache_for_test_modules() -> None:
     """Package AST iteration includes test modules and reuses cached trees."""
     current = Path(__file__).resolve()
     current_tree = ast.parse("CURRENT = True")
-    config_path = repo_path("src/aeat/core/config.py")
+    config_path = repo_path("src/cadrumo/core/config.py")
     config_tree = ast.parse("CONFIG = True")
 
     items = dict(package_ast_items({current: current_tree, config_path: config_tree}))
@@ -199,8 +199,8 @@ def test_package_ast_items_reuses_cache_for_test_modules() -> None:
 
 def test_module_name_renders_importable_aeat_modules() -> None:
     """Module-name rendering handles ordinary modules and package initializers."""
-    assert module_name(repo_path("src/aeat/core/config.py")) == "aeat.core.config"
-    assert module_name(repo_path("src/aeat/application/__init__.py")) == "aeat.application"
+    assert module_name(repo_path("src/cadrumo/core/config.py")) == "cadrumo.core.config"
+    assert module_name(repo_path("src/cadrumo/application/__init__.py")) == "cadrumo.application"
 
 
 def test_ast_for_path_prefers_supplied_cache(tmp_path: Path) -> None:

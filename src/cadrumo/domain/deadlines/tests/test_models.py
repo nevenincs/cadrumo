@@ -1,10 +1,10 @@
-"""Unit tests for the strict pydantic v2 models in :mod:`aeat.domain.deadlines._models`.
+"""Unit tests for the strict pydantic v2 models in :mod:`cadrumo.domain.deadlines._models`.
 
 Verifies the strictness invariants of
-:class:`aeat.domain.deadlines.TaxpayerProfile` (extra fields,
+:class:`cadrumo.domain.deadlines.TaxpayerProfile` (extra fields,
 immutability, strict bool/enum coercion), the date-ordering
-invariants of :class:`aeat.domain.deadlines.ModeloDeadline`, and
-that :class:`aeat.domain.deadlines.Schedule` survives a JSON round
+invariants of :class:`cadrumo.domain.deadlines.ModeloDeadline`, and
+that :class:`cadrumo.domain.deadlines.Schedule` survives a JSON round
 trip.
 """
 

@@ -1,8 +1,8 @@
-"""Unit tests for :func:`aeat.adapters.outbound.aeat.verify.verify_csv`.
+"""Unit tests for :func:`cadrumo.adapters.outbound.aeat.verify.verify_csv`.
 
 Exercises the borrowed-vs-self-owned browser-session lifecycle of
 :func:`verify_csv` using lightweight recording doubles that satisfy the
-:class:`aeat.adapters.outbound.aeat.verify.VerifyBrowserSessionLike` shape.
+:class:`cadrumo.adapters.outbound.aeat.verify.VerifyBrowserSessionLike` shape.
 """
 
 from __future__ import annotations
@@ -209,7 +209,7 @@ def test_browser_adapter_type_error_is_registered() -> None:
 
     assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY, (
         "'ERROR_SEDE_BROWSER_ADAPTER_TYPE' not found in ERROR_REGISTRY; "
-        "add it to src/aeat/core/errors/registry/_adapters.py"
+        "add it to src/cadrumo/core/errors/registry/_adapters.py"
     )
 
 

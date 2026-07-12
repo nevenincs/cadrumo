@@ -78,7 +78,7 @@ def test_playwright_error_aliases_import_as_plain_fallbacks_without_the_extra() 
     """Blocked Playwright imports keep the adapter aliases import-safe and outside the AEAT registry."""
     from ..core.errors import AeatError
 
-    module_name = "aeat.adapters.outbound.aeat._playwright"
+    module_name = "cadrumo.adapters.outbound.aeat._playwright"
     saved_module = sys.modules.pop(module_name, None)
     try:
         with _block_imports("playwright"):

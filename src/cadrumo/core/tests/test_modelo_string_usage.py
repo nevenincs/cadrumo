@@ -1,9 +1,9 @@
 """CI gate: production code uses the :class:`Modelo` enum, not bare code strings.
 
-Walks every production module under ``src/aeat`` (tests excluded) and fails if a
+Walks every production module under ``src/cadrumo`` (tests excluded) and fails if a
 bare three-digit modelo-code **string literal** appears in an identifier
 position — a comparison, a dict key/value, a call argument, an assignment — where
-it should instead reference a :class:`~aeat.core.Modelo` member.
+it should instead reference a :class:`~cadrumo.core.Modelo` member.
 
 The code set is derived from the :class:`Modelo` enum itself, so it stays in sync
 as members are added (a new modelo dir → a new enum member → tracked here with no
@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _CODES: frozenset[str] = frozenset(m.value for m in Modelo)
 
 #: Production modules that own a bare code string for a documented reason.
-#: Keyed by (``src/aeat``-relative POSIX path, code) → reason. Kept deliberately
+#: Keyed by (``src/cadrumo``-relative POSIX path, code) → reason. Kept deliberately
 #: small; every entry is a judgement call recorded during the Modelo-enum sweep.
 _ALLOWLIST: dict[tuple[str, str], str] = {
     ("domain/calculations/registry/_citation_blocklist.py", "100"): (
@@ -150,11 +150,11 @@ def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: 
             if key in _ALLOWLIST:
                 stale_allowlist.discard(key)
                 continue
-            offenders.append(f'src/aeat/{rel}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}')
+            offenders.append(f'src/cadrumo/{rel}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}')
 
     assert not offenders, (
         "Bare modelo-code string literals found in production identifier positions; "
-        "import and use the Modelo enum (aeat.core.Modelo) instead:\n" + "\n".join(offenders)
+        "import and use the Modelo enum (cadrumo.core.Modelo) instead:\n" + "\n".join(offenders)
     )
     assert not stale_allowlist, "Stale _ALLOWLIST entries no longer present in the source; remove them:\n" + "\n".join(
         f"  {path}: {code}" for path, code in sorted(stale_allowlist)

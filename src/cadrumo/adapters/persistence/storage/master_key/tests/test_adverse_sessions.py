@@ -162,7 +162,7 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
             aeat_local_storage_root=tmp_path / "state",
             aeat_database_url=f"sqlite:///{explicit_db.as_posix()}",
         ),
-        caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.master_key._bucket_session"),
+        caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.master_key._bucket_session"),
     ):
         session.close()
 

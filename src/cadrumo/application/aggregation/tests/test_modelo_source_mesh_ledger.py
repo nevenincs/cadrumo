@@ -671,7 +671,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
             {"namespace": TX_BUCKET_NAMESPACE},
         )
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.aggregation._source_mesh"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation._source_mesh"):
         resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
@@ -712,7 +712,7 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
         objects=secure_objects,
     )
 
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.aggregation._source_mesh"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation._source_mesh"):
         resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

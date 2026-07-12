@@ -157,7 +157,7 @@ def test_committed_modelo_232_declaration_pdf_extraction_profile_targets_declara
         pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
         assert pdf_profiles, revision.id
         for profile in pdf_profiles:
-            assert profile.parser == "aeat.adapters.inbound.declaracion.parse_declaracion"
+            assert profile.parser == "cadrumo.adapters.inbound.declaracion.parse_declaracion"
             assert profile.confidence == "strict"
             assert profile.failure_semantics == "fail_hard"
             assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids
@@ -366,7 +366,7 @@ def test_committed_modelo_232_construct_includes_export_layout_and_export_link()
         assert construct.export_layouts == tuple(layout.id for layout in revision.export_layouts)
         export_links = [link for link in revision.application_links if link.surface == "export"]
         assert len(export_links) == 1, revision.id
-        assert export_links[0].consumer == "aeat.application.filing.export_draft"
+        assert export_links[0].consumer == "cadrumo.application.filing.export_draft"
         assert export_links[0].id in construct.application_links
 
 

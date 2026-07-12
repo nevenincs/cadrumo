@@ -1,13 +1,13 @@
-"""Unit tests for the :class:`~aeat.domain.categories.SpendingCategory` enum surface.
+"""Unit tests for the :class:`~cadrumo.domain.categories.SpendingCategory` enum surface.
 
 Locks two structural properties on the taxonomy:
 
 * The catalogue is large enough (at least the project's mandated
   count of distinct deductible categories).
-* Every :class:`~aeat.domain.categories.SpendingCategory` member is
+* Every :class:`~cadrumo.domain.categories.SpendingCategory` member is
   assigned to exactly one
-  :class:`~aeat.domain.categories.SpendingCategoryFamily` via the
-  :data:`~aeat.domain.categories.CATEGORY_FAMILY_MEMBERS` table.
+  :class:`~cadrumo.domain.categories.SpendingCategoryFamily` via the
+  :data:`~cadrumo.domain.categories.CATEGORY_FAMILY_MEMBERS` table.
 """
 
 from __future__ import annotations

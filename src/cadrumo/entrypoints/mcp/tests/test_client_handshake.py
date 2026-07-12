@@ -60,7 +60,7 @@ def test_stdio_subprocess_client_round_trips_a_read_only_call() -> None:
     command_key_by_tool[HARNESS_LOAD_TOOL] = ""
     driver = ScriptedPersonaDriver([LiveCallTool(tool_name=HARNESS_LOAD_TOOL, arguments_json="{}")])
     trajectory = run_live_session(
-        [sys.executable, "-c", "from aeat.entrypoints.mcp import main; main()"],
+        [sys.executable, "-c", "from cadrumo.entrypoints.mcp import main; main()"],
         persona="verifier",
         session_id="handshake-conformance",
         driver=driver,

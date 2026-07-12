@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted CalculationRevisionCatalogueRepository.
 
 Persists :class:`CalculationRevisionCatalogue` under
-``aeat.domain.modelos.calculation_revisions`` at
+``cadrumo.domain.modelos.calculation_revisions`` at
 ``SensitivityClass.FINANCIAL``.
 
 The calculation-revision catalogue is the FINANCIAL-class encrypted

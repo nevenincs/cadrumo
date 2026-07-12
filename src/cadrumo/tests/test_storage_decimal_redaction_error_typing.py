@@ -186,7 +186,7 @@ def _load_censo_sync_error_class() -> type:
     import pathlib
 
     spec = importlib.util.spec_from_file_location(
-        "aeat.application.user_profile._censo_errors",
+        "cadrumo.application.user_profile._censo_errors",
         str(pathlib.Path(__file__).parent.parent / "application/user_profile/_censo_errors.py"),
     )
     assert spec is not None and spec.loader is not None

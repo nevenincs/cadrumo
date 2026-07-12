@@ -7,8 +7,8 @@ the public API surface or in any module name. The same pattern
 applies to every read-only AEAT subpackage.
 
 The guard inspects every ``.py`` file under
-``src/aeat/adapters/inbound/sanitizer/`` and
-``src/aeat/entrypoints/cli/sanitize/``, every public function and
+``src/cadrumo/adapters/inbound/sanitizer/`` and
+``src/cadrumo/entrypoints/cli/sanitize/``, every public function and
 class definition with module-level constants, plus every public
 CLI verb attached to the Typer ``app``.
 
@@ -63,7 +63,7 @@ _WHITELIST: frozenset[str] = frozenset(
 def _project_root() -> Path:
     """Returns the repository root from this test file's location."""
     here = Path(__file__).resolve()
-    # src/aeat/adapters/inbound/sanitizer/tests/test_no_write_surface.py → up 7 levels
+    # src/cadrumo/adapters/inbound/sanitizer/tests/test_no_write_surface.py → up 7 levels
     return here.parents[6]
 
 
@@ -75,7 +75,7 @@ def _public_python_files() -> list[Path]:
     """
     root = _project_root()
     candidates: list[Path] = []
-    for sub in ("src/aeat/adapters/inbound/sanitizer", "src/aeat/entrypoints/cli/sanitize"):
+    for sub in ("src/cadrumo/adapters/inbound/sanitizer", "src/cadrumo/entrypoints/cli/sanitize"):
         for path in (root / sub).rglob("*.py"):
             name = path.name
             if name.startswith("test_") or name.startswith("_test_"):

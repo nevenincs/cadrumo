@@ -75,7 +75,7 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             surface="declaracion_pdf",
             artefact_kind="declaration_pdf",
             accepted_artefact_kinds=("declaration_pdf",),
-            parser="aeat.adapters.inbound.declaracion.parse_declaracion",
+            parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
             target_casillas=(
                 ExtractionTargetDefinition(
                     casilla_id=_NUMERIC_CASILLA_01,
@@ -118,8 +118,8 @@ def test_validator_rejects_extraction_profile_parser_that_is_not_a_dotted_callab
     validator no longer names or imports adapter parser modules to confirm a
     ``parser =`` path resolves — that resolution check (allowed-authority prefix,
     importability, callability) moved to the adapter-legal CI gate
-    ``aeat.adapters.inbound.tests.test_extraction_parser_paths_resolve``, where
-    importing ``aeat.adapters.inbound`` parsers is legal. What remains at the
+    ``cadrumo.adapters.inbound.tests.test_extraction_parser_paths_resolve``, where
+    importing ``cadrumo.adapters.inbound`` parsers is legal. What remains at the
     domain layer is a pure structural-shape check: the string must have the
     ``module.attribute`` dotted-callable shape.
     """
@@ -633,7 +633,7 @@ def test_validator_rejects_communication_link_with_filing_schedule() -> None:
         update={
             "id": f"{filing_link.id}-communication",
             "surface": "communication",
-            "consumer": "aeat.application.modelo",
+            "consumer": "cadrumo.application.modelo",
         },
     )
     application_links = tuple(

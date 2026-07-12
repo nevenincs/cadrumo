@@ -13,7 +13,7 @@ of the following marker tokens in the preceding 3 source lines:
 
 Structural prevention (ratchet history)
 --------------------------------
-This test AST-walks **all** production Python files under ``src/aeat/``
+This test AST-walks **all** production Python files under ``src/cadrumo/``
 (excluding test files) so every new file added by any future campaign is
 automatically covered.
 
@@ -64,7 +64,7 @@ _CONTEXT_LINES = 3
 
 # ---------------------------------------------------------------------------
 # Known pre-existing violating sites (ratchet history backlog).
-# Each entry is (relative-posix-path-from-src/aeat/, function-def-lineno).
+# Each entry is (relative-posix-path-from-src/cadrumo/, function-def-lineno).
 # New sites must NOT be added here — add a marker comment or use the concrete
 # type instead.  Removing an entry after fixing locks that site at zero.
 # ---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ def _collect_violations(
 
     Consumes the shared production AST cache so the per-file parse cost is
     paid once per session rather than per ratchet test. The cache holds
-    every parseable ``.py`` file under ``src/aeat/``; this helper applies
+    every parseable ``.py`` file under ``src/cadrumo/``; this helper applies
     the test-surface exclusion (``test_*.py`` / ``*_test.py``) as the
     per-test filter.
     """

@@ -322,15 +322,15 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
 _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
     {
         (
-            "src/aeat/entrypoints/cli/_config/__init__.py",
+            "src/cadrumo/entrypoints/cli/_config/__init__.py",
             "help-document prose is operator-facing text, not an OutputSchema payload",
         ),
         (
-            "src/aeat/entrypoints/cli/_config/__init__.py",
+            "src/cadrumo/entrypoints/cli/_config/__init__.py",
             "repair-report passthrough emits an already validated ConfigRepairReport",
         ),
         (
-            "src/aeat/entrypoints/cli/_config/_repair_cli.py",
+            "src/cadrumo/entrypoints/cli/_config/_repair_cli.py",
             "repair-report passthrough after config repair extraction",
         ),
     },
@@ -490,7 +490,7 @@ def test_profile_bound_command_populates_active_profile_label(tmp_path: Path) ->
 def test_zero_bare_emit_sites_outside_exemption_set() -> None:
     """Production CLI modules must use ``_emit_envelope``, not bare ``_emit``.
 
-    Walks every Python file under ``src/aeat/entrypoints/cli/`` (excluding
+    Walks every Python file under ``src/cadrumo/entrypoints/cli/`` (excluding
     tests + the ``_common`` helper module that DEFINES ``_emit``) and
     counts call sites matching ``_emit(ctx`` outside the documented
     exemption set. Any new bare-emit site fails the gate so the
@@ -498,7 +498,7 @@ def test_zero_bare_emit_sites_outside_exemption_set() -> None:
     """
     from pathlib import Path
 
-    root = Path("src/aeat/entrypoints/cli")
+    root = Path("src/cadrumo/entrypoints/cli")
     violations: list[str] = []
     for path in sorted(root.rglob("*.py")):
         if path.name.startswith("test_") or path.name == "conftest.py":

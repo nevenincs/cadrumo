@@ -3,11 +3,11 @@
 Pins membership and round-trip semantics for :class:`RentaIncomeType`
 and :class:`EstimacionDirectaModalidad` so accidental additions or
 removals surface as test failures.  Mirrors the
-:mod:`aeat.domain.iva.test_categories` pattern.
+:mod:`cadrumo.domain.iva.test_categories` pattern.
 
 The former ``RentaCCAA`` enum has been removed; the canonical CCAA type is
-:class:`aeat.domain.contribuyente.CCAA`.  Tests for that enum (including the
-ISO-code mapping) live in :mod:`aeat.domain.contribuyente.test_model`.
+:class:`cadrumo.domain.contribuyente.CCAA`.  Tests for that enum (including the
+ISO-code mapping) live in :mod:`cadrumo.domain.contribuyente.test_model`.
 """
 
 from __future__ import annotations

@@ -43,7 +43,7 @@ def _populated_filing() -> ModeloPresentado:
     justificante_pdf_path to be populated; acknowledged_at also set.
     Two attempts so the tuple-of-attempts surface is exercised, with
     distinct status / error fields per attempt.  ``period`` is a typed
-    :class:`~aeat.core.Period` (non-default) so the persistence boundary
+    :class:`~cadrumo.core.Period` (non-default) so the persistence boundary
     is proven to carry the structured value end-to-end.
     """
 
@@ -175,7 +175,7 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology proof: corrupting the ``period`` payload must surface.
 
     :class:`ModeloPresentado` now stores ``period`` as a typed
-    :class:`~aeat.core.Period` serialised to ``{"filing_year": int,
+    :class:`~cadrumo.core.Period` serialised to ``{"filing_year": int,
     "code": str}``.  Surgically replace the persisted ``code`` with an
     invalid value; the load path must either raise :class:`ValidationError`
     or produce a record that differs from the original — proving that the

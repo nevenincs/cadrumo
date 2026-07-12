@@ -97,7 +97,7 @@ def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
         update={
             "id": f"{filing_link.id}-communication",
             "surface": "communication",
-            "consumer": "aeat.application.modelo",
+            "consumer": "cadrumo.application.modelo",
         },
     )
     application_links = tuple(

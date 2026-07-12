@@ -1,7 +1,7 @@
 """Parity gates binding :class:`BindingSourceKind` to the registry and frozensets.
 
 These guards keep the single canonical source-kind taxonomy
-(:class:`aeat.core.BindingSourceKind`) in lock-step with two surfaces it claims
+(:class:`cadrumo.core.BindingSourceKind`) in lock-step with two surfaces it claims
 authority over:
 
 * every ``source`` token actually declared across the compiled registry
@@ -9,7 +9,7 @@ authority over:
 * the per-family source-kind frozensets, which MUST be derived subsets of the
   enum rather than independently hand-maintained.
 
-This is the source-kind sibling of the :class:`aeat.core.Modelo` /
+This is the source-kind sibling of the :class:`cadrumo.core.Modelo` /
 ``registry_modelo_codes()`` parity gate in ``core/tests/test_modelo.py``.
 """
 

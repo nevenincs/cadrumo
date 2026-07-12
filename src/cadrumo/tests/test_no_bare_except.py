@@ -6,13 +6,13 @@ themselves.  ``except Exception: pass`` and aliased broad variants are equally
 opaque when the body is only a no-op statement — they mask real failures and
 defeat the quality-gate purpose of the test.
 
-This test walks every ``test_*.py`` file under ``src/aeat/``,
+This test walks every ``test_*.py`` file under ``src/cadrumo/``,
 parses the AST, and fails if it finds either shape.  Adding a bare
 ``except`` to a test file is blocked immediately by the CI gate;
 the fix is always to replace it with a specific exception assertion.
 
 The enumeration also covers
-:mod:`aeat.entrypoints.cli.test_stdio` to confirm no workaround
+:mod:`cadrumo.entrypoints.cli.test_stdio` to confirm no workaround
 for the behavior contract stream-reconfigure tests landed there.
 """
 
@@ -48,7 +48,7 @@ def _bare_except_locations(source_tree_ast: Mapping[Path, ast.AST] | None = None
     """Return (file, lineno, shape) for every bare-except in test files.
 
     Uses the shared test-module inventory so fixtures stay outside this ratchet.
-    When supplied, the session AST cache amortises parses for ``src/aeat`` paths
+    When supplied, the session AST cache amortises parses for ``src/cadrumo`` paths
     while project-level paths outside that tree still fall back to per-path parse.
     """
     findings: list[tuple[str, int, str]] = []
@@ -161,7 +161,7 @@ def _is_noop_handler_body(body: list[ast.stmt]) -> bool:
 def test_no_bare_except_in_test_surface(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Zero bare-except or ``except Exception: pass`` shapes in test files.
 
-    Every test file under ``src/aeat/`` is parsed with the standard AST
+    Every test file under ``src/cadrumo/`` is parsed with the standard AST
     module; no subprocess, no mock, no skip.  Failures name the exact
     file and line number so the author can replace the bare handler with
     a specific exception assertion.

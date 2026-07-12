@@ -167,7 +167,7 @@ def test_read_active_profile_logs_missing_selected_record(
     """A torn active pointer degrades to no record with debug evidence."""
 
     with profile_create_storage_span(_MISSING_PROFILE_ID):
-        caplog.set_level(logging.DEBUG, logger="aeat.application.workflow._models")
+        caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow._models")
 
         record = WorkflowState().active_profile_record(schema=schema)
 

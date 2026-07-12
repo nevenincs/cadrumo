@@ -1,6 +1,6 @@
 """Unit tests for the LIRPF art. 23.2 tier resolver.
 
-Exercises :func:`aeat.domain.fincas.resolve_reduccion` against every BOE
+Exercises :func:`cadrumo.domain.fincas.resolve_reduccion` against every BOE
 trigger condition, every priority-order edge, every effective-date
 branch, the LAU art. 17.6 forfeit sentinel, and the qualifying-share
 split for the tier 70-b-1 (joven inquilino) ordinal.

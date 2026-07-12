@@ -1,6 +1,6 @@
 """Notifications-parser tests against real AEAT HTML captures (identity-redacted).
 
-Fixtures under ``src/aeat/tests/fixtures/aeat-sede/notifications-*.html``
+Fixtures under ``src/cadrumo/tests/fixtures/aeat-sede/notifications-*.html``
 are live captures with NIF and name scrubbed. Pins the parser to the
 actual column shape AEAT serves.
 """

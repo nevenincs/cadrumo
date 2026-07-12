@@ -8,7 +8,7 @@ are proven here end-to-end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`), not
 the direct ``resolve_relations_from_local_store`` resolver path the existing
 continuity tests
-(``aeat.application.calculations.tests.test_modelo_200_bin_carry_forward_continuity``
+(``cadrumo.application.calculations.tests.test_modelo_200_bin_carry_forward_continuity``
 and ``...test_modelo_200_dotaciones_deterioro_carry_continuity``) exercise. This
 module closes the M200 self-carry honesty-review gap: before it, the relation
 resolver was proven to fire, but only on the now-non-canonical direct path —

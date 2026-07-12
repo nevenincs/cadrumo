@@ -1,8 +1,8 @@
 """Real-behavior tests for the portal-drift record and detection.
 
-:func:`~aeat.domain.portals.evaluate_portal_drift` compares a real registered
-:class:`~aeat.domain.portals.PortalMetadata` entry against an observed URL and
-materialises a typed :class:`~aeat.domain.portals.PortalDriftEvent` when they
+:func:`~cadrumo.domain.portals.evaluate_portal_drift` compares a real registered
+:class:`~cadrumo.domain.portals.PortalMetadata` entry against an observed URL and
+materialises a typed :class:`~cadrumo.domain.portals.PortalDriftEvent` when they
 diverge. These tests drive the real frozen registry entries — no mocks — and
 assert that a matching URL yields no drift, a path divergence yields a ``URL``
 record, a host divergence yields a ``SUBDOMAIN`` record, and that the record

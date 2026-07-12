@@ -1,4 +1,4 @@
-"""Unit tests for the typed repositories in :mod:`aeat.adapters.persistence.storage.sql`.
+"""Unit tests for the typed repositories in :mod:`cadrumo.adapters.persistence.storage.sql`.
 
 Exercises CRUD round-trips through :class:`ModeloRepository`,
 :class:`PortalRepository`, and :class:`CorpusArtifactRepository` against a

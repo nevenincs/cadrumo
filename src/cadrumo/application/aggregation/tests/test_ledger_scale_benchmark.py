@@ -1,7 +1,7 @@
 """Scale benchmark: P95 latency at 30k-transaction / 10-year ledger scale.
 
 This module seeds a REAL bucket (encrypted SQLite via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`, no
+:class:`~cadrumo.adapters.persistence.storage.sql.SecureObjectRepository`, no
 mocks) with ~30,000 synthetic ledger transactions spread across 10 filing
 years, then measures the P95 wall-clock latency of the ledger-scale
 operations the budget contract names:
@@ -12,14 +12,14 @@ operations the budget contract names:
    unfiltered read out of the 3-second period-operation budget.
 2. **Annual renta aggregation diagnostic** —
    :func:`aggregate_renta_ledger_expenses_from_repositories`, which loads the
-   full catalogue and then filters by :meth:`~aeat.core.Period.contains` for
+   full catalogue and then filters by :meth:`~cadrumo.core.Period.contains` for
    one annual window. The latency decision keeps this path out of the
    date-index optimisation until the invoice-date fallback key is resolved.
 3. **Quarterly IVA aggregation budget gate** —
    :func:`aggregate_iva_ledger_observations_from_repositories`, the
    partitioned period-scoped path covered by the latency decision.
 4. **Modelo calculate diagnostic** —
-   :func:`~aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation`
+   :func:`~cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation`
    for a real M130 quarter, exercising the full registry engine over the
    ledger-backed income resolver.
 
@@ -34,7 +34,7 @@ engine. No mocks, stubs, skips, or xfail. Marked ``integration`` (real
 cross-layer, deterministic, no external I/O) so it is excluded from the
 default ``-m unit`` CI lane per the project's marker taxonomy, and run
 explicitly via ``uv run pytest -m integration
-src/aeat/application/aggregation/tests/test_ledger_scale_benchmark.py``.
+src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py``.
 
 The report format follows the honesty mandate: budgeted checks assert their
 threshold, while diagnostics label their budget scope and keep structural
@@ -99,7 +99,7 @@ _TAX_ID = "40404040T"
 _P95_BUDGET_SECONDS = 3.0
 
 #: The bundled spending-category profile registry only defines 2024/2025 (see
-#: ``src/aeat/_data/registry/aeat/categories/profiles/``); the renta-ledger
+#: ``src/cadrumo/_data/registry/aeat/categories/profiles/``); the renta-ledger
 #: aggregation benchmark pins its category-profile lookup to this registered
 #: year regardless of the synthetic filing years it aggregates over.
 _CATEGORY_PROFILE_YEAR = 2025
@@ -146,7 +146,7 @@ _M100_RENDIMIENTO_SOURCE_1553_CASILLA = validated_casilla_id("1553", surface="be
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA = validated_casilla_id("1577", surface="bench M100 1577")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA = validated_casilla_id("1391", surface="bench M100 BIN")
 _PRIOR_YEAR_NET_INCOME = Decimal("50000")
-_TRANSACTION_REPOSITORY_LOGGER = "aeat.adapters.persistence.profile.transactions"
+_TRANSACTION_REPOSITORY_LOGGER = "cadrumo.adapters.persistence.profile.transactions"
 _PARTITION_LOG_MARKERS = (
     "partitioned transaction catalogue via date index",
     "partitioned transaction catalogue via full-scan fallback",
@@ -411,7 +411,7 @@ def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: Secure
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             # The bundled spending-category profile registry only covers
-            # 2024/2025 (see src/aeat/_data/registry/aeat/categories/profiles/);
+            # 2024/2025 (see src/cadrumo/_data/registry/aeat/categories/profiles/);
             # the benchmark's *period* still targets the last synthetic filing
             # year (see module docstring) -- profile_year is intentionally
             # decoupled per the function's own documented contract.

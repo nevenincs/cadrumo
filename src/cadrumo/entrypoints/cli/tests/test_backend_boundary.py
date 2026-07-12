@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PLAN_PATH = PROJECT_ROOT / ".vault" / "plan" / "2026-05-08-cli-backend-boundary-plan.md"
 _REFERENCE_PATH = PROJECT_ROOT / ".vault" / "reference" / "2026-05-08-cli-backend-boundary-reference.md"
-_CLI_ROOT = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+_CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "aspirational",
     "backwards-compat",
@@ -80,14 +80,14 @@ class BoundaryFinding:
 _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
     BoundaryFinding(
         row_id="CLI-001",
-        source="src/aeat/entrypoints/cli/_common.py",
+        source="src/cadrumo/entrypoints/cli/_common.py",
         symbols=("_canonical_period",),
         backend_gap="API-005",
         owner="application.filing",
     ),
     BoundaryFinding(
         row_id="CLI-007",
-        source="src/aeat/entrypoints/cli/_overview.py",
+        source="src/cadrumo/entrypoints/cli/_overview.py",
         symbols=("overview_status",),
         backend_gap="API-008",
         owner="application.overview",
@@ -188,14 +188,14 @@ def test_boundary_plan_tracks_every_known_cli_finding_and_backend_gap() -> None:
 def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None:
     """Manual ledger import and review logic must not move back into the CLI."""
 
-    ledger_cli = (PROJECT_ROOT / "src/aeat/entrypoints/cli/_ledger.py").read_text(encoding="utf-8")
+    ledger_cli = (PROJECT_ROOT / "src/cadrumo/entrypoints/cli/_ledger.py").read_text(encoding="utf-8")
     # The monolithic ``_actions.py`` was decomposed into sibling backend modules
     # (``_actions_import.py``, ``_actions_common.py``, ``_actions_manual.py``,
     # ``_models.py``, ...); ``_actions.py`` now re-exports them. Scan the whole
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8") for path in sorted((PROJECT_ROOT / "src/aeat/application/ledger").glob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted((PROJECT_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
     )
     forbidden_cli_tokens = (
         "CsvProvider",
@@ -318,26 +318,26 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
     """Rejected operator surfaces must not keep importable Typer shims."""
 
     removed = (
-        "src/aeat/entrypoints/cli/_declaration.py",
-        "src/aeat/entrypoints/cli/_invoice.py",
-        "src/aeat/entrypoints/cli/auth/__init__.py",
-        "src/aeat/entrypoints/cli/auth/_registry.py",
-        "src/aeat/entrypoints/cli/browser/__init__.py",
-        "src/aeat/entrypoints/cli/browser/health.py",
-        "src/aeat/entrypoints/cli/browser/test_health.py",
-        "src/aeat/entrypoints/cli/financial/__init__.py",
-        "src/aeat/entrypoints/cli/financial/_catalogue.py",
-        "src/aeat/entrypoints/cli/financial/_profile_aliases.py",
-        "src/aeat/entrypoints/cli/financial/ingest.py",
-        "src/aeat/entrypoints/cli/financial/invoices.py",
-        "src/aeat/entrypoints/cli/financial/profile.py",
-        "src/aeat/entrypoints/cli/financial/test_cli.py",
-        "src/aeat/entrypoints/cli/financial/test_profile.py",
-        "src/aeat/entrypoints/cli/financial/test_profile_aliases.py",
-        "src/aeat/entrypoints/cli/financial/txs.py",
-        "src/aeat/entrypoints/cli/filing/__init__.py",
-        "src/aeat/entrypoints/cli/filing/conftest.py",
-        "src/aeat/entrypoints/cli/filing/test_filing_cli.py",
+        "src/cadrumo/entrypoints/cli/_declaration.py",
+        "src/cadrumo/entrypoints/cli/_invoice.py",
+        "src/cadrumo/entrypoints/cli/auth/__init__.py",
+        "src/cadrumo/entrypoints/cli/auth/_registry.py",
+        "src/cadrumo/entrypoints/cli/browser/__init__.py",
+        "src/cadrumo/entrypoints/cli/browser/health.py",
+        "src/cadrumo/entrypoints/cli/browser/test_health.py",
+        "src/cadrumo/entrypoints/cli/financial/__init__.py",
+        "src/cadrumo/entrypoints/cli/financial/_catalogue.py",
+        "src/cadrumo/entrypoints/cli/financial/_profile_aliases.py",
+        "src/cadrumo/entrypoints/cli/financial/ingest.py",
+        "src/cadrumo/entrypoints/cli/financial/invoices.py",
+        "src/cadrumo/entrypoints/cli/financial/profile.py",
+        "src/cadrumo/entrypoints/cli/financial/test_cli.py",
+        "src/cadrumo/entrypoints/cli/financial/test_profile.py",
+        "src/cadrumo/entrypoints/cli/financial/test_profile_aliases.py",
+        "src/cadrumo/entrypoints/cli/financial/txs.py",
+        "src/cadrumo/entrypoints/cli/filing/__init__.py",
+        "src/cadrumo/entrypoints/cli/filing/conftest.py",
+        "src/cadrumo/entrypoints/cli/filing/test_filing_cli.py",
     )
     assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
 
@@ -379,12 +379,12 @@ def test_profile_backend_schema_duplicate_branch_stays_removed() -> None:
     """Retired application-profile branch files must stay absent."""
 
     removed = (
-        "src/aeat/application/profile/__init__.py",
-        "src/aeat/application/profile/_actions.py",
-        "src/aeat/application/profile/_models.py",
-        "src/aeat/application/profile/_repository.py",
-        "src/aeat/application/profile/test_actions.py",
-        "src/aeat/application/profile/test_validate.py",
+        "src/cadrumo/application/profile/__init__.py",
+        "src/cadrumo/application/profile/_actions.py",
+        "src/cadrumo/application/profile/_models.py",
+        "src/cadrumo/application/profile/_repository.py",
+        "src/cadrumo/application/profile/test_actions.py",
+        "src/cadrumo/application/profile/test_validate.py",
     )
     assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
 
@@ -393,15 +393,15 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
     """Callers must use canonical user-profile services only."""
 
     forbidden_tokens = (
-        "aeat.application.profile",
+        "cadrumo.application.profile",
         "from .profile",
         "profile_bucket_repository",
         "set_active_profile",
         "set_profile_values",
     )
     search_roots = (
-        PROJECT_ROOT / "src" / "aeat" / "application",
-        PROJECT_ROOT / "src" / "aeat" / "entrypoints",
+        PROJECT_ROOT / "src" / "cadrumo" / "application",
+        PROJECT_ROOT / "src" / "cadrumo" / "entrypoints",
     )
     offenders: list[str] = []
     for root in search_roots:
@@ -419,10 +419,10 @@ def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
     """Per-modelo aggregation must fail through registered backend errors."""
 
     scoped_files = (
-        "src/aeat/application/aggregation/_retenciones.py",
-        "src/aeat/application/aggregation/_counterpart.py",
-        "src/aeat/application/aggregation/tests/test_retenciones.py",
-        "src/aeat/application/aggregation/tests/test_counterpart.py",
+        "src/cadrumo/application/aggregation/_retenciones.py",
+        "src/cadrumo/application/aggregation/_counterpart.py",
+        "src/cadrumo/application/aggregation/tests/test_retenciones.py",
+        "src/cadrumo/application/aggregation/tests/test_counterpart.py",
     )
     forbidden_tokens = ("NotImplementedError", "not implemented")
     offenders: list[str] = []
@@ -487,14 +487,14 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # input aliases under test — not censo shim language.
     # scopes.toml is excluded: the CENSO apoderamiento scope legitimately carries
     # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
-    registry_dir = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+    registry_dir = PROJECT_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
     registry_tests = registry_dir / "tests"
     scanned_files = (
         _CLI_ROOT / "_modelo.py",
-        PROJECT_ROOT / "src" / "aeat" / "locales" / "en.yml",
-        PROJECT_ROOT / "src" / "aeat" / "locales" / "es.yml",
-        PROJECT_ROOT / "src" / "aeat" / "locales" / "ca.yml",
-        PROJECT_ROOT / "src" / "aeat" / "locales" / "hu.yml",
+        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "en.yml",
+        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "es.yml",
+        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "ca.yml",
+        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "hu.yml",
         registry_dir / "_censo_modelos.py",
         registry_dir / "_queries.py",
         registry_tests / "test_censo_modelo_foundation.py",
@@ -543,7 +543,7 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
 def test_modelo_145_shims_stubs_and_compatibility_aliases_stay_absent() -> None:
     """Modelo 145 must stay a real local communication surface, not a compatibility shell."""
 
-    application_dir = PROJECT_ROOT / "src" / "aeat" / "application" / "modelo"
+    application_dir = PROJECT_ROOT / "src" / "cadrumo" / "application" / "modelo"
     scanned_files = (
         _CLI_ROOT / "_modelo_m145_cli.py",
         _CLI_ROOT / "_modelo_m145_parsing.py",
@@ -607,7 +607,7 @@ def test_registry_corpus_cli_ownership_is_registry_only() -> None:
 def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:
     """Generic run tracing is not part of the accepted CLI surface."""
 
-    wrapper_path = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_observability.py"
+    wrapper_path = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_observability.py"
     assert not wrapper_path.exists()
 
     offences: list[str] = []

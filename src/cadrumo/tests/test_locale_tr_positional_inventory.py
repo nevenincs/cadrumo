@@ -3,7 +3,7 @@
 Rule
 ----
 For every ``raise SomeError(tr(...))`` pattern in a non-test production module
-under ``src/aeat/``, the first positional argument to the error constructor
+under ``src/cadrumo/``, the first positional argument to the error constructor
 must NOT be a ``tr()`` call result.
 
 The canonical form is::
@@ -120,7 +120,7 @@ def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:
 def _collect_violations(
     source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> list[str]:
-    """Walk every production module under ``src/aeat/`` and collect violations.
+    """Walk every production module under ``src/cadrumo/`` and collect violations.
 
     The invariant is applied unconditionally: every non-test module that
     raises an :class:`AeatError` subclass must use the
@@ -143,7 +143,7 @@ def test_no_aeat_error_raise_with_positional_tr(source_tree_ast: Mapping[Path, a
     """Every production module must have zero raise-with-positional-tr() violations.
 
     The invariant applies unconditionally to every non-test module under
-    ``src/aeat/``.  Passing ``tr(...)`` as the positional ``message``
+    ``src/cadrumo/``.  Passing ``tr(...)`` as the positional ``message``
     argument resolves the locale string eagerly at raise time using the
     ambient output language, rather than deferring resolution to the CLI
     render layer where the operator's chosen ``--output-language`` is

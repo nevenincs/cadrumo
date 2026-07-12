@@ -1,8 +1,8 @@
-"""Unit tests for :func:`aeat.domain.iva.classify_iva`.
+"""Unit tests for :func:`cadrumo.domain.iva.classify_iva`.
 
 Walks the closed-table rules plus the R99 fallthrough, verifies the cross-field
 ``rate_tier`` requirements on
-:class:`aeat.domain.iva.IvaInvoiceClassificationCriteria`, and checks that rate
+:class:`cadrumo.domain.iva.IvaInvoiceClassificationCriteria`, and checks that rate
 resolution honours the transaction date.
 """
 

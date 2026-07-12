@@ -20,8 +20,8 @@ no mocks, no fixture trees) and resolves every cited command path from:
 
 - every registered :class:`ErrorCode` ``default_suggestion``;
 - the curated operator help documents (root / config / app surfaces);
-- every string literal in production modules under ``aeat.adapters``,
-  ``aeat.application``, ``aeat.core.errors``, and ``aeat.entrypoints``
+- every string literal in production modules under ``cadrumo.adapters``,
+  ``cadrumo.application``, ``cadrumo.core.errors``, and ``cadrumo.entrypoints``
   (AST-extracted, so comments cannot false-positive and ``next_action`` /
   write-policy / envelope-builder / adapter-refusal strings are all swept).
 

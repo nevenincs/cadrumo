@@ -2,7 +2,7 @@
 
 Covers strict-frozen guarantees, schema-version handling, residence-
 change ledger validation, and accented / foral-alias parsing in
-:func:`aeat.domain.contribuyente.parse_tax_region`.
+:func:`cadrumo.domain.contribuyente.parse_tax_region`.
 """
 
 from __future__ import annotations

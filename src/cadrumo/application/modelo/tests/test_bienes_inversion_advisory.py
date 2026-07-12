@@ -1,8 +1,8 @@
 """Calculate-path advisory wiring for the capital-goods IVA regularización register.
 
-Exercises :func:`~aeat.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`
+Exercises :func:`~cadrumo.application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`
 against a REAL encrypted register persisted through
-:class:`~aeat.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
+:class:`~cadrumo.adapters.persistence.profile.bienes_inversion.BienesInversionIvaRegisterRepository`
 inside a genuine bucket runtime (``isolated_runtime_profile``) — no mocks, no
 stubs. The pure art-109 math itself is proven in
 ``domain/bienes_inversion/tests/test_regularizacion.py`` and the pure advisory

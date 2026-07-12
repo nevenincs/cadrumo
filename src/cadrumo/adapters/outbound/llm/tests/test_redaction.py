@@ -3,7 +3,7 @@
 The LLM cache and usage log persist response text that may echo NIF or
 counterparty context from the original prompt. Both writers must apply the
 substrate's DIAGNOSTIC-class redaction rules
-(:func:`aeat.core.redaction.redact_structured`) before any payload reaches
+(:func:`cadrumo.core.redaction.redact_structured`) before any payload reaches
 the encrypted secure-object backend; these tests exercise canary NIF and
 bearer-token strings to prove that discipline holds without materializing
 JSON files.

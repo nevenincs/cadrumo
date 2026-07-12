@@ -27,7 +27,7 @@ See Also:
     :class:`aeat-tests.secure_sql.TestRuntimeProfile`
         Frozen record yielded by the helper so tests can inspect the isolated
         storage root, bucket id, runtime, and repository.
-    :mod:`aeat.adapters.persistence.storage.sql.conftest`
+    :mod:`cadrumo.adapters.persistence.storage.sql.conftest`
         Module-scoped storage fixture shape used only where transactional
         rollback isolates per-test state.
 """

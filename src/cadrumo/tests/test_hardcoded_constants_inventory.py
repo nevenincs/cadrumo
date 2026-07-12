@@ -25,11 +25,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_AEAT, non_test_package_python_files, regex_line_hits
+from ._inventory import SRC_CADRUMO, non_test_package_python_files, regex_line_hits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SRC_ROOT = SRC_AEAT
+_SRC_ROOT = SRC_CADRUMO
 
 # ---------------------------------------------------------------------------
 # Canonical definition sites — excluded from the bare-literal scan.
@@ -49,7 +49,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
 
 
 def _production_py_files() -> tuple[Path, ...]:
-    """Return all non-test Python source files under src/aeat/."""
+    """Return all non-test Python source files under src/cadrumo/."""
     return tuple(p for p in non_test_package_python_files(include_data=True) if p not in _CANONICAL_DEFINITIONS)
 
 

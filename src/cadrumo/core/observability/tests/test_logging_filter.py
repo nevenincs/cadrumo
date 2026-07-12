@@ -3,12 +3,12 @@
 Two related concerns:
 
 * :class:`TestRunContextLoggingFilter` verifies that the
-  :func:`aeat.core.logging.get_logger` factory stamps ``run_id`` and
+  :func:`cadrumo.core.logging.get_logger` factory stamps ``run_id`` and
   ``step_id`` attributes onto every :class:`logging.LogRecord`, both
   inside and outside an active
-  :func:`aeat.core.observability.run_context`.
+  :func:`cadrumo.core.observability.run_context`.
 * :class:`TestStderrRunEventFilter` verifies that the default stderr
-  handler installed by :mod:`aeat.core.logging` drops records that
+  handler installed by :mod:`cadrumo.core.logging` drops records that
   carry a ``run_event`` extra — without this, every observability event
   would also print on stderr, spamming long workflows.
 """
@@ -66,7 +66,7 @@ class TestRunContextLoggingFilter:
         tmp_path: Path,
     ) -> None:
         with override_settings(aeat_runs_dir=str(tmp_path)):
-            logger = get_logger("aeat.core.observability.test_logging_filter")
+            logger = get_logger("cadrumo.core.observability.test_logging_filter")
             capture = _CaptureHandler()
             logging.getLogger().addHandler(capture)
             try:
@@ -92,8 +92,8 @@ class TestRunContextLoggingFilter:
 class TestStderrRunEventFilter:
     """The default stderr handler must drop records carrying ``run_event``.
 
-    :func:`aeat.core.observability.record_event` logs at INFO through
-    ``aeat.core.observability``, which propagates to the root stderr
+    :func:`cadrumo.core.observability.record_event` logs at INFO through
+    ``cadrumo.core.observability``, which propagates to the root stderr
     handler. Without the filter, every event would print on stderr —
     spamming long workflows. The filter drops only records that carry a
     ``run_event`` extra; plain log lines still reach stderr.

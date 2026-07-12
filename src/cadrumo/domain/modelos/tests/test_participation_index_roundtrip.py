@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted TransactionParticipationIndexRepository.
 
 Persists :class:`TransactionRevisionParticipationIndex` under
-``aeat.domain.modelos.participation_index`` at :class:`SensitivityClass`
+``cadrumo.domain.modelos.participation_index`` at :class:`SensitivityClass`
 FINANCIAL, one secure object per ledger transaction id.
 
 The participation index is the FINANCIAL-class encrypted boundary that links a

@@ -1,13 +1,13 @@
-"""Real-behaviour tests for aeat.core.wizard_catalogue.
+"""Real-behaviour tests for cadrumo.core.wizard_catalogue.
 
 These tests assert:
 
-1. After importing aeat.application.wizard._catalogue, the core registry
+1. After importing cadrumo.application.wizard._catalogue, the core registry
    slot is filled and get_setup_flow() / get_wizard_flows() return the
    same objects that _catalogue exposes as SETUP_FLOW / WIZARD_FLOWS.
 
-2. No deferred lazy upward imports from aeat.application.wizard._catalogue
-   remain in aeat.domain.deadlines._profiles or aeat.domain.contribuyente._keys.
+2. No deferred lazy upward imports from cadrumo.application.wizard._catalogue
+   remain in cadrumo.domain.deadlines._profiles or cadrumo.domain.contribuyente._keys.
    A fresh Python interpreter imports those domain modules and asserts the
    application wizard catalogue was not loaded as an import-time side effect.
 
@@ -95,13 +95,13 @@ import importlib
 import sys
 
 for module_name in (
-    "aeat.domain.deadlines._profiles",
-    "aeat.domain.contribuyente._keys",
+    "cadrumo.domain.deadlines._profiles",
+    "cadrumo.domain.contribuyente._keys",
 ):
     importlib.import_module(module_name)
 
-if "aeat.application.wizard._catalogue" in sys.modules:
-    raise SystemExit("domain imports loaded aeat.application.wizard._catalogue")
+if "cadrumo.application.wizard._catalogue" in sys.modules:
+    raise SystemExit("domain imports loaded cadrumo.application.wizard._catalogue")
 """
 
     result = subprocess.run(  # noqa: S603 - fixed interpreter and literal script for import isolation.
@@ -116,7 +116,7 @@ if "aeat.application.wizard._catalogue" in sys.modules:
 
 
 def test_wizard_catalogue_exports_are_callable() -> None:
-    """All public symbols in aeat.core.wizard_catalogue are importable and callable."""
+    """All public symbols in cadrumo.core.wizard_catalogue are importable and callable."""
 
     from .. import wizard_catalogue
     from ..errors import CoreError

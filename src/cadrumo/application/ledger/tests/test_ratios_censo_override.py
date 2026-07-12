@@ -1,7 +1,7 @@
 """Real-behavior tests for the censo-override warning helper.
 
 Locks the contract that
-:func:`aeat.application.ledger._ratios.censo_override_warning` returns
+:func:`cadrumo.application.ledger._ratios.censo_override_warning` returns
 a typed warning when an operator's per-category override for a
 HOME_OFFICE category deviates from the legally-binding censo-derived
 value, and stays silent for non-HOME_OFFICE categories.

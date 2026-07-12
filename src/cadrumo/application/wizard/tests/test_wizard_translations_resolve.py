@@ -4,7 +4,7 @@
 by :data:`WIZARD_FLOWS`, the descriptor-derived flag-help keys, and
 the fixed runtime error keys. ``audit_cli_translations`` walks every
 ``cli.<group>.*`` key referenced statically by any module under
-``aeat.entrypoints.cli``. Both audits assert every key resolves to
+``cadrumo.entrypoints.cli``. Both audits assert every key resolves to
 non-empty content in every locale.
 """
 

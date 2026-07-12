@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
-SCAN_ROOTS = ("src/aeat", "docs")
+SCAN_ROOTS = ("src/cadrumo", "docs")
 SKIPPED_PARTS = frozenset(
     {
         "__pycache__",
@@ -79,18 +79,18 @@ def _text(pattern: str) -> Pattern[str]:
 
 ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
-        path=_path(r"^src/aeat/tests/fixtures/"),
+        path=_path(r"^src/cadrumo/tests/fixtures/"),
         reason="external HTML/PDF corpus and fixture generation material preserves official/source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/_data/registry/aeat/modelos/"),
+        path=_path(r"^src/cadrumo/_data/registry/aeat/modelos/"),
         reason="registry parser declarations may mention external fixture filenames in comments",
         pattern_names=frozenset({"year-qualified quarterly token", "calendar quarter token"}),
         text=_text(r"(?:fixtures|justificantes|\.pdf)"),
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/adapters/inbound/declaracion/tests/(?:"
+            r"^src/cadrumo/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"
             r"_parser_boundary_m\d+_support|_parser_boundary_m\d+_current_expected|"
             r"test_m303_primitive_anti_tautology|test_parser_boundary_part1|"
@@ -104,16 +104,16 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="declaracion parser corpus tests pin external justificante fixture filenames and source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/inbound/justificante/tests/test_parser\.py$"),
+        path=_path(r"^src/cadrumo/adapters/inbound/justificante/tests/test_parser\.py$"),
         reason="justificante parser tests preserve external PDF fixture filenames",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_m131_current_year\.py$"),
+        path=_path(r"^src/cadrumo/adapters/inbound/declaracion/tests/test_parser_boundary_m131_current_year\.py$"),
         reason="parser boundary test preserves the committed synthetic justificante filename",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/(?:"
+            r"^src/cadrumo/(?:"
             r"application/calculations/tests/test_prorrata_regularizacion|"
             r"application/modelo/tests/test_prorrata_regularizacion_source_timing|"
             r"application/modelo/tests/test_review_package(?:_collab_audit|_counter_sign|_feedback|_recipient_encryption|_review_only_workspace|_signing)?|"
@@ -125,40 +125,40 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         pattern_names=frozenset({"year-qualified quarterly token"}),
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/inbound/pdf/tests/test_scrub\.py$"),
+        path=_path(r"^src/cadrumo/adapters/inbound/pdf/tests/test_scrub\.py$"),
         reason="inbound parser and scrub tests preserve external justificante/PDF fixture filenames",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/outbound/aeat/sede/tests/_declarations_support\.py$"),
+        path=_path(r"^src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support\.py$"),
         reason="sede connector tests preserve redacted submitted-file fixture names",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/adapters/outbound/google/tests/test_(?:pull_result_roundtrip|worksheet_export_pull_roundtrip)\.py$"
+            r"^src/cadrumo/adapters/outbound/google/tests/test_(?:pull_result_roundtrip|worksheet_export_pull_roundtrip)\.py$"
         ),
         reason="Google export tests preserve external pull labels and worksheet note locators",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip\.py$"),
+        path=_path(r"^src/cadrumo/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip\.py$"),
         reason="archive bundle tests preserve external draft id labels",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/adapters/persistence/profile/tests/test_justificante_(?:repository|secure_storage_roundtrip)\.py$"
+            r"^src/cadrumo/adapters/persistence/profile/tests/test_justificante_(?:repository|secure_storage_roundtrip)\.py$"
         ),
         reason="justificante persistence tests preserve external justificante PDF fixture filenames and period tokens",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_modelo_result_summary_labels\.py$"),
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels\.py$"),
         reason="result-summary label tests pin external work-unit name labels that embed a period token",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/(core|domain)/(?:_period|period)\.py$|^src/aeat/(core|domain)/tests/test_period\.py$"),
+        path=_path(r"^src/cadrumo/(core|domain)/(?:_period|period)\.py$|^src/cadrumo/(core|domain)/tests/test_period\.py$"),
         reason="Period source and tests explicitly document/refuse the killed combined input forms",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/entrypoints/cli/_common\.py$|^src/aeat/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
+            r"^src/cadrumo/entrypoints/cli/_common\.py$|^src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
         ),
         reason="CLI period grammar refusal docs and tests prove calendar/hybrid spellings are rejected",
     ),
@@ -168,87 +168,87 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/entrypoints/cli/tests/(test_modelo_registry_surface|test_modelo|test_cold_start_no_profile)\.py$"
+            r"^src/cadrumo/entrypoints/cli/tests/(test_modelo_registry_surface|test_modelo|test_cold_start_no_profile)\.py$"
         ),
         reason="CLI refusal/regression tests use old combined strings as invalid operator input",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_audit_remediation\.py$"),
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_audit_remediation\.py$"),
         reason="CLI audit regression asserts the old combined form is absent from operator text",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_repair_privacy_contract\.py$"),
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_repair_privacy_contract\.py$"),
         reason="privacy-redaction tests preserve sensitive old-shape strings to prove they are redacted",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/domain/calculations/registry/tests/test_(?:registry_schema_part2|queries)\.py$"),
+        path=_path(r"^src/cadrumo/domain/calculations/registry/tests/test_(?:registry_schema_part2|queries)\.py$"),
         reason="registry schema/query tests use old combined strings as invalid input",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/domain/calculations/registry/_queries\.py$"),
+        path=_path(r"^src/cadrumo/domain/calculations/registry/_queries\.py$"),
         reason="registry query docs preserve the retired dashed registry-introspection dialect",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/workflow/(?:_models\.py|tests/test_(?:models|declaration_key)\.py)$"),
+        path=_path(r"^src/cadrumo/application/workflow/(?:_models\.py|tests/test_(?:models|declaration_key)\.py)$"),
         reason="workflow key docs/tests prove declaration keys no longer store combined tokens",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/(?:domain/modelos|application/filing)/tests/test_(?:secure_storage_roundtrip|history_repository|repository)\.py$"
+            r"^src/cadrumo/(?:domain/modelos|application/filing)/tests/test_(?:secure_storage_roundtrip|history_repository|repository)\.py$"
         ),
         reason="secure-storage tests assert old combined strings are not persisted in encrypted stores",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/filing/tests/test_import\.py$"),
+        path=_path(r"^src/cadrumo/application/filing/tests/test_import\.py$"),
         reason="filing import refusal tests prove old raw period spellings are rejected",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/modelo/tests/test_work_period_normalization\.py$"),
+        path=_path(r"^src/cadrumo/application/modelo/tests/test_work_period_normalization\.py$"),
         reason="modelo work-period normalisation tests prove old inbound strings are refused or canonicalised",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/modelo/tests/test_(?:export|history|iva_wallet_engine_integration|iva_wallet_engine_overrides|justificante_reconcile_from_persisted|participation_co_emission|reconcile|reconcile_value_comparison|reconciliation_history|revision_id_d1_contract|simplificado_ledger_bypass)\.py$"
+            r"^src/cadrumo/application/modelo/tests/test_(?:export|history|iva_wallet_engine_integration|iva_wallet_engine_overrides|justificante_reconcile_from_persisted|participation_co_emission|reconcile|reconcile_value_comparison|reconciliation_history|revision_id_d1_contract|simplificado_ledger_bypass)\.py$"
         ),
         reason="modelo workflow tests preserve external work-unit, justificante, and review labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/transactions/tests/test_diagnostics\.py$"),
+        path=_path(r"^src/cadrumo/application/transactions/tests/test_diagnostics\.py$"),
         reason="diagnostic source-locator tests preserve old user-provided period strings as opaque input",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/aggregation/tests/test_(?:aggregation|counterpart|foreign_assets|retenciones|per_modelo_service|service|iva_ledger)\.py$"
+            r"^src/cadrumo/application/aggregation/tests/test_(?:aggregation|counterpart|foreign_assets|retenciones|per_modelo_service|service|iva_ledger)\.py$"
         ),
         reason="aggregation tests still carry targeted invalid-input and historical-label examples",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/calculations/tests/test_(?:iva_wallet_reconciliation|observations_repository_roundtrip)\.py$"
+            r"^src/cadrumo/application/calculations/tests/test_(?:iva_wallet_reconciliation|observations_repository_roundtrip)\.py$"
         ),
         reason="calculation tests preserve operator evidence/source locator labels and redaction assertions",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/calculations/tests/test_cross_period_clean_state(?:_provenance)?\.py$"),
+        path=_path(r"^src/cadrumo/application/calculations/tests/test_cross_period_clean_state(?:_provenance)?\.py$"),
         reason="calculation clean-state tests preserve AEAT expediente source labels, not period inputs",
         pattern_names=frozenset({"year-qualified quarterly token"}),
         text=_text("2025" + "-1T"),
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/(?:verification/tests/test_verify_helpers|calculations/tests/test_modelo_720_fichero_boe_roundtrip)\.py$"
+            r"^src/cadrumo/application/(?:verification/tests/test_verify_helpers|calculations/tests/test_modelo_720_fichero_boe_roundtrip)\.py$"
         ),
         reason="annual legacy-label tests cover non-core external periodo values",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/(?:adapters/outbound/(?:storage|llm)|application/filing)/tests/test_(?:local|cache_roundtrip|export|testing_registry)\.py$"
+            r"^src/cadrumo/(?:adapters/outbound/(?:storage|llm)|application/filing)/tests/test_(?:local|cache_roundtrip|export|testing_registry)\.py$"
         ),
         reason="artifact/cache/export tests preserve external filename and object-key labels",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/live/tests/test_(?:"
+            r"^src/cadrumo/application/live/tests/test_(?:"
             r"filed_capture_calculation_history|iva_remote_state_acquisition|"
             r"iva_wallet_capture_backend|justificante_reconcile_from_persisted"
             r")\.py$"
@@ -257,68 +257,68 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/application/(?:ledger/tests/_action_test_support|workflow/tests/test_state_persistence_roundtrip)\.py$"
+            r"^src/cadrumo/application/(?:ledger/tests/_action_test_support|workflow/tests/test_state_persistence_roundtrip)\.py$"
         ),
         reason="workflow and ledger support tests preserve external work-unit/export path labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/calculations/tests/test_carry_gate_parity\.py$"),
+        path=_path(r"^src/cadrumo/application/calculations/tests/test_carry_gate_parity\.py$"),
         reason="calculation carry-gate tests preserve opaque AEAT expediente source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/filing/tests/_export_support\.py$"),
+        path=_path(r"^src/cadrumo/application/filing/tests/_export_support\.py$"),
         reason="filing export support tests preserve external export path labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"),
+        path=_path(r"^src/cadrumo/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"),
         reason="live capture support tests preserve external justificante fixture and work-unit labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/modelo/tests/_export_modelo_303_support\.py$"),
+        path=_path(r"^src/cadrumo/application/modelo/tests/_export_modelo_303_support\.py$"),
         reason="modelo export support tests preserve external justificante and expediente labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/overview/(?:_calendar|tests/test_calendar[a-z_]*)\.py$"),
+        path=_path(r"^src/cadrumo/application/overview/(?:_calendar|tests/test_calendar[a-z_]*)\.py$"),
         reason="overview calendar code/tests preserve pre-existing display-doc and justificante CSV labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/overview/tests/calendar_test_support\.py$"),
+        path=_path(r"^src/cadrumo/application/overview/tests/calendar_test_support\.py$"),
         reason="overview calendar support tests preserve external justificante CSV labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/verification/_verify\.py$"),
+        path=_path(r"^src/cadrumo/application/verification/_verify\.py$"),
         reason="verification helper docs explicitly refuse combined calendar input",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/core/(?:observability/tests/test_replay|tests/test_paths)\.py$"),
+        path=_path(r"^src/cadrumo/core/(?:observability/tests/test_replay|tests/test_paths)\.py$"),
         reason="core tests preserve historical replay argv and path-token examples",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/domain/calculations/registry/tests/test_(?:corpus_round_trip_gate|provisional_specimen_gate)\.py$"
+            r"^src/cadrumo/domain/calculations/registry/tests/test_(?:corpus_round_trip_gate|provisional_specimen_gate)\.py$"
         ),
         reason="registry corpus gates generate external justificante fixture filenames",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/domain/(?:justificante|modelos|submission)/tests/test_.*\.py$"),
+        path=_path(r"^src/cadrumo/domain/(?:justificante|modelos|submission)/tests/test_.*\.py$"),
         reason="domain roundtrip tests preserve external justificante, work-unit, and storage labels",
     ),
     AllowlistRule(
         path=_path(
-            r"^src/aeat/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_export_verb|modelo_reconcile_verb|overview_calendar_verb)\.py$"
+            r"^src/cadrumo/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_export_verb|modelo_reconcile_verb|overview_calendar_verb)\.py$"
         ),
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"),
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"),
         reason="CLI tests preserve external projection, justificante, and evidence labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/tests/test_(?:ledger_corpus_fidelity|ledger_modelo_staleness)\.py$"),
+        path=_path(r"^src/cadrumo/tests/test_(?:ledger_corpus_fidelity|ledger_modelo_staleness)\.py$"),
         reason="top-level ledger corpus tests preserve external corpus period labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/locales/(?:ca|en|es|hu)\.yml$"),
+        path=_path(r"^src/cadrumo/locales/(?:ca|en|es|hu)\.yml$"),
         reason="pre-existing locale help examples are ratcheted until the locale sweep owns them",
         pattern_names=frozenset({"calendar quarter token"}),
         text=_text("2024" + "Q1"),
@@ -329,13 +329,13 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         pattern_names=frozenset({"year-qualified quarterly token"}),
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_app_quickfile\.py$"),
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_app_quickfile\.py$"),
         reason="quickfile invoice tests use an opaque operator-facing invoice_number display label, not a period input",
         pattern_names=frozenset({"year-qualified quarterly token"}),
         text=_text(r"invoice_number="),
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_modelo_(?:kv_format_localization|state_text_labels)\.py$"),
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_modelo_(?:kv_format_localization|state_text_labels)\.py$"),
         reason="work-unit fixtures use an opaque display-name label, not a period input",
         pattern_names=frozenset({"year-qualified quarterly token"}),
         text=_text(r"name="),

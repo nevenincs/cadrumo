@@ -51,7 +51,7 @@ Coverage map for the sociedades fold surface
 * **M200 self BIN stock carry (00670) / dotaciones-deterioro (01494/01495)** —
   already driven through the REAL M200 engine by the direct-resolver continuity
   tests
-  ``aeat.application.calculations.tests.test_modelo_200_bin_carry_forward_continuity``
+  ``cadrumo.application.calculations.tests.test_modelo_200_bin_carry_forward_continuity``
   and ``...test_modelo_200_dotaciones_deterioro_carry_continuity``. The live
   operator path additionally requires the full six-binding legal-entity profile
   scaffold (``new-entity-flag``, ``incn-prior-12-months``,
@@ -204,7 +204,7 @@ def _seed_m200_sociedad_profile() -> None:
     ``sal-capital-social``. For a standard SL (not a SAL), the SAL facts are
     absent / zero, which the formulas treat as no dotacion. The profile resolver
     fills all six from the persisted record via
-    :class:`aeat.application.modelo._profile_binding.ModeloProfileBindingResolver`;
+    :class:`cadrumo.application.modelo._profile_binding.ModeloProfileBindingResolver`;
     no profile binding is hand-fed through the caller channel. ``display_name``
     matches the ``isolated_runtime_profile`` manifest label.
     """

@@ -1,6 +1,6 @@
 """Reviewed-excluded review-state action tests (issue #224).
 
-Exercises :func:`~aeat.application.ledger.mark_transaction_reviewed_excluded`
+Exercises :func:`~cadrumo.application.ledger.mark_transaction_reviewed_excluded`
 against real encrypted repositories: the operator marks an active transaction as
 deliberately excluded from filing, the uniform mutation quintet reflects the new
 ``excluded`` review status, the ``ledger.transaction.reviewed_excluded`` lifecycle

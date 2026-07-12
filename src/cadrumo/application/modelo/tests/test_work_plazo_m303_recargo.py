@@ -3,8 +3,8 @@
 Issue #576 reported that the Art. 27 LGT extemporaneidad recargo warning was
 absent for the R9 (quarterly IVA / Modelo 303) deadline cluster. The
 deadline-generic advisory landed under issue #533
-(:func:`aeat.application.modelo.modelo_work_deadline_posture` +
-:func:`aeat.domain.deadlines._recargo.build_recovery_for_overdue`), and the
+(:func:`cadrumo.application.modelo.modelo_work_deadline_posture` +
+:func:`cadrumo.domain.deadlines._recargo.build_recovery_for_overdue`), and the
 Modelo 303 registry carries quarterly deadline windows (``1T``/``2T``/``3T``/
 ``4T``) exactly like Modelo 130. Because the summary resolves its close date
 through the generic :func:`resolve_filing_closes_on`, no M303-specific wiring is
@@ -12,9 +12,9 @@ needed: a late M303 quarter already surfaces the unassessed rate preview.
 
 This test proves that invariant so the R9 cluster cannot silently regress. It is
 the M303-quarterly companion to
-``aeat.domain.deadlines.tests.test_extemporaneidad`` (which covers the M130
+``cadrumo.domain.deadlines.tests.test_extemporaneidad`` (which covers the M130
 quarterly resolver and the BOE-grounded recargo band schedule) and to
-``aeat.entrypoints.cli.tests.test_modelo_calculate_recargo_notice`` (which drives
+``cadrumo.entrypoints.cli.tests.test_modelo_calculate_recargo_notice`` (which drives
 the CLI Notice for M130).
 
 Real-behaviour, non-tautology: the close date is read from the live registry

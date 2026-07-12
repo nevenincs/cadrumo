@@ -1,7 +1,7 @@
 """Static guard for production exception base classes.
 
 User/application-facing AEAT exceptions must derive from
-:class:`aeat.core.errors.AeatError` so they bind to the central error
+:class:`cadrumo.core.errors.AeatError` so they bind to the central error
 registry. A tiny allowlist remains for private implementation sentinels
 and structural mixin bases that are not raised directly.
 """
@@ -21,64 +21,64 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _BARE_EXCEPTION_BASES = (Exception, ValueError, RuntimeError, KeyError, TypeError)
 _ALLOWLIST = {
-    "aeat.core.errors.AeatError": "central root of the registry-bound exception hierarchy",
-    "aeat.application.live._snapshot_base.SnapshotNotFoundError": (
+    "cadrumo.core.errors.AeatError": "central root of the registry-bound exception hierarchy",
+    "cadrumo.application.live._snapshot_base.SnapshotNotFoundError": (
         "structural KeyError mixin; concrete snapshot errors also inherit AeatError"
     ),
-    "aeat.adapters.outbound.aeat._playwright.PlaywrightError": (
+    "cadrumo.adapters.outbound.aeat._playwright.PlaywrightError": (
         "optional-extra fallback alias for playwright.async_api.Error; it must match the third-party "
         "exception shape when Playwright is absent and is only caught/wrapped by adapter boundaries"
     ),
-    "aeat.agent._skill_metadata.SkillMetadataError": (
+    "cadrumo.agent._skill_metadata.SkillMetadataError": (
         "agent-harness skill-frontmatter/applies_when validation error; intentionally a plain "
         "ValueError (a malformed-input signal at the harness boundary), not an operator-facing "
         "registry-bound filing/calculation error"
     ),
-    "aeat.agent.eval._live_harness.LiveHarnessError": (
+    "cadrumo.agent.eval._live_harness.LiveHarnessError": (
         "agent-harness live-eval scaffolding runtime error; intentionally a plain RuntimeError "
         "(a harness-boundary execution signal), not an operator-facing registry-bound filing error"
     ),
-    "aeat.entrypoints.mcp._input_schema.SchemaResolutionError": (
+    "cadrumo.entrypoints.mcp._input_schema.SchemaResolutionError": (
         "MCP input-schema build-coverage error; intentionally a plain RuntimeError (a loud "
         "build-time signal that a command's CLI subtree failed to materialise, which would "
         "otherwise ship a silent argument-free schema), not an operator-facing registry-bound "
         "filing error"
     ),
-    "aeat.application.auth._certificate_secret_backend.CertificateSecretBackendUnavailableError": (
+    "cadrumo.application.auth._certificate_secret_backend.CertificateSecretBackendUnavailableError": (
         "certificate-secret backend boundary error; translated by the auth command/service layer, not raised as a "
         "registry-bound calculation or filing error"
     ),
-    "aeat.application.auth._certificate_secret_backend.CertificateSecretNotFoundError": (
+    "cadrumo.application.auth._certificate_secret_backend.CertificateSecretNotFoundError": (
         "certificate-secret backend absence signal; callers collapse it to optional secret state"
     ),
-    "aeat.application.auth._certificate_sources.CertificateSourceNoActiveBucketError": (
+    "cadrumo.application.auth._certificate_sources.CertificateSourceNoActiveBucketError": (
         "certificate-source mutation precondition signal for an uninitialised local profile bucket"
     ),
-    "aeat.application.auth._certificate_sources.CertificateSourceNotFoundError": (
+    "cadrumo.application.auth._certificate_sources.CertificateSourceNotFoundError": (
         "mapping-style certificate-source lookup miss; inherits KeyError so callers can preserve key semantics"
     ),
-    "aeat.application.bucket_maintenance._sandbox.SandboxAlreadyExistsError": (
+    "cadrumo.application.bucket_maintenance._sandbox.SandboxAlreadyExistsError": (
         "sandbox lifecycle application-service refusal; CLI boundary renders it as an operator action refusal"
     ),
-    "aeat.application.bucket_maintenance._sandbox.SandboxDiscardRefusedError": (
+    "cadrumo.application.bucket_maintenance._sandbox.SandboxDiscardRefusedError": (
         "sandbox destructive-action gate refusal; intentionally local to sandbox lifecycle orchestration"
     ),
-    "aeat.application.bucket_maintenance._sandbox.SandboxMergeRefusedError": (
+    "cadrumo.application.bucket_maintenance._sandbox.SandboxMergeRefusedError": (
         "sandbox merge confirmation/scope refusal; intentionally local to sandbox lifecycle orchestration"
     ),
-    "aeat.application.bucket_maintenance._sandbox.SandboxNotArchivedError": (
+    "cadrumo.application.bucket_maintenance._sandbox.SandboxNotArchivedError": (
         "sandbox restore precondition refusal; intentionally local to sandbox lifecycle orchestration"
     ),
-    "aeat.application.bucket_maintenance._sandbox.SandboxNotFoundError": (
+    "cadrumo.application.bucket_maintenance._sandbox.SandboxNotFoundError": (
         "sandbox bucket lookup miss; intentionally local to sandbox lifecycle orchestration"
     ),
-    "aeat.application.bucket_maintenance._sandbox.SandboxSourceNotFoundError": (
+    "cadrumo.application.bucket_maintenance._sandbox.SandboxSourceNotFoundError": (
         "sandbox seed-source lookup miss; intentionally local to sandbox lifecycle orchestration"
     ),
-    "aeat.application.invoices._bulk_import._RowParseError": (
+    "cadrumo.application.invoices._bulk_import._RowParseError": (
         "private row parser control-flow carrier; converted to BulkInvoiceImportRowFailure before leaving the module"
     ),
-    "aeat.application.invoices._wizard._WizardFieldError": (
+    "cadrumo.application.invoices._wizard._WizardFieldError": (
         "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
     ),
 }

@@ -1,7 +1,7 @@
 """Strict roundtrip and lifecycle tests for live justificante captures.
 
 Persists :class:`JustificanteCaptureSnapshot` records under
-``aeat.application.live.justificante_capture_snapshot`` at
+``cadrumo.application.live.justificante_capture_snapshot`` at
 ``SensitivityClass.FINANCIAL`` through the real encrypted secure-object
 store. The load-bearing field is the captured PDF: the binary receipt
 rides the JSON envelope as base64, so the roundtrip witnesses that the

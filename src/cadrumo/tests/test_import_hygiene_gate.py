@@ -5,9 +5,9 @@ gate enforcing the ``import-centralization`` decision record's Ruling 1 (one can
 top-level export per symbol; cross-package consumers import only from the
 owning package's ``__all__`` facade). Supersedes the two narrower pre-existing
 gates it now subsumes:
-``src/aeat/domain/calculations/registry/tests/test_public_api_boundaries.py``
+``src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py``
 (registry-package-scoped raw-orchestration boundary) and
-``src/aeat/entrypoints/cli/tests/test_architecture_boundaries.py`` (CLI-package
+``src/cadrumo/entrypoints/cli/tests/test_architecture_boundaries.py`` (CLI-package
 private-domain-import subset). Their documented exceptions are seeded below as
 named baseline entries so nothing that was previously tolerated silently
 regresses.
@@ -21,7 +21,7 @@ Three ratcheting/pinned checks, backed by the checked-in
   structurally removed by extracting the four mutually-needed runtime-bound
   names (``WorkflowEvent``, ``utc_now``, ``InvoiceReviewRecord``,
   ``LedgerReviewRecord``) into a shared leaf module,
-  ``aeat.application._workflow_review_models``, that neither package depends
+  ``cadrumo.application._workflow_review_models``, that neither package depends
   on. The baseline's ``sites`` list is now permanently ``[]``. The gate keeps
   its ratchet/named-set-equality shape (count may not exceed the baseline;
   every current violation must be a named baseline entry) rather than a bare
@@ -63,7 +63,7 @@ a production (non-test) violation is NEVER tolerated by the test-debt file,
 and the production assertions above are unaffected by its contents.
 
 A fifth, hard-zero check (**Family 4: underscore-named entries in
-``__all__``**) asserts the live ``src/aeat`` tree carries no facade export
+``__all__``**) asserts the live ``src/cadrumo`` tree carries no facade export
 whose name starts with an underscore (a leading ``_``, not a dunder). A public
 facade exporting a private-named symbol contradicts the single-canonical-
 source policy the naming convention signals everywhere else in the codebase.
@@ -175,7 +175,7 @@ def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
 
 
 def _current_production_family1_sites() -> tuple[_BaselineSite, ...]:
-    """Re-run the real scanner against the live ``src/aeat`` tree."""
+    """Re-run the real scanner against the live ``src/cadrumo`` tree."""
     py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     violations = find_private_import_violations(all_sites)
@@ -206,7 +206,7 @@ def test_production_family1_baseline_is_hard_zero() -> None:
 
     The ``application.review`` <-> ``application.workflow`` cycle-break this
     baseline used to carry has been structurally removed (see the shared
-    ``aeat.application._workflow_review_models`` leaf module). ``sites`` is
+    ``cadrumo.application._workflow_review_models`` leaf module). ``sites`` is
     now a permanent ``[]``; this pins that the baseline itself has not
     regressed back to a ratchet allowlist for that specific exception.
     """
@@ -385,13 +385,13 @@ def test_family2_shim_modules_are_exactly_the_documented_bridges() -> None:
 
 
 _RETIRED_UMBRELLA_SYMBOL_OWNERS: Final[dict[str, str]] = {
-    "CalculationRevision": "aeat.application.modelo",
-    "CalculationRevisionAmendmentKind": "aeat.application.modelo",
-    "ExternalEvidenceKind": "aeat.application.modelo",
-    "WorkUnit": "aeat.application.modelo",
-    "link_transaction": "aeat.application.invoices",
-    "suggest_reconciliations": "aeat.application.invoices",
-    "verify_link_consistency": "aeat.application.invoices",
+    "CalculationRevision": "cadrumo.application.modelo",
+    "CalculationRevisionAmendmentKind": "cadrumo.application.modelo",
+    "ExternalEvidenceKind": "cadrumo.application.modelo",
+    "WorkUnit": "cadrumo.application.modelo",
+    "link_transaction": "cadrumo.application.invoices",
+    "suggest_reconciliations": "cadrumo.application.invoices",
+    "verify_link_consistency": "cadrumo.application.invoices",
 }
 
 

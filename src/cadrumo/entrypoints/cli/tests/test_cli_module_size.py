@@ -25,7 +25,7 @@ from ....tests import ast_for_path, package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLI_ROOT = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+_CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _DEFAULT_MODULE_LINE_LIMIT = 1250
 # Per-module ceilings for SPLIT-CANDIDATE CLI modules grown by recovered features.
 _MODULE_LINE_LIMIT_OVERRIDES = {

@@ -1,11 +1,11 @@
-"""Unit tests for :mod:`aeat.adapters.inbound.sanitizer._streams`.
+"""Unit tests for :mod:`cadrumo.adapters.inbound.sanitizer._streams`.
 
 The tests synthesise PDFs in-process with content streams that pin each
 text-show operator the sanitiser must rewrite (``Tj``, ``TJ``, ``'``,
 ``"``). For each operator the test asserts that the cleartext is gone
 from the post-rewrite content stream, the synthetic value is present at
 the same position, and one
-:class:`aeat.adapters.inbound.sanitizer._records.Replacement` row landed
+:class:`cadrumo.adapters.inbound.sanitizer._records.Replacement` row landed
 per cleartext occurrence carrying the SHA-256 of the cleartext (never
 the cleartext itself).
 """

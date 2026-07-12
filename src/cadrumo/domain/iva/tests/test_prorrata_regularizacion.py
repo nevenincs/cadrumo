@@ -38,7 +38,7 @@ def test_definitiva_percentage_comes_from_the_full_year_art104_substrate() -> No
     """The definitive percentage is the art-104 round-up over full-year volumes.
 
     con-derecho 90.000 / total 100.000 = 90% exactly (no rounding needed); the
-    result is a DEFINITIVA/annual :class:`~aeat.domain.iva.ProrrataResult`.
+    result is a DEFINITIVA/annual :class:`~cadrumo.domain.iva.ProrrataResult`.
     """
     result = compute_prorrata_definitiva_anual(
         ProrrataInputs(

@@ -5,7 +5,7 @@ resident-IRPF profile. On the non-interactive create paths that default is
 otherwise applied silently, so a taxpayer who never chose a comunidad has
 their autonomic deductions and autonomic tax scale computed for Madrid
 without any signal. These tests pin that the create flow surfaces a
-``warning``-severity :class:`~aeat.core.json_contract.Notice`
+``warning``-severity :class:`~cadrumo.core.json_contract.Notice`
 (``config.profile.create.ccaa_defaulted``) exactly when the CCAA was
 assumed, and stays silent when the operator explicitly names a comunidad —
 including an explicit Madrid.

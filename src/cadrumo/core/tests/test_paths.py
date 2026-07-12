@@ -1,7 +1,7 @@
 """Security-guardrail regression tests for the shared path helpers.
 
 Pinned regression coverage for the path-handling boundary exposed by
-:mod:`aeat.core.paths`. Each guardrail must pass against the canonical
+:mod:`cadrumo.core.paths`. Each guardrail must pass against the canonical
 shapes (filename tokens, nested forward-slash subpaths) AND fail closed
 against every known bypass shape (parent traversal, shell
 metacharacters, absolute-looking inputs, dotfiles, overlong tokens,
@@ -197,8 +197,8 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
     """The worst-case suffix constant matches the real bucket blob-sidecar filename shape.
 
     Anti-tautology guard: recomputes the suffix from the real
-    :mod:`aeat.adapters.persistence.storage` namespace constants and the
-    real :mod:`aeat.adapters.outbound.storage._local` filename-building
+    :mod:`cadrumo.adapters.persistence.storage` namespace constants and the
+    real :mod:`cadrumo.adapters.outbound.storage._local` filename-building
     rules (HMAC prefix 8, label capped at 64 chars, ``.meta.json``
     sidecar extension) so a change to either shape is caught here instead
     of silently under-counting the margin.

@@ -63,7 +63,7 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
 
     missing = tmp_path / "no-such-statement.csv"
     with (
-        caplog.at_level("ERROR", logger="aeat.adapters.inbound.financial.providers"),
+        caplog.at_level("ERROR", logger="cadrumo.adapters.inbound.financial.providers"),
         pytest.raises(TransactionValidationError) as excinfo,
     ):
         import_ledger_source(
@@ -79,7 +79,7 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
     probe_errors = [
         record
         for record in caplog.records
-        if record.levelno >= logging.ERROR and record.name.startswith("aeat.adapters.inbound.financial.providers")
+        if record.levelno >= logging.ERROR and record.name.startswith("cadrumo.adapters.inbound.financial.providers")
     ]
     assert probe_errors == []
 

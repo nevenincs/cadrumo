@@ -61,9 +61,9 @@ def test_lexical_and_citation_modules_import_without_search_extra() -> None:
     # The degraded lexical-only mode must import with no semantic stack; a
     # real import-machinery check, not a mock.
     for module in (
-        "aeat.application.corpus_search._lexical_index",
-        "aeat.application.corpus_search._citation_lookup",
-        "aeat.application.corpus_search",
+        "cadrumo.application.corpus_search._lexical_index",
+        "cadrumo.application.corpus_search._citation_lookup",
+        "cadrumo.application.corpus_search",
     ):
         assert importlib.import_module(module) is not None
 

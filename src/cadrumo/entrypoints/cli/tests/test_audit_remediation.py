@@ -195,7 +195,7 @@ _TYPER_HELP_SURFACE_CALLABLES = frozenset({"Typer", "Option", "Argument", "comma
 
 def test_typer_help_sources_are_direct_translations() -> None:
     failures: list[str] = []
-    for module in Path("src/aeat").rglob("*.py"):
+    for module in Path("src/cadrumo").rglob("*.py"):
         if module.name.startswith(("test_", "_test_")):
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))

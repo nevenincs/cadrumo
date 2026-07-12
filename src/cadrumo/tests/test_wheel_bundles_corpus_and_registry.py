@@ -1,8 +1,8 @@
 """Tripwire test that the built wheel bundles every shipped data file except corpus source binaries.
 
 The corpus-registry packaging contract
-relocates both data trees under ``src/aeat/_data/`` so the existing
-``packages = ["src/aeat"]`` hatchling directive carries them inside
+relocates both data trees under ``src/cadrumo/_data/`` so the existing
+``packages = ["src/cadrumo"]`` hatchling directive carries them inside
 the wheel without any force-include declaration. The terminology tree
 uses the same shipped-data contract. The wheel-split packaging decision
 then excludes the corpus SOURCE binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``)
@@ -36,11 +36,11 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import REPO_ROOT, SRC_AEAT
+from ._inventory import REPO_ROOT, SRC_CADRUMO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DATA_ROOT = SRC_AEAT / "_data"
+_DATA_ROOT = SRC_CADRUMO / "_data"
 _WHEEL_DATA_PREFIX = "aeat/_data"
 
 # Corpus source binaries excluded from the slim ``aeat`` wheel (they ship in the
@@ -50,23 +50,23 @@ _CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 
 def _is_corpus_source_binary(source_relative: str) -> bool:
-    """Return True for a ``src/aeat/_data/corpus`` path that is an excluded source binary."""
+    """Return True for a ``src/cadrumo/_data/corpus`` path that is an excluded source binary."""
 
-    return source_relative.startswith("src/aeat/_data/corpus/") and source_relative.lower().endswith(
+    return source_relative.startswith("src/cadrumo/_data/corpus/") and source_relative.lower().endswith(
         _CORPUS_BINARY_SUFFIXES
     )
 
 
 def _git_ls_files_data() -> list[str]:
-    """Return git-tracked paths under ``src/aeat/_data`` relative to the project root."""
+    """Return git-tracked paths under ``src/cadrumo/_data`` relative to the project root."""
 
     completed = subprocess.run(
         [
             "git",
             "ls-files",
-            "src/aeat/_data/corpus",
-            "src/aeat/_data/registry",
-            "src/aeat/_data/terminology",
+            "src/cadrumo/_data/corpus",
+            "src/cadrumo/_data/registry",
+            "src/cadrumo/_data/terminology",
         ],
         cwd=REPO_ROOT,
         capture_output=True,
@@ -99,11 +99,11 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
     they are legitimately absent from this slim wheel and must not be expected here.
     """
 
-    prefix = "src/aeat/_data/"
+    prefix = "src/cadrumo/_data/"
     expected: set[str] = set()
     for path in tracked:
         if not path.startswith(prefix):
-            raise AssertionError(f"git ls-files returned a path outside src/aeat/_data/: {path!r}")
+            raise AssertionError(f"git ls-files returned a path outside src/cadrumo/_data/: {path!r}")
         if _is_corpus_source_binary(path):
             continue
         relative = path[len(prefix) :]
@@ -156,7 +156,7 @@ def test_wheel_filename_matches_distribution(built_wheel: Path) -> None:
 
 
 def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> None:
-    """Every git-tracked file under src/aeat/_data appears inside the wheel archive."""
+    """Every git-tracked file under src/cadrumo/_data appears inside the wheel archive."""
 
     tracked = _git_ls_files_data()
     expected = _expected_archive_paths(tracked)

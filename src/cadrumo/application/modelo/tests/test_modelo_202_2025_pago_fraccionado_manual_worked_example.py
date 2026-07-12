@@ -349,7 +349,7 @@ def test_m202_2025_manual_grounding_is_enrolled_and_raises_independently_grounde
     ``corpus/manual_oracles/modelo-202-2025-primer-pago-modalidad-40-2.json``
     evidence. This test proves the OTHER end of the wire: that the
     declaration actually reaches the live, VALIDATED
-    :class:`~aeat.domain.calculations.registry.RegistryVerificationPolicy` fold,
+    :class:`~cadrumo.domain.calculations.registry.RegistryVerificationPolicy` fold,
     so casilla "03" raises ``independently_grounded_fraction`` above zero for
     M202 rather than sitting inert in TOML. Not tautological: the grounded
     set and the fraction are read from the registry's own declared and

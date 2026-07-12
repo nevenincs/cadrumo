@@ -841,7 +841,7 @@ def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switc
 def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_manifest() -> None:
     """The indicator helper itself must never raise on a corrupt active manifest.
 
-    Exercises :func:`~aeat.entrypoints.cli._common._active_sandbox_notice`
+    Exercises :func:`~cadrumo.entrypoints.cli._common._active_sandbox_notice`
     directly against a bucket whose manifest is torn/corrupt AND is the
     currently active bucket (``AEAT_ACTIVE_PROFILE`` points at it). This
     isolates the indicator's own defensive handling: the helper must

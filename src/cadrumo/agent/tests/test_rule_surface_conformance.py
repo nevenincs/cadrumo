@@ -11,10 +11,10 @@ non-existent verb or field fails the gate.
 
 A second, negative gate closes the complementary black-box hole: nothing forbade
 an operator document from naming a package internal (a dotted ``aeat.<pkg>...``
-module path, a ``src/aeat/...`` repo path, a private ``_module`` symbol, or a
+module path, a ``src/cadrumo/...`` repo path, a private ``_module`` symbol, or a
 ``test_*`` name) instead of the CLI/manifest/legal surface the operator is
 supposed to orient over. The dotted-module-path half of that check is sourced
-from the live :class:`~aeat.application.operator_surface.OperatorSurfaceContract`
+from the live :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract`
 ``service_owner`` / ``owner`` string values (never a hand-authored package-name
 list), so a newly added backend module is blocked from leaking into rule prose
 the moment it is registered as a command family's owner, with no separate
@@ -210,7 +210,7 @@ def _internal_service_owner_tokens() -> frozenset[str]:
 
     Sourced from :class:`MountedCommandFamily.service_owner` and
     :class:`ServiceOwner.owner` on the live
-    :class:`~aeat.application.operator_surface.OperatorSurfaceContract` - never a
+    :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` - never a
     hand-authored package-name list - so a newly registered backend module is
     blocked from operator prose the moment it is enrolled as a command family's
     owner, with no second allowlist to keep in sync.
@@ -289,12 +289,12 @@ def test_no_operator_document_names_a_package_internal() -> None:
 
     - A **data-sourced** check: no document may contain, anywhere in its text,
       one of the live contract's ``service_owner`` / ``owner`` dotted module
-      paths (e.g. ``aeat.application.modelo``). The blocklist is read from
-      :func:`~aeat.application.operator_surface.get_operator_surface_contract`,
+      paths (e.g. ``cadrumo.application.modelo``). The blocklist is read from
+      :func:`~cadrumo.application.operator_surface.get_operator_surface_contract`,
       not hand-authored, so it grows automatically as new backend modules are
       registered as command-family owners.
     - Two **structural** checks over backticked spans: a repo path
-      (``src/aeat/...``) and a private-symbol- or test-name-shaped single token
+      (``src/cadrumo/...``) and a private-symbol- or test-name-shaped single token
       (`` `_foo` ``, `` `test_bar` ``). These are internal-shaped regardless of
       which package they name, so they need no data source.
 

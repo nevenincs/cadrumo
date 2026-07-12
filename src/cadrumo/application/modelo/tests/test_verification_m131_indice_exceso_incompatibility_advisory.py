@@ -33,7 +33,7 @@ See Also:
         Application verification entry point that emits the advisory finding.
     :func:`~application.modelo._verification_actions._evaluate_advisory_predicate_fires`
         Predicate helper exercised directly by the focused firing cases.
-    ``src/aeat/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml``
         Registry-authored 2025 advisory predicate declarations under test.
 """
 

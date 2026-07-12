@@ -177,11 +177,11 @@ def test_finalise_registry_logs_info_on_success(
 ) -> None:
     """``_finalise_registry`` keeps successful import-time logs at debug level."""
     caplog.clear()
-    with caplog.at_level(logging.DEBUG, logger="aeat.domain.portals._registry"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.domain.portals._registry"):
         mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
     assert len(mapping) == 41
     debug_records = [
-        r for r in caplog.records if r.name == "aeat.domain.portals._registry" and r.levelno == logging.DEBUG
+        r for r in caplog.records if r.name == "cadrumo.domain.portals._registry" and r.levelno == logging.DEBUG
     ]
     assert len(debug_records) == 1
     assert "loaded 41 portal entries" in debug_records[0].getMessage()

@@ -1,6 +1,6 @@
 """Precedence-chain tests for the active-profile resolver.
 
-The resolver lives at `aeat.core.resolve_active_bucket_id`. It consults
+The resolver lives at `cadrumo.core.resolve_active_bucket_id`. It consults
 two precedence rungs in order:
 
 1. `Settings.aeat_active_profile` (`AEAT_ACTIVE_PROFILE` env var, or
@@ -75,7 +75,7 @@ def test_active_profile_record_logs_missing_secure_record(tmp_path: Path, caplog
 
     bucket_id = "missing-record-profile"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        caplog.set_level(logging.DEBUG, logger="aeat.application.workflow._models")
+        caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow._models")
 
         assert WorkflowState().active_profile_record() is None
 

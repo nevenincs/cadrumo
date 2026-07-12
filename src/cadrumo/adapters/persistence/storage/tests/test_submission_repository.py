@@ -1,6 +1,6 @@
 """Tests for the governed-persistence :class:`SubmissionRepository`.
 
-Exercises :class:`aeat.domain.submission.SubmissionRepository`'s save,
+Exercises :class:`cadrumo.domain.submission.SubmissionRepository`'s save,
 load, list, iter, and delete API; the per-submission lock isolation;
 and the classification gate enforcement on the audit envelope.
 """
@@ -92,7 +92,7 @@ class TestEmptyState:
         assert repo.load("missing-id") is None
 
     def test_object_marker_identifies_secure_backend(self, repo: SubmissionRepository) -> None:
-        assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
+        assert repo.envelope_path_for("abc123").as_posix().endswith("cadrumo.domain.submission.records/abc123")
 
     def test_list_submission_ids_empty(self, repo: SubmissionRepository) -> None:
         assert repo.list_submission_ids() == ()
@@ -165,7 +165,7 @@ class TestClassificationGate:
         )
         repo = SubmissionRepository()
         SecureObjectRepository().save(
-            namespace="aeat.domain.submission.records",
+            namespace="cadrumo.domain.submission.records",
             object_key=filing.submission_id,
             classification=SensitivityClass.OPERATIONAL,
             schema_version=1,
@@ -176,7 +176,7 @@ class TestClassificationGate:
             repo.load(filing.submission_id)
         assert exc_info.value.translated_message == "errors.storage.namespace.classification_mismatch"
         assert exc_info.value.context == {
-            "namespace": "aeat.domain.submission.records",
+            "namespace": "cadrumo.domain.submission.records",
             "classification": SensitivityClass.OPERATIONAL.value,
             "expected": SensitivityClass.AUDIT.value,
         }
@@ -196,5 +196,5 @@ class TestPerSubmissionLockIsolation:
         assert a != b
         assert a.parent == b.parent
         assert a.parent == repo.store_dir
-        assert a.as_posix().endswith("aeat.domain.submission.records/sub-a.lock")
-        assert b.as_posix().endswith("aeat.domain.submission.records/sub-b.lock")
+        assert a.as_posix().endswith("cadrumo.domain.submission.records/sub-a.lock")
+        assert b.as_posix().endswith("cadrumo.domain.submission.records/sub-b.lock")

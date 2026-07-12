@@ -1,4 +1,4 @@
-"""Tests for :func:`~aeat.application.registry.diff_registry_revisions`.
+"""Tests for :func:`~cadrumo.application.registry.diff_registry_revisions`.
 
 Grounds the diff against the two *real* Modelo 303 revisions shipped in the
 bundled registry (``2009-y-siguientes`` and ``2023-y-siguientes``): every

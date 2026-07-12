@@ -1,10 +1,10 @@
 """Real-behavior tests for ``build_data_prep_walkthrough``.
 
 Exercises the ordered data-prep checklist directly against real
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` storage (an
+:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository` storage (an
 isolated encrypted profile bucket, no mocks), real
-:class:`~aeat.domain.invoices.InvoiceCatalogue` / :class:`~aeat.domain.invoices.Invoice`
-records, and a real :func:`~aeat.application.ledger.preflight_ledger_tax_readiness`
+:class:`~cadrumo.domain.invoices.InvoiceCatalogue` / :class:`~cadrumo.domain.invoices.Invoice`
+records, and a real :func:`~cadrumo.application.ledger.preflight_ledger_tax_readiness`
 report. This module never touches the modelo calculation registry authority, so it
 stays independent of any registry-authoring state elsewhere in the tree.
 """

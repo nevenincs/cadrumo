@@ -25,7 +25,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-bundled_path = importlib.import_module("aeat.core.resources").bundled_path
+bundled_path = importlib.import_module("cadrumo.core.resources").bundled_path
 _CORPUS_ROOT = bundled_path("corpus", "aeat_official", "instructions")
 
 

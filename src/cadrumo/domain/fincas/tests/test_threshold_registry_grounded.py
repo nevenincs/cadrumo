@@ -4,7 +4,7 @@ The prior-rent-rebaja threshold (5% per BOE Ley 12/2023) lives as a
 registry parameter under Modelo 100 / each ejercicio (id pattern
 ``renta-<year>-rental-prior-rent-rebaja-threshold``). The rental resolver's
 ``_resolve_prior_rent_rebaja_threshold(period_year)`` reads it via
-``aeat.domain.calculations.registry.read_parameter`` and threads the value into
+``cadrumo.domain.calculations.registry.read_parameter`` and threads the value into
 ``_qualifies_for_tier_90``.
 
 These tests confirm:

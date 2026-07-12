@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def active_profile(tmp_path: Path) -> Iterator[None]:
     """Set the active-profile setting so the precedence chain resolves.
 
-    Routes through :func:`aeat.core.config.override_settings`, the
+    Routes through :func:`cadrumo.core.config.override_settings`, the
     canonical Settings injection mechanism. Tests that exercise a
     different profile name nest a further `override_settings` block
     in their body.

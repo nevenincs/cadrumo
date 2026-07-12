@@ -1,10 +1,10 @@
 """Protocol-level tests for the Cl@ve Movil authentication provider.
 
-Exercises :class:`aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider`
+Exercises :class:`cadrumo.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider`
 against hand-written ``BrowserSessionLike`` stand-ins that record the
 navigation and form interactions performed by the provider. The
 stand-ins satisfy the same Protocol the production
-:class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents, so the
+:class:`cadrumo.adapters.outbound.aeat.browser.BrowserSession` presents, so the
 provider's choreography (selector clicks, form fills, post-auth
 landing assertions) is verified without a real browser.
 
@@ -930,7 +930,7 @@ def test_render_progress_banner_emits_via_logger_not_stdout(
     """_render_progress_banner must write to the logger, not to stdout/stderr."""
     import logging
 
-    with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
+    with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth._clave_movil"):
         _render_progress_banner(
             verification_code="ABC123",
             timeout_seconds=120,
@@ -964,7 +964,7 @@ def test_render_progress_banner_branch_logged(
     """QR and non-QR branch banners must appear in structured log records."""
     import logging
 
-    with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
+    with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth._clave_movil"):
         _render_progress_banner(
             verification_code=verification_code,
             timeout_seconds=timeout_seconds,

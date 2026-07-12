@@ -2,7 +2,7 @@
 
 This is the load-bearing security gate the sanitiser exists to
 satisfy. For every committed fixture under
-``src/aeat/tests/fixtures/justificantes/<modelo>/`` the test loads the
+``src/cadrumo/tests/fixtures/justificantes/<modelo>/`` the test loads the
 sidecar mapping JSON (which records the synthetic values applied
 to the fixture) and asserts that no entry in any forbidden-leak
 category contains a value that should have been replaced.

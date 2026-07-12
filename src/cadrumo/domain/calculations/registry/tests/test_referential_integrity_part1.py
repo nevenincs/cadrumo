@@ -415,7 +415,7 @@ def test_dangling_extraction_profile_target_casilla() -> None:
         surface="borrador_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="aeat.domain.calculations.registry._validate.RegistryValidator",
+        parser="cadrumo.domain.calculations.registry._validate.RegistryValidator",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=_NONEXISTENT_CASILLA,
@@ -447,7 +447,7 @@ def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="aeat.adapters.inbound.declaracion.parse_declaracion",
+        parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=_TEXT_CASILLA,
@@ -477,7 +477,7 @@ def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="aeat.adapters.inbound.declaracion.parse_declaracion",
+        parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=_TEXT_CASILLA,

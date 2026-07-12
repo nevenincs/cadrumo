@@ -57,7 +57,7 @@ from typing import NamedTuple, override
 import pytest
 
 from ._inventory import (
-    SRC_AEAT,
+    SRC_CADRUMO,
     ast_for_path,
     production_python_files,
     repo_relative,
@@ -798,7 +798,7 @@ _ALLOWLIST_EDGE_CEILING: int = 466  # net -18 after structural lifts; 4 cycle-ba
 
 def _aeat_relative(dotted: str) -> str:
     """Strip the leading ``aeat.`` (or bare ``aeat``) from a dotted module name."""
-    if dotted == "aeat":
+    if dotted == "cadrumo":
         return ""
     if dotted.startswith("aeat."):
         return dotted[len("aeat.") :]
@@ -826,11 +826,11 @@ def _resolve_target(node: ast.Import | ast.ImportFrom, package_base: tuple[str, 
             target = package + ([node.module] if node.module else [])
             return ".".join(target)
         module = node.module or ""
-        if module == "aeat" or module.startswith("aeat."):
+        if module == "cadrumo" or module.startswith("aeat."):
             return _aeat_relative(module)
         return None
     for alias in node.names:
-        if alias.name == "aeat" or alias.name.startswith("aeat."):
+        if alias.name == "cadrumo" or alias.name.startswith("aeat."):
             return _aeat_relative(alias.name)
     return None
 
@@ -957,8 +957,8 @@ def _discover_unsanctioned_sites() -> tuple[_LocalImport, ...]:
         tree = ast_for_path(path)
         if tree is None:
             continue
-        parts = path.relative_to(SRC_AEAT).parts
-        rel_parts = path.relative_to(SRC_AEAT).with_suffix("").parts
+        parts = path.relative_to(SRC_CADRUMO).parts
+        rel_parts = path.relative_to(SRC_CADRUMO).with_suffix("").parts
         is_init = path.name == "__init__.py"
         # Containing package = rel_parts[:-1] whether the file is a package
         # __init__ (drops "__init__") or a regular module (drops the module name).

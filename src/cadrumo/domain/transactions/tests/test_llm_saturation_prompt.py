@@ -7,7 +7,7 @@ Covers the IVA-category saturation contract (llm-ledger-classification decision)
   numeric tax field (``iva_rate`` / ``taxable_base`` / ``iva_amount``), so the
   model can never originate a number;
 * :func:`prompt_spec_with_saturation_fields` builds the IVA-category allow-list
-  from the registry-grounded :class:`aeat.domain.iva.IvaCatalogue`;
+  from the registry-grounded :class:`cadrumo.domain.iva.IvaCatalogue`;
 * the rendered prompt asks for the category only (never a rate/base/amount);
 * :func:`parse_response` accepts a grounded ``iva_category`` and rejects a
   hallucinated one, and rejects an ``iva_category`` emitted against a spec that

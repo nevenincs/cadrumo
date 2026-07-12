@@ -1,9 +1,9 @@
 """Post-filing event classification and actionable-filtering on calendar events.
 
 Asserts that pulled AEAT notification / expediente snapshots carry the
-fine-grained :class:`~aeat.core.PostFilingEventKind` procedural category on
-the projected :class:`~aeat.application.overview.OverviewCalendarEvent`, and
-that :func:`~aeat.application.overview.actionable_post_filing_events` selects
+fine-grained :class:`~cadrumo.core.PostFilingEventKind` procedural category on
+the projected :class:`~cadrumo.application.overview.OverviewCalendarEvent`, and
+that :func:`~cadrumo.application.overview.actionable_post_filing_events` selects
 exactly the demand / enforcement categories.
 """
 

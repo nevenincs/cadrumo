@@ -1,6 +1,6 @@
 """Real-behavior tests for the classify-path censo business_pct stamping.
 
-Locks that :func:`aeat.entrypoints.cli._ledger_support._resolve_business_pct_with_censo`
+Locks that :func:`cadrumo.entrypoints.cli._ledger_support._resolve_business_pct_with_censo`
 derives the HOME_OFFICE business_pct from the operator-declared
 ``vivienda_office`` m² facts (the re-seated ``bound_raw_afectacion_ratio``
 source) when the operator omits an explicit percentage, and leaves an

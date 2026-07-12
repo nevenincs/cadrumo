@@ -19,7 +19,7 @@ cross-quarter vertical -- the supplier's real recargo cadence -- is what this
 test verifies.
 
 Real-behaviour, real-adapter: real encrypted-SQLite secure store via
-:class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository` +
+:class:`~cadrumo.adapters.persistence.storage.sql.SecureObjectRepository` +
 ``isolated_runtime_profile``, the real registry authority, the real calculation
 engine, and the real ``ledger_iva_aggregation`` resolver. No mocks, stubs,
 skips, or xfail.

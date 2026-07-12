@@ -1,8 +1,8 @@
 """Round-trip CRUD tests for the rental-register repositories (#454).
 
 These concrete repositories live in the persistence adapter
-(:mod:`aeat.adapters.persistence.profile.fincas`); they satisfy the
-read-side ports declared in :mod:`aeat.domain.fincas._repository_ports`.
+(:mod:`cadrumo.adapters.persistence.profile.fincas`); they satisfy the
+read-side ports declared in :mod:`cadrumo.domain.fincas._repository_ports`.
 """
 
 from __future__ import annotations

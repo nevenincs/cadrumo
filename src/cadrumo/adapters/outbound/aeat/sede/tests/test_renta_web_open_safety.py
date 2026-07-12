@@ -43,7 +43,7 @@ def test_click_tokens_include_canonical_write_verb_tokens() -> None:
     assert not missing, f"FORBIDDEN_CLICK_TOKENS is missing canonical write verbs: {sorted(missing)}"
 
 
-_SEDE_DIR = PROJECT_ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "sede"
+_SEDE_DIR = PROJECT_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / "aeat" / "sede"
 _DRIVER_FILE = _SEDE_DIR / "_renta_web_open.py"
 
 

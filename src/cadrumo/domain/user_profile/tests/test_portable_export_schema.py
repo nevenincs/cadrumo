@@ -48,7 +48,7 @@ def test_portable_export_v3_defaults_keep_empty_custody_fields_json_valid() -> N
 
 def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload() -> None:
     carried = CarriedSecureObject(
-        namespace="aeat.domain.buckets.event_history",
+        namespace="cadrumo.domain.buckets.event_history",
         object_key=_OBJECT_KEY,
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
@@ -57,8 +57,8 @@ def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload()
     )
     coverage = CoverageManifest(
         custody_profile="full",
-        carried_namespaces=("aeat.domain.buckets.event_history",),
-        row_counts_by_namespace={"aeat.domain.buckets.event_history": 1},
+        carried_namespaces=("cadrumo.domain.buckets.event_history",),
+        row_counts_by_namespace={"cadrumo.domain.buckets.event_history": 1},
     )
 
     bundle = UserProfilePortableExport(
@@ -74,8 +74,8 @@ def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload()
     assert reloaded.carried_objects[0].object_key == _OBJECT_KEY
     assert reloaded.carried_objects[0].payload == _BINARY_PAYLOAD
     assert reloaded.coverage_manifest.custody_profile == "full"
-    assert reloaded.coverage_manifest.carried_namespaces == ("aeat.domain.buckets.event_history",)
-    assert reloaded.coverage_manifest.row_counts_by_namespace["aeat.domain.buckets.event_history"] == 1
+    assert reloaded.coverage_manifest.carried_namespaces == ("cadrumo.domain.buckets.event_history",)
+    assert reloaded.coverage_manifest.row_counts_by_namespace["cadrumo.domain.buckets.event_history"] == 1
 
 
 def test_portable_export_schema_rejects_extra_fields_and_is_frozen() -> None:
@@ -101,7 +101,7 @@ def test_carried_secure_object_rejects_invalid_fields() -> None:
     for object_key, payload_b64, expected_message in cases:
         with pytest.raises(ValidationError, match=expected_message):
             CarriedSecureObject(
-                namespace="aeat.domain.buckets.event_history",
+                namespace="cadrumo.domain.buckets.event_history",
                 object_key=object_key,
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
@@ -113,15 +113,15 @@ def test_carried_secure_object_rejects_invalid_fields() -> None:
 def test_coverage_manifest_rejects_negative_row_counts() -> None:
     with pytest.raises(ValidationError, match="row counts must be non-negative"):
         CoverageManifest(
-            carried_namespaces=("aeat.domain.buckets.event_history",),
-            row_counts_by_namespace={"aeat.domain.buckets.event_history": -1},
+            carried_namespaces=("cadrumo.domain.buckets.event_history",),
+            row_counts_by_namespace={"cadrumo.domain.buckets.event_history": -1},
         )
 
 
 def test_coverage_manifest_row_counts_are_immutable_after_default_and_validation() -> None:
     manifests = (
         CoverageManifest(),
-        CoverageManifest(row_counts_by_namespace={"aeat.domain.buckets.event_history": 1}),
+        CoverageManifest(row_counts_by_namespace={"cadrumo.domain.buckets.event_history": 1}),
     )
 
     for manifest in manifests:

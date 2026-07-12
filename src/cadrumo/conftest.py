@@ -1,14 +1,14 @@
-"""Package-level pytest fixtures for every test under ``src/aeat/``.
+"""Package-level pytest fixtures for every test under ``src/cadrumo/``.
 
 Hosts the ``source_tree_ast`` session-scoped fixture that ratchet
 inventories consume to amortise the AST parse cost across the suite.
-The fixture has to live here (not in ``src/aeat/tests/conftest.py``)
+The fixture has to live here (not in ``src/cadrumo/tests/conftest.py``)
 because pytest's conftest discovery walks UP from each test file; a
 conftest inside the ``tests/`` subdirectory is invisible to ratchets
-hosted at ``src/aeat/test_*.py`` and elsewhere under ``src/aeat/``.
+hosted at ``src/cadrumo/test_*.py`` and elsewhere under ``src/cadrumo/``.
 
 Marker-contract and live-import gating remain hosted from
-``src/aeat/tests/conftest.py`` (collection-time hook scope is shared
+``src/cadrumo/tests/conftest.py`` (collection-time hook scope is shared
 across all child conftests by pytest).
 """
 
@@ -31,15 +31,15 @@ import pytest
 from .core.external_constants import UTF_8_ENCODING
 from .tests import package_python_files, prime_ast_cache
 
-_SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
-"""Root of the ``src/aeat/`` source tree (the directory hosting this conftest)."""
+_SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
+"""Root of the ``src/cadrumo/`` source tree (the directory hosting this conftest)."""
 
 
 @pytest.fixture(scope="session")
 def source_tree_ast() -> Mapping[Path, ast.AST]:
-    """Return a session-cached mapping of every ``src/aeat/`` ``.py`` file to its parsed AST.
+    """Return a session-cached mapping of every ``src/cadrumo/`` ``.py`` file to its parsed AST.
 
-    Walks ``src/aeat/`` once per pytest session via ``rglob("*.py")``, skips
+    Walks ``src/cadrumo/`` once per pytest session via ``rglob("*.py")``, skips
     ``__pycache__`` directories, ``.venv`` parents, and the ``_data/``
     payload tree, reads each file as UTF-8 with ``errors='replace'`` (so
     a stray encoding cookie cannot raise), and parses it with the

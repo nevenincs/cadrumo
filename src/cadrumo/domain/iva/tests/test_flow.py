@@ -213,7 +213,7 @@ def test_iva_flow_legal_articles_carry_required_text_quotes() -> None:
 
 def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
     for art in ("84", "88", "92"):
-        # corpus ships under the bundled data root (src/aeat/_data/);
+        # corpus ships under the bundled data root (src/cadrumo/_data/);
         # resolve via bundled_path, not a CWD-relative path.
         excerpt = bundled_path("corpus", "normatives", "html", f"ley-37-1992-art-{art}.html")
         assert excerpt.exists()

@@ -2,7 +2,7 @@
 
 These close the research F1 gap: replay now proves "the same JSON came
 out", not only "the same argv re-runs". They exercise the real
-:func:`aeat.core.observability.replay_run` path with its corpus-drift
+:func:`cadrumo.core.observability.replay_run` path with its corpus-drift
 gate, the persisted golden ``envelope.json`` artifact, the capture sink,
 and the shared golden compare primitive — plus the ``run_context``
 envelope-capture that persists the artifact in the first place.

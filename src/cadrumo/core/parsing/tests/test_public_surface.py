@@ -1,4 +1,4 @@
-"""Public package surface tests for :mod:`aeat.core.parsing`."""
+"""Public package surface tests for :mod:`cadrumo.core.parsing`."""
 
 from __future__ import annotations
 

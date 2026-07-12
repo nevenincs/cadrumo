@@ -5,14 +5,14 @@ by exactly one canonical mechanism *across every modelo*, "with zero dangling
 binds and zero dormant resolvers". A one-off breadth audit proved that invariant
 held at HEAD (zero dangling/dormant across the full registry). This gate converts
 that single proof into a permanent ``proven-by-gates`` invariant: it walks every
-modelo code in the bundled :class:`~aeat.domain.calculations.registry.ModeloRevision`
+modelo code in the bundled :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
 tree, loads each revision's validated :class:`RegistrySnapshot`, and refuses two
 fragmentation classes the mandate forbids:
 
 * a ``BOUND`` casilla whose ``binding`` id resolves to no binding in its revision
   (a *dangling bind*), and
 * a binding whose ``source`` carries no canonical
-  :class:`~aeat.application.aggregation.BindingSourceDisposition`
+  :class:`~cadrumo.application.aggregation.BindingSourceDisposition`
   (ENROLLED / DEFERRED / RESERVED) — a *novel / dormant source*.
 
 A future modelo authored with a dangling bind or an undispositioned source — the
@@ -156,8 +156,8 @@ def test_every_binding_source_has_a_canonical_disposition() -> None:
     """Zero novel/dormant sources: every binding source is dispositioned.
 
     For every binding across every revision, its ``source`` MUST be a
-    :class:`~aeat.core.BindingSourceKind` member that maps to a canonical
-    :class:`~aeat.application.aggregation.BindingSourceDisposition`
+    :class:`~cadrumo.core.BindingSourceKind` member that maps to a canonical
+    :class:`~cadrumo.application.aggregation.BindingSourceDisposition`
     (ENROLLED / DEFERRED / RESERVED). A source kind outside that union is a
     novel/dormant source that would resolve to no mechanism on the live mesh.
     """

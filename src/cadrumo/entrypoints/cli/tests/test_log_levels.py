@@ -46,7 +46,7 @@ def test_apply_log_level_updates_stderr_handlers() -> None:
 
 
 def test_set_log_level_configures_root_file_and_non_file_handlers() -> None:
-    """Real-behavior test for :func:`aeat.core.logging.set_log_level`.
+    """Real-behavior test for :func:`cadrumo.core.logging.set_log_level`.
 
     Calls :func:`configure_logging` directly (mirroring the production path),
     then calls :func:`set_log_level`, and asserts the effective level on the

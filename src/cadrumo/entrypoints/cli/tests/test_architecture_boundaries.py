@@ -7,13 +7,13 @@ the latter's ``_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS`` allowlist covering
 ``_modelo_iva_wallet_cli.py`` -> ``domain.iva_compensation._errors`` and
 ``_modelo_maritime_cli.py`` -> ``domain.renta._errors``) are superseded by the
 project-wide ratcheting import-hygiene gate,
-``src/aeat/tests/test_import_hygiene_gate.py`` (backed by
+``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
 ``dev/import_hygiene_scan.py`` and ``dev/import_hygiene_baseline.json``), per
 the ``import-centralization`` decision record's Ruling 8. Both former allowlist entries are
 empty in practice at supersession time: neither modelo CLI module still
 imports its domain package's private submodule (both now import the public
 facade), and the general gate enforces the boundary for every production file
-under ``src/aeat``, not just the modelo CLI surface. The remaining checks
+under ``src/cadrumo``, not just the modelo CLI surface. The remaining checks
 below (legacy-root growth budgets, raw-id-regex placement, legacy-selector
 reintroduction, centralized-addressing bypass) are modelo-CLI-decomposition-
 specific structural rules, not import-hygiene duplicates, and remain this
@@ -45,7 +45,7 @@ from ....tests import ast_for_path, leaf_name, package_python_files
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_CLI_ROOT = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+_CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _MODELO_MODULE_PREFIX = "_modelo"
 _MODELO_LEGACY_ROOT = "_modelo.py"
 _MODELO_PAYLOADS = "_modelo_payloads.py"

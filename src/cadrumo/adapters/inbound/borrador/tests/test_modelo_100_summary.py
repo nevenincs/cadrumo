@@ -139,7 +139,7 @@ def _profile(
         surface="borrador_pdf",
         artefact_kind="modelo_100_renta",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="aeat.adapters.inbound.borrador.parse_borrador",
+        parser="cadrumo.adapters.inbound.borrador.parse_borrador",
         target_casillas=tuple(
             ExtractionTargetDefinition(
                 casilla_id=cid,
@@ -242,7 +242,7 @@ class TestObservedValues:
         sensitive_pdf = tmp_path / "12345678Z-renta-borrador.pdf"
         pdf.rename(sensitive_pdf)
 
-        with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.borrador._parser"):
+        with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.borrador._parser"):
             parse_borrador(sensitive_pdf)
 
         rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

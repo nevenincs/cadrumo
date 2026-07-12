@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 # Named exemptions confirmed by the registry call-site review
 # ---------------------------------------------------------------------------
-# Paths relative to the ``aeat`` package root (``src/aeat/``).  The path
+# Paths relative to the ``aeat`` package root (``src/cadrumo/``).  The path
 # separator is ``/`` regardless of host OS so the set comparison is portable.
 
 _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
@@ -62,14 +62,14 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
 
 
 def _aeat_src_root() -> Path:
-    """Return the absolute path to ``src/aeat/``."""
+    """Return the absolute path to ``src/cadrumo/``."""
     here = Path(__file__).resolve()
     # climb: tests/ -> calculations/ -> application/ -> aeat/ -> src/
     for parent in here.parents:
-        if parent.name == "aeat" and (parent.parent.name == "src" or (parent / "__init__.py").exists()):
+        if parent.name == "cadrumo" and (parent.parent.name == "src" or (parent / "__init__.py").exists()):
             return parent
     raise RuntimeError(  # pragma: no cover
-        "Cannot locate the src/aeat/ package root from this test's path",
+        "Cannot locate the src/cadrumo/ package root from this test's path",
     )
 
 

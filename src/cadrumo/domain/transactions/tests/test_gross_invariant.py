@@ -1,6 +1,6 @@
 """Real-behavior tests for the ``gross == taxable_base + iva_amount`` invariant.
 
-The :class:`aeat.domain.transactions.Transaction` model enforces, to the euro
+The :class:`cadrumo.domain.transactions.Transaction` model enforces, to the euro
 cent, that a populated tax substrate reconstitutes the IVA-inclusive gross —
 but only when **both** ``taxable_base`` and ``iva_amount`` are present. Rows
 with an unset tax substrate (the common case) must validate unconditionally.

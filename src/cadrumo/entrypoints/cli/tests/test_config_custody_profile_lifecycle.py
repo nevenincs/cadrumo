@@ -23,8 +23,8 @@ _CLI_HARNESS = dedent(
     import sys
     from pathlib import Path
 
-    from aeat.core import config as config_module
-    from aeat.core.config import Settings
+    from cadrumo.core import config as config_module
+    from cadrumo.core.config import Settings
 
     storage_root = Path(sys.argv[1])
     passphrase_arg = sys.argv[2]
@@ -42,7 +42,7 @@ _CLI_HARNESS = dedent(
     token = config_module._settings_override.set(settings)
     try:
         sys.argv = ["aeat", *cli_args]
-        from aeat.entrypoints.cli import main
+        from cadrumo.entrypoints.cli import main
 
         main()
     finally:
@@ -490,7 +490,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
     """CLI and wizard code delegate custody spans to application profile lifecycle operations."""
 
     scanned = {
-        "src/aeat/entrypoints/cli/_config/__init__.py": (
+        "src/cadrumo/entrypoints/cli/_config/__init__.py": (
             "activate_master_key_provider",
             "get_master_key_provider",
             "_write_active_profile_pointer",
@@ -499,7 +499,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
             "restore_active_profile_pointer",
             "override_settings(aeat_active_profile",
         ),
-        "src/aeat/application/wizard/_commands.py": (
+        "src/cadrumo/application/wizard/_commands.py": (
             "activate_master_key_provider",
             "get_master_key_provider",
             "_write_active_profile_pointer",
@@ -508,7 +508,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
             "restore_active_profile_pointer",
             "override_settings(aeat_active_profile",
         ),
-        "src/aeat/application/setup/_service.py": (
+        "src/cadrumo/application/setup/_service.py": (
             "_write_active_profile_pointer",
             "capture_active_profile_pointer",
             "restore_active_profile_pointer",

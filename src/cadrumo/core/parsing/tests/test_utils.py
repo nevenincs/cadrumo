@@ -1,4 +1,4 @@
-"""Real-behaviour tests for :func:`aeat.core.parsing._utils._parse_bool`.
+"""Real-behaviour tests for :func:`cadrumo.core.parsing._utils._parse_bool`.
 
 Contract under test (contract):
 * Recognised truthy tokens  → True

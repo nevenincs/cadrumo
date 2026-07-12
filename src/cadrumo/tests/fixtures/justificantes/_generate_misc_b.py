@@ -24,7 +24,7 @@ class _Modelo232Fixture:
     """Sanitized M232 declaracion informativa fixture.
 
     Labels are taken verbatim from the AEAT-published DiseÃ±o de Registro at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_232/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_232/files/
         01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx
         02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx
 
@@ -282,7 +282,7 @@ class _Modelo347Fixture:
     for Modelo 347 (Orden HAC/1431/2025), record-type-1 field at positions 5-8:
       "EJERCICIO â€” Las cuatro cifras del ejercicio fiscal al que corresponde la declaraciÃ³n."
     Source:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_347/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/
         01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf
       page 1, TIPO DE REGISTRO 1, positions 5-8.
 
@@ -374,7 +374,7 @@ class _Modelo184Fixture:
       https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
         DR_100_199/DR_Modelo_184_2025.pdf
     Saved at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/
         01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf
 
     Registro de tipo 1, positions 5-8: "EJERCICIO"
@@ -460,7 +460,7 @@ class _Modelo131Fixture:
     Layout verdict: GAP-DOCUMENTED (line-end box numbers, numeric_casilla fails).
 
     Ground truth is the AEAT-published DR xlsx for M131 2026 at:
-      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_131/files/
+      src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/
         01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx
     Shared-string entries [65]-[78] confirm the AEAT bracket [NN] casilla
     notation (e.g. "Suma de rendimientos netos [01]", "Diferencia [10]"),
@@ -604,7 +604,7 @@ class _Modelo840Fixture:
     """Sanitized M840 declaracion fixture.
 
     Labels are taken verbatim from the AEAT-published printed form PDF at
-    src/aeat/_data/corpus/aeat_official/forms/modelo_840/files/
+    src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/
       01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
     pdfplumber yields "14Ejercicio:" and "15Declaracion de:" as the casilla-label
     prefixes. Values are placed on the same line so the named_label parser captures
@@ -682,7 +682,7 @@ class _Modelo202Fixture:
 
     Box numbers and labels are taken verbatim from the bundled AEAT Diseno
     de Registro (per-clave [NN] notation confirmed against
-    src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/
+    src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/
     01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx.extracted.md)
     and the AEAT-published instructions HTML
     (modelo-202-instrucciones-2023-2024.html), which references "clave 01",

@@ -7,9 +7,9 @@ generator composes these primitives to produce a PDF the extractors
 can parse with the same primitive stack they'd use against a real AEAT
 declaración.
 
-The module is test-only — it lives under ``src/aeat/tests/fixtures/`` and is not
-importable from ``src/aeat/``. Reusing reportlab keeps the dependency
-surface identical to the existing ``src/aeat/tests/fixtures/justificantes/
+The module is test-only — it lives under ``src/cadrumo/tests/fixtures/`` and is not
+importable from ``src/cadrumo/``. Reusing reportlab keeps the dependency
+surface identical to the existing ``src/cadrumo/tests/fixtures/justificantes/
 _generate.py`` helper.
 """
 

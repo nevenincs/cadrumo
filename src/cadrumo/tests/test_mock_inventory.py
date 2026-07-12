@@ -1,7 +1,7 @@
 """Static guard: forbidden test-control inventory for production tests.
 
 Walks every deterministic test, test-support, and ``conftest.py`` module under
-``src/aeat/`` via AST and classifies each ``unittest`` / ``mock`` /
+``src/cadrumo/`` via AST and classifies each ``unittest`` / ``mock`` /
 ``pytest_mock`` import plus imported, assigned, or locally defined helpers
 named like test doubles.
 
@@ -14,7 +14,7 @@ Classification rule:
 
 Current inventory for durable replacement:
   Zero ``unittest``, ``mock``, or ``pytest_mock`` imports found in deterministic
-  tests, test-support modules, or conftests under ``src/aeat/``.  The codebase
+  tests, test-support modules, or conftests under ``src/cadrumo/``.  The codebase
   uses constructor injection with inline callables for boundary-injection sites
   rather than the mock library. Zero imported, assigned, or locally defined
   mock/fake/stub/spy/dummy helper classes or functions.

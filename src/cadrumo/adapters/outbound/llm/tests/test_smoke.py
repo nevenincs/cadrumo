@@ -1,4 +1,4 @@
-"""Smoke tests for the :mod:`aeat.adapters.outbound.llm` subpackage."""
+"""Smoke tests for the :mod:`cadrumo.adapters.outbound.llm` subpackage."""
 
 import pytest
 

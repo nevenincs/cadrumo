@@ -1,4 +1,4 @@
-"""Tests for the governed-persistence :class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`.
+"""Tests for the governed-persistence :class:`~cadrumo.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`.
 
 Exercises round-trip save/load, idempotent saves, list/iter, deletion,
 the FINANCIAL classification gate, the unsafe-id rejection, and the
@@ -102,7 +102,7 @@ class TestEmptyState:
         assert repo.load("does-not-exist") is None
 
     def test_object_marker_identifies_secure_backend(self, repo: ModeloDraftRepository) -> None:
-        assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.filing.drafts/abc123")
+        assert repo.envelope_path_for("abc123").as_posix().endswith("cadrumo.domain.filing.drafts/abc123")
 
     def test_list_draft_ids_empty(self, repo: ModeloDraftRepository) -> None:
         assert repo.list_draft_ids() == ()
@@ -172,7 +172,7 @@ class TestClassificationGate:
             payload=draft,
         )
         SecureObjectRepository().save(
-            namespace="aeat.domain.filing.drafts",
+            namespace="cadrumo.domain.filing.drafts",
             object_key=draft.draft_id,
             classification=SensitivityClass.OPERATIONAL,
             schema_version=1,
@@ -213,5 +213,5 @@ class TestPerDraftLockIsolation:
         assert a != b
         assert a.parent == b.parent
         assert a.parent == repo.store_dir
-        assert a.as_posix().endswith("aeat.domain.filing.drafts/draft-a.lock")
-        assert b.as_posix().endswith("aeat.domain.filing.drafts/draft-b.lock")
+        assert a.as_posix().endswith("cadrumo.domain.filing.drafts/draft-a.lock")
+        assert b.as_posix().endswith("cadrumo.domain.filing.drafts/draft-b.lock")

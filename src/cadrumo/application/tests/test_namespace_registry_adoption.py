@@ -3,7 +3,7 @@
 Feature modules may spell a secure-object namespace as an inline string literal
 rather than importing its registry constant. The domain repositories deliberately
 do so to preserve the lazy-import (json-pipe-safety) contract, which forbids a
-module-level ``aeat.adapters.persistence.storage`` import; the literal is
+module-level ``cadrumo.adapters.persistence.storage`` import; the literal is
 duplicated precisely to avoid eagerly pulling the storage package into every CLI
 command's import chain.
 
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
-from ...tests import SRC_AEAT, leaf_name, production_ast_items, repo_relative
+from ...tests import SRC_CADRUMO, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,9 +41,9 @@ _SECURE_OBJECT_METHODS = {
 
 #: Production trees whose secure-object namespace literals are cross-checked.
 _GUARDED_ROOTS = (
-    SRC_AEAT / "application",
-    SRC_AEAT / "domain",
-    SRC_AEAT / "adapters" / "outbound",
+    SRC_CADRUMO / "application",
+    SRC_CADRUMO / "domain",
+    SRC_CADRUMO / "adapters" / "outbound",
 )
 
 

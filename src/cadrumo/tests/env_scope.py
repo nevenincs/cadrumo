@@ -1,7 +1,7 @@
 """Centralized environment-scope helpers for tests.
 
 The backend's canonical state-mutation surface for AEAT-prefixed config
-is :func:`aeat.core.config.override_settings`. That ContextVar-backed
+is :func:`cadrumo.core.config.override_settings`. That ContextVar-backed
 helper covers every Settings field and is the right tool for almost
 every test that needs to pin or shadow AEAT configuration.
 
@@ -13,13 +13,13 @@ A small set of tests legitimately need to manipulate *real*
   itself — validators must observe real env values, so a ContextVar
   override above the env layer would defeat the test.
 * The model-validator-derives-default tests in
-  :mod:`aeat.core.test_token_dir_state_root` must observe an unset
+  :mod:`cadrumo.core.test_token_dir_state_root` must observe an unset
   ``AEAT_TOKEN_DIR`` so the validator runs.
 * CLI runtime infrastructure that AEAT does not own (the pytest
   runner's ``PYTEST_CURRENT_TEST`` flag, Rich's ``COLUMNS`` width
   read, ``sys.argv``) is read directly by tightly scoped helpers in
-  :mod:`aeat.entrypoints.cli._stdio` and
-  :mod:`aeat.core.access_gate`. Those production helpers accept
+  :mod:`cadrumo.entrypoints.cli._stdio` and
+  :mod:`cadrumo.core.access_gate`. Those production helpers accept
   explicit overrides as kwargs; this module is for the os.environ
   side only.
 
@@ -52,7 +52,7 @@ __all__ = [
 
 
 class _EnvFileFreeSettings(Settings):
-    """A :class:`~aeat.core.config.Settings` subclass that never reads a real ``.env`` file.
+    """A :class:`~cadrumo.core.config.Settings` subclass that never reads a real ``.env`` file.
 
     ``pydantic_settings.BaseSettings.__init__`` accepts a real, documented
     ``_env_file=None`` per-instance override, but both ``pyright`` and ``ty``
@@ -71,7 +71,7 @@ class _EnvFileFreeSettings(Settings):
 
 
 def settings_without_env_file(**overrides: Any) -> Settings:
-    """Construct a :class:`~aeat.core.config.Settings` that never reads the real ``.env`` file.
+    """Construct a :class:`~cadrumo.core.config.Settings` that never reads the real ``.env`` file.
 
     Equivalent at runtime to ``Settings(_env_file=None)`` — see
     :class:`_EnvFileFreeSettings` for why this factory exists instead of the
@@ -100,7 +100,7 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
     (or a subclass with a custom ``model_config``) whose values come
     from a known, controlled env baseline rather than the ambient
     operator/CI environment. The ``override_settings`` helper in
-    :mod:`aeat.core.config` is the right tool when tests need to pin
+    :mod:`cadrumo.core.config` is the right tool when tests need to pin
     Settings field values; this helper is the right tool when tests
     are exercising the env-precedence layer itself.
 
@@ -135,7 +135,7 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
 def scoped_sys_argv(argv: list[str]) -> Iterator[None]:
     """Pin ``sys.argv`` for the with-block.
 
-    The CLI startup helpers in :mod:`aeat.entrypoints.cli._stdio` (and
+    The CLI startup helpers in :mod:`cadrumo.entrypoints.cli._stdio` (and
     a small set of sibling utilities) inspect ``sys.argv`` to decide
     whether the invocation is a ``--help`` surface. Tests exercising
     those branches need argv pinned to a known value.
@@ -170,7 +170,7 @@ def scoped_env_var(name: str, value: str | None) -> Iterator[None]:
     (``PYTEST_CURRENT_TEST``), display-shell variables (``COLUMNS``),
     or any env slot the production code documents as a non-Settings
     surface. For AEAT-prefixed Settings fields, use
-    :func:`aeat.core.config.override_settings` instead.
+    :func:`cadrumo.core.config.override_settings` instead.
 
     Arguments:
         name: Env var name (case-sensitive).

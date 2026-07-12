@@ -130,8 +130,8 @@ def test_user_profile_imports_before_registry_barrel() -> None:
         [
             sys.executable,
             "-c",
-            "import aeat.domain.user_profile as u; "
-            "import aeat.domain.calculations.registry as r; "
+            "import cadrumo.domain.user_profile as u; "
+            "import cadrumo.domain.calculations.registry as r; "
             "assert hasattr(u, 'validate_user_profile_registry_contract'); "
             "assert hasattr(r, 'RegistryValidator')",
         ],

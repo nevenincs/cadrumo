@@ -2,7 +2,7 @@
 
 Closes #502 (2/2): TaxpayerProfile censo fields (activity_start_date /
 activity_end_date) now have a real deadline-rule consumer in
-:func:`aeat.domain.deadlines._engine._window_outside_activity_period`.
+:func:`cadrumo.domain.deadlines._engine._window_outside_activity_period`.
 The engine skips obligation windows that fall entirely before alta
 (``closes_on < activity_start_date``) or entirely after baja
 (``opens_on > activity_end_date``); straddling windows stay on the

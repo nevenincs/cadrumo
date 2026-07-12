@@ -139,7 +139,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision() -> None:
     deadline_link = next(item for item in revision.application_links if item.id == "modelo-190-deadline")
 
     assert deadline_link.surface == "deadline"
-    assert deadline_link.consumer == "aeat.domain.deadlines"
+    assert deadline_link.consumer == "cadrumo.domain.deadlines"
     assert deadline_link.requires_snapshot is True
     assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
     assert catalogues.legal["orden-eha-3127-2009:art-1"].evidence_tier == "legal_authority"

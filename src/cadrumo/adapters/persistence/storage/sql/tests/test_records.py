@@ -49,7 +49,7 @@ def test_records_forbid_extra_fields() -> None:
     """The canonical strict-frozen config refuses unknown columns.
 
     Locks the ``extra="forbid"`` strictness the SQL boundary records inherit
-    from :data:`~aeat.core.STRICT_FROZEN_CONFIG`; an unexpected field projected
+    from :data:`~cadrumo.core.STRICT_FROZEN_CONFIG`; an unexpected field projected
     from the ORM boundary must be rejected, never silently dropped.
     """
     with pytest.raises(ValidationError):

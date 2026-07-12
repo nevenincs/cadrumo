@@ -121,8 +121,8 @@ def test_reduce_jscpd_output_parses_clone_count_and_percentage() -> None:
     """A realistic jscpd console summary yields the clone count and duplicated %."""
     raw = (
         "Clone found (python):\n"
-        " - src/aeat/a.py [10:1 - 20:1]\n"
-        " - src/aeat/b.py [30:1 - 40:1]\n"
+        " - src/cadrumo/a.py [10:1 - 20:1]\n"
+        " - src/cadrumo/b.py [30:1 - 40:1]\n"
         "\n"
         "Found 3 clones.\n"
         "\n"

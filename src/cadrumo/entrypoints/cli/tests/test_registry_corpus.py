@@ -5,7 +5,7 @@ Tests exercise the ``aeat app registry citations`` and
 shared cached CLI runner, against the committed corpus on disk. No mocks /
 fakes / fixtures — every command consumes the same domain APIs the
 production runtime uses (the reviewed registry legal catalogue,
-``aeat.domain.manuals.load_manual``, etc.).
+``cadrumo.domain.manuals.load_manual``, etc.).
 
 The CLI exposure lives under ``aeat app registry``, not under a new
 root verb. The boundary regression guard at the bottom of the file
@@ -223,7 +223,7 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
     rejected. This test asserts no source file under
     ``entrypoints/cli/`` registers either name at the root level."""
 
-    cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     forbidden_root_names = (
         'name="normatives"',
         "name='normatives'",
@@ -317,7 +317,7 @@ def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:
     evented. Assert that neither ``citations fetch`` nor ``manuals
     fetch`` is registered."""
 
-    cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     forbidden_command_names = (
         '@citations_app.command("fetch"',
         "@citations_app.command('fetch'",
