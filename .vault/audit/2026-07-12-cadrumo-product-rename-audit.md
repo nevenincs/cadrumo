@@ -212,6 +212,22 @@ packaged-data anchor resolves to `cadrumo/_data`. The findings above are serious
 delivery and provenance defects but do not establish irreversible data loss,
 authority-evidence corruption, or a critical safety breach.
 
+### relocated-test-contract-resolution | resolved | Executable tests enforce the Cadrumo hard cut
+
+Resolved the preceding high finding by making the cold-start contract explicit
+on both sides of the rename. The console import gate now requires real in-process
+and fresh-process `cadrumo` imports to succeed, while a separate fresh process
+must fail to import the retired `aeat` product root. The registry cache-isolation
+proof now imports the real session fixture from `cadrumo.conftest`, allowing its
+two spawned pytest sessions to exercise the canonical package without a shim.
+
+The cohesive AST import scanner now describes, names, and reports the executable
+`cadrumo.*` namespace it already resolves, and its path-based ratchet keys use the
+actual `cadrumo/` source root. Focused tests execute real imports, subprocesses,
+and pytest sessions without mocks, patches, skips, or compatibility aliases.
+Authority-owned AEAT registry taxonomy, cache filenames, environment controls,
+and associated historical explanations remain unchanged.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
