@@ -851,3 +851,16 @@ let profile bootstrap derive its bucket database route, and provide an explicit
 tax-residence CCAA in the Docker fixture. Recommendation 23 and the P07 HIGH are
 closed. The successful runs used only the accepted `cadrumo` and `cadrumo-mcp`
 product executables; AEAT remains authority terminology.
+
+## W04.P08 S46 shared-index provenance
+
+Commit `6f2f22ab06` correctly contains the S46 hard cut to `cadrumo_` MCP tool
+names and `mcp__plugin_cadrumo_cadrumo__` client prefixes, but it also consumed
+67 peer-staged paths already present in the shared index. The mixed commit has
+79 paths total and couples broad CLI copy/test changes, MCP prompt/tool edits,
+one cross-domain execution record, and a packaging-test deletion with S46. It
+also deleted the S45 execution record even though the S45 implementation remains
+in history. No amend, reset, rebase, or other history rewrite was used. The S45
+record and canonical prompt/server/metadata working bytes were restored by an
+explicit follow-up commit, preserving both work bodies and disclosing their
+coupled provenance.
