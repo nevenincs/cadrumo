@@ -2,7 +2,7 @@
 
 Discovery-phase tool: builds an inventory of cross-package private imports,
 shim/re-export modules, and redundantly re-exported symbols across
-``src/aeat``. READ-ONLY: it does not modify production code.
+``src/cadrumo``. READ-ONLY: it does not modify production code.
 
 Re-run with:
 
@@ -25,7 +25,7 @@ from typing import Final
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
-PKG_ROOT = SRC_ROOT / "aeat"
+PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = "utf-8"
 
 
@@ -316,7 +316,7 @@ def find_private_import_violations(all_sites: list[ImportSite]) -> list[PrivateI
     """Return every import site that reaches into a foreign package's privates."""
     violations: list[PrivateImportViolation] = []
     for site in all_sites:
-        if not site.target_mod.startswith("aeat"):
+        if not site.target_mod.startswith("cadrumo"):
             continue
         if not has_private_component(site.target_mod):
             continue
@@ -528,7 +528,7 @@ def find_multi_sourced_symbols(facades: dict[str, FacadeInfo], all_sites: list[I
     facade_export_origins = _facade_export_origins(facades)
 
     # Map symbol -> set of private modules it's imported FROM (target private
-    # module -> imported name), restricted to aeat.* targets.
+    # module -> imported name), restricted to cadrumo.* targets.
     symbol_private_sources: dict[str, set[str]] = defaultdict(set)
     symbol_facade_consumers: dict[str, set[str]] = defaultdict(set)
     symbol_private_consumers: dict[str, set[str]] = defaultdict(set)
@@ -536,7 +536,7 @@ def find_multi_sourced_symbols(facades: dict[str, FacadeInfo], all_sites: list[I
     facade_targets = {pkg for pkg, info in facades.items() if info.has_real_all}
 
     for site in all_sites:
-        if not site.target_mod.startswith("aeat"):
+        if not site.target_mod.startswith("cadrumo"):
             continue
         for name in site.imported_names:
             if name == "*":
@@ -555,9 +555,9 @@ def find_multi_sourced_symbols(facades: dict[str, FacadeInfo], all_sites: list[I
     # Case A: symbol declared __all__ in more than one facade package. Split
     # by confidence: "hierarchical_rollup" when every pair of declaring
     # facades is in a parent/child (umbrella aggregator) relationship -- this
-    # codebase's umbrella packages (e.g. `aeat.adapters.persistence.storage`
+    # codebase's umbrella packages (e.g. `cadrumo.adapters.persistence.storage`
     # over its `.envelope` / `.bucket` / `.crypto` sub-facades,
-    # `aeat.core.errors` over `.registry`) deliberately roll up child-facade
+    # `cadrumo.core.errors` over `.registry`) deliberately roll up child-facade
     # symbols into a parent convenience facade, which is NOT the violation
     # this family targets; "high" when at least two declaring facades are
     # NOT in an ancestor/descendant relationship AND resolve the name to the
@@ -687,7 +687,7 @@ def classify_fix_strategy(
 
 
 def main() -> int:
-    """Scan ``src/aeat`` and print the import-hygiene inventory report."""
+    """Scan ``src/cadrumo`` and print the import-hygiene inventory report."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", type=Path, default=None, help="Write full inventory as JSON to this path")
     parser.add_argument("--top", type=int, default=20, help="Top-N offender modules to print")
