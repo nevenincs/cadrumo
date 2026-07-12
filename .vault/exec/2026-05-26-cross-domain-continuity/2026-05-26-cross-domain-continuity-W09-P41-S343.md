@@ -136,3 +136,62 @@ peer WIP in shared application modules (`_verification_actions.py`,
 additive recargo/plazo changes.
 
 Plan step W09.P41.S343 left unchecked for the coordinator to verify independently.
+
+## Corrective execution (2026-07-11)
+
+### Description
+
+- Ground the reopened boundary with `vaultspec-rag` against the accepted Article
+  27 ADR, the related research, the deadline engine, the calculate projection,
+  and the real CLI surface.
+- Replace `ModeloWorkPlazoSummary` and its mixed-purpose recargo summary with
+  `ModeloWorkDeadlinePosture` and `ModeloWorkConditionalRecargoPreview`.
+  Remove the optional payable-amount, presentation-date, and
+  prior-requirement primitives that could previously mark a rate as a statutory
+  computation.
+- Make the preview contract one-way and explicit: it carries the governed rate
+  reference date and literal `assessment_status="unassessed"`; the reference
+  date is not a presentation date.
+- Project the renamed contract onto the CLI payload and notice context. Replace
+  `deadline.recargo`, `recargo_conditional`, and the recargo-liability notice
+  with `conditional_recargo_preview`, an unassessed status, and language that
+  states no Article 27 surcharge or interest liability is determined.
+- Update all shipped CLI locales and the M130/M303 application and real CLI
+  regressions. Preserve the exact twelve-month rate boundary by deriving test
+  expectations from the governed deadline recovery engine.
+
+### Outcome
+
+The calculate path now exposes only voluntary-deadline posture and an
+explicitly unassessed conditional rate preview. It cannot accept or represent
+an unproven actual presentation date, amount payable, or no-prior-requirement
+fact as a statutory Article 27 assessment.
+
+### Verification
+
+- `uv run pytest -q src/aeat/domain/deadlines/tests/test_recargo.py src/aeat/domain/deadlines/tests/test_extemporaneidad.py src/aeat/application/modelo/tests/test_modelo_calculate_recargo_notice.py src/aeat/application/modelo/tests/test_work_plazo_m303_recargo.py src/aeat/application/modelo/tests/test_work_plazo_m100_campaign.py src/aeat/entrypoints/cli/tests/test_modelo_calculate_recargo_notice.py src/aeat/core/i18n/tests/test_placeholder_parity.py` — 42 passed.
+- `uv run ruff check` and `uv run ruff format --check` against all S343 Python
+  modules and tests — passed.
+
+### Notes
+
+The annual-campaign plazo regression was live untracked peer work. Its owner
+updated the renamed public deadline-posture import and confirmed its focused
+tests; it was not included in this Step's authored diff.
+
+### Review correction (2026-07-11)
+
+Independent review found that the no-preview fallback still selected the
+general warning translation, whose text says a rate is displayed. Route only
+the `conditional_recargo_preview is None` branch through a dedicated
+no-preview translation key in every shipped locale. The preview-bearing branch
+retains its rate-preview wording.
+
+Extend the direct typed CLI-renderer regression to assert the JSON projection
+contains `conditional_recargo_preview: null`, retains the explicit unassessed
+status, and does not describe a displayed rate.
+
+Verification: `uv run pytest -q
+src/aeat/entrypoints/cli/tests/test_modelo_calculate_recargo_notice.py
+src/aeat/core/i18n/tests/test_placeholder_parity.py` — 3 passed. Targeted
+`ruff check` and `ruff format --check` — passed.

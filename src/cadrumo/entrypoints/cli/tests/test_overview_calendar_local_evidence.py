@@ -69,7 +69,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             },
         )
         artefact_body = b"modelo-303-2025-1T-justificante"
-        store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
+        store = FiledDeclaracionObservationStore(Path("var/cadrumo/filed-declarations"))
         artefact = store.persist_artefact(
             ("303", 2025, Period.from_year_and_code(2025, "1T"), "12345678901234567890"),
             FiledDeclaracionArtefact(
@@ -209,7 +209,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:
     pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
     with profile_storage_session(PRIMARY_PROFILE_ID):
-        store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
+        store = FiledDeclaracionObservationStore(Path("var/cadrumo/filed-declarations"))
         artefact = store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
             FiledDeclaracionArtefact(

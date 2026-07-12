@@ -5,7 +5,7 @@ error-registry ``default_suggestion`` fields, the curated operator help
 documents, ``next_action`` builder strings, the runtime write-policy, and the
 four locale catalogues all cite ``aeat app ...`` / ``aeat config ...``
 invocations that an operator is told to run next. The pull/--file standard
-rule (``aeat-cli-pull-and-file-standard``) records that NONE of these strings
+rule (``cadrumo-pull-and-file-standard``) records that NONE of these strings
 were covered by a conformance gate: ``test_documented_command_conformance``
 scans only the how-to docs, and ``test_json_schema_conformance`` only the
 envelope ``command=`` identifiers, so "a verb rename MUST be swept by hand"
@@ -15,7 +15,7 @@ that no longer exists, which is a silent failure of the first instructive
 surface.
 
 This gate converts that hand-sweep obligation into CI enforcement. It walks
-the REAL Click tree (``typer.main.get_command`` over the live ``aeat`` app —
+the REAL Click tree (``typer.main.get_command`` over the live ``cadrumo`` app —
 no mocks, no fixture trees) and resolves every cited command path from:
 
 - every registered :class:`ErrorCode` ``default_suggestion``;
@@ -31,7 +31,7 @@ sweep; extending this gate over them is tracked as a follow-up (the catalogues
 carried three locale-divergent dead citations when this gate landed, owned by
 the locale-CLI workflow).
 
-Citation grammar: ``aeat`` followed by a root family (``app`` / ``config``)
+Citation grammar: ``cadrumo`` followed by a root family (``app`` / ``config``)
 and a run of lowercase kebab-case tokens. Resolution walks group-by-group and
 accepts trailing tokens once a leaf command is reached (they are arguments);
 uppercase placeholders (``NAME``), options (``--file``), and ``<id>`` forms
@@ -54,7 +54,7 @@ import pytest
 
 from ....application.operator_surface import HelpSurface, build_help_document
 from ....core.errors import ERROR_REGISTRY
-from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,7 +66,7 @@ _AST_SCAN_ROOTS = (
     _PACKAGE_ROOT / "entrypoints",
 )
 
-# ``aeat`` + a root family + a run of kebab-case tokens. A token is lowercase
+# ``cadrumo`` + a root family + a run of kebab-case tokens. A token is lowercase
 # kebab-case OR a bare modelo code (three digits, e.g. ``100``/``303``), the
 # only digit-leading command segments in the live tree (``aeat app live
 # borrador 100 list``). Uppercase placeholders, ``--option`` forms, and
@@ -74,13 +74,13 @@ _AST_SCAN_ROOTS = (
 # lowercase argument VALUES, which the resolver tolerates past a leaf) are
 # captured. Admitting the modelo code keeps a runnable ``... borrador 100 list``
 # citation from terminating prematurely on the ``borrador`` group.
-_CITATION_PATTERN = re.compile(r"\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
+_CITATION_PATTERN = re.compile(r"\bcadrumo (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
 
 
 @cache
 def _root_command() -> click.Command:
     """Build the live Click tree once for the whole module."""
-    return aeat_click_command()
+    return cadrumo_click_command()
 
 
 def _is_group(command: click.Command) -> bool:
@@ -108,7 +108,7 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
       pointed at ``... --help``.
     """
     command: click.Command = _root_command()
-    context = click.Context(command, info_name="aeat")
+    context = click.Context(command, info_name="cadrumo")
     for token in tokens:
         if not _is_group(command):
             # Already at a leaf; remaining tokens are argument values.
@@ -171,7 +171,7 @@ def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
     is only evaluated on a citation whose verb path is sound.
     """
     command: click.Command = _root_command()
-    context = click.Context(command, info_name="aeat")
+    context = click.Context(command, info_name="cadrumo")
     for token in tokens:
         if not _is_group(command):
             return command
@@ -187,7 +187,7 @@ def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
 def _cited_options_after(text: str, start: int) -> list[str]:
     """Extract ``--option`` tokens that belong to the citation ending at ``start``.
 
-    Scans forward from the end of the matched verb path until the next ``aeat``
+    Scans forward from the end of the matched verb path until the next ``cadrumo``
     citation begins or the text ends, so options trailing one suggested command
     are not mis-attributed to a later one. ``--help`` is dropped (a universal
     root global that is always runnable). ``--opt=value`` is reduced to the bare
@@ -276,7 +276,7 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
                     if option not in valid_options:
                         failures.append(
                             f"{origin}: cites {cited!r} with option {option!r}, which is not a parameter of "
-                            f"'aeat {' '.join(tokens)}' (nor a root-global option)"
+                            f"'cadrumo {' '.join(tokens)}' (nor a root-global option)"
                         )
     return failures
 
@@ -352,8 +352,8 @@ _RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "default_sugges
 def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
     """Collect ``id()`` of every string ``Constant`` used as a runnable-suggestion value.
 
-    Matches both ``suggestion="aeat ..."`` keyword arguments and
-    ``{"recovery": "aeat ..."}`` / ``{"next_action": "aeat ..."}`` dict
+    Matches both ``suggestion="cadrumo ..."`` keyword arguments and
+    ``{"recovery": "cadrumo ..."}`` / ``{"next_action": "cadrumo ..."}`` dict
     entries, where the operator is directed to run the cited command verbatim.
     """
     suggestion_ids: set[int] = set()

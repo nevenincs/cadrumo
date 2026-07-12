@@ -10,7 +10,7 @@ from click.testing import Result
 from typer.core import TyperGroup
 
 from ....core.resources import bundled_path, resources
-from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import cadrumo_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
@@ -45,7 +45,7 @@ def _child(group: object, name: str):
 
 
 def _command_path(*path: str) -> object:
-    current: object = aeat_click_command()
+    current: object = cadrumo_click_command()
     for segment in path:
         current = _child(current, segment)
         assert current is not None, f"missing command path {' '.join(path)}"

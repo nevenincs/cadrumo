@@ -7,7 +7,7 @@ model enters the workflow already carrying the playbook and its rules of
 engagement. The catalogue is DERIVED from the shipped skill documents and
 their structured ``applies_when`` metadata, never hand-listed, so a new skill
 ships as a new prompt with zero registration and the surface cannot drift from
-the data.
+the data (`aeat-registry-authority-flow` discipline applied to the harness).
 
 Like ``_tools`` and ``_dispatch``, this module is SDK-independent pure
 functions over typed models; ``_server`` adapts :class:`PromptDocument` to the
@@ -21,13 +21,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...agent import iter_skill_documents, operator_rules_text, parse_skill_metadata
 from ...core import accepted_period_patterns
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
-from ._resources import HarnessResourceKind, resource_uri
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
+_SKILL_URI_PREFIX = "aeat://skill/"
+_RULES_URI = "aeat://rule/operating-rules"
 _MARKDOWN = "text/markdown"
 
-ORIENTATION_PROMPT_NAME = "cadrumo-empezar"
+ORIENTATION_PROMPT_NAME = "aeat-empezar"
 
 _PERIOD_ARGUMENT_DESCRIPTION = "The AEAT period code. Accepted forms: " + "; ".join(accepted_period_patterns()) + "."
 
@@ -135,7 +136,7 @@ def _workflow_brief(name: str, description: str) -> str:
 
 def _orientation_brief() -> str:
     return (
-        "You are an assistant helping a taxpayer operate Cadrumo — a "
+        "You are an assistant helping a taxpayer operate the aeat console — a "
         "deterministic Spanish tax CLI exposed as tools. The embedded operator "
         "rules are your binding operating contract for the whole session; read "
         "them before acting.\n\n"
@@ -162,7 +163,7 @@ def build_prompt_catalogue() -> tuple[GuidedPrompt, ...]:
     rows: list[GuidedPrompt] = [
         GuidedPrompt(
             name=ORIENTATION_PROMPT_NAME,
-            title="Empezar con el asistente Cadrumo",
+            title="Empezar con el asistente aeat",
             description=(
                 "Load the operator rules and orient the session: capability "
                 "contract, active profile, and the taxpayer's derived "
@@ -215,12 +216,7 @@ def prompt_document(name: str, arguments: dict[str, str] | None = None) -> Promp
         return PromptDocument(
             prompt=catalogue[ORIENTATION_PROMPT_NAME],
             brief_text=_orientation_brief(),
-            embedded=(
-                EmbeddedDocument(
-                    uri=resource_uri(HarnessResourceKind.RULE, "operating-rules"),
-                    text=operator_rules_text(),
-                ),
-            ),
+            embedded=(EmbeddedDocument(uri=_RULES_URI, text=operator_rules_text()),),
         )
     texts = _skill_texts()
     if name not in texts:
@@ -239,7 +235,7 @@ def prompt_document(name: str, arguments: dict[str, str] | None = None) -> Promp
     return PromptDocument(
         prompt=prompt,
         brief_text=_workflow_brief(metadata.name, metadata.description) + _argument_scope_line(arguments),
-        embedded=(EmbeddedDocument(uri=resource_uri(HarnessResourceKind.SKILL, name), text=text),),
+        embedded=(EmbeddedDocument(uri=f"{_SKILL_URI_PREFIX}{name}", text=text),),
     )
 
 

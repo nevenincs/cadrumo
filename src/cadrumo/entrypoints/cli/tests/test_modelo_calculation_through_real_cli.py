@@ -1,6 +1,6 @@
 """Cross-modelo CLI calculation tests grounded in external oracle values (contract/contract).
 
-Each test drives the real ``aeat`` CLI against an isolated real-session backend
+Each test drives the real ``cadrumo`` CLI against an isolated real-session backend
 (``isolated_runtime_profile``) — no mocks, no unsecured-monkeypatch backend.
 
 Expected casilla values are derived exclusively from external authoritative

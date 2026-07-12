@@ -1,4 +1,4 @@
-"""Tests for the AEAT CLI command-suggestion group.
+"""Tests for the Cadrumo CLI command-suggestion group.
 
 The base Typer group only suggests typo-distance near misses. These
 tests cover the two operator-facing gaps :class:`AeatTyperGroup`

@@ -1,4 +1,4 @@
-"""CLI root landing renderer for the bare ``aeat`` invocation.
+"""CLI root landing renderer for the bare ``cadrumo`` invocation.
 
 Provides the root landing text helper
 :func:`render_cli_root_landing_lines`, which converts the

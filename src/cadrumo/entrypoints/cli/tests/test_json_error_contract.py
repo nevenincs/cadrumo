@@ -23,7 +23,7 @@ flag probe cannot recognise the JSON request (e.g. ``--format`` with no
 value at the very end) falls back to text rendering — the format wish is
 itself part of the unparseable input.
 
-Real-behavior only: the real ``aeat`` app object through
+Real-behavior only: the real ``cadrumo`` app object through
 the shared CLI runner over a real isolated profile, plus a real subprocess for
 the crash funnel (the only honest way to observe a terminal traceback
 replacement).

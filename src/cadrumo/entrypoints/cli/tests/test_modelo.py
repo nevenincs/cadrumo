@@ -1,4 +1,4 @@
-"""CLI work-command tests for the ``aeat ... modelo`` command tree."""
+"""CLI work-command tests for the ``cadrumo ... modelo`` command tree."""
 
 from __future__ import annotations
 

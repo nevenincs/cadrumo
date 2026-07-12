@@ -1,4 +1,4 @@
-"""Terminal exception handling for the root ``aeat`` dispatch.
+"""Terminal exception handling for the root ``cadrumo`` dispatch.
 
 Typer's standalone ``main`` renders every :class:`~click.ClickException` (usage
 errors, bad parameters, unknown options) as Rich text and lets unexpected

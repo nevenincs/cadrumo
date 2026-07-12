@@ -7,11 +7,11 @@ Closes two overview verb coverage gaps in one file:
   explain). Each verb is exercised against an isolated profile so the
   mount + help path + empty-bucket envelope all reach the operator.
 
-- Add negative tests asserting `aeat deadlines` and
+- Add negative tests asserting `cadrumo deadlines` and
   related retired noun-groups are unknown commands. The verb tree
   retired the standalone `deadlines` noun-group in favour of mounting
   deadline-shaped surfaces under `aeat app overview`. Operators
-  reaching for `aeat deadlines ...` must see Click's "No such command"
+  reaching for `cadrumo deadlines ...` must see Click's "No such command"
   refusal, not a silent fallthrough.
 """
 
@@ -197,7 +197,7 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json() 
 
 
 def test_retired_deadlines_noun_group_is_unknown() -> None:
-    """Reaching for `aeat deadlines ...` (or `aeat app deadlines ...`)
+    """Reaching for `cadrumo deadlines ...` (or `aeat app deadlines ...`)
     must surface Click's "No such command" refusal. The verb tree
     retired the standalone deadlines noun-group; its surfaces live
     under `aeat app overview` (calendar, agenda, backlog)."""

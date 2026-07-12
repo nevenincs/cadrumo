@@ -42,16 +42,16 @@ if TYPE_CHECKING:
     # the real import stays deferred to inside the function body below.
     from mcp.types import Tool
 
-#: The floor tool's MCP name, following the per-verb ``aeat_<key>`` naming
+#: The floor tool's MCP name, following the per-verb ``cadrumo_<key>`` naming
 #: convention (``_dispatch.tool_name_for_command``): the conceptual
-#: ``harness.load`` verb renders as ``aeat_harness_load``.
-HARNESS_LOAD_TOOL = "aeat_harness_load"
+#: ``harness.load`` verb renders as ``cadrumo_harness_load``.
+HARNESS_LOAD_TOOL = "cadrumo_harness_load"
 
 #: The identity-assertion tool's MCP name (ADR I1). Like the floor and
-#: grounding tools it is a read-only console tool carrying the ``aeat_``
+#: grounding tools it is a read-only console tool carrying the ``cadrumo_``
 #: prefix; unlike the per-verb surface it is always advertised and never
 #: persona-scoped away, so an agent can always confirm the active taxpayer.
-WHOAMI_TOOL = "aeat_whoami"
+WHOAMI_TOOL = "cadrumo_whoami"
 
 _MARKDOWN_SUFFIX = ".md"
 
