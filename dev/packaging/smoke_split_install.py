@@ -39,7 +39,7 @@ from .smoke_core import (
 )
 from .smoke_pip_core import _create_pip_venv, _install_target_with_pip
 
-_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
 
 _ADVISORY_PROBE = """
 import warnings
