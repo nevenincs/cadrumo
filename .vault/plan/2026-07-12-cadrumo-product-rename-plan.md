@@ -143,7 +143,7 @@ Project Cadrumo across MCP server, tools, resources, and client behavior.
 - [x] `W04.P08.S43` - Rename server, tool prefixes, subprocess argv, and product environment names while retaining authority language; `src/cadrumo/entrypoints/mcp/_server.py`.
 - [x] `W04.P08.S44` - Rename MCP resource URI schemes; `src/cadrumo/entrypoints/mcp/_resources.py`.
 - [x] `W04.P08.S45` - Rename MCP prompts and product-facing tool copy; `src/cadrumo/entrypoints/mcp/_prompts.py`.
-- [ ] `W04.P08.S46` - Update MCP allowlists and recompute tool-name budgets; `src/cadrumo/entrypoints/mcp tests`.
+- [x] `W04.P08.S46` - Update MCP allowlists and recompute tool-name budgets; `src/cadrumo/entrypoints/mcp tests`.
 - [ ] `W04.P08.S47` - Prove a real Cadrumo client initialize, list, call, and shutdown handshake; `src/cadrumo/entrypoints/mcp/tests/test_client_handshake.py`.
 
 ### Phase `W04.P09` - change generator authority and regenerate marketplace
