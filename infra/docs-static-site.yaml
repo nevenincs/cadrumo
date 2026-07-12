@@ -102,11 +102,11 @@ Resources:
           - ErrorCachingMinTTL: 10
             ErrorCode: 403
             ResponseCode: 404
-            ResponsePagePath: /docs/404.html
+            ResponsePagePath: /404.html
           - ErrorCachingMinTTL: 10
             ErrorCode: 404
             ResponseCode: 404
-            ResponsePagePath: /docs/404.html
+            ResponsePagePath: /404.html
         DefaultCacheBehavior:
           AllowedMethods:
             - GET

@@ -27,12 +27,25 @@ CANONICAL_SITE_URL = f"https://{CANONICAL_SITE_DOMAIN}"
 _CACHE_CONTROL = "public, max-age=300, must-revalidate"
 _REQUIRED_ARTIFACTS = (
     "index.html",
+    "404.html",
     "favicon.png",
+    "og-image.jpg",
+    "robots.txt",
+    "sitemap.xml",
 )
 # The landing page shares the documentation bucket; its sync must never touch
 # the documentation prefix the docs publisher owns.
 _PROTECTED_PREFIX_EXCLUDES = ("docs/*",)
-_INVALIDATION_PATHS = ("/", "/index.html", "/favicon.png", "/assets/*")
+_INVALIDATION_PATHS = (
+    "/",
+    "/index.html",
+    "/404.html",
+    "/favicon.png",
+    "/og-image.jpg",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/assets/*",
+)
 
 
 def _build_site(repo_root: Path) -> Path:
@@ -110,6 +123,7 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
     """Require the landing root, intact docs, and a private origin."""
     checks = (
         (f"{CANONICAL_SITE_URL}/", 200),
+        (f"{CANONICAL_SITE_URL}/__cadrumo-delivery-missing__.html", 404),
         (f"{CANONICAL_DOCS_BASE_URL}/", 200),
         (f"https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/index.html", 403),
     )
