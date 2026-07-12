@@ -4,9 +4,9 @@ and each feature boundary refuses instructively when its extra is absent.
 The optional integration stacks (``google`` / ``browser`` / ``anthropic``) live in
 ``[project.optional-dependencies]``. These tests use a real import blocker — a
 ``sys.meta_path`` finder that makes the package genuinely unimportable, the same
-condition a fresh ``pip install aeat`` (no extras) produces — rather than a mock.
+condition a fresh ``pip install cadrumo`` (no extras) produces — rather than a mock.
 With the extra blocked the core CLI must still build, and reaching the feature
-must raise the feature's own typed error naming ``pip install aeat-cli[<extra>]``.
+must raise the feature's own typed error naming ``pip install cadrumo[<extra>]``.
 """
 
 from __future__ import annotations
@@ -102,7 +102,7 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     client = LLMClient(settings=load_settings())
     with _block_imports("anthropic"), pytest.raises(LLMConfigError) as raised:
         client._build_adapter(LLMProvider.ANTHROPIC)
-    assert raised.value.suggestion == "pip install aeat-cli[anthropic]"
+    assert raised.value.suggestion == "pip install cadrumo[anthropic]"
 
 
 @pytest.mark.asyncio
@@ -115,7 +115,7 @@ async def test_browser_boundary_refuses_instructively_without_the_extra() -> Non
 
         with pytest.raises(BrowserError) as raised:
             await _factory._start_playwright()
-    assert raised.value.suggestion == "pip install aeat-cli[browser]"
+    assert raised.value.suggestion == "pip install cadrumo[browser]"
 
 
 def test_google_extra_unavailable_is_observed_by_the_probe_without_the_extra() -> None:
