@@ -368,6 +368,67 @@ import. Direct facade and engine imports plus the focused former-database
 refusal tests pass. The four concurrently owned S20 authentication/session
 files remain unchanged by this remediation.
 
+### phase-p04-custody-resolver-gap | high | Modelo 145 records cannot satisfy the complete-custody contract
+
+The S22 record discloses, but does not resolve, a failure in
+`test_every_carried_namespace_has_a_natural_key_resolver`. Independent targeted
+execution at the reviewed HEAD reproduces the failure: the carried namespace
+`cadrumo.application.modelo.m145_communication_record` has no natural-key
+resolver. This is not merely a rename-spelling assertion. The namespace is a
+registered bucket-local financial custody row, so the missing resolver prevents
+the complete-custody/export machinery from deriving the stable identity needed
+to carry those records. S22 and S23 therefore cannot establish complete
+persistence closure while this gate remains red.
+
+The S22 record accurately labels the failure as outside that step's bundle
+format edit, and no reviewed rename commit introduced a fake, mock, stub,
+patch, monkeypatch, skip, or xfail to conceal it. Nevertheless, provenance does
+not make a live custody-integrity failure safe to release. Add the production
+resolver through the authoritative resolver registry and prove a real Modelo
+145 record survives export/import with the same natural identity before closing
+W02.P04.
+
+### phase-p04-namespace-discovery-blind-spot | medium | One registered production namespace is absent from discovery
+
+Independent execution also reproduces the S21 record's broader failure in
+`test_every_discovered_production_secure_object_namespace_is_registered`:
+`cadrumo.domain.transactions.bucket` is present in
+`STORAGE_NAMESPACE_REGISTRY`, but the production-namespace discovery helper
+does not discover it. Runtime registry coverage is therefore present, but the
+guard intended to detect unregistered persistence literals has a blind spot.
+Repair the discovery mechanism or the production declaration shape rather than
+weakening the asserted worked example, then rerun the complete registry gate.
+
+### phase-p04-hard-cut-review | resolved | Rename boundaries fail closed without compatibility paths
+
+Review of S17-S23 and commits `523391ab8d`, `a0db621ca1`, `568a4030d7`,
+`8b67cc4360`, `7cc976dd66`, `dec439b019`, `a36049dc97`, `34e04e3986`, and
+`e7a9ec4753` found no migration, fallback, dual-read, adoption, or compatibility
+write path. Product-owned environment controls use Cadrumo identity while AEAT
+authority controls and mixed namespace authority segments remain explicit.
+Former root, database, session, namespace, and bundle identities are checked
+before canonical creation, engine construction, row access, payload read, or
+write; refusal tests preserve the old bytes and rows.
+
+The bundle cut requires schema version 3 and `product: cadrumo`, validates the
+header before returning payload bytes, and binds the serialized header into the
+sealed format rather than accepting the former header as an alias. The focused
+rename tests exercise production code directly and add no prohibited test
+shortcut. The checkout itself contains a former `aeat.db`; direct `Settings()`
+construction refuses it before normal startup. That local failure is expected
+hard-cut behavior and corroborates the recorded environment sensitivity, but it
+also means broad validation from this checkout is not a clean-state pass. Only
+the explicitly isolated clean-state results may be cited as passing evidence.
+
+### phase-p04-review-critical-findings | critical | No critical W02.P04 finding identified
+
+The reviewed cuts preserve former-state bytes, retain AEAT authority identity,
+and fail closed before adoption or mutation. No data destruction, cryptographic
+downgrade, former-state compatibility reader, or authority-evidence corruption
+was identified. The unresolved Modelo 145 custody resolver is high severity and
+must remain a release blocker, but current evidence does not establish a
+critical-severity defect.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
@@ -384,3 +445,6 @@ files remain unchanged by this remediation.
 12. Remove the ignored `.relocated-aeat` bytecode artifacts through an explicitly authorised, verified cleanup step before packaging acceptance, then prove wheels and source archives contain no such members.
 13. Add a move-integrity manifest for future tree-scale relocations: old relative path, target relative path, byte hash, tracked/dirty/untracked status, and collision disposition. Cardinality plus rename detection is useful but insufficient for a dirty 21,000-file move.
 14. Remove the one remaining `*.pyc.relocated-aeat-2` artifact through the same verified literal-path cleanup discipline, then rerun the exact `fd -HI relocated-aeat src/cadrumo` check before marking the low finding resolved.
+15. Add the missing natural-key resolver for `cadrumo.application.modelo.m145_communication_record` through the authoritative production registry and prove a real record's export/import identity round trip before W02.P04 closure.
+16. Restore production namespace discovery coverage for `cadrumo.domain.transactions.bucket`; keep the worked-example assertion and fix the scanner/declaration boundary rather than deleting the expectation.
+17. Rerun both persistence integrity gates and the S23 acceptance file from a genuinely clean Cadrumo root after the local former database is handled by an operator-authorised process. Do not report the current hard-cut refusal as a broad test pass.
