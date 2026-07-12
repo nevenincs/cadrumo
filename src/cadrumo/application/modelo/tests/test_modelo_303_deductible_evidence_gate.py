@@ -43,8 +43,8 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.env_scope import ready_clave_settings
+from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,

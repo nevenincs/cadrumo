@@ -2,7 +2,7 @@
 
 The orchestration layer's `register_active_profile` and
 `select_profile` MUST atomically materialise the plaintext
-`<aeat-root>/active-profile` pointer file so a subsequent process
+`<cadrumo-root>/active-profile` pointer file so a subsequent process
 invocation resolves the active profile from disk before any
 encrypted state row needs to load. This file pins that contract
 end-to-end against a real file-backed storage root, registering each

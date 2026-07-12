@@ -162,7 +162,7 @@ class TestStatusDetailUrlTemplate:
             )
 
         with _isolated_aeat_env():
-            settings = BlankEnvSettings()
+            settings = BlankEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.aeat_certificate_path is None
         assert settings.aeat_certificate_password_secret is None
 
@@ -193,13 +193,13 @@ class TestStatusDetailUrlTemplate:
             )
 
         with _isolated_aeat_env():
-            settings = LegacyProductEnvSettings()
+            settings = LegacyProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_local_storage_root != Path("legacy-state-root")
         assert settings.aeat_auth_provider is AuthProviderKindSetting.CERTIFICATE
 
         env_path.write_text("UNRELATED_CADRUMO_TYPO=1\n", encoding="utf-8")
         with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
-            LegacyProductEnvSettings()
+            LegacyProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
 
     def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
         """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
@@ -219,7 +219,7 @@ class TestStatusDetailUrlTemplate:
             )
 
         with _isolated_aeat_env():
-            settings = RelativeEnvSettings()
+            settings = RelativeEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_workflow_runs_dir == PROJECT_ROOT / "env" / "workflow" / "runs"
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
@@ -329,7 +329,7 @@ class TestRepoRelativePathNormalisationCoverage:
             )
 
         with _isolated_aeat_env():
-            settings = RelativeAuditSettings()
+            settings = RelativeAuditSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
         assert settings.cadrumo_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
         assert settings.cadrumo_runs_dir == PROJECT_ROOT / "var" / "runs"

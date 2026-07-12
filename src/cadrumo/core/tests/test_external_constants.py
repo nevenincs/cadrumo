@@ -451,6 +451,8 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared(source_tree_
 
     allowed_files = {
         repo_relative(Path(__file__).resolve()),
+        "src/cadrumo/adapters/outbound/storage/tests/_runtime_attached_repositories_support.py",
+        "src/cadrumo/adapters/persistence/storage/tests/_runtime_attached_repositories_support.py",
         "src/cadrumo/tests/aeat_literal_fixtures.py",
     }
     volatile_tokens = tuple(
@@ -503,7 +505,7 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_log_stderr_level": "ERROR",
         "cadrumo_log_file_level": "DEBUG",
         "cadrumo_log_root_level": "DEBUG",
-        "cadrumo_google_drive_vault_folder_name": "aeat-vault",
+        "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
         "cadrumo_google_oauth_access_refresh_buffer_s": 300,
         "cadrumo_workbook_parity_per_file_timeout_s": 15.0,
         "cadrumo_workbook_parity_recalc_timeout_s": 60,
@@ -522,6 +524,12 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
     assert settings.cadrumo_llm_openai_chat_completions_url.startswith("https://api.openai.com")
     assert "{model}" in settings.cadrumo_llm_gemini_generate_content_template
     assert settings.cadrumo_llm_ollama_chat_url.startswith("http://")
+
+
+def test_settings_refuse_the_former_product_google_drive_vault_folder() -> None:
+    """The old Drive folder cannot be configured as fresh Cadrumo state."""
+    with pytest.raises(ValidationError, match="former product Google Drive vault folder"):
+        Settings(cadrumo_google_drive_vault_folder_name=" aeat-vault ")
 
 
 def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> None:

@@ -281,7 +281,7 @@ def test_help_command_rows_are_backed_by_mounted_command_families() -> None:
                 if " -> " in entry.command or "rejected" in entry.command:
                     continue
                 tokens = entry.command.split()
-                assert tokens[0] == "aeat"
+                assert tokens[0] == "cadrumo"
                 assert (tokens[1], tokens[2]) in mounted
 
 

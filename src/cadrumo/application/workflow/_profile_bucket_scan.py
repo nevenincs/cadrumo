@@ -1,6 +1,6 @@
 """Manifest-scan discovery for profile bucket pointers.
 
-A profile bucket lives at ``<aeat-root>/buckets/<profile-id>/`` where
+A profile bucket lives at ``<cadrumo-root>/buckets/<profile-id>/`` where
 ``<profile-id>`` is the immutable UUIDv4 profile identity. The
 plaintext ``manifest.toml`` inside carries that ``bucket_id`` (the
 UUID) and a decoupled mutable ``label`` (the operator-chosen display
@@ -91,7 +91,7 @@ def read_profile_bucket(
 
     Args:
         label: Operator-facing profile label. Must be non-empty.
-        root: Optional AEAT root override. When ``None``, resolves
+        root: Optional Cadrumo storage-root override. When ``None``, resolves
             ``Settings.cadrumo_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, a tombstoned profile is also
             a candidate; default ``False`` matches only live profiles.
@@ -180,7 +180,7 @@ def resolve_profile_bucket(
 
     Args:
         identifier: A profile UUID bucket id or an operator display label.
-        root: Optional AEAT root override. When ``None``, resolves
+        root: Optional Cadrumo storage-root override. When ``None``, resolves
             ``Settings.cadrumo_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, inspect surfaces can resolve a
             deleted profile by UUID or name; default ``False`` matches only
@@ -219,7 +219,7 @@ def list_profile_buckets(
     used by repair / audit surfaces that must see deleted profiles.
 
     Args:
-        root: Optional AEAT root override. When ``None``, resolves
+        root: Optional Cadrumo storage-root override. When ``None``, resolves
             ``Settings.cadrumo_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, tombstoned profiles are
             included; default ``False`` returns only live profiles.

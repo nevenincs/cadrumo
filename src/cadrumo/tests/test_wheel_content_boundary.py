@@ -41,8 +41,8 @@ from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_WHEEL_PREFIX = "aeat"
-_WHEEL_DATA_PREFIX = "aeat/_data"
+_WHEEL_PREFIX = "cadrumo"
+_WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
 
 # Corpus source binaries the wheel-split excludes; they ship in the two
@@ -81,9 +81,9 @@ def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("aeat_cli-*.whl"))
+    wheels = sorted(out_dir.glob("cadrumo-*.whl"))
     if len(wheels) != 1:
-        raise AssertionError(f"expected exactly one aeat_cli-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
+        raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     with zipfile.ZipFile(wheels[0]) as archive:
         return frozenset(info.filename for info in archive.infolist())
 

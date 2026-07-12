@@ -71,7 +71,7 @@ def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:
         run_id=run_id,
         started_at=_INSTANT,
         finished_at=_INSTANT,
-        entrypoint="aeat golden demo",
+        entrypoint="cadrumo golden demo",
         arguments=(),
         corpus_sha256=corpus_sha256,
         db_sha256="b" * 64,
@@ -191,7 +191,7 @@ class TestRunContextPersistsEnvelope:
         import io
 
         with override_settings(cadrumo_runs_dir=tmp_path):
-            with run_context(entrypoint="aeat golden demo", arguments=()) as info:
+            with run_context(entrypoint="cadrumo golden demo", arguments=()) as info:
                 run_id = info.run_id
                 emit_json_success(_COMMAND, _result(snapshot_id="snap-run"), stream=io.StringIO())
 
@@ -201,7 +201,7 @@ class TestRunContextPersistsEnvelope:
 
     def test_run_without_emit_persists_no_envelope(self, tmp_path: Path) -> None:
         with override_settings(cadrumo_runs_dir=tmp_path):
-            with run_context(entrypoint="aeat golden demo", arguments=()) as info:
+            with run_context(entrypoint="cadrumo golden demo", arguments=()) as info:
                 run_id = info.run_id
             # No JSON emitted → no golden artifact written.
             with pytest.raises(RunTraceValidationError, match="not found"):

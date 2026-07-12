@@ -49,7 +49,7 @@ def _build_trace(run_id: str, *, corpus_sha256: str) -> RunTrace:
         run_id=run_id,
         started_at=datetime(2026, 4, 14, tzinfo=UTC),
         finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-        entrypoint="aeat hello",
+        entrypoint="cadrumo hello",
         arguments=(),
         corpus_sha256=corpus_sha256,
         db_sha256="b" * 64,
@@ -69,7 +69,7 @@ class TestReplayRun:
             save_trace(trace)
             result = replay_run(trace.run_id)
             assert result.run_id == trace.run_id
-            assert result.entrypoint == "aeat hello"
+            assert result.entrypoint == "cadrumo hello"
 
     def test_refuses_on_corpus_drift(
         self,
@@ -100,7 +100,7 @@ class TestReplayRun:
                 run_id="aaaabbbbccccdddd",
                 started_at=datetime(2026, 4, 14, tzinfo=UTC),
                 finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-                entrypoint="aeat workflow run",
+                entrypoint="cadrumo workflow run",
                 arguments=(
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
                     ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG),
@@ -132,7 +132,7 @@ class TestReplayRun:
                 run_id="1111222233334444",
                 started_at=datetime(2026, 4, 14, tzinfo=UTC),
                 finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-                entrypoint="aeat test replay",
+                entrypoint="cadrumo test replay",
                 arguments=(),
                 corpus_sha256=current_corpus,
                 db_sha256="b" * 64,
@@ -146,7 +146,7 @@ class TestReplayRun:
             # ``load_settings()`` at re-entry.
             with (
                 override_settings(cadrumo_runs_dir=tmp_path, cadrumo_replay_active=original.run_id),
-                run_context(entrypoint="aeat test replay-child", arguments=()) as info,
+                run_context(entrypoint="cadrumo test replay-child", arguments=()) as info,
             ):
                 child_run_id = info.run_id
 
@@ -159,7 +159,7 @@ class TestReplayRun:
         from .._store import load_trace
 
         with override_settings(cadrumo_runs_dir=tmp_path, cadrumo_replay_active="1"):
-            with run_context(entrypoint="aeat test", arguments=()) as info:
+            with run_context(entrypoint="cadrumo test", arguments=()) as info:
                 rid = info.run_id
 
             trace = load_trace(rid)
@@ -204,7 +204,7 @@ class TestReplayEndToEndBooleanFlag:
                 run_id="deadbeefcafe0001",
                 started_at=datetime(2026, 4, 14, tzinfo=UTC),
                 finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-                entrypoint="aeat workflow list",
+                entrypoint="cadrumo workflow list",
                 # NOTE: ``name="json"`` here matches how the real
                 # wrapped command (cli/workflow/list_cmd.py) builds its
                 # arguments dict — using the CLI flag spelling as the
@@ -274,7 +274,7 @@ class TestArgvReconstruction:
         ] = (
             (
                 "positional-first",
-                "aeat inbox ack",
+                "cadrumo inbox ack",
                 (
                     ArgumentRecord(name="notificacion_id", value="N-42", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
@@ -293,13 +293,13 @@ class TestArgvReconstruction:
             ),
             (
                 "underscore-flag",
-                "aeat workflow list",
+                "cadrumo workflow list",
                 (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),),
                 ("workflow", "list", "--as-json"),
             ),
             (
                 "false-bool-skipped",
-                "aeat inbox list",
+                "cadrumo inbox list",
                 (
                     ArgumentRecord(name="unread", value="False", source=ArgumentSource.FLAG),
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
@@ -308,13 +308,13 @@ class TestArgvReconstruction:
             ),
             (
                 "true-bool-bare",
-                "aeat workflow show",
+                "cadrumo workflow show",
                 (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
                 ("workflow", "show", "--json"),
             ),
             (
                 "leading-dash-value",
-                "aeat sync resolve-divergence",
+                "cadrumo sync resolve-divergence",
                 (
                     ArgumentRecord(name="record_id", value="R-42", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="notes", value="--urgent", source=ArgumentSource.FLAG),
@@ -323,7 +323,7 @@ class TestArgvReconstruction:
             ),
             (
                 "env-default-skipped",
-                "aeat run show",
+                "cadrumo run show",
                 (
                     ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="cadrumo_runs_dir", value="var/runs", source=ArgumentSource.ENV),
@@ -353,7 +353,7 @@ class TestArgvReconstruction:
                 cli_flag="--json",
             ),
         )
-        argv = _argv_from_arguments("aeat workflow show", args)
+        argv = _argv_from_arguments("cadrumo workflow show", args)
         assert argv == ["workflow", "show", "--json"]
         # Also exercises the False path with override.
         args_false = (
@@ -364,7 +364,7 @@ class TestArgvReconstruction:
                 cli_flag="--json",
             ),
         )
-        argv_false = _argv_from_arguments("aeat workflow show", args_false)
+        argv_false = _argv_from_arguments("cadrumo workflow show", args_false)
         # False-bool override still gets skipped, not re-emitted.
         assert argv_false == ["workflow", "show"]
 

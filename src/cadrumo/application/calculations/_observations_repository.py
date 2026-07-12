@@ -141,7 +141,7 @@ def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) ->
 
 def _require_observation_period(period: Period) -> Period:
     if not isinstance(period, Period):
-        raise ObservationKeyError("observation period must be an aeat.core.Period")
+        raise ObservationKeyError("observation period must be an cadrumo.core.Period")
     return period
 
 

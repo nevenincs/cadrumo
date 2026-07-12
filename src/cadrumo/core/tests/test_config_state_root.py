@@ -232,7 +232,7 @@ def test_fresh_installed_cadrumo_state_is_resolved_and_reused(tmp_path: Path) ->
 
 
 def test_installed_resolution_refuses_former_product_state_without_touching_it(tmp_path: Path) -> None:
-    """Recognizable former-product state is refused without adoption or mutation."""
+    """Recognizable retired ``aeat`` state is refused without adoption or mutation."""
     former_storage = tmp_path / "aeat" / "storage"
     former_storage.mkdir(parents=True)
     marker = former_storage / "opaque-state.bin"

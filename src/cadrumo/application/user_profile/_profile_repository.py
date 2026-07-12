@@ -170,7 +170,7 @@ class ProfileRepository:
         """Construct the repository.
 
         Args:
-            root: AEAT local storage root (the parent of ``buckets/``).
+            root: Cadrumo local storage root (the parent of ``buckets/``).
                 When ``None`` the value is resolved from the
                 pydantic-settings :class:`~cadrumo.core.config.Settings`
                 object.

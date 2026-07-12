@@ -23,7 +23,7 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     client = OAuthClient(
         client_id="desktop-client.apps.googleusercontent.com",
         client_secret="gcp-client-secret",
-        project_id="aeat-vault",
+        project_id="cadrumo-vault",
         auth_uri="https://accounts.google.com/o/oauth2/auth",
         token_uri="https://oauth2.googleapis.com/token",
         auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",

@@ -27,12 +27,15 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from ._config_runtime_fields import AeatRuntimeSettings
 from .external_constants import DEFAULT_CURRENCY
 from .paths import PROJECT_ROOT
+
+FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME: Final = "aeat-vault"
 
 
 class AeatIntegrationSettings(AeatRuntimeSettings):
@@ -40,15 +43,23 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
 
     # ── Google integration ───────────────────────────────────────────────
     cadrumo_google_drive_vault_folder_name: str = Field(
-        default="aeat-vault",
+        default="cadrumo-vault",
         min_length=1,
-        description="Folder name created under the Google Drive root for the AEAT vault",
+        description="Folder name created under the Google Drive root for the Cadrumo vault",
     )
     cadrumo_google_oauth_access_refresh_buffer_s: int = Field(
         default=300,
         gt=0,
         description="Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens",
     )
+
+    @field_validator("cadrumo_google_drive_vault_folder_name")
+    @classmethod
+    def _refuse_former_product_google_drive_vault_folder(cls, value: str) -> str:
+        if value.strip().casefold() == FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME:
+            raise ValueError("the former product Google Drive vault folder is not supported")
+        return value
+
     # ── Workbook parity / Sheets ─────────────────────────────────────────
     cadrumo_workbook_parity_per_file_timeout_s: float = Field(
         default=15.0,

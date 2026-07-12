@@ -1,4 +1,4 @@
-"""Tripwire tests for the release-please LOCAL-only workflow (aeat#60).
+"""Tripwire tests for the release-please LOCAL-only workflow (#60).
 
 These tests validate the project-meta files that drive `just release`:
 
@@ -10,7 +10,7 @@ These tests validate the project-meta files that drive `just release`:
   agree.
 
 The test lives in ``src/cadrumo/tests/`` rather than alongside any
-``aeat.*`` runtime subpackage because it validates project-meta
+``cadrumo.*`` runtime subpackage because it validates project-meta
 files that do not belong to a runtime module.
 
 Per the project pydantic mandate, the JSON payloads are parsed into
@@ -212,7 +212,7 @@ def test_release_please_config_is_well_formed() -> None:
     assert config.changelog_path == "CHANGELOG.md"
     assert "." in config.packages
     root_pkg = config.packages["."]
-    assert root_pkg.package_name == "aeat"
+    assert root_pkg.package_name == "cadrumo"
     assert root_pkg.release_type == "python"
     assert "src/cadrumo/__init__.py" in root_pkg.extra_files
 

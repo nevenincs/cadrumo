@@ -38,7 +38,7 @@ EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(
     member.value.upper() for member in EUMemberState if member is not EUMemberState.XI
 )
 """Closed set of ISO-3166 alpha-2 codes (uppercase) for the 27 EU
-Member States, sourced from :class:`aeat.domain.iva.EUMemberState` while
+Member States, sourced from :class:`cadrumo.domain.iva.EUMemberState` while
 excluding the Northern Ireland IVA prefix ``XI``."""
 
 

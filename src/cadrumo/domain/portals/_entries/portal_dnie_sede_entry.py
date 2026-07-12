@@ -23,4 +23,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_dnie_sede_entry.label",
     purpose="entries.portal_dnie_sede_entry.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the DNIe Sede entry page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the DNIe Sede entry page."""

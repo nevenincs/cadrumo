@@ -811,7 +811,8 @@ def test_build_orders_entries_by_close_then_modelo_then_period() -> None:
         today=date(2026, 4, 1),
     )
     keys = [
-        (entry.closes_on, entry.modelo, entry.period.filing_year, entry.period.registry_token) for entry in calendar.entries
+        (entry.closes_on, entry.modelo, entry.period.filing_year, entry.period.registry_token)
+        for entry in calendar.entries
     ]
     assert keys == sorted(keys)
 

@@ -9,7 +9,7 @@ The tests exercise three real Drive paths:
 
 1. `probe()` against the real Drive API — confirms the root folder is
    reachable and a sentinel round-trip succeeds.
-2. `put` + `get` round-trip — creates a file under `aeat-vault/_probe/`,
+2. `put` + `get` round-trip — creates a file under `cadrumo-vault/_probe/`,
    reads it back, asserts payload equality + integrity verification.
 3. `iter_objects` + `delete` cleanup — confirms the new object is
    listed, then deletes it and confirms a subsequent get raises

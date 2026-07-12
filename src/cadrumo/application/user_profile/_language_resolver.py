@@ -1,14 +1,12 @@
-"""Active-profile output-language resolver wiring for ``core.i18n``.
+"""Resolve the active profile's preferred output language for ``core.i18n``.
 
-The ``core`` layer must not import application modules, so it resolves
-the active profile's ``preferences.output_language`` preference through
-a registered callback (see
-:func:`cadrumo.core.i18n.register_profile_language_resolver`).
-
-This module owns the application-side resolver and registers it as a
-module-import side-effect. Importing it is cheap — every heavyweight
-import (workflow persistence, orchestration) is deferred inside the
-resolver body so registration cannot trigger an import cascade.
+The ``core`` layer remains independent of application modules. It resolves the
+active profile's ``preferences.output_language`` preference through a registered
+callback. :mod:`cadrumo.application.user_profile` explicitly calls
+:func:`register_language_resolver` after the module's imports complete. That
+function registers
+:func:`resolve_active_profile_output_language` with
+:func:`cadrumo.core.i18n.register_profile_language_resolver`.
 """
 
 from __future__ import annotations
@@ -22,9 +20,8 @@ def resolve_active_profile_output_language() -> str | None:
     Performs a pure read of workflow state — no mutation, no bucket
     events — and returns ``None`` when there is no active profile or no
     language fact, so the caller falls back to the settings default.
-    When the bucket session is closed or cannot open, reads the
-    bucket-local non-secret language hint instead of the encrypted
-    profile envelope.
+    When no bucket session is currently bound, reads the bucket-local
+    non-secret language hint instead of the encrypted profile envelope.
     """
     from ...adapters.persistence.storage.master_key import has_active_bucket_session
 

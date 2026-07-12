@@ -25,4 +25,4 @@ ENTRY: PortalMetadata = build_entry(
     purpose="entries.portal_cert_selection.purpose",
     notes=("entries.portal_cert_selection.notes.0",),
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-selection gateway."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the certificate-selection gateway."""

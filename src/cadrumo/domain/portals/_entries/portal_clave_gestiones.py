@@ -24,4 +24,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_clave_gestiones.label",
     purpose="entries.portal_clave_gestiones.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve self-service page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the Cl@ve self-service page."""

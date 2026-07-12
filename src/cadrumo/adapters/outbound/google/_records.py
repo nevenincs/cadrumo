@@ -137,7 +137,7 @@ class DriveConfig(BaseModel):
     """Per-profile Drive backend configuration persisted alongside OAuth records.
 
     :func:`adapters.outbound.google.save_drive_config`
-    persists the operator's chosen ``aeat-vault/`` parent folder id.
+    persists the operator's chosen ``cadrumo-vault/`` parent folder id.
     :func:`adapters.outbound.storage.get_storage_provider` reads it after
     :class:`core.config.Settings`; the
     ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` setting remains an override for

@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _provider() -> GoogleDriveProvider:
-    return GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="aeat-vault")
+    return GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault")
 
 
 def test_google_drive_explicit_constructor_does_not_build_google_client() -> None:
@@ -41,7 +41,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
                 provider = GoogleDriveProvider(
                     credentials=object(),
                     root_folder_id="drive-root",
-                    vault_folder_name="aeat-vault",
+                    vault_folder_name="cadrumo-vault",
                 )
                 watched = (
                     "googleapiclient.discovery",
@@ -68,7 +68,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
     ("provider_kwargs", "message", "context"),
     (
         (
-            {"credentials": object(), "root_folder_id": " ", "vault_folder_name": "aeat-vault"},
+            {"credentials": object(), "root_folder_id": " ", "vault_folder_name": "cadrumo-vault"},
             "adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
             {"root_folder_id": " "},
         ),
@@ -94,6 +94,17 @@ def test_google_drive_provider_rejects_blank_constructor_values_with_localized_m
     assert exc.translated_message is not None
     assert exc.context == context
     assert resolve_error_message(exc) == tr(exc.translated_message, **(exc.context or {}))
+
+
+def test_google_drive_provider_refuses_the_former_product_vault_before_service_construction() -> None:
+    """The legacy Drive folder is never adopted as Cadrumo state."""
+    with pytest.raises(OutboundStorageValidationError) as raised:
+        GoogleDriveProvider(credentials=object(), root_folder_id="drive-root", vault_folder_name="aeat-vault")
+
+    exc = raised.value
+    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.former_vault_folder"
+    assert exc.context == {"vault_folder_name": "aeat-vault"}
+    assert resolve_error_message(exc) == tr(exc.translated_message, **exc.context)
 
 
 @pytest.mark.parametrize(

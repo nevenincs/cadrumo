@@ -15,7 +15,7 @@ This test verifies that contract end-to-end by driving the real build pipeline:
 2. The resulting wheel archive is opened as a zip.
 3. Every path reported by ``git ls-files`` under the shipped data
    subtrees, EXCEPT the excluded corpus source binaries, is asserted to
-   appear in the archive at the corresponding ``aeat/_data/<relative-path>``
+   appear in the archive at the corresponding ``cadrumo/_data/<relative-path>``
    prefix.
 4. The corpus source binaries are asserted ABSENT from the slim wheel; the two
    ``aeat-data-*`` companion distributions are what carry them
@@ -41,7 +41,7 @@ from ._inventory import REPO_ROOT, SRC_CADRUMO
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_CADRUMO / "_data"
-_WHEEL_DATA_PREFIX = "aeat/_data"
+_WHEEL_DATA_PREFIX = "cadrumo/_data"
 
 # Corpus source binaries excluded from the slim ``aeat`` wheel (they ship in the
 # two ``aeat-data-*`` companions). A path is an excluded corpus source binary
@@ -130,9 +130,9 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob("aeat_cli-*.whl"))
+    wheels = sorted(out_dir.glob("cadrumo-*.whl"))
     if len(wheels) != 1:
-        raise AssertionError(f"expected exactly one aeat_cli-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
+        raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     return wheels[0]
 
 
@@ -143,14 +143,14 @@ def test_data_root_exists_in_worktree() -> None:
 
 
 def test_wheel_filename_matches_distribution(built_wheel: Path) -> None:
-    """The built wheel follows the expected ``aeat_cli-<version>-py3-none-any.whl`` shape.
+    """The built wheel follows the expected ``cadrumo-<version>-py3-none-any.whl`` shape.
 
-    The PyPI distribution is ``aeat-cli`` (the import package stays ``aeat``), so
-    the wheel filename normalises the distribution name to ``aeat_cli`` — matching
-    the ``aeat_cli-*.whl`` glob the ``built_wheel`` fixture already uses.
+    The PyPI distribution is ``cadrumo`` (the import package stays ``cadrumo``), so
+    the wheel filename normalises the distribution name to ``cadrumo`` — matching
+    the ``cadrumo-*.whl`` glob the ``built_wheel`` fixture already uses.
     """
 
-    assert re.match(r"^aeat_cli-[0-9.]+(\.[a-z0-9]+)?-py3-none-any\.whl$", built_wheel.name), (
+    assert re.match(r"^cadrumo-[0-9.]+(\.[a-z0-9]+)?-py3-none-any\.whl$", built_wheel.name), (
         f"unexpected wheel filename: {built_wheel.name}"
     )
 

@@ -1,7 +1,7 @@
 """Regression tests for the bucket-provisioning side of `initialize_workspace`.
 
 Pins the post-init bucket-provisioning contract: after a successful
-workspace init, the per-bucket directory tree (`<aeat-root>/buckets/<id>/`
+workspace init, the per-bucket directory tree (`<cadrumo-root>/buckets/<id>/`
 with `db/`, `blobs/`, `audit/` subdirectories) AND the
 `<bucket-dir>/manifest.toml` must exist on disk. The bucket directory
 is named by the immutable UUID profile identity; the manifest carries

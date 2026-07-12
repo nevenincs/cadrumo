@@ -382,13 +382,21 @@ def configure_logging() -> None:
     if _CONFIGURED or _is_aeat_metadata_invocation():
         return
 
+    from ._config_state_root import FormerProductStateError
     from .config import load_settings
 
-    log_file = default_log_file_path()
+    try:
+        log_file = default_log_file_path()
+        settings = load_settings()
+    except FormerProductStateError:
+        # A normal command must reach the typed CLI refusal boundary instead
+        # of crashing while its import-time logger tries to open former state.
+        # Do not configure a file handler or inspect the rejected root.
+        _CONFIGURED = True
+        return
     log_directory_failure = _prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
 
-    settings = load_settings()
     configured_handlers: dict[str, dict[str, Any]] = {
         "stderr": {
             "level": settings.cadrumo_log_stderr_level,

@@ -196,7 +196,7 @@ class ProfileBucketPointer(BaseModel):
 def _period_identity_segment(period: Period) -> str:
     """Return the stable non-combined identity segment for ``period``."""
     if not isinstance(period, Period):
-        raise TypeError(f"period must be aeat.core.Period, got {type(period).__name__}")
+        raise TypeError(f"period must be cadrumo.core.Period, got {type(period).__name__}")
     return f"{period.filing_year}:{period.registry_token}"
 
 
@@ -210,7 +210,7 @@ def declaration_key(modelo: str, period: Period) -> str:
 
 
 class WorkflowState(BaseModel):
-    """Encrypted operator state for the AEAT user CLI.
+    """Encrypted operator state for the Cadrumo ``aeat`` CLI.
 
     The entire state is persisted as a single encrypted envelope via
     :class:`WorkflowStateRepository`. Mutations always return a new

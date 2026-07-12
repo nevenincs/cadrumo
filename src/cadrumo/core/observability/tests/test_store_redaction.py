@@ -55,7 +55,7 @@ def _trace_with_argument(*, run_id: str, argument_name: str, argument_value: str
         run_id=run_id,
         started_at=_STARTED_AT,
         finished_at=_FINISHED_AT,
-        entrypoint="aeat hello",
+        entrypoint="cadrumo hello",
         arguments=(ArgumentRecord(name=argument_name, value=argument_value, source=ArgumentSource.FLAG),),
         corpus_sha256="b" * 64,
         db_sha256="c" * 64,

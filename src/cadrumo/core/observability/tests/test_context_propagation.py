@@ -83,15 +83,15 @@ class TestRunContextOutcome:
         tmp_path: Path,
     ) -> None:
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
-            with run_context(entrypoint="aeat test ok", arguments=()) as info:
+            with run_context(entrypoint="cadrumo test ok", arguments=()) as info:
                 run_id = info.run_id
             trace = load_trace(run_id)
             assert trace.outcome is RunOutcome.OK
 
     def test_outcome_failed_when_body_raises(self, tmp_path: Path) -> None:
         cases = (
-            (RuntimeError("boom"), "aeat test fail"),
-            (KeyboardInterrupt(), "aeat test int"),
+            (RuntimeError("boom"), "cadrumo test fail"),
+            (KeyboardInterrupt(), "cadrumo test int"),
         )
 
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
@@ -121,7 +121,7 @@ class TestRunContextOutcome:
         with (
             override_settings(cadrumo_runs_dir=tmp_path),
             pytest.raises(RunTracePersistenceError) as excinfo,
-            run_context(entrypoint="aeat test persist fail", arguments=(), run_id=run_id),
+            run_context(entrypoint="cadrumo test persist fail", arguments=(), run_id=run_id),
         ):
             (tmp_path / run_id / "trace.json").mkdir()
 
@@ -137,7 +137,7 @@ class TestRunContextOutcome:
         with (
             override_settings(cadrumo_runs_dir=tmp_path),
             pytest.raises(RuntimeError, match="primary failure"),
-            run_context(entrypoint="aeat test body fail", arguments=(), run_id=run_id),
+            run_context(entrypoint="cadrumo test body fail", arguments=(), run_id=run_id),
         ):
             (tmp_path / run_id / "trace.json").mkdir()
             raise RuntimeError("primary failure")
@@ -164,7 +164,7 @@ class TestRunContextRunIdValidation:
                 before = set(tmp_path.iterdir())
                 with (
                     pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
-                    run_context(entrypoint="aeat test", arguments=(), run_id=bad_run_id),
+                    run_context(entrypoint="cadrumo test", arguments=(), run_id=bad_run_id),
                 ):
                     pass
                 # No directory must have been created by the rejected enter.
@@ -176,7 +176,7 @@ class TestRunContextRunIdValidation:
     ) -> None:
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with run_context(
-                entrypoint="aeat test",
+                entrypoint="cadrumo test",
                 arguments=(),
                 run_id="cafebabecafebabe",
             ) as info:
@@ -192,7 +192,7 @@ class TestRunIdPropagation:
     ) -> None:
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
             chain: Callable[[str], None] = _SubmissionStep(_InboxStep(_StatusStep()))
-            with run_context(entrypoint="aeat test chain", arguments=()) as info:
+            with run_context(entrypoint="cadrumo test chain", arguments=()) as info:
                 chain("alpha")
                 chain("beta")
                 run_id = info.run_id
@@ -224,7 +224,7 @@ class TestRunSinkScrubbing:
     ) -> None:
         """A NIF-shaped value in a GenericPayload field must not appear in plain text."""
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
-            with run_context(entrypoint="aeat test scrub nif", arguments=()) as info:
+            with run_context(entrypoint="cadrumo test scrub nif", arguments=()) as info:
                 record_event(
                     RunEventKind.ASSERTION,
                     payload=RunEventPayload(generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))),
@@ -269,7 +269,7 @@ class TestRunSinkScrubbing:
     ) -> None:
         """Every JSONL line must deserialise cleanly after scrubbing is applied."""
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
-            with run_context(entrypoint="aeat test scrub json", arguments=()) as info:
+            with run_context(entrypoint="cadrumo test scrub json", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,
                     payload=RunEventPayload(generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))),

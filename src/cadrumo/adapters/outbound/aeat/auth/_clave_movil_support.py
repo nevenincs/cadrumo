@@ -10,9 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-from contextvars import ContextVar
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
@@ -22,6 +19,7 @@ from pydantic import SecretStr
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
+from .._operator_progress import emit_operator_progress, operator_progress_sink
 from ._errors import AuthConfigurationError, AuthError
 
 if TYPE_CHECKING:
@@ -186,38 +184,6 @@ def diagnostic_fingerprint(value: object) -> str:
     return f"sha256:{digest}"
 
 
-_OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
-    "_aeat_auth_operator_progress_sink",
-    default=None,
-)
-"""Active operator progress sink for the current context, or ``None`` when unset."""
-
-
-@contextmanager
-def operator_progress_sink(sink: Callable[[str], None]) -> Iterator[None]:
-    """Arm an operator-facing progress sink for the current context.
-
-    While armed, :func:`render_progress_banner` routes its already-built
-    operator banner — the "approve in your Cl@ve app / verification code:
-    XXX" prompt — to ``sink`` in addition to the runtime log, so a headless
-    operator sees the verification code they must confirm *during* the Cl@ve
-    wait instead of only in the log file. The sink is unset (``None``) in
-    production and tests unless a caller (the CLI entry point) arms it, so the
-    banner path pays a single ``ContextVar.get()`` call when no sink is
-    installed. Mirrors the capture-sink idiom in
-    :mod:`core.observability._capture`.
-
-    The banner is non-secret operator guidance (a challenge code the operator
-    confirms), not a credential; it is emitted only to this operator channel,
-    never folded into a machine-readable result.
-    """
-    token = _OPERATOR_PROGRESS_SINK.set(sink)
-    try:
-        yield
-    finally:
-        _OPERATOR_PROGRESS_SINK.reset(token)
-
-
 def render_progress_banner(
     *,
     verification_code: str | None,
@@ -266,9 +232,7 @@ def render_progress_banner(
     )
     banner = "\n".join(lines)
     log.info("auth.waiting_banner banner=%r", banner)
-    sink = _OPERATOR_PROGRESS_SINK.get()
-    if sink is not None:
-        sink(banner)
+    emit_operator_progress(banner)
 
 
 __all__ = [
