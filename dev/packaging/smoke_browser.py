@@ -75,8 +75,8 @@ import asyncio
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
-from aeat.adapters.outbound.aeat.browser import default_browser_session_factory
-from aeat.core.config import load_settings
+from cadrumo.adapters.outbound.aeat.browser import default_browser_session_factory
+from cadrumo.core.config import load_settings
 
 
 class Handler(BaseHTTPRequestHandler):

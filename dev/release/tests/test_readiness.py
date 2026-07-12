@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests.env_scope import scoped_env_var
+from cadrumo.tests.env_scope import scoped_env_var
 
 from .. import readiness
 
@@ -26,11 +26,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _write_pyproject(root: Path, version: str) -> None:
-    (root / "pyproject.toml").write_text(f'[project]\nname = "aeat-cli"\nversion = "{version}"\n', encoding="utf-8")
+    (root / "pyproject.toml").write_text(f'[project]\nname = "cadrumo"\nversion = "{version}"\n', encoding="utf-8")
 
 
 def _write_init(root: Path, version: str) -> None:
-    init_dir = root / "src" / "aeat"
+    init_dir = root / "src" / "cadrumo"
     init_dir.mkdir(parents=True, exist_ok=True)
     (init_dir / "__init__.py").write_text(f'__version__ = "{version}"\n', encoding="utf-8")
 

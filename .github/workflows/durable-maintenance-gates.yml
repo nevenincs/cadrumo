@@ -106,10 +106,10 @@ jobs:
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
         run: |
           uv run --no-sync pytest \
-            src/aeat/tests/test_roundtrip_coverage.py \
-            src/aeat/application/ledger/tests \
-            src/aeat/adapters/persistence/storage \
-            src/aeat/adapters/persistence/profile \
+            src/cadrumo/tests/test_roundtrip_coverage.py \
+            src/cadrumo/application/ledger/tests \
+            src/cadrumo/adapters/persistence/storage \
+            src/cadrumo/adapters/persistence/profile \
             -k roundtrip \
             --junitxml=roundtrip-junit.xml
 
