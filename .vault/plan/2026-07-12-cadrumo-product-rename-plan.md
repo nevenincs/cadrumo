@@ -86,7 +86,7 @@ Move the import root and every executable dynamic reference without aliases.
 Move product configuration and persistence identifiers at one breaking boundary.
 
 - [x] `W02.P04.S17` - Rename product-owned settings and CADRUMO environment parsing while retaining authority settings; `src/cadrumo configuration consumers/tests; dev configuration consumers; env/.env.example; packaging/mcpb/manifest.json; .github/workflows; justfile; conftest.py`.
-- [ ] `W02.P04.S18` - Move the platform application-data root to Cadrumo and refuse detected former-product state; `src/cadrumo/core/_config_state_root.py`.
+- [x] `W02.P04.S18` - Move the platform application-data root to Cadrumo and refuse detected former-product state; `src/cadrumo/core/_config_state_root.py; src/cadrumo/core/tests/test_config_state_root.py`.
 - [ ] `W02.P04.S19` - Rename the product database filename without fallback; `src/cadrumo/adapters/persistence/storage SQL`.
 - [ ] `W02.P04.S20` - Rename product authentication-session storage without reading or moving former state; `src/cadrumo authentication session storage`.
 - [ ] `W02.P04.S21` - Rename product logical storage namespaces without touching authority field names; `src/cadrumo/adapters/persistence/storage`.

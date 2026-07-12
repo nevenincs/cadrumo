@@ -24,6 +24,7 @@ import pytest
 
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from .._config_state_root import (
+    FormerProductStateError,
     RunMode,
     StateRootInputs,
     default_storage_root,
@@ -44,7 +45,7 @@ def _installed_inputs_under(base: Path, *, platform: str = "win32") -> StateRoot
     per-platform environment variable points at ``base`` — a host-absolute
     ``tmp_path`` — so the resolver's absolute-path acceptance holds on any host.
     """
-    candidate = base / "site-packages" / "aeat" / "core"
+    candidate = base / "site-packages" / "cadrumo" / "core"
     if platform == "win32":
         environ = {"LOCALAPPDATA": str(base)}
     elif platform == "linux":
@@ -158,7 +159,7 @@ def test_checkout_markers_beat_a_present_platform_env(tmp_path: Path) -> None:
 
 
 def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
-    """Every platform's installed run resolves under ``<base>/aeat/storage``.
+    """Every platform's installed run resolves under ``<base>/cadrumo/storage``.
 
     A marker-free candidate under a fake ``site-packages`` classifies installed
     and the storage root lands under the platform user-data base, never under
@@ -171,7 +172,7 @@ def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
         resolution = resolve_state_root(inputs)
         if resolution.run_mode is not RunMode.INSTALLED:
             failures.append(f"{platform}: run_mode={resolution.run_mode!r}")
-        if resolution.platform_user_data_root.name != "aeat":
+        if resolution.platform_user_data_root.name != "cadrumo":
             failures.append(f"{platform}: user_data_root={resolution.platform_user_data_root}")
         if resolution.storage_root != resolution.platform_user_data_root / "storage":
             failures.append(f"{platform}: storage_root={resolution.storage_root}")
@@ -184,9 +185,9 @@ def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
 
 
 def test_windows_localappdata_falls_back_to_appdata_local_when_unset(tmp_path: Path) -> None:
-    """Windows with no ``%LOCALAPPDATA%`` roots under ``~/AppData/Local/aeat``."""
+    """Windows with no ``%LOCALAPPDATA%`` roots under ``~/AppData/Local/cadrumo``."""
     inputs = StateRootInputs(
-        project_root_candidate=tmp_path / "site-packages" / "aeat",
+        project_root_candidate=tmp_path / "site-packages" / "cadrumo",
         platform="win32",
         environ={},
         home=tmp_path / "home",
@@ -194,7 +195,7 @@ def test_windows_localappdata_falls_back_to_appdata_local_when_unset(tmp_path: P
     resolution = resolve_state_root(inputs)
 
     assert resolution.run_mode is RunMode.INSTALLED
-    assert resolution.storage_root == (tmp_path / "home" / "AppData" / "Local" / "aeat" / "storage")
+    assert resolution.storage_root == (tmp_path / "home" / "AppData" / "Local" / "cadrumo" / "storage")
 
 
 def test_relative_platform_env_base_is_ignored(tmp_path: Path) -> None:
@@ -205,14 +206,45 @@ def test_relative_platform_env_base_is_ignored(tmp_path: Path) -> None:
     a cwd-relative location.
     """
     inputs = StateRootInputs(
-        project_root_candidate=tmp_path / "site-packages" / "aeat",
+        project_root_candidate=tmp_path / "site-packages" / "cadrumo",
         platform="linux",
         environ={"XDG_DATA_HOME": "relative/not/absolute"},
         home=tmp_path / "home",
     )
     resolution = resolve_state_root(inputs)
 
-    assert resolution.storage_root == (tmp_path / "home" / ".local" / "share" / "aeat" / "storage")
+    assert resolution.storage_root == (tmp_path / "home" / ".local" / "share" / "cadrumo" / "storage")
+
+
+def test_fresh_installed_cadrumo_state_is_resolved_and_reused(tmp_path: Path) -> None:
+    """A fresh installed root is Cadrumo-owned and remains the sole state root."""
+    inputs = _installed_inputs_under(tmp_path)
+    first = resolve_state_root(inputs)
+
+    first.storage_root.mkdir(parents=True)
+    marker = first.storage_root / "fresh-state.marker"
+    marker.write_text("cadrumo", encoding="utf-8")
+
+    second = resolve_state_root(inputs)
+    assert second.storage_root == tmp_path / "cadrumo" / "storage"
+    assert marker.read_text(encoding="utf-8") == "cadrumo"
+    assert not (tmp_path / "aeat").exists()
+
+
+def test_installed_resolution_refuses_former_product_state_without_touching_it(tmp_path: Path) -> None:
+    """Recognizable former-product state is refused without adoption or mutation."""
+    former_storage = tmp_path / "aeat" / "storage"
+    former_storage.mkdir(parents=True)
+    marker = former_storage / "opaque-state.bin"
+    marker.write_bytes(b"former-product-state")
+    inputs = _installed_inputs_under(tmp_path)
+
+    with pytest.raises(FormerProductStateError, match="will not read, move, re-key, delete, or adopt"):
+        resolve_state_root(inputs)
+
+    assert marker.read_bytes() == b"former-product-state"
+    assert former_storage.is_dir()
+    assert not (tmp_path / "cadrumo").exists()
 
 
 def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Path) -> None:
