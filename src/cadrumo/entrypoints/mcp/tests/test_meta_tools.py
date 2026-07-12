@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _blocked_descriptor() -> McpToolDescriptor:
     """A synthetic descriptor whose leaf triggers the permanent live-write block."""
     return McpToolDescriptor(
-        name="aeat_x_submit",
+        name="cadrumo_x_submit",
         command_key="x.submit",
         description="synthetic live-write",
         input_schema={"type": "object", "properties": {}, "required": [], "additionalProperties": False},
@@ -197,6 +197,14 @@ def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> 
     assert names == {"search", "execute", "toolsets", "describe"}
     for tool in tools:
         assert tool.inputSchema["type"] == "object"
+    product_descriptions = [tool.description for tool in tools if tool.name in {"search", "execute", "describe"}]
+    assert all("Cadrumo command" in description for description in product_descriptions)
+    assert all("aeat command" not in description.lower() for description in product_descriptions)
+
+
+def test_server_uses_the_canonical_cadrumo_identity() -> None:
+    server = build_server(())
+    assert server.name == "cadrumo"
 
 
 def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:
