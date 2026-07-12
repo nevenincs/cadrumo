@@ -57,7 +57,7 @@ InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 #: The committed relevance-weights file (the build-time RAG sweep's output).
 #: Optional: present-boosts, absent-uses-base-weights. Re-read every build so
 #: it auto-applies the moment the sweep lands the file.
-_RELEVANCE_RELPATH = Path("src") / "aeat" / "_data" / "terminology" / "relevance" / "relevance.json"
+_RELEVANCE_RELPATH = Path("src") / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
 
 #: Pagefind meta / filter / sort values are strings; the weight is rendered to
 #: a fixed-width zero-padded integer string so Pagefind's lexical sort orders
