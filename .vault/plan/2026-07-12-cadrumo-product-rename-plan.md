@@ -112,7 +112,7 @@ distinct `cadrumo-mcp` command.
 Move the companion projects and shared namespace coherently.
 
 - [x] `W03.P06.S28` - Move the manuals companion project directory; `packaging/aeat_data_manuals to packaging/cadrumo_data_manuals`.
-- [ ] `W03.P06.S29` - Rename manuals distribution metadata and repository URLs; `packaging/cadrumo_data_manuals/pyproject.toml`.
+- [x] `W03.P06.S29` - Rename manuals distribution metadata and repository URLs; `packaging/cadrumo_data_manuals/pyproject.toml`.
 - [ ] `W03.P06.S30` - Retarget manuals build mapping and plugin name to cadrumo_data; `packaging/cadrumo_data_manuals/hatch_build.py`.
 - [ ] `W03.P06.S31` - Move the official companion project directory; `packaging/aeat_data_official to packaging/cadrumo_data_official`.
 - [ ] `W03.P06.S32` - Rename official distribution metadata and repository URLs; `packaging/cadrumo_data_official/pyproject.toml`.
