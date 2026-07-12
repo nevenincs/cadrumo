@@ -202,6 +202,16 @@ runtime import path. They nevertheless retain former-product implementation
 bytes inside the source tree, add ambiguity to forensic and packaging scans,
 and should not be treated as a durable rename artifact.
 
+### relocated-bytecode-debris-resolution | resolved | Ignored collision artifacts removed
+
+Immediately before cleanup, 23 remaining `*.pyc.relocated-aeat` files totalling
+185,188 bytes were found under `src/cadrumo`; one of the 24 audit-time files had
+already disappeared as ignored cache state changed. Every resolved path was
+verified to remain inside the workspace, then removed individually with
+non-recursive literal-path operations. A complete follow-up scan found zero
+remaining collision artifacts. No tracked source or ordinary Python bytecode was
+deleted.
+
 ### phase-p03-critical-findings | critical | No critical Phase W02.P03 finding identified
 
 The review found no evidence that official AEAT corpus bytes, registry taxonomy,
