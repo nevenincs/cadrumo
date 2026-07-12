@@ -31,8 +31,8 @@ the Spanish authority, its portals, protocols, credentials, legal provenance,
 official corpus, registry taxonomy, citations, hashes, and historical evidence.
 
 The plan introduces no import, executable, environment, plugin, MCP, namespace,
-or persisted-state compatibility shim. The sole human command is `aeat`, which
-invokes Cadrumo directly; `cadrumo-mcp` remains the distinct MCP command.
+or persisted-state compatibility shim. The sole human command is `cadrumo`;
+`cadrumo-mcp` remains the distinct MCP command.
 Generated surfaces follow their authored
 authorities, public publication remains blocked on evidenced external-name
 clearance, and every edit begins with explicit shared-worktree ownership and
@@ -99,7 +99,7 @@ Depends on W02 and produces installable local artifacts before integration regen
 
 ### Phase `W03.P05` - rename root distribution and scripts
 
-Make the Cadrumo distribution expose the sole human `aeat` command and the
+Make the Cadrumo distribution expose the sole human `cadrumo` command and the
 distinct `cadrumo-mcp` command.
 
 - [x] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts to cadrumo and cadrumo-mcp; `pyproject.toml`.
@@ -253,8 +253,8 @@ permitted.
 
 1. `import cadrumo` succeeds from source and installed wheel, `import aeat`
    fails, and the wheel contains no former product import root.
-2. `aeat --version` and `cadrumo-mcp` work from clean installs. There is no
-   `cadrumo` human CLI alias or `aeat` Python import package.
+2. `cadrumo --version` and `cadrumo-mcp` work from clean installs. There is
+   no `aeat` human CLI alias or Python import package.
 3. The root and companion wheels share a version, remain within size budgets,
    install together, expose only `cadrumo_data`, preserve disjoint corpus
    ownership, and retain byte-exact official evidence.
