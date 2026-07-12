@@ -1,6 +1,6 @@
 # Understanding the AEAT pipeline
 
-This cluster explains how the tool moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday self-employed taxpayer in Spain - the *autónomo* who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
+This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday self-employed taxpayer in Spain - the *autónomo* who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
 Read this to understand how the pieces fit together. To actually perform a task, follow the [how-to guides](../how-to/index.md) or the step-by-step [Quickstart](../how-to/quickstart.md) and [Tutorial](../tutorials/index.md).
 

@@ -1,15 +1,16 @@
-# aeat-cli
+# Cadrumo
 
-`aeat` is a helper for preparing your Spanish tax forms.
+Cadrumo is a helper for preparing your Spanish tax forms. It ships as the
+`aeat` command-line application.
 
-This is the landing page for the `aeat` command-line application. It shows how to
+This is the landing page for Cadrumo's documentation. It shows how to
 turn local records into checked modelo figures and export files. You upload those
 files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
-project source is on [GitHub](https://github.com/wgergely/aeat).
+project source is on [GitHub](https://github.com/nevenincs/aeat).
 
-`aeat` is for autónomos, small businesses, and the people who help them prepare
+Cadrumo is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The
-project is pre-alpha, so expect breaking changes between versions.
+project is in beta, so expect changes between versions.
 
 The guides on this page are ordered by the usual filing path. Start at the first
 thing you have not done yet. The path runs from installing the CLI and setting up
