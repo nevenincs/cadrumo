@@ -1,10 +1,10 @@
-"""Central settings facade for AEAT automation.
+"""Central settings facade for Cadrumo.
 
-The :class:`Settings` model is the environment authority for AEAT-prefixed
+The :class:`Settings` model is the environment authority for Cadrumo
 configuration: operators and tests override fields here, and downstream code
 obtains the effective model through :func:`load_settings` or
-:func:`override_settings`. Runtime-tunable settings stay in this schema, while
-AEAT/Sede route and selector defaults come from
+:func:`override_settings`. Runtime-tunable Cadrumo settings stay in this schema,
+while AEAT and Sede route and selector defaults come from
 :mod:`core.external_constants` through the default factories below.
 
 The storage boundary exposed here is also deliberate. Database URL derivation,
@@ -28,7 +28,10 @@ from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_v
 from pydantic_settings import DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
 
 from . import _config_live_tests as _live_test_config
-from ._config_integration_fields import AeatIntegrationSettings
+from ._config_integration_fields import (
+    FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
+    AeatIntegrationSettings,
+)
 from ._config_state_root import (
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     PRODUCT_DATABASE_FILENAME,
@@ -69,8 +72,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-# Project root: four levels up from src/aeat/core/config.py
-# (file → core/ → aeat/ → src/ → REPO_ROOT).
+# Project root: four levels up from src/cadrumo/core/config.py
+# (file → core/ → cadrumo/ → src/ → REPO_ROOT).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
@@ -284,7 +287,7 @@ class Settings(AeatIntegrationSettings):
     cadrumo_storage_provider_kind: str = Field(
         default="local_filesystem",
         description=(
-            "Backend for `aeat.adapters.outbound.storage`. "
+            "Backend for `cadrumo.adapters.outbound.storage`. "
             "Accepted values: local_filesystem (default), google_drive, in_memory. "
             "google_drive additionally requires cadrumo_google_drive_root_folder_id "
             "and a per-profile registered OAuth client + token via `aeat config google`."
@@ -298,8 +301,8 @@ class Settings(AeatIntegrationSettings):
             "paired with a `.meta.json` sidecar. The default is installed-run aware: a "
             "source checkout resolves to `PROJECT_ROOT/var/storage`, while an installed "
             "distribution roots at the platform user-data directory "
-            "(`%LOCALAPPDATA%/aeat/storage`, `$XDG_DATA_HOME/aeat/storage` or "
-            "`~/Library/Application Support/aeat/storage`) so the encrypted store never "
+            "(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or "
+            "`~/Library/Application Support/cadrumo/storage`) so the encrypted store never "
             "lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` "
             "override wins over the derived default."
         ),
@@ -307,9 +310,9 @@ class Settings(AeatIntegrationSettings):
     cadrumo_google_drive_root_folder_id: str | None = Field(
         default=None,
         description=(
-            "Drive folder ID under which `aeat-vault/` is created and used. "
+            "Drive folder ID under which `cadrumo-vault/` is created and used. "
             "Required when cadrumo_storage_provider_kind=google_drive. Operator obtains "
-            "this from the Cloud Console / Drive web UI; the app creates `aeat-vault/` "
+            "this from the Cloud Console / Drive web UI; the app creates `cadrumo-vault/` "
             "lazily on first probe."
         ),
     )
@@ -366,7 +369,7 @@ class Settings(AeatIntegrationSettings):
         default=False,
         description=(
             "Force ANSI colour output even when stdout is not a TTY. "
-            "Operators set this when piping aeat output through a terminal "
+            "Operators set this when piping cadrumo output through a terminal "
             "renderer (less -R, gh actions, etc.). Defaults to False; the "
             "should_use_color() helper consults this and the standard NO_COLOR "
             "convention through Settings rather than reading os.environ directly."
@@ -486,7 +489,7 @@ class Settings(AeatIntegrationSettings):
         default=None,
         description=(
             "Per-shell override for the active operator profile. When set, "
-            "wins over the <aeat-root>/active-profile pointer file in the "
+            "wins over the <cadrumo-root>/active-profile pointer file in the "
             "active-profile precedence chain. Leave unset for normal "
             "installs; the pointer file is the canonical default."
         ),
@@ -834,7 +837,7 @@ class Settings(AeatIntegrationSettings):
     cadrumo_inbox_alert_lead_days: int = Field(
         default=7,
         description=(
-            "Lead window (days) for `aeat inbox next-deadline`: surface CRITICAL/HIGH "
+            "Lead window (days) for `cadrumo inbox next-deadline`: surface CRITICAL/HIGH "
             "notifications whose appeal_deadline falls within the next N days"
         ),
     )
@@ -911,7 +914,7 @@ class Settings(AeatIntegrationSettings):
     )
     cadrumo_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
-        description="Parser backend for `aeat.adapters.inbound.justificante`",
+        description="Parser backend for `cadrumo.adapters.inbound.justificante`",
     )
 
     # ── Filing history ──────────────────────────────────────────────────────

@@ -95,7 +95,7 @@ def _root_help() -> HelpDocument:
         surface=HelpSurface.ROOT,
         heading=tr(
             "cli.operator_surface.help.root.heading",
-            default="aeat - local-first Spanish tax workflow",
+            default="cadrumo - local-first Spanish tax workflow",
         ),
         paragraphs=(
             tr(

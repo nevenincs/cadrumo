@@ -190,7 +190,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
 
 :func:`is_profile_bound_write_verb_path` matches this catalog by prefix after
 the CLI root reconstructs the Typer verb path. The catalog is separate from
-:data:`~aeat.entrypoints.cli._bootstrap_exempt.BOOTSTRAP_EXEMPT_VERB_PATHS`:
+:data:`~cadrumo.entrypoints.cli._bootstrap_exempt.BOOTSTRAP_EXEMPT_VERB_PATHS`:
 bootstrap-exempt verbs skip the active-session gate, while these prefixes
 identify commands that must be routed through an active profile bucket before
 they can mutate profile-bound storage.

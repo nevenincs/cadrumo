@@ -420,7 +420,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
 def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
     """OSS / IOSS has no operator-facing CLI verb. Consumption is
     via ``aeat app modelo calculate``. The CLI tree must not
-    register an ``oss``, ``ioss``, ``aeat oss``, ``aeat ioss``,
+    register an ``oss``, ``ioss``, ``cadrumo oss``, ``cadrumo ioss``,
     ``app iva oss``, or ``app iva ioss`` command."""
 
     cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"

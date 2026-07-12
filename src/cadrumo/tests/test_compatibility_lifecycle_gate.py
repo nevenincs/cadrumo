@@ -44,7 +44,7 @@ from ..core import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DISTRIBUTION_NAME: Final[str] = "aeat-cli"
+_DISTRIBUTION_NAME: Final[str] = "cadrumo"
 
 #: The persisted-format tiers a released floor key may name: the secure-object
 #: substrate, the portable profile bundle, and the sealed archive. The

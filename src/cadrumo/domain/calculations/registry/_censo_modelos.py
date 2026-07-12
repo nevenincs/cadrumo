@@ -50,7 +50,7 @@ class CensoModeloFoundationLogFields(BaseModel):
     model_config = _STRICT_FROZEN
 
     service_name: str = "censo_modelo_foundation"
-    service_owner: str = Field(pattern=r"^aeat\.domain\.calculations\.registry$")
+    service_owner: str = Field(pattern=r"^cadrumo\.domain\.calculations\.registry$")
     modelo: str = Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
     role: CensoModeloRole
     decision: Literal["active_work_unit_allowed", "historical_metadata_only"]
@@ -96,7 +96,7 @@ class CensoModeloFoundationContract(BaseModel):
     model_config = _STRICT_FROZEN
 
     schema_version: str = "1"
-    service_owner: str = Field(default=CENSO_MODELO_SERVICE_OWNER, pattern=r"^aeat\.domain\.calculations\.registry$")
+    service_owner: str = Field(default=CENSO_MODELO_SERVICE_OWNER, pattern=r"^cadrumo\.domain\.calculations\.registry$")
     active_modelo: str = Field(default=Modelo.M036.value, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
     historical_modelos: tuple[str, ...] = (Modelo.M037.value,)
     event_kinds: tuple[CensoModeloEventKind, ...]
@@ -152,7 +152,7 @@ class CensoModeloFoundationResult(BaseModel):
 
     modelo: str = Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
     role: CensoModeloRole
-    service_owner: str = Field(pattern=r"^aeat\.domain\.calculations\.registry$")
+    service_owner: str = Field(pattern=r"^cadrumo\.domain\.calculations\.registry$")
     event_kind: CensoModeloEventKind | None = None
     event_kinds: tuple[CensoModeloEventKind, ...] = ()
     active_work_unit_allowed: bool

@@ -394,7 +394,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     Directories without a valid ``trace.json`` — or whose name does not
     match the canonical ``run_id`` shape — are skipped silently. This
     lets crashed runs (no on-exit finaliser call) coexist with healthy
-    ones rather than poisoning ``aeat run list``, and blocks any
+    ones rather than poisoning ``cadrumo run list``, and blocks any
     non-run artefacts that may have been dropped into the runs
     directory by hand.
 

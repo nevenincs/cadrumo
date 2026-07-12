@@ -661,9 +661,7 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
         assert len(stored_reports) == 1
         stored_report = stored_reports[0]
         report = stored_report
-        stored_finding_evidence = tuple(
-            (finding.message, finding.next_action) for finding in stored_report.findings
-        )
+        stored_finding_evidence = tuple((finding.message, finding.next_action) for finding in stored_report.findings)
 
         text_projection = invoke_cached_cli(
             [
@@ -681,9 +679,7 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
         notices = envelope["notices"]
         payload = envelope["result"]
         blocking_notice = next(
-            notice
-            for notice in notices
-            if notice["context"]["kind"] == "cross_period_dependency_unclean"
+            notice for notice in notices if notice["context"]["kind"] == "cross_period_dependency_unclean"
         )
         suppression_notice = next(
             notice
@@ -691,9 +687,7 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
             if notice["context"]["kind"] == "advisory" and "període=1T" in notice["message"]
         )
         blocking_payload = next(
-            finding
-            for finding in payload["findings"]
-            if finding["kind"] == "cross_period_dependency_unclean"
+            finding for finding in payload["findings"] if finding["kind"] == "cross_period_dependency_unclean"
         )
         suppression_payload = next(
             finding
@@ -704,8 +698,9 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
         assert "La dependència entre períodes no està neta" in blocking_notice["message"]
         assert "model=303" in blocking_notice["message"]
         assert blocking_notice["suggestion"] is not None
-        assert "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in (
-            blocking_notice["suggestion"]
+        assert (
+            "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A"
+            in (blocking_notice["suggestion"])
         )
         assert "La dependència entre períodes no està neta" in blocking_payload["message"]
         assert blocking_payload["next_action"] == blocking_notice["suggestion"]
@@ -713,18 +708,17 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
         assert "la dependència entre períodes s'ha exclòs" in suppression_notice["message"]
         assert "2025-10-01" in suppression_notice["message"]
         assert suppression_notice["suggestion"] is not None
-        assert "Confirmeu que la data d'inici d'activitat registrada és correcta" in (
-            suppression_notice["suggestion"]
-        )
+        assert "Confirmeu que la data d'inici d'activitat registrada és correcta" in (suppression_notice["suggestion"])
         assert "la dependència entre períodes s'ha exclòs" in suppression_payload["message"]
         assert suppression_payload["next_action"] == suppression_notice["suggestion"]
         assert "la dependència entre períodes s'ha exclòs" in text_projection.output
         assert all("%{" not in message for message, _ in stored_finding_evidence)
 
         reloaded_report = reports.load().for_calculation_revision(revision_id)[0]
-        assert tuple(
-            (finding.message, finding.next_action) for finding in reloaded_report.findings
-        ) == stored_finding_evidence
+        assert (
+            tuple((finding.message, finding.next_action) for finding in reloaded_report.findings)
+            == stored_finding_evidence
+        )
 
     advisory_findings = tuple(
         finding

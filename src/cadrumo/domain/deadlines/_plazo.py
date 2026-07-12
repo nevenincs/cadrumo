@@ -23,19 +23,26 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
     :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`.
 
     Matching rule: the registry window period must carry the same
-    filing year and bare registry period token as the supplied WorkUnit
+    filing year and bare registry period token as the supplied ``WorkUnit``
     period (e.g. ``"1T"``, ``"0A"``, ``"01"``).
 
-    Returns ``None`` when the registry carries no window for the
-    combination — either the modelo has no deadline windows registered
-    for that year, or the period token does not match any window.
-    ``None`` is a benign data-gap signal; callers should degrade
-    gracefully rather than treating it as fatal.
+    Annual Modelo 100 uses its tax year as the registry key even though
+    its normal campaign runs in the following calendar year. A close date
+    for tax year 2024 can therefore fall in 2025. This function never
+    borrows a following-year or future-year window when an exact match is
+    absent.
+
+    Returns ``None`` when no registry window exactly matches the
+    combination. The modelo might have no deadline window for that year,
+    or its period token might not match any window. ``None`` means the
+    deadline data is unavailable; callers continue without a close date.
 
     Args:
-        modelo: AEAT modelo code (e.g. ``"130"``, ``"303"``).
+        modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
+            (e.g. ``"130"``, ``"303"``).
         filing_year: Tax year for which the work unit was created.
-        period: WorkUnit bare registry period token (e.g. ``"1T"``, ``"0A"``, ``"01"``).
+        period: ``WorkUnit`` bare registry period token (e.g. ``"1T"``,
+            ``"0A"``, ``"01"``).
 
     Returns:
         The :class:`~datetime.date` on which the filing window closes,

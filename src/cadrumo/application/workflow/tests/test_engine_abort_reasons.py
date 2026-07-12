@@ -257,8 +257,7 @@ class TestAbortReasons:
         assert last.details is not None
         assert last.details["error_count"] == "1"
         assert last.details["next_action"] == (
-            "Run: aeat app modelo verification-report list "
-            "--calculation-revision-id <calculation_revision_id>"
+            "Run: aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
         )
 
     @pytest.mark.parametrize(
@@ -281,7 +280,9 @@ class TestAbortReasons:
         assert last.details is not None
         assert last.details["error_type"] == "ModeloBuilderError"
         assert last.details["error_message"] == "unresolved registry input"
-        assert last.details["next_action"] == "Repair the cited draft input and rerun aeat app modelo work calculate."
+        assert (
+            last.details["next_action"] == "Repair the cited draft input and rerun aeat app modelo work calculate."
+        )
 
     def test_preflight_failed(self) -> None:
         fx = _fixtures()

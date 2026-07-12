@@ -406,7 +406,7 @@ def verify_modelo_parity(
     Returns a :class:`ParityReport`.
 
     Side effects:
-        - Idempotently creates (or updates) a `aeat-vault/calc-sheets/
+        - Idempotently creates (or updates) a `cadrumo-vault/calc-sheets/
           {modelo}-{period}-{year}/AEAT … {modelo} {period} {year}`
           spreadsheet under the operator's Drive root.
         - Writes the scenario's operator inputs into `Entradas` and

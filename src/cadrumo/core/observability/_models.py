@@ -57,7 +57,7 @@ class ArgumentSource(StrEnum):
         FLAG: Option-style flag (e.g. ``--since 2026-01-01``).
         POSITIONAL: Positional argument that must be re-emitted in the
             original order with no ``--`` prefix during replay
-            (e.g. ``notificacion_id`` on ``aeat inbox show``).
+            (e.g. ``notificacion_id`` on ``cadrumo inbox show``).
         ENV: Value sourced from a process environment variable.
         CONFIG: Value sourced from a configuration file.
         DEFAULT: Value sourced from the option's declared default.

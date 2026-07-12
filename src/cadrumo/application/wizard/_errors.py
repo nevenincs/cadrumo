@@ -1,7 +1,7 @@
 """Wizard error hierarchy.
 
 Every wizard error inherits from :class:`AeatError` so callers can
-catch the package-wide base class to handle every aeat domain error
+catch the package-wide base class to handle every cadrumo domain error
 uniformly. Each concrete subclass is bound to an :class:`ErrorCode`
 in the application error registry.
 """

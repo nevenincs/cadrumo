@@ -65,7 +65,7 @@ def _make_trace(
     run_id: str = _RUN_ID,
     started_at: datetime = _AWARE_STARTED_AT,
     finished_at: datetime | None = _AWARE_FINISHED_AT,
-    entrypoint: str = "aeat hello",
+    entrypoint: str = "cadrumo hello",
     arguments: tuple[ArgumentRecord, ...] = (),
     corpus_sha256: str = "a" * 64,
     db_sha256: str = "b" * 64,
@@ -173,7 +173,7 @@ class TestRunEventAndTrace:
 
     def test_trace_round_trip(self) -> None:
         trace = _make_trace(
-            entrypoint="aeat workflow run",
+            entrypoint="cadrumo workflow run",
             arguments=(ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),),
         )
         rebuilt = RunTrace.model_validate_json(trace.model_dump_json())

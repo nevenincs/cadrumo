@@ -134,9 +134,15 @@ def reveal_cli_identifiers_opt_in() -> bool:
     identities, URLs, tokens, and secure-object keys remain redacted by the
     CLI redaction profile.
     """
+    from ._config_state_root import FormerProductStateError
     from .config import load_settings
 
-    return load_settings().cadrumo_cli_reveal_identifiers
+    try:
+        return load_settings().cadrumo_cli_reveal_identifiers
+    except FormerProductStateError:
+        # The privacy default is fail-closed. Metadata output remains available
+        # while Cadrumo refuses a former product-state directory.
+        return False
 
 
 def _json_default(value: object) -> object:

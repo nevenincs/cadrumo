@@ -329,8 +329,7 @@ def _manual_fact_basis_entries(
         for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
         and not (
-            m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER
-            and casilla == "rendimientos_integros"
+            m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER and casilla == "rendimientos_integros"
         )
     )
 
@@ -411,7 +410,8 @@ def _missing_evidence_findings(
                         "There is currently no dedicated public CLI path that mints issued-invoice evidence like "
                         "`aeat app ledger evidence add` does for purchase invoices. If you already have a secure "
                         "attachment id, link it with "
-                        f"`aeat app ledger attach {diagnostic.binding_id} --attachment-id ATTACHMENT_ID`, then rerun "
+                        f"`aeat app ledger attach {diagnostic.binding_id} "
+                        "--attachment-id ATTACHMENT_ID`, then rerun "
                         "verification."
                     )
                 ),
@@ -939,9 +939,7 @@ def _m369_unresolved_oss_source_finding(
     """
     if str(work_unit.modelo) != Modelo.M369.value:
         return None
-    oss_bindings = tuple(
-        binding for binding in snapshot.revision.bindings if binding.source is _OSS_AGGREGATION_SOURCE
-    )
+    oss_bindings = tuple(binding for binding in snapshot.revision.bindings if binding.source is _OSS_AGGREGATION_SOURCE)
     if not oss_bindings:
         return None
     legal_refs = tuple(sorted({ref for binding in oss_bindings for ref in binding.legal_refs}))
@@ -952,9 +950,7 @@ def _m369_unresolved_oss_source_finding(
         if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
     )
     if unrouted_issues:
-        unrouted_source_refs = ", ".join(
-            issue.source_ref or "unidentified OSS source" for issue in unrouted_issues
-        )
+        unrouted_source_refs = ", ".join(issue.source_ref or "unidentified OSS source" for issue in unrouted_issues)
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -986,9 +982,7 @@ def _m369_unresolved_oss_source_finding(
             and diagnostic.reason in {"unrouted_observation", "storage_degraded"}
         )
         if legacy_diagnostics:
-            legacy_refs = ", ".join(
-                diagnostic.source_ref or diagnostic.reason for diagnostic in legacy_diagnostics
-            )
+            legacy_refs = ", ".join(diagnostic.source_ref or diagnostic.reason for diagnostic in legacy_diagnostics)
             return ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -1015,7 +1009,8 @@ def _m369_unresolved_oss_source_finding(
                     "recalculate before verification."
                 ),
                 next_action=(
-                    "Restore or classify the OSS/IOSS issued invoice evidence, rerun `aeat app modelo work calculate`, "
+                    "Restore or classify the OSS/IOSS issued invoice evidence, rerun "
+                    "`aeat app modelo work calculate`, "
                     "then rerun verification."
                 ),
                 legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,

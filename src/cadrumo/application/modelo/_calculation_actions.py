@@ -211,6 +211,11 @@ def calculate_modelo_revision(
     by the private mesh bridge below; callers cannot manufacture the M369
     OSS/IOSS source-assessment record used by verification and export.
 
+    Args:
+        ledger_preflight_transaction_repository: Optional
+            :class:`TransactionCatalogueRepository` used for the ledger
+            preflight check before calculation.
+
     """
     return _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
@@ -642,10 +647,10 @@ def _resolve_bucket_source_mesh(
     from ..aggregation import (
         AtribucionMemberSourceResolver,
         CalculationSourceContext,
-            ForeignAssetsAggregationSourceResolver,
-            LedgerImpatriadoIncomeAggregationSourceResolver,
-            LedgerIrnrIncomeAggregationSourceResolver,
-            LedgerIvaAggregationSourceResolver,
+        ForeignAssetsAggregationSourceResolver,
+        LedgerImpatriadoIncomeAggregationSourceResolver,
+        LedgerIrnrIncomeAggregationSourceResolver,
+        LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
         LedgerRentaGastoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,

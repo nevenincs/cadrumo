@@ -71,7 +71,7 @@ class TestRunContextLoggingFilter:
             logging.getLogger().addHandler(capture)
             try:
                 logger.info("outside")
-                with run_context(entrypoint="aeat test", arguments=()) as info:
+                with run_context(entrypoint="cadrumo test", arguments=()) as info:
                     logger.info("inside")
                     inside_run_id = info.run_id
             finally:
@@ -119,7 +119,7 @@ class TestStderrRunEventFilter:
         from .. import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
 
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
-            with run_context(entrypoint="aeat test stderr-filter", arguments=()) as info:
+            with run_context(entrypoint="cadrumo test stderr-filter", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,
                     payload=RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),

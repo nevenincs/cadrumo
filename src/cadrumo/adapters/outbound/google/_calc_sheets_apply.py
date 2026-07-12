@@ -4,15 +4,15 @@ The adapter is the outbound boundary for
 :mod:`application.storage.calc_sheets`: the engine produces a pure
 :class:`~application.storage.calc_sheets.SheetExportPlan`, and this
 module turns the plan into a real spreadsheet inside the operator's
-``aeat-vault/`` Drive folder. Every Drive folder and Sheets spreadsheet the
+``cadrumo-vault/`` Drive folder. Every Drive folder and Sheets spreadsheet the
 adapter touches carries the
-``appProperties.aeat_vault_app=aeat`` ownership marker so the operator's
+``appProperties.cadrumo_vault_app=cadrumo`` ownership marker so the operator's
 pre-existing Drive content is isolated from app-owned artefacts.
 
 Composition:
 
 - Drive v3 hosts the parent folder structure
-  ``aeat-vault/calc-sheets/{modelo}-{period}-{year}/`` and the spreadsheet
+  ``cadrumo-vault/calc-sheets/{modelo}-{period}-{year}/`` and the spreadsheet
   file metadata.
 - Sheets v4 reshapes the spreadsheet: tabs, cell values, formulas,
   protected ranges, and developer metadata stamping the engine
@@ -80,18 +80,18 @@ _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
 _VAULT_FOLDER_NAME: Final[str] = _Settings().cadrumo_google_drive_vault_folder_name
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
-_OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
-_OWNERSHIP_VALUE: Final[str] = "aeat"
-_RELATION_METADATA_PREFIX: Final[str] = "aeat_relation:"
+_OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
+_OWNERSHIP_VALUE: Final[str] = "cadrumo"
+_RELATION_METADATA_PREFIX: Final[str] = "cadrumo_relation:"
 _MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
     {
-        "aeat_engine_version",
-        "aeat_registry_sha",
-        "aeat_modelo_id",
-        "aeat_revision_id",
-        "aeat_filing_year",
-        "aeat_period",
-        "aeat_exported_at",
+        "cadrumo_engine_version",
+        "cadrumo_registry_sha",
+        "cadrumo_modelo_id",
+        "cadrumo_revision_id",
+        "cadrumo_filing_year",
+        "cadrumo_period",
+        "cadrumo_exported_at",
     },
 )
 
@@ -102,7 +102,7 @@ class CalcSheetsApplyResult(BaseModel):
     Returned by :func:`~adapters.outbound.google.apply_export_plan` after
     a :class:`~application.storage.calc_sheets.SheetExportPlan` has been
     materialised. Carries the spreadsheet's Drive file id, its Sheets URL, the
-    ``aeat-vault/calc-sheets/<...>/`` Drive folder id, and the counts of value
+    ``cadrumo-vault/calc-sheets/<...>/`` Drive folder id, and the counts of value
     cells, formula cells, row-set headers, protected ranges, and tabs written
     during the apply cycle.
     """
@@ -796,13 +796,13 @@ def _input_message_for_constraint(constraint: SheetCellConstraint) -> str:
 def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
     metadata = plan.metadata
     pairs: list[tuple[str, str]] = [
-        ("aeat_engine_version", metadata.engine_version),
-        ("aeat_registry_sha", metadata.registry_sha),
-        ("aeat_modelo_id", metadata.modelo_id),
-        ("aeat_revision_id", metadata.revision_id),
-        ("aeat_filing_year", str(metadata.filing_year)),
-        ("aeat_period", metadata.period.registry_token),
-        ("aeat_exported_at", metadata.exported_at.isoformat()),
+        ("cadrumo_engine_version", metadata.engine_version),
+        ("cadrumo_registry_sha", metadata.registry_sha),
+        ("cadrumo_modelo_id", metadata.modelo_id),
+        ("cadrumo_revision_id", metadata.revision_id),
+        ("cadrumo_filing_year", str(metadata.filing_year)),
+        ("cadrumo_period", metadata.period.registry_token),
+        ("cadrumo_exported_at", metadata.exported_at.isoformat()),
     ]
     if plan.relation_provenance is not None:
         for relation in plan.relation_provenance.values:
@@ -821,7 +821,7 @@ def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
             }
             pairs.append(
                 (
-                    f"aeat_relation:{relation.relation}",
+                    f"cadrumo_relation:{relation.relation}",
                     "; ".join(f"{k}={v}" for k, v in payload.items() if v),
                 ),
             )

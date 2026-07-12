@@ -31,4 +31,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m130_pago_fraccionado_ed.label",
     purpose="entries.portal_m130_pago_fraccionado_ed.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 130 procedure page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the Modelo 130 procedure page."""

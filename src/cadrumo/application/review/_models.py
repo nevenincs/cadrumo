@@ -145,7 +145,7 @@ __all__ = [
     "TransactionReviewItem",
 ]
 """``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are defined in and owned
-by :mod:`aeat.application._workflow_review_models` (see that module's
+by :mod:`cadrumo.application._workflow_review_models` (see that module's
 docstring for the mutual-runtime-dependency rationale); this module
 re-exports them so ``application.review`` consumers keep importing them from
 here.

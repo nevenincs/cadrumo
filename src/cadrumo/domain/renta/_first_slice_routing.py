@@ -223,7 +223,7 @@ FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = {
 
 Every :class:`SpendingCategory` member routes to a real Modelo 100
 ``estimacion_directa`` expense casilla; the table is total (see
-:mod:`aeat.domain.renta.tests.test_first_slice_routing`), so no member
+:mod:`cadrumo.domain.renta.tests.test_first_slice_routing`), so no member
 is silently unrouted (``no-silent-under-declaration``,
 ``no-dormant-source-resolvers``).
 """

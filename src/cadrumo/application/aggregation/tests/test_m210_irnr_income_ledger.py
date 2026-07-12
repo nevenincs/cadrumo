@@ -60,9 +60,7 @@ def _register_wizard_catalogue() -> None:
 
 
 def _classification(code: str, gross_income_amount: Decimal) -> M210IncomeClassification:
-    payer_mode = (
-        M210PayerMode.MULTIPLE_PAYERS_CODE_35 if code == "35" else M210PayerMode.SINGLE_PAYER
-    )
+    payer_mode = M210PayerMode.MULTIPLE_PAYERS_CODE_35 if code == "35" else M210PayerMode.SINGLE_PAYER
     return M210IncomeClassification(
         official_tipo_renta_code=code,
         gross_income_amount=gross_income_amount,
@@ -371,9 +369,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             captured_at=_CLOCK,
         )
         ledger_binding = next(
-            binding
-            for binding in snapshot.revision.bindings
-            if str(binding.source) == "ledger_irnr_income_aggregation"
+            binding for binding in snapshot.revision.bindings if str(binding.source) == "ledger_irnr_income_aggregation"
         )
         ledger_evidence = compute_ledger_filing_evidence(
             source_transaction_ids=ledger.source_transaction_ids,
@@ -451,8 +447,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
     assert manual.casilla_values["rendimientos_integros"] == Decimal("777.00")
     assert manual.source_transaction_ids == ()
     assert not any(
-        diagnostic.reason == "unhandled_binding_source"
-        and diagnostic.source_kind == "ledger_irnr_income_aggregation"
+        diagnostic.reason == "unhandled_binding_source" and diagnostic.source_kind == "ledger_irnr_income_aggregation"
         for diagnostic in manual_result.source_diagnostics
     )
     assert ledger.m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER
@@ -484,6 +479,8 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
     assert verification.granted_verificado_completo is True
     assert verified_ledger is not None
     assert verified_ledger.ledger_filing_evidence is not None
-    assert all(entry.casilla_id != "rendimientos_integros" for entry in verified_ledger.ledger_filing_evidence.manual_entries)
+    assert all(
+        entry.casilla_id != "rendimientos_integros" for entry in verified_ledger.ledger_filing_evidence.manual_entries
+    )
     assert classification_staleness.changed == (es_id,)
     assert jurisdiction_staleness.changed == (es_id,)

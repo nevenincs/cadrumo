@@ -35,12 +35,16 @@ import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
 from ..core.config import AuthProviderKindSetting, Settings
+
+_SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
+"""Keep temporary Cadrumo local-storage roots alive for returned Settings instances."""
 
 __all__ = [
     "isolated_aeat_env",
@@ -77,6 +81,14 @@ def settings_without_env_file(**overrides: Any) -> Settings:
     :class:`_EnvFileFreeSettings` for why this factory exists instead of the
     raw keyword form.
     """
+    if (
+        "cadrumo_local_storage_root" not in overrides
+        and "CADRUMO_LOCAL_STORAGE_ROOT" not in os.environ
+        and "cadrumo_local_storage_root" not in os.environ
+    ):
+        temporary_directory = TemporaryDirectory(prefix="cadrumo-settings-")
+        _SETTINGS_STORAGE_DIRECTORIES.append(temporary_directory)
+        overrides = {**overrides, "cadrumo_local_storage_root": temporary_directory.name}
     return _EnvFileFreeSettings(**overrides)
 
 
@@ -89,7 +101,10 @@ def ready_clave_settings(tax_id: str) -> Settings:
 
 @contextmanager
 def isolated_aeat_env(**overrides: str) -> Iterator[None]:
-    """Clear every AEAT_* env slot, apply explicit overrides, restore on exit.
+    """Clear every Settings env slot, apply explicit overrides, restore on exit.
+
+    Despite its historical name, this includes Cadrumo product settings and
+    AEAT authority settings.
 
     Snapshots both the upper-case and lower-case slot for each Settings
     field name (pydantic-settings consults both), pops them from

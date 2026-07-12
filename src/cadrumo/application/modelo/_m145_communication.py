@@ -71,7 +71,7 @@ class M145CommunicationServiceContract(BaseModel):
     schema_version: str = "1"
     service_owner: str = Field(
         default=M145_COMMUNICATION_SERVICE_OWNER,
-        pattern=r"^aeat\.application\.modelo$",
+        pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     period_token: str = Field(default=M145_COMMUNICATION_PERIOD, pattern=r"^comunicacion$")

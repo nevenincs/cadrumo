@@ -243,7 +243,7 @@ def test_developer_metadata_pairs_preserve_relation_grounding() -> None:
 
     pairs = dict(_developer_metadata_pairs(plan))
 
-    assert pairs["aeat_relation:modelo-180-rel-115-base-anual"] == (
+    assert pairs["cadrumo_relation:modelo-180-rel-115-base-anual"] == (
         "value=190.00; provenance=local_filing; source_modelo=115; source_filing_year=2026; "
         "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
         f"source_refs=boe-modelo-180-2023-form; resolved_at={resolved_at.isoformat()}"
@@ -283,7 +283,7 @@ def test_developer_metadata_pairs_preserve_blank_relation_grounding() -> None:
 
     pairs = dict(_developer_metadata_pairs(plan))
 
-    assert pairs["aeat_relation:modelo-180-rel-115-base-anual"] == (
+    assert pairs["cadrumo_relation:modelo-180-rel-115-base-anual"] == (
         "provenance=operator_manual; source_modelo=115; source_filing_year=2026; "
         "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
         "source_refs=boe-modelo-180-2023-form"
@@ -321,10 +321,10 @@ def test_structural_cleanup_deletes_only_adapter_managed_metadata_and_protected_
     )
     spreadsheet = {
         "developerMetadata": [
-            {"metadataId": 101, "metadataKey": "aeat_registry_sha", "metadataValue": "old"},
+            {"metadataId": 101, "metadataKey": "cadrumo_registry_sha", "metadataValue": "old"},
             {"metadataId": 102, "metadataKey": "foreign_key", "metadataValue": "keep"},
-            {"metadataId": 103, "metadataKey": "aeat_relation:prior", "metadataValue": "old"},
-            {"metadataKey": "aeat_modelo_id", "metadataValue": "missing-id"},
+            {"metadataId": 103, "metadataKey": "cadrumo_relation:prior", "metadataValue": "old"},
+            {"metadataKey": "cadrumo_modelo_id", "metadataValue": "missing-id"},
         ],
         "sheets": [
             {
