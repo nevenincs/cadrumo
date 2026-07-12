@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
+from .....core.product_identity import PRODUCT_IDENTITY
 from .....tests import (
     ast_for_path,
     leaf_name,
@@ -809,7 +810,11 @@ def _assignment_parts(node: ast.AST) -> tuple[list[ast.expr], ast.expr | None]:
 
 
 def _resolve_namespace_value(node: ast.expr, bindings: dict[str, str]) -> str | None:
-    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("aeat."):
+    if (
+        isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value.startswith(f"{PRODUCT_IDENTITY.python_package}.")
+    ):
         return node.value
     if isinstance(node, ast.Name):
         return bindings.get(node.id)

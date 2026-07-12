@@ -441,6 +441,20 @@ it through a sealed bucket export, imports it under a fresh storage root, and re
 same record identity and content. The exact namespace-completeness gate, sealed
 archive round trip, and authoritative persistence test pass together (3 passed).
 
+### phase-p04-namespace-discovery-blind-spot-resolution | resolved | Discovery follows canonical Cadrumo product identity
+
+The production-namespace AST resolver still admitted only string literals beginning
+with the retired `aeat.` product prefix. Consequently, the valid production declaration
+`TX_BUCKET_NAMESPACE = "cadrumo.domain.transactions.bucket"` was invisible even though
+the transaction repository passes that binding through its real secure-object calls and
+the namespace registry declares the same value.
+
+The single resolver now derives its accepted leading prefix from
+`PRODUCT_IDENTITY.python_package`. This restores discovery for the transaction bucket
+and every other directly declared Cadrumo production namespace without adding a
+transaction-specific exception, test-only enumeration, compatibility spelling, or
+duplicate namespace authority. The exact formerly failing discovery gate passes.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
