@@ -8,7 +8,9 @@ You run it as a Claude plugin, through any Model Context Protocol (MCP) client, 
 
 > **Verify everything.** `aeat` works to ground every figure in current regulation and cites its sources, but it can make mistakes. Never accept a result blindly. You remain responsible for every declaration you file, and the authors accept no liability for incorrect output.
 >
-> **Status: beta.** Expect breaking changes between versions. The web home at `aeat.neve.md` is under construction; until it lands, this repository is the canonical source.
+> **Status: beta.** Expect breaking changes between versions. The web home is [cadrumo.neve.md](https://cadrumo.neve.md); this repository is the canonical source.
+>
+> **Not affiliated with the AEAT.** Cadrumo/`aeat` is an independent open-source project published by Gergely Wootsch ([neve.md](https://neve.md)). It is not official software and is not affiliated with, endorsed, sponsored, or approved by the Agencia Estatal de Administración Tributaria or any other public administration. It never files taxes on your behalf.
 
 ## What you use it for
 
@@ -106,6 +108,7 @@ Run `just docs` to build the rendered site, which adds the command-line and API 
 - Building, checking, and exporting happen locally. Live AEAT access is read-only - pulling your justificantes, notifications, and censo data - and each profile opts in to it per capability.
 - Ledger rows, invoices, and evidence bytes persist only inside encrypted storage on your machine. There's no cloud backend.
 - When an assistant operates the toolkit, your chat provider sees the conversation and the figures discussed in it, nothing more.
+- Neither the software nor the website sends anything to the authors: no telemetry, no analytics, no tracking. The full policy is in [`PRIVACY.md`](PRIVACY.md).
 
 ## Getting help
 
@@ -118,10 +121,12 @@ Report bugs and ask questions on the [issue tracker](https://github.com/neveninc
 - Adding a modelo to the registry starts with `python -m dev.registry.newmodelo scaffold <modelo-id> <revision-id>`, which writes the authoring skeleton and prints the contributor checklist.
 - The agent-driven contribution workflow is documented in [`CLAUDE.md`](CLAUDE.md).
 
-## License
+## License and legal
 
-Apache 2.0. See [LICENSE](LICENSE).
+- Apache 2.0. See [LICENSE](LICENSE) and the attribution in [NOTICE](NOTICE). Copyright 2026 Gergely Wootsch ([neve.md](https://neve.md)) and the cadrumo contributors.
+- Third-party attributions: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) (engine) and [`frontend/THIRD_PARTY_NOTICES.md`](frontend/THIRD_PARTY_NOTICES.md) (website).
+- Privacy: we never collect, receive, or share your data — [`PRIVACY.md`](PRIVACY.md). The website's aviso legal, privacy, and cookie notice (EN/ES/CA) live at [cadrumo.neve.md/#/legal](https://cadrumo.neve.md/#/legal).
 
 ## Disclaimer
 
-This project is not a substitute for professional tax advice, and it isn't affiliated with AEAT. It never submits filings; you upload any exported file through AEAT's official tools yourself and remain responsible for every declaration. The authors accept no liability for filings produced or actions taken with this software. Read the [full disclaimer](docs/disclaimer.md) before relying on `aeat`.
+This project is not a substitute for professional tax advice, and it isn't affiliated with AEAT: references to "AEAT", modelo numbers, and casillas are purely descriptive of the official public forms and rules the software computes against. It never submits filings; you upload any exported file through AEAT's official tools yourself and remain responsible for every declaration. The authors accept no liability for filings produced or actions taken with this software. Read the [full disclaimer](docs/disclaimer.md) before relying on `aeat`.
