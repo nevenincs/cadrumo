@@ -98,7 +98,7 @@ section,
   pointer-events: none;
 }
 
-/* Scroll reveals — applied only when JS runs and motion is allowed */
+/* Scroll reveals: applied only when JS runs and motion is allowed */
 
 .reveal-init {
   opacity: 0;
