@@ -136,7 +136,7 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
             bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
             assert bucket_b.exists(profile_a) is False
 
-        assert (storage_root / "buckets" / profile_a / "db" / "aeat.db").is_file()
+        assert (storage_root / "buckets" / profile_a / "db" / "cadrumo.db").is_file()
 
 
 def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Path) -> None:
@@ -154,7 +154,7 @@ def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Pa
         UserProfileLifecycleRepository(bucket_id=profile_id)
 
     assert not (tmp_path / "explicit.db").exists()
-    assert not (storage_root / "buckets" / profile_id / "db" / "aeat.db").exists()
+    assert not (storage_root / "buckets" / profile_id / "db" / "cadrumo.db").exists()
 
 
 def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> None:

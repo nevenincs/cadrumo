@@ -194,7 +194,7 @@ def test_guarded_write_verbs_refuse_root_fallback_database(tmp_path: Path) -> No
         assert result.returncode == 2, output
         assert "No active profile" in output
         assert "profile create" in output
-        assert not (tmp_path / "aeat.db").exists(), output
+        assert not (tmp_path / "cadrumo.db").exists(), output
 
 
 def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path) -> None:
@@ -265,7 +265,7 @@ def test_minimal_registry_modelo_work_create_reaches_leaf_refusal_on_root_fallba
     assert "G320" in output
     assert "No active profile" not in output
     assert "perfil activo" not in output
-    assert not (tmp_path / "aeat.db").exists()
+    assert not (tmp_path / "cadrumo.db").exists()
 
 
 def test_root_fallback_guard_predicate_covers_profile_bound_mutations() -> None:

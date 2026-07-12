@@ -159,7 +159,7 @@ def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> 
     """An absent database URL derives a root-level SQLite fallback.
 
     With no explicit ``cadrumo_database_url`` and no selected profile, the
-    settings layer derives ``sqlite:///<storage-root>/aeat.db`` rather
+    settings layer derives ``sqlite:///<storage-root>/cadrumo.db`` rather
     than leaving the URL empty; the engine factory then builds a working
     engine against that fallback file. This is the engine-boundary
     counterpart of the config layer's database-URL derivation, and
@@ -171,12 +171,36 @@ def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> 
         cadrumo_active_profile=None,
         cadrumo_local_storage_root=storage_root,
     )
-    fallback_db = storage_root / "aeat.db"
+    fallback_db = storage_root / "cadrumo.db"
     assert settings.cadrumo_database_url == f"sqlite:///{fallback_db.as_posix()}"
     with _engine_for(settings) as engine:
         with engine.connect() as conn:
             assert conn.execute(text("select 5")).scalar_one() == 5
         assert fallback_db.exists()
+
+
+def test_engine_refuses_existing_former_product_database_without_touching_bytes(tmp_path: Path) -> None:
+    """An explicit former filename is refused before SQLite opens the file."""
+    former_db = tmp_path / "aeat.db"
+    former_bytes = b"former-product-database-bytes"
+    former_db.write_bytes(former_bytes)
+
+    with pytest.raises(StorageError, match="refusing retired product database filename"):
+        create_engine_from_settings(_settings_for(f"sqlite:///{former_db.as_posix()}"))
+
+    assert former_db.read_bytes() == former_bytes
+    assert not (tmp_path / "cadrumo.db").exists()
+
+
+def test_engine_refuses_creating_a_database_with_former_product_filename(tmp_path: Path) -> None:
+    """The retired basename is not a valid fresh explicit SQLite target."""
+    former_db = tmp_path / "nested" / "aeat.db"
+
+    with pytest.raises(StorageError, match="refusing retired product database filename"):
+        create_engine_from_settings(_settings_for(f"sqlite:///{former_db.as_posix()}"))
+
+    assert not former_db.exists()
+    assert not former_db.parent.exists()
 
 
 def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> None:

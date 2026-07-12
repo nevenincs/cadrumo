@@ -22,14 +22,18 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
-from pydantic_settings import SettingsConfigDict
+from pydantic_settings import DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
 
 from . import _config_live_tests as _live_test_config
 from ._config_integration_fields import AeatIntegrationSettings
-from ._config_state_root import default_storage_root
+from ._config_state_root import (
+    PRODUCT_DATABASE_FILENAME,
+    default_storage_root,
+    refuse_former_product_database,
+)
 from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from ._config_support import (
     AuthProviderKindSetting,
@@ -83,6 +87,37 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_audit_dir": "audit",
 }
 
+_LEGACY_PRODUCT_DOTENV_NAMES = frozenset(
+    {
+        "AEAT_LIVE_TESTS_ENABLED",
+        "AEAT_LOCAL_STORAGE_ROOT",
+        "AEAT_SECRET_PASSPHRASE",
+        "AEAT_SECRET_STORE_BACKEND",
+        "AEAT_SECRET_STORE_DIR",
+    }
+)
+"""Former product settings excluded from the Cadrumo dotenv boundary.
+
+These names used to select product state and credentials. They are neither
+renamed nor read: a Cadrumo process instead starts from its Cadrumo defaults or
+explicit ``CADRUMO_*`` controls. Authority-owned ``AEAT_*`` settings remain in
+the normal settings model.
+"""
+
+
+class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
+    """Ignore former product dotenv keys without relaxing unknown-key checks."""
+
+    def __call__(self) -> dict[str, Any]:
+        original_env_vars = self.env_vars
+        self.env_vars = {
+            name: value for name, value in original_env_vars.items() if name.upper() not in _LEGACY_PRODUCT_DOTENV_NAMES
+        }
+        try:
+            return super().__call__()
+        finally:
+            self.env_vars = original_env_vars
+
 
 class Settings(AeatIntegrationSettings):
     """Application settings populated from environment variables and ``.env``.
@@ -105,6 +140,32 @@ class Settings(AeatIntegrationSettings):
         env_file_encoding="utf-8",
         env_ignore_empty=True,
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[Settings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Keep the hard-cut dotenv filter while preserving strict unknown-key validation."""
+        assert isinstance(dotenv_settings, DotEnvSettingsSource)
+        filtered_dotenv_settings = _CadrumoDotEnvSettingsSource(
+            settings_cls,
+            env_file=dotenv_settings.env_file,
+            env_file_encoding=dotenv_settings.env_file_encoding,
+            case_sensitive=dotenv_settings.case_sensitive,
+            env_prefix=dotenv_settings.env_prefix,
+            env_prefix_target=dotenv_settings.env_prefix_target,
+            env_nested_delimiter=dotenv_settings.env_nested_delimiter,
+            env_nested_max_split=dotenv_settings.env_nested_max_split,
+            env_ignore_empty=dotenv_settings.env_ignore_empty,
+            env_parse_none_str=dotenv_settings.env_parse_none_str,
+            env_parse_enums=dotenv_settings.env_parse_enums,
+        )
+        return init_settings, env_settings, filtered_dotenv_settings, file_secret_settings
 
     # ── Token Storage ───────────────────────────────────────────────────────
     cadrumo_token_dir: Path = Field(
@@ -160,9 +221,9 @@ class Settings(AeatIntegrationSettings):
             "SQLAlchemy URL for the primary persistence backend. When empty, "
             "the model validator resolves the URL through the active-profile "
             "precedence chain to "
-            "``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/aeat.db``; "
+            "``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``; "
             "with no active profile it derives a root-level fallback at "
-            "``sqlite:///<cadrumo_local_storage_root>/aeat.db`` so the URL is "
+            "``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so the URL is "
             "never empty when the storage root is set. Tests that need a "
             "deterministic location supply this field explicitly; production "
             "reads the computed value."
@@ -882,7 +943,7 @@ class Settings(AeatIntegrationSettings):
 
         When the field is left empty (the production default), this
         validator computes the per-bucket SQLite URL at
-        ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/aeat.db``.
+        ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``.
         Tests that pass an explicit URL bypass the resolution — the
         validator only fires the computation when the field is empty.
 
@@ -896,7 +957,7 @@ class Settings(AeatIntegrationSettings):
            switch``.
 
         When neither rung resolves, the field derives a root-level
-        fallback at ``sqlite:///<cadrumo_local_storage_root>/aeat.db`` so
+        fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so
         the two storage settings stay coherent: setting
         ``CADRUMO_LOCAL_STORAGE_ROOT`` alone never leaves
         ``cadrumo_database_url`` empty. Cold-start commands still refuse
@@ -929,14 +990,16 @@ class Settings(AeatIntegrationSettings):
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()
         if not bucket_id:
-            fallback_db_path = self.cadrumo_local_storage_root / "aeat.db"
+            refuse_former_product_database(self.cadrumo_local_storage_root)
+            fallback_db_path = self.cadrumo_local_storage_root / PRODUCT_DATABASE_FILENAME
             object.__setattr__(
                 self,
                 "cadrumo_database_url",
                 f"sqlite:///{fallback_db_path.as_posix()}",
             )
             return self
-        bucket_db_path = self.cadrumo_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"
+        refuse_former_product_database(self.cadrumo_local_storage_root, bucket_id=bucket_id)
+        bucket_db_path = self.cadrumo_local_storage_root / "buckets" / bucket_id / "db" / PRODUCT_DATABASE_FILENAME
         object.__setattr__(
             self,
             "cadrumo_database_url",

@@ -14,6 +14,7 @@ from ..config import (
     settings_for_active_profile_bucket,
 )
 from ..errors import ActiveProfilePointerError, CoreValidationError
+from .._config_state_root import FormerProductStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,8 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None:
     for db_path_parts in (
         ("explicit.db",),
-        ("state", "buckets", "bucket-a", "db", "aeat.db"),
-        ("state", "aeat.db"),
+        ("state", "buckets", "bucket-a", "db", "cadrumo.db"),
+        ("state", "cadrumo.db"),
     ):
         db_path = tmp_path.joinpath(*db_path_parts)
         settings = Settings(
@@ -47,7 +48,7 @@ def test_active_bucket_database_route_is_detected(tmp_path: Path) -> None:
 
     assert route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert route.bucket_id == "bucket-a"
-    assert route.database_path == tmp_path / "buckets" / "bucket-a" / "db" / "aeat.db"
+    assert route.database_path == tmp_path / "buckets" / "bucket-a" / "db" / "cadrumo.db"
 
 
 def test_pointer_resolved_bucket_database_route_is_detected(tmp_path: Path) -> None:
@@ -77,8 +78,33 @@ def test_no_active_profile_classifies_root_fallback_database(tmp_path: Path) -> 
     route = classify_storage_route(settings)
 
     assert route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
-    assert route.database_path == tmp_path / "aeat.db"
+    assert route.database_path == tmp_path / "cadrumo.db"
     assert route.bucket_id == ""
+
+
+def test_root_route_refuses_existing_former_database_without_touching_bytes(tmp_path: Path) -> None:
+    former_db = tmp_path / "aeat.db"
+    former_bytes = b"former-root-database"
+    former_db.write_bytes(former_bytes)
+
+    with pytest.raises(FormerProductStateError, match="will not read, move, copy, delete, migrate, or adopt"):
+        Settings(cadrumo_local_storage_root=tmp_path)
+
+    assert former_db.read_bytes() == former_bytes
+    assert not (tmp_path / "cadrumo.db").exists()
+
+
+def test_bucket_route_refuses_existing_former_database_without_touching_bytes(tmp_path: Path) -> None:
+    former_db = tmp_path / "buckets" / "operator" / "db" / "aeat.db"
+    former_db.parent.mkdir(parents=True)
+    former_bytes = b"former-bucket-database"
+    former_db.write_bytes(former_bytes)
+
+    with pytest.raises(FormerProductStateError, match="will not read, move, copy, delete, migrate, or adopt"):
+        Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator")
+
+    assert former_db.read_bytes() == former_bytes
+    assert not (former_db.parent / "cadrumo.db").exists()
 
 
 def test_settings_for_active_profile_bucket_derives_non_explicit_bucket_route(tmp_path: Path) -> None:
@@ -91,7 +117,7 @@ def test_settings_for_active_profile_bucket_derives_non_explicit_bucket_route(tm
     assert "cadrumo_database_url" not in derived.model_fields_set
     assert route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert route.bucket_id == "operator"
-    assert route.database_path == tmp_path / "state" / "buckets" / "operator" / "db" / "aeat.db"
+    assert route.database_path == tmp_path / "state" / "buckets" / "operator" / "db" / "cadrumo.db"
 
 
 def test_settings_for_active_profile_bucket_rejects_explicit_database_url(tmp_path: Path) -> None:
