@@ -4,4 +4,4 @@
 *.cmd text eol=crlf
 # <<< vaultspec-managed <<<
 
-corpus/aeat_official/** -text
+src/cadrumo/_data/corpus/aeat_official/** -text
