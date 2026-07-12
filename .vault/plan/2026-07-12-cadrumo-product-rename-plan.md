@@ -90,7 +90,7 @@ Move product configuration and persistence identifiers at one breaking boundary.
 - [x] `W02.P04.S19` - Rename the product database filename without fallback; `src/cadrumo core configuration/state routing; persistence SQL and master-key consumers; cohesive database tests/examples`.
 - [x] `W02.P04.S20` - Rename product authentication-session storage without reading or moving former state; `src/cadrumo/core/auth_session_keys.py; src/cadrumo/adapters/outbound/aeat/auth/_session_store.py; src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py; src/cadrumo/adapters/outbound/aeat/auth/tests/test_session_store_roundtrip.py`.
 - [x] `W02.P04.S21` - Rename product logical storage namespaces without touching authority field names; `src/cadrumo persistence namespace registry/repository and cohesive consumers/tests/examples`.
-- [ ] `W02.P04.S22` - Rename product bundle suffixes and reject former bundle formats; `src/cadrumo application import-export boundaries`.
+- [x] `W02.P04.S22` - Rename product bundle suffixes and reject former bundle formats; `src/cadrumo sealed bucket archive writer/reader/header/service and focused storage/application/CLI tests`.
 - [ ] `W02.P04.S23` - Add real-filesystem tests for fresh Cadrumo state and explicit old-state refusal; `src/cadrumo persistence tests`.
 
 ## Wave `W03` - rebuild distributions and executable surfaces

@@ -137,7 +137,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
-    archive_path = tmp_path / "profile-backup.tar.gz"
+    archive_path = tmp_path / "profile-backup.cadrumo-bucket.tar.gz"
     passphrase = "correct-horse-battery-staple-9"  # noqa: S105 - synthetic test fixture, not a secret
     r_export = _archive_export("profile", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
@@ -193,7 +193,7 @@ def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path
     r_create = _create_profile("profile-identity", tax_id="12345678Z")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "profile-identity-transfer.tar.gz"
+    archive_path = tmp_path / "profile-identity-transfer.cadrumo-bucket.tar.gz"
     r_export = _archive_export(
         "profile-identity",
         archive_path,
@@ -231,7 +231,7 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
-    archive_path = tmp_path / "profile2-backup.tar.gz"
+    archive_path = tmp_path / "profile2-backup.cadrumo-bucket.tar.gz"
     passphrase = "another-recovery-passphrase-42"  # noqa: S105 - synthetic test fixture, not a secret
     r_export = _archive_export("profile2", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
@@ -258,7 +258,7 @@ def test_archive_import_refuses_wrong_recovery_wrap_passphrase(tmp_path: Path) -
     r_create = _create_profile("profile-wrong-passphrase", tax_id="87654321X")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "profile-wrong-passphrase.tar.gz"
+    archive_path = tmp_path / "profile-wrong-passphrase.cadrumo-bucket.tar.gz"
     r_export = _archive_export(
         "profile-wrong-passphrase",
         archive_path,
@@ -293,7 +293,7 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
     r_create = _create_profile("profile3", tax_id="11111111H")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "profile3-backup.tar.gz"
+    archive_path = tmp_path / "profile3-backup.cadrumo-bucket.tar.gz"
     r_export = _archive_export(
         "profile3",
         archive_path,
@@ -307,14 +307,14 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
         assert r_inspect.exit_code == 0, r_inspect.output
         payload = unwrap_schema_envelope(r_inspect.output)
         assert payload["recovery_wrap_present"] is True
-        assert payload["archive_schema_version"] == 2
+        assert payload["archive_schema_version"] == 3
         assert payload["size_bytes"] == archive_path.stat().st_size
         assert isinstance(payload["created_at"], str) and payload["created_at"]
 
 
 def test_archive_inspect_refuses_missing_file(tmp_path: Path) -> None:
     """``inspect`` refuses cleanly (no traceback) when the archive file is absent."""
-    missing = tmp_path / "does-not-exist.tar.gz"
+    missing = tmp_path / "does-not-exist.cadrumo-bucket.tar.gz"
     r = _archive_inspect(missing)
     assert r.exit_code != 0, r.output
     assert "Traceback" not in r.output
@@ -337,7 +337,7 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
     r_create = _create_profile("profile4", tax_id="22222222J")
     assert r_create.exit_code == 0, r_create.output
 
-    archive_path = tmp_path / "profile4-backup.tar.gz"
+    archive_path = tmp_path / "profile4-backup.cadrumo-bucket.tar.gz"
     passphrase = "tamper-test-passphrase-321"  # noqa: S105 - synthetic test fixture, not a secret
     r_export = _archive_export("profile4", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output
@@ -355,7 +355,7 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
     raw[-8] ^= 0xFF  # Flip a byte deep inside the AEAD ciphertext/tag region.
     payload_path.write_bytes(bytes(raw))
 
-    tampered_path = tmp_path / "profile4-backup-tampered.tar.gz"
+    tampered_path = tmp_path / "profile4-backup-tampered.cadrumo-bucket.tar.gz"
     with tarfile.open(tampered_path, mode="w:gz") as archive:
         for member_name in ("header.json", "payload.envelope", "recovery.wrap"):
             member_path = extract_dir / member_name
@@ -378,7 +378,7 @@ def test_archive_import_refuses_uuid_collision(tmp_path: Path) -> None:
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
-    archive_path = tmp_path / "profile5-backup.tar.gz"
+    archive_path = tmp_path / "profile5-backup.cadrumo-bucket.tar.gz"
     passphrase = "collision-test-passphrase-654"  # noqa: S105 - synthetic test fixture, not a secret
     r_export = _archive_export("profile5", archive_path, recovery_wrap_passphrase=passphrase)
     assert r_export.exit_code == 0, r_export.output

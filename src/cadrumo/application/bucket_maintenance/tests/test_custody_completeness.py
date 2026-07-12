@@ -129,7 +129,7 @@ def test_sealed_archive_restores_evidence_and_audit_trail_in_fresh_root(
 ) -> None:
     seeded_event_id = seeded_bucket
     sha = AttachmentStore().put_bytes(_EVIDENCE)  # idempotent: returns the digest
-    archive = tmp_path / "exports" / "bucket.aeat-bucket.tar.gz"
+    archive = tmp_path / "exports" / "bucket.cadrumo-bucket.tar.gz"
 
     BucketMaintenanceService().export(
         ExportBucketCommand(bucket_id=runtime.bucket_id, output_path=archive, recovery_wrap_passphrase=_RECOVERY),

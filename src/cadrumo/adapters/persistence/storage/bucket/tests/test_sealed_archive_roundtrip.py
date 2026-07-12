@@ -40,17 +40,18 @@ _RECOVERY_WRAP = b"sealed-recovery-wrap-ciphertext-v1"
 
 def _header(*, recovery_wrap_present: bool = False) -> ExportArchiveHeader:
     return ExportArchiveHeader(
+        product="cadrumo",
         bucket_id=_BUCKET_ID,
         manifest_digest=_MANIFEST_DIGEST,
         recovery_wrap_present=recovery_wrap_present,
-        archive_schema_version=2,
+        archive_schema_version=3,
         created_at=_FROZEN_INSTANT,
     )
 
 
 def test_roundtrip_without_recovery_wrap_returns_same_header_and_payload(tmp_path: Path) -> None:
     """A 2-member archive round-trips exactly."""
-    archive_path = tmp_path / "export.tar.gz"
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     header = _header()
 
     write_sealed_archive(
@@ -67,7 +68,7 @@ def test_roundtrip_without_recovery_wrap_returns_same_header_and_payload(tmp_pat
 
 def test_roundtrip_with_recovery_wrap_returns_all_three_members(tmp_path: Path) -> None:
     """A 3-member archive round-trips the recovery wrap too."""
-    archive_path = tmp_path / "export.tar.gz"
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     header = _header(recovery_wrap_present=True)
 
     write_sealed_archive(
@@ -97,7 +98,7 @@ def test_writer_refuses_when_header_recovery_flag_disagrees_with_bytes(
     error_match: str,
 ) -> None:
     """Recovery-wrap header flag and payload bytes must agree."""
-    archive_path = tmp_path / "export.tar.gz"
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     header = _header(recovery_wrap_present=recovery_wrap_present)
 
     with pytest.raises(SealedArchiveWriteError, match=error_match):
@@ -111,7 +112,7 @@ def test_writer_refuses_when_header_recovery_flag_disagrees_with_bytes(
 
 def test_writer_refuses_to_overwrite_existing_target(tmp_path: Path) -> None:
     """Existing target_path refuses; operator removes it first."""
-    archive_path = tmp_path / "export.tar.gz"
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     archive_path.write_bytes(b"existing")
     header = _header()
 
@@ -121,12 +122,12 @@ def test_writer_refuses_to_overwrite_existing_target(tmp_path: Path) -> None:
 
 def test_reader_rejects_layout_with_extra_member(tmp_path: Path) -> None:
     """An archive with an extra unknown member fast-fails the layout gate."""
-    archive_path = tmp_path / "export.tar.gz"
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     header = _header()
     write_sealed_archive(archive_path, header=header, payload_envelope_bytes=_PAYLOAD)
 
     # Re-pack the archive with an extra unknown member appended.
-    rebuilt_path = tmp_path / "tampered.tar.gz"
+    rebuilt_path = tmp_path / "tampered.cadrumo-bucket.tar.gz"
     import io
 
     with tarfile.open(archive_path, "r:gz") as source:
@@ -151,9 +152,9 @@ def test_reader_rejects_layout_with_extra_member(tmp_path: Path) -> None:
         read_sealed_archive(rebuilt_path)
 
 
-def test_reader_rejects_archive_with_corrupt_header(tmp_path: Path) -> None:
-    """A header.json that does not parse as ExportArchiveHeader fast-fails."""
-    archive_path = tmp_path / "export.tar.gz"
+def test_reader_rejects_archive_without_cadrumo_product_marker(tmp_path: Path) -> None:
+    """A pre-cut header refuses before its payload is returned."""
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     import io
 
     with tarfile.open(archive_path, "w:gz") as archive:
@@ -165,14 +166,68 @@ def test_reader_rejects_archive_with_corrupt_header(tmp_path: Path) -> None:
         payload_info.size = len(_PAYLOAD)
         archive.addfile(payload_info, io.BytesIO(_PAYLOAD))
 
-    with pytest.raises(SealedArchiveHeaderError, match="header schema validation failed"):
+    with pytest.raises(SealedArchiveHeaderError, match="payload members were not read"):
         read_sealed_archive(archive_path)
+
+
+def test_former_bundle_suffix_is_refused_without_opening_or_mutating_bytes(tmp_path: Path) -> None:
+    """The former suffix refuses even when its bytes are not a readable archive."""
+    former_path = tmp_path / "sentinel.aeat-bucket.tar.gz"
+    sentinel = b"former-bundle-sentinel-bytes-must-remain-opaque"
+    former_path.write_bytes(sentinel)
+
+    with pytest.raises(SealedArchiveHeaderError, match="archive was not opened"):
+        read_sealed_archive(former_path)
+
+    assert former_path.read_bytes() == sentinel
+    assert not (tmp_path / "sentinel.cadrumo-bucket.tar.gz").exists()
+
+
+def test_renamed_former_header_refuses_before_payload_adoption(tmp_path: Path) -> None:
+    """Renaming an old archive cannot bypass its missing product-format marker."""
+    import io
+    import json
+
+    archive_path = tmp_path / "renamed-former.cadrumo-bucket.tar.gz"
+    sentinel_payload = b"former-encrypted-payload-sentinel"
+    former_header = {
+        "bucket_id": _BUCKET_ID,
+        "manifest_digest": _MANIFEST_DIGEST,
+        "recovery_wrap_present": False,
+        "archive_schema_version": 2,
+        "created_at": _FROZEN_INSTANT.isoformat(),
+    }
+    with tarfile.open(archive_path, "w:gz") as archive:
+        header_bytes = json.dumps(former_header).encode("utf-8")
+        header_info = tarfile.TarInfo(HEADER_MEMBER_NAME)
+        header_info.size = len(header_bytes)
+        archive.addfile(header_info, io.BytesIO(header_bytes))
+        payload_info = tarfile.TarInfo(PAYLOAD_MEMBER_NAME)
+        payload_info.size = len(sentinel_payload)
+        archive.addfile(payload_info, io.BytesIO(sentinel_payload))
+    original_bytes = archive_path.read_bytes()
+
+    with pytest.raises(SealedArchiveHeaderError, match="payload members were not read"):
+        read_sealed_archive(archive_path)
+
+    assert archive_path.read_bytes() == original_bytes
+
+
+def test_writer_refuses_former_suffix_without_creating_a_bundle(tmp_path: Path) -> None:
+    """Cadrumo never writes or auto-renames the former published suffix."""
+    former_path = tmp_path / "export.aeat-bucket.tar.gz"
+
+    with pytest.raises(SealedArchiveWriteError, match="former-product bundle suffix"):
+        write_sealed_archive(former_path, header=_header(), payload_envelope_bytes=_PAYLOAD)
+
+    assert not former_path.exists()
+    assert not (tmp_path / "export.cadrumo-bucket.tar.gz").exists()
 
 
 def test_archive_metadata_is_normalised_byte_stable(tmp_path: Path) -> None:
     """Two writes of the same content produce bit-identical archives."""
-    first_path = tmp_path / "first.tar.gz"
-    second_path = tmp_path / "second.tar.gz"
+    first_path = tmp_path / "first.cadrumo-bucket.tar.gz"
+    second_path = tmp_path / "second.cadrumo-bucket.tar.gz"
     header = _header()
 
     write_sealed_archive(first_path, header=header, payload_envelope_bytes=_PAYLOAD)
@@ -196,7 +251,7 @@ def test_archive_metadata_is_normalised_byte_stable(tmp_path: Path) -> None:
 
 def test_reader_rejects_out_of_order_members(tmp_path: Path) -> None:
     """Header in second position is a layout violation."""
-    archive_path = tmp_path / "swapped.tar.gz"
+    archive_path = tmp_path / "swapped.cadrumo-bucket.tar.gz"
     import io
 
     header = _header()
