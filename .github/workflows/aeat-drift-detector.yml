@@ -70,8 +70,8 @@ jobs:
           AEAT_CLAVE_MOVIL_NIE_SOPORTE: ${{ secrets.AEAT_CLAVE_MOVIL_NIE_SOPORTE }}
         run: |
           uv run --no-sync pytest \
-            src/aeat/adapters/outbound/aeat/sede/test_groi_oracle_live.py \
-            src/aeat/adapters/outbound/aeat/sede/test_groi_dependency_chain_live.py \
+            src/cadrumo/adapters/outbound/aeat/sede/test_groi_oracle_live.py \
+            src/cadrumo/adapters/outbound/aeat/sede/test_groi_dependency_chain_live.py \
             -v --junitxml=drift-junit.xml
 
       - name: Upload drift results
@@ -95,7 +95,7 @@ jobs:
               `Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               '',
               'Remediation: re-capture the AEAT form HTML, update the',
-              'driver selectors in `src/aeat/adapters/outbound/aeat/sede/_groi_check.py`,',
+              'driver selectors in `src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py`,',
               'and re-run the tests locally with `CADRUMO_LIVE_TESTS_ENABLED=1`.',
             ].join('\n');
             await github.rest.issues.create({

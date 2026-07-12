@@ -11,7 +11,7 @@ of the contract in a fresh stdlib venv:
 - **Core alone (advisory path):** the registry authority loads and validates
   non-fatally while emitting the loud :class:`CorpusCompanionAdvisory` naming
   the missing set and the ``cadrumo[corpus-sources]`` install hint, and the
-  companion-guarded ``cadrumo app registry verify`` verb refuses instructively.
+  companion-guarded ``aeat app registry verify`` verb refuses instructively.
 - **With both companions (byte-identical path):** the same venv, after
   installing the two ``cadrumo-data-*`` wheels, resolves the binaries through the
   corpus seam over the joined namespace, the advisory disappears, and full
@@ -126,8 +126,8 @@ _PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 
 
 def _venv_cadrumo(venv: Path) -> Path:
-    """Return the installed canonical Cadrumo console script."""
-    executable = "cadrumo.exe" if sys.platform == "win32" else "cadrumo"
+    """Return the installed `aeat` console script (the Cadrumo CLI)."""
+    executable = "aeat.exe" if sys.platform == "win32" else "aeat"
     return _venv_bin(venv) / executable
 
 
@@ -180,7 +180,7 @@ def _assert_registry_verify_refuses(work_dir: Path, venv_path: Path) -> None:
         env=_runtime_env(work_dir, "refusal-state"),
     )
     if completed.returncode == 0:
-        raise SystemExit("cadrumo app registry verify unexpectedly succeeded without the companion")
+        raise SystemExit("aeat app registry verify unexpectedly succeeded without the companion")
     combined = f"{completed.stdout}\n{completed.stderr}"
     if "corpus-sources" not in combined:
         raise SystemExit(f"registry verify refusal does not cite the corpus-sources install hint:\n{combined}")
