@@ -8,7 +8,7 @@ to an operator who cannot tell it apart from a real one.
 This module dispatches a REAL ``modelo.work.calculate`` for M130 through the
 actual CLI command handling (the identical transport
 :func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects the
-``aeat_modelo_work_calculate`` MCP tool call onto, mirroring
+``cadrumo_modelo_work_calculate`` MCP tool call onto, mirroring
 ``test_response_provenance_golden.py``'s category-3 dispatch), seeds the exact
 AEAT DR 130 Instrucciones worked-example inputs (ingresos 12.000, gastos 4.000)
 so casilla 07 resolves to the same 1.600,00 EUR oracle figure
@@ -194,7 +194,7 @@ def _dispatch_real_m130_calculate_json(
 
     Drives real command handling end to end (create work unit -> seed the AEAT
     DR 130 worked-example ledger rows -> calculate) - the same transport the
-    ``aeat_modelo_work_calculate`` MCP tool dispatches to. Returns the raw JSON
+    ``cadrumo_modelo_work_calculate`` MCP tool dispatches to. Returns the raw JSON
     text (not the decoded mapping) because ``faithfulness_check`` grounds
     narration against the tool result's serialized JSON, exactly as the real
     ``PostToolUse`` hook receives it.
