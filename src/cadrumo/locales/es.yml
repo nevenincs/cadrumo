@@ -6177,7 +6177,7 @@ mcp:
         presenta por sí mismo.'
       no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
         la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando aeat equivalente directamente en un
+        hacerte preguntas, o ejecuta el comando Cadrumo CLI equivalente directamente en un
         terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]

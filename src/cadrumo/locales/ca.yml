@@ -6121,7 +6121,7 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
         la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre aeat equivalent directament en un terminal.'
+        fer-te preguntes, o executa l''ordre Cadrumo CLI equivalent directament en un terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
       que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb

@@ -186,7 +186,7 @@ def refusal_message(route: ConfirmRoute, *, command_key: str) -> str:
         default=(
             "'{command}' needs a human confirmation, and this client does not "
             "support elicitation. Run it from a client that can ask you questions, "
-            "or run the equivalent aeat CLI command directly in a terminal."
+            "or run the equivalent Cadrumo CLI command directly in a terminal."
         ),
     )
 
