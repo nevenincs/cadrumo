@@ -745,6 +745,41 @@ The incomplete smoke evidence is high severity because it blocks truthful Wave
 closure, but no source-binary loss, companion-byte corruption, namespace alias,
 credential exposure, or other critical defect was identified.
 
+### phase-p07-core-smoke-payload-parity-resolution | resolved | Slim payload gate consumes packaging ownership
+
+The first bounded post-fix core run stopped during wheel validation after 14.101
+seconds because the smoke gate still expected the `.docx` and `.zip` files that
+S41 had correctly moved into the official companion. No manifest was written and
+no install, import, CLI, or profile check ran, so this result was classified as a
+gate defect rather than clean-install evidence.
+
+The core smoke now derives split-owned suffixes from the root Hatch exclusion
+configuration and verifies every excluded tracked corpus file against the real
+manuals or official companion hook ownership maps. A focused real-wheel member
+test requires every remaining tracked slim-core data file, rejects every
+split-owned binary, and specifically covers the two files exposed by the failed
+run. This resolves the payload-gate mismatch only; the rolling HIGH remains open
+until the bounded full core smoke completes and writes its manifest.
+
+### split-smoke-m036-source-fingerprint | high | Installed authority rejected the normalized official procedure bytes
+
+The post-fix split-install run reached the companion-less installed authority and
+failed because `aeat-modelo-036-procedure` still declared the pre-relocation CRLF
+fingerprint: 36,079 bytes and SHA-256 `fd5264e1a8c371eb2bad45347a0defa5cc79882051cd6e90d9980a70722f53bd`.
+The package-root relocation had already normalized the tracked official HTML blob
+to LF without changing its text, yielding 36,022 bytes and SHA-256
+`c757f418705b37e33937a69d9f306f1afe4c7371505e5ba4583bb95b40e89df3`.
+
+### split-smoke-m036-source-fingerprint-resolution | resolved | Relocation-normalized evidence bytes restored
+
+Catalogue-wide comparison found 28 text evidence blobs normalized by the relocation,
+while their reviewed declarations still matched the pre-relocation official bytes.
+Changing those declarations would have legitimized an accidental evidence mutation.
+The affected HTML, XSD, and properties files were therefore restored to their declared
+CRLF byte representations without refetching or changing textual content. Exact
+bundled-authority validation and focused source-integrity tests pass against the
+preserved official bytes, resolving the installed-runtime blocker.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.

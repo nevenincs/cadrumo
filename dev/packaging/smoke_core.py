@@ -39,7 +39,10 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 # in the
 # ``cadrumo`` archive.
 _CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
-_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+_COMPANION_HOOKS = (
+    "packaging/cadrumo_data_manuals/hatch_build.py",
+    "packaging/cadrumo_data_official/hatch_build.py",
+)
 _RENTA_PDF_ALLOW_LIST = {
     f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -382,17 +385,70 @@ def _tracked_source_data_paths(repo_root: Path) -> set[str]:
     return tracked
 
 
-def _is_corpus_source_binary(source_relative: str) -> bool:
+def _configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
+    """Return corpus suffixes excluded by the root wheel configuration."""
+    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    excluded = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
+    prefix = f"{_CORPUS_SOURCE_PREFIX}**/*"
+    suffixes = tuple(sorted({Path(pattern).suffix.lower() for pattern in excluded if pattern.startswith(prefix)}))
+    if not suffixes or "" in suffixes:
+        raise SystemExit("root wheel config declares no precise corpus binary suffix exclusions")
+    return suffixes
+
+
+def _companion_corpus_ownership(repo_root: Path) -> dict[str, frozenset[str]]:
+    """Return top-level corpus partitions and suffixes owned by companion hooks."""
+    ownership: dict[str, frozenset[str]] = {}
+    for relative_hook in _COMPANION_HOOKS:
+        tree = ast.parse((repo_root / relative_hook).read_text(encoding=_UTF_8))
+        literals: dict[str, frozenset[str]] = {}
+        for node in tree.body:
+            if not isinstance(node, ast.Assign) or len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+                continue
+            name = node.targets[0].id
+            if name not in {"_CORPUS_BINARY_SUFFIXES", "_OWNED_SUBDIRS"}:
+                continue
+            value = node.value
+            if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "frozenset":
+                value = value.args[0]
+            literals[name] = frozenset(str(item).lower() for item in ast.literal_eval(value))
+        missing = {"_CORPUS_BINARY_SUFFIXES", "_OWNED_SUBDIRS"} - literals.keys()
+        if missing:
+            raise SystemExit(
+                f"companion hook {relative_hook} is missing literal ownership declarations: {sorted(missing)!r}"
+            )
+        suffixes = literals["_CORPUS_BINARY_SUFFIXES"]
+        for subdir in literals["_OWNED_SUBDIRS"]:
+            if subdir in ownership:
+                raise SystemExit(f"corpus companion ownership overlaps at top-level partition: {subdir}")
+            ownership[str(subdir)] = suffixes
+    return ownership
+
+
+def _is_corpus_source_binary(source_relative: str, suffixes: tuple[str, ...]) -> bool:
     """Return True for a tracked ``_data/corpus`` path that is an excluded source binary."""
-    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(
-        _CORPUS_BINARY_SUFFIXES
-    )
+    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(suffixes)
+
+
+def _assert_split_files_have_companion_owners(repo_root: Path, paths: set[str]) -> None:
+    """Verify every root-excluded corpus file is selected by one companion hook."""
+    ownership = _companion_corpus_ownership(repo_root)
+    unowned: list[str] = []
+    for path in sorted(paths):
+        relative = path.removeprefix(_CORPUS_SOURCE_PREFIX)
+        subdir = relative.partition("/")[0]
+        if Path(path).suffix.lower() not in ownership.get(subdir, frozenset()):
+            unowned.append(path)
+    if unowned:
+        raise SystemExit(
+            f"{len(unowned)} root-excluded corpus binaries have no companion hook owner: {_format_path_sample(unowned)}"
+        )
 
 
 def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
     """Return expected bundled-data paths inside the slim ``cadrumo`` wheel archive.
 
-    Corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded:
+    Corpus source binaries declared by the root Hatch exclusion list are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
     two ``cadrumo-data-*`` companions, so they are legitimately absent from the
     archive.
@@ -400,9 +456,13 @@ def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
     data-budget wheel boundary (tests serve no installed consumer) and are
     likewise legitimately absent.
     """
+    tracked = _tracked_source_data_paths(repo_root)
+    suffixes = _configured_corpus_binary_suffixes(repo_root)
+    split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
+    _assert_split_files_have_companion_owners(repo_root, split_owned)
     expected: set[str] = set()
-    for path in _tracked_source_data_paths(repo_root):
-        if _is_corpus_source_binary(path):
+    for path in tracked:
+        if path in split_owned:
             continue
         if "/tests/" in path:
             continue
