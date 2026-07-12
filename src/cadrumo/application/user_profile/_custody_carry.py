@@ -85,7 +85,12 @@ from ..live import (
     notifications_snapshot_object_key,
     verify_observation_object_key,
 )
-from ..modelo import M036DeclarationResult, m036_declaration_object_key
+from ..modelo import (
+    M036DeclarationResult,
+    M145CommunicationRecord,
+    m036_declaration_object_key,
+    m145_communication_record_object_key,
+)
 from ._repository import user_profile_snapshot_object_key
 
 if TYPE_CHECKING:
@@ -295,7 +300,9 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _business_operation_invoice_repo() -> BusinessOperationInvoiceRepository:
         return BusinessOperationInvoiceRepository()
 
-    resolvers["cadrumo.application.ledger.business_operation_invoices"] = _bound_resolver(_business_operation_invoice_repo)
+    resolvers["cadrumo.application.ledger.business_operation_invoices"] = _bound_resolver(
+        _business_operation_invoice_repo
+    )
 
     def _classification_rule_repo() -> LedgerClassificationRuleRepository:
         return LedgerClassificationRuleRepository()
@@ -339,6 +346,17 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         _m036_key,
         snapshot_id_attr="declaration_id",
     )
+
+    def _m145_communication_key(record: SecureObjectRecord, bucket_id: str) -> str:
+        communication = _envelope_payload(record, M145CommunicationRecord)
+        if communication.bucket_id != bucket_id:
+            raise ValueError("Modelo 145 communication record bucket_id does not match its custody bucket")
+        return m145_communication_record_object_key(
+            communication.bucket_id,
+            communication.communication_record_id,
+        )
+
+    resolvers["cadrumo.application.modelo.m145_communication_record"] = _m145_communication_key
 
     def _verify_payload() -> type[VerifyObservation]:
         return VerifyObservation
