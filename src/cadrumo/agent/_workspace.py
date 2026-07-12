@@ -33,6 +33,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from .. import __version__
+from ..core import PRODUCT_IDENTITY
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from . import harness_root, iter_operator_rules, iter_personas
 
@@ -50,58 +51,59 @@ _CLAUDE_MEMORY_FILE = "CLAUDE.md"
 # The plugin layout target (ADR "Plugin generation") re-materialises the SAME
 # authored harness source as a one-click Claude plugin: a ``.claude-plugin/``
 # manifest, a top-level ``skills/`` and ``agents/`` tree, and an ``.mcp.json``
-# declaring the stdio ``aeat-mcp`` server. The manifest schema is the one the
+# declaring the stdio ``cadrumo-mcp`` server. The manifest schema is the one the
 # live ``claude plugin validate --strict`` oracle accepts; every field name here
 # is verified against that validator, not trusted from documentation.
 _PLUGIN_DIR = ".claude-plugin"
 _PLUGIN_MANIFEST = "plugin.json"
-_PLUGIN_NAME = "aeat"
-_PLUGIN_DISPLAY_NAME = "AEAT Spanish tax assistant"
+_PLUGIN_NAME = PRODUCT_IDENTITY.plugin_identifier
+_PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
 # Distilled from the mcpb manifest one-liner; keeps the never-files-live boundary
 # stated on the operator-facing surface.
 _PLUGIN_DESCRIPTION = (
-    "Operate the aeat Spanish-tax CLI: grounded search over the bundled BOE/AEAT "
+    f"Operate {PRODUCT_IDENTITY.display_name} through the aeat Spanish-tax CLI: "
+    "grounded search over the bundled BOE/AEAT "
     "legal corpus, situation-keyed guided workflows, and gated execution that "
     "never files to AEAT. The server advertises an orientation core by default "
     "(overview + contract + search/execute); set the surface option to 'full' to "
     "advertise every verb up front."
 )
-_PLUGIN_AUTHOR_NAME = "AEAT tax assistant project"
+_PLUGIN_AUTHOR_NAME = f"{PRODUCT_IDENTITY.display_name} tax assistant project"
 _PLUGIN_LICENSE = "Apache-2.0"
-_PLUGIN_KEYWORDS = ("tax", "aeat", "spain", "irpf", "iva", "modelo")
+_PLUGIN_KEYWORDS = (PRODUCT_IDENTITY.plugin_identifier, "tax", "aeat", "spain", "irpf", "iva", "modelo")
 _PLUGIN_SCHEMA = "https://anthropic.com/claude-code/plugin.schema.json"
 
-# The plugin's stdio MCP server. ``uvx`` boots ``aeat-mcp`` from the published
+# The plugin's stdio MCP server. ``uvx`` boots ``cadrumo-mcp`` from the published
 # wheel pinned to the plugin's own version (D2a), so a machine with ``uv`` but no
 # project checkout runs the exact server the plugin release was cut against. The
-# PyPI distribution name (``aeat-cli``, the operator's registered project) differs
-# from the plugin name (``aeat``) and the import package (``aeat``); the pin MUST
+# PyPI distribution, plugin name, and import package all use the Cadrumo identity.
+# The pin MUST
 # carry the ``[agent]`` extra — the MCP SDK the server runs on rides that extra,
-# and a bare install makes ``aeat-mcp`` refuse with the install hint. The active
+# and a bare install makes ``cadrumo-mcp`` refuse with the install hint. The active
 # persona is wired from the ``userConfig`` persona option through the documented
 # ``${user_config.persona}`` interpolation; the server validates and refuses an
 # unknown persona (server-side validation is the refusal surface).
 _MCP_CONFIG = ".mcp.json"
-_MCP_SERVER_NAME = "aeat"
+_MCP_SERVER_NAME = PRODUCT_IDENTITY.mcp_server
 _MCP_LAUNCHER = "uvx"
-_MCP_CONSOLE_SCRIPT = "aeat-mcp"
-_PYPI_DISTRIBUTION = "aeat-cli"
-_MCP_PERSONA_ENV = "CADRUMO_MCP_PERSONA"
+_MCP_CONSOLE_SCRIPT = PRODUCT_IDENTITY.mcp_executable
+_PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
+_MCP_PERSONA_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 # The advertised-tool-surface toggle (ADR mcp-progressive-discovery P1). ``core``
 # (default) advertises only the orientation slice; ``full`` restores the flat
 # per-verb surface. Wired from the ``userConfig`` surface option; the server
 # validates the value and refuses an unknown one.
-_MCP_SURFACE_ENV = "CADRUMO_MCP_SURFACE"
+_MCP_SURFACE_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_SURFACE"
 _MCP_SURFACE_INTERPOLATION = "${user_config.surface}"
 
 # --- Claude marketplace layout --------------------------------------------
 #
 # The marketplace layout target (ADR "Marketplace") emits the git-repo content
 # a dedicated public marketplace repository serves: a ``.claude-plugin/``
-# ``marketplace.json`` (marketplace name ``neve``) listing the aeat plugin plus
+# ``marketplace.json`` (marketplace name ``neve``) listing the Cadrumo plugin plus
 # the plugin tree it points
-# at, materialised UNDER the marketplace root at ``plugins/aeat`` via the same
+# at, materialised UNDER the marketplace root at ``plugins/cadrumo`` via the same
 # ``materialise_plugin`` emitter, so the marketplace manifest and the plugin it
 # serves cannot drift. Every field name here is the one the live
 # ``claude plugin validate --strict`` oracle accepts for a marketplace manifest;
@@ -113,7 +115,7 @@ _MARKETPLACE_MANIFEST = "marketplace.json"
 # (``<plugin>@neve``), independent of the repo it is served from; kebab-case
 # (lowercase) is required by the claude.ai marketplace sync.
 _MARKETPLACE_NAME = "neve"
-_MARKETPLACE_DESCRIPTION = "Neve plugin marketplace — Claude plugins including the aeat Spanish-tax assistant."
+_MARKETPLACE_DESCRIPTION = "Neve plugin marketplace — Claude plugins including the Cadrumo Spanish-tax assistant."
 _MARKETPLACE_OWNER_NAME = _PLUGIN_AUTHOR_NAME
 _MARKETPLACE_PLUGINS_SUBDIR = "plugins"
 # The relative source the marketplace manifest points at, resolved from the
@@ -124,12 +126,12 @@ _MARKETPLACE_PLUGIN_SOURCE = f"./{_MARKETPLACE_PLUGINS_SUBDIR}/{_PLUGIN_NAME}"
 def _plugin_version() -> str:
     """Resolve the plugin version from installed package metadata.
 
-    Reads the ``aeat`` distribution version through :mod:`importlib.metadata`,
+    Reads the Cadrumo distribution version through :mod:`importlib.metadata`,
     falling back to the in-package ``__version__`` when the distribution is not
     installed (an editable checkout run straight from the source tree).
     """
     try:
-        return _metadata.version(_PLUGIN_NAME)
+        return _metadata.version(_PYPI_DISTRIBUTION)
     except _metadata.PackageNotFoundError:
         return __version__
 
@@ -157,7 +159,7 @@ class MarketplaceManifest(BaseModel):
     """Result of materialising the marketplace-served tree from the harness source.
 
     ``plugin_source`` is the relative ``plugins[].source`` the marketplace
-    manifest points at (``./plugins/aeat``); ``plugin`` is the nested
+    manifest points at (``./plugins/cadrumo``); ``plugin`` is the nested
     :class:`PluginManifest` for the plugin materialised under that source, so the
     marketplace and the plugin it serves are one emission and cannot drift.
     """
@@ -179,7 +181,7 @@ _PERSONA_CONFIG_KEY = "persona"
 _PERSONA_CONFIG_TITLE = "Persona"
 _PERSONA_CONFIG_DESCRIPTION = (
     "The harness persona scoping the tool surface; leave blank for the full "
-    "surface. The aeat-mcp server validates the value and refuses an unknown "
+    "surface. The cadrumo-mcp server validates the value and refuses an unknown "
     "persona."
 )
 _SURFACE_CONFIG_KEY = "surface"
@@ -196,7 +198,7 @@ def _plugin_user_config(persona_default: str) -> dict[str, object]:
     """Build the ``userConfig`` block declaring the persona string option.
 
     The plugin format offers no enum/dropdown ``userConfig`` type, so the
-    persona is a string option with a default; the aeat-mcp server stays the
+    persona is a string option with a default; the cadrumo-mcp server stays the
     refusal surface for an unknown persona.
     """
     return {
@@ -263,7 +265,7 @@ _TOOL_SCOPE_HEADING = "## Tool scope"
 # Claude built-in tools that mutate the local workspace filesystem. A persona
 # whose declared tool scope is read-only (orchestration only) does not carry
 # them; every other persona inherits the full tool set and relies on the
-# aeat-mcp server's own persona-scope gate as the refusal surface (per the ADR:
+# cadrumo-mcp server's own persona-scope gate as the refusal surface (per the ADR:
 # server-side validation stays the refusal surface).
 _WORKSPACE_MUTATION_TOOLS = ("Edit", "Write", "NotebookEdit")
 
@@ -349,7 +351,7 @@ def _emit_plugin_agents(output_dir: Path) -> int:
 
 
 def _mcp_config_document(version: str) -> dict[str, object]:
-    """Build the plugin's ``.mcp.json`` declaring the stdio ``aeat-mcp`` server."""
+    """Build the plugin's ``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server."""
     return {
         "mcpServers": {
             _MCP_SERVER_NAME: {
@@ -410,7 +412,7 @@ def _marketplace_manifest_document() -> dict[str, object]:
     ``name``, ``owner`` (object), and ``plugins[]`` are the validator-required
     fields; ``description`` is required additionally under ``--strict`` (its
     absence is a strict-failing warning). The single ``plugins[]`` entry sources
-    the plugin from the relative ``./plugins/aeat`` subtree this generator
+    the plugin from the relative ``./plugins/cadrumo`` subtree this generator
     materialises alongside the manifest.
     """
     return {
@@ -431,8 +433,8 @@ def materialise_marketplace(
 ) -> MarketplaceManifest:
     """Write the marketplace-served tree under ``output_dir`` from the harness source.
 
-    Emits ``.claude-plugin/marketplace.json`` listing the aeat plugin and, under
-    the relative ``plugins/aeat`` source it points at, the full plugin tree via
+    Emits ``.claude-plugin/marketplace.json`` listing the Cadrumo plugin and, under
+    the relative ``plugins/cadrumo`` source it points at, the full plugin tree via
     :func:`materialise_plugin`. Because both come from one call, the marketplace
     manifest and the plugin it serves cannot drift. ``version`` and
     ``persona_default`` pass straight through to the plugin emission.
@@ -486,8 +488,8 @@ def _claude_memory(rule_names: Sequence[str]) -> str:
     """
     imports = "\n".join(f"@{_CLAUDE_DIR}/{_RULES_SUBDIR}/{name}" for name in rule_names)
     return (
-        "# aeat operator workspace\n\n"
-        "Claude-native materialisation of the aeat operator harness. The aeat CLI is a\n"
+        "# Cadrumo operator workspace\n\n"
+        "Claude-native materialisation of the Cadrumo operator harness. The aeat CLI is a\n"
         "deterministic Spanish-tax tool universe; this harness is how to operate it\n"
         "safely. The operating rules imported below are your always-on operating\n"
         "contract. Tax-advisor personas are Claude subagents under\n"
