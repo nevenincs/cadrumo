@@ -42,6 +42,7 @@ import time
 import uuid
 from typing import TYPE_CHECKING
 
+from ...core import PRODUCT_IDENTITY
 from ...core.external_constants import UTF_8_ENCODING
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._completions import complete_prompt_argument
@@ -308,7 +309,7 @@ def _run_subprocess_tool(
         open_world=descriptor.annotations.open_world_hint,
     )
     timeout_s = timeout_seconds(tier)
-    argv = ["cadrumo", *cli_argv_for(descriptor.verb_schema, arguments)]
+    argv = [PRODUCT_IDENTITY.cli_executable, *cli_argv_for(descriptor.verb_schema, arguments)]
     result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
     if result.timed_out:
         return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
