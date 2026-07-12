@@ -1,8 +1,8 @@
-"""Operating-layer resource templates: pull the harness by ``aeat://`` URI.
+"""Operating-layer resource templates: pull the harness by ``cadrumo://`` URI.
 
 ADR R4's second delivery channel above the tools-only floor: MCP resource
-templates ``aeat://skill/{name}``, ``aeat://rule/{name}`` and
-``aeat://persona/{name}`` let a resources-capable client enumerate and pull the
+templates ``cadrumo://skill/{name}``, ``cadrumo://rule/{name}`` and
+``cadrumo://persona/{name}`` let a resources-capable client enumerate and pull the
 shipped operating layer verbatim as ``text/markdown``. The concrete resource set
 and the read resolution are both DERIVED from the shipped ``aeat/_data/agent/``
 tree through the ``cadrumo.agent`` package facade (``iter_skill_documents``,
@@ -30,7 +30,7 @@ from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-_URI_SCHEME = "aeat"
+_URI_SCHEME = "cadrumo"
 _URI_PREFIX = f"{_URI_SCHEME}://"
 _MARKDOWN = "text/markdown"
 _MARKDOWN_SUFFIX = ".md"
@@ -158,7 +158,7 @@ _TEMPLATE_DESCRIPTIONS: dict[HarnessResourceKind, str] = {
 
 
 def resource_uri(kind: HarnessResourceKind, name: str) -> str:
-    """Render the ``aeat://<kind>/<name>`` URI for one operating-layer document."""
+    """Render the ``cadrumo://<kind>/<name>`` URI for one operating-layer document."""
     return f"{_URI_PREFIX}{kind.value}/{name}"
 
 
@@ -184,7 +184,7 @@ def list_harness_resources() -> tuple[HarnessResourceRef, ...]:
 
 
 def list_harness_resource_templates() -> tuple[HarnessResourceTemplate, ...]:
-    """Return the three ``aeat://<kind>/{name}`` resource templates.
+    """Return the three ``cadrumo://<kind>/{name}`` resource templates.
 
     Returns:
         A :class:`HarnessResourceTemplate`.
@@ -192,7 +192,7 @@ def list_harness_resource_templates() -> tuple[HarnessResourceTemplate, ...]:
     return tuple(
         HarnessResourceTemplate(
             uri_template=f"{_URI_PREFIX}{kind.value}/{{name}}",
-            name=f"aeat-{kind.value}",
+            name=f"cadrumo-{kind.value}",
             kind=kind,
             description=_TEMPLATE_DESCRIPTIONS[kind],
         )
@@ -201,15 +201,15 @@ def list_harness_resource_templates() -> tuple[HarnessResourceTemplate, ...]:
 
 
 def _parse_uri(uri: str) -> tuple[HarnessResourceKind, str]:
-    """Parse an ``aeat://<kind>/<name>`` URI into its kind and name.
+    """Parse a ``cadrumo://<kind>/<name>`` URI into its kind and name.
 
     Raises:
         HarnessResourceNotFoundError: The URI is not a well-formed
-            ``aeat://<kind>/<name>`` reference (wrong scheme, unknown kind, or a
+            ``cadrumo://<kind>/<name>`` reference (wrong scheme, unknown kind, or a
             missing name segment).
     """
     if not uri.startswith(_URI_PREFIX):
-        raise HarnessResourceNotFoundError(f"not an aeat resource URI: {uri!r}")
+        raise HarnessResourceNotFoundError(f"not a Cadrumo resource URI: {uri!r}")
     kind_token, _, name = uri[len(_URI_PREFIX) :].partition("/")
     if not name:
         raise HarnessResourceNotFoundError(f"resource URI carries no name: {uri!r}")
@@ -224,7 +224,7 @@ def _parse_uri(uri: str) -> tuple[HarnessResourceKind, str]:
 
 
 def parse_resource_uri(uri: str) -> tuple[HarnessResourceKind, str]:
-    """Parse an ``aeat://<kind>/<name>`` URI into its kind and name.
+    """Parse a ``cadrumo://<kind>/<name>`` URI into its kind and name.
 
     The public parse the server uses to route a ``resources/read``: bundled kinds
     resolve in-process via :func:`read_harness_resource`; the bucket-scoped kinds
@@ -232,7 +232,7 @@ def parse_resource_uri(uri: str) -> tuple[HarnessResourceKind, str]:
 
     Raises:
         HarnessResourceNotFoundError: The URI is not a well-formed
-            ``aeat://<kind>/<name>`` reference.
+            ``cadrumo://<kind>/<name>`` reference.
 
     Returns:
         The parsed ``(kind, name)`` pair.
@@ -241,7 +241,7 @@ def parse_resource_uri(uri: str) -> tuple[HarnessResourceKind, str]:
 
 
 def read_harness_resource(uri: str) -> HarnessResourceContent:
-    """Resolve an ``aeat://<kind>/<name>`` URI to its shipped document text.
+    """Resolve a ``cadrumo://<kind>/<name>`` URI to its shipped document text.
 
     Resolves the session-free bundled kinds only (skill / rule / persona / corpus).
     The bucket-scoped kinds (:data:`BUCKET_SCOPED_RESOURCE_KINDS`) read ENCRYPTED
@@ -272,7 +272,7 @@ def read_harness_resource(uri: str) -> HarnessResourceContent:
 
 
 def _read_corpus_resource(ref: str, uri: str) -> HarnessResourceContent:
-    """Resolve an ``aeat://corpus/<ref>`` URI to verbatim bundled legal text.
+    """Resolve a ``cadrumo://corpus/<ref>`` URI to verbatim bundled legal text.
 
     ``ref`` is a citation id or a retrieval ``corpus_ref``; resolution routes
     through the registry legal catalogue (the single citation authority).
