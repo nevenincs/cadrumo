@@ -5738,7 +5738,7 @@ mcp:
         by design. Export locally; the taxpayer files themselves.'
       no_channel: '''{command}'' needs a human confirmation, and this client does
         not support elicitation. Run it from a client that can ask you questions,
-        or run the equivalent aeat CLI command directly in a terminal.'
+        or run the equivalent Cadrumo CLI command directly in a terminal.'
   faithfulness:
     advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
       that no tool result in this session produced. Verify the figure against a calculate/revision
