@@ -141,7 +141,7 @@ const footerColumns = [
     links: [
       ['GitHub', repositoryUrl],
       ['PyPI: aeat-cli', downloadUrl],
-      ['aeat.neve.md', siteUrl],
+      ['cadrumo.neve.md', siteUrl],
     ],
   },
 ]
@@ -167,15 +167,22 @@ function useScrollReveal() {
   }, [])
 }
 
-function useScrollProgress() {
+function useScrollEffects() {
   useEffect(() => {
     const bar = document.querySelector<HTMLElement>('.scroll-progress')
-    if (!bar) return
+    const header = document.querySelector<HTMLElement>('.site-header')
+    const bannerImage = document.querySelector<HTMLElement>('.banner img')
+    const allowMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let frame = 0
     const update = () => {
       const root = document.documentElement
       const max = root.scrollHeight - root.clientHeight
-      bar.style.transform = `scaleX(${max > 0 ? root.scrollTop / max : 0})`
+      const top = root.scrollTop
+      if (bar) bar.style.transform = `scaleX(${max > 0 ? top / max : 0})`
+      header?.classList.toggle('is-scrolled', top > 8)
+      if (allowMotion && bannerImage) {
+        bannerImage.style.transform = `translateY(${Math.min(top * 0.12, 28)}px) scale(1.18)`
+      }
       frame = 0
     }
     const onScroll = () => {
@@ -194,7 +201,7 @@ function useScrollProgress() {
 
 export function App() {
   useScrollReveal()
-  useScrollProgress()
+  useScrollEffects()
 
   return (
     <div className="site-shell">
@@ -227,7 +234,7 @@ export function App() {
           <img src={bannerImage} alt="A carefully arranged desk of folders, notes, and a calculator" />
         </div>
 
-        <section className="hero page-container" aria-labelledby="hero-heading" data-reveal>
+        <section className="hero page-container" aria-labelledby="hero-heading">
           <h1 id="hero-heading">
             Tax calculation engine, <em>assisted</em> by agents.
           </h1>
@@ -378,7 +385,7 @@ export function App() {
         <div className="page-container footer-content">
           <div className="footer-columns">
             <div className="footer-brand">
-              <p className="footer-brand-name">aeat</p>
+              <p className="footer-brand-name">cadrumo</p>
               <p className="footer-brand-summary">
                 A Spanish tax-filing assistant, driven by a deterministic engine and an agent
                 harness.
@@ -399,11 +406,11 @@ export function App() {
           </div>
           <div className="footer-legal">
             <p className="footer-disclaimer">
-              <span className="aeat-pill">aeat</span> is an independent open-source project
+              <span className="aeat-pill">cadrumo</span> is an independent open-source project
               (Apache-2.0). It is not affiliated with AEAT and never submits filings; you file
               through AEAT's official channels and remain responsible for every declaration.
             </p>
-            <p className="footer-copyright">© 2026 the aeat authors.</p>
+            <p className="footer-copyright">© 2026 the cadrumo authors.</p>
           </div>
         </div>
       </footer>
