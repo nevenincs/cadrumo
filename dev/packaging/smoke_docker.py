@@ -16,6 +16,7 @@ from typing import Final
 from .smoke_core import _build_wheel, _executable, _manifest_path, _write_smoke_manifest
 
 _UTF_8: Final[str] = "utf-8"
+_DOCKER_COMMAND_TIMEOUT_SECONDS: Final[int] = 30
 
 
 @dataclass(frozen=True)
@@ -85,19 +86,24 @@ def _docker_version_command(docker: DockerCli) -> list[str]:
     return [*docker.argv_prefix, "version", "--format", "{{.Server.Version}}"]
 
 
-def _docker_responds(docker: DockerCli) -> bool:
-    """Return whether one Docker backend answers the daemon version probe."""
+def _command_succeeds(command: list[str], *, timeout: int = _DOCKER_COMMAND_TIMEOUT_SECONDS) -> bool:
+    """Return whether a real command exits successfully within ``timeout``."""
     try:
         result = subprocess.run(
-            _docker_version_command(docker),
+            command,
             capture_output=True,
             text=True,
             check=False,
-            timeout=15,
+            timeout=timeout,
         )
     except subprocess.TimeoutExpired:
         return False
     return result.returncode == 0
+
+
+def _wsl_docker_cli_available(wsl: str, distro: str) -> bool:
+    """Return whether ``distro`` exposes a Docker CLI, without probing its daemon."""
+    return _command_succeeds([wsl, "-d", distro, "--", "docker", "--version"])
 
 
 def _docker_cli() -> DockerCli:
@@ -105,10 +111,8 @@ def _docker_cli() -> DockerCli:
     if os.name == "nt":
         wsl = shutil.which("wsl")
         distro = os.environ.get("CADRUMO_WSL_DOCKER_DISTRO", "Ubuntu")
-        if wsl is not None:
-            candidate = DockerCli((wsl, "-d", distro, "--", "docker"), f"wsl:{distro}", distro)
-            if _docker_responds(candidate):
-                return candidate
+        if wsl is not None and _wsl_docker_cli_available(wsl, distro):
+            return DockerCli((wsl, "-d", distro, "--", "docker"), f"wsl:{distro}", distro)
         docker = _executable("docker")
         return DockerCli((docker,), "windows")
     return DockerCli((_executable("docker"),), "native")
@@ -118,13 +122,21 @@ def _preflight_docker(docker: DockerCli) -> None:
     """Fail quickly when Docker is installed but the daemon is not answering."""
     command = _docker_version_command(docker)
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=False, timeout=15)
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=_DOCKER_COMMAND_TIMEOUT_SECONDS,
+        )
     except subprocess.TimeoutExpired as exc:
         stdout = exc.stdout or ""
         stderr = exc.stderr or ""
         sys.stdout.write(stdout)
         sys.stderr.write(stderr)
-        raise SystemExit(f"docker daemon did not answer within 15 seconds via {docker.label}") from exc
+        raise SystemExit(
+            f"docker daemon did not answer within {_DOCKER_COMMAND_TIMEOUT_SECONDS} seconds via {docker.label}"
+        ) from exc
     if result.returncode != 0:
         sys.stdout.write(result.stdout)
         sys.stderr.write(result.stderr)
