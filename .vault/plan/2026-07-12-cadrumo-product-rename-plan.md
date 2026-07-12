@@ -76,7 +76,7 @@ Move the import root and every executable dynamic reference without aliases.
 - [x] `W02.P03.S12` - Retarget registry callable strings while retaining authority taxonomy paths; `src/cadrumo/_data/registry TOML callable targets`.
 - [x] `W02.P03.S13` - Retarget dynamic imports to public Cadrumo facades; `src/cadrumo dynamic import sites`.
 - [x] `W02.P03.S14` - Retarget error-registration module paths and structural assertions; `src/cadrumo/core/errors registries`.
-- [ ] `W02.P03.S15` - Preserve the external authority adapter name under the new product root; `src/cadrumo/adapters/outbound/aeat`.
+- [x] `W02.P03.S15` - Preserve the external authority adapter name under the new product root; `src/cadrumo/adapters/outbound/aeat`.
 - [ ] `W02.P03.S16` - Preserve the authority registry taxonomy under the new product root; `src/cadrumo/_data/registry/aeat`.
 
 ### Phase `W02.P04` - cut product configuration and state
