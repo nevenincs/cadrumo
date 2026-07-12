@@ -80,9 +80,15 @@ dependency-provisioning pattern (`OFX_EXTRA` in the core optional-extras
 registry, lazy guarded import in the OFX provider, OFX-looking sources refuse
 with the `pip install aeat-cli[ofx]` hint while non-OFX detection candidates
 degrade to a probe miss; real-import-blocker degradation tests). The CORE
-dependency closure is now free of strong copyleft. Remaining deferred
-follow-ups: ship the `NOTICE` file inside the wheel/sdist validated against
-the packaging parity gates; optionally register "Cadrumo" as a trademark.
+dependency closure is now free of strong copyleft. Also landed: the Apache
+4(d) attribution chain now ships inside every published artifact — explicit
+PEP 639 `license-files = ["LICENSE", "NOTICE"]` on the root distribution and
+on both corpus companions (each companion gained its own LICENSE copy and a
+NOTICE that scopes Apache-2.0 to packaging/derived works, never the official
+AEAT/BOE documents), verified in all six built artifacts
+(`dist-info/licenses/` + `License-File` metadata in the wheels, sdist roots)
+and pinned by the `test_license_attribution_chain` packaging gate. Remaining
+deferred follow-up: optionally register "Cadrumo" as a trademark.
 
 ## Rationale
 
