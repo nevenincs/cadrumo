@@ -75,14 +75,15 @@ aeat --format json config check
 
 ## Install optional integrations
 
-The core install is lean. Google export, the live AEAT browser, and the
-Anthropic-API provider are optional package extras. Install only the ones you
-need:
+The core install is lean. Google export, the live AEAT browser, the
+Anthropic-API provider, and OFX/QFX bank-statement import are optional package
+extras. Install only the ones you need:
 
 ```bash
 pip install "aeat-cli[google]"
 pip install "aeat-cli[browser]"
 pip install "aeat-cli[anthropic]"
+pip install "aeat-cli[ofx]"
 pip install "aeat-cli[all]"
 ```
 

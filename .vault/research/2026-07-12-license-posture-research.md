@@ -140,10 +140,10 @@ chain) rather than a licence change.
 
 ## Residual items
 
-1. Gate `ofxtools` behind an `ofx` extra with the established
-   graceful-degradation refusal, keeping the CORE dependency closure free of
-   strong copyleft (needs its own plan: provider registry gating, install
-   hint, capability report, tests).
+1. DONE (same day): `ofxtools` gated behind the `ofx` extra — core registry
+   entry, lazy guarded import, instructive refusal for OFX-looking sources,
+   probe-miss degradation for auto-detection, dev-group pin for the test
+   environment, and real-import-blocker degradation tests.
 2. Ship the root `NOTICE` file inside the wheel/sdist (Apache-2.0 §4(d)
    applies to redistributors of the work; carrying NOTICE in the artifact is
    the clean discharge). Needs a hatch build-config change validated against

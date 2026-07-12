@@ -74,10 +74,15 @@ core dependencies and the deptry ignore, lockfile regenerated (dropping
 MPL-2.0 `pikepdf`/`certifi`) and a corpus public-sector-reuse section added
 to `THIRD_PARTY_NOTICES.md`; the same reuse scoping added to both data
 companions' READMEs; the operator contact `hello@neve.md` published in
-`PRIVACY.md` and the site legal page (EN/ES/CA). Deferred follow-ups: gate
-`ofxtools` behind an `ofx` capability extra per the dependency-provisioning
-pattern; ship the `NOTICE` file inside the wheel/sdist validated against the
-packaging parity gates; optionally register "Cadrumo" as a trademark.
+`PRIVACY.md` and the site legal page (EN/ES/CA). Landed as an immediate
+follow-up: `ofxtools` gated behind the `ofx` capability extra per the
+dependency-provisioning pattern (`OFX_EXTRA` in the core optional-extras
+registry, lazy guarded import in the OFX provider, OFX-looking sources refuse
+with the `pip install aeat-cli[ofx]` hint while non-OFX detection candidates
+degrade to a probe miss; real-import-blocker degradation tests). The CORE
+dependency closure is now free of strong copyleft. Remaining deferred
+follow-ups: ship the `NOTICE` file inside the wheel/sdist validated against
+the packaging parity gates; optionally register "Cadrumo" as a trademark.
 
 ## Rationale
 
@@ -92,9 +97,10 @@ all cheaper to fix than a licence migration.
 
 ## Consequences
 
-- The core dependency closure is copyleft-free except `ofxtools`; until the
-  extra-gating lands, third parties building combined artifacts must treat
-  the combination as GPL-3.0-governed — now disclosed rather than latent.
+- The core dependency closure is copyleft-free; only installations that opt
+  into the `ofx` extra pull GPL-3.0 `ofxtools`, and third parties bundling
+  that extra into combined artifacts must treat the combination as
+  GPL-3.0-governed — disclosed rather than latent.
 - The Apache-2.0 stamp on the data companions is scoped honestly, removing
   an over-claim a rights-holder could challenge.
 - Retaining Apache-2.0 keeps the plugin/marketplace channel friction-free

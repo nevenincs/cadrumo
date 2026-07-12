@@ -44,15 +44,17 @@ dependencies are resolved and installed separately by the user's installer
 from PyPI under their own licences. Two declared dependencies carry
 non-permissive licences and are disclosed here explicitly:
 
-- **ofxtools** — GPL-3.0-only (https://github.com/csingley/ofxtools). A core
-  dependency backing the OFX/QFX bank-statement import provider. Apache-2.0
-  is one-way compatible with GPL-3.0, so a combined installation is lawful;
-  however, anyone who redistributes `aeat-cli` TOGETHER WITH its installed
-  dependencies (a container image, a frozen binary, a vendored bundle) must
-  comply with the GPL-3.0 for the combined work. This project itself ships no
-  such combined artifact: the PyPI wheels contain no third-party code, and
-  the MCP bundle launches the CLI via `uvx`, resolving dependencies on the
-  user's machine.
+- **ofxtools** — GPL-3.0-only (https://github.com/csingley/ofxtools). An
+  OPTIONAL dependency, gated behind the `ofx` extra
+  (`pip install aeat-cli[ofx]`), backing the OFX/QFX bank-statement import
+  provider; a bare-core install carries no strong-copyleft dependency at all.
+  Apache-2.0 is one-way compatible with GPL-3.0, so a combined installation
+  is lawful; however, anyone who redistributes `aeat-cli` TOGETHER WITH the
+  installed `ofx` extra (a container image, a frozen binary, a vendored
+  bundle) must comply with the GPL-3.0 for the combined work. This project
+  itself ships no such combined artifact: the PyPI wheels contain no
+  third-party code, and the MCP bundle launches the CLI via `uvx`, resolving
+  dependencies on the user's machine.
 - **pikepdf** — MPL-2.0 (https://github.com/pikepdf/pikepdf), used for PDF
   sanitisation. MPL-2.0 is a file-level licence; it imposes obligations only
   on modified MPL-covered files, none of which this project modifies or

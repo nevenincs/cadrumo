@@ -42,9 +42,6 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
-  # Financial ingest. ofxtools is the maintained, strict OFX-spec parser
-  # (ships py.typed) that replaces the prior unmaintained OFX library.
-  "ofxtools>=1.1,<2",
   "openpyxl>=3.1.5,<4",
   # PDF parsing for justificantes.
   "pdfplumber>=0.11.9,<1",
@@ -129,6 +126,14 @@ browser = [
 anthropic = [
   "anthropic>=0.74.1,<1",
 ]
+# OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
+# parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
+# keeps the CORE dependency closure free of strong copyleft (license-posture
+# ADR). Lazily imported behind `require_optional_extra(OFX_EXTRA)`; an OFX
+# source without the extra refuses with the `pip install aeat-cli[ofx]` hint.
+ofx = [
+  "ofxtools>=1.1,<2",
+]
 # Operator agent-harness runtime. The harness operating layer (rules, personas,
 # skills) ships as reviewed product data in the CORE wheel under
 # `src/aeat/_data/agent/` and is read with no extra dependency. This extra gates
@@ -183,6 +188,7 @@ all = [
   "aeat-cli[google]",
   "aeat-cli[browser]",
   "aeat-cli[anthropic]",
+  "aeat-cli[ofx]",
   "aeat-cli[agent]",
   "aeat-cli[search]",
 ]
@@ -280,6 +286,7 @@ dev = [
   "playwright>=1.58.0",
   "playwright-stealth>=2.0.3,<3",
   "anthropic>=0.74.1,<1",
+  "ofxtools>=1.1,<2",
   "prek>=0.2.0",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
