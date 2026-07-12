@@ -153,7 +153,7 @@ Change plugin generation authorities before regenerating and validating marketpl
 - [x] `W04.P09.S48` - Rename plugin identity, distribution pin, command, source path, metadata, and environment interpolation; `src/cadrumo/agent/_workspace.py`.
 - [x] `W04.P09.S49` - Update generator tests for plugins/cadrumo and pinned Cadrumo launcher output; `src/cadrumo/agent/tests`.
 - [x] `W04.P09.S50` - Regenerate the marketplace manifest and Cadrumo plugin subtree from the changed authority; `packaging/marketplace generated output`.
-- [ ] `W04.P09.S51` - Validate the regenerated marketplace and plugin with the live strict Claude validator; `packaging/marketplace validation evidence`.
+- [x] `W04.P09.S51` - Validate the regenerated marketplace and plugin with the live strict Claude validator; `packaging/marketplace validation evidence`.
 
 ### Phase `W04.P10` - rename or retire MCPB explicitly
 
