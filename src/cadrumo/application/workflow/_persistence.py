@@ -262,13 +262,13 @@ class WorkflowStateRepository:
     def reset_workflow_state(
         self,
         *,
-        actor: str = "aeat.application.workflow",
+        actor: str = "cadrumo.application.workflow",
         source: str = "aeat config repair reset-progress",
         reason_class: str | None = None,
     ) -> WorkflowStateResetFingerprint:
         """Delete the workflow-state envelope and emit a reset event.
 
-        The mutation is scoped to namespace ``aeat.workflow`` / key
+        The mutation is scoped to namespace ``cadrumo.workflow`` / key
         ``state``; no other namespace or row is touched. The
         ``workflow_state.reset`` bucket event is appended BEFORE the
         secure-object row is deleted so the worst-case failure mode
@@ -395,7 +395,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
 
 def reset_workflow_state(
     *,
-    actor: str = "aeat.application.workflow",
+    actor: str = "cadrumo.application.workflow",
     source: str = "aeat config repair reset-progress",
     reason_class: str | None = None,
 ) -> WorkflowStateResetFingerprint:

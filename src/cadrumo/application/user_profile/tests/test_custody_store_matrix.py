@@ -873,7 +873,7 @@ def _seed_filed_artefact(bucket_id: str) -> None:
 
 def _verify_filed_artefact(bucket_id: str) -> None:
     repo = secure_object_repository_for_active_bucket()
-    assert repo.list_keys("aeat.outbound.aeat.sede.filed_declaration.artefacts"), "filed declaration artefact lost"
+    assert repo.list_keys("cadrumo.outbound.aeat.sede.filed_declaration.artefacts"), "filed declaration artefact lost"
 
 
 def _seed_iva_wallet_observation(bucket_id: str) -> None:
@@ -905,13 +905,13 @@ def _verify_iva_wallet_observation(bucket_id: str) -> None:
 
 
 _CASES: tuple[StoreCase, ...] = (
-    StoreCase("aeat.ledger.classification.rules", _seed_classification_rule, _verify_classification_rule),
-    StoreCase("aeat.auth.apoderado", _seed_apoderado, _verify_apoderado),
+    StoreCase("cadrumo.ledger.classification.rules", _seed_classification_rule, _verify_classification_rule),
+    StoreCase("cadrumo.auth.apoderado", _seed_apoderado, _verify_apoderado),
     StoreCase("cadrumo.domain.filing.amendments", _seed_amendment, _verify_amendment),
-    StoreCase("aeat.persistence.profile.inventory", _seed_inventory_ledger, _verify_inventory_ledger),
-    StoreCase("aeat.persistence.profile.assets", _seed_assets_ledger, _verify_assets_ledger),
+    StoreCase("cadrumo.persistence.profile.inventory", _seed_inventory_ledger, _verify_inventory_ledger),
+    StoreCase("cadrumo.persistence.profile.assets", _seed_assets_ledger, _verify_assets_ledger),
     StoreCase(
-        "aeat.persistence.profile.assets.amortization",
+        "cadrumo.persistence.profile.assets.amortization",
         _seed_amortization_ledger,
         _verify_amortization_ledger,
     ),
@@ -919,9 +919,9 @@ _CASES: tuple[StoreCase, ...] = (
     StoreCase("cadrumo.application.modelo.m036_declaration", _seed_m036, _verify_m036),
     StoreCase("cadrumo.application.live.verify_observations", _seed_verify_observation, _verify_verify_observation),
     StoreCase("cadrumo.application.user_profile.snapshot", _seed_user_profile_snapshot, _verify_user_profile_snapshot),
-    StoreCase("aeat.calculations.observations", _seed_observations, _verify_observations),
-    StoreCase("aeat.retenciones.observations", _seed_retencion, _verify_retencion),
-    StoreCase("aeat.withholding.observations", _seed_withholding, _verify_withholding),
+    StoreCase("cadrumo.calculations.observations", _seed_observations, _verify_observations),
+    StoreCase("cadrumo.retenciones.observations", _seed_retencion, _verify_retencion),
+    StoreCase("cadrumo.withholding.observations", _seed_withholding, _verify_withholding),
     StoreCase(
         "cadrumo.application.ledger.purchase_invoice_evidence",
         _seed_purchase_invoice_evidence,
@@ -933,30 +933,30 @@ _CASES: tuple[StoreCase, ...] = (
         _verify_business_operation_invoice,
     ),
     StoreCase(
-        "aeat.outbound.aeat.sede.filed_declaration.observations",
+        "cadrumo.outbound.aeat.sede.filed_declaration.observations",
         _seed_filed_observation,
         _verify_filed_observation,
     ),
     StoreCase(
-        "aeat.outbound.aeat.sede.filed_declaration.artefacts",
+        "cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
         _seed_filed_artefact,
         _verify_filed_artefact,
     ),
     StoreCase(
-        "aeat.outbound.aeat.sede.iva_compensation_wallet.observations",
+        "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations",
         _seed_iva_wallet_observation,
         _verify_iva_wallet_observation,
     ),
     StoreCase("cadrumo.domain.submission.records", _seed_submission, _verify_submission),
     StoreCase("cadrumo.application.evidence.bundles", _seed_evidence_bundle, _verify_evidence_bundle),
-    StoreCase("aeat.calculations.iva_compensation.history", _seed_iva_compensation, _verify_iva_compensation),
+    StoreCase("cadrumo.calculations.iva_compensation.history", _seed_iva_compensation, _verify_iva_compensation),
     StoreCase("cadrumo.application.filing.history", _seed_filing_history, _verify_filing_history),
     StoreCase("cadrumo.domain.filing.drafts", _seed_draft, _verify_draft),
     StoreCase("cadrumo.domain.usage_ratios", _seed_usage_ratios, _verify_usage_ratios),
     StoreCase("cadrumo.domain.invoices", _seed_invoice_catalogue, _verify_invoice_catalogue),
     StoreCase("cadrumo.domain.modelos.verification_reports", _seed_verification_reports, _verify_verification_reports),
     StoreCase(
-        "aeat.calculations.iva_wallet.reconciliation_decisions",
+        "cadrumo.calculations.iva_wallet.reconciliation_decisions",
         _seed_iva_wallet_decision,
         _verify_iva_wallet_decision,
     ),
@@ -1028,7 +1028,7 @@ def test_every_carried_store_round_trips_through_recovery(
     from ....core.classification import SensitivityClass
 
     source_runtime.repository.save(
-        namespace="aeat.workflow",
+        namespace="cadrumo.workflow",
         object_key="state",
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,

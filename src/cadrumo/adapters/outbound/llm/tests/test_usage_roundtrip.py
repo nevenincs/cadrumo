@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted ``UsageRecorder`` boundary.
 
 ``UsageRecorder`` persists :class:`UsageRecord` rows under the
-``aeat.outbound.llm.usage`` namespace at
+``cadrumo.outbound.llm.usage`` namespace at
 ``SensitivityClass.DIAGNOSTIC``.
 
 Anti-tautology: writes two distinct records on different dates with

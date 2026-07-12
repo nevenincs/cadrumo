@@ -1,7 +1,7 @@
 """Strict roundtrip across the capital-goods IVA regularización register repo.
 
 Persists :class:`BienesInversionIvaRegister` under
-``aeat.persistence.profile.bienes_inversion`` at ``SensitivityClass.FINANCIAL``.
+``cadrumo.persistence.profile.bienes_inversion`` at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates every defaultable field on
 :class:`BienInversionIvaRecord` with non-default values (a non-default

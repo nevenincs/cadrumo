@@ -542,7 +542,7 @@ class Settings(AeatIntegrationSettings):
     )
     aeat_certificate_verify_url: str = Field(
         default_factory=_default_aeat_sede_origin_with_slash,
-        description="Target URL for aeat.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
+        description="Target URL for cadrumo.adapters.outbound.aeat.auth.verify_handshake() mTLS smoke test",
     )
     aeat_auth_timeout_ms: int = Field(
         default=30_000,

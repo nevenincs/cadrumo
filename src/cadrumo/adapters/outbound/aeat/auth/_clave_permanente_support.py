@@ -46,7 +46,7 @@ from ._errors import AuthConfigurationError, AuthError
 if TYPE_CHECKING:
     from .....core.config import Settings
 
-DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_permanente.diagnostics"
+DIAGNOSTIC_NAMESPACE: Final[str] = "cadrumo.outbound.aeat.auth.clave_permanente.diagnostics"
 
 
 def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:

@@ -95,11 +95,11 @@ if TYPE_CHECKING:
 #: they are not double-carried.
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
     {
-        "aeat.application.user_profile.value",
-        "aeat.domain.transactions.bucket",
-        "aeat.domain.modelos.work_units",
-        "aeat.domain.modelos.calculation_revisions",
-        "aeat.domain.modelos.filing_records",
+        "cadrumo.application.user_profile.value",
+        "cadrumo.domain.transactions.bucket",
+        "cadrumo.domain.modelos.work_units",
+        "cadrumo.domain.modelos.calculation_revisions",
+        "cadrumo.domain.modelos.filing_records",
     },
 )
 
@@ -187,38 +187,38 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers: dict[str, NaturalKeyResolver] = {}
 
     # --- Attachments (evidence bytes + manifests) ----------------------------
-    resolvers["aeat.domain.attachments.blobs"] = _blob_resolver
+    resolvers["cadrumo.domain.attachments.blobs"] = _blob_resolver
 
     # The manifest store strips ``attachment_id`` from the persisted payload (it is
     # the object key, re-injected on load) so ``Envelope[Attachment]`` will not parse;
     # the natural key is recoverable from the retained content-addressed ``sha256``,
     # which the model enforces to equal ``attachment_id``.
-    resolvers["aeat.domain.attachments.manifests"] = _json_field_resolver("sha256")
+    resolvers["cadrumo.domain.attachments.manifests"] = _json_field_resolver("sha256")
 
     # --- Cross-period calculation inputs (SecureBoundRepository) --------------
     def _observations_repo() -> CalculationObservationRepository:
         return CalculationObservationRepository()
 
-    resolvers["aeat.calculations.observations"] = _bound_resolver(_observations_repo)
+    resolvers["cadrumo.calculations.observations"] = _bound_resolver(_observations_repo)
 
     def _iva_history_repo() -> IvaCompensationHistoryRepository:
         return IvaCompensationHistoryRepository()
 
-    resolvers["aeat.calculations.iva_compensation.history"] = _bound_resolver(_iva_history_repo)
+    resolvers["cadrumo.calculations.iva_compensation.history"] = _bound_resolver(_iva_history_repo)
 
     def _iva_wallet_repo() -> IvaWalletDecisionRepository:
         return IvaWalletDecisionRepository()
 
-    resolvers["aeat.calculations.iva_wallet.reconciliation_decisions"] = _bound_resolver(_iva_wallet_repo)
+    resolvers["cadrumo.calculations.iva_wallet.reconciliation_decisions"] = _bound_resolver(_iva_wallet_repo)
 
     def _iva_wallet_event_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         payload = _envelope_payload(record, IvaWalletDecisionEnvelopePayload)
         return iva_wallet_decision_event_key(payload.decision)
 
-    resolvers["aeat.calculations.iva_wallet.reconciliation_decision_events"] = _iva_wallet_event_key
+    resolvers["cadrumo.calculations.iva_wallet.reconciliation_decision_events"] = _iva_wallet_event_key
 
     # --- Audit trail ---------------------------------------------------------
-    resolvers["aeat.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
+    resolvers["cadrumo.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
 
     # --- Live captures (SecureSnapshotRepository) ----------------------------
     def _justificante_payload() -> type[JustificanteCaptureSnapshot]:
@@ -227,7 +227,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _justificante_key(bucket_id: str, snapshot_id: str) -> str:
         return justificante_capture_snapshot_object_key(bucket_id, snapshot_id)
 
-    resolvers["aeat.application.live.justificante_capture_snapshot"] = _snapshot_resolver(
+    resolvers["cadrumo.application.live.justificante_capture_snapshot"] = _snapshot_resolver(
         _justificante_payload,
         _justificante_key,
     )
@@ -238,7 +238,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _notifications_key(bucket_id: str, snapshot_id: str) -> str:
         return notifications_snapshot_object_key(bucket_id, snapshot_id)
 
-    resolvers["aeat.application.live.notifications_snapshot"] = _snapshot_resolver(
+    resolvers["cadrumo.application.live.notifications_snapshot"] = _snapshot_resolver(
         _notifications_payload,
         _notifications_key,
     )
@@ -249,7 +249,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _expedientes_key(bucket_id: str, snapshot_id: str) -> str:
         return expedientes_snapshot_object_key(bucket_id, snapshot_id)
 
-    resolvers["aeat.application.live.expedientes_snapshot"] = _snapshot_resolver(
+    resolvers["cadrumo.application.live.expedientes_snapshot"] = _snapshot_resolver(
         _expedientes_payload,
         _expedientes_key,
     )
@@ -258,66 +258,66 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _justificante_metadata_repo() -> JustificanteRepository:
         return JustificanteRepository()
 
-    resolvers["aeat.domain.justificante.metadata"] = _bound_resolver(_justificante_metadata_repo)
+    resolvers["cadrumo.domain.justificante.metadata"] = _bound_resolver(_justificante_metadata_repo)
 
     # --- Withholding / retencion observations (SecureBoundRepository) ---------
     def _retencion_repo() -> RetencionObservationRepository:
         return RetencionObservationRepository()
 
-    resolvers["aeat.retenciones.observations"] = _bound_resolver(_retencion_repo)
+    resolvers["cadrumo.retenciones.observations"] = _bound_resolver(_retencion_repo)
 
     def _percepciones_repo() -> PercepcionObservationRepository:
         return PercepcionObservationRepository()
 
-    resolvers["aeat.withholding.observations"] = _bound_resolver(_percepciones_repo)
+    resolvers["cadrumo.withholding.observations"] = _bound_resolver(_percepciones_repo)
 
     # --- Filing/ledger/submission state (SecureBoundRepository) ---------------
     def _filing_history_repo() -> ModeloHistoryRepository:
         return ModeloHistoryRepository()
 
-    resolvers["aeat.application.filing.history"] = _bound_resolver(_filing_history_repo)
+    resolvers["cadrumo.application.filing.history"] = _bound_resolver(_filing_history_repo)
 
     def _iva_remote_state_repo() -> IvaRemoteStateAcquisitionManifestRepository:
         return IvaRemoteStateAcquisitionManifestRepository()
 
-    resolvers["aeat.application.live.iva_remote_state_acquisitions"] = _bound_resolver(_iva_remote_state_repo)
+    resolvers["cadrumo.application.live.iva_remote_state_acquisitions"] = _bound_resolver(_iva_remote_state_repo)
 
     def _evidence_bundle_repo() -> EvidenceBundleRepository:
         return EvidenceBundleRepository()
 
-    resolvers["aeat.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
+    resolvers["cadrumo.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
 
     def _purchase_invoice_evidence_repo() -> PurchaseInvoiceEvidenceRepository:
         return PurchaseInvoiceEvidenceRepository()
 
-    resolvers["aeat.application.ledger.purchase_invoice_evidence"] = _bound_resolver(_purchase_invoice_evidence_repo)
+    resolvers["cadrumo.application.ledger.purchase_invoice_evidence"] = _bound_resolver(_purchase_invoice_evidence_repo)
 
     def _business_operation_invoice_repo() -> BusinessOperationInvoiceRepository:
         return BusinessOperationInvoiceRepository()
 
-    resolvers["aeat.application.ledger.business_operation_invoices"] = _bound_resolver(_business_operation_invoice_repo)
+    resolvers["cadrumo.application.ledger.business_operation_invoices"] = _bound_resolver(_business_operation_invoice_repo)
 
     def _classification_rule_repo() -> LedgerClassificationRuleRepository:
         return LedgerClassificationRuleRepository()
 
-    resolvers["aeat.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
+    resolvers["cadrumo.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
 
     def _submission_repo() -> SubmissionRepository:
         return SubmissionRepository()
 
-    resolvers["aeat.domain.submission.records"] = _bound_resolver(_submission_repo)
+    resolvers["cadrumo.domain.submission.records"] = _bound_resolver(_submission_repo)
 
     def _draft_repo() -> ModeloDraftRepository:
         return ModeloDraftRepository()
 
-    resolvers["aeat.domain.filing.drafts"] = _bound_resolver(_draft_repo)
+    resolvers["cadrumo.domain.filing.drafts"] = _bound_resolver(_draft_repo)
 
     # --- Filing amendments (union payload; key is a top-level field) ----------
-    resolvers["aeat.domain.filing.amendments"] = _json_field_resolver("amendment_id")
+    resolvers["cadrumo.domain.filing.amendments"] = _json_field_resolver("amendment_id")
 
     # --- Per-bucket single-document stores -----------------------------------
-    resolvers["aeat.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
-    resolvers["aeat.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
+    resolvers["cadrumo.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
+    resolvers["cadrumo.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
 
     # --- Live snapshot captures (SecureSnapshotRepository) --------------------
     def _borrador_payload() -> type[Borrador100Snapshot]:
@@ -326,7 +326,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _borrador_key(bucket_id: str, snapshot_id: str) -> str:
         return borrador_100_snapshot_object_key(bucket_id, snapshot_id)
 
-    resolvers["aeat.application.live.borrador_100_snapshot"] = _snapshot_resolver(_borrador_payload, _borrador_key)
+    resolvers["cadrumo.application.live.borrador_100_snapshot"] = _snapshot_resolver(_borrador_payload, _borrador_key)
 
     def _m036_payload() -> type[M036DeclarationResult]:
         return M036DeclarationResult
@@ -334,7 +334,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _m036_key(bucket_id: str, declaration_id: str) -> str:
         return m036_declaration_object_key(bucket_id, declaration_id)
 
-    resolvers["aeat.application.modelo.m036_declaration"] = _snapshot_resolver(
+    resolvers["cadrumo.application.modelo.m036_declaration"] = _snapshot_resolver(
         _m036_payload,
         _m036_key,
         snapshot_id_attr="declaration_id",
@@ -346,7 +346,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _verify_key(bucket_id: str, observation_id: str) -> str:
         return verify_observation_object_key(bucket_id, observation_id)
 
-    resolvers["aeat.application.live.verify_observations"] = _snapshot_resolver(
+    resolvers["cadrumo.application.live.verify_observations"] = _snapshot_resolver(
         _verify_payload,
         _verify_key,
         snapshot_id_attr="observation_id",
@@ -358,13 +358,13 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _profile_snapshot_key(bucket_id: str, snapshot_id: str) -> str:
         return user_profile_snapshot_object_key(bucket_id, snapshot_id)
 
-    resolvers["aeat.application.user_profile.snapshot"] = _snapshot_resolver(
+    resolvers["cadrumo.application.user_profile.snapshot"] = _snapshot_resolver(
         _profile_snapshot_payload,
         _profile_snapshot_key,
     )
 
     # --- AEAT-outbound filed-declaration state -------------------------------
-    resolvers["aeat.outbound.aeat.sede.filed_declaration.artefacts"] = _sha256_payload_resolver
+    resolvers["cadrumo.outbound.aeat.sede.filed_declaration.artefacts"] = _sha256_payload_resolver
 
     def _filed_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         obs = _envelope_payload(record, FiledDeclaracionObservation)
@@ -375,7 +375,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
             obs.expediente_id,
         )
 
-    resolvers["aeat.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
+    resolvers["cadrumo.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
 
     def _iva_wallet_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         obs = _envelope_payload(record, IvaCompensationWalletObservation)
@@ -386,7 +386,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
             obs.captured_at.isoformat(),
         )
 
-    resolvers["aeat.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
+    resolvers["cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
 
     return resolvers
 

@@ -30,7 +30,7 @@ from ._models import BucketTransactionRef
 # namespace / schema-version constants naming the persisted-envelope contract;
 # the concrete repository redeclares them adapter-side.
 _TX_CATALOGUE_VERSION = 1
-TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
+TX_BUCKET_NAMESPACE = "cadrumo.domain.transactions.bucket"
 
 
 def transaction_index_object_key(bucket_id: str) -> str:

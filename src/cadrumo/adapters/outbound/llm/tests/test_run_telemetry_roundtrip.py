@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted ``LLMRunTelemetryRecorder`` boundary.
 
 ``LLMRunTelemetryRecorder`` persists :class:`LLMRunRecord` rows under the
-``aeat.outbound.llm.run_telemetry`` namespace at
+``cadrumo.outbound.llm.run_telemetry`` namespace at
 ``SensitivityClass.DIAGNOSTIC``, mirroring ``UsageRecorder``'s persistence
 shape.
 

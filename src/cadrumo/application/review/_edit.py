@@ -141,8 +141,8 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
 _INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = numeric_iva_rate_percentages()
 """Closed set of integer-percentage IVA rates the CLI accepts on
 ``--set iva.rate``.  Derived structurally from
-:func:`aeat.domain.invoices.numeric_iva_rate_percentages` so it tracks
-:class:`aeat.domain.invoices.IvaRate` membership (``RATE_0`` / ``RATE_4``
+:func:`cadrumo.domain.invoices.numeric_iva_rate_percentages` so it tracks
+:class:`cadrumo.domain.invoices.IvaRate` membership (``RATE_0`` / ``RATE_4``
 / ``RATE_10`` / ``RATE_21``) without re-listing literals here.  The
 underlying substrate at :func:`aeat.domain.iva.lookup_rate` is the
 authority for the fractional percentages those slots resolve to at a date.

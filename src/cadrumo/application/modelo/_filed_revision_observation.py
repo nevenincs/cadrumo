@@ -73,7 +73,7 @@ APP_FILING_SOURCE_KIND: Final = "app_filing"
 """Non-official ``source_kind`` stamped on locally-filed observations.
 
 Deliberately NOT a member of
-``aeat.application.calculations._cross_period_clean_state._OFFICIAL_SOURCE_KINDS``:
+``cadrumo.application.calculations._cross_period_clean_state._OFFICIAL_SOURCE_KINDS``:
 a locally-filed value is not external AEAT evidence and must never satisfy the
 cross-period clean-state filing gate. See ADR
 ``2026-06-09-modelo-iva-routing-carry`` ruling D1.

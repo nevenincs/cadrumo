@@ -236,11 +236,11 @@ def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> 
 #: full-custody coverage assertion even though the generic carry skips them.
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
     {
-        "aeat.application.user_profile.value",
-        "aeat.domain.transactions.bucket",
-        "aeat.domain.modelos.work_units",
-        "aeat.domain.modelos.calculation_revisions",
-        "aeat.domain.modelos.filing_records",
+        "cadrumo.application.user_profile.value",
+        "cadrumo.domain.transactions.bucket",
+        "cadrumo.domain.modelos.work_units",
+        "cadrumo.domain.modelos.calculation_revisions",
+        "cadrumo.domain.modelos.filing_records",
     },
 )
 

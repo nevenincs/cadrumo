@@ -252,7 +252,7 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
 
 def _store_corrupt_local_filing_evidence() -> None:
     secure_object_repository_for_active_bucket().save(
-        namespace="aeat.outbound.aeat.sede.filed_declaration.observations",
+        namespace="cadrumo.outbound.aeat.sede.filed_declaration.observations",
         object_key="corrupt-observation",
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,

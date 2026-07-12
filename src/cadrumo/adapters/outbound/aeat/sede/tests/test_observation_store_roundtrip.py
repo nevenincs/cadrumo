@@ -1,9 +1,9 @@
 """Strict roundtrip across the ``FiledDeclaracionObservationStore`` boundary.
 
 Persists :class:`FiledDeclaracionObservation` envelopes under the
-``aeat.outbound.aeat.sede.filed_declaration.observations`` namespace and
+``cadrumo.outbound.aeat.sede.filed_declaration.observations`` namespace and
 raw artefact bodies under
-``aeat.outbound.aeat.sede.filed_declaration.artefacts``. Both sinks
+``cadrumo.outbound.aeat.sede.filed_declaration.artefacts``. Both sinks
 operate at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates non-default values on every

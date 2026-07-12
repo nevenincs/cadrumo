@@ -151,7 +151,7 @@ def test_config_repair_integrity_objects_cli_is_metadata_only_for_unreadable_row
     _create_operator_profile()
     active_bucket_id = resolve_active_bucket_id()
     assert active_bucket_id is not None
-    namespace = "aeat.outbound.aeat.sede.iva_compensation_wallet.observations"
+    namespace = "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"
     sensitive_tax_id = "12345678Z"
     sensitive_period = "2026Q1"
     sensitive_payload = b"wallet-balance=999999; taxpayer=12345678Z"
@@ -192,7 +192,7 @@ def test_config_repair_quarantine_moves_unreadable_rows_without_disclosing_paylo
     _create_operator_profile()
     active_bucket_id = resolve_active_bucket_id()
     assert active_bucket_id is not None
-    namespace = "aeat.outbound.aeat.sede.iva_compensation_wallet.observations"
+    namespace = "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"
     _write_row_with_wrong_bucket_key(
         key=b"\xb2" * 32,
         namespace=namespace,
@@ -223,7 +223,7 @@ def test_config_repair_quarantine_dry_run_is_metadata_only_and_non_mutating() ->
     _create_operator_profile()
     active_bucket_id = resolve_active_bucket_id()
     assert active_bucket_id is not None
-    namespace = "aeat.outbound.aeat.sede.iva_compensation_wallet.observations"
+    namespace = "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"
     sensitive_tax_id = "12345678Z"
     sensitive_period = "2026Q1"
     _write_row_with_wrong_bucket_key(

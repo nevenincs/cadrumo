@@ -90,7 +90,7 @@ def _save_rows(namespace: str, count: int, *, tag: str) -> None:
 class TestBuildIntegrityReport:
     def test_clean_install_reports_ok(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
-            _save_rows("aeat.workflow", 5, tag="a")
+            _save_rows("cadrumo.workflow", 5, tag="a")
             _save_rows("aeat.profile.bucket", 3, tag="a")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         assert report.readable_total == 8
@@ -103,12 +103,12 @@ class TestBuildIntegrityReport:
         # Two rows written under key A become undecryptable once the
         # active master key rotates to B.
         with EphemeralMasterKeyProvider(key=_KEY_A):
-            _save_rows("aeat.workflow", 2, tag="stale")
+            _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
-            _save_rows("aeat.workflow", 5, tag="current")
+            _save_rows("cadrumo.workflow", 5, tag="current")
             _save_rows("aeat.profile.bucket", 3, tag="current")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
-        workflow = next(ns for ns in report.namespaces if ns.namespace == "aeat.workflow")
+        workflow = next(ns for ns in report.namespaces if ns.namespace == "cadrumo.workflow")
         assert workflow.readable == 5
         assert workflow.unreadable == 2
         assert report.unreadable_total == 2
@@ -117,9 +117,9 @@ class TestBuildIntegrityReport:
 
     def test_namespace_filter_restricts_scope(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
-            _save_rows("aeat.workflow", 2, tag="stale")
+            _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
-            _save_rows("aeat.workflow", 5, tag="current")
+            _save_rows("cadrumo.workflow", 5, tag="current")
             _save_rows("aeat.profile.bucket", 3, tag="current")
             report = build_repair_integrity_report(
                 namespace="aeat.profile.bucket",
@@ -140,9 +140,9 @@ class TestBuildIntegrityReport:
 class TestBuildListReport:
     def test_list_returns_all_keys_in_namespace(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
-            _save_rows("aeat.workflow", 3, tag="a")
-            report = build_repair_list_report(namespace="aeat.workflow", repository=SecureObjectRepository())
-        assert report.namespace == "aeat.workflow"
+            _save_rows("cadrumo.workflow", 3, tag="a")
+            report = build_repair_list_report(namespace="cadrumo.workflow", repository=SecureObjectRepository())
+        assert report.namespace == "cadrumo.workflow"
         assert report.rows_total == 3
         digests = tuple(row.object_key_digest for row in report.rows)
         # Natural keys are HMAC-digested at the column boundary; the
@@ -154,16 +154,16 @@ class TestBuildListReport:
     def test_list_filter_mode_reflects_flag_selection(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
             repo = SecureObjectRepository()
-            default = build_repair_list_report(namespace="aeat.workflow", repository=repo)
+            default = build_repair_list_report(namespace="cadrumo.workflow", repository=repo)
             assert default.filter_mode == "default"
             all_mode = build_repair_list_report(
-                namespace="aeat.workflow",
+                namespace="cadrumo.workflow",
                 include_all=True,
                 repository=repo,
             )
             assert all_mode.filter_mode == "all"
             unreadable_mode = build_repair_list_report(
-                namespace="aeat.workflow",
+                namespace="cadrumo.workflow",
                 only_unreadable=True,
                 repository=repo,
             )
@@ -171,12 +171,12 @@ class TestBuildListReport:
 
     def test_list_unreadable_filters_to_only_failed_decryption_rows(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):
-            _save_rows("aeat.workflow", 2, tag="stale")
+            _save_rows("cadrumo.workflow", 2, tag="stale")
         with EphemeralMasterKeyProvider(key=_KEY_B):
             repo = SecureObjectRepository()
-            _save_rows("aeat.workflow", 3, tag="current")
-            default = build_repair_list_report(namespace="aeat.workflow", repository=repo)
-            unreadable = build_repair_list_report(namespace="aeat.workflow", only_unreadable=True, repository=repo)
+            _save_rows("cadrumo.workflow", 3, tag="current")
+            default = build_repair_list_report(namespace="cadrumo.workflow", repository=repo)
+            unreadable = build_repair_list_report(namespace="cadrumo.workflow", only_unreadable=True, repository=repo)
 
         assert default.rows_total == 5
         assert default.integrity.readable == 3
@@ -201,7 +201,7 @@ class TestBuildListReport:
             )
             with suspend_active_session():
                 assert not has_active_bucket_session()
-                report = build_repair_list_report(namespace="aeat.workflow")
+                report = build_repair_list_report(namespace="cadrumo.workflow")
 
         assert report.rows_total == 1
         assert report.integrity.readable + report.integrity.unreadable == 1
@@ -212,7 +212,7 @@ class TestBuildListReport:
             pytest.raises(RepairIntegrityError) as exc_info,
         ):
             build_repair_list_report(
-                namespace="aeat.workflow",
+                namespace="cadrumo.workflow",
                 include_all=True,
                 only_unreadable=True,
             )
@@ -231,7 +231,7 @@ class TestReportInvariants:
         from pydantic import ValidationError
 
         with EphemeralMasterKeyProvider(key=_KEY_A):
-            _save_rows("aeat.workflow", 1, tag="a")
+            _save_rows("cadrumo.workflow", 1, tag="a")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         with pytest.raises(ValidationError):
             report.__setattr__("readable_total", 99)
@@ -241,7 +241,7 @@ class TestRepairRemediationDecisionRepository:
     def test_load_refuses_decision_payload_when_content_hash_does_not_match(self) -> None:
         decided_at = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
         original_id = repair_remediation_decision_id(
-            target_namespace="aeat.workflow",
+            target_namespace="cadrumo.workflow",
             target_object_key_digest="abc123",
             outcome="rebuild",
             decided_at=decided_at,
@@ -253,7 +253,7 @@ class TestRepairRemediationDecisionRepository:
         )
         tampered = RepairRemediationDecision(
             decision_id=original_id,
-            target_namespace="aeat.workflow",
+            target_namespace="cadrumo.workflow",
             target_object_key_digest="abc123",
             outcome="rebuild",
             decided_at=decided_at,

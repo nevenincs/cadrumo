@@ -50,7 +50,7 @@ class ReviewQueueRow(BaseModel):
     """Legal references (BOE permalinks or canonical IDs) justifying the finding.
 
     Populated for ``modelo_finding`` items from the underlying
-    :attr:`~aeat.domain.filing.ModeloValidationFinding.references_rules`.
+    :attr:`~cadrumo.domain.filing.ModeloValidationFinding.references_rules`.
     Empty for transaction / invoice items where the obligation is not
     directly grounded in a registry legal reference.
     """

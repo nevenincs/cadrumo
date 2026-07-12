@@ -54,7 +54,7 @@ def _ephemeral_secure_repo(
 def test_older_row_upgrades_through_registered_chain_on_read(tmp_path: Path) -> None:
     """A v1 row reads as a v2 record once the 1-to-2 upgrader is registered."""
     with _ephemeral_secure_repo(tmp_path, "lineage-upgrade.db") as (db_path, _engine, repo):
-        namespace = "aeat-test.lineage.upgrade"
+        namespace = "cadrumo-test.lineage.upgrade"
         natural_key = "record-key"
         repo.save(
             namespace=namespace,

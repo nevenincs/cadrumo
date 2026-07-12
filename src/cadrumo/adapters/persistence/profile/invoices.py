@@ -33,7 +33,7 @@ _log = get_logger(__name__)
 # namespace/version constants redeclared here (the persistence contract now lives
 # with the adapter); the string is preserved to avoid orphaning persisted envelopes
 _INVOICE_CATALOGUE_VERSION = 1
-_INVOICE_NAMESPACE = "aeat.domain.invoices"
+_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
 _INVOICE_OBJECT_KEY = "catalogue"
 
 

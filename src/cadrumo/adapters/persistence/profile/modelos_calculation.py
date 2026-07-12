@@ -54,7 +54,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 _LOGGER = get_logger(__name__)
 # namespace string preserved across rename to avoid orphaning persisted envelopes
-_CALCULATION_NAMESPACE = "aeat.domain.modelos.calculation_revisions"
+_CALCULATION_NAMESPACE = "cadrumo.domain.modelos.calculation_revisions"
 _CALCULATION_OBJECT_KEY = "catalogue"
 _CALCULATION_CATALOGUE_VERSION = 1
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"

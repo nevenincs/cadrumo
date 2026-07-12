@@ -50,7 +50,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
-_VERIFICATION_NAMESPACE = "aeat.domain.modelos.verification_reports"
+_VERIFICATION_NAMESPACE = "cadrumo.domain.modelos.verification_reports"
 _VERIFICATION_OBJECT_KEY = "catalogue"
 _VERIFICATION_CATALOGUE_VERSION = 1
 _VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report_persistence"

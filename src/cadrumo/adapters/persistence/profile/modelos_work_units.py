@@ -52,7 +52,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
-_WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
+_WORK_UNIT_NAMESPACE = "cadrumo.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
 _WORK_UNIT_CATALOGUE_VERSION = 1
 _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"
