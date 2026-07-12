@@ -160,7 +160,7 @@ Change plugin generation authorities before regenerating and validating marketpl
 Keep the secondary bundle honest under the Cadrumo identity or explicitly retire it.
 
 - [x] `W04.P10.S52` - Rename the secondary bundle manifest identity and executable; `packaging/mcpb/manifest.json`.
-- [ ] `W04.P10.S53` - Emit cadrumo.mcpb and Cadrumo diagnostics without overstating installability; `packaging/mcpb/build.py`.
+- [x] `W04.P10.S53` - Emit cadrumo.mcpb and Cadrumo diagnostics without overstating installability; `packaging/mcpb/build.py`.
 - [ ] `W04.P10.S54` - Prove manifest validation, bundle members, and honest signing behavior; `packaging/mcpb/tests/test_build.py`.
 
 ## Wave `W05` - converge developer, release, locale, and documentation surfaces
