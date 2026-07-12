@@ -75,7 +75,7 @@ def test_gemini_uses_central_endpoint_setting_and_api_key_header() -> None:
     endpoint = f"http://127.0.0.1:{server.server_port}/v1beta/models/{{model}}:generateContent"
 
     try:
-        with override_settings(aeat_llm_gemini_generate_content_template=endpoint):
+        with override_settings(cadrumo_llm_gemini_generate_content_template=endpoint):
             completion = asyncio.run(GeminiAdapter("gemini-secret", timeout_s=3).complete(_request()))
     finally:
         server.shutdown()
@@ -103,7 +103,7 @@ def test_gemini_transport_failure_raises_llm_provider_error() -> None:
     endpoint = f"http://127.0.0.1:{unused_port}/v1beta/models/{{model}}:generateContent"
 
     with (
-        override_settings(aeat_llm_gemini_generate_content_template=endpoint),
+        override_settings(cadrumo_llm_gemini_generate_content_template=endpoint),
         pytest.raises(LLMProviderError, match="Gemini connection failure"),
     ):
         asyncio.run(GeminiAdapter("gemini-secret", timeout_s=1).complete(_request()))

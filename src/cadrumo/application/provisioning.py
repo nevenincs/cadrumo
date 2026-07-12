@@ -74,7 +74,7 @@ def _ollama_tags_url(chat_url: str) -> str:
 def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     """Probe Ollama and the configured vision model, returning a :class:`DependencyStatus`.
 
-    Reads ``aeat_llm_ollama_chat_url`` and ``aeat_llm_ollama_vision_model`` from
+    Reads ``cadrumo_llm_ollama_chat_url`` and ``cadrumo_llm_ollama_vision_model`` from
     :class:`~cadrumo.core.config.Settings`, then performs a short-timeout
     ``GET /api/tags``. The probe never runs inference and returns unavailable
     when the server is unreachable (``ollama serve``) or the configured model is
@@ -84,8 +84,8 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     remediation.
     """
     resolved = settings if settings is not None else load_settings()
-    model = resolved.aeat_llm_ollama_vision_model
-    url = _ollama_tags_url(resolved.aeat_llm_ollama_chat_url)
+    model = resolved.cadrumo_llm_ollama_vision_model
+    url = _ollama_tags_url(resolved.cadrumo_llm_ollama_chat_url)
     try:
         with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
             response = client.get(url)
@@ -96,7 +96,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
             service="ollama-vision",
             available=False,
             detail=f"Ollama is not reachable at {url}",
-            remediation="start Ollama (ollama serve) and ensure it listens on aeat_llm_ollama_chat_url",
+            remediation="start Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url",
         )
     names = {str(entry.get("name", "")) for entry in payload.get("models", []) if isinstance(entry, dict)}
     # Ollama lists names with the tag (e.g. "qwen2.5vl:3b"); match the configured

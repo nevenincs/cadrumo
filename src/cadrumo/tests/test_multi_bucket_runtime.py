@@ -44,7 +44,7 @@ def test_both_bucket_directories_exist_on_disk(tmp_path: Path) -> None:
 
 
 def test_primary_is_the_active_profile_by_default(tmp_path: Path) -> None:
-    """``aeat_active_profile`` resolves to the primary on yield."""
+    """``cadrumo_active_profile`` resolves to the primary on yield."""
     with isolated_two_bucket_runtime(
         tmp_path=tmp_path,
         primary_bucket_id=_PRIMARY,

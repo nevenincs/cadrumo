@@ -13,7 +13,7 @@ verb path as the operator would type it.
 
 Membership criteria:
 
-- The verb must function correctly on a fresh ``AEAT_LOCAL_STORAGE_ROOT``
+- The verb must function correctly on a fresh ``CADRUMO_LOCAL_STORAGE_ROOT``
   with no active profile pointer and no encrypted state.
 - The verb must not perform any column-level encrypt or decrypt
   operation as a side effect of its own work.

@@ -10,7 +10,7 @@ This module is the application-side policy query, not the session opener.
 It classifies the dispatched verb path, honours bootstrap-exempt CLI
 surfaces, delegates stub-only Modelo work-create refusals to the leaf
 handler, and refuses profile-bound mutations when storage is routed to the
-root fallback database or to an explicit ``AEAT_DATABASE_URL``. A stale
+root fallback database or to an explicit ``CADRUMO_DATABASE_URL``. A stale
 settings object with a valid active-profile pointer is reclassified through
 :func:`~cadrumo.core.config.settings_for_active_profile_bucket` so the root
 callback sees the same active-bucket route the storage runtime would use.
@@ -306,8 +306,11 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
     """
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
-    if route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE and "aeat_database_url" not in resolved.model_fields_set:
-        pointer = read_pointer(resolved.aeat_local_storage_root)
+    if (
+        route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
+        and "cadrumo_database_url" not in resolved.model_fields_set
+    ):
+        pointer = read_pointer(resolved.cadrumo_local_storage_root)
         if pointer is not None:
             return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
     return route
@@ -338,7 +341,7 @@ def _delegates_to_leaf_refusal(
     if modelo_code not in STUB_ONLY_MODELOS:
         return False
     resolved = settings or load_settings()
-    return modelo_code != Modelo.M210 or not resolved.aeat_m210_engine_live
+    return modelo_code != Modelo.M210 or not resolved.cadrumo_m210_engine_live
 
 
 def _option_value(argv_tokens: Sequence[str], option: str) -> str | None:

@@ -222,7 +222,7 @@ def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() 
         counterparty_eu_member_state=EUMemberState.ES,
     )
 
-    with override_settings(aeat_output_language="hu"):
+    with override_settings(cadrumo_output_language="hu"):
         clear_output_language_cache()
         report = preflight_transaction_catalogue(
             bucket_id=_BUCKET_ID,

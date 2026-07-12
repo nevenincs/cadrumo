@@ -11,19 +11,19 @@ from contextlib import contextmanager, nullcontext
 from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
-    "aeat_local_storage_root",
-    "aeat_active_profile",
-    "aeat_secret_store_backend",
-    "aeat_secret_store_dir",
-    "aeat_secret_passphrase",
+    "cadrumo_local_storage_root",
+    "cadrumo_active_profile",
+    "cadrumo_secret_store_backend",
+    "cadrumo_secret_store_dir",
+    "cadrumo_secret_passphrase",
     "aeat_auth_provider",
     LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD,
     "aeat_certificate_path",
     "aeat_certificate_password_secret",
     "aeat_certificate_friendly_name",
     "aeat_certificate_backend",
-    "aeat_cert_warn_days",
-    "aeat_cert_critical_days",
+    "cadrumo_cert_warn_days",
+    "cadrumo_cert_critical_days",
     "aeat_clave_movil_dni_nie",
     "aeat_clave_movil_dni_fecha",
     "aeat_clave_movil_nie_soporte",
@@ -49,7 +49,7 @@ def auth_operator_settings_scope(settings: Settings | None) -> Iterator[Settings
         for field in _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS
         if field in settings.model_fields_set
     }
-    for route_field in ("aeat_local_storage_root", "aeat_active_profile"):
+    for route_field in ("cadrumo_local_storage_root", "cadrumo_active_profile"):
         if route_field not in overrides:
             overrides[route_field] = getattr(load_settings(), route_field)
     with override_settings(**overrides) as scoped:
@@ -60,10 +60,10 @@ def active_bucket_id_from_settings(settings: Settings) -> str | None:
     """Resolve the active bucket for ``settings`` without falling through to process globals."""
     from ...core import read_pointer
 
-    override = (settings.aeat_active_profile or "").strip()
+    override = (settings.cadrumo_active_profile or "").strip()
     if override:
         return override
-    pointer = read_pointer(settings.aeat_local_storage_root)
+    pointer = read_pointer(settings.cadrumo_local_storage_root)
     return pointer.bucket_id if pointer is not None else None
 
 

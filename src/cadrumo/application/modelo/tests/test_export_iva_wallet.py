@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _wallet_decision_repository_at(sidecar_db: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
-    settings = Settings(aeat_database_url=f"sqlite:///{sidecar_db.as_posix()}")
+    settings = Settings(cadrumo_database_url=f"sqlite:///{sidecar_db.as_posix()}")
     objects = SecureObjectRepository(
         engine=get_engine(settings),
         namespace_registry=STORAGE_NAMESPACE_REGISTRY,

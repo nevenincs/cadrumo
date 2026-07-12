@@ -32,7 +32,7 @@ _STALE_LOCK_INSPECTION_AT = datetime(2026, 5, 26, 14, 0, 0, tzinfo=UTC)
 def _active_profile() -> Iterator[None]:
     from ....core.config import override_settings
 
-    with override_settings(aeat_active_profile="operator"):
+    with override_settings(cadrumo_active_profile="operator"):
         yield
 
 
@@ -43,7 +43,7 @@ def _settings(tmp_path: Path) -> Settings:
     the previous ``model_copy(update=)`` form bypassed validators per
     pydantic v2 semantics.
     """
-    return Settings(aeat_token_dir=tmp_path / "tokens")
+    return Settings(cadrumo_token_dir=tmp_path / "tokens")
 
 
 def test_auth_acquisition_lock_blocks_second_live_owner(tmp_path: Path) -> None:

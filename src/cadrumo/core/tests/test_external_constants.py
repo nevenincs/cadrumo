@@ -494,23 +494,23 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "aeat_browser_timezone": "Europe/Madrid",
         "aeat_browser_viewport_width": 1366,
         "aeat_browser_viewport_height": 900,
-        "aeat_file_lock_timeout_s": 30.0,
-        "aeat_file_lock_retry_backoff_s": 0.05,
-        "aeat_bucket_lock_poll_interval_s": 0.1,
-        "aeat_bucket_default_idle_lock_minutes": 15,
-        "aeat_auth_clave_movil_lock_buffer_s": 90,
-        "aeat_auth_certificate_lock_ttl_s": 180,
-        "aeat_log_stderr_level": "ERROR",
-        "aeat_log_file_level": "DEBUG",
-        "aeat_log_root_level": "DEBUG",
-        "aeat_google_drive_vault_folder_name": "aeat-vault",
-        "aeat_google_oauth_access_refresh_buffer_s": 300,
-        "aeat_workbook_parity_per_file_timeout_s": 15.0,
-        "aeat_workbook_parity_recalc_timeout_s": 60,
-        "aeat_workbook_parity_libreoffice_timeout_s": 120,
-        "aeat_calc_sheets_recalc_delay_s": 2.0,
-        "aeat_llm_default_max_tokens": 1024,
-        "aeat_llm_default_temperature": 0.0,
+        "cadrumo_file_lock_timeout_s": 30.0,
+        "cadrumo_file_lock_retry_backoff_s": 0.05,
+        "cadrumo_bucket_lock_poll_interval_s": 0.1,
+        "cadrumo_bucket_default_idle_lock_minutes": 15,
+        "cadrumo_auth_clave_movil_lock_buffer_s": 90,
+        "cadrumo_auth_certificate_lock_ttl_s": 180,
+        "cadrumo_log_stderr_level": "ERROR",
+        "cadrumo_log_file_level": "DEBUG",
+        "cadrumo_log_root_level": "DEBUG",
+        "cadrumo_google_drive_vault_folder_name": "aeat-vault",
+        "cadrumo_google_oauth_access_refresh_buffer_s": 300,
+        "cadrumo_workbook_parity_per_file_timeout_s": 15.0,
+        "cadrumo_workbook_parity_recalc_timeout_s": 60,
+        "cadrumo_workbook_parity_libreoffice_timeout_s": 120,
+        "cadrumo_calc_sheets_recalc_delay_s": 2.0,
+        "cadrumo_llm_default_max_tokens": 1024,
+        "cadrumo_llm_default_temperature": 0.0,
         "aeat_manuals_http_timeout_s": 60.0,
     }
 
@@ -519,9 +519,9 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
 
     assert settings.aeat_live_iva_declaration_capture_timeout_ms < settings.aeat_live_iva_surface_timeout_ms
     assert settings.aeat_live_iva_cli_watchdog_timeout_ms < 300_000
-    assert settings.aeat_llm_openai_chat_completions_url.startswith("https://api.openai.com")
-    assert "{model}" in settings.aeat_llm_gemini_generate_content_template
-    assert settings.aeat_llm_ollama_chat_url.startswith("http://")
+    assert settings.cadrumo_llm_openai_chat_completions_url.startswith("https://api.openai.com")
+    assert "{model}" in settings.cadrumo_llm_gemini_generate_content_template
+    assert settings.cadrumo_llm_ollama_chat_url.startswith("http://")
 
 
 def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> None:

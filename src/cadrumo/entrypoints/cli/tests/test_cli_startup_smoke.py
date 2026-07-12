@@ -28,11 +28,11 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
     cli_args = sys.argv[2:]
     settings = Settings(
         _env_file=None,
-        aeat_local_storage_root=storage_root,
-        aeat_active_profile="11111111-1111-4111-8111-111111111111",
-        aeat_secret_store_backend="file",
-        aeat_secret_store_dir=storage_root / "secrets",
-        aeat_output_language="en",
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile="11111111-1111-4111-8111-111111111111",
+        cadrumo_secret_store_backend="file",
+        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_output_language="en",
     )
     token = config_module._settings_override.set(settings)
     try:
@@ -70,7 +70,7 @@ def _assert_no_startup_crash(output: str) -> None:
     assert "Traceback" not in output
     assert "ImportError" not in output
     assert "cannot import name 'RescateType'" not in output
-    assert "AEAT_SECRET_PASSPHRASE is not set" not in output
+    assert "CADRUMO_SECRET_PASSPHRASE is not set" not in output
 
 
 def test_app_modelo_list_starts_without_unlocking_active_profile(tmp_path: Path) -> None:

@@ -30,7 +30,7 @@ def workspace_hash(storage_root: Path) -> str:
 
     Args:
         storage_root: The deployment's local storage root
-            (``settings.aeat_local_storage_root``). Only its resolved path
+            (``settings.cadrumo_local_storage_root``). Only its resolved path
             string is hashed; no file contents, profile data, or identity
             fields are read.
 

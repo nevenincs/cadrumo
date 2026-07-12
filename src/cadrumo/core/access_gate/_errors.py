@@ -73,7 +73,7 @@ class AeatLiveReadNotEnabledError(AeatError):
     """Raised when pytest live-read access is required but the test gate is shut.
 
     Emitted by :meth:`core.access_gate.AeatAccessGate.require_live_read` during pytest
-    execution when ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``.
+    execution when ``CADRUMO_LIVE_TESTS_ENABLED`` is not set to ``"1"``.
     Operator-facing live reads are controlled by auth/profile/read-only
     guards rather than this test opt-in variable.
     """

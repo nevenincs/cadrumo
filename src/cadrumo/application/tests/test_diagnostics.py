@@ -50,7 +50,7 @@ def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
     """Bind diagnostics tests to an isolated storage root by default."""
 
     storage_root = tmp_path / "diagnostics-storage"
-    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=None) as settings:
+    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -60,7 +60,7 @@ def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
 
 @contextmanager
 def _explicit_database(db_path: Path) -> Generator[None]:
-    with override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
         dispose_engine(settings)
         try:
             yield
@@ -337,7 +337,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings:
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
         try:
             assert secure_object_unreadable_total() == 0
@@ -358,7 +358,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID) as settings,
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings,
         activate_session(_bucket_session(_OTHER_BUCKET_ID)),
     ):
         dispose_engine(settings)

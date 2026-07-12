@@ -655,7 +655,7 @@ def test_config_profile_show_refuses_when_no_active_profile() -> None:
     from ....core.config import override_settings
 
     _clear_active_profile_pointer()
-    with override_settings(aeat_active_profile=None):
+    with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("show",))
     assert result.exit_code != 0
 

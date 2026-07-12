@@ -104,7 +104,7 @@ def test_normalise_period_rejects_unsupported_typed_period(
     # The year-mismatch case now renders via a translated_message key; force the
     # English locale so the assertion matches the byte-identical English text
     # (the registry-period-missing case still carries a raw args[0] string).
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         rendered = resolve_error_message(exc_info.value)
     assert re.search(match, rendered), rendered
 

@@ -17,13 +17,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_default_posture_refuses_cloud_even_when_acknowledged() -> None:
     settings = Settings()
-    assert settings.aeat_evidence_cloud_upload_permitted is False
-    assert settings.aeat_evidence_gestor_mode is False
+    assert settings.cadrumo_evidence_cloud_upload_permitted is False
+    assert settings.cadrumo_evidence_gestor_mode is False
     assert cloud_evidence_read_permitted(settings, acknowledged=True) is False
 
 
 def test_permitted_deployment_still_requires_per_invocation_acknowledgement() -> None:
-    settings = Settings(aeat_evidence_cloud_upload_permitted=True, aeat_evidence_gestor_mode=False)
+    settings = Settings(cadrumo_evidence_cloud_upload_permitted=True, cadrumo_evidence_gestor_mode=False)
     # Not acknowledged this invocation -> refused (no sticky enable).
     assert cloud_evidence_read_permitted(settings, acknowledged=False) is False
     # Acknowledged this invocation -> permitted.
@@ -31,6 +31,6 @@ def test_permitted_deployment_still_requires_per_invocation_acknowledgement() ->
 
 
 def test_gestor_mode_bars_cloud_absolutely() -> None:
-    settings = Settings(aeat_evidence_cloud_upload_permitted=True, aeat_evidence_gestor_mode=True)
+    settings = Settings(cadrumo_evidence_cloud_upload_permitted=True, cadrumo_evidence_gestor_mode=True)
     # Gestor mode overrides both the deployment permit and per-invocation consent.
     assert cloud_evidence_read_permitted(settings, acknowledged=True) is False

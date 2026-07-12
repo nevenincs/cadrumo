@@ -207,8 +207,8 @@ def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path:
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
-            "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "AEAT_SECRET_PASSPHRASE": "help-width-test-passphrase",
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+            "CADRUMO_SECRET_PASSPHRASE": "help-width-test-passphrase",
             "COLUMNS": "80",
         },
     )

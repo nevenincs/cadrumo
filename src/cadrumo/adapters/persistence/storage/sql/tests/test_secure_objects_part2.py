@@ -44,7 +44,7 @@ def _ephemeral_secure_repo_at(
     db_path: Path,
 ) -> Iterator[tuple[Any, SecureObjectRepository]]:
     with EphemeralMasterKeyProvider():
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine)
         try:
             yield engine, SecureObjectRepository(engine=engine)

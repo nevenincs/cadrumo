@@ -358,7 +358,7 @@ def test_registry_parity_default_store_root_comes_from_settings(tmp_path: Path) 
     configured_root = tmp_path / "configured-parity"
     explicit_root = tmp_path / "explicit-parity"
 
-    with override_settings(aeat_registry_parity_store_dir=configured_root):
+    with override_settings(cadrumo_registry_parity_store_dir=configured_root):
         assert _resolve_parity_store_root(None) == configured_root
         assert _resolve_parity_store_root(explicit_root) == explicit_root
 

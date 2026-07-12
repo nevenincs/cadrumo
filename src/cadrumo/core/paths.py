@@ -155,7 +155,7 @@ def windows_storage_root_long_path_margin(root: Path) -> int:
     ceiling it measures against.
 
     Args:
-        root: The candidate storage root (``aeat_local_storage_root`` or
+        root: The candidate storage root (``cadrumo_local_storage_root`` or
             an outbound-storage provider root).
 
     Returns:

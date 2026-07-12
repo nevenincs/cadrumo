@@ -45,8 +45,8 @@ def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> 
 
     The capability resolution (``resolve_active_capability``) is the single place
     the posture is computed: the gestor-mode bar is applied first and absolutely
-    (``aeat_evidence_gestor_mode``), then the active profile's opt-in/out fact, then
-    — when no profile fact is set — the global ``aeat_evidence_cloud_upload_permitted``
+    (``cadrumo_evidence_gestor_mode``), then the active profile's opt-in/out fact, then
+    — when no profile fact is set — the global ``cadrumo_evidence_cloud_upload_permitted``
     flag as the fallback default (so existing deployments behave unchanged until a
     profile sets the capability). A capability can only NARROW this floor, never
     widen it. The acknowledgement is never sticky -- it must be re-affirmed each

@@ -111,7 +111,7 @@ def test_usage_ratio_bucket_lock_is_a_real_mutex(tmp_path: Path) -> None:
         bucket_id = profile.bucket_id
         # Tiny wait-budget so the contended re-acquire fails fast instead of
         # blocking for the default timeout (the setting must be strictly > 0).
-        with override_settings(aeat_file_lock_timeout_s=0.05, aeat_file_lock_retry_backoff_s=0.01):  # noqa: SIM117 - pytest.raises must scope only the contended re-acquire
+        with override_settings(cadrumo_file_lock_timeout_s=0.05, cadrumo_file_lock_retry_backoff_s=0.01):  # noqa: SIM117 - pytest.raises must scope only the contended re-acquire
             with usage_ratio_bucket_lock(bucket_id):
                 with pytest.raises(LockAcquisitionError):
                     with usage_ratio_bucket_lock(bucket_id):

@@ -64,7 +64,7 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
     assert result.profile_id == result.bucket_id
 
     settings = load_settings()
-    paths = bucket_paths(settings.aeat_local_storage_root, result.profile_id)
+    paths = bucket_paths(settings.cadrumo_local_storage_root, result.profile_id)
     assert paths.bucket_dir.is_dir()
     assert paths.db_dir.is_dir()
     assert paths.blobs_dir.is_dir()
@@ -88,7 +88,7 @@ def test_initialize_workspace_writes_manifest_with_uuid_id_and_name_label(
     )
 
     settings = load_settings()
-    paths = bucket_paths(settings.aeat_local_storage_root, result.profile_id)
+    paths = bucket_paths(settings.cadrumo_local_storage_root, result.profile_id)
     manifest = read_manifest(paths)
 
     # bucket_id is the immutable UUID; label is the decoupled operator name.
@@ -179,7 +179,7 @@ def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
 
     assert first.profile_id != second.profile_id
     settings = load_settings()
-    first_manifest = read_manifest(bucket_paths(settings.aeat_local_storage_root, first.profile_id))
-    second_manifest = read_manifest(bucket_paths(settings.aeat_local_storage_root, second.profile_id))
+    first_manifest = read_manifest(bucket_paths(settings.cadrumo_local_storage_root, first.profile_id))
+    second_manifest = read_manifest(bucket_paths(settings.cadrumo_local_storage_root, second.profile_id))
     assert first_manifest.label == "catering"
     assert second_manifest.label == "consulting"

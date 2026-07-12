@@ -184,7 +184,7 @@ class ProfileRepository:
                 lifecycle service. ``None`` resolves the canonical
                 process-shared schema.
         """
-        self._root = root if root is not None else load_settings().aeat_local_storage_root
+        self._root = root if root is not None else load_settings().cadrumo_local_storage_root
         self._secure_objects = secure_objects
         self._schema = schema
 

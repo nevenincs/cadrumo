@@ -66,7 +66,7 @@ def test_profile_fact_overrides_the_default() -> None:
 
 
 def test_gestor_mode_bars_cloud_upload_even_with_profile_opt_in() -> None:
-    settings = load_settings().model_copy(update={"aeat_evidence_gestor_mode": True})
+    settings = load_settings().model_copy(update={"cadrumo_evidence_gestor_mode": True})
     record = _record(UserProfileFact(path="capabilities.cloud_evidence_upload", value=True))
     cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=record, settings=settings)
     # The safety floor wins absolutely — a capability narrows, never widens.
@@ -74,6 +74,6 @@ def test_gestor_mode_bars_cloud_upload_even_with_profile_opt_in() -> None:
 
 
 def test_global_flag_enables_cloud_when_no_profile_fact() -> None:
-    settings = load_settings().model_copy(update={"aeat_evidence_cloud_upload_permitted": True})
+    settings = load_settings().model_copy(update={"cadrumo_evidence_cloud_upload_permitted": True})
     cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=None, settings=settings)
     assert cloud.enabled is True and cloud.source is CapabilitySource.GLOBAL_SETTING

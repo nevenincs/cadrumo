@@ -93,7 +93,7 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
         model="test-model",
     )
 
-    run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     assert run_recorder.load_records() == ()
 
     suggestion = suggest_llm_classification(
@@ -126,7 +126,7 @@ def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRunt
         model="test-model",
     )
 
-    run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.aeat_llm_run_telemetry_dir)
+    run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
     with pytest.raises(LLMClassifierError):
         suggest_llm_classification(

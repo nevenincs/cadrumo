@@ -47,8 +47,8 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
         **os.environ,
         "AEAT_BROWSER_CHANNEL": "chromium",
         "AEAT_BROWSER_HEADLESS": "true",
-        "AEAT_LOCAL_STORAGE_ROOT": str(storage_root),
-        "AEAT_OUTPUT_LANGUAGE": "en",
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_OUTPUT_LANGUAGE": "en",
         "PLAYWRIGHT_BROWSERS_PATH": str(browser_cache),
     }
 

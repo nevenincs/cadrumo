@@ -50,7 +50,7 @@ _PROFILE_CREATE_GUIDANCE = "profile create"
 
 @pytest.fixture(autouse=True)
 def _english_output() -> Iterator[None]:
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         yield
 
 

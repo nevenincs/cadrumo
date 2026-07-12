@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_workbook_operator_labels_resolve_through_output_language() -> None:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
 
     label_values = {cell.value for cell in plan.value_cells if cell.role == "label"}
@@ -35,7 +35,7 @@ def test_workbook_operator_labels_resolve_through_output_language() -> None:
 def test_guide_paragraphs_resolve_through_output_language() -> None:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
 
     assert plan.guide.title == f"{snapshot.modelo.title} - 1T/2025"

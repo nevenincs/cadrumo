@@ -52,7 +52,7 @@ class LLMCache:
     """
 
     def __init__(self, root_dir: Path | None = None) -> None:
-        self.root_dir = root_dir or load_settings().aeat_llm_cache_dir
+        self.root_dir = root_dir or load_settings().cadrumo_llm_cache_dir
 
     def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:
         """Derive a :class:`~adapters.outbound.llm.CacheKey` from the request.

@@ -315,7 +315,7 @@ class TestSecureStorage:
         assert b"DE123456789" in record.payload
         assert b"DE123456789" not in (secure_engine.paths.db_dir / "aeat.db").read_bytes()
         assert not (
-            secure_engine.settings.aeat_audit_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
+            secure_engine.settings.cadrumo_audit_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()
 
     def test_object_key_refuses_blank_bucket_with_locale_metadata(self) -> None:

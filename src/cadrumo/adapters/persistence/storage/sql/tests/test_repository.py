@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 @contextmanager
 def _engine(tmp_path: Path) -> Iterator[Engine]:
-    settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'repo.db').as_posix()}")
+    settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / 'repo.db').as_posix()}")
     engine = create_engine_from_settings(settings)
     Base.metadata.create_all(engine)
     try:

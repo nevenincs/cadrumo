@@ -52,8 +52,8 @@ def test_settings_layer_output_language_typed_or_exempt() -> None:
     src = _read_file(config_file)
 
     assert _has_output_language_import(src), f"{config_file} must import OutputLanguage from external_constants"
-    assert "aeat_output_language: Annotated[OutputLanguage | None" in src or "OutputLanguage | None" in src, (
-        f"{config_file} aeat_output_language field must be typed as OutputLanguage | None"
+    assert "cadrumo_output_language: Annotated[OutputLanguage | None" in src or "OutputLanguage | None" in src, (
+        f"{config_file} cadrumo_output_language field must be typed as OutputLanguage | None"
     )
 
 

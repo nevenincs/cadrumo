@@ -16,13 +16,13 @@ protocol:
   garbage-collected.
 
 The :func:`get_master_key_provider` factory selects a provider per
-:attr:`Settings.aeat_secret_store_backend`. The ``auto`` backend tries
+:attr:`Settings.cadrumo_secret_store_backend`. The ``auto`` backend tries
 the OS keychain and falls back to the file backend only when the
 keychain is unusable. The ``keyring`` backend refuses to fall back; the
 ``file`` backend never consults the keychain.
 
 The on-disk file backend persists two artefacts in
-:attr:`Settings.aeat_secret_store_dir`:
+:attr:`Settings.cadrumo_secret_store_dir`:
 
 - ``master.key`` — the AES-256-GCM ciphertext of the master key, plus
   its 12-byte nonce, plus the 16-byte tag, base64-encoded.
@@ -31,7 +31,7 @@ The on-disk file backend persists two artefacts in
   derive the KEK from the operator's passphrase. This file is
   human-readable; only ``master.key`` is sensitive.
 
-Passphrase resolution: ``AEAT_SECRET_PASSPHRASE`` env var is consulted
+Passphrase resolution: ``CADRUMO_SECRET_PASSPHRASE`` env var is consulted
 first; absent that, the passphrase is prompted interactively via
 :func:`getpass.getpass`.
 """
@@ -221,12 +221,12 @@ class _RealKeyringClient:
         if isinstance(backend, _fail_backend.Keyring):
             raise KeyringUnavailableError(
                 f"OS keychain backend is the no-op fail.Keyring (resolved {type(backend).__name__}); "
-                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
+                "install a usable backend or set CADRUMO_SECRET_STORE_BACKEND=file.",
             )
         if type(backend).__name__ == "Keyring" and type(backend).__module__.endswith(".null"):
             raise KeyringUnavailableError(
                 "OS keychain backend is the no-op null.Keyring; "
-                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
+                "install a usable backend or set CADRUMO_SECRET_STORE_BACKEND=file.",
             )
 
     def get_password(self, service: str, username: str) -> str | None:
@@ -348,7 +348,7 @@ class KeyringMasterKeyProvider:
         from .....core.config import load_settings
 
         settings = load_settings()
-        lock_target = Path(settings.aeat_secret_store_dir) / "keyring.lock"
+        lock_target = Path(settings.cadrumo_secret_store_dir) / "keyring.lock"
         lock_target.parent.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(lock_target):
             self._probe_backend()
@@ -380,7 +380,7 @@ class KeyringMasterKeyProvider:
             raise MasterKeyKeychainLockedError(
                 f"OS keychain refused get_password: {exc}; "
                 "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-                "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
+                "or set CADRUMO_SECRET_STORE_BACKEND=file to use the passphrase backend.",
             ) from exc
         except KeyringUnavailableError:
             raise
@@ -443,7 +443,7 @@ class FileFallbackMasterKeyProvider:
 
     Persists ``master.key`` (plus a human-readable ``master.kdf``
     parameters document carrying the per-store ``salt_b64``) under
-    :attr:`Settings.aeat_secret_store_dir`. The KEK is derived from a
+    :attr:`Settings.cadrumo_secret_store_dir`. The KEK is derived from a
     passphrase via Argon2id and wraps the master key with AES-256-GCM.
     """
 
@@ -800,7 +800,7 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
     if session.bucket_id == "unsecured":
         return
     db_path = (
-        load_settings().aeat_local_storage_root / BUCKETS_DIRNAME / session.bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
+        load_settings().cadrumo_local_storage_root / BUCKETS_DIRNAME / session.bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
     )
     if not db_path.is_file():
         return
@@ -896,14 +896,14 @@ def _provider_enter(
     else:
         dek_bytes = load_or_mint_bucket_dek(
             kek=key_bytes,
-            storage_root=settings.aeat_local_storage_root,
+            storage_root=settings.cadrumo_local_storage_root,
             bucket_id=bucket_id,
             allow_bootstrap_mint=allow_bucket_dek_enrollment,
         )
     idle_minutes = idle_minutes_for_bucket(
-        storage_root=settings.aeat_local_storage_root,
+        storage_root=settings.cadrumo_local_storage_root,
         bucket_id=bucket_id,
-        default_minutes=settings.aeat_bucket_default_idle_lock_minutes,
+        default_minutes=settings.cadrumo_bucket_default_idle_lock_minutes,
     )
     session = BucketSession.open(
         bucket_id=bucket_id,
@@ -992,9 +992,9 @@ class UnsecuredMasterKeyProvider:
 
     Activation requires both signals:
 
-    - ``AEAT_ALLOW_UNENCRYPTED=1`` environment variable (the hostile-
+    - ``CADRUMO_ALLOW_UNENCRYPTED=1`` environment variable (the hostile-
       named opt-out gate).
-    - ``aeat_secret_store_backend=unsecured`` setting (or equivalent
+    - ``cadrumo_secret_store_backend=unsecured`` setting (or equivalent
       explicit backend selection at the substrate boundary).
 
     Refused at profile-load time when the operator profile carries a
@@ -1074,7 +1074,7 @@ def refuse_unsecured_with_real_nif(
     if looks_like_real_tax_id(tax_id):
         raise UnsecuredModeRefusedError(
             "unsecured master-key backend is incompatible with a real tax id; either remove "
-            "AEAT_ALLOW_UNENCRYPTED=1 / aeat_secret_store_backend=unsecured, "
+            "CADRUMO_ALLOW_UNENCRYPTED=1 / cadrumo_secret_store_backend=unsecured, "
             "or use a synthetic placeholder (e.g. '00000000T').",
         )
 
@@ -1114,23 +1114,23 @@ def get_master_key_provider(
     from .....core.config import SecretStoreBackend, load_settings  # local import to avoid cycles
 
     settings = settings_override if settings_override is not None else load_settings()
-    backend_value = settings.aeat_secret_store_backend.value if backend is None else backend
+    backend_value = settings.cadrumo_secret_store_backend.value if backend is None else backend
     try:
         resolved = SecretStoreBackend(backend_value)
     except ValueError as exc:
         raise SecretStoreError(f"unknown secret-store backend: {backend_value!r}") from exc
-    store_dir = Path(settings.aeat_secret_store_dir)
+    store_dir = Path(settings.cadrumo_secret_store_dir)
     if resolved is SecretStoreBackend.UNSECURED:
         # Hostile-named opt-out gate: the unsecured backend requires the
-        # operator to explicitly set AEAT_ALLOW_UNENCRYPTED=1 (strict
+        # operator to explicitly set CADRUMO_ALLOW_UNENCRYPTED=1 (strict
         # string match, not Pydantic bool coercion — see the Settings
         # field's inline rationale). Refuse otherwise. The NIF-canary
         # that fences off real tax data lives at the profile-load
         # boundary (see consumer modules).
-        if settings.aeat_allow_unencrypted != "1":
+        if settings.cadrumo_allow_unencrypted != "1":
             raise UnsecuredModeRefusedError(
-                "aeat_secret_store_backend='unsecured' requires "
-                "AEAT_ALLOW_UNENCRYPTED=1. The unsecured backend uses a "
+                "cadrumo_secret_store_backend='unsecured' requires "
+                "CADRUMO_ALLOW_UNENCRYPTED=1. The unsecured backend uses a "
                 "published deterministic master key and provides ZERO "
                 "confidentiality; intended for testing / throwaway data only.",
             )
@@ -1170,7 +1170,7 @@ def get_master_key_provider(
         # NO file-fallback artefacts exist, RAISE the locked error
         # rather than minting a fresh K2 that would diverge from the
         # K1 sitting in the locked keychain. The operator must either
-        # unlock the keychain or set ``AEAT_SECRET_STORE_BACKEND=file``
+        # unlock the keychain or set ``CADRUMO_SECRET_STORE_BACKEND=file``
         # explicitly to acknowledge the file-only path.
         file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
         if file_fallback_exists:
@@ -1189,7 +1189,7 @@ def get_master_key_provider(
             "may already hold a different one — the resulting two master keys would render "
             "any record encrypted under either key unreadable when the other backend is "
             "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-            "or set AEAT_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
+            "or set CADRUMO_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
             "and provision a file-fallback master key with `aeat config profile create NAME`.",
         ) from exc
     except MasterKeyMaterialMissingError:

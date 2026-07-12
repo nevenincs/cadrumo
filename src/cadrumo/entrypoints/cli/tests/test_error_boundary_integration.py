@@ -66,12 +66,12 @@ _REFUSED_EXIT: int = get_error_exit_code(ErrorCategory.REFUSED)
             "--quiet/--verbose mutual-exclusion flag collision",
         ),
         (
-            # Env-var path: AEAT_LOG_LEVEL set to a value not in the allowed
+            # Env-var path: CADRUMO_LOG_LEVEL set to a value not in the allowed
             # set; resolve_log_level() raises on the env-var parse branch.
             ["config", "repair"],
-            "AEAT_LOG_LEVEL",
+            "CADRUMO_LOG_LEVEL",
             "NOT_A_VALID_LEVEL",
-            "AEAT_LOG_LEVEL env set to an unrecognised value",
+            "CADRUMO_LOG_LEVEL env set to an unrecognised value",
         ),
     ],
     ids=["flag-collision", "invalid-env"],
@@ -92,7 +92,7 @@ def test_log_level_resolution_error_exits_refused(
        use to grep structured error payloads.
 
     No mocks. No monkeypatch (per CLAUDE.md mandate). The env-var case
-    pins state via ``override_settings(aeat_log_level=env_val)`` so the
+    pins state via ``override_settings(cadrumo_log_level=env_val)`` so the
     real production resolver sees the override; the flag-collision case
     needs no override and runs against the default Settings.
 
@@ -104,7 +104,7 @@ def test_log_level_resolution_error_exits_refused(
 
     if env_key is not None and env_val is not None:
         # Translate the env-var name to the Settings field name. The
-        # parametrise table currently only exercises AEAT_LOG_LEVEL.
+        # parametrise table currently only exercises CADRUMO_LOG_LEVEL.
         field_name = env_key.lower()
         with override_settings(**{field_name: env_val}):
             result = invoke_cached_cli(args, catch_exceptions=False)

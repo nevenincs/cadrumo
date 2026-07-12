@@ -35,7 +35,7 @@ def _m130_snapshot():
 
 
 def test_recalc_delay_uses_central_settings_override() -> None:
-    with override_settings(aeat_calc_sheets_recalc_delay_s=0.125):
+    with override_settings(cadrumo_calc_sheets_recalc_delay_s=0.125):
         assert _sheets_recalc_delay_seconds() == 0.125
 
 

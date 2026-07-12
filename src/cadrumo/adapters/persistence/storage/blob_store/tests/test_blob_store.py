@@ -148,7 +148,7 @@ class TestNotFoundAndIntegrity:
         with pytest.raises(BlobNotFoundError) as excinfo:
             store.get(ref)
         envelope = build_error_envelope(excinfo.value)
-        with override_settings(aeat_output_language="en"):
+        with override_settings(cadrumo_output_language="en"):
             message = resolve_error_message(excinfo.value)
 
         assert excinfo.value.translated_message == "errors.fail.fail_storage_blob_not_found"

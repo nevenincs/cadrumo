@@ -65,7 +65,7 @@ class TestRunContextLoggingFilter:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             logger = get_logger("cadrumo.core.observability.test_logging_filter")
             capture = _CaptureHandler()
             logging.getLogger().addHandler(capture)
@@ -118,7 +118,7 @@ class TestStderrRunEventFilter:
         """The filter must NOT accidentally drop events from the sink."""
         from .. import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with run_context(entrypoint="aeat test stderr-filter", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,

@@ -100,7 +100,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
 
     The lookup normalises whitespace and returns ``None`` when the modelo is not
     in :data:`STUB_ONLY_MODELOS`. Modelo 210 is conditionally released when the
-    ``aeat_m210_engine_live`` setting is enabled; all other entries remain
+    ``cadrumo_m210_engine_live`` setting is enabled; all other entries remain
     refused by this policy surface.
 
     See Also:
@@ -112,7 +112,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
     modelo_code = modelo.strip()
     if modelo_code not in STUB_ONLY_MODELOS:
         return None
-    if modelo_code == Modelo.M210 and load_settings().aeat_m210_engine_live:
+    if modelo_code == Modelo.M210 and load_settings().cadrumo_m210_engine_live:
         return None
     return STUB_MODELO_LOCALE_KEYS[modelo_code]
 

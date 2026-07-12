@@ -106,8 +106,8 @@ _FORBIDDEN_MARKERS = (
     )
     | _LEGACY_DOMAIN_MARKERS
 )
-_LIVE_ENV_NAME = "AEAT_LIVE_TESTS_ENABLED"
-_LIVE_TEST_OPT_IN_TOKENS = ("AEAT_LIVE_TESTS_ENABLED", "aeat_live_tests_enabled")
+_LIVE_ENV_NAME = "CADRUMO_LIVE_TESTS_ENABLED"
+_LIVE_TEST_OPT_IN_TOKENS = ("CADRUMO_LIVE_TESTS_ENABLED", "cadrumo_live_tests_enabled")
 _LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
     {
         Path("src/cadrumo/core/_config_live_tests.py"),
@@ -746,7 +746,7 @@ def test_live_test_env_runtime_access_is_live_or_gate_scoped(marker_policy_inven
     """Ordinary unit/domain tests must not depend on the live-test opt-in env var."""
     violations = marker_policy_inventory.live_env_runtime_violations
     assert not violations, (
-        "runtime AEAT_LIVE_TESTS_ENABLED access is only allowed in aeat_live tests "
+        "runtime CADRUMO_LIVE_TESTS_ENABLED access is only allowed in aeat_live tests "
         "or focused access-gate tests:\n" + "\n".join(violations)
     )
 

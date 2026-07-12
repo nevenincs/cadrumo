@@ -532,7 +532,7 @@ def _active_profile_tax_identity() -> str:
         else:
             from ...core.config import override_settings
 
-            with override_settings(aeat_active_profile=bucket_id):
+            with override_settings(cadrumo_active_profile=bucket_id):
                 service = build_lifecycle_service(bucket_id=bucket_id)
                 with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
                     record = service.read(bucket_id)

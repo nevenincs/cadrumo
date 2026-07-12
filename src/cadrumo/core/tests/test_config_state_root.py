@@ -1,7 +1,7 @@
 """Tests for the installed-vs-checkout storage state-root resolution.
 
 The :mod:`cadrumo.core._config_state_root` seam decides where
-:attr:`~cadrumo.core.config.Settings.aeat_local_storage_root` defaults: a source
+:attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root` defaults: a source
 checkout keeps ``PROJECT_ROOT / "var" / "storage"`` while an installed
 distribution roots under the platform user-data directory. These tests exercise
 the real resolver and the real :class:`~cadrumo.core.config.Settings` validator
@@ -62,7 +62,7 @@ def _installed_inputs_under(base: Path, *, platform: str = "win32") -> StateRoot
 def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> None:
     """The token, log, secret, blob and audit roots follow the installed base.
 
-    Rooting ``aeat_local_storage_root`` at an installed platform-user-data
+    Rooting ``cadrumo_local_storage_root`` at an installed platform-user-data
     directory must cascade through the existing state-root validators so every
     derived substrate directory lives under the same installed base, not under
     ``PROJECT_ROOT``.
@@ -71,24 +71,24 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
     assert resolution.run_mode is RunMode.INSTALLED
 
     with isolated_aeat_env():
-        settings = settings_without_env_file(aeat_local_storage_root=resolution.storage_root)
+        settings = settings_without_env_file(cadrumo_local_storage_root=resolution.storage_root)
 
-    root = settings.aeat_local_storage_root
-    assert settings.aeat_token_dir == root / "tokens"
-    assert settings.aeat_log_dir == root / "logs"
-    assert settings.aeat_secret_store_dir == root / "secrets"
-    assert settings.aeat_blob_store_dir == root / "blobs"
-    assert settings.aeat_audit_dir == root / "audit"
+    root = settings.cadrumo_local_storage_root
+    assert settings.cadrumo_token_dir == root / "tokens"
+    assert settings.cadrumo_log_dir == root / "logs"
+    assert settings.cadrumo_secret_store_dir == root / "secrets"
+    assert settings.cadrumo_blob_store_dir == root / "blobs"
+    assert settings.cadrumo_audit_dir == root / "audit"
 
     # Every derived root follows the installed base and never the repo root.
     for derived in (
-        settings.aeat_token_dir,
-        settings.aeat_log_dir,
-        settings.aeat_secret_store_dir,
-        settings.aeat_blob_store_dir,
-        settings.aeat_audit_dir,
+        settings.cadrumo_token_dir,
+        settings.cadrumo_log_dir,
+        settings.cadrumo_secret_store_dir,
+        settings.cadrumo_blob_store_dir,
+        settings.cadrumo_audit_dir,
     ):
-        # aeat_log_dir is declared Optional (an explicit AEAT_LOG_DIR override
+        # cadrumo_log_dir is declared Optional (an explicit CADRUMO_LOG_DIR override
         # could stay None), but this construction leaves it unset, so the
         # `_resolve_log_dir_under_storage_root` validator always roots it - the
         # assertion below is real test coverage of that resolution, not just a
@@ -102,7 +102,7 @@ def test_explicit_substrate_override_still_wins_over_installed_base(tmp_path: Pa
     """An explicit substrate directory kwarg overrides the installed derivation.
 
     The installed default must not defeat an operator's explicit
-    ``AEAT_SECRET_STORE_DIR``-class override; the derivation only fills the
+    ``CADRUMO_SECRET_STORE_DIR``-class override; the derivation only fills the
     field when it was left unset.
     """
     resolution = resolve_state_root(_installed_inputs_under(tmp_path))
@@ -110,14 +110,14 @@ def test_explicit_substrate_override_still_wins_over_installed_base(tmp_path: Pa
 
     with isolated_aeat_env():
         settings = settings_without_env_file(
-            aeat_local_storage_root=resolution.storage_root,
-            aeat_secret_store_dir=explicit_secret_dir,
+            cadrumo_local_storage_root=resolution.storage_root,
+            cadrumo_secret_store_dir=explicit_secret_dir,
         )
 
-    assert settings.aeat_secret_store_dir == explicit_secret_dir
-    assert settings.aeat_secret_store_dir != settings.aeat_local_storage_root / "secrets"
+    assert settings.cadrumo_secret_store_dir == explicit_secret_dir
+    assert settings.cadrumo_secret_store_dir != settings.cadrumo_local_storage_root / "secrets"
     # The un-overridden siblings still derive from the installed base.
-    assert settings.aeat_blob_store_dir == settings.aeat_local_storage_root / "blobs"
+    assert settings.cadrumo_blob_store_dir == settings.cadrumo_local_storage_root / "blobs"
 
 
 def test_live_default_is_the_checkout_var_storage_root() -> None:
@@ -226,18 +226,18 @@ def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Pa
     resolution = resolve_state_root(_installed_inputs_under(tmp_path))
 
     with isolated_aeat_env():
-        settings = settings_without_env_file(aeat_local_storage_root=resolution.storage_root)
+        settings = settings_without_env_file(cadrumo_local_storage_root=resolution.storage_root)
 
     state_tree = (
-        settings.aeat_local_storage_root,
-        settings.aeat_token_dir,
-        settings.aeat_log_dir,
-        settings.aeat_secret_store_dir,
-        settings.aeat_blob_store_dir,
-        settings.aeat_audit_dir,
+        settings.cadrumo_local_storage_root,
+        settings.cadrumo_token_dir,
+        settings.cadrumo_log_dir,
+        settings.cadrumo_secret_store_dir,
+        settings.cadrumo_blob_store_dir,
+        settings.cadrumo_audit_dir,
     )
     for path in state_tree:
-        # aeat_log_dir is declared Optional, but this construction leaves it
+        # cadrumo_log_dir is declared Optional, but this construction leaves it
         # unset, so the resolution validator always roots it - see the same
         # note in test_installed_storage_root_derives_every_substrate_dir above.
         assert path is not None

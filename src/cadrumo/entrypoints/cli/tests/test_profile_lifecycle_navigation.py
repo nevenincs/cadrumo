@@ -39,7 +39,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 @pytest.fixture
 def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
-    """Per-bucket storage (no global AEAT_DATABASE_URL).
+    """Per-bucket storage (no global CADRUMO_DATABASE_URL).
 
     Each profile bucket resolves its own SQLite file from the
     active-profile pointer chain, the production cold-start path.
@@ -49,8 +49,8 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     use create_profile_via_cli.
     """
     # _isolated_backend's isolated_profile_storage_root already set
-    # aeat_local_storage_root to tmp_path / "aeat-storage".
-    yield load_settings().aeat_local_storage_root
+    # cadrumo_local_storage_root to tmp_path / "aeat-storage".
+    yield load_settings().cadrumo_local_storage_root
 
 
 # --- profile rename is a label-only edit ---
@@ -548,14 +548,14 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    with override_settings(aeat_active_profile=tombstoned_uuid):
+    with override_settings(cadrumo_active_profile=tombstoned_uuid):
         by_env = _invoke(("--language", "en", "app", "ledger", "list"))
 
     write_pointer(
-        load_settings().aeat_local_storage_root,
+        load_settings().cadrumo_local_storage_root,
         BucketPointer(bucket_id=tombstoned_uuid, schema_version=1),
     )
-    with override_settings(aeat_active_profile=None):
+    with override_settings(cadrumo_active_profile=None):
         by_pointer = _invoke(("--language", "en", "app", "ledger", "list"))
 
     for result in (by_env, by_pointer):
@@ -581,15 +581,15 @@ def test_explicit_profile_show_reaches_tombstoned_target_with_stale_active_uuid(
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    with override_settings(aeat_active_profile=tombstoned_uuid):
+    with override_settings(cadrumo_active_profile=tombstoned_uuid):
         by_env_label = _invoke(("--language", "en", "config", "profile", "show", "alpha"))
         by_env_uuid = _invoke(("--language", "en", "config", "profile", "show", tombstoned_uuid))
 
     write_pointer(
-        load_settings().aeat_local_storage_root,
+        load_settings().cadrumo_local_storage_root,
         BucketPointer(bucket_id=tombstoned_uuid, schema_version=1),
     )
-    with override_settings(aeat_active_profile=None):
+    with override_settings(cadrumo_active_profile=None):
         by_pointer_label = _invoke(("--language", "en", "config", "profile", "show", "alpha"))
         by_pointer_uuid = _invoke(("--language", "en", "config", "profile", "show", tombstoned_uuid))
 
@@ -616,7 +616,7 @@ def test_no_arg_profile_show_output_language_does_not_mask_stale_active_uuid(
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
-    with override_settings(aeat_active_profile=tombstoned_uuid):
+    with override_settings(cadrumo_active_profile=tombstoned_uuid):
         no_target = _invoke(("config", "profile", "show", "--output-language", "en"))
         by_label = _invoke(("config", "profile", "show", "alpha", "--output-language", "en"))
         by_uuid = _invoke(("config", "profile", "show", tombstoned_uuid, "--output-language", "en"))

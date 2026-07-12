@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _output_language(language: str):
-    """Pin ``aeat_output_language`` for the duration of a test.
+    """Pin ``cadrumo_output_language`` for the duration of a test.
 
     Delegates to the canonical Settings override API
     (:func:`cadrumo.core.config.override_settings`); the production
@@ -36,7 +36,7 @@ def _output_language(language: str):
     """
     from ....core.config import override_settings
 
-    return override_settings(aeat_output_language=language)
+    return override_settings(cadrumo_output_language=language)
 
 
 _NON_ASCII_ERROR_CASES = (("es", "envío"), ("hu", "élő"))

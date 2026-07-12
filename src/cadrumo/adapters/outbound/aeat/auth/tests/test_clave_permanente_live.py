@@ -7,7 +7,7 @@ human-in-the-loop Cl@ve Móvil live probes — a single opt-in flag gates both
 the selector-reachability probe and the full login flow; there is no
 separate "explicitly enabled full login" escalation because no operator
 interaction is required. Everything here stays dry-run by default per
-``AEAT_LIVE_TESTS_ENABLED``; the tool never submits, only authenticates for
+``CADRUMO_LIVE_TESTS_ENABLED``; the tool never submits, only authenticates for
 subsequent reads.
 
 See Also:
@@ -82,7 +82,7 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
 
     Routine Cl@ve Permanente login for AEAT read paths requires no
     operator interaction, so this test opts in on the shared live-test
-    flag alone (``AEAT_LIVE_TESTS_ENABLED``) plus configured credentials —
+    flag alone (``CADRUMO_LIVE_TESTS_ENABLED``) plus configured credentials —
     no additional escalation flag, unlike the human-in-the-loop Cl@ve
     Móvil live suite.
     """

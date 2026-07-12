@@ -84,17 +84,17 @@ class TestFileFallbackProvider:
     def test_bootstrap_activation_mints_distinct_persisted_bucket_dek(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         master_key = provider.provision_master_key()
-        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
+        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
 
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             activate_master_key_provider(
                 provider,
@@ -107,20 +107,20 @@ class TestFileFallbackProvider:
         assert bucket_dek_path.is_file()
         assert first_dek != master_key
         _write_registered_bucket(
-            settings.aeat_local_storage_root,
+            settings.cadrumo_local_storage_root,
             "alpha",
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         )
 
         second = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             activate_master_key_provider(second, fallback_bucket_id="alpha"),
         ):
@@ -132,17 +132,17 @@ class TestFileFallbackProvider:
     ) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
-        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
+        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
 
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             activate_master_key_provider(
                 provider,
@@ -153,7 +153,7 @@ class TestFileFallbackProvider:
             assert len(get_active_master_key()) == KEY_SIZE
 
         _write_registered_bucket(
-            settings.aeat_local_storage_root,
+            settings.cadrumo_local_storage_root,
             "alpha",
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         )
@@ -162,14 +162,14 @@ class TestFileFallbackProvider:
         bucket_dek_path.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
 
         second = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             pytest.raises(MasterKeyUnavailableError) as excinfo,
             activate_master_key_provider(second, fallback_bucket_id="alpha"),
@@ -184,24 +184,24 @@ class TestFileFallbackProvider:
 
     def test_bucket_dek_manifest_without_dek_fails_closed(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
+        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
         _write_registered_bucket(
-            settings.aeat_local_storage_root,
+            settings.cadrumo_local_storage_root,
             "current",
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         )
         provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
-        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "current" / "bucket.dek.json"
+        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "current" / "bucket.dek.json"
 
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             pytest.raises(MasterKeyMaterialMissingError, match="bucket-dek-v1"),
             activate_master_key_provider(provider, fallback_bucket_id="current"),
@@ -213,17 +213,17 @@ class TestFileFallbackProvider:
     def test_fallback_bucket_id_does_not_authorize_dek_enrollment(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
-        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "missing" / "bucket.dek.json"
+        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "missing" / "bucket.dek.json"
 
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             pytest.raises(MasterKeyMaterialMissingError, match="no manifest"),
             activate_master_key_provider(provider, fallback_bucket_id="missing"),
@@ -235,15 +235,15 @@ class TestFileFallbackProvider:
     def test_existing_dek_without_manifest_does_not_authorize_activation(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             activate_master_key_provider(
                 provider,
@@ -252,29 +252,29 @@ class TestFileFallbackProvider:
             ),
         ):
             assert len(get_active_master_key()) == KEY_SIZE
-        assert (settings.aeat_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
+        assert (settings.cadrumo_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
 
         second = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             pytest.raises(MasterKeyMaterialMissingError, match="no manifest"),
             activate_master_key_provider(second, fallback_bucket_id="orphaned"),
         ):
             pass
-        assert (settings.aeat_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
+        assert (settings.cadrumo_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
 
     def test_bucket_manifest_idle_lock_overrides_settings_default(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
+        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
         provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.aeat_secret_store_dir,
+            store_dir=settings.cadrumo_secret_store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
@@ -283,9 +283,9 @@ class TestFileFallbackProvider:
         # wrapped DEK on disk), then register the idle-lock manifest.
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
             ),
             activate_master_key_provider(
                 provider,
@@ -294,14 +294,14 @@ class TestFileFallbackProvider:
             ),
         ):
             assert get_active_master_key() != provider.get_master_key()
-        _write_registered_bucket(settings.aeat_local_storage_root, "short-idle", idle_lock_minutes=3)
+        _write_registered_bucket(settings.cadrumo_local_storage_root, "short-idle", idle_lock_minutes=3)
 
         with (
             override_settings(
-                aeat_local_storage_root=settings.aeat_local_storage_root,
-                aeat_secret_store_dir=settings.aeat_secret_store_dir,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
-                aeat_bucket_default_idle_lock_minutes=15,
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_bucket_default_idle_lock_minutes=15,
             ),
             activate_master_key_provider(provider, fallback_bucket_id="short-idle"),
         ):
@@ -345,7 +345,7 @@ class TestFileFallbackProvider:
         assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_passphrase_mismatch"
 
     def test_passphrase_via_settings(self, tmp_path: Path) -> None:
-        with override_settings(aeat_secret_passphrase="from-env-var"):
+        with override_settings(cadrumo_secret_passphrase="from-env-var"):
             provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")
             key = provider.provision_master_key()
             assert len(key) == KEY_SIZE

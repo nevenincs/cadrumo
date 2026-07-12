@@ -90,7 +90,7 @@ class TestCreateProfileCrashWindow:
         with pytest.raises(ProfileSchemaValidationError):
             _create_profile(_CRASH_PROFILE_ID, label="Crash target", facts=_INCOMPLETE_FACTS)
 
-        root = load_settings().aeat_local_storage_root
+        root = load_settings().cadrumo_local_storage_root
         paths = bucket_paths(root, _CRASH_PROFILE_ID)
 
         assert not bucket_dek_path(storage_root=root, bucket_id=_CRASH_PROFILE_ID).is_file(), (
@@ -105,7 +105,7 @@ class TestCreateProfileCrashWindow:
         # vacuously true against a never-created bucket.
         _create_profile(_SURVIVOR_PROFILE_ID, label="Survivor", facts=_VALID_FACTS)
 
-        root = load_settings().aeat_local_storage_root
+        root = load_settings().cadrumo_local_storage_root
         paths = bucket_paths(root, _SURVIVOR_PROFILE_ID)
 
         assert bucket_dek_path(storage_root=root, bucket_id=_SURVIVOR_PROFILE_ID).is_file()
@@ -129,7 +129,7 @@ class TestRenameProfileCrashWindow:
         from ..bucket import read_manifest
 
         _create_profile(_RENAME_PROFILE_ID, label="Original Label", facts=_VALID_FACTS)
-        root = load_settings().aeat_local_storage_root
+        root = load_settings().cadrumo_local_storage_root
         paths = bucket_paths(root, _RENAME_PROFILE_ID)
 
         # Drive ONLY the record-side write of the real rename (S), simulating a
@@ -159,7 +159,7 @@ class TestRenameProfileCrashWindow:
         from ..bucket import read_manifest
 
         _create_profile(_RENAME_PROFILE_ID, label="Original Label", facts=_VALID_FACTS)
-        root = load_settings().aeat_local_storage_root
+        root = load_settings().cadrumo_local_storage_root
         paths = bucket_paths(root, _RENAME_PROFILE_ID)
 
         with profile_storage_session(_RENAME_PROFILE_ID):
@@ -206,7 +206,7 @@ class TestHardDeleteCrashWindow:
         _create_profile(_DELETE_PROFILE_ID, label="Delete target", facts=_VALID_FACTS)
         delete_profile_with_lifecycle_span(_DELETE_PROFILE_ID)
 
-        root = load_settings().aeat_local_storage_root
+        root = load_settings().cadrumo_local_storage_root
         paths = bucket_paths(root, _DELETE_PROFILE_ID)
 
         # Anti-tautology: before the partial-removal corruption, the scan finds

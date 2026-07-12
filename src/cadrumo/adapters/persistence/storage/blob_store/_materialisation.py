@@ -76,9 +76,9 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
         # active :class:`BucketSession`) when ``master_key_provider`` is
         # absent. The CLI root callback opens the session before any
         # consumer reaches this factory.
-        blob_store = EncryptedBlobStore(root_dir=Path(resolved.aeat_blob_store_dir))
+        blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_blob_store_dir))
         _singleton_store = SecretStore(
-            store_dir=Path(resolved.aeat_secret_store_dir),
+            store_dir=Path(resolved.cadrumo_secret_store_dir),
             blob_store=blob_store,
         )
         return _singleton_store

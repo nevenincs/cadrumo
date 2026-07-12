@@ -139,7 +139,7 @@ def test_endpoint_configured_but_consent_off_never_sends() -> None:
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
-        settings = Settings(aeat_telemetry_opt_in=False, aeat_telemetry_tier=TelemetryTier.OFF)
+        settings = Settings(cadrumo_telemetry_opt_in=False, cadrumo_telemetry_tier=TelemetryTier.OFF)
         result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True, sink=sink)
     finally:
         _stop_loopback_server(server, thread)
@@ -155,9 +155,9 @@ def test_fully_permitted_invocation_posts_the_allowlisted_payload() -> None:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
         settings = Settings(
-            aeat_telemetry_opt_in=True,
-            aeat_telemetry_tier=TelemetryTier.FULL,
-            aeat_telemetry_endpoint=endpoint,
+            cadrumo_telemetry_opt_in=True,
+            cadrumo_telemetry_tier=TelemetryTier.FULL,
+            cadrumo_telemetry_endpoint=endpoint,
         )
         payload = _payload()
         result = emit_telemetry_event(payload, settings=settings, acknowledged=True, sink=sink)

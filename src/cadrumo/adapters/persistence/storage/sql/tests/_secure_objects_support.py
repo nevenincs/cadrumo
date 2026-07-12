@@ -77,7 +77,7 @@ def _seed_under_key(
 ) -> None:
     """Seed one secure-object row through the public repository under ``provider``."""
     with provider:
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine).save(

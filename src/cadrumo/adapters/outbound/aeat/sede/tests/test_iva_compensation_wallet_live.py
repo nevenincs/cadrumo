@@ -1,6 +1,6 @@
 """Opt-in live smoke test for the AEAT IVA compensation wallet reader.
 
-Runs only when ``AEAT_LIVE_TESTS_ENABLED=1`` is set. The test acquires
+Runs only when ``CADRUMO_LIVE_TESTS_ENABLED=1`` is set. The test acquires
 an operator-approved Cl@ve Móvil session against the Pre303 presentation
 surface and then drives the same read-only wallet adapter used by the
 application capture workflow. It asserts structural evidence only; it

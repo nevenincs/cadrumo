@@ -73,10 +73,10 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
     with ExitStack() as stack:
         stack.enter_context(
             override_settings(
-                aeat_local_storage_root=tmp_path,
-                aeat_active_profile=None,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
-                aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+                cadrumo_local_storage_root=tmp_path,
+                cadrumo_active_profile=None,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_secret_passphrase=SecretStr(dev_test_database_password()),
             ),
         )
         _ACTIVE_STORAGE_STACK = stack
@@ -540,9 +540,9 @@ def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path)
     _stage_profile_manifest(tmp_path, "operator")
 
     with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile="operator",
-        aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+        cadrumo_local_storage_root=tmp_path,
+        cadrumo_active_profile="operator",
+        cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     ):
         projection = build_operator_state_projection(
             state=WorkflowState(),

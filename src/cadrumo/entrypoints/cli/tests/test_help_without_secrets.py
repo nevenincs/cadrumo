@@ -1,7 +1,7 @@
 """Help and usage-error surfaces never demand the secret-store passphrase.
 
 Operator-surface regression for the help-tree black hole: with an active
-profile configured but ``AEAT_SECRET_PASSPHRASE`` unset and a
+profile configured but ``CADRUMO_SECRET_PASSPHRASE`` unset and a
 non-interactive stdin, the root callback's bucket-session activation used
 to run before any help or usage rendering, so EVERY subgroup help
 (``aeat config --help``, ``aeat app --help``, ``aeat app ledger --help``)
@@ -38,10 +38,10 @@ _PLACEHOLDER_ACTIVE_PROFILE = "0123456789abcdef0123456789abcdef"
 #: Matches an actual passphrase VALUE materialization (an env-style
 #: assignment, e.g. leaked from ``os.environ`` or a diagnostic dump), never
 #: a bare instructional mention of the variable's NAME. Operator-facing help
-#: prose is allowed to name ``AEAT_SECRET_PASSPHRASE`` when explaining where
+#: prose is allowed to name ``CADRUMO_SECRET_PASSPHRASE`` when explaining where
 #: it must be set for an isolated run (``application/operator_surface/_help.py``);
 #: only an actual ``KEY=value`` leak is a genuine secret disclosure.
-_PASSPHRASE_VALUE_LEAK_PATTERN = re.compile(r"AEAT_SECRET_PASSPHRASE\s*=\s*\S")
+_PASSPHRASE_VALUE_LEAK_PATTERN = re.compile(r"CADRUMO_SECRET_PASSPHRASE\s*=\s*\S")
 
 
 def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
@@ -49,10 +49,10 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
-            "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "AEAT_TOKEN_DIR": str(tmp_path / "tokens"),
-            "AEAT_RUNS_DIR": str(tmp_path / "runs"),
-            "AEAT_ACTIVE_PROFILE": _PLACEHOLDER_ACTIVE_PROFILE,
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+            "CADRUMO_TOKEN_DIR": str(tmp_path / "tokens"),
+            "CADRUMO_RUNS_DIR": str(tmp_path / "runs"),
+            "CADRUMO_ACTIVE_PROFILE": _PLACEHOLDER_ACTIVE_PROFILE,
         },
     )
     return env
@@ -89,7 +89,7 @@ def test_subgroup_help_renders_without_passphrase(
 ) -> None:
     """Every subgroup help renders exit 0 with real content, no master key.
 
-    Help prose may legitimately NAME ``AEAT_SECRET_PASSPHRASE`` (e.g. the
+    Help prose may legitimately NAME ``CADRUMO_SECRET_PASSPHRASE`` (e.g. the
     isolated-run instructions on ``aeat config --help``); only an actual
     value assignment is a genuine leak, so the gate checks for that
     narrower pattern rather than a blanket substring match.
@@ -108,7 +108,7 @@ def test_unknown_command_renders_usage_error_without_passphrase(tmp_path: Path) 
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 2, combined
     assert "nosuchcmd" in combined
-    assert "AEAT_SECRET_PASSPHRASE" not in combined
+    assert "CADRUMO_SECRET_PASSPHRASE" not in combined
 
 
 def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: Path) -> None:
@@ -118,7 +118,7 @@ def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: 
     assert result.returncode == 2, combined
     assert "create" in result.stdout
     assert "show" in result.stdout
-    assert "AEAT_SECRET_PASSPHRASE" not in combined
+    assert "CADRUMO_SECRET_PASSPHRASE" not in combined
 
 
 def test_data_verb_still_refuses_without_passphrase(tmp_path: Path) -> None:
@@ -131,4 +131,4 @@ def test_data_verb_still_refuses_without_passphrase(tmp_path: Path) -> None:
     result = _run(["app", "ledger", "list"], tmp_path)
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined
-    assert "AEAT_SECRET_PASSPHRASE" in combined
+    assert "CADRUMO_SECRET_PASSPHRASE" in combined

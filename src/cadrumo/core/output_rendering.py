@@ -125,7 +125,7 @@ def reveal_cli_identifiers_opt_in() -> bool:
     decision at the central success-output privacy boundary (per the
     centralized-output-redaction ADR) and keeps the pure redaction module free
     of a Settings dependency. Default off preserves the paste-safe placeholder
-    behaviour; an operator sets ``AEAT_CLI_REVEAL_IDENTIFIERS=1`` to opt out.
+    behaviour; an operator sets ``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` to opt out.
     Both success-output emitters — :func:`render_command_output` and the JSON
     envelope :func:`cadrumo.core.json_contract.emit_json_success` — consult this
     one resolver so the two transports cannot diverge.
@@ -136,7 +136,7 @@ def reveal_cli_identifiers_opt_in() -> bool:
     """
     from .config import load_settings
 
-    return load_settings().aeat_cli_reveal_identifiers
+    return load_settings().cadrumo_cli_reveal_identifiers
 
 
 def _json_default(value: object) -> object:

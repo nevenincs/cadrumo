@@ -249,7 +249,7 @@ class TestAbortReasons:
         )
         fx.draft_builder.draft = fx.draft
 
-        with override_settings(aeat_output_language=language):
+        with override_settings(cadrumo_output_language=language):
             result = _run_next(fx)
 
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
@@ -273,7 +273,7 @@ class TestAbortReasons:
         fx = _fixtures()
         fx.draft_builder.raise_exc = ModeloBuilderError("unresolved registry input")
 
-        with override_settings(aeat_output_language=language):
+        with override_settings(cadrumo_output_language=language):
             result = _run_next(fx)
 
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS

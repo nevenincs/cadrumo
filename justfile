@@ -311,7 +311,7 @@ fix-rag:
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
-pytest_workers := env_var_or_default("AEAT_PYTEST_WORKERS", "auto")
+pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 test-ratchets:

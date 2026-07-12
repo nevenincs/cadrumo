@@ -44,7 +44,7 @@ def test_cli_correct_verb_requires_confirm(tmp_path: Path) -> None:
                 "--reason",
                 "fix",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0, result.output
@@ -77,7 +77,7 @@ def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
                 "typo in opening balance",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
         stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
@@ -112,7 +112,7 @@ def test_cli_correct_verb_refuses_when_no_record(tmp_path: Path) -> None:
                 "no record",
                 "--confirm",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0, result.output

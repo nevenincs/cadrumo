@@ -28,7 +28,7 @@ irrespective of persona; this gate decides *whether* a tool is in the active
 persona's boundary at all. Both run in the ``PreToolUse`` layer.
 
 :func:`active_persona` resolves the runtime session's persona from the
-``AEAT_MCP_PERSONA`` environment variable; ``_server.py`` calls it once at
+``CADRUMO_MCP_PERSONA`` environment variable; ``_server.py`` calls it once at
 ``serve()`` startup and threads the result through ``_list_tools`` (filters
 the advertised tool set) and ``_call_tool`` (refuses an out-of-scope call
 before the global HITL gate runs).
@@ -69,7 +69,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 #: or empty means the session is un-personified and keeps the full, unscoped
 #: tool surface - the pre-D1 behaviour is preserved for any caller that does
 #: not opt into a persona boundary.
-PERSONA_ENV_VAR = "AEAT_MCP_PERSONA"
+PERSONA_ENV_VAR = "CADRUMO_MCP_PERSONA"
 
 # Ordered so a family's actual mutability may be compared against a persona's
 # declared ceiling: READ_ONLY is strictly less permissive-requiring than

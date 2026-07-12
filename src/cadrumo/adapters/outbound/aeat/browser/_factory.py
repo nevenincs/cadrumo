@@ -181,7 +181,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     # shipping provider currently relies on it. The storage-state
     # filename is keyed by the active bucket UUID, consistent with the
     # other token/lock filename call sites.
-    storage_state_path = settings.aeat_token_dir / f"{bucket_id}-storage.json"
+    storage_state_path = settings.cadrumo_token_dir / f"{bucket_id}-storage.json"
     profile = Profile(name=bucket_id, storage_state_path=storage_state_path)
     return await create_browser_session(settings, profile)
 

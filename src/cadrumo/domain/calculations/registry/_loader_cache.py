@@ -36,8 +36,8 @@ from pathlib import Path
 from ....core.config import load_settings
 from ....core.resources import bundled_path
 
-REGISTRY_DISK_CACHE_DIR_ENV_VAR = "AEAT_REGISTRY_DISK_CACHE_DIR"
-"""Environment variable backing :attr:`~core.config.Settings.aeat_registry_disk_cache_dir`."""
+REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
+"""Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
 
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
@@ -126,8 +126,8 @@ def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
 def registry_disk_cache_dir() -> Path:
     """Return the directory the cross-process registry disk pickle lives in.
 
-    Reads :attr:`~core.config.Settings.aeat_registry_disk_cache_dir` (the
-    ``AEAT_REGISTRY_DISK_CACHE_DIR`` env var) before falling back to
+    Reads :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir` (the
+    ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` env var) before falling back to
     ``tempfile.gettempdir()``, so a test can redirect the disk-cache pickle to
     a test-owned directory. Production and the ordinary bundled-root sharing
     path never set this field and always use the real OS temp directory; only
@@ -142,7 +142,7 @@ def registry_disk_cache_dir() -> Path:
     spawns via ``env=``, so a cross-process sharing proof can isolate BOTH
     ends of the process pair onto the same test-owned directory.
     """
-    override = load_settings().aeat_registry_disk_cache_dir
+    override = load_settings().cadrumo_registry_disk_cache_dir
     if override is not None:
         return override
     return Path(tempfile.gettempdir())

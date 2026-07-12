@@ -82,7 +82,7 @@ def test_get_storage_provider_local_uses_active_profile_bucket_root(tmp_path: Pa
     object_key_hmac = "a" * 64
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-local") as profile:
-        with override_settings(aeat_storage_provider_kind=ProviderKind.LOCAL_FILESYSTEM.value):
+        with override_settings(cadrumo_storage_provider_kind=ProviderKind.LOCAL_FILESYSTEM.value):
             provider = get_storage_provider()
 
         assert isinstance(provider, StorageProvider)
@@ -102,7 +102,7 @@ def test_get_storage_provider_local_uses_active_profile_bucket_root(tmp_path: Pa
 
 def test_factory_rejects_blank_provider_kind_with_localized_context() -> None:
     with (
-        override_settings(aeat_storage_provider_kind="   ") as settings,
+        override_settings(cadrumo_storage_provider_kind="   ") as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
         get_storage_provider(settings=settings)
@@ -115,7 +115,7 @@ def test_factory_rejects_blank_provider_kind_with_localized_context() -> None:
 
 def test_factory_rejects_unknown_provider_kind_with_localized_context() -> None:
     with (
-        override_settings(aeat_storage_provider_kind="not-a-provider") as settings,
+        override_settings(cadrumo_storage_provider_kind="not-a-provider") as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
         get_storage_provider(settings=settings)
@@ -133,8 +133,8 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-missing-root"),
         override_settings(
-            aeat_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            aeat_google_drive_root_folder_id="",
+            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
+            cadrumo_google_drive_root_folder_id="",
         ) as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
@@ -150,8 +150,8 @@ def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) 
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-missing-client"),
         override_settings(
-            aeat_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            aeat_google_drive_root_folder_id="drive-root",
+            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
+            cadrumo_google_drive_root_folder_id="drive-root",
         ) as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
@@ -167,8 +167,8 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-missing-token"),
         override_settings(
-            aeat_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            aeat_google_drive_root_folder_id="drive-root",
+            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
+            cadrumo_google_drive_root_folder_id="drive-root",
         ) as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
@@ -286,8 +286,8 @@ def test_get_storage_provider_google_drive_dispatches_impersonation_selection_th
         scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-full-dispatch-impersonation"),
         override_settings(
-            aeat_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            aeat_google_drive_root_folder_id="drive-root",
+            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
+            cadrumo_google_drive_root_folder_id="drive-root",
         ) as settings,
         pytest.raises(GoogleAuthAdcUnavailableError) as raised,
     ):

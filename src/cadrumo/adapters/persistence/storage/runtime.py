@@ -135,8 +135,8 @@ class StorageRuntime(BaseModel):
         active = current_active_bucket_session()
         assert active is not None
         settings = Settings(
-            aeat_local_storage_root=self.storage_root,
-            aeat_active_profile=self.bucket_id,
+            cadrumo_local_storage_root=self.storage_root,
+            cadrumo_active_profile=self.bucket_id,
         )
         # The active bucket session owns the engine lifecycle: acquire the
         # engine through it so the handle is registered on the session and
@@ -231,14 +231,14 @@ def _settings_output_language() -> str:
     except (AttributeError, KeyError, ValueError):
         _log.debug("storage runtime could not resolve output language; using default", exc_info=True)
         return DEFAULT_OUTPUT_LANGUAGE.value
-    if "aeat_output_language" in settings.model_fields_set:
-        explicit = _normalise_supported_language(settings.aeat_output_language)
+    if "cadrumo_output_language" in settings.model_fields_set:
+        explicit = _normalise_supported_language(settings.cadrumo_output_language)
         if explicit is not None:
             return explicit
     hinted = _active_bucket_output_language_hint(settings)
     if hinted is not None:
         return hinted
-    return _normalise_supported_language(settings.aeat_output_language) or DEFAULT_OUTPUT_LANGUAGE.value
+    return _normalise_supported_language(settings.cadrumo_output_language) or DEFAULT_OUTPUT_LANGUAGE.value
 
 
 def _normalise_supported_language(value: object) -> str | None:
@@ -257,7 +257,7 @@ def _active_bucket_output_language_hint(settings: Settings) -> str | None:
         if bucket_id is None:
             return None
         return read_bucket_output_language_hint(
-            storage_root=settings.aeat_local_storage_root,
+            storage_root=settings.cadrumo_local_storage_root,
             bucket_id=bucket_id,
         )
     except Exception as exc:
@@ -369,7 +369,7 @@ def inspect_storage_runtime(
         route_kind=route.kind,
         route_attached_to_active_bucket=route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE,
         route_has_database_path=route.database_path is not None,
-        storage_root=resolved.aeat_local_storage_root,
+        storage_root=resolved.cadrumo_local_storage_root,
         bucket_id=route.bucket_id if ready else "",
         active_session=session,
         readiness=StorageRuntimeReadiness(
@@ -398,7 +398,7 @@ def inspect_bucket_storage_runtime(
     resolved = settings or load_settings()
     current_route = classify_storage_route(resolved)
     if (
-        "aeat_database_url" in resolved.model_fields_set
+        "cadrumo_database_url" in resolved.model_fields_set
         and current_route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     ):
         return inspect_storage_runtime(resolved, now=now)

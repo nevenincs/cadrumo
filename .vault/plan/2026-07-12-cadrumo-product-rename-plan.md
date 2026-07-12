@@ -6,8 +6,8 @@ date: '2026-07-12'
 modified: '2026-07-12'
 tier: L4
 related:
-  - '[[2026-07-12-cadrumo-product-rename-adr]]'
   - '[[2026-07-12-cadrumo-product-rename-research]]'
+  - '[[2026-07-12-cadrumo-cli-executable-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -31,7 +31,9 @@ the Spanish authority, its portals, protocols, credentials, legal provenance,
 official corpus, registry taxonomy, citations, hashes, and historical evidence.
 
 The plan introduces no import, executable, environment, plugin, MCP, namespace,
-or persisted-state compatibility shim. Generated surfaces follow their authored
+or persisted-state compatibility shim. The sole human command is `aeat`, which
+invokes Cadrumo directly; `cadrumo-mcp` remains the distinct MCP command.
+Generated surfaces follow their authored
 authorities, public publication remains blocked on evidenced external-name
 clearance, and every edit begins with explicit shared-worktree ownership and
 scoped-diff inspection.
@@ -83,7 +85,7 @@ Move the import root and every executable dynamic reference without aliases.
 
 Move product configuration and persistence identifiers at one breaking boundary.
 
-- [ ] `W02.P04.S17` - Rename product-owned settings and CADRUMO environment parsing while retaining authority settings; `src/cadrumo/core/config.py`.
+- [x] `W02.P04.S17` - Rename product-owned settings and CADRUMO environment parsing while retaining authority settings; `src/cadrumo configuration consumers/tests; dev configuration consumers; env/.env.example; packaging/mcpb/manifest.json; .github/workflows; justfile; conftest.py`.
 - [ ] `W02.P04.S18` - Move the platform application-data root to Cadrumo and refuse detected former-product state; `src/cadrumo/core/_config_state_root.py`.
 - [ ] `W02.P04.S19` - Rename the product database filename without fallback; `src/cadrumo/adapters/persistence/storage SQL`.
 - [ ] `W02.P04.S20` - Rename product authentication-session storage without reading or moving former state; `src/cadrumo authentication session storage`.
@@ -97,10 +99,11 @@ Depends on W02 and produces installable local artifacts before integration regen
 
 ### Phase `W03.P05` - rename root distribution and scripts
 
-Make the root distribution and console surfaces install as Cadrumo.
+Make the Cadrumo distribution expose the sole human `aeat` command and the
+distinct `cadrumo-mcp` command.
 
-- [ ] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts to cadrumo and cadrumo-mcp; `pyproject.toml`.
-- [ ] `W03.P05.S25` - Rename CLI program identity and version and help surfaces; `src/cadrumo/entrypoints/cli`.
+- [ ] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts so the sole human `aeat` command launches Cadrumo and `cadrumo-mcp` launches MCP; `pyproject.toml`.
+- [ ] `W03.P05.S25` - Project Cadrumo product identity while retaining `aeat` as the sole human CLI and help-surface command; `src/cadrumo/entrypoints/cli`.
 - [ ] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp/__init__.py`.
 - [ ] `W03.P05.S27` - Update optional-extra installation guidance to Cadrumo distributions; `src/cadrumo/core/_optional_extras.py`.
 
@@ -206,10 +209,11 @@ Depends on all implementation Waves and distinguishes valid AEAT authority uses 
 
 ### Phase `W06.P14` - run referent-aware residue and behavior gates
 
-Prove Cadrumo behavior and classify every retained former-name occurrence.
+Prove Cadrumo behavior and classify every retained `aeat` occurrence by
+contract and referent.
 
-- [ ] `W06.P14.S76` - Audit remaining aeat tokens and classify each as authority, historical evidence, immutable corpus, or defect; `repository rename residue report`.
-- [ ] `W06.P14.S77` - Prove no aeat import root, old console script, dual environment reader, namespace fallback, or state migration remains; `compatibility absence gate`.
+- [ ] `W06.P14.S76` - Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect; `repository rename residue report`.
+- [ ] `W06.P14.S77` - Prove no `aeat` import root, second human CLI alias, dual environment reader, namespace fallback, or state migration remains; `compatibility absence gate`.
 - [ ] `W06.P14.S78` - Run focused runtime, persistence, CLI, MCP, agent, and packaging tests with real behavior; `Cadrumo feature test surface`.
 - [ ] `W06.P14.S79` - Run installed-wheel, split-companion, Docker, MCP handshake, locale, and documentation gates; `Cadrumo artifact acceptance surface`.
 - [ ] `W06.P14.S80` - Run the path-scoped feature-surface quality gate for every file owned by issue #476; `feature-surface gate evidence`.
@@ -249,8 +253,8 @@ permitted.
 
 1. `import cadrumo` succeeds from source and installed wheel, `import aeat`
    fails, and the wheel contains no former product import root.
-2. `cadrumo --version` and `cadrumo-mcp` work from clean installs, with no
-   old scripts or aliases.
+2. `aeat --version` and `cadrumo-mcp` work from clean installs. There is no
+   `cadrumo` human CLI alias or `aeat` Python import package.
 3. The root and companion wheels share a version, remain within size budgets,
    install together, expose only `cadrumo_data`, preserve disjoint corpus
    ownership, and retain byte-exact official evidence.

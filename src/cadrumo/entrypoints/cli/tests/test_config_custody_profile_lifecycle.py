@@ -30,14 +30,14 @@ _CLI_HARNESS = dedent(
     passphrase_arg = sys.argv[2]
     cli_args = sys.argv[3:]
     base_settings = Settings(_env_file=None)
-    passphrase = passphrase_arg or base_settings.aeat_dev_test_database_password
+    passphrase = passphrase_arg or base_settings.cadrumo_dev_test_database_password
     settings = Settings(
         _env_file=None,
-        aeat_local_storage_root=storage_root,
-        aeat_secret_store_dir=storage_root / "secrets",
-        aeat_secret_store_backend="file",
-        aeat_secret_passphrase=passphrase,
-        aeat_output_language="en",
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_backend="file",
+        cadrumo_secret_passphrase=passphrase,
+        cadrumo_output_language="en",
     )
     token = config_module._settings_override.set(settings)
     try:
@@ -375,7 +375,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     env_default = _run_aeat(
         tmp_path,
         ("config", "profile", "show"),
-        extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
+        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert env_default.returncode == 0, _combined_output(env_default)
     assert "display_name\talpha" in env_default.stdout
@@ -383,7 +383,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     explicit_name = _run_aeat(
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show", "beta"),
-        extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
+        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_name.returncode == 0, _combined_output(explicit_name)
     assert "display_name\tbeta" in explicit_name.stdout
@@ -392,7 +392,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show"),
         extra_env={
-            "AEAT_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
+            "CADRUMO_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
         },
     )
     assert explicit_root.returncode == 0, _combined_output(explicit_root)
@@ -401,7 +401,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     explicit_root_by_id = _run_aeat(
         tmp_path,
         ("--profile", alpha_id, "config", "profile", "show"),
-        extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
+        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
     assert "display_name\talpha" in explicit_root_by_id.stdout
@@ -453,11 +453,11 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
         f"pointer default should not write to alpha; counts before={before}, after={after_pointer}"
     )
 
-    # Env-override precedence: AEAT_ACTIVE_PROFILE wins over the pointer.
+    # Env-override precedence: CADRUMO_ACTIVE_PROFILE wins over the pointer.
     env_write = _run_aeat(
         tmp_path,
         ("config", "auth", "configure", "--provider", "clave_movil"),
-        extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
+        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert env_write.returncode == 0, _combined_output(env_write)
     assert "No active profile" not in _combined_output(env_write)
@@ -473,7 +473,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     explicit_write = _run_aeat(
         tmp_path,
         ("--profile", "beta", "config", "auth", "configure", "--provider", "clave_movil"),
-        extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
+        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_write.returncode == 0, _combined_output(explicit_write)
     assert "No active profile" not in _combined_output(explicit_write)
@@ -497,7 +497,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
             "_clear_active_profile_pointer",
             "capture_active_profile_pointer",
             "restore_active_profile_pointer",
-            "override_settings(aeat_active_profile",
+            "override_settings(cadrumo_active_profile",
         ),
         "src/cadrumo/application/wizard/_commands.py": (
             "activate_master_key_provider",
@@ -506,7 +506,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
             "_clear_active_profile_pointer",
             "capture_active_profile_pointer",
             "restore_active_profile_pointer",
-            "override_settings(aeat_active_profile",
+            "override_settings(cadrumo_active_profile",
         ),
         "src/cadrumo/application/setup/_service.py": (
             "_write_active_profile_pointer",

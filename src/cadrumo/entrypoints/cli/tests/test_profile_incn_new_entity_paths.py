@@ -115,7 +115,7 @@ def _load_active_taxpayer_profile():
     from ....core.config import load_settings
     from ....domain.deadlines import taxpayer_profile_from_mapping
 
-    pointer = read_pointer(load_settings().aeat_local_storage_root)
+    pointer = read_pointer(load_settings().cadrumo_local_storage_root)
     assert pointer is not None, "config profile create did not mint an active bucket pointer"
     with profile_storage_session(pointer.bucket_id):
         state = workflow_state_repository().load()

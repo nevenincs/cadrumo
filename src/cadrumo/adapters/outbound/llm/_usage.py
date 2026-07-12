@@ -46,9 +46,9 @@ class UsageRecorder:
 
         Args:
             root_dir: Logical usage partition; defaults to the centralized
-                ``aeat_llm_usage_dir`` setting.
+                ``cadrumo_llm_usage_dir`` setting.
         """
-        self.root_dir = root_dir or load_settings().aeat_llm_usage_dir
+        self.root_dir = root_dir or load_settings().cadrumo_llm_usage_dir
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
         """Build a :class:`adapters.outbound.llm.UsageRecord` from a response.

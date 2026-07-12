@@ -86,21 +86,21 @@ def test_expired_bucket_session_seals_before_refusing_active_master_key_reads() 
 
 def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_path: Path) -> None:
     settings = _settings_with_store(tmp_path)
-    _write_registered_bucket(settings.aeat_local_storage_root, "alpha")
+    _write_registered_bucket(settings.cadrumo_local_storage_root, "alpha")
     FileFallbackMasterKeyProvider(
-        store_dir=settings.aeat_secret_store_dir,
+        store_dir=settings.cadrumo_secret_store_dir,
         passphrase_callback=lambda: "right-passphrase",
     ).provision_master_key()
     wrong_provider = FileFallbackMasterKeyProvider(
-        store_dir=settings.aeat_secret_store_dir,
+        store_dir=settings.cadrumo_secret_store_dir,
         passphrase_callback=lambda: "wrong-passphrase",
     )
 
     with (
         override_settings(
-            aeat_local_storage_root=settings.aeat_local_storage_root,
-            aeat_secret_store_dir=settings.aeat_secret_store_dir,
-            aeat_secret_store_backend=SecretStoreBackend.FILE,
+            cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+            cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+            cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         ),
         pytest.raises(MasterKeyPassphraseMismatchError),
         activate_master_key_provider(wrong_provider, fallback_bucket_id="alpha"),
@@ -113,19 +113,19 @@ def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_pa
 
 def test_torn_bucket_manifest_activation_fails_without_opening_bucket_session(tmp_path: Path) -> None:
     settings = _settings_with_store(tmp_path)
-    paths = provision_bucket_directory(settings.aeat_local_storage_root, "torn")
+    paths = provision_bucket_directory(settings.cadrumo_local_storage_root, "torn")
     manifest_path(paths).write_text('bucket_id = "torn', encoding=UTF_8_ENCODING)
     provider = FileFallbackMasterKeyProvider(
-        store_dir=settings.aeat_secret_store_dir,
+        store_dir=settings.cadrumo_secret_store_dir,
         passphrase_callback=lambda: "right-passphrase",
     )
     provider.provision_master_key()
 
     with (
         override_settings(
-            aeat_local_storage_root=settings.aeat_local_storage_root,
-            aeat_secret_store_dir=settings.aeat_secret_store_dir,
-            aeat_secret_store_backend=SecretStoreBackend.FILE,
+            cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+            cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+            cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         ),
         pytest.raises(StorageValidationError),
         activate_master_key_provider(provider, fallback_bucket_id="torn"),
@@ -159,8 +159,8 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
 
     with (
         override_settings(
-            aeat_local_storage_root=tmp_path / "state",
-            aeat_database_url=f"sqlite:///{explicit_db.as_posix()}",
+            cadrumo_local_storage_root=tmp_path / "state",
+            cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
         ),
         caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.master_key._bucket_session"),
     ):
@@ -172,9 +172,9 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
 
 def _settings_with_store(tmp_path: Path) -> Settings:
     with override_settings(
-        aeat_local_storage_root=tmp_path / "state",
-        aeat_secret_store_dir=tmp_path / "secrets",
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_local_storage_root=tmp_path / "state",
+        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
     ) as settings:
         return settings
 

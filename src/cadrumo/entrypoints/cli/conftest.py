@@ -63,8 +63,8 @@ def _force_english_output() -> Iterator[None]:
 
 @pytest.fixture(autouse=True)
 def _isolated_aeat_root(tmp_path: Path) -> Iterator[None]:
-    """Point `Settings.aeat_local_storage_root` at the test's `tmp_path`."""
-    with temporary_env(AEAT_LOCAL_STORAGE_ROOT=str(tmp_path)):
+    """Point `Settings.cadrumo_local_storage_root` at the test's `tmp_path`."""
+    with temporary_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path)):
         yield
 
 

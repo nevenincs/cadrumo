@@ -125,8 +125,8 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     assert server["command"] == "uvx"
     assert server["args"] == ["--from", "aeat-cli[agent]==1.2.3", "aeat-mcp"]
     assert server["env"] == {
-        "AEAT_MCP_PERSONA": "${user_config.persona}",
-        "AEAT_MCP_SURFACE": "${user_config.surface}",
+        "CADRUMO_MCP_PERSONA": "${user_config.persona}",
+        "CADRUMO_MCP_SURFACE": "${user_config.surface}",
     }
 
 

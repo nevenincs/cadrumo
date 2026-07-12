@@ -234,7 +234,7 @@ def _nearest_existing_ancestor(path: Path) -> Path | None:
 
 def _probe_storage_root(settings: Settings) -> PreflightCheck:
     """Report whether the local secure-storage root is reachable and writable."""
-    root = settings.aeat_local_storage_root
+    root = settings.cadrumo_local_storage_root
     ancestor = _nearest_existing_ancestor(root)
     if ancestor is None:
         return PreflightCheck(
@@ -242,7 +242,10 @@ def _probe_storage_root(settings: Settings) -> PreflightCheck:
             healthy=False,
             severity=HealthSeverity.ERROR,
             detail=f"no existing directory at or above the storage root {root}",
-            remediation=f"create the storage root directory {root} or set AEAT_LOCAL_STORAGE_ROOT to a writable path",
+            remediation=(
+                f"create the storage root directory {root} or set "
+                "CADRUMO_LOCAL_STORAGE_ROOT to a writable path"
+            ),
         )
     if not ancestor.is_dir():
         return PreflightCheck(
@@ -250,7 +253,7 @@ def _probe_storage_root(settings: Settings) -> PreflightCheck:
             healthy=False,
             severity=HealthSeverity.ERROR,
             detail=f"the storage root ancestor {ancestor} is not a directory",
-            remediation=f"set AEAT_LOCAL_STORAGE_ROOT to a writable directory (currently {root})",
+            remediation=f"set CADRUMO_LOCAL_STORAGE_ROOT to a writable directory (currently {root})",
         )
     if not os.access(ancestor, os.W_OK):
         return PreflightCheck(
@@ -258,7 +261,7 @@ def _probe_storage_root(settings: Settings) -> PreflightCheck:
             healthy=False,
             severity=HealthSeverity.ERROR,
             detail=f"the storage root ancestor {ancestor} is not writable",
-            remediation=f"grant write access to {ancestor} or set AEAT_LOCAL_STORAGE_ROOT to a writable path",
+            remediation=f"grant write access to {ancestor} or set CADRUMO_LOCAL_STORAGE_ROOT to a writable path",
         )
     existing = "present" if root.exists() else "created lazily on first write"
     return PreflightCheck(
@@ -307,13 +310,16 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
     advisory (the store is merely locked and prompts interactively), a
     configured one is ``OK``.
     """
-    if settings.aeat_secret_passphrase is None:
+    if settings.cadrumo_secret_passphrase is None:
         return PreflightCheck(
             check="env:configuration",
             healthy=True,
             severity=HealthSeverity.WARN,
             detail="configuration is valid but no master-key passphrase is configured (locked store)",
-            remediation="set AEAT_SECRET_PASSPHRASE for non-interactive access, or unlock interactively when prompted",
+            remediation=(
+                "set CADRUMO_SECRET_PASSPHRASE for non-interactive access, "
+                "or unlock interactively when prompted"
+            ),
         )
     return PreflightCheck(
         check="env:configuration",
@@ -328,7 +334,7 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
 _LONG_PATH_REGISTRY_REMEDIATION = (
     "run `New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' "
     "-Name 'LongPathsEnabled' -Value 1 -PropertyType DWORD -Force` as Administrator, then "
-    "restart the terminal; or move AEAT_LOCAL_STORAGE_ROOT to a shorter path"
+    "restart the terminal; or move CADRUMO_LOCAL_STORAGE_ROOT to a shorter path"
 )
 
 
@@ -367,7 +373,7 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
             detail="LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
         )
 
-    root = settings.aeat_local_storage_root
+    root = settings.cadrumo_local_storage_root
     margin = windows_storage_root_long_path_margin(root)
     if margin <= 0:
         return PreflightCheck(

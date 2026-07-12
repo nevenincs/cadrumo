@@ -1,7 +1,7 @@
 """Local provider adapter for Ollama-compatible runtimes.
 
 Speaks the Ollama ``/api/chat`` endpoint (resolved per call from
-``Settings.aeat_llm_ollama_chat_url``) and adapts its response into the
+``Settings.cadrumo_llm_ollama_chat_url``) and adapts its response into the
 :class:`~adapters.outbound.llm._providers.base.ProviderCompletion` shape.
 The adapter assumes the runtime is reachable on localhost; remote Ollama
 deployments are out of scope.
@@ -156,7 +156,7 @@ class LocalAdapter(_ProviderAdapter):
         settings = load_settings()
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
             response = await client.post(
-                settings.aeat_llm_ollama_chat_url,
+                settings.cadrumo_llm_ollama_chat_url,
                 json={
                     "model": request.model,
                     "messages": messages,
@@ -167,7 +167,7 @@ class LocalAdapter(_ProviderAdapter):
                         # A vision request packs the allow-list prompt plus the encoded
                         # invoice image past Ollama's 4096 default context; size the
                         # window from settings so the request is not truncated/rejected.
-                        "num_ctx": settings.aeat_llm_ollama_num_ctx,
+                        "num_ctx": settings.cadrumo_llm_ollama_num_ctx,
                     },
                 },
             )

@@ -106,7 +106,7 @@ class TestIntracomFieldsPersistence:
         records = svc.list_all(bucket_id=_BUCKET_ID)
 
         assert records == (result.record,)
-        assert not (isolated_settings.aeat_invoices_dir / "payable_invoice" / f"{_BUCKET_ID}.jsonl").exists()
+        assert not (isolated_settings.cadrumo_invoices_dir / "payable_invoice" / f"{_BUCKET_ID}.jsonl").exists()
         raw_records = tuple(secure_objects.iter_all_records_raw())
         assert any(row.namespace == "cadrumo.application.ledger.business_operation_invoices" for row in raw_records)
 

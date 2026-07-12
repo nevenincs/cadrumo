@@ -201,7 +201,7 @@ class WorkflowStateRepository:
         from the envelope itself.
 
         The ``repair reset-progress`` recovery verb is bootstrap-exempt
-        and may run on a cold root where ``aeat_database_url`` does
+        and may run on a cold root where ``cadrumo_database_url`` does
         not resolve (no active profile). In that case there is no
         state envelope to reset; the fingerprint records empty
         metadata rather than crashing on the absent database
@@ -304,7 +304,7 @@ class WorkflowRunRepository:
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
         run_id = _validate_run_id(result.run_id)
-        marker_dir = runs_dir or Settings().aeat_workflow_runs_dir
+        marker_dir = runs_dir or Settings().cadrumo_workflow_runs_dir
         envelope = Envelope[WorkflowResult](
             schema_version=_RUN_VERSION,
             written_at=utc_now(),

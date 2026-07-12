@@ -74,11 +74,11 @@ _CLI_HARNESS = dedent(
     cli_args = sys.argv[2:]
     settings = Settings(
         _env_file=None,
-        aeat_local_storage_root=storage_root,
-        aeat_active_profile=" ",
-        aeat_secret_store_backend="unsecured",
-        aeat_allow_unencrypted="1",
-        aeat_output_language="en",
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=" ",
+        cadrumo_secret_store_backend="unsecured",
+        cadrumo_allow_unencrypted="1",
+        cadrumo_output_language="en",
     )
     token = config_module._settings_override.set(settings)
     try:
@@ -107,12 +107,12 @@ _EXPLICIT_DATABASE_HARNESS = dedent(
     cli_args = sys.argv[2:]
     settings = Settings(
         _env_file=None,
-        aeat_local_storage_root=storage_root,
-        aeat_database_url=f"sqlite:///{(storage_root / 'explicit.db').as_posix()}",
-        aeat_active_profile="operator",
-        aeat_secret_store_backend="unsecured",
-        aeat_allow_unencrypted="1",
-        aeat_output_language="en",
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_database_url=f"sqlite:///{(storage_root / 'explicit.db').as_posix()}",
+        cadrumo_active_profile="operator",
+        cadrumo_secret_store_backend="unsecured",
+        cadrumo_allow_unencrypted="1",
+        cadrumo_output_language="en",
     )
     token = config_module._settings_override.set(settings)
     try:
@@ -208,8 +208,8 @@ def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path) -> Non
         assert result.returncode == 2, output
         assert "Storage runtime is not ready" in output
         assert "database route is not attached to an active profile bucket" in output
-        assert "AEAT_DATABASE_URL" in output
-        assert "AEAT_LOCAL_STORAGE_ROOT" in output
+        assert "CADRUMO_DATABASE_URL" in output
+        assert "CADRUMO_LOCAL_STORAGE_ROOT" in output
         assert not (tmp_path / "explicit.db").exists(), output
 
 

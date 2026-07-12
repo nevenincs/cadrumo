@@ -124,7 +124,7 @@ def _forbidden_mutation_verbs(name: str) -> frozenset[str]:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(aeat_audit_dir=tmp_path / "audit"),
+        override_settings(cadrumo_audit_dir=tmp_path / "audit"),
         profile_create_storage_span(_ACTIVE_TEST_BUCKET_ID),
     ):
         workflow_state_repository().update(

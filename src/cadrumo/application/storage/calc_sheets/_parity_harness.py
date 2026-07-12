@@ -300,7 +300,7 @@ def _missing_seed_anchor(input_kind: str) -> CalcSheetsParityError:
 
 
 def _sheets_recalc_delay_seconds() -> float:
-    return load_settings().aeat_calc_sheets_recalc_delay_s
+    return load_settings().cadrumo_calc_sheets_recalc_delay_s
 
 
 def _read_sheets_computed(

@@ -62,7 +62,7 @@ class TestJsonlStoreRoundTrip:
         )
 
     def test_append_and_load(self, tmp_path: Path) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             events = tuple(self._make_event(i) for i in range(3))
             for evt in events:
                 save_events_append(evt.run_id, evt)
@@ -84,7 +84,7 @@ class TestJsonlStoreRoundTrip:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             evt = self._make_event(1)
             save_events_append(evt.run_id, evt)
             target = runs_dir() / evt.run_id / _EVENTS_FILENAME
@@ -182,7 +182,7 @@ class TestStoreRunIdValidation:
             "..",
         )
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             for bad_run_id in bad_run_ids:
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                     _validate_run_id(bad_run_id)
@@ -197,7 +197,7 @@ class TestStoreRunIdValidation:
     ) -> None:
         from .. import load_trace
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                 load_trace("not-a-valid-run")
             # The crafted run_id must never have resulted in a new directory.
@@ -209,7 +209,7 @@ class TestStoreRunIdValidation:
     ) -> None:
         from .. import load_trace
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             # 16 hex chars — passes validation, but nothing on disk.
             with pytest.raises(RunTraceValidationError, match=r"trace\.json not found"):
                 load_trace("0" * 16)
@@ -233,7 +233,7 @@ class TestStorePersistenceErrors:
     def test_save_trace_wraps_unusable_runs_root(self, tmp_path: Path) -> None:
         runs_root = tmp_path / "runs"
         runs_root.write_text("not a directory", encoding="utf-8")
-        settings = Settings(aeat_runs_dir=runs_root)
+        settings = Settings(cadrumo_runs_dir=runs_root)
 
         with pytest.raises(RunTracePersistenceError) as excinfo:
             save_trace(self._trace(), settings=settings)
@@ -248,7 +248,7 @@ class TestStorePersistenceErrors:
         runs_root = tmp_path / "runs"
         trace_path = runs_root / run_id / "trace.json"
         trace_path.mkdir(parents=True)
-        settings = Settings(aeat_runs_dir=runs_root)
+        settings = Settings(cadrumo_runs_dir=runs_root)
 
         with pytest.raises(RunTracePersistenceError) as excinfo:
             load_trace(run_id, settings=settings)
@@ -264,7 +264,7 @@ class TestStorePersistenceErrors:
         (runs_root / "plain.txt").write_text("not a run", encoding="utf-8")
         (runs_root / "not-a-run").mkdir()
         (runs_root / "0123456789abcdef").mkdir()
-        settings = Settings(aeat_runs_dir=runs_root)
+        settings = Settings(cadrumo_runs_dir=runs_root)
 
         caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability._store")
 
@@ -298,7 +298,7 @@ class TestIterEvents:
         from .. import iter_events
 
         with (
-            override_settings(aeat_runs_dir=str(tmp_path)),
+            override_settings(cadrumo_runs_dir=str(tmp_path)),
             pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
         ):
             # No .iter(), no .__next__() — the call itself must raise.
@@ -311,7 +311,7 @@ class TestIterEvents:
         """Consuming n events pulls exactly n lines off disk."""
         from .. import iter_events
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             run_id = "0123456789abcdef"
             for i in range(5):
                 save_events_append(run_id, self._event(run_id, i))
@@ -332,7 +332,7 @@ class TestIterEvents:
         """A validation error fires during iteration, not at call time."""
         from .. import iter_events
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             run_id = "abcdef0123456789"
             save_events_append(run_id, self._event(run_id, 0))
             # Append a malformed line after the valid one.

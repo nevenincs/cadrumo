@@ -1,6 +1,6 @@
 """Live-gated OAuth Desktop integration tests.
 
-Deselect unless `AEAT_LIVE_TESTS_ENABLED=1` AND the operator has
+Deselect unless `CADRUMO_LIVE_TESTS_ENABLED=1` AND the operator has
 already pre-registered an `OAuthClient` in the secure store for the
 named test profile (`AEAT_GOOGLE_LIVE_PROFILE`, default `live-test`).
 The tests exercise three real-world paths against the operator's own

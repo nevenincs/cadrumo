@@ -25,7 +25,7 @@ rather than any curated contract tuple. CLI help strings are ``tr()``
 values resolved to plain strings at module-import time, so the output
 language must be pinned BEFORE any CLI module is imported. The four-language
 help is therefore gathered by walking the tree four times, once per
-language, each in a fresh subprocess with ``AEAT_OUTPUT_LANGUAGE=<lang>``
+language, each in a fresh subprocess with ``CADRUMO_OUTPUT_LANGUAGE=<lang>``
 (the same clean-interpreter guarantee the CLI reference generator uses).
 """
 
@@ -222,7 +222,7 @@ _WALK_PROGRAM = textwrap.dedent(
 def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
     """Materialise the CLI tree in one language via a fresh subprocess.
 
-    Pins ``AEAT_OUTPUT_LANGUAGE`` to ``language`` so every ``help=tr(...)``
+    Pins ``CADRUMO_OUTPUT_LANGUAGE`` to ``language`` so every ``help=tr(...)``
     call stores that language's string on the Typer objects before any CLI
     module is imported (the clean-interpreter guarantee mirrored from
     :func:`dev.docs.cli_reference.generate_cli_reference_in_subprocess`).
@@ -238,7 +238,7 @@ def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
             materialised in this language).
     """
     env = dict(os.environ)
-    env["AEAT_OUTPUT_LANGUAGE"] = language.value
+    env["CADRUMO_OUTPUT_LANGUAGE"] = language.value
 
     result = subprocess.run(
         [sys.executable, "-c", _WALK_PROGRAM],

@@ -107,7 +107,7 @@ class AnthropicAdapter(_ProviderAdapter):
             LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
-            msg = "AEAT_LLM_ANTHROPIC_API_KEY must be set for the Anthropic provider."
+            msg = "CADRUMO_LLM_ANTHROPIC_API_KEY must be set for the Anthropic provider."
             raise LLMConfigError(msg)
         self._sdk = _load_anthropic_sdk()
         self._client = self._sdk.AsyncAnthropic(api_key=api_key, timeout=timeout_s)

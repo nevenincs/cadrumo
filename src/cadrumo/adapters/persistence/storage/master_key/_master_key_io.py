@@ -27,7 +27,7 @@ __all__ = [
 
 _log = get_logger(__name__)
 
-PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"  # noqa: S105 - env var name, not secret value
+PASSPHRASE_ENV_VAR: Final[str] = "CADRUMO_SECRET_PASSPHRASE"  # noqa: S105 - env var name, not secret value
 """Environment variable consulted by the file backend before prompting."""
 
 PassphraseCallback = Callable[[], str]
@@ -82,7 +82,7 @@ def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None)
     """Resolve the operator's passphrase from env or stdin."""
     from .....core.config import load_settings
 
-    configured = load_settings().aeat_secret_passphrase
+    configured = load_settings().cadrumo_secret_passphrase
     if configured is not None:
         normalized = configured.get_secret_value().rstrip("\r\n")
         if not normalized:

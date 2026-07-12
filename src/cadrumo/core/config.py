@@ -69,8 +69,8 @@ _LOGGER = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
-DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
-"""Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "CADRUMO_DEV_TEST_DATABASE_PASSWORD"
+"""Environment variable backing :attr:`Settings.cadrumo_dev_test_database_password`."""
 LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
 LIVE_READ_TEST_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_OPT_IN_ENV_VAR
 LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
@@ -78,9 +78,9 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_G
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
-    "aeat_secret_store_dir": "secrets",
-    "aeat_blob_store_dir": "blobs",
-    "aeat_audit_dir": "audit",
+    "cadrumo_secret_store_dir": "secrets",
+    "cadrumo_blob_store_dir": "blobs",
+    "cadrumo_audit_dir": "audit",
 }
 
 
@@ -93,8 +93,8 @@ class Settings(AeatIntegrationSettings):
     provider selectors, but does not open secret stores, build outbound
     providers, or execute AEAT browser flows.
 
-    Validators keep derived paths coherent with ``aeat_local_storage_root`` and
-    derive ``aeat_database_url`` from either an explicit field, the active
+    Validators keep derived paths coherent with ``cadrumo_local_storage_root`` and
+    derive ``cadrumo_database_url`` from either an explicit field, the active
     profile, or the cold root fallback. Tests and CLI scopes should prefer
     :func:`override_settings` over process-wide environment mutation whenever
     they are not explicitly testing environment parsing.
@@ -107,15 +107,15 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Token Storage ───────────────────────────────────────────────────────
-    aeat_token_dir: Path = Field(
+    cadrumo_token_dir: Path = Field(
         default=PROJECT_ROOT,
         description=(
             "Directory for cached authentication token and lock files. The "
             "``PROJECT_ROOT`` default here is a placeholder: when the field "
             "is not explicitly set, the model validator roots it at "
-            "``<aeat_local_storage_root>/tokens`` so every profile store, "
+            "``<cadrumo_local_storage_root>/tokens`` so every profile store, "
             "token and lock files included, lives under one state root. An "
-            "explicit ``AEAT_TOKEN_DIR`` override wins over the derived "
+            "explicit ``CADRUMO_TOKEN_DIR`` override wins over the derived "
             "default."
         ),
     )
@@ -125,12 +125,12 @@ class Settings(AeatIntegrationSettings):
         default_factory=_default_aeat_sede_origin,
         description="AEAT sede electrónica base URL",
     )
-    aeat_log_level: str = Field(
+    cadrumo_log_level: str = Field(
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
     )
     # ── Multilingual i18n ───────────────────────────────────────────────────
-    aeat_output_language: Annotated[
+    cadrumo_output_language: Annotated[
         OutputLanguage | None,
         BeforeValidator(_coerce_output_language_setting),
     ] = Field(
@@ -144,35 +144,35 @@ class Settings(AeatIntegrationSettings):
         default="es",
         description=("Authoritative language for domain terminology (modelos, registry definitions, references)."),
     )
-    aeat_authoritative_language_project_docs: str = Field(
+    cadrumo_authoritative_language_project_docs: str = Field(
         default="en",
         description="Authoritative language for internal code and documentation",
     )
-    aeat_fallback_languages: str = Field(
+    cadrumo_fallback_languages: str = Field(
         default="es,en",
         description=("Comma-separated fallback chain consulted when the target language is missing."),
     )
 
     # ── Storage ─────────────────────────────────────────────────────────────
-    aeat_database_url: str = Field(
+    cadrumo_database_url: str = Field(
         default="",
         description=(
             "SQLAlchemy URL for the primary persistence backend. When empty, "
             "the model validator resolves the URL through the active-profile "
             "precedence chain to "
-            "``sqlite:///<aeat_local_storage_root>/buckets/<bucket-id>/db/aeat.db``; "
+            "``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/aeat.db``; "
             "with no active profile it derives a root-level fallback at "
-            "``sqlite:///<aeat_local_storage_root>/aeat.db`` so the URL is "
+            "``sqlite:///<cadrumo_local_storage_root>/aeat.db`` so the URL is "
             "never empty when the storage root is set. Tests that need a "
             "deterministic location supply this field explicitly; production "
             "reads the computed value."
         ),
     )
-    aeat_storage_backup_dir: Path = Field(
+    cadrumo_storage_backup_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "backups",
         description="Directory where the storage layer writes database backups",
     )
-    aeat_secret_store_backend: SecretStoreBackend = Field(
+    cadrumo_secret_store_backend: SecretStoreBackend = Field(
         default=SecretStoreBackend.AUTO,
         description=(
             "Master-key backend for the secret store. "
@@ -180,55 +180,55 @@ class Settings(AeatIntegrationSettings):
             "keyring = OS keychain only (refuses to fall back). "
             "file = encrypted file only (required for CI / headless). "
             "unsecured = testing-only mode with a published deterministic "
-            "key; requires aeat_allow_unencrypted=true and refuses real NIFs."
+            "key; requires cadrumo_allow_unencrypted=true and refuses real NIFs."
         ),
     )
     # Typed as ``str`` (not ``bool``) to preserve the strict-"1"-only
     # kill-switch semantic. Pydantic's bool coercion would widen the
     # opt-in surface to accept "true"/"yes"/"on" — a softer gate than
     # the safety-critical "no confidentiality" surface allows. The
-    # consumer in master_key checks ``settings.aeat_allow_unencrypted
+    # consumer in master_key checks ``settings.cadrumo_allow_unencrypted
     # == "1"`` rather than truth-testing.
-    aeat_allow_unencrypted: str = Field(
+    cadrumo_allow_unencrypted: str = Field(
         default="",
         description=(
             "Hostile-named opt-out gate for the unsecured backend. Must be "
-            "set to the literal '1' (env var: AEAT_ALLOW_UNENCRYPTED=1) to "
-            "use aeat_secret_store_backend=unsecured. The unsecured backend "
+            "set to the literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to "
+            "use cadrumo_secret_store_backend=unsecured. The unsecured backend "
             "is intended for testing / educational / throwaway scenarios "
             "only and provides ZERO confidentiality. The substrate refuses "
             "to load an operator profile that carries a real NIF/NIE/CIF "
             "while running in unsecured mode."
         ),
     )
-    aeat_secret_store_dir: Path = Field(
+    cadrumo_secret_store_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "secrets",
         description="Directory for the encrypted secret-store master-key file and ciphertext records",
     )
-    aeat_dev_test_database_password: SecretStr = Field(
+    cadrumo_dev_test_database_password: SecretStr = Field(
         default=SecretStr(DEV_TEST_DATABASE_PASSWORD),
         description="Development/test-only password used by secure-storage subprocess tests.",
     )
-    aeat_blob_store_dir: Path = Field(
+    cadrumo_blob_store_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "blobs",
         description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
     )
-    aeat_audit_dir: Path = Field(
+    cadrumo_audit_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "audit",
         description="Directory for the governed audit sink (redacted, classification-aware)",
     )
 
     # ── Outbound storage provider ───────────────────────────────────────────
-    aeat_storage_provider_kind: str = Field(
+    cadrumo_storage_provider_kind: str = Field(
         default="local_filesystem",
         description=(
             "Backend for `aeat.adapters.outbound.storage`. "
             "Accepted values: local_filesystem (default), google_drive, in_memory. "
-            "google_drive additionally requires aeat_google_drive_root_folder_id "
+            "google_drive additionally requires cadrumo_google_drive_root_folder_id "
             "and a per-profile registered OAuth client + token via `aeat config google`."
         ),
     )
-    aeat_local_storage_root: Path = Field(
+    cadrumo_local_storage_root: Path = Field(
         default_factory=default_storage_root,
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
@@ -238,15 +238,15 @@ class Settings(AeatIntegrationSettings):
             "distribution roots at the platform user-data directory "
             "(`%LOCALAPPDATA%/aeat/storage`, `$XDG_DATA_HOME/aeat/storage` or "
             "`~/Library/Application Support/aeat/storage`) so the encrypted store never "
-            "lands inside a virtualenv or uv cache. An explicit `AEAT_LOCAL_STORAGE_ROOT` "
+            "lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` "
             "override wins over the derived default."
         ),
     )
-    aeat_google_drive_root_folder_id: str | None = Field(
+    cadrumo_google_drive_root_folder_id: str | None = Field(
         default=None,
         description=(
             "Drive folder ID under which `aeat-vault/` is created and used. "
-            "Required when aeat_storage_provider_kind=google_drive. Operator obtains "
+            "Required when cadrumo_storage_provider_kind=google_drive. Operator obtains "
             "this from the Cloud Console / Drive web UI; the app creates `aeat-vault/` "
             "lazily on first probe."
         ),
@@ -254,11 +254,11 @@ class Settings(AeatIntegrationSettings):
 
     # ── Live tests ──────────────────────────────────────────────────────────
     # Typed as ``str`` to preserve the strict literal-"1" opt-in predicate.
-    aeat_live_tests_enabled: str = Field(
+    cadrumo_live_tests_enabled: str = Field(
         default="",
         description="Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services",
     )
-    aeat_live_tests_google: str = Field(
+    cadrumo_live_tests_google: str = Field(
         default="",
         description=(
             "Opt-in flag (set to '1') to run @pytest.mark.aeat_live Google "
@@ -273,7 +273,7 @@ class Settings(AeatIntegrationSettings):
         This is a strict ``"1"`` predicate for test selection only; production
         live-read access gates consume their own policy and capability checks.
         """
-        return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_enabled)
+        return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_enabled)
 
     @property
     def live_tests_google_enabled(self) -> bool:
@@ -283,7 +283,7 @@ class Settings(AeatIntegrationSettings):
         general live-read opt-in and remain separate from production provider
         construction.
         """
-        return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_google)
+        return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_google)
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
     # Set by ``cadrumo.core.observability._replay.replay_run`` on the parent
@@ -294,13 +294,13 @@ class Settings(AeatIntegrationSettings):
     # (Settings is read-only and ``Settings()`` is re-instantiated by
     # ``load_settings()`` on each call, so the write is visible to the
     # next read).
-    aeat_replay_active: str = Field(
+    cadrumo_replay_active: str = Field(
         default="",
         description="Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry",
     )
 
     # ── TTY / colour ────────────────────────────────────────────────────────
-    aeat_force_color: bool = Field(
+    cadrumo_force_color: bool = Field(
         default=False,
         description=(
             "Force ANSI colour output even when stdout is not a TTY. "
@@ -320,7 +320,7 @@ class Settings(AeatIntegrationSettings):
             "convention is honoured without per-call-site os.environ reads."
         ),
     )
-    aeat_cli_reveal_identifiers: bool = Field(
+    cadrumo_cli_reveal_identifiers: bool = Field(
         default=False,
         description=(
             "Reveal raw profile and bucket identifiers in CLI success output "
@@ -329,7 +329,7 @@ class Settings(AeatIntegrationSettings):
             "policy (profile/bucket UUIDs are redacted so diagnostics are safe "
             "to paste into shared notes). A multi-client gestor who must "
             "disambiguate which bucket a command addressed sets "
-            "``AEAT_CLI_REVEAL_IDENTIFIERS=1`` to opt out. This only un-redacts "
+            "``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` to opt out. This only un-redacts "
             "the opaque profile/bucket UUIDs; NIF/NIE/CIF tax identities, "
             "bearer tokens, URLs, and secure-object keys stay redacted "
             "unconditionally."
@@ -337,21 +337,21 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Diagnostic logging ──────────────────────────────────────────────────
-    aeat_log_dir: Path | None = Field(
+    cadrumo_log_dir: Path | None = Field(
         default=None,
         description=(
             "Diagnostic-log root directory. The ``None`` default here is a "
             "placeholder: when the field is not explicitly set, the model "
-            "validator roots it at ``<aeat_local_storage_root>/logs`` so the "
+            "validator roots it at ``<cadrumo_local_storage_root>/logs`` so the "
             "diagnostic log lives under the one state root that "
-            "``AEAT_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's "
-            "log. An explicit ``AEAT_LOG_DIR`` override wins over the "
+            "``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's "
+            "log. An explicit ``CADRUMO_LOG_DIR`` override wins over the "
             "derived default."
         ),
     )
 
     # ── Workbook parity scanner ─────────────────────────────────────────────
-    aeat_libreoffice_executable: Path | None = Field(
+    cadrumo_libreoffice_executable: Path | None = Field(
         default=None,
         description=(
             "Optional explicit path to the soffice / libreoffice binary used by "
@@ -361,13 +361,13 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Master-key passphrase (live-write security perimeter) ───────────────
-    aeat_secret_passphrase: SecretStr | None = Field(
+    cadrumo_secret_passphrase: SecretStr | None = Field(
         default=None,
         description=(
             "Passphrase that derives the encrypted-secret-store master key. "
             "Default None — the master-key loader refuses operation on None or "
             "empty value to preserve fail-closed behaviour. Operator-facing "
-            "env var is AEAT_SECRET_PASSPHRASE."
+            "env var is CADRUMO_SECRET_PASSPHRASE."
         ),
     )
 
@@ -403,14 +403,14 @@ class Settings(AeatIntegrationSettings):
         default=True,
         description="Run browser in headless mode",
     )
-    aeat_wallet_diagnostic_dump_dir: Path | None = Field(
+    cadrumo_wallet_diagnostic_dump_dir: Path | None = Field(
         default=None,
         description=(
             "Opt-in diagnostic capture directory for the IVA compensation "
             "wallet (cartera) read. The ``None`` default disables capture and "
             "is the only production posture: with it unset the wallet read "
             "path is byte-for-byte unchanged. When set via "
-            "``AEAT_WALLET_DIAGNOSTIC_DUMP_DIR`` the read dumps the full "
+            "``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read dumps the full "
             "captured page tree — main document, every popup page, every child "
             "frame, and per-page screenshots — to this directory so AEAT DOM "
             "drift on the cartera surface can be diagnosed offline "
@@ -420,7 +420,7 @@ class Settings(AeatIntegrationSettings):
             "sanitisation."
         ),
     )
-    aeat_active_profile: str | None = Field(
+    cadrumo_active_profile: str | None = Field(
         default=None,
         description=(
             "Per-shell override for the active operator profile. When set, "
@@ -487,11 +487,11 @@ class Settings(AeatIntegrationSettings):
         ge=1,
         description="Playwright navigation timeout for AEAT authentication probes in milliseconds",
     )
-    aeat_strict_security: bool = Field(
+    cadrumo_strict_security: bool = Field(
         default=False,
         description="Raise instead of warn when AEAT credential artifact permission hardening fails",
     )
-    aeat_cert_warn_days: int = Field(
+    cadrumo_cert_warn_days: int = Field(
         default=60,
         gt=0,
         description=(
@@ -499,7 +499,7 @@ class Settings(AeatIntegrationSettings):
             "certificates with <= this many days remaining are surfaced as WARN"
         ),
     )
-    aeat_cert_critical_days: int = Field(
+    cadrumo_cert_critical_days: int = Field(
         default=14,
         gt=0,
         description=(
@@ -627,53 +627,53 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── LLM ─────────────────────────────────────────────────────────────────
-    aeat_llm_provider: LLMProviderSetting = Field(
+    cadrumo_llm_provider: LLMProviderSetting = Field(
         default=LLMProviderSetting.ANTHROPIC,
         description="Default LLM provider name",
     )
-    aeat_llm_model: str = Field(
+    cadrumo_llm_model: str = Field(
         default="claude-sonnet-4-6",
         description="Default LLM model identifier",
     )
-    aeat_llm_anthropic_api_key: SecretStr | None = Field(
+    cadrumo_llm_anthropic_api_key: SecretStr | None = Field(
         default=None,
         description="Anthropic API key (env only, never logged)",
     )
-    aeat_llm_openai_api_key: SecretStr | None = Field(
+    cadrumo_llm_openai_api_key: SecretStr | None = Field(
         default=None,
         description="OpenAI API key (optional)",
     )
-    aeat_llm_gemini_api_key: SecretStr | None = Field(
+    cadrumo_llm_gemini_api_key: SecretStr | None = Field(
         default=None,
         description="Google Gemini API key (optional)",
     )
-    aeat_llm_cache_dir: Path = Field(
+    cadrumo_llm_cache_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "llm-cache",
         description="Directory for on-disk LLM cache entries",
     )
-    aeat_llm_usage_dir: Path = Field(
+    cadrumo_llm_usage_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "llm-usage",
         description="Directory for append-only LLM usage JSONL logs",
     )
-    aeat_llm_run_telemetry_dir: Path = Field(
+    cadrumo_llm_run_telemetry_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "llm-run-telemetry",
         description="Directory for append-only local LLM run-timing telemetry logs",
     )
-    aeat_llm_run_telemetry_retention_days: int = Field(
+    cadrumo_llm_run_telemetry_retention_days: int = Field(
         default=30,
         ge=1,
         description="Retention window in days for local LLM run-telemetry records; older records are pruned",
     )
-    aeat_llm_run_telemetry_max_records: int = Field(
+    cadrumo_llm_run_telemetry_max_records: int = Field(
         default=5000,
         ge=1,
         description="Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned",
     )
-    aeat_llm_default_timeout_s: int = Field(
+    cadrumo_llm_default_timeout_s: int = Field(
         default=60,
         description="Default timeout for LLM provider calls in seconds",
     )
-    aeat_llm_max_retries: int = Field(
+    cadrumo_llm_max_retries: int = Field(
         default=3,
         description="Maximum retry attempts for retryable LLM failures",
     )
@@ -684,7 +684,7 @@ class Settings(AeatIntegrationSettings):
     # deployment-permitted, per-invocation, acknowledged exception only and is
     # categorically barred in gestor/professional deployments
     # (sensitive-financial-data-secure-storage-only).
-    aeat_evidence_cloud_upload_permitted: bool = Field(
+    cadrumo_evidence_cloud_upload_permitted: bool = Field(
         default=False,
         description=(
             "Whether this deployment permits transmitting evidence to a cloud model at all. "
@@ -692,11 +692,11 @@ class Settings(AeatIntegrationSettings):
             "consent acknowledgement is still required for each cloud read."
         ),
     )
-    aeat_evidence_gestor_mode: bool = Field(
+    cadrumo_evidence_gestor_mode: bool = Field(
         default=False,
         description=(
             "Gestor/professional deployment flag. When True, cloud evidence upload is categorically "
-            "refused regardless of aeat_evidence_cloud_upload_permitted or per-invocation consent."
+            "refused regardless of cadrumo_evidence_cloud_upload_permitted or per-invocation consent."
         ),
     )
 
@@ -706,19 +706,19 @@ class Settings(AeatIntegrationSettings):
     # written to encrypted secure storage or a local JSONL file and never
     # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
     # opt-in exception governed by the same off-host consent shape as
-    # aeat_evidence_cloud_upload_permitted / aeat_evidence_gestor_mode
+    # cadrumo_evidence_cloud_upload_permitted / cadrumo_evidence_gestor_mode
     # (sensitive-financial-data-secure-storage-only; see
     # 2026-07-04-remote-telemetry-adr). No transport reads these fields yet in
     # this slice; the gate and the allowlisted payload schema are built first.
-    aeat_telemetry_opt_in: bool = Field(
+    cadrumo_telemetry_opt_in: bool = Field(
         default=False,
         description=(
             "Whether this deployment permits transmitting remote telemetry at all. Default off: all "
             "telemetry stays local. When True, a per-invocation operator consent acknowledgement is "
-            "still required for each emit, and aeat_telemetry_tier must not be 'off'."
+            "still required for each emit, and cadrumo_telemetry_tier must not be 'off'."
         ),
     )
-    aeat_telemetry_tier: TelemetryTier = Field(
+    cadrumo_telemetry_tier: TelemetryTier = Field(
         default=TelemetryTier.OFF,
         description=(
             "Remote telemetry tier: 'off' (no remote emission regardless of opt-in), 'crash_only' "
@@ -726,15 +726,15 @@ class Settings(AeatIntegrationSettings):
             "remote_allowed=True metric keys are ever eligible for transmission at any tier."
         ),
     )
-    aeat_telemetry_gestor_mode: bool = Field(
+    cadrumo_telemetry_gestor_mode: bool = Field(
         default=False,
         description=(
             "Gestor/professional deployment flag. When True, remote telemetry emission is "
-            "categorically refused regardless of aeat_telemetry_opt_in, aeat_telemetry_tier, or "
+            "categorically refused regardless of cadrumo_telemetry_opt_in, cadrumo_telemetry_tier, or "
             "per-invocation consent."
         ),
     )
-    aeat_telemetry_endpoint: str | None = Field(
+    cadrumo_telemetry_endpoint: str | None = Field(
         default=None,
         description=(
             "Remote telemetry collector URL. Scaffolded for a future transport slice; no code in the "
@@ -743,7 +743,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Filing-deadline engine ──────────────────────────────────────────────
-    aeat_deadline_due_soon_days: int = Field(
+    cadrumo_deadline_due_soon_days: int = Field(
         default=14,
         description=(
             "Days before an obligation's closes_on date that flag ObligationStatus.DUE_SOON in the deadline engine"
@@ -751,25 +751,25 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Submission engine ───────────────────────────────────────────────────
-    aeat_submissions_dir: Path = Field(
+    cadrumo_submissions_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "submissions",
         description="Directory where ModeloPresentado JSON audit records are persisted",
     )
-    aeat_submission_browser_trace_dir: Path = Field(
+    cadrumo_submission_browser_trace_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "browser-traces",
         description="Directory where submission-engine Playwright traces and screenshots are written",
     )
 
     # ── Notifications inbox ─────────────────────────────────────────────────
-    aeat_inbox_dir: Path = Field(
+    cadrumo_inbox_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "inbox",
         description="Directory where the persisted Inbox JSON file lives",
     )
-    aeat_inbox_pdf_dir: Path = Field(
+    cadrumo_inbox_pdf_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "inbox" / "pdfs",
         description="Directory where downloaded notification PDFs are stored",
     )
-    aeat_inbox_alert_lead_days: int = Field(
+    cadrumo_inbox_alert_lead_days: int = Field(
         default=7,
         description=(
             "Lead window (days) for `aeat inbox next-deadline`: surface CRITICAL/HIGH "
@@ -778,22 +778,22 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Workflow engine ─────────────────────────────────────────────────────
-    aeat_workflow_runs_dir: Path = Field(
+    cadrumo_workflow_runs_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "workflow-runs",
         description="Directory where WorkflowResult JSON audit records are persisted",
     )
     # ── Filing draft engine ─────────────────────────────────────────────────
-    aeat_drafts_dir: Path = Field(
+    cadrumo_drafts_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "drafts",
         description="Directory where filing drafts are written as JSON files",
     )
-    aeat_draft_fail_on_warning: bool = Field(
+    cadrumo_draft_fail_on_warning: bool = Field(
         default=False,
         description=(
             "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
     )
-    aeat_m210_engine_live: bool = Field(
+    cadrumo_m210_engine_live: bool = Field(
         default=False,
         description=(
             "Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo "
@@ -806,15 +806,15 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Status reader ───────────────────────────────────────────────────────
-    aeat_status_cache_dir: Path = Field(
+    cadrumo_status_cache_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "status-cache",
         description="Directory for the short-lived AEAT status-page cache",
     )
-    aeat_status_cache_ttl_s: int = Field(
+    cadrumo_status_cache_ttl_s: int = Field(
         default=900,
         description="TTL in seconds for status cache entries (default 15 min)",
     )
-    aeat_status_browser_trace_dir: Path = Field(
+    cadrumo_status_browser_trace_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "browser-traces",
         description="Directory where the status reader drops Playwright trace files",
     )
@@ -834,7 +834,7 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Observability ──────────────────────────────────────────────────────
-    aeat_runs_dir: Path = Field(
+    cadrumo_runs_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "runs",
         description=(
             "Directory where run traces and JSONL event logs are persisted "
@@ -843,27 +843,27 @@ class Settings(AeatIntegrationSettings):
     )
 
     # ── Justificante parser ─────────────────────────────────────────────────
-    aeat_justificantes_dir: Path = Field(
+    cadrumo_justificantes_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "justificantes",
         description="Directory where parsed justificante PDFs and metadata are stored",
     )
-    aeat_justificante_parser_backend: JustificanteParserBackendSetting = Field(
+    cadrumo_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
         description="Parser backend for `aeat.adapters.inbound.justificante`",
     )
 
     # ── Filing history ──────────────────────────────────────────────────────
-    aeat_filing_history_dir: Path = Field(
+    cadrumo_filing_history_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "filing-history",
         description="Directory where the persisted ModeloHistory JSON file lives",
     )
-    aeat_filing_history_cache_ttl_s: int = Field(
+    cadrumo_filing_history_cache_ttl_s: int = Field(
         default=900,
         description="TTL in seconds for per-expediente filing-history cache entries (default 15 min)",
     )
-    aeat_filing_history_archive_html: bool = Field(
+    cadrumo_filing_history_archive_html: bool = Field(
         default=False,
-        description="If true, archive fetched detail-page HTML under <aeat_filing_history_dir>/pages/",
+        description="If true, archive fetched detail-page HTML under <cadrumo_filing_history_dir>/pages/",
     )
 
     # ── Introspection ───────────────────────────────────────────────────────
@@ -878,36 +878,36 @@ class Settings(AeatIntegrationSettings):
 
     @model_validator(mode="after")
     def _resolve_database_url_for_active_profile(self) -> Settings:
-        """Resolve ``aeat_database_url`` through the active-profile chain.
+        """Resolve ``cadrumo_database_url`` through the active-profile chain.
 
         When the field is left empty (the production default), this
         validator computes the per-bucket SQLite URL at
-        ``sqlite:///<aeat_local_storage_root>/buckets/<bucket-id>/db/aeat.db``.
+        ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/aeat.db``.
         Tests that pass an explicit URL bypass the resolution — the
         validator only fires the computation when the field is empty.
 
         Active-profile resolution honours the operator-facing
         precedence chain:
 
-        1. ``self.aeat_active_profile`` (from ``AEAT_ACTIVE_PROFILE``
+        1. ``self.cadrumo_active_profile`` (from ``CADRUMO_ACTIVE_PROFILE``
            env var, or an ``override_settings`` block in tests).
-        2. ``<aeat_local_storage_root>/active-profile`` plaintext
+        2. ``<cadrumo_local_storage_root>/active-profile`` plaintext
            pointer file written by ``profile create`` / ``profile
            switch``.
 
         When neither rung resolves, the field derives a root-level
-        fallback at ``sqlite:///<aeat_local_storage_root>/aeat.db`` so
+        fallback at ``sqlite:///<cadrumo_local_storage_root>/aeat.db`` so
         the two storage settings stay coherent: setting
-        ``AEAT_LOCAL_STORAGE_ROOT`` alone never leaves
-        ``aeat_database_url`` empty. Cold-start commands still refuse
+        ``CADRUMO_LOCAL_STORAGE_ROOT`` alone never leaves
+        ``cadrumo_database_url`` empty. Cold-start commands still refuse
         before touching this fallback database — every profile-scoped
         path checks for an active profile first — so the fallback
         database is a placeholder that real per-profile data never
         lands in.
         """
-        if self.aeat_database_url:
+        if self.cadrumo_database_url:
             return self
-        bucket_id = (self.aeat_active_profile or "").strip()
+        bucket_id = (self.cadrumo_active_profile or "").strip()
         if not bucket_id:
             # Delegate to the canonical pointer-file reader rather
             # than re-implementing the TOML parse inline. The reader
@@ -917,9 +917,9 @@ class Settings(AeatIntegrationSettings):
             from . import pointer_path, read_pointer
 
             try:
-                pointer = read_pointer(self.aeat_local_storage_root)
+                pointer = read_pointer(self.cadrumo_local_storage_root)
             except (OSError, ValueError) as exc:
-                pointer_file = pointer_path(self.aeat_local_storage_root)
+                pointer_file = pointer_path(self.cadrumo_local_storage_root)
                 _LOGGER.debug(
                     "Invalid active-profile pointer at %s; refusing root storage fallback",
                     pointer_file,
@@ -929,84 +929,84 @@ class Settings(AeatIntegrationSettings):
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()
         if not bucket_id:
-            fallback_db_path = self.aeat_local_storage_root / "aeat.db"
+            fallback_db_path = self.cadrumo_local_storage_root / "aeat.db"
             object.__setattr__(
                 self,
-                "aeat_database_url",
+                "cadrumo_database_url",
                 f"sqlite:///{fallback_db_path.as_posix()}",
             )
             return self
-        bucket_db_path = self.aeat_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"
+        bucket_db_path = self.cadrumo_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"
         object.__setattr__(
             self,
-            "aeat_database_url",
+            "cadrumo_database_url",
             f"sqlite:///{bucket_db_path.as_posix()}",
         )
         return self
 
     @model_validator(mode="after")
     def _resolve_token_dir_under_storage_root(self) -> Settings:
-        """Root ``aeat_token_dir`` under ``aeat_local_storage_root``.
+        """Root ``cadrumo_token_dir`` under ``cadrumo_local_storage_root``.
 
         When the field is not explicitly supplied (the production
         default), this validator computes
-        ``<aeat_local_storage_root>/tokens`` so that auth token and
+        ``<cadrumo_local_storage_root>/tokens`` so that auth token and
         lock files live inside the one state root that
-        ``AEAT_LOCAL_STORAGE_ROOT`` scopes — making the isolation
+        ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes — making the isolation
         contract tests and the persona harness rely on actually true.
 
-        An explicit ``AEAT_TOKEN_DIR`` env var (or a value supplied via
+        An explicit ``CADRUMO_TOKEN_DIR`` env var (or a value supplied via
         an ``override_settings`` block in tests) registers the field in
         ``model_fields_set`` and wins: the validator only computes the
         derived path when the field was left at its placeholder
         default.
 
-        ``mode="after"`` guarantees ``aeat_local_storage_root`` is
+        ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is
         already populated when this runs.
         """
-        if "aeat_token_dir" in self.model_fields_set:
+        if "cadrumo_token_dir" in self.model_fields_set:
             return self
         object.__setattr__(
             self,
-            "aeat_token_dir",
-            self.aeat_local_storage_root / "tokens",
+            "cadrumo_token_dir",
+            self.cadrumo_local_storage_root / "tokens",
         )
         return self
 
     @model_validator(mode="after")
     def _resolve_log_dir_under_storage_root(self) -> Settings:
-        """Root ``aeat_log_dir`` under ``aeat_local_storage_root``.
+        """Root ``cadrumo_log_dir`` under ``cadrumo_local_storage_root``.
 
         When the field is not explicitly supplied (the production
         default of ``None``), this validator computes
-        ``<aeat_local_storage_root>/logs`` so the diagnostic log lives
-        inside the one state root that ``AEAT_LOCAL_STORAGE_ROOT``
+        ``<cadrumo_local_storage_root>/logs`` so the diagnostic log lives
+        inside the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT``
         scopes — consistent with the token directory. A system-wide
         ``~/.config/aeat/logs/aeat.log`` mixes every workspace's (and
         every test run's) records into a single file; rooting the log
         under the storage root keeps each workspace's diagnostics
         isolated.
 
-        An explicit ``AEAT_LOG_DIR`` env var (or a value supplied via
+        An explicit ``CADRUMO_LOG_DIR`` env var (or a value supplied via
         an ``override_settings`` block in tests) registers the field in
         ``model_fields_set`` and wins: the validator only computes the
         derived path when the field was left at its ``None`` default.
 
-        ``mode="after"`` guarantees ``aeat_local_storage_root`` is
+        ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is
         already populated when this runs.
         """
-        if "aeat_log_dir" in self.model_fields_set:
+        if "cadrumo_log_dir" in self.model_fields_set:
             return self
         object.__setattr__(
             self,
-            "aeat_log_dir",
-            self.aeat_local_storage_root / "logs",
+            "cadrumo_log_dir",
+            self.cadrumo_local_storage_root / "logs",
         )
         return self
 
     @model_validator(mode="after")
     def _resolve_storage_substrate_dirs_under_storage_root(self) -> Settings:
-        """Root storage substrate directories under ``aeat_local_storage_root``.
+        """Root storage substrate directories under ``cadrumo_local_storage_root``.
 
         Secret, blob, and audit stores share the same state-root derivation as
         token and log directories unless the operator explicitly supplies the
@@ -1016,7 +1016,7 @@ class Settings(AeatIntegrationSettings):
         for field_name, dirname in _STATE_ROOT_DERIVED_DIRS.items():
             if field_name in self.model_fields_set:
                 continue
-            object.__setattr__(self, field_name, self.aeat_local_storage_root / dirname)
+            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / dirname)
         return self
 
     @field_validator(
@@ -1032,9 +1032,9 @@ class Settings(AeatIntegrationSettings):
 
     @field_validator(
         "aeat_certificate_password_secret",
-        "aeat_llm_anthropic_api_key",
-        "aeat_llm_openai_api_key",
-        "aeat_llm_gemini_api_key",
+        "cadrumo_llm_anthropic_api_key",
+        "cadrumo_llm_openai_api_key",
+        "cadrumo_llm_gemini_api_key",
         mode="before",
     )
     @classmethod
@@ -1124,40 +1124,40 @@ class Settings(AeatIntegrationSettings):
         return load_external_constants()
 
     @field_validator(
-        "aeat_token_dir",
-        "aeat_usage_ratios_path",
-        "aeat_financial_txs_dir",
-        "aeat_invoices_dir",
-        "aeat_attachments_dir",
-        "aeat_purchase_invoice_evidence_dir",
-        "aeat_ledgers_dir",
-        "aeat_local_storage_root",
-        "aeat_log_dir",
-        "aeat_storage_backup_dir",
-        "aeat_secret_store_dir",
-        "aeat_blob_store_dir",
-        "aeat_audit_dir",
-        "aeat_registry_parity_store_dir",
-        "aeat_registry_disk_cache_dir",
+        "cadrumo_token_dir",
+        "cadrumo_usage_ratios_path",
+        "cadrumo_financial_txs_dir",
+        "cadrumo_invoices_dir",
+        "cadrumo_attachments_dir",
+        "cadrumo_purchase_invoice_evidence_dir",
+        "cadrumo_ledgers_dir",
+        "cadrumo_local_storage_root",
+        "cadrumo_log_dir",
+        "cadrumo_storage_backup_dir",
+        "cadrumo_secret_store_dir",
+        "cadrumo_blob_store_dir",
+        "cadrumo_audit_dir",
+        "cadrumo_registry_parity_store_dir",
+        "cadrumo_registry_disk_cache_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
         "aeat_iva_catalogue_root",
         "aeat_certificate_path",
-        "aeat_llm_cache_dir",
-        "aeat_llm_usage_dir",
-        "aeat_llm_run_telemetry_dir",
-        "aeat_submissions_dir",
-        "aeat_submission_browser_trace_dir",
-        "aeat_inbox_dir",
-        "aeat_inbox_pdf_dir",
-        "aeat_workflow_runs_dir",
-        "aeat_drafts_dir",
-        "aeat_runs_dir",
-        "aeat_status_cache_dir",
-        "aeat_status_browser_trace_dir",
-        "aeat_justificantes_dir",
-        "aeat_filing_history_dir",
-        "aeat_wallet_diagnostic_dump_dir",
+        "cadrumo_llm_cache_dir",
+        "cadrumo_llm_usage_dir",
+        "cadrumo_llm_run_telemetry_dir",
+        "cadrumo_submissions_dir",
+        "cadrumo_submission_browser_trace_dir",
+        "cadrumo_inbox_dir",
+        "cadrumo_inbox_pdf_dir",
+        "cadrumo_workflow_runs_dir",
+        "cadrumo_drafts_dir",
+        "cadrumo_runs_dir",
+        "cadrumo_status_cache_dir",
+        "cadrumo_status_browser_trace_dir",
+        "cadrumo_justificantes_dir",
+        "cadrumo_filing_history_dir",
+        "cadrumo_wallet_diagnostic_dump_dir",
         mode="after",
     )
     @classmethod
@@ -1178,7 +1178,7 @@ def classify_storage_route(settings: Settings | None = None) -> StorageRouteClas
     The returned :class:`StorageRouteClassification` distinguishes explicit
     database URLs, active-profile bucket databases, and cold root-fallback
     SQLite routes. Application write guards consume this facade instead of
-    re-parsing ``aeat_database_url`` or duplicating active-profile pointer
+    re-parsing ``cadrumo_database_url`` or duplicating active-profile pointer
     rules.
     """
     return classify_storage_route_for_settings(settings or load_settings())
@@ -1188,7 +1188,7 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     """Return settings routed to ``bucket_id``'s active-profile database.
 
     Non-route fields are preserved from ``source`` (or :func:`load_settings`),
-    while ``aeat_database_url`` is re-derived through the same validators used
+    while ``cadrumo_database_url`` is re-derived through the same validators used
     by normal settings construction. Explicit database URLs are refused by the
     lower-level route helper because they already define the storage authority.
 
@@ -1225,15 +1225,15 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # merged dict through ``model_validate`` so a malformed override
     # fails fast at entry, before the ContextVar is set.
     merged = current.model_dump()
-    route_overrides = {"aeat_active_profile", "aeat_local_storage_root"}
+    route_overrides = {"cadrumo_active_profile", "cadrumo_local_storage_root"}
     if (
-        "aeat_database_url" not in overrides
-        and "aeat_database_url" not in current.model_fields_set
+        "cadrumo_database_url" not in overrides
+        and "cadrumo_database_url" not in current.model_fields_set
         and route_overrides.intersection(overrides)
     ):
-        merged.pop("aeat_database_url", None)
-    if "aeat_local_storage_root" in overrides:
-        for derived_field in (*_STATE_ROOT_DERIVED_DIRS, "aeat_token_dir", "aeat_log_dir"):
+        merged.pop("cadrumo_database_url", None)
+    if "cadrumo_local_storage_root" in overrides:
+        for derived_field in (*_STATE_ROOT_DERIVED_DIRS, "cadrumo_token_dir", "cadrumo_log_dir"):
             if derived_field not in overrides and derived_field not in current.model_fields_set:
                 merged.pop(derived_field, None)
     merged.update(overrides)

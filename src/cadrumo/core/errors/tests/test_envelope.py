@@ -14,8 +14,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _output_language(language: str):
-    """Pin ``aeat_output_language`` via the canonical Settings override."""
-    return override_settings(aeat_output_language=language)
+    """Pin ``cadrumo_output_language`` via the canonical Settings override."""
+    return override_settings(cadrumo_output_language=language)
 
 
 def test_error_json_serializes_deterministically_with_shared_spine() -> None:

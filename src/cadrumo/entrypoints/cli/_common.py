@@ -199,7 +199,7 @@ def _active_sandbox_notice() -> Notice | None:
     if bucket_id is None:
         return None
     try:
-        paths = bucket_paths(load_settings().aeat_local_storage_root, bucket_id)
+        paths = bucket_paths(load_settings().cadrumo_local_storage_root, bucket_id)
         if not manifest_path(paths).is_file():
             return None
         label = read_manifest(paths).label
@@ -279,7 +279,7 @@ def _state() -> WorkflowState:
 
     # Without an active profile there is no bucket database to open;
     # workflow_state_repository().load() would raise a raw StorageError
-    # ("aeat_database_url is empty") that leaks internal plumbing to the
+    # ("cadrumo_database_url is empty") that leaks internal plumbing to the
     # operator. Refuse early with the operator-facing no-active-profile
     # message instead.
     if resolve_active_bucket_id() is None:
@@ -600,5 +600,5 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
     from ...core.config import override_settings
     from ...core.i18n import clear_output_language_cache
 
-    ctx.with_resource(override_settings(aeat_output_language=language))
+    ctx.with_resource(override_settings(cadrumo_output_language=language))
     clear_output_language_cache()

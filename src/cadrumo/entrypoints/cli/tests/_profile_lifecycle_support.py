@@ -60,7 +60,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     with profile_create_storage_span(bucket_id):
         pass
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     paths = provision_bucket_directory(root, bucket_id)
     write_manifest(
         paths,

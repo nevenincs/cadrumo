@@ -1,7 +1,7 @@
 """Installed-vs-checkout detection and the platform user-data storage root.
 
 The central settings facade (:class:`~core.config.Settings`) roots the
-encrypted profile store at ``aeat_local_storage_root``, from which the token,
+encrypted profile store at ``cadrumo_local_storage_root``, from which the token,
 log, secret, blob and audit roots derive. Historically that root defaulted to
 ``PROJECT_ROOT / "var" / "storage"``, which is correct for a source checkout
 but wrong for an installed distribution: under a wheel it resolves *inside* the
@@ -22,7 +22,7 @@ string, the environment mapping, and the home directory — is captured in the
 frozen :class:`StateRootInputs` seam so the detection is deterministic and
 testable without mutating the ambient process. :func:`default_storage_root` is
 the live entry point :class:`~core.config.Settings` binds as its
-``aeat_local_storage_root`` default factory.
+``cadrumo_local_storage_root`` default factory.
 
 See Also:
     :class:`~core.config.Settings`
@@ -103,7 +103,7 @@ class StateRootResolution(BaseModel):
     Carries the decided :class:`RunMode`, the project-root candidate it was
     decided from, the platform user-data base, and the effective
     ``storage_root`` that :class:`~core.config.Settings` should default
-    ``aeat_local_storage_root`` to.
+    ``cadrumo_local_storage_root`` to.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -202,9 +202,9 @@ def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
 
 
 def default_storage_root() -> Path:
-    """Return the ``aeat_local_storage_root`` default for the live process.
+    """Return the ``cadrumo_local_storage_root`` default for the live process.
 
-    Bound as the :class:`~core.config.Settings` ``aeat_local_storage_root``
+    Bound as the :class:`~core.config.Settings` ``cadrumo_local_storage_root``
     default factory: a checkout resolves to ``PROJECT_ROOT / "var" / "storage"``
     (unchanged), an installed run to the platform user-data storage directory.
     """

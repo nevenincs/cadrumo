@@ -20,7 +20,7 @@ def _active_bucket_id_for_source(
     include_process_pointer: bool,
 ) -> str | None:
     """Resolve the active bucket for ``source`` without ignoring scoped settings."""
-    override = (source.aeat_active_profile or "").strip()
+    override = (source.cadrumo_active_profile or "").strip()
     if override:
         return override
     route = classify_storage_route(source)

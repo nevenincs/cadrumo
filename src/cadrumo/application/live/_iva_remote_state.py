@@ -659,7 +659,7 @@ async def _capture_iva_compensation_wallet_with_session(
         taxpayer_nif=taxpayer_nif,
         settings=settings,
     )
-    store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-wallet"
+    store_root = output_root if output_root is not None else settings.cadrumo_audit_dir / "live" / "iva-wallet"
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 
 
@@ -717,7 +717,9 @@ async def _capture_iva_remote_state_for_active_storage(
             )
 
         _AeatAccessGate(settings).require_live_read()
-        store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
+        store_root = (
+            output_root if output_root is not None else settings.cadrumo_audit_dir / "live" / "iva-remote-state"
+        )
         filed_history: IvaCompensationHistoryCaptureReport | None = None
         wallet: IvaWalletCaptureReport | None = None
         auth_result: _AuthenticatedAeatSessionResult | None = None

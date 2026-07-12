@@ -402,7 +402,7 @@ def _settings_factory():
                 "aeat_certificate_password_secret": SECRET_PASSPHRASE,
                 "aeat_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
                 "aeat_certificate_verify_url": verify_url,
-                "aeat_token_dir": path.parent / ".tokens",
+                "cadrumo_token_dir": path.parent / ".tokens",
             }
             overrides.update(extra_overrides)
             return scoped(**overrides)

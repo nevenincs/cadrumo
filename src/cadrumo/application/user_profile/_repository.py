@@ -116,18 +116,18 @@ def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) 
     try:
         if language is None:
             clear_bucket_output_language_hint(
-                storage_root=load_settings().aeat_local_storage_root,
+                storage_root=load_settings().cadrumo_local_storage_root,
                 bucket_id=bucket_id,
             )
             return
         written = write_bucket_output_language_hint(
-            storage_root=load_settings().aeat_local_storage_root,
+            storage_root=load_settings().cadrumo_local_storage_root,
             bucket_id=bucket_id,
             language=language,
         )
         if not written:
             clear_bucket_output_language_hint(
-                storage_root=load_settings().aeat_local_storage_root,
+                storage_root=load_settings().cadrumo_local_storage_root,
                 bucket_id=bucket_id,
             )
     except OSError:

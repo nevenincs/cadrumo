@@ -100,7 +100,7 @@ def _normalise_supported_language(value: object) -> str | None:
 def output_language() -> str:
     """Resolve the operator-facing output language.
 
-    An explicit ``aeat_output_language`` value on the active Settings
+    An explicit ``cadrumo_output_language`` value on the active Settings
     (env var, ``override_settings`` block, or ``.env`` file) wins for
     one-off sessions and automation. Otherwise the active profile's
     ``output.language`` key is used. The settings default remains the
@@ -121,9 +121,9 @@ def clear_output_language_cache() -> None:
 
 _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
     OUTPUT_LANGUAGE_ENV_VAR,
-    "AEAT_DATABASE_URL",
-    "AEAT_SECRET_STORE_BACKEND",
-    "AEAT_ALLOW_UNENCRYPTED",
+    "CADRUMO_DATABASE_URL",
+    "CADRUMO_SECRET_STORE_BACKEND",
+    "CADRUMO_ALLOW_UNENCRYPTED",
 )
 
 
@@ -173,14 +173,14 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
             exc_info=True,
         )
         return DEFAULT_OUTPUT_LANGUAGE
-    if "aeat_output_language" in settings.model_fields_set:
-        explicit = _normalise_supported_language(settings.aeat_output_language)
+    if "cadrumo_output_language" in settings.model_fields_set:
+        explicit = _normalise_supported_language(settings.cadrumo_output_language)
         if explicit is not None:
             return explicit
     profile_language = _active_profile_output_language()
     if profile_language is not None:
         return profile_language
-    return _normalise_supported_language(settings.aeat_output_language) or DEFAULT_OUTPUT_LANGUAGE
+    return _normalise_supported_language(settings.cadrumo_output_language) or DEFAULT_OUTPUT_LANGUAGE
 
 
 def _active_profile_output_language() -> str | None:

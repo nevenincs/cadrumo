@@ -63,7 +63,7 @@ def resolve_profile_output_language_hint(bucket_id: str) -> str | None:
         if not trimmed:
             return None
         return read_bucket_output_language_hint(
-            storage_root=load_settings().aeat_local_storage_root,
+            storage_root=load_settings().cadrumo_local_storage_root,
             bucket_id=trimmed,
         )
     except Exception:

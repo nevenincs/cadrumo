@@ -10,7 +10,7 @@ introduced when AEAT browser sessions moved from plaintext token-directory
 paths to encrypted secure-object storage. Application probes and provider
 adapters call the same helper so certificate and Cl@ve Móvil session reads,
 writes, and deletes agree on one active-bucket/provider partition. The key is
-deliberately independent of ``Settings.aeat_token_dir``; the secure repository
+deliberately independent of ``Settings.cadrumo_token_dir``; the secure repository
 digests the logical key before persistence.
 """
 

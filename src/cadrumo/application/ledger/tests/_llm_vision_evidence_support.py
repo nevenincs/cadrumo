@@ -142,7 +142,7 @@ def _run_against_loopback_ollama[T](content: str, call: Callable[[], T]) -> tupl
     thread.start()
     endpoint = f"http://127.0.0.1:{server.server_port}/api/chat"
     try:
-        with override_settings(aeat_llm_ollama_chat_url=endpoint):
+        with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
             result = call()
     finally:
         server.shutdown()
