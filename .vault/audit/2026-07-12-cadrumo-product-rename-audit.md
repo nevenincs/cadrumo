@@ -56,6 +56,23 @@ No evidence shows destructive worktree handling, secret disclosure, external
 reservation or publication, legal-corpus mutation, compatibility-shim approval,
 or another critical safety or intent failure in `W01.P01`.
 
+### diagnostic-dump-identity-resolution | resolved | Local dump custody is product-owned
+
+Resolved the preceding high finding by applying the referent decision already
+recorded in `S02`: `AEAT_WALLET_DIAGNOSTIC_DUMP_DIR` is a product control because
+it selects a caller-provided local directory, creates that directory, and writes
+Cadrumo-controlled redacted structural summaries into it. It therefore becomes
+`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`. `S03` now agrees and names the corresponding
+field `cadrumo_wallet_diagnostic_dump_dir`. AEAT cartera, Sede, wallet, URL, and
+payload terminology remains authority-owned. The correction introduces no old
+environment reader, directory migration, or fallback: the former override and
+its directory are not read or auto-ingested.
+
+The overlap is now deterministic: `S02` remains 102 product-owned and 49
+authority-owned public variables with zero ambiguous, and `S03` has no contrary
+wallet-directory classification. The completed `S03` scaffold annotations were
+also removed as part of the requested resolution hygiene.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
