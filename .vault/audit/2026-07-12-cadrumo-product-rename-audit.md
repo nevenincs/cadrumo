@@ -624,6 +624,14 @@ artifact boundary.
 No compatibility package, second console alias, authority-evidence corruption,
 or other critical defect was found in the closure review.
 
+### phase-p05-plan-prose-resolution | resolved | Plan prose matches canonical executable
+
+The remaining Description, P05 intent, and Verification prose now name
+`cadrumo` as the sole human executable and `cadrumo-mcp` as the distinct MCP
+command. The former `aeat` executable and import root are explicitly absent.
+This aligns every active plan statement with the accepted Cadrumo ADR, checked
+S24/S25 rows, source metadata, and inspected wheel.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
