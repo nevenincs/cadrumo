@@ -1,6 +1,6 @@
 """Static enforcement of the :data:`~core.errors.ERROR_REGISTRY` invariants.
 
-Walks every importable module under ``aeat``, discovers each
+Walks every importable module under ``cadrumo``, discovers each
 :class:`~core.errors.AeatError` subclass, and asserts:
 
 * every subclass binds to a registered :class:`~core.errors.ErrorCode`,
@@ -45,11 +45,11 @@ from .. import ERROR_REGISTRY, AeatError, ErrorCategory, get_registered_error_co
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _import_all_aeat_modules() -> None:
+def _import_all_cadrumo_modules() -> None:
     from .. import __path__ as errors_path
 
-    aeat_path = [str(Path(errors_path[0]).parent.parent)]
-    for info in pkgutil.walk_packages(aeat_path, prefix="aeat."):
+    cadrumo_path = [str(Path(errors_path[0]).parent.parent)]
+    for info in pkgutil.walk_packages(cadrumo_path, prefix="cadrumo."):
         name = info.name
         if ".tests." in name or ".test_" in name or "._test_" in name:
             continue
@@ -95,14 +95,14 @@ def _resolve_raise_target(module_name: str, node: ast.expr) -> object | None:
     return _resolve(node)
 
 
-def _looks_like_aeat_error_reference(node: ast.expr, known_names: set[str]) -> bool:
+def _looks_like_cadrumo_error_reference(node: ast.expr, known_names: set[str]) -> bool:
     rendered = ast.unparse(node)
     last_token = rendered.rsplit(".", 1)[-1]
     return last_token in known_names
 
 
-def test_every_aeat_error_subclass_has_a_registered_code() -> None:
-    _import_all_aeat_modules()
+def test_every_cadrumo_error_subclass_has_a_registered_code() -> None:
+    _import_all_cadrumo_modules()
     subclasses = _iter_error_subclasses(AeatError)
     ordered = sorted(subclasses, key=lambda error_type: f"{error_type.__module__}.{error_type.__name__}")
 
@@ -135,7 +135,7 @@ def test_modelo_calculate_input_errors_have_registered_codes() -> None:
 
 
 def test_every_registered_code_maps_to_exactly_one_error_subclass() -> None:
-    _import_all_aeat_modules()
+    _import_all_cadrumo_modules()
     subclasses = _iter_error_subclasses(AeatError)
     reverse: dict[str, list[str]] = {}
     for error_type in subclasses:
@@ -148,15 +148,15 @@ def test_every_registered_code_maps_to_exactly_one_error_subclass() -> None:
 
 
 def test_every_category_has_at_least_one_registered_error_code() -> None:
-    _import_all_aeat_modules()
+    _import_all_cadrumo_modules()
     categories = {code.category for code in ERROR_REGISTRY.values()}
     assert categories == set(ErrorCategory)
 
 
-def test_raise_sites_do_not_use_bare_aeat_error_and_reference_registered_subclasses(
+def test_raise_sites_do_not_use_bare_cadrumo_error_and_reference_registered_subclasses(
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
-    _import_all_aeat_modules()
+    _import_all_cadrumo_modules()
     subclasses = _iter_error_subclasses(AeatError)
     index = {error_type.__name__: error_type for error_type in subclasses}
     known_names = set(index) | {"AeatError"}
@@ -178,7 +178,7 @@ def test_raise_sites_do_not_use_bare_aeat_error_and_reference_registered_subclas
             if code.code not in ERROR_REGISTRY:
                 unresolved_targets.append(f"{repo_relative(path)}:{rendered}")
             continue
-        if resolved is None and _looks_like_aeat_error_reference(target, known_names):
+        if resolved is None and _looks_like_cadrumo_error_reference(target, known_names):
             unresolved_targets.append(f"{repo_relative(path)}:{rendered}")
 
     assert direct_base_raises == []
