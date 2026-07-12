@@ -653,6 +653,15 @@ def _clean_product_env() -> dict[str, str]:
     return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
 
 
+def _isolated_product_env(storage_root: Path) -> dict[str, str]:
+    """Return a clean product environment rooted in isolated temporary storage."""
+    return {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
+    }
+
+
 def _assert_installed_data(work_dir: Path, venv: Path) -> None:
     """Verify representative bundled data leaves through the installed package."""
     leaves_literal = repr(list(_REPRESENTATIVE_DATA_LEAVES))
@@ -669,11 +678,7 @@ if missing:
 print(root)
 """
     runtime_root = work_dir / "installed-data-state"
-    env = {
-        **_clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
-    }
+    env = _isolated_product_env(runtime_root)
     _run([str(_venv_python(venv)), "-c", code], cwd=work_dir, env=env)
 
 
@@ -772,16 +777,16 @@ print("attachment-and-llm-surfaces-ok")
 def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     """Run installed CLI smoke checks against the clean wheel venv."""
     cadrumo = str(_venv_aeat(venv))
-    version = _run([cadrumo, "--version"], cwd=work_dir)
+    version = _run(
+        [cadrumo, "--version"],
+        cwd=work_dir,
+        env=_isolated_product_env(work_dir / "version-state"),
+    )
     if "cadrumo " not in version.stdout:
         raise SystemExit(f"unexpected cadrumo --version output: {version.stdout!r}")
 
     default_root = work_dir / "default-check-state"
-    default_env = {
-        **_clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(default_root),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(default_root / 'cadrumo.db').as_posix()}",
-    }
+    default_env = _isolated_product_env(default_root)
     default_check = _run(
         [cadrumo, "--format", "json", "config", "check"],
         cwd=work_dir,
