@@ -556,6 +556,29 @@ installed interface, but the review found no data destruction, authority
 evidence corruption, import compatibility package, credential exposure, or
 other critical defect.
 
+### phase-p05-human-executable-contract-resolution | resolved | Cadrumo ADR supersedes former CLI naming
+
+The HIGH finding applied an older CLI naming decision after the accepted
+`2026-07-12-cadrumo-product-rename-adr` had explicitly replaced product naming
+with the canonical tuple whose human CLI is `cadrumo`. Under the newer
+authorising decision, `aeat` is reserved for the Spanish authority and cannot
+remain a product executable alias.
+
+Concurrent WIP had changed the live script, Typer name, lazy command key,
+invocation detector, and `prog_name` back to `aeat`; those exact lines were
+reconciled to `cadrumo` while preserving surrounding peer work. The plan's S24
+and S25 actions were restored through the canonical plan CLI, and the
+accidentally reopened S05, S07, and S24 rows were reclosed from their existing
+committed Step evidence. The current metadata again exposes only `cadrumo` and
+`cadrumo-mcp`.
+
+### phase-p05-plan-traceability-resolution | resolved | Completed Step state restored
+
+S05, S07, and S24 have committed implementation records and were reopened only
+because a cross-commit carried unrelated plan edits. Their checked state is now
+restored, and S24's action again matches its accepted Cadrumo record. No Step was
+closed without existing implementation evidence.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
