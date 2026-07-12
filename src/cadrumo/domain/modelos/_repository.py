@@ -1,16 +1,16 @@
 """Encrypted SQL repository for the modelo work-unit catalogue.
 
-:class:`~aeat.domain.modelos.WorkUnitCatalogueRepository` persists
+:class:`~cadrumo.domain.modelos.WorkUnitCatalogueRepository` persists
 :class:`WorkUnit` records in a :class:`WorkUnitCatalogue` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` :class:`~cadrumo.adapters.persistence.storage.SensitivityClass`
 through
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`. The
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`. The
 catalogue is serialised as a single
-:class:`~aeat.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
+:class:`~cadrumo.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
 by a stable namespace and object key; the underlying column is encrypted so no
 plaintext work-unit metadata lands on disk.
 The storage contract is declared by
-:data:`aeat.adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`;
+:data:`cadrumo.adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`;
 its default object key is the singleton ``catalogue`` row.
 """
 
@@ -28,7 +28,7 @@ class WorkUnitPersistenceError(ModeloError):
     """Raised when the work-unit catalogue cannot be loaded or saved.
 
     This wraps storage-boundary failures from
-    :class:`~aeat.domain.modelos.WorkUnitCatalogueRepository` while preserving
+    :class:`~cadrumo.domain.modelos.WorkUnitCatalogueRepository` while preserving
     translated recovery context for callers.
     """
 

@@ -283,6 +283,24 @@ container because the user authorised the cross-commit. Rollback must therefore
 preserve or separately extract those paths rather than reverting the tree move
 as though it were rename-only.
 
+### stale-import-guidance-final-resolution | resolved | Concurrent production guidance now names Cadrumo
+
+Completed the stale-guidance remediation in the five production files excluded
+from the initial clean-file commit. Live whole-file inspection found 21 active
+qualified product-root references in docstrings and comments, correcting the
+earlier rolling entry's count of nine. All 21 now use `cadrumo.*`: four workflow
+event references, two participation-index storage references, six work-unit
+repository references, six verification-repository references, and three portal
+registry references.
+
+The five files' full concurrent contents were preserved and cross-committed under
+the user's explicit overlap authorization. Runtime persisted namespace values,
+legacy registry-consumer matching, AEAT authority taxonomy, and authority prose
+were not changed. Targeted residue classification now reports zero active
+product-root documentation references in these files; the remaining qualified
+`aeat.*` values are executable compatibility data intentionally outside this
+documentation-only resolution.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
