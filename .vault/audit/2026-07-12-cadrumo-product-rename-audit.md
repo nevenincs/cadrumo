@@ -228,6 +228,33 @@ and pytest sessions without mocks, patches, skips, or compatibility aliases.
 Authority-owned AEAT registry taxonomy, cache filenames, environment controls,
 and associated historical explanations remain unchanged.
 
+### shared-wip-commit-provenance-resolution | resolved | User authorised overlap preservation and cross-commit
+
+The user explicitly directed the campaign to remain in this worktree, work
+through the overlaps, and cross-commit them where needed. Under that authority,
+S09 preserved the current bytes and history state of the overlapping package
+tree while moving it atomically; it did not discard, reset, restore, or overwrite
+the concurrent work.
+
+The seven baseline-untracked source/data paths first brought under version
+control by the move were:
+
+- `_data/registry/aeat/modelos/100/revisions/2025/bindings/0077-renta-2025-profile-has-economic-activity.toml`
+- `application/modelo/tests/test_work_plazo_m100_campaign.py`
+- `core/tests/test_prorrata_register_core_authority.py`
+- `domain/iva/_m303_settlement.py`
+- `domain/iva/tests/test_m303_settlement.py`
+- `entrypoints/cli/tests/test_modelo_200_stored_calculation_drift_cli.py`
+- `entrypoints/cli/tests/test_s423_selected_language_cli.py`
+
+The other first-seen target members were the already-authorised Cadrumo identity
+files and the S09 execution record. This resolution does not claim feature
+authorship for the seven paths; their originating feature provenance remains
+external to the rename, while `8d4cd1efce` is intentionally their first Git
+container because the user authorised the cross-commit. Rollback must therefore
+preserve or separately extract those paths rather than reverting the tree move
+as though it were rename-only.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
