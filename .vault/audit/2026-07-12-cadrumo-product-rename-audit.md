@@ -688,6 +688,63 @@ removed non-recursively. A follow-up scan across both companion projects found
 zero `*.pyc` files. The real-wheel evidence already proved these caches were
 never package members.
 
+### phase-p07-incomplete-clean-install-acceptance | high | Three checked smoke Steps lack post-fix completion evidence
+
+S37 and S40 are checked complete even though their real clean-install commands
+expired at the 124-second outer budget before producing smoke manifests. S39 is
+also checked complete although its only Docker execution failed during profile
+creation; the database-route correction was inspected and compiled but the
+container lane was not rerun. The records disclose these outcomes honestly, but
+checked plan state converts incomplete or failing evidence into apparent Phase
+closure.
+
+S41 and S42 strongly establish wheel composition, installation, import refusal,
+entry points, partition ownership, bytes, and size. They do not execute the
+remaining core smoke workflow, a real joint split-install lifecycle, or the
+corrected Docker profile path. Therefore these timeouts do not invalidate the
+artifact bytes, but they do block claiming W03.P07 complete. Because the plan
+hard-sequences W04 after W03, they also block proceeding under the current plan
+as though the artifact Wave were proven. Obtain bounded successful post-fix runs
+with manifests, or explicitly amend the acceptance plan; do not reinterpret a
+timeout or pre-fix Docker failure as a pass.
+
+### phase-p07-artifact-and-lock-review | resolved | Canonical lock and wheel ownership evidence are internally sound
+
+`uv lock --check` resolves 246 packages and the live lock is byte-identical to
+HEAD. It contains exactly one editable `cadrumo` 0.1.1 record and one 0.1.1
+record for each companion, with canonical directory sources and no former
+distribution or project-directory record. S38's fresh aggregate-extras smoke
+completed and wrote its manifest.
+
+The S41 correction extends the split-owned binary authority consistently across
+root exclusions, the official Hatch hook, split smoke, and the independent
+distribution gate to include `.docx` and `.zip`. S42 then proves both companion
+wheels are disjoint and exhaustive over all 193 tracked source binaries, byte
+identical, PEP 420 compatible, version aligned, and below the file cap. The root
+wheel contains neither those companion binaries nor any `aeat/` or
+`cadrumo_data/` import root, and its installed Cadrumo import/version/former-root
+refusal evidence is real. Focused smoke-manifest validation passes (`1 passed`)
+and Ruff passes on all changed probes and ownership authorities. No mock, fake,
+stub, patch, monkeypatch, skip, or xfail substitutes for these checks.
+
+### phase-p07-concurrent-script-drift | medium | Unapproved WIP again replaces the canonical script locally
+
+Committed HEAD and the reviewed stable-archive artifact declare only `cadrumo`
+and `cadrumo-mcp`, and the unapproved CLI ADR was correctly excluded from every
+P07 commit. The shared working tree nevertheless again changes the root script
+key from `cadrumo` to `aeat` and carries that conflicting ADR as untracked work.
+This is not a committed alias and does not invalidate S41's captured artifact,
+but it proves the one-line restoration is not durable in the live checkout.
+Future artifact or lock work must continue to build from a verified committed
+tree or obtain explicit ownership of the script line; never stage the local
+conflict with rename delivery.
+
+### phase-p07-review-critical-findings | critical | No critical W03.P07 finding identified
+
+The incomplete smoke evidence is high severity because it blocks truthful Wave
+closure, but no source-binary loss, companion-byte corruption, namespace alias,
+credential exposure, or other critical defect was identified.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
@@ -712,3 +769,5 @@ never package members.
 20. Build a fresh wheel from the reconciled committed tree and record the exact console-entrypoint pair, absence of an `aeat` import root, and installed `--help`/`--version` behavior. Keep MCP wire-identity changes assigned to W04.
 21. Reconcile the plan description, W03.P05 phase description, and verification item 2 from the former `aeat` executable wording to the accepted sole `cadrumo` command before plan closure.
 22. Prevent or sweep the two companion `__pycache__/hatch_build.cpython-313.pyc` files immediately before final artifact inspection; verify by literal companion-directory scans and do not treat their temporary removal as durable across builds.
+23. Re-run the corrected core, split-install, and Docker core probes with bounded per-stage diagnostics and enough outer budget to write their manifests. Keep S37, S39, and S40—and therefore W03.P07—open until those post-fix runs complete successfully.
+24. Quarantine or resolve the concurrent `aeat` script/ADR work before any further build or lock commit. Verify `git show HEAD:pyproject.toml` and the actual build input both expose only `cadrumo` plus `cadrumo-mcp`.
