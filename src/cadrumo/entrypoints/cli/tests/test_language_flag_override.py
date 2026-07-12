@@ -24,7 +24,7 @@ _NO_FORCED_LANGUAGE_ENV: dict[str, str | None] = {"CADRUMO_OUTPUT_LANGUAGE": Non
 
 
 def test_root_callback_language_flag_routes_through_override_settings() -> None:
-    """``aeat --language ca --help`` renders Catalan via the override seam.
+    """``cadrumo --language ca --help`` renders Catalan via the override seam.
 
     The flag bypasses ``os.environ`` entirely: the CLI root callback
     wraps the invocation in ``override_settings(cadrumo_output_language=

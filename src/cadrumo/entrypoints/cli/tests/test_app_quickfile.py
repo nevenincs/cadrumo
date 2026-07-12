@@ -1,6 +1,6 @@
 """Real-behavior CLI tests for ``aeat app quickfile``.
 
-Drives the one-command filing chain through the real ``aeat`` CLI against an
+Drives the one-command filing chain through the real ``cadrumo`` CLI against an
 isolated real-session backend (real KEK/DEK, real encrypted SQLite) — no mocks,
 no seeded revisions. Each test runs the actual
 readiness -> create -> calculate -> verify -> export services in sequence.

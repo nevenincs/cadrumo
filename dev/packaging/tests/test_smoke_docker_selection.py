@@ -10,32 +10,13 @@ import sys
 import pytest
 
 from dev.packaging.smoke_docker import (
-    _browser_probe_source,
     _command_succeeds,
-    _core_probe_source,
     _docker_cli,
     _preflight_docker,
     _wsl_docker_cli_available,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-def test_generated_probes_compile_with_canonical_product_and_authority_names() -> None:
-    """Generated programs use Cadrumo for the product and AEAT only for authority semantics."""
-    core = _core_probe_source()
-    browser = _browser_probe_source()
-
-    compile(core, "<docker-core-probe>", "exec")
-    compile(browser, "<docker-browser-probe>", "exec")
-
-    assert 'run(["cadrumo", "--version"]' in core
-    assert 'run(["aeat", "--version"]' not in core
-    assert "unexpected cadrumo --version output" in core
-    assert "registry/aeat/modelos/036/manifest.toml" in core
-    assert "corpus/aeat_official/" in core
-    assert "from cadrumo.adapters.outbound.aeat.browser" in browser
-    assert '"AEAT_BROWSER_CHANNEL": "chromium"' in browser
 
 
 def test_command_success_probe_observes_real_exit_status() -> None:

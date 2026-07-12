@@ -1,6 +1,6 @@
 """Regression tests for pago-fraccionado period consistency across CLI verbs.
 
-Drives the real ``aeat`` CLI against an isolated encrypted backend to
+Drives the real ``cadrumo`` CLI against an isolated encrypted backend to
 pin the period-unification contract: every pago-fraccionado clave
 (``1P`` / ``2P`` / ``3P``) that ``modelo work create`` accepts must
 also be accepted by ``modelo work verify`` without an

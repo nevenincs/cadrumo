@@ -103,7 +103,7 @@ async def _call(
         # confirm / faithfulness gate under test rather than the identity gate.
         # whoami is a read-only console tool that emits no telemetry, so record
         # counts are unaffected.
-        await session.call_tool("aeat_whoami", {})
+        await session.call_tool("cadrumo_whoami", {})
         return await session.call_tool(name, dict(arguments))
 
 

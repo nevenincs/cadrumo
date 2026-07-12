@@ -1,7 +1,7 @@
-"""Argument-level conformance gate for documented ``aeat`` commands.
+"""Argument-level conformance gate for documented ``cadrumo`` commands.
 
 The sibling :mod:`test_educational_docs_conformance` gate binds only the
-*leading verb path* of a cited ``aeat ...`` invocation: it checks that the
+*leading verb path* of a cited ``cadrumo ...`` invocation: it checks that the
 longest verb prefix accepts ``--help``. That left a blind spot — a doc could
 cite a real command with a *wrong option name* or the *wrong argument shape*
 and the verb-only gate stayed green. Two such defects shipped and were caught
@@ -14,7 +14,7 @@ only because a human ran the commands by hand:
   positional.
 
 This gate closes that blind spot. It walks the *live* Typer/click command tree
-**in process** (no shell-out, no ``uv``) and, for every ``aeat ...`` invocation
+**in process** (no shell-out, no ``uv``) and, for every ``cadrumo ...`` invocation
 cited in a user-facing doc, asserts:
 
 - **(a) Command-path resolution.** The leading verb tokens resolve to a real
@@ -58,7 +58,7 @@ introspected and asserted in
 :func:`test_live_introspection_matches_reality` so the introspection machinery
 cannot silently rot.
 
-Real-behavior only: the gate imports the real ``aeat`` app object and walks the
+Real-behavior only: the gate imports the real ``cadrumo`` app object and walks the
 materialized click command tree (which triggers the lazy-subcommand loaders).
 No test doubles. It fails loudly on an invalid documented command and passes
 when the docs are correct.
@@ -76,7 +76,7 @@ import click
 import pytest
 
 from ....core.paths import PROJECT_ROOT
-from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -86,13 +86,13 @@ _FLAT_DOC_GLOBS = ("docs/*.md",)
 _TREE_DOC_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to", "docs/runbooks")
 
 # Inline backticks and fenced blocks are the only authoritative command
-# surfaces; a bare ``aeat ...`` in prose is not a cited invocation.
+# surfaces; a bare ``cadrumo ...`` in prose is not a cited invocation.
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 
-# A line is an ``aeat`` invocation when ``aeat`` appears as a bare token
-# (start of line or after shell punctuation), not as a substring (``aeat.exe``).
-_AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
+# A line is an ``cadrumo`` invocation when ``cadrumo`` appears as a bare token
+# (start of line or after shell punctuation), not as a substring (``cadrumo.exe``).
+_CADRUMO_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])cadrumo(?=\s|$)")
 
 # Global options declared on the root callback. Accepted at any position before
 # the subcommand path and validated against the root command's own params, so
@@ -120,8 +120,8 @@ def _flat_docs() -> list[Path]:
 
 @cache
 def _root_command() -> click.Command:
-    """Materialize the live ``aeat`` click command (root of the tree)."""
-    return aeat_click_command()
+    """Materialize the live ``cadrumo`` click command (root of the tree)."""
+    return cadrumo_click_command()
 
 
 @cache
@@ -153,7 +153,7 @@ def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
     subcommand of the current group (that token and the rest are arguments).
     """
     cmd: click.Command = _root_command()
-    ctx = click.Context(cmd, info_name="aeat")
+    ctx = click.Context(cmd, info_name="cadrumo")
     resolved: list[str] = []
     for tok in tokens:
         if not hasattr(cmd, "list_commands"):
@@ -202,7 +202,7 @@ _PLACEHOLDER_RE = re.compile(r"^(<[^>]+>|[A-Z][A-Z0-9_-]*)$")
 
 @dataclass(frozen=True)
 class _CitedCommand:
-    """A single cited ``aeat`` invocation, decomposed for validation."""
+    """A single cited ``cadrumo`` invocation, decomposed for validation."""
 
     raw: str
     verb_tokens: tuple[str, ...]
@@ -236,22 +236,22 @@ def _is_value_placeholder(tok: str) -> bool:
 
 
 def _parse_command_line(line: str) -> _CitedCommand | None:
-    """Decompose one ``aeat ...`` line into verb path + cited options.
+    """Decompose one ``cadrumo ...`` line into verb path + cited options.
 
     Returns ``None`` for lines that are not concretely-resolvable invocations:
-    the bare ``aeat`` token, an ``aeat ...`` ellipsis reference, the machine-format
-    ``aeat 1.2.3`` version echo, or a line whose only verb is a top-level flag
+    the bare ``cadrumo`` token, an ``cadrumo ...`` ellipsis reference, the machine-format
+    ``cadrumo 1.2.3`` version echo, or a line whose only verb is a top-level flag
     (``aeat --version``).
     """
     cleaned = _strip_inline_comment(line).strip()
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
     # Some doc lines prefix the command with a shell sigil or a tab-led label.
-    m = _AEAT_TOKEN_RE.search(cleaned)
+    m = _CADRUMO_TOKEN_RE.search(cleaned)
     if m is None:
         return None
     after = cleaned[m.end() :].strip()
     if not after:
-        return None  # bare ``aeat``
+        return None  # bare ``cadrumo``
     try:
         tokens = _shlex_split(after)
     except ValueError:
@@ -262,7 +262,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     # concrete invocation; the trailing ``...`` is the tell.
     if any(t == "..." for t in tokens):
         return None
-    # The machine-format version echo ``aeat 1.2.3`` / ``aeat 0.1.0`` is output,
+    # The machine-format version echo ``cadrumo 1.2.3`` / ``cadrumo 0.1.0`` is output,
     # not an invocation: a single token that is a dotted version literal.
     if len(tokens) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", tokens[0]):
         return None
@@ -348,7 +348,7 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
         # Join shell line continuations within a fenced block before splitting.
         joined = span.replace("\\\n", " ")
         for line in joined.splitlines():
-            if _AEAT_TOKEN_RE.search(line) is None:
+            if _CADRUMO_TOKEN_RE.search(line) is None:
                 continue
             parsed = _parse_command_line(line)
             if parsed is None:
@@ -389,7 +389,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
         if opt not in valid_options:
             violations.append(
                 f"`{cited.raw}` cites option `{opt}`, which is not a parameter of "
-                f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)",
+                f"`cadrumo {' '.join(resolved.resolved_path)}` (nor a global option)",
             )
 
     # (c) Dead subcommand of a live group: longest-prefix resolution stops at
@@ -401,7 +401,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
     if hasattr(cmd, "list_commands") and leftover:
         violations.append(
             f"`{cited.raw}` cites `{leftover[0]}`, which is not a subcommand of "
-            f"the group `aeat {' '.join(resolved.resolved_path)}`",
+            f"the group `cadrumo {' '.join(resolved.resolved_path)}`",
         )
         return violations
 
@@ -476,12 +476,12 @@ def test_live_introspection_matches_reality() -> None:
 
 @pytest.mark.parametrize("doc", _flat_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
 def test_documented_commands_conform(doc) -> None:
-    """Every cited ``aeat`` command resolves with valid options and arguments."""
+    """Every cited ``cadrumo`` command resolves with valid options and arguments."""
     text = doc.read_text(encoding="utf-8")
     violations: list[str] = []
     for cited in _cited_commands(text):
         violations.extend(_validate_command(cited))
     assert not violations, (
-        f"{doc.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
+        f"{doc.relative_to(PROJECT_ROOT)} cites cadrumo commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
     )

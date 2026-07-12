@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _filed_observation_path(modelo: str, year: int, period: str) -> str:
-    return f"var/aeat/filed-declarations/{modelo}-{year}-{period}.json"
+    return f"var/cadrumo/filed-declarations/{modelo}-{year}-{period}.json"
 
 
 def _filing_record_id(modelo: str, year: int, period: str) -> str:
@@ -26,7 +26,7 @@ def _filing_record_id(modelo: str, year: int, period: str) -> str:
 
 def test_live_filed_pull_text_reports_mode_failures_and_evidence_counts() -> None:
     report = FiledDataCaptureReport(
-        output_root="var/aeat/filed-declarations",
+        output_root="var/cadrumo/filed-declarations",
         modelo="303",
         year=2026,
         captured_count=1,
@@ -65,7 +65,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
         message="bounded register timeout",
     )
     report = BulkFiledDataCaptureReport(
-        output_root="var/aeat/filed-declarations",
+        output_root="var/cadrumo/filed-declarations",
         modelos=("303", "390"),
         year_from=2026,
         year_to=2026,
@@ -104,7 +104,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
 
 def test_live_filed_pull_sources_text_reports_target_period_and_evidence_counts() -> None:
     report = SourceFiledDataCaptureReport(
-        output_root="var/aeat/filed-declarations",
+        output_root="var/cadrumo/filed-declarations",
         target_modelo="130",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),

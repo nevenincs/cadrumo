@@ -17,7 +17,7 @@ import typer
 
 
 class ExitCode(IntEnum):
-    """Stable process exit codes reserved for the AEAT CLI contract.
+    """Stable process exit codes reserved for the Cadrumo CLI contract.
 
     The values map one-to-one with :class:`ErrorCategory`
     categories so the JSON envelope's ``exit_code`` field is always derived

@@ -1,6 +1,6 @@
 """Real-behavior CLI tests for ``aeat app overview pipeline``.
 
-Drives the real ``aeat`` CLI against an isolated encrypted backend to pin the
+Drives the real ``cadrumo`` CLI against an isolated encrypted backend to pin the
 cross-domain pipeline-health dashboard's operator contract from #238:
 
 * a fresh profile with no ledger data and no modelo work units for the

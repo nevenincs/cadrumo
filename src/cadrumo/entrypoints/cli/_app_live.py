@@ -469,7 +469,7 @@ def iva_wallet_pull_history_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/aeat/live/iva-compensation-history"),
+    ] = Path("var/cadrumo/live/iva-compensation-history"),
 ) -> None:
     """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
@@ -555,7 +555,7 @@ def iva_wallet_pull_evidence_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/aeat/live/iva-read-evidence"),
+    ] = Path("var/cadrumo/live/iva-read-evidence"),
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
@@ -1017,7 +1017,7 @@ def filed_pull_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/aeat/filed-declarations"),
+    ] = Path("var/cadrumo/filed-declarations"),
     period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
     expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
@@ -1139,7 +1139,7 @@ def filed_pull_sources_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/aeat/filed-declarations"),
+    ] = Path("var/cadrumo/filed-declarations"),
     registry_root: Annotated[
         Path | None,
         typer.Option(

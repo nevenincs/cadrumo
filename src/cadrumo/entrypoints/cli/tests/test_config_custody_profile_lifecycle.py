@@ -41,7 +41,7 @@ _CLI_HARNESS = dedent(
     )
     token = config_module._settings_override.set(settings)
     try:
-        sys.argv = ["aeat", *cli_args]
+        sys.argv = ["cadrumo", *cli_args]
         from cadrumo.entrypoints.cli import main
 
         main()

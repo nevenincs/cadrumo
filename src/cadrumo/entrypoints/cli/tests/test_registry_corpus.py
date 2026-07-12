@@ -9,7 +9,7 @@ production runtime uses (the reviewed registry legal catalogue,
 
 The CLI exposure lives under ``aeat app registry``, not under a new
 root verb. The boundary regression guard at the bottom of the file
-enforces that no ``aeat normatives`` or ``aeat manual`` top-level verb
+enforces that no ``cadrumo normatives`` or ``cadrumo manual`` top-level verb
 is registered.
 """
 
@@ -25,7 +25,7 @@ from typer._click.core import Context as TyperContext
 from typer.core import TyperGroup
 
 from ....core.paths import PROJECT_ROOT
-from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -219,7 +219,7 @@ def test_manuals_list_accepts_year_filter() -> None:
 
 def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
     """The CLI root is restricted to ``aeat config`` and ``aeat app``
-    only. A top-level ``aeat normatives`` or ``aeat manual`` verb is
+    only. A top-level ``cadrumo normatives`` or ``cadrumo manual`` verb is
     rejected. This test asserts no source file under
     ``entrypoints/cli/`` registers either name at the root level."""
 
@@ -268,7 +268,7 @@ def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
         assert isinstance(child, TyperGroup)
         return child
 
-    root = aeat_click_command()
+    root = cadrumo_click_command()
     assert isinstance(root, TyperGroup)
     app_group = _child(root, "app")
     registry_group = _child(app_group, "registry")
@@ -291,9 +291,9 @@ def test_rejected_topic_and_help_command_vocabulary_is_absent_from_help_text() -
     """Accepted help surfaces must not advertise rejected topic/help commands."""
 
     forbidden_phrases = (
-        "aeat help",
-        "aeat topic",
-        "aeat topics",
+        "cadrumo help",
+        "cadrumo topic",
+        "cadrumo topics",
         "aeat app help",
         "aeat app topic",
         "aeat app topics",

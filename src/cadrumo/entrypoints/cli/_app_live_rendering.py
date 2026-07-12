@@ -1,4 +1,4 @@
-"""Text rendering helpers for live AEAT CLI command envelopes."""
+"""Text rendering helpers for live Cadrumo CLI command envelopes."""
 
 from __future__ import annotations
 

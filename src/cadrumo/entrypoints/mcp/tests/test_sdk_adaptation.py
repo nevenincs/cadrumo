@@ -29,13 +29,13 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert len(tools) == len(descriptors)
     by_name = {tool.name: tool for tool in tools}
 
-    contract = by_name["aeat_contract"]
+    contract = by_name["cadrumo_contract"]
     assert contract.annotations is not None
     assert contract.annotations.readOnlyHint is True
     assert contract.inputSchema["type"] == "object"
     assert contract.outputSchema
 
-    remove = by_name["aeat_ledger_remove"]
+    remove = by_name["cadrumo_ledger_remove"]
     assert remove.annotations is not None
     assert remove.annotations.readOnlyHint is False
     assert remove.annotations.destructiveHint is True

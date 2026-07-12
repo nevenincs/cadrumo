@@ -1,6 +1,6 @@
 """D5 conformance gate for the CLI's own self-referential strings.
 
-The sibling :mod:`test_documented_command_conformance` gate pins the ``aeat ...``
+The sibling :mod:`test_documented_command_conformance` gate pins the ``cadrumo ...``
 invocations cited in *user-facing docs* against the live command tree. This gate
 closes the same class of drift one layer in: the CLI's *own* internally-authored
 strings that name a command path or advertise an enum-choice set, which a
@@ -10,7 +10,7 @@ Two classes of self-referential string are pinned, each against the live
 Typer/click tree walked **in process** (no shell-out):
 
 **Class 1 - command-naming hint strings.** Next-action and failure-hint strings
-that name an ``aeat ...`` command path MUST resolve to a live command, and every
+that name an ``cadrumo ...`` command path MUST resolve to a live command, and every
 long/short option they cite MUST be a real parameter of that command (or a root
 global). The authoritative sources walked here are:
 
@@ -44,7 +44,7 @@ To enrol a new enum-choice surface: append an :class:`_EnumChoiceSurface` row to
 :data:`_ENUM_CHOICE_SURFACES` naming the command path, the option, the advertised
 members, and the handler's real accepted set.
 
-Real-behavior only: the gate imports the real ``aeat`` app object, walks the
+Real-behavior only: the gate imports the real ``cadrumo`` app object, walks the
 materialized click tree, and reads the real error registry and locale catalogue.
 No test doubles, no skips. It fails loudly on a drifted hint or a
 handler-refused advertised member.
@@ -63,7 +63,7 @@ from ....application.modelo import ModeloCalculationRevisionSelector
 from ....core.errors import ERROR_REGISTRY
 from ....core.i18n._render import _locale_map
 from ....domain.attachments import AttachmentSource
-from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import cadrumo_click_command
 from .test_documented_command_conformance import (
     _AEAT_TOKEN_RE,
     _CitedCommand,
@@ -132,7 +132,7 @@ def _registry_suggestion_strings() -> Iterator[tuple[str, str]]:
 
 
 def _locale_command_strings() -> Iterator[tuple[str, str]]:
-    """Yield ``(dotted_key, value)`` for ``cli.*`` strings embedding ``aeat ...``."""
+    """Yield ``(dotted_key, value)`` for ``cli.*`` strings embedding ``cadrumo ...``."""
     catalogue = _locale_map("en")
     seen: set[tuple[str, str]] = set()
     for key, value in catalogue.items():
@@ -167,7 +167,7 @@ _TERMINAL_GLOBAL_FLAGS = frozenset({"--help", "-h", "--version"})
 
 
 def _command_span(after_aeat: str) -> str:
-    """Trim trailing natural-prose from an ``aeat ...`` span.
+    """Trim trailing natural-prose from an ``cadrumo ...`` span.
 
     A hint string commonly embeds a command inside a sentence ("Run aeat config
     unlock NAME or pass --profile."). The command is the maximal leading token
@@ -191,7 +191,7 @@ def _command_span(after_aeat: str) -> str:
 
 
 def _cited_from_text(text: str) -> list[_CitedCommand]:
-    """Decompose every ``aeat ...`` command embedded in a free-text string.
+    """Decompose every ``cadrumo ...`` command embedded in a free-text string.
 
     Reuses the documented-command gate's :func:`_parse_command_line` for the
     final decomposition, after trimming sentence prose around the command span so
@@ -206,7 +206,7 @@ def _cited_from_text(text: str) -> list[_CitedCommand]:
         span = _command_span(raw_line[match.end() :].strip())
         if not span:
             continue
-        parsed = _parse_command_line(f"aeat {span}")
+        parsed = _parse_command_line(f"cadrumo {span}")
         if parsed is not None:
             out.append(parsed)
     return out
@@ -233,7 +233,7 @@ def test_registry_suggestions_resolve() -> None:
 
 
 def test_locale_command_strings_resolve() -> None:
-    """Every ``cli.*`` locale string embedding ``aeat ...`` resolves."""
+    """Every ``cli.*`` locale string embedding ``cadrumo ...`` resolves."""
     violations: list[str] = []
     for key, value in _locale_command_strings():
         for cited in _cited_from_text(value):
@@ -289,9 +289,9 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     import typer._click as click_vendored
     from typer.core import TyperGroup
 
-    root = aeat_click_command()
+    root = cadrumo_click_command()
     assert isinstance(root, (click_vendored.Command, TyperGroup))
-    ctx = click_vendored.Context(root, info_name="aeat")
+    ctx = click_vendored.Context(root, info_name="cadrumo")
     cmd: object = root
     for tok in verb_path:
         assert _is_command_group(cmd), f"{tok}: parent in {verb_path} is not a group"

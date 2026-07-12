@@ -17,6 +17,7 @@ import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no lo
 from collections.abc import Mapping
 from enum import StrEnum
 
+from ...core._config_state_root import FormerProductStateError
 from ...core.errors import AeatError
 from ...core.logging import set_log_level
 
@@ -75,7 +76,7 @@ def resolve_log_level(
         debug: Whether ``--debug`` was passed.
         env: Optional environment mapping for deterministic tests; when
             ``None``, :func:`load_settings` is
-            consulted (the single AEAT-config surface).
+            consulted (the single Cadrumo-config surface).
 
     Returns:
         The effective :class:`LogLevel`.
@@ -101,14 +102,14 @@ def resolve_log_level(
     if env is not None:
         raw_value = env.get("CADRUMO_LOG_LEVEL", "").strip().lower()
     else:
-        # No explicit env mapping: read via Settings (single AEAT-config surface).
+        # No explicit env mapping: read via Settings (single Cadrumo-config surface).
         # The env parameter remains for tests that need to inject an isolated
         # mapping without going through Settings's os.environ + .env merge.
         from ...core.config import load_settings
 
         try:
             raw_value = load_settings().cadrumo_log_level.strip().lower()
-        except (KeyError, ValueError, AttributeError):
+        except (FormerProductStateError, KeyError, ValueError, AttributeError):
             raw_value = ""
     if not raw_value:
         return LogLevel.DEFAULT

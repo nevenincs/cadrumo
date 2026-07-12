@@ -33,14 +33,14 @@ from ....core.errors import (
 )
 from ....core.observability import RunContextMissingError
 from ....domain.portals import PortalIntegrityError
-from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_suggestions_parse_as_valid_cli_commands() -> None:
     """Every registered ``default_suggestion`` parses against the live Click context."""
-    command = aeat_click_command()
+    command = cadrumo_click_command()
     # Heavy subcommand groups are registered lazily, so the materialized
     # Click group's ``list_commands`` — not the Typer ``registered_*``
     # lists — is the canonical top-level command inventory.
@@ -50,7 +50,7 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
     suggestions = [
         code.default_suggestion
         for code in ERROR_REGISTRY.values()
-        if code.default_suggestion is not None and code.default_suggestion.startswith("aeat ")
+        if code.default_suggestion is not None and code.default_suggestion.startswith("cadrumo ")
     ]
     assert suggestions
 
@@ -59,7 +59,7 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
         if len(tokens) > 1 and not tokens[1].startswith("-"):
             assert tokens[1] in top_level
         try:
-            command.make_context("aeat", tokens[1:], resilient_parsing=False)
+            command.make_context("cadrumo", tokens[1:], resilient_parsing=False)
         except Exit as exc:
             assert exc.exit_code == 0
 

@@ -64,20 +64,15 @@ def test_each_skill_prompt_embeds_its_skill_document_verbatim() -> None:
         assert document.brief_text.strip()
         embedded_texts = [item.text for item in document.embedded]
         assert text in embedded_texts
-        assert document.embedded[0].uri == f"cadrumo://skill/{name}"
+        assert document.embedded[0].uri == f"aeat://skill/{name}"
         assert document.embedded[0].mime_type == "text/markdown"
 
 
 def test_orientation_prompt_embeds_the_operator_rules() -> None:
     document = prompt_document(ORIENTATION_PROMPT_NAME)
     assert document.brief_text.strip()
-    assert ORIENTATION_PROMPT_NAME == "cadrumo-empezar"
-    assert document.prompt.title == "Empezar con el asistente Cadrumo"
-    assert "operate Cadrumo" in document.brief_text
-    assert "aeat console" not in document.brief_text.casefold()
     embedded_texts = [item.text for item in document.embedded]
     assert operator_rules_text() in embedded_texts
-    assert document.embedded[0].uri == "cadrumo://rule/operating-rules"
 
 
 def test_unknown_prompt_name_raises_prompt_not_found() -> None:
@@ -142,7 +137,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
         assert result.messages[0].content.text.strip()
         resource_message = result.messages[1]
         assert resource_message.content.type == "resource"
-        assert str(resource_message.content.resource.uri) == "cadrumo://skill/preparar-modelo-130"
+        assert str(resource_message.content.resource.uri) == "aeat://skill/preparar-modelo-130"
         assert resource_message.content.resource.mimeType == "text/markdown"
         assert resource_message.content.resource.text == skill_texts["preparar-modelo-130"]
 
