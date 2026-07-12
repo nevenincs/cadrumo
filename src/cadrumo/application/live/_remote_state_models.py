@@ -1,14 +1,14 @@
 """Typed report models for live AEAT filed-data and IVA remote-state services.
 
 These frozen records are renderer-facing summaries, not raw evidence stores.
-They carry typed :class:`~aeat.core.Period` values, secure-storage references,
+They carry typed :class:`~cadrumo.core.Period` values, secure-storage references,
 redacted diagnostic fields, and counts/ids needed by CLI and workflow surfaces
 after live capture has persisted the underlying observations.
 
 See Also:
-    :class:`aeat.application.live.IvaRemoteStateAcquisitionReport`
+    :class:`cadrumo.application.live.IvaRemoteStateAcquisitionReport`
         Combined read-only IVA remote-state acquisition result.
-    :class:`aeat.application.live.IvaRemoteStateStoredEvidenceReport`
+    :class:`cadrumo.application.live.IvaRemoteStateStoredEvidenceReport`
         Stored-evidence view that can be loaded without live AEAT contact.
 """
 

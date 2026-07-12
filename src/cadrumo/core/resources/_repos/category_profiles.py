@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class CategoryProfileRepository(ResourceCacheRepository[Mapping["SpendingCategory", "CategoryProfile"], int]):
     """Year-keyed repository for spending-category profile registries.
 
-    Wraps :func:`aeat.domain.categories.resolve_category_profiles`
+    Wraps :func:`cadrumo.domain.categories.resolve_category_profiles`
     and returns mappings from :class:`SpendingCategory` to
     :class:`CategoryProfile`.
     """

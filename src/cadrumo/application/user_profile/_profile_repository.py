@@ -1,10 +1,10 @@
 """The single, sole writer of a logical profile's physical stores.
 
 A logical profile fragments across a bucket directory, a plaintext
-:class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`, an
-encrypted :class:`~aeat.domain.user_profile.UserProfileRecord` row in a
+:class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`, an
+encrypted :class:`~cadrumo.domain.user_profile.UserProfileRecord` row in a
 per-bucket SQLite database, and an append-only
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
+:class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
 Before this repository, every CLI handler and application service
 wrote whichever stores it remembered; consistency was by convention
 and a failure mid-sequence left a half-live profile.
@@ -15,26 +15,26 @@ are cross-store units of work: the
 filesystem directory + manifest are staged first (a directory with no
 secure-object row is detectable, reclaimable garbage), the encrypted
 record commits next inside the SQLite transaction, the
-:class:`~aeat.core.BucketPointer` moves last. On any failure the staged
+:class:`~cadrumo.core.BucketPointer` moves last. On any failure the staged
 filesystem state is rolled back. :meth:`ProfileRepository.load` runs
-:func:`~aeat.application.user_profile._integrity.verify_profile_integrity`
+:func:`~cadrumo.application.user_profile._integrity.verify_profile_integrity`
 so a profile whose stores have drifted surfaces the drift instead of
 being served silently.
 
 Application orchestration
-(:func:`~aeat.application.user_profile.register_active_profile`,
-:func:`~aeat.application.user_profile.remove_active_profile`,
-:func:`~aeat.application.user_profile.select_profile`) and the CLI
+(:func:`~cadrumo.application.user_profile.register_active_profile`,
+:func:`~cadrumo.application.user_profile.remove_active_profile`,
+:func:`~cadrumo.application.user_profile.select_profile`) and the CLI
 ``config profile`` verbs delegate their store writes here; there is
 exactly one implementation of the cross-store profile write.
 
 See Also:
-    :class:`~aeat.application.user_profile.ProfileLifecycleService`
+    :class:`~cadrumo.application.user_profile.ProfileLifecycleService`
         Bucket-local record and lifecycle-event service composed by this
         repository.
-    :func:`~aeat.application.workflow.read_profile_bucket`
+    :func:`~cadrumo.application.workflow.read_profile_bucket`
         Manifest scan used by label lookup and live-profile surfaces.
-    :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`
+    :class:`~cadrumo.application.user_profile._aggregate.ProfileAggregate`
         In-memory cross-store profile aggregate returned by this repository.
 """
 
@@ -153,10 +153,10 @@ class ProfileRepository:
 
     The repository composes the existing lower-level pieces — the
     secure-record
-    :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`,
-    :func:`~aeat.adapters.persistence.storage.bucket.provision_bucket_directory`,
-    the :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
-    IO helpers, and the active-profile :class:`~aeat.core.BucketPointer`
+    :class:`~cadrumo.application.user_profile.UserProfileLifecycleRepository`,
+    :func:`~cadrumo.adapters.persistence.storage.bucket.provision_bucket_directory`,
+    the :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`
+    IO helpers, and the active-profile :class:`~cadrumo.core.BucketPointer`
     IO. It is the single place those writes happen.
     """
 
@@ -172,7 +172,7 @@ class ProfileRepository:
         Args:
             root: AEAT local storage root (the parent of ``buckets/``).
                 When ``None`` the value is resolved from the
-                pydantic-settings :class:`~aeat.core.config.Settings`
+                pydantic-settings :class:`~cadrumo.core.config.Settings`
                 object.
             secure_objects: Optional injected secure-object repository.
                 When supplied, every encrypted-store read and write is
@@ -225,7 +225,7 @@ class ProfileRepository:
            engine resolves its URL from the pointer chain, so the
            pointer must precede the encrypted-record write.
         3. Commit the encrypted
-           :class:`~aeat.domain.user_profile.UserProfileRecord` (the
+           :class:`~cadrumo.domain.user_profile.UserProfileRecord` (the
            SQLite transaction).
 
         The pre-create active-profile pointer is captured here, before
@@ -248,7 +248,7 @@ class ProfileRepository:
 
         Returns:
             The assembled
-            :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`.
+            :class:`~cadrumo.application.user_profile._aggregate.ProfileAggregate`.
 
         Raises:
             ProfileNotFoundError: If the profile already carries a
@@ -371,18 +371,18 @@ class ProfileRepository:
         """Assemble the aggregate from every store; verify integrity.
 
         Reads the plaintext manifest and the encrypted record, runs
-        :func:`~aeat.application.user_profile._integrity.verify_profile_integrity`
+        :func:`~cadrumo.application.user_profile._integrity.verify_profile_integrity`
         to confirm the directory, the manifest, and the record all
         agree on the UUID, the lifecycle status, and the display label,
         then builds the
-        :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`.
+        :class:`~cadrumo.application.user_profile._aggregate.ProfileAggregate`.
 
         Args:
             profile_id: The UUID of the profile to load.
 
         Returns:
             The assembled
-            :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`
+            :class:`~cadrumo.application.user_profile._aggregate.ProfileAggregate`
             for the profile.
 
         Raises:
@@ -458,7 +458,7 @@ class ProfileRepository:
         Profile identity is an immutable UUID, so a rename is a pure
         metadata edit: only the label moves, in the two stores that
         hold a copy of it - the encrypted
-        :class:`~aeat.domain.user_profile.UserProfileRecord`
+        :class:`~cadrumo.domain.user_profile.UserProfileRecord`
         ``display_name`` and the plaintext manifest ``label``. There
         is no directory move and no re-key.
 
@@ -466,7 +466,7 @@ class ProfileRepository:
         service updates the record and emits ``PROFILE_RENAMED``, then
         the manifest label projection is rewritten. ``load`` runs the
         cross-store integrity check first, so a drifted profile raises
-        :class:`~aeat.application.user_profile._integrity.ProfileIntegrityError`
+        :class:`~cadrumo.application.user_profile._integrity.ProfileIntegrityError`
         rather than being relabelled in a torn state.
 
         Args:
@@ -475,7 +475,7 @@ class ProfileRepository:
 
         Returns:
             The updated
-            :class:`~aeat.application.user_profile._aggregate.ProfileAggregate`
+            :class:`~cadrumo.application.user_profile._aggregate.ProfileAggregate`
             with the new label.
 
         Raises:
@@ -545,7 +545,7 @@ class ProfileRepository:
         ``load`` runs the cross-store integrity check, which compares
         the manifest status against the record status, so a profile
         left in the step-2/step-3 drift state by a crash raises
-        :class:`~aeat.application.user_profile._integrity.ProfileIntegrityError`
+        :class:`~cadrumo.application.user_profile._integrity.ProfileIntegrityError`
         on the next load - reclaiming a drifted profile is the
         ``repair`` surface's domain.
 
@@ -674,7 +674,7 @@ class ProfileRepository:
         audit) see them; live-surface callers filter on ``status``.
 
         Each element is a :class:`ProfileSummary`; live label lookups
-        use :func:`~aeat.application.workflow.read_profile_bucket`.
+        use :func:`~cadrumo.application.workflow.read_profile_bucket`.
         """
         buckets_root = self._root / BUCKETS_DIRNAME
         if not buckets_root.is_dir():
@@ -794,7 +794,7 @@ class ProfileRepository:
         """Return a secure-record repository bound to ``profile_id``'s db.
 
         When an injected
-        :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+        :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
         was supplied at construction it is reused; otherwise the repository
         resolves the per-bucket engine from settings.
         """
@@ -808,7 +808,7 @@ class ProfileRepository:
         PROFILE_BUCKET_CREATED / PROFILE_TOMBSTONED audit events; this
         repository composes it inside the cross-store unit of work.
         It is created by
-        :func:`~aeat.application.user_profile._orchestration.build_lifecycle_service`.
+        :func:`~cadrumo.application.user_profile._orchestration.build_lifecycle_service`.
         """
         from ._orchestration import build_lifecycle_service
 

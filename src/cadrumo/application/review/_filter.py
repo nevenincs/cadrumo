@@ -21,7 +21,7 @@ orchestration layer reads instead of re-parsing strings at every
 ReviewQueue / aggregator call site.
 
 The specs are *parsing* surfaces; the actual filtering logic lives in
-:class:`aeat.application.review.ReviewQueue` and the per-scope
+:class:`cadrumo.application.review.ReviewQueue` and the per-scope
 adapters.
 """
 
@@ -174,7 +174,7 @@ class InvoiceReviewFilterKey(StrEnum):
         STATUS: Lifecycle state of the invoice (``pending`` /
             ``reviewed`` / ``matched``).
         KIND: Issued-vs-received discriminator. Values come from
-            :class:`aeat.domain.invoices.InvoiceKind`.
+            :class:`cadrumo.domain.invoices.InvoiceKind`.
     """
 
     STATUS = "status"
@@ -272,10 +272,10 @@ def _enum_value_or_raise[E: StrEnum](
             clause value is compared against the enum members ignoring
             case, so an operator may type either case on the command
             line. Used for lowercase-valued enums
-            (:class:`aeat.domain.invoices.InvoiceKind`, ``issued`` /
+            (:class:`cadrumo.domain.invoices.InvoiceKind`, ``issued`` /
             ``received``) and for uppercase-valued enums
-            (:class:`aeat.domain.transactions.BusinessClassification`
-            ``BUSINESS``, :class:`~aeat.domain.transactions.TransactionDirection`
+            (:class:`cadrumo.domain.transactions.BusinessClassification`
+            ``BUSINESS``, :class:`~cadrumo.domain.transactions.TransactionDirection`
             ``INCOMING``) so ``classification=business`` resolves the same
             as ``classification=BUSINESS``.
 
@@ -340,7 +340,7 @@ class LedgerReviewFilterSpec(BaseModel):
             provided.
         import_id: Raw import-batch id if ``import=`` was provided.
             Identifier-shape validation lives on the
-            :class:`aeat.application.transactions` import surface.
+            :class:`cadrumo.application.transactions` import surface.
     """
 
     model_config = _STRICT_FROZEN
@@ -490,7 +490,7 @@ class InvoiceReviewFilterSpec(BaseModel):
     Attributes:
         clauses: Raw clauses in input order.
         status: Resolved :class:`InvoiceReviewStatus`.
-        kind: Resolved :class:`aeat.domain.invoices.InvoiceKind`
+        kind: Resolved :class:`cadrumo.domain.invoices.InvoiceKind`
             (``issued`` / ``received``).
     """
 

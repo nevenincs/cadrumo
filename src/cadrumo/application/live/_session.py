@@ -2,16 +2,16 @@
 
 This module is the shared read-only entry gate for application-live services.
 It loads :class:`Settings`, enforces
-:meth:`aeat.core.access_gate.AeatAccessGate.require_live_read`, and only then
+:meth:`cadrumo.core.access_gate.AeatAccessGate.require_live_read`, and only then
 returns an authenticated :class:`AeatSession`. It never calls
 ``require_live_write`` and never performs AEAT-side mutations.
 
 See Also:
-    :class:`~aeat.core.access_gate.AeatAccessGate`
+    :class:`~cadrumo.core.access_gate.AeatAccessGate`
         Core gate that authorizes pytest live reads and refuses all live writes.
-    :func:`~aeat.application.auth.ensure_authenticated_aeat_session`
+    :func:`~cadrumo.application.auth.ensure_authenticated_aeat_session`
         Auth service called only after the read gate passes.
-    :mod:`aeat.application.live`
+    :mod:`cadrumo.application.live`
         Public read-only live facade that routes remote acquisition helpers
         through this session boundary.
 """

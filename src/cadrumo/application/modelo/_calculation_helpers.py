@@ -1,23 +1,23 @@
 """Shared calculation helpers for modelo application actions.
 
-The helpers load mutable :class:`~aeat.domain.modelos.WorkUnit` records, resolve
+The helpers load mutable :class:`~cadrumo.domain.modelos.WorkUnit` records, resolve
 their law-determined
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`, and project engine,
+:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`, and project engine,
 imported, or amended values into
-:class:`~aeat.domain.calculations.registry.CasillaObservation` provenance rows.
+:class:`~cadrumo.domain.calculations.registry.CasillaObservation` provenance rows.
 Amendment helpers reuse the baseline
-:class:`~aeat.domain.modelos.CalculationRevision` where a corrected casilla was
+:class:`~cadrumo.domain.modelos.CalculationRevision` where a corrected casilla was
 not overridden, and rebuild overridden rows from the selected snapshot so
 legal/source grounding is never silently erased.
 
 See Also:
-    :mod:`aeat.application.modelo._calculation_actions`:
+    :mod:`cadrumo.application.modelo._calculation_actions`:
         Uses these helpers before registry-engine execution and persistence.
-    :mod:`aeat.application.modelo._amendment_actions`:
+    :mod:`cadrumo.application.modelo._amendment_actions`:
         Reuses amendment observation projection for corrected filing records.
-    :mod:`aeat.application.modelo._registry_resources`:
+    :mod:`cadrumo.application.modelo._registry_resources`:
         Supplies the packaged registry authority used for snapshot resolution.
-    :class:`~aeat.domain.calculations.registry.RegistryCalculationResult`:
+    :class:`~cadrumo.domain.calculations.registry.RegistryCalculationResult`:
         Registry-engine result whose values and formula entries are projected
         into typed observations.
 """
@@ -58,7 +58,7 @@ from ._registry_resources import (
 
 
 def load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_id: str) -> WorkUnit:
-    """Load a mutable :class:`aeat.domain.modelos.WorkUnit` for calculation.
+    """Load a mutable :class:`cadrumo.domain.modelos.WorkUnit` for calculation.
 
     Missing ids raise :class:`WorkUnitNotFoundError`. Work units already marked
     ``DESCARTADO`` raise :class:`WorkUnitMutationRefusedError`, because the
@@ -80,7 +80,7 @@ def load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_i
 
 
 def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
-    """Resolve and return the :class:`~aeat.domain.calculations.registry.RegistrySnapshot`.
+    """Resolve and return the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
 
     After resolution the snapshot's revision id is asserted equal to the work
     unit's pinned ``revision_id`` (D1 calc-time assertion, per the
@@ -90,15 +90,15 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
     :exc:`WorkUnitRevisionDivergenceError` directing the operator to re-create
     the work unit.
 
-    The :class:`aeat.domain.modelos.WorkUnit` ``revision_id`` is never passed
+    The :class:`cadrumo.domain.modelos.WorkUnit` ``revision_id`` is never passed
     into the snapshot resolution call; it is only compared against the
     law-determined resolver answer.
 
     See Also:
-        :func:`aeat.application.modelo._work_addressing.resolve_registry_revision_for_work_target`:
+        :func:`cadrumo.application.modelo._work_addressing.resolve_registry_revision_for_work_target`:
             Performs the create-time counterpart of this revision identity
             assertion.
-        :class:`aeat.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:
+        :class:`cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:
             Refusal raised when the pinned revision no longer matches the
             law-determined snapshot.
     """
@@ -147,16 +147,16 @@ def build_typed_observations(
     engine_result: RegistryCalculationResult,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build :class:`~aeat.domain.calculations.registry.CasillaObservation` rows.
+    """Build :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows.
 
     Formula targets carry their
-    :class:`~aeat.domain.calculations.registry.RegistryCalculationEntry`
+    :class:`~cadrumo.domain.calculations.registry.RegistryCalculationEntry`
     provenance. Non-formula values get legal/source references from the
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` casilla
+    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` casilla
     definitions. Any value without a formula entry or registry casilla
     definition raises
-    :class:`aeat.application.modelo.CasillaProvenanceMissingError` through
-    :func:`aeat.application.modelo._calculation_helpers.casilla_observation_for`
+    :class:`cadrumo.application.modelo.CasillaProvenanceMissingError` through
+    :func:`cadrumo.application.modelo._calculation_helpers.casilla_observation_for`
     rather than emitting an ungrounded row.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
@@ -177,16 +177,16 @@ def external_filing_observations(
     casilla_values: Mapping[CasillaId, Decimal],
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build :class:`~aeat.domain.calculations.registry.CasillaObservation` rows for imports.
+    """Build :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows for imports.
 
-    The :class:`~aeat.domain.calculations.registry.RegistrySnapshot` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` supplies the
     provenance for imported values that have no
-    :class:`~aeat.domain.calculations.registry.RegistryCalculationEntry`
+    :class:`~cadrumo.domain.calculations.registry.RegistryCalculationEntry`
     in the current process. This keeps imported AEAT baselines on the same
     typed-observation contract as locally calculated revisions.
 
     See Also:
-        :func:`aeat.application.modelo.import_external_filing_evidence`:
+        :func:`cadrumo.application.modelo.import_external_filing_evidence`:
             Persists the external-evidence baseline that consumes these rows.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
@@ -212,10 +212,10 @@ def casilla_observation_for(
 
     Formula entries contribute formula id, operand lineage, and legal/source
     refs. Non-formula casillas use the
-    :class:`~aeat.domain.calculations.registry.CasillaDefinition` selected by
-    the :class:`~aeat.domain.calculations.registry.RegistrySnapshot`. A missing
+    :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` selected by
+    the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`. A missing
     definition is a hard provenance error because emitting a
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` without
+    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` without
     ``legal_refs`` and ``source_refs`` would erase legal grounding.
     """
     if entry is not None:
@@ -256,18 +256,18 @@ def amendment_observations(
     baseline_revision: CalculationRevision,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build amendment :class:`~aeat.domain.calculations.registry.CasillaObservation` rows.
+    """Build amendment :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows.
 
-    The baseline :class:`~aeat.domain.modelos.CalculationRevision` contributes
+    The baseline :class:`~cadrumo.domain.modelos.CalculationRevision` contributes
     unchanged observations for casillas the amendment did not override. Newly
     overridden casillas are rebuilt from the
-    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` so the persisted
+    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` so the persisted
     amendment revision carries legal/source provenance even when the imported
     baseline had sparse observation rows. A corrected casilla absent from the
-    snapshot raises :class:`aeat.application.modelo.CasillaProvenanceMissingError`.
+    snapshot raises :class:`cadrumo.application.modelo.CasillaProvenanceMissingError`.
 
     See Also:
-        :func:`aeat.application.modelo.amend_modelo_revision`:
+        :func:`cadrumo.application.modelo.amend_modelo_revision`:
             Uses these rows for the corrected amendment revision.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)

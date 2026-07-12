@@ -10,9 +10,9 @@ the inline state-machine, supersession, and content-id helpers have
 been routed through the shared base.
 
 Snapshot records are wrapped in an
-:class:`~aeat.adapters.persistence.storage.Envelope` and persisted through a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~aeat.adapters.persistence.storage.SensitivityClass`
+:class:`~cadrumo.adapters.persistence.storage.Envelope` and persisted through a
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` at
+``FINANCIAL`` :class:`~cadrumo.adapters.persistence.storage.SensitivityClass`
 under the borrador namespace.
 """
 

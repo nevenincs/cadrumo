@@ -1,6 +1,6 @@
 """External filing import actions for modelo baselines.
 
-:func:`~aeat.application.modelo.import_external_filing_evidence` turns
+:func:`~cadrumo.application.modelo.import_external_filing_evidence` turns
 AEAT-attested external evidence into a presented
 :class:`CalculationRevision` plus current
 :class:`ModeloRecord`. Evidence-bearing imports validate the
@@ -14,22 +14,22 @@ The imported record is the production baseline consumed by the amendment path.
 It is intentionally distinct from a locally calculated and filed return:
 ``external_evidence`` marks that the values came from official AEAT evidence,
 while
-:func:`~aeat.application.modelo._calculation_helpers.external_filing_observations`
+:func:`~cadrumo.application.modelo._calculation_helpers.external_filing_observations`
 keeps the imported casilla values on the same registry-grounded
 :class:`CasillaObservation` contract as local
 calculation revisions.
 
 See Also:
-    :func:`~aeat.entrypoints.cli._modelo_records_cli.filing_record_import`:
+    :func:`~cadrumo.entrypoints.cli._modelo_records_cli.filing_record_import`:
         CLI surface that parses ``filing-record import`` options and calls this
         service.
-    :func:`~aeat.application.modelo.amend_modelo_revision`:
+    :func:`~cadrumo.application.modelo.amend_modelo_revision`:
         Consumes the imported current :class:`ModeloRecord`
         as an amendment baseline.
-    :mod:`~aeat.domain.justificante`:
+    :mod:`~cadrumo.domain.justificante`:
         Receipt metadata store required by justificante-PDF, CSV-register, and
         live-capture evidence kinds.
-    :func:`~aeat.application.modelo._registry_helpers.reject_unknown_import_casillas`:
+    :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_import_casillas`:
         Resolves the registry snapshot and refuses noncanonical or undeclared
         imported casilla ids.
     :class:`ExternalEvidence`:
@@ -151,11 +151,11 @@ def import_external_filing_evidence[CasillaKey](
         external evidence metadata.
 
     See Also:
-        :func:`~aeat.application.modelo._calculation_helpers.external_filing_observations`:
+        :func:`~cadrumo.application.modelo._calculation_helpers.external_filing_observations`:
             Builds provenance-bearing observations for imported casilla values.
-        :func:`~aeat.application.modelo.amend_modelo_revision`:
+        :func:`~cadrumo.application.modelo.amend_modelo_revision`:
             Requires this external-evidence baseline before filing amendments.
-        :mod:`~aeat.domain.justificante`:
+        :mod:`~cadrumo.domain.justificante`:
             Stores the receipt metadata checked for receipt-bound evidence
             references.
     """

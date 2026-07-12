@@ -1,17 +1,17 @@
 """Preflight gating for the filing submission engine.
 
 ``Preflight`` runs four ordered gates against a
-:class:`aeat.domain.submission._protocols.ModeloDraftLike` before any
+:class:`cadrumo.domain.submission._protocols.ModeloDraftLike` before any
 browser work begins. Every failure raises
 :class:`SubmissionPreflightError`; the happy path is silent.
 
 See Also:
-    :class:`~aeat.domain.submission.SubmissionEngine`
+    :class:`~cadrumo.domain.submission.SubmissionEngine`
         Public read-only engine that owns this preflight runner.
-    :class:`~aeat.domain.submission.DeadlineWindowChecker`
+    :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
         Gate-3 protocol used only when the caller has not skipped the filing
         window check.
-    :class:`~aeat.application.workflow.WorkflowPurpose`
+    :class:`~cadrumo.application.workflow.WorkflowPurpose`
         Application policy input that decides whether workflow callers pass
         ``skip_deadline_window`` for local verification or filing.
 """
@@ -37,7 +37,7 @@ _logger = get_logger(__name__)
 # StrEnum value for ``AuthProviderKind.CERTIFICATE`` — duplicated as a
 # bare string so the domain layer does not import the application-layer
 # enum at runtime. Kept in sync with
-# :class:`aeat.application.auth.AuthProviderKind` by code review.
+# :class:`cadrumo.application.auth.AuthProviderKind` by code review.
 _AUTH_KIND_CERTIFICATE = "certificate"
 _PREFLIGHT_DRAFT_STALE_LOCALE_KEY = "errors.refused.submission_preflight_draft_stale"
 _PREFLIGHT_DRAFT_NOT_APPROVED_LOCALE_KEY = "errors.refused.submission_preflight_draft_not_approved"
@@ -51,9 +51,9 @@ def _describe_provider_operator_impact(description: AuthProviderDescriptionLike)
     """Return the operator-impact summary for ``description``.
 
     Mirror of
-    :func:`aeat.application.auth.describe_provider_operator_impact`.
+    :func:`cadrumo.application.auth.describe_provider_operator_impact`.
     Duplicated here because the layered-import contract forbids
-    `aeat.domain.*` from depending on `aeat.application.*` at runtime;
+    `cadrumo.domain.*` from depending on `cadrumo.application.*` at runtime;
     the helper is pure string formatting against ``description``'s
     pydantic fields, so co-locating it with the gate that consumes
     its output keeps the domain leaf clean.

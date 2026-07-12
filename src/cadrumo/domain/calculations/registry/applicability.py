@@ -24,7 +24,7 @@ identifiers is preserved here for two reasons:
      the source-side name choice.
 
 Cross-package consumers MUST import from this module
-(``aeat.domain.calculations.registry.applicability``), NOT from
+(``cadrumo.domain.calculations.registry.applicability``), NOT from
 ``_applicability``. Imports of ``_applicability`` are flagged by
 ``test_public_api_boundaries.py::test_source_tree_does_not_use_absolute_registry_private_imports``.
 

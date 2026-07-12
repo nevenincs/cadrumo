@@ -1,7 +1,7 @@
 """Bucket-scoped expedientes snapshot service.
 
 Wraps the read-only AEAT sede declarations walker
-(:mod:`aeat.adapters.outbound.aeat.sede._declarations`) with
+(:mod:`cadrumo.adapters.outbound.aeat.sede._declarations`) with
 bucket-scoped persistence. Read-only by construction: no method calls
 AEAT to mutate expediente state.
 

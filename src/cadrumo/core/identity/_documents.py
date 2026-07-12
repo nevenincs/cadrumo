@@ -21,7 +21,7 @@ member and raises :class:`IdentityError` on malformed input. It accepts mixed
 case, trims surrounding whitespace, and rejects values whose check letter does
 not match the algorithm, not just shape mismatches. Callers that only need the
 canonical string form use
-:func:`~aeat.core.identity.validate_spanish_tax_id` from the sibling tax-id
+:func:`~cadrumo.core.identity.validate_spanish_tax_id` from the sibling tax-id
 module.
 """
 
@@ -81,7 +81,7 @@ class IdentityError(AeatError, ValueError):
     """Raised when a candidate string is not a valid Spanish identity document.
 
     Bound to the registered error code ``INTEGRITY_IDENTITY_DOCUMENT``
-    in :data:`aeat.core.errors.ERROR_REGISTRY`. Carries a human-readable
+    in :data:`cadrumo.core.errors.ERROR_REGISTRY`. Carries a human-readable
     diagnostic that names the failing shape (``NIF``, ``NIE``, ``CIF``)
     and, where relevant, the expected vs observed check character.
 
@@ -97,8 +97,8 @@ def nif_check_letter(number: int) -> str:
     Implements the AEAT control-letter table :data:`_NIF_LETTERS`
     (``TRWAGMYFPDXBNJZSQVHLCKE``) indexed by ``number % 23``. This is the
     single source of the check-letter computation for the whole
-    :mod:`aeat.core.identity` package; the sibling
-    :mod:`aeat.core.identity._tax_id` re-exports it rather than
+    :mod:`cadrumo.core.identity` package; the sibling
+    :mod:`cadrumo.core.identity._tax_id` re-exports it rather than
     re-declaring the ``% 23`` expression, and every enum-returning
     validator in this module computes its expected letter through it.
     """
@@ -118,7 +118,7 @@ def _cif_check_value(digits: str) -> int:
     the raw integer and leaves the digit-vs-letter rendering and the
     per-kind acceptance policy to the caller, because the two identity
     surfaces (:func:`_compute_cif_check` here and
-    :func:`aeat.core.identity._tax_id.validate_spanish_tax_id`) apply
+    :func:`cadrumo.core.identity._tax_id.validate_spanish_tax_id`) apply
     deliberately divergent CIF leader-set policies over the same arithmetic.
 
     Args:

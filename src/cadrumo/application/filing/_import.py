@@ -87,7 +87,7 @@ class JustificanteImportResult:
     The container is deliberately a frozen dataclass rather than a
     pydantic model because it wraps two already-validated pydantic
     records and defers the ``ModeloPresentado`` type to runtime (the
-    ``aeat.adapters.outbound.aeat.export`` package itself imports :mod:`application.filing`, so
+    ``cadrumo.adapters.outbound.aeat.export`` package itself imports :mod:`application.filing`, so
     pulling ``ModeloPresentado`` in at module scope would cycle).
 
     Attributes:
@@ -137,7 +137,7 @@ def import_filing_from_justificante(
         display_name=f"Imported filing {justificante.csv}",
     )
 
-    # Deferred import: `aeat.application.filing` imports this module, so top-level
+    # Deferred import: `cadrumo.application.filing` imports this module, so top-level
     # resolution of ``build_draft`` would form a cycle.
     from . import build_draft
 

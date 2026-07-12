@@ -10,7 +10,7 @@ escapes.
 The containment helpers (:func:`resolve_relative_subpath` and
 :func:`resolve_record_json_path`) refuse backslashes, parent references,
 absolute components, and any resolved path that escapes the owning root. They
-raise :class:`~aeat.core.errors.CoreValidationError` and are the load-bearing
+raise :class:`~cadrumo.core.errors.CoreValidationError` and are the load-bearing
 defence against caller-controlled identifier injection on the on-disk store
 paths.
 
@@ -69,7 +69,7 @@ _WINDOWS_LONG_PATH_WINERRORS = frozenset({_WIN_ERROR_PATH_NOT_FOUND, _WIN_ERROR_
 #: Worst-case path suffix (leading separator through file extension) that
 #: the bucket-directory layout can append below a configured storage root:
 #: ``\buckets\<uuid-36>\blobs\<hmac-8>--<label-64>.meta.json``. Mirrors
-#: :data:`aeat.adapters.persistence.storage._namespace_registry.BUCKETS_DIRNAME`
+#: :data:`cadrumo.adapters.persistence.storage._namespace_registry.BUCKETS_DIRNAME`
 #: / ``BUCKET_BLOBS_DIRNAME`` and the outbound
 #: ``LocalFileSystemProvider`` filename shape
 #: (``<hmac_prefix_8>--<label>.meta.json``, ``label`` capped at 64 chars).
@@ -289,8 +289,8 @@ def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
     cache without requiring a full content hash.
 
     This is not an integrity hash or evidence digest. For byte-level
-    verification use :func:`aeat.core.hashing.hash_file` or
-    :func:`aeat.core.hashing.sha256_file`.
+    verification use :func:`cadrumo.core.hashing.hash_file` or
+    :func:`cadrumo.core.hashing.sha256_file`.
 
     Args:
         path: The file to fingerprint. Must be an existing, stat-able

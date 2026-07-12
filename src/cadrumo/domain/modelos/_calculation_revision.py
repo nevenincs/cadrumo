@@ -360,7 +360,7 @@ def _outputs_for_hash_from_observations(
 class CalculationSourceRef(BaseModel):
     """One resolver-level source-object trace persisted on a calculation revision.
 
-    The calculation source mesh (``aeat.application.aggregation``) resolves each
+    The calculation source mesh (``cadrumo.application.aggregation``) resolves each
     registry binding source through an enrolled resolver and produces a typed
     ``CalculationSourceProvenance`` row per contributing source object. This is
     the DOMAIN-side, persistence-shaped projection of that provenance: it carries
@@ -370,7 +370,7 @@ class CalculationSourceRef(BaseModel):
 
     It deliberately does NOT carry ``legal_refs`` / ``source_refs`` — those are the
     per-casilla regulatory grounding already carried by
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` on the same
+    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` on the same
     revision; duplicating them here would fragment the grounding across two
     surfaces.
 

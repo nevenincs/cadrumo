@@ -18,7 +18,7 @@ finalized audit surface.
 See Also:
     :class:`TransactionRevisionParticipationIndex`:
         Per-transaction secure object rebuilt by this module.
-    :func:`aeat.application.modelo._verification_actions._build_participation_writes`:
+    :func:`cadrumo.application.modelo._verification_actions._build_participation_writes`:
         Write-time co-emission path that keeps the index current during
         verification persistence.
 """

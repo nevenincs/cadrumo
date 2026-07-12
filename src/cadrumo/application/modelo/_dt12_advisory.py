@@ -6,12 +6,12 @@ opposite verification case: high trabajo income with a zero reduction casilla,
 where the operator may have omitted pre-2007 pension-plan contribution data.
 
 See Also:
-    :func:`~aeat.application.modelo._calculate_input.apply_calculation_shortcut_inputs`
+    :func:`~cadrumo.application.modelo._calculate_input.apply_calculation_shortcut_inputs`
         Shortcut input path that computes and injects the reduction when the
         pension-plan amounts are supplied.
-    :func:`~aeat.domain.modelos.compute_dt12_reduccion_plan_pensiones`
+    :func:`~cadrumo.domain.modelos.compute_dt12_reduccion_plan_pensiones`
         Domain computation used by the shortcut path.
-    :func:`~aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
+    :func:`~cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`
         Structural revision semantic-role lookup used by this advisory.
 """
 
@@ -45,7 +45,7 @@ def _dt12_reduccion_advisory_finding(
     """Warn when large trabajo income is present but no DT 12ª reduction is declared.
 
     The ``revision`` is a structural registry revision compatible with
-    :func:`~aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
+    :func:`~cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`.
     A matching case returns a warning-severity :class:`ModeloVerificationFinding`
     grounded in ``ley-35-2006:dt-12``; absent roles or a non-zero reduction return
     ``None``.

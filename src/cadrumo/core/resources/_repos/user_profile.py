@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class UserProfileSchemaRepository(ResourceCacheRepository["ProfileSchemaDefinition", None]):
     """Singleton-keyed repository for the bundled user-profile schema.
 
-    Wraps :func:`aeat.domain.user_profile.load_user_profile_schema`
+    Wraps :func:`cadrumo.domain.user_profile.load_user_profile_schema`
     and returns the :class:`ProfileSchemaDefinition` aggregate.
     """
 

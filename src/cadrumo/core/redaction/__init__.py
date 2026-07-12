@@ -255,7 +255,7 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
     """Resolve the default rule set for a sensitivity class.
 
     Convenience wrapper that goes through
-    ``aeat.core.classification._default_policy_for`` and then
+    ``cadrumo.core.classification._default_policy_for`` and then
     :func:`default_rules_for` so callers do not need to know about
     the policy table.
 

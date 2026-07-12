@@ -1,11 +1,11 @@
 """Manual ledger transaction services and read projections.
 
-The services build :class:`~aeat.domain.transactions.Transaction` records from
-:class:`~aeat.application.ledger.ManualLedgerTransactionCommand`, persist them
+The services build :class:`~cadrumo.domain.transactions.Transaction` records from
+:class:`~cadrumo.application.ledger.ManualLedgerTransactionCommand`, persist them
 in a loaded :class:`TransactionCatalogue`, append bucket events, and return
-:class:`~aeat.application.ledger.ManualLedgerTransactionResult` values.
+:class:`~cadrumo.application.ledger.ManualLedgerTransactionResult` values.
 Evidence paths validate purchase-invoice, attachment, and
-:class:`~aeat.domain.usage_ratios.UsageRatioProfile` references before
+:class:`~cadrumo.domain.usage_ratios.UsageRatioProfile` references before
 persistence.
 """
 
@@ -116,7 +116,7 @@ def create_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Persist one manual ledger transaction in the command's bucket.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     with the created transaction and associated bucket event.
     """
     now = _normalise_timestamp(occurred_at)
@@ -193,7 +193,7 @@ def attach_manual_transaction_evidence(
 ) -> ManualLedgerTransactionResult:
     """Attach purchase evidence or supplementary attachments to one ledger transaction.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`.
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`.
     """
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
@@ -246,7 +246,7 @@ def get_manual_transaction(
     transaction_id: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Return one :class:`~aeat.application.ledger.ManualLedgerTransactionResult` from a bucket catalogue."""
+    """Return one :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult` from a bucket catalogue."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = _require_transaction(repository.load(), transaction_id)
     return _result(bucket_id, transaction, ())
@@ -260,7 +260,7 @@ def list_manual_transactions(
     """Return every transaction in a bucket, sorted by effective date and id.
 
     Each element is a
-    :class:`~aeat.application.ledger.ManualLedgerTransactionResult` for one
+    :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult` for one
     stored transaction.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -282,7 +282,7 @@ def query_ledger_review_rows(
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
 
-    Returns a :class:`~aeat.application.ledger.LedgerReviewQueryResult`.
+    Returns a :class:`~cadrumo.application.ledger.LedgerReviewQueryResult`.
     """
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
@@ -295,7 +295,7 @@ def query_ledger_review_rows(
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
-    """Return the :class:`~aeat.application.ledger.LedgerTransactionPayload` for one ledger transaction."""
+    """Return the :class:`~cadrumo.application.ledger.LedgerTransactionPayload` for one ledger transaction."""
     raw = transaction.raw
     return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,
@@ -347,7 +347,7 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
     """Return one ledger transaction projection plus derived operator review status.
 
     Returns a
-    :class:`~aeat.application.ledger.LedgerTransactionReviewPayload` with all
+    :class:`~cadrumo.application.ledger.LedgerTransactionReviewPayload` with all
     operator-facing fields populated from the transaction record.
     """
     base = ledger_transaction_payload(transaction)
@@ -360,7 +360,7 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
 def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> LedgerTransactionResultPayload:
     """Return the canonical result payload for one ledger mutation/read result.
 
-    Returns a :class:`~aeat.application.ledger.LedgerTransactionResultPayload`.
+    Returns a :class:`~cadrumo.application.ledger.LedgerTransactionResultPayload`.
     """
     return LedgerTransactionResultPayload(
         bucket_id=result.ref.bucket_id,
@@ -374,7 +374,7 @@ def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTrans
     """Return durable event lineage fields for one ledger transaction.
 
     Returns a
-    :class:`~aeat.application.ledger.LedgerTransactionTrackingPayload`.
+    :class:`~cadrumo.application.ledger.LedgerTransactionTrackingPayload`.
     """
     return LedgerTransactionTrackingPayload(
         transaction_id=transaction.transaction_id,
@@ -392,7 +392,7 @@ def summarize_manual_transactions(
     period: Period | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
-    """Return a read-only :class:`~aeat.application.ledger.LedgerStatusReport` for one bucket."""
+    """Return a read-only :class:`~cadrumo.application.ledger.LedgerStatusReport` for one bucket."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
     status_counts: dict[LedgerReviewStatus, int] = {
@@ -470,10 +470,10 @@ def update_manual_transaction(
     """Replace one manual ledger transaction from a validated command payload.
 
     The replacement is built from
-    :class:`~aeat.application.ledger.ManualLedgerTransactionCommand` and saved
-    as a new :class:`~aeat.domain.transactions.Transaction` revision.
+    :class:`~cadrumo.application.ledger.ManualLedgerTransactionCommand` and saved
+    as a new :class:`~cadrumo.domain.transactions.Transaction` revision.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`.
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
@@ -637,10 +637,10 @@ def update_manual_transaction_fields(
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
 
     The patch is a
-    :class:`~aeat.application.ledger.ManualLedgerTransactionPatch` converted
-    into a :class:`~aeat.application.ledger.ManualLedgerTransactionCommand`
+    :class:`~cadrumo.application.ledger.ManualLedgerTransactionPatch` converted
+    into a :class:`~cadrumo.application.ledger.ManualLedgerTransactionCommand`
     before the same replacement path used by
-    :func:`~aeat.application.ledger.update_manual_transaction`.
+    :func:`~cadrumo.application.ledger.update_manual_transaction`.
 
     When ``reaffirm`` is :data:`True` the automatic re-affirmation no-op guard
     is bypassed and the command is forced through even if the patched fields are
@@ -649,12 +649,12 @@ def update_manual_transaction_fields(
 
     ``_preloaded_catalogue`` is an internal optimisation: a caller that has
     already decrypted the bucket :class:`TransactionCatalogue` (e.g.
-    :func:`~aeat.application.ledger.attach_manual_transaction_evidence`) passes
+    :func:`~cadrumo.application.ledger.attach_manual_transaction_evidence`) passes
     it through so this function does not decrypt the whole catalogue a second
     time. There is no write between the caller's load and this one, so the
     preloaded view is current.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     reflecting the updated transaction state after the patch is applied.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)

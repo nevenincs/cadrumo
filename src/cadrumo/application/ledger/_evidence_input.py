@@ -91,7 +91,7 @@ class EvidenceInput(BaseModel):
         evidence_id: Originating purchase-invoice ``evidence_id`` when the bytes
             came from a :class:`PurchaseInvoiceEvidence` record, else ``None``.
         attachment_id: Originating ``attachment_id`` when the bytes came from an
-            :class:`~aeat.domain.attachments.Attachment`, else ``None``.
+            :class:`~cadrumo.domain.attachments.Attachment`, else ``None``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -162,7 +162,7 @@ def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentSt
     """Read a linked attachment's bytes from secure storage into an ``EvidenceInput``.
 
     Loads the attachment manifest and its encrypted blob from the
-    :class:`~aeat.domain.attachments.AttachmentStoreProtocol` (active bucket)
+    :class:`~cadrumo.domain.attachments.AttachmentStoreProtocol` (active bucket)
     into memory. No file is written.
 
     Args:

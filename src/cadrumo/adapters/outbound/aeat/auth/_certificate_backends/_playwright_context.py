@@ -110,7 +110,7 @@ class PlaywrightContextBackend(_CertBackend):
                 "BrowserContext was not constructed with the expected client "
                 "certificate. Playwright requires client certs to be passed at "
                 "browser.new_context() time via the client_certificates kwarg; "
-                "use aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context."
+                "use cadrumo.adapters.outbound.aeat.auth._certificate_backends._playwright_context."
                 "build_client_certificates_kwarg() from the browser session "
                 "factory and tag the resulting context with "
                 f"{CERTIFICATE_CONTEXT_MARKER}={cert.sha256_thumbprint!r}.",

@@ -1,15 +1,15 @@
 """Error hierarchy for the calculation-verification subpackage.
 
 Defines :class:`VerificationError`, the base exception for unrecoverable
-verification failures rooted at :class:`aeat.core.errors.AeatError`.
+verification failures rooted at :class:`cadrumo.core.errors.AeatError`.
 Ordinary discrepancies between printed and computed values are *not*
 exceptions — they are encoded in
-:class:`aeat.application.verification.VerificationVerdict`.
+:class:`cadrumo.application.verification.VerificationVerdict`.
 
 See Also:
     :class:`VerificationError`,
-    :class:`aeat.application.verification.VerificationVerdict`, and
-    :class:`aeat.application.verification.ClassifiedDiscrepancy`.
+    :class:`cadrumo.application.verification.VerificationVerdict`, and
+    :class:`cadrumo.application.verification.ClassifiedDiscrepancy`.
 """
 
 from __future__ import annotations
@@ -24,6 +24,6 @@ class VerificationError(AeatError):
     contract, missing core dependency). Discrepancies between the printed
     casilla values and the engine-derived values are not exceptions; they
     surface as
-    :class:`aeat.application.verification.ClassifiedDiscrepancy` entries
+    :class:`cadrumo.application.verification.ClassifiedDiscrepancy` entries
     on the verdict.
     """

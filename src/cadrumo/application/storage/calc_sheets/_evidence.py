@@ -11,7 +11,7 @@ each contributor to the canonical :class:`CasillaId` values it supports so this
 module never guesses modelo-specific tax meaning from row contents.
 
 See Also:
-    :class:`aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`
+    :class:`cadrumo.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`
         Bundled fact basis attached to a ledger-derived calculation revision.
     :class:`SheetEvidenceFacet`
         Workbook-plan evidence facet rendered into the Evidencia tab and JSON

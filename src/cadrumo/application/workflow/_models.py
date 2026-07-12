@@ -1,11 +1,11 @@
 """Strict pydantic v2 records for the composite workflow engine.
 
-Every boundary-crossing type in :mod:`aeat.application.workflow` is
+Every boundary-crossing type in :mod:`cadrumo.application.workflow` is
 defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
 enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
 diagnostics emitted by workflow diagnostics. Some helpers accept an
-optional :class:`~aeat.adapters.persistence.storage.SecureObjectRepository` so
+optional :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` so
 callers can supply a custom storage backend without going through the runtime
 default. The
 :class:`WorkflowState` record carries a reference to the active-bucket
@@ -16,24 +16,24 @@ and :class:`UserProfileRecord` for workflow persistence and state management.
 :class:`WorkflowEvent` and the review-annotation field types embedded on
 :class:`WorkflowState` (``InvoiceReviewRecord``, ``LedgerReviewRecord``) are
 defined in the shared leaf module
-:mod:`aeat.application._workflow_review_models` rather than here or in
-:mod:`aeat.application.review`, because :mod:`aeat.application.review` embeds
+:mod:`cadrumo.application._workflow_review_models` rather than here or in
+:mod:`cadrumo.application.review`, because :mod:`cadrumo.application.review` embeds
 :class:`WorkflowEvent` as a field type in turn — a genuine mutual runtime
 dependency that a shared leaf module resolves without either package
 importing the other.
 
 See Also:
-    :class:`~aeat.application.workflow.WorkflowEngine`
+    :class:`~cadrumo.application.workflow.WorkflowEngine`
         Produces :class:`WorkflowResult` records and advances
         :class:`WorkflowStage` values.
-    :class:`~aeat.application.workflow.WorkflowPurpose`
+    :class:`~cadrumo.application.workflow.WorkflowPurpose`
         Selects the local FILE or VERIFY policy that controls deadline and
         preflight treatment.
-    :class:`~aeat.application.workflow.WorkflowRunRepository`
+    :class:`~cadrumo.application.workflow.WorkflowRunRepository`
         Persists terminal :class:`WorkflowResult` records in secure storage.
-    :class:`~aeat.application.workflow.WorkflowStateRepository`
+    :class:`~cadrumo.application.workflow.WorkflowStateRepository`
         Persists the encrypted :class:`WorkflowState` envelope.
-    :mod:`aeat.application.modelo._workflow_gate`
+    :mod:`cadrumo.application.modelo._workflow_gate`
         Drives calculation revisions through the workflow and persists the
         resulting run record before verification or local filing state changes.
 
@@ -41,7 +41,7 @@ Import ordering note
 --------------------
 The ``SiteHealthStatus`` and ``ModeloDeadline`` imports are placed
 *after* :class:`WorkflowState` and related state models so that
-:mod:`aeat.application.auth._actions` (which imports :class:`WorkflowState`
+:mod:`cadrumo.application.auth._actions` (which imports :class:`WorkflowState`
 from this partially-initialised module during the browser-adapter import
 chain) finds those names already present.
 """
@@ -226,7 +226,7 @@ class WorkflowState(BaseModel):
 
     The historical ``profiles`` field has retired. Consumers that
     need to enumerate registered profiles call
-    :func:`aeat.application.workflow._profile_bucket_scan.list_profile_buckets`
+    :func:`cadrumo.application.workflow._profile_bucket_scan.list_profile_buckets`
     or :func:`read_profile_bucket` directly; both scan
     ``<aeat_local_storage_root>/buckets/*/manifest.toml`` and never
     open an encrypted database. The active profile resolves via the
@@ -251,13 +251,13 @@ class WorkflowState(BaseModel):
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active bucket id resolves via the precedence chain in
-        :func:`aeat.core.resolve_active_bucket_id` (env var > pointer file
+        :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
         fallback). The bucket id and profile name are 1:1 by orchestration
         convention, so the resolved id is the lifecycle-service read key.
 
         ``secure_objects`` (a :class:`SecureObjectRepository` override) and
         ``schema`` are optional overrides forwarded to
-        :func:`~aeat.application.user_profile.build_lifecycle_service`; a
+        :func:`~cadrumo.application.user_profile.build_lifecycle_service`; a
         per-bucket store and the bundled schema are resolved when ``None``.
         """
         bucket_id = _resolve_active_bucket_id()
@@ -288,7 +288,7 @@ def active_transaction_catalogue_repository(
     Args:
         state: The current workflow state used to resolve the active bucket.
         objects: Optional
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override passed through to the returned repository.
     """
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -362,7 +362,7 @@ def update_declaration_pointer(
 # Heavy adapter/domain imports — placed AFTER the state models above so that
 # auth._actions (which imports WorkflowState from this partially-loaded
 # module during the browser-adapter initialisation chain) finds the names
-# already present in sys.modules['aeat.application.workflow._models'].
+# already present in sys.modules['cadrumo.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
 from ...adapters.outbound.aeat.browser import SiteHealthStatus

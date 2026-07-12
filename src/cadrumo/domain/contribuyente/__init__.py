@@ -63,7 +63,7 @@ from .family import (
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
     # wizard catalogue (the source of truth) can import the leaf modules
-    # under ``aeat.domain.contribuyente`` without triggering the catalogue-driven
+    # under ``cadrumo.domain.contribuyente`` without triggering the catalogue-driven
     # build. Type checkers see the same tuple-of-``ProfileKey`` contract as
     # an eager export would expose.
     from ._keys import PROFILE_KEYS as PROFILE_KEYS

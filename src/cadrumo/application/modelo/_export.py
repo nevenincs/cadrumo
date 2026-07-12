@@ -1,11 +1,11 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
-:func:`~aeat.application.modelo.export_modelo_revision` accepts a
-:class:`~aeat.domain.modelos.CalculationRevision` id, rebuilds and approves a
-:class:`~aeat.application.filing.ModeloDraft` from the revision replay inputs,
+:func:`~cadrumo.application.modelo.export_modelo_revision` accepts a
+:class:`~cadrumo.domain.modelos.CalculationRevision` id, rebuilds and approves a
+:class:`~cadrumo.application.filing.ModeloDraft` from the revision replay inputs,
 then writes a fichero-BOE-formatted artefact to the operator-supplied output
 path. A ``MODELO_EXPORTED`` event is appended to the
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
+:class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
 
 Export consumes the registry-authored fichero-BOE layouts through the filing
 runtime schema provider; Python code owns orchestration and safety checks, while
@@ -24,15 +24,15 @@ The CLI verb ``aeat app modelo export`` is a thin delegate over this
 service.
 
 See Also:
-    :func:`~aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`:
+    :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`:
         Reconstructs the filing inputs from the persisted revision.
-    :func:`~aeat.application.filing.build_draft`:
+    :func:`~cadrumo.application.filing.build_draft`:
         Builds the transient registry-backed draft that is exported.
-    :func:`~aeat.application.filing.export_draft`:
+    :func:`~cadrumo.application.filing.export_draft`:
         Serializes the approved draft through registry export layouts.
-    :func:`~aeat.application.modelo._verification_actions.require_cross_period_clean_state`:
+    :func:`~cadrumo.application.modelo._verification_actions.require_cross_period_clean_state`:
         Rechecks cross-period filing prerequisites before writing the export.
-    :func:`~aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+    :func:`~cadrumo.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
         Determines the fichero declaration type and refund disposition.
 """
 
@@ -217,7 +217,7 @@ class ModeloExportOutputPathError(ModeloExportError):
 
 
 class ModeloExportCommand(BaseModel):
-    """Strict input contract for :func:`~aeat.application.modelo.export_modelo_revision`.
+    """Strict input contract for :func:`~cadrumo.application.modelo.export_modelo_revision`.
 
     Attributes:
         calculation_revision_id: SHA-256 hex id of the calculation
@@ -246,10 +246,10 @@ class ModeloExportCommand(BaseModel):
 
 
 class ModeloExportResult(BaseModel):
-    """Receipt produced by :func:`~aeat.application.modelo.export_modelo_revision`.
+    """Receipt produced by :func:`~cadrumo.application.modelo.export_modelo_revision`.
 
     Composes the lower-level
-    :class:`~aeat.application.filing.DeclaracionExportResult` (already a
+    :class:`~cadrumo.application.filing.DeclaracionExportResult` (already a
     byte-level receipt of the written file) with the work-unit-level
     identity the operator addresses.
 
@@ -260,7 +260,7 @@ class ModeloExportResult(BaseModel):
             the active profile bucket at export time).
         modelo: AEAT modelo identifier.
         filing_year: AEAT filing year.
-        period: Filing period as a typed :class:`~aeat.core.Period` value.
+        period: Filing period as a typed :class:`~cadrumo.core.Period` value.
         output_path: Absolute path the file was written to.
         byte_size: Size of the written file in bytes.
         file_sha256: Hex-encoded SHA-256 of the written bytes.
@@ -414,7 +414,7 @@ def _load_revision_for_export(
     *,
     repo: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> CalculationRevision:
-    """Load an exportable :class:`~aeat.domain.modelos.CalculationRevision` or raise a typed refusal."""
+    """Load an exportable :class:`~cadrumo.domain.modelos.CalculationRevision` or raise a typed refusal."""
     revisions = repo.load()
     revision = revisions.get(calculation_revision_id)
     if revision is None:
@@ -438,7 +438,7 @@ def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]
     """Return identity export-header slots from the active profile.
 
     The operator's legal name is not carried on the deadline-engine
-    :class:`~aeat.domain.deadlines.TaxpayerProfile` (which holds only
+    :class:`~cadrumo.domain.deadlines.TaxpayerProfile` (which holds only
     ``tax_id``); it lives in the schema-driven user-profile fact catalogue. Natural-person
     exports populate the individual ``surnames`` / ``name`` slots. Legal
     entities populate the official 60-character ``surnames`` slot with the
@@ -693,7 +693,7 @@ compose_export_headers = _compose_export_headers
 
 
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
-    """Return the typed :class:`~aeat.core.Period` carried by the work unit."""
+    """Return the typed :class:`~cadrumo.core.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
@@ -742,13 +742,13 @@ def _approve_export_draft(
     period: Period,
     schema_provider: RegistrySchemaAccessor,
 ) -> tuple[Period, ModeloDraft]:
-    """Build and approve the export draft for one :class:`~aeat.domain.modelos.CalculationRevision`.
+    """Build and approve the export draft for one :class:`~cadrumo.domain.modelos.CalculationRevision`.
 
-    The :class:`~aeat.domain.deadlines.TaxpayerProfile` is forwarded to
-    :func:`~aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
+    The :class:`~cadrumo.domain.deadlines.TaxpayerProfile` is forwarded to
+    :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
     so export uses the same profile-applicability relation inputs as the filing
-    workflow gate. Returns the resolved :class:`~aeat.core.Period` and approved
-    :class:`~aeat.application.filing.ModeloDraft`.
+    workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
+    :class:`~cadrumo.application.filing.ModeloDraft`.
     """
     inputs: filing_domain.ModeloInputs = revision_filing_replay_inputs(
         revision=revision,
@@ -970,11 +970,11 @@ def export_modelo_revision(
     """Export a verified-complete or filed calculation revision to disk.
 
     ``workflow_profile`` is the
-    :class:`~aeat.domain.deadlines.TaxpayerProfile` used to compose the filing
+    :class:`~cadrumo.domain.deadlines.TaxpayerProfile` used to compose the filing
     draft headers and to replay profile-applicability relation inputs.
 
     Local-only: never contacts AEAT. Re-builds the filing draft from
-    :func:`~aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
+    :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
     so the exported file reflects the same legal casilla and relation map that
     would be filed.
 
@@ -983,26 +983,26 @@ def export_modelo_revision(
     writing any operator-visible file, the service validates the output path,
     export-layout renderability, profile readiness, ledger evidence, IVA wallet
     decision provenance, and cross-period clean state. It then rebuilds and
-    approves a transient :class:`~aeat.application.filing.ModeloDraft`, composes
+    approves a transient :class:`~cadrumo.application.filing.ModeloDraft`, composes
     the fichero headers, serializes through
-    :func:`~aeat.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
+    :func:`~cadrumo.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
     the bucket-event-history catalogue, and finally atomically renames the
     sibling ``.tmp`` file into place. Any write, event, or rename failure removes
     the temporary cleartext artefact before raising.
 
     Returns:
-        :class:`~aeat.application.modelo.ModeloExportResult`: The export
+        :class:`~cadrumo.application.modelo.ModeloExportResult`: The export
         receipt, including byte size, digest, event id, casilla provenance, and
         any redacted IVA wallet decision provenance.
 
     See Also:
-        :class:`~aeat.application.modelo.ModeloExportCommand`:
+        :class:`~cadrumo.application.modelo.ModeloExportCommand`:
             Strict input envelope for the revision id, output path, actor, and
             refund election.
-        :func:`~aeat.application.modelo._export._compose_export_headers`:
+        :func:`~cadrumo.application.modelo._export._compose_export_headers`:
             Builds required fichero-BOE header keys from the work unit, profile,
             revision, period, amendment marker, and refund election.
-        :func:`~aeat.application.modelo._export._validate_output_path`:
+        :func:`~cadrumo.application.modelo._export._validate_output_path`:
             Refuses unsafe destinations before fichero bytes are written.
     """
     from ...core import resolve_active_bucket_id

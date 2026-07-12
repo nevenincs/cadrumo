@@ -41,7 +41,7 @@ See Also:
         turning it into mutable operator bucket state.
 
 Examples:
-    >>> from aeat.domain.manuals import (
+    >>> from cadrumo.domain.manuals import (
     ...     ManualId, ManualPart, fetch_manual_part, load_manual,
     ... )
     >>> result = fetch_manual_part(

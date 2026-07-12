@@ -3,26 +3,26 @@
 The listing helpers read AEAT declaration-register rows without downloading
 artefacts. The capture helpers download the selected filed-declaration artefacts
 through the authenticated Sede adapter, persist encrypted
-:class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+:class:`~cadrumo.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
 payloads and artefacts, promote extracted casillas into registry-grounded
 calculation observations, and attempt to stamp matching current
-:class:`~aeat.domain.modelos.ModeloRecord` filings with live
-:class:`~aeat.domain.modelos.ExternalEvidence`.
+:class:`~cadrumo.domain.modelos.ModeloRecord` filings with live
+:class:`~cadrumo.domain.modelos.ExternalEvidence`.
 
 Source capture resolves a
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` before
+:class:`~cadrumo.domain.calculations.registry.ValidatedRegistryAuthority` before
 asking the Sede adapter which prior declarations a target filing needs, so
 cross-period inputs remain registry-authored rather than adapter-inferred. The
 module never creates a remote submission or mutates AEAT state; filing-record
 stamping is local evidence enrollment against an existing current record.
 
 See Also:
-    :func:`aeat.application.live._session.active_verified_session`
+    :func:`cadrumo.application.live._session.active_verified_session`
         Enforces the read-only live gate before the register walker is opened.
-    :func:`aeat.application.live._filed_observation_persistence.persist_latest_filed_calculation_observations`
+    :func:`cadrumo.application.live._filed_observation_persistence.persist_latest_filed_calculation_observations`
         Persists the latest captured filed observations as calculation-history
         evidence.
-    :func:`aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+    :func:`cadrumo.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
         Persists matching justificante metadata and stamps current filing
         records when the receipt matches.
 """
@@ -342,7 +342,7 @@ async def capture_filed_data(
 
     The report accounts for persisted observation manifests, encrypted artefact
     references, saved justificante CSVs, stamped
-    :class:`aeat.domain.modelos.ModeloRecord` ids, conflicts, and calculation
+    :class:`cadrumo.domain.modelos.ModeloRecord` ids, conflicts, and calculation
     observation keys produced from the captured AEAT rows.
     """
     session, settings = await active_verified_session()

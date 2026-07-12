@@ -5,9 +5,9 @@ and read :class:`BucketEventHistoryRepository` events for history and
 review-derived filters.
 
 List and view commands delegate row projection to
-:func:`~aeat.entrypoints.cli._ledger_list.project_ledger_list` and emit typed
-payloads such as :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerViewResult`
-and :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
+:func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list` and emit typed
+payloads such as :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`
+and :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
 """
 
 from __future__ import annotations
@@ -748,7 +748,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
             help=tr("cli.ledger.list.hide_llm_rejected_help"),
         ),
     ) -> None:
-        """List bucket-scoped ledger rows through :func:`~aeat.entrypoints.cli._ledger_list.project_ledger_list`."""
+        """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
         transaction_repository = _tx_repo(_state())
         resolved_filters = list(filters)
         if period is not None:
@@ -803,7 +803,7 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
     ) -> None:
         """Read one bucket-scoped ledger transaction.
 
-        Emits a :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerViewResult`.
+        Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
         """
         transaction_repository = _tx_repo(_state())
         resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
@@ -972,7 +972,7 @@ def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: 
     ) -> None:
         """Show audit lineage for one transaction.
 
-        Emits a :class:`~aeat.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
+        Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
         """
         transaction_repository = _tx_repo(_state())
         resolved_id = resolve_transaction_id(transaction_repository, transaction_id)
@@ -1010,8 +1010,8 @@ def _ledger_track_participated_in(
 ) -> list[dict[str, object]] | None:
     """Return the finalized-revision participations for ``transaction_id``, or ``None``.
 
-    Wraps :func:`~aeat.application.ledger.get_transaction_participation`, whose
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex` is the
+    Wraps :func:`~cadrumo.application.ledger.get_transaction_participation`, whose
+    :class:`~cadrumo.domain.modelos.TransactionRevisionParticipationIndex` is the
     rebuildable inverse index from ledger rows to finalized revisions.
     Surfaces the inverse audit trail on the ``ledger track`` lineage output:
     every finalized modelo revision and filing that consumed this transaction.
@@ -1079,7 +1079,7 @@ def _history_object_ids(
 
 
 def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
-    """Return the chronological union of :class:`~aeat.domain.buckets.BucketEvent` rows across ``object_ids``."""
+    """Return the chronological union of :class:`~cadrumo.domain.buckets.BucketEvent` rows across ``object_ids``."""
     event_catalogue = BucketEventHistoryRepository().load()
     object_id_set = set(object_ids)
     matches: list[BucketEvent] = []
@@ -1109,8 +1109,8 @@ def _latest_llm_rejection_notice(
 ) -> Notice | None:
     """Return a notice when the row's most recent LLM decision was a rejection.
 
-    Returns a :class:`~aeat.core.json_contract.Notice` derived from
-    :data:`~aeat.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
+    Returns a :class:`~cadrumo.core.json_contract.Notice` derived from
+    :data:`~cadrumo.entrypoints.cli._ledger_list.LLM_DECISION_EVENT_TYPES`.
     Reads the bucket-event history for the transaction (and its edit lineage) and
     finds the latest LLM-decision event. When that is a rejection — i.e. the
     operator declined an LLM suggestion and has not since accepted one — `view`

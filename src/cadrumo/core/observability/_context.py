@@ -2,11 +2,11 @@
 
 Entering :func:`run_context` at the outermost CLI entry point mints a
 fresh ``run_id``, fingerprints the corpus / db / cert state, attaches a
-:class:`aeat.core.observability._sink.JsonlRunSink` to the root logger
+:class:`cadrumo.core.observability._sink.JsonlRunSink` to the root logger
 for the duration of the block, emits a
-:attr:`aeat.core.observability._models.RunEventKind.STEP_START` event,
+:attr:`cadrumo.core.observability._models.RunEventKind.STEP_START` event,
 and persists the final
-:class:`aeat.core.observability._models.RunTrace` on exit. Nesting is
+:class:`cadrumo.core.observability._models.RunTrace` on exit. Nesting is
 idempotent: an inner enter reuses the outer ``run_id`` and only pushes
 a new step identifier.
 """
@@ -118,7 +118,7 @@ def _build_initial_context(
 
     A caller-supplied ``run_id`` is validated against the canonical
     shape (16 lowercase hex) by
-    :func:`aeat.core.observability._store._validate_run_id` before
+    :func:`cadrumo.core.observability._store._validate_run_id` before
     anything touches the filesystem — this prevents a malicious or
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
@@ -179,10 +179,10 @@ def run_context(
 
     The outermost enter mints a ``run_id``, fingerprints the corpus /
     db / cert state, attaches a
-    :class:`aeat.core.observability._sink.JsonlRunSink` to the root
+    :class:`cadrumo.core.observability._sink.JsonlRunSink` to the root
     logger, emits a ``STEP_START`` event, and on exit emits a
     ``STEP_END`` plus persists the finalised
-    :class:`aeat.core.observability._models.RunTrace` (even on
+    :class:`cadrumo.core.observability._models.RunTrace` (even on
     exception, with :attr:`RunOutcome.FAILED`).
 
     Inner enters reuse the outer ``run_id`` and only push a new
@@ -195,7 +195,7 @@ def run_context(
         arguments: Sequence of :class:`ArgumentRecord` capturing the
             CLI flags / values for replay.
         run_id: Optional caller-supplied ``run_id`` (used by
-            :func:`aeat.core.observability.replay_run`).
+            :func:`cadrumo.core.observability.replay_run`).
         step_id: Optional initial step identifier; defaults to
             ``"step-0"`` for the outermost enter and a derived nested
             id for inner enters.

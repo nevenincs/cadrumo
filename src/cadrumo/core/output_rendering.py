@@ -3,15 +3,15 @@
 :func:`render_command_output` is the shared text/JSON transport boundary
 for command handlers that do not need a full :class:`SchemaEnvelope`.
 It returns :class:`RenderedCommandOutput`, chooses an :class:`OutputFormat`,
-and applies :func:`aeat.core.redaction.redact_for_cli_output` or
-:func:`aeat.core.redaction.redact_structured_for_cli_output` before text
+and applies :func:`cadrumo.core.redaction.redact_for_cli_output` or
+:func:`cadrumo.core.redaction.redact_structured_for_cli_output` before text
 reaches stdout.
 
 Envelope-aware commands bypass this bare renderer in JSON mode through
-:func:`aeat.core.json_contract.emit_json_success`, but both paths consult
+:func:`cadrumo.core.json_contract.emit_json_success`, but both paths consult
 :func:`reveal_cli_identifiers_opt_in` so profile and bucket identifier redaction
 cannot drift between direct payload rendering and the
-:class:`~aeat.core.json_contract.SchemaEnvelope` path.
+:class:`~cadrumo.core.json_contract.SchemaEnvelope` path.
 
 This module returns rendered text only; CLI transports own stdout/stderr writes
 and exit-code handling. It also owns success-output redaction only. Error
@@ -121,13 +121,13 @@ def render_command_output(
 def reveal_cli_identifiers_opt_in() -> bool:
     """Resolve the profile/bucket identifier reveal opt-out at the output boundary.
 
-    Reading :func:`aeat.core.config.load_settings` here keeps the policy
+    Reading :func:`cadrumo.core.config.load_settings` here keeps the policy
     decision at the central success-output privacy boundary (per the
     centralized-output-redaction ADR) and keeps the pure redaction module free
     of a Settings dependency. Default off preserves the paste-safe placeholder
     behaviour; an operator sets ``AEAT_CLI_REVEAL_IDENTIFIERS=1`` to opt out.
     Both success-output emitters — :func:`render_command_output` and the JSON
-    envelope :func:`aeat.core.json_contract.emit_json_success` — consult this
+    envelope :func:`cadrumo.core.json_contract.emit_json_success` — consult this
     one resolver so the two transports cannot diverge.
 
     The opt-in reveals only opaque profile and bucket identifiers. Tax
@@ -171,7 +171,7 @@ def jsonable_output_payload(payload: object) -> object:
     rather than ``ModelClass.model_validate(json.loads(raw))``: pydantic
     coerces list -> tuple when it owns the JSON parse, but not when
     handed a pre-parsed dict. The roundtrip tests in
-    :mod:`aeat.core.tests.test_json_envelope_roundtrip` pin the correct usage.
+    :mod:`cadrumo.core.tests.test_json_envelope_roundtrip` pin the correct usage.
 
     This is a transport normalization helper, not a domain contract authority.
     Command-specific payload classes own field semantics and ordering; this

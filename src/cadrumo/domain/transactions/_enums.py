@@ -1,7 +1,7 @@
 """Closed enumerations for the transaction catalogue.
 
 Defines the closed discriminators on
-:class:`aeat.domain.transactions.Transaction` and related history records.
+:class:`cadrumo.domain.transactions.Transaction` and related history records.
 """
 
 from __future__ import annotations

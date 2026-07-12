@@ -2,9 +2,9 @@
 
 The read side of this module produces metadata-only reports over encrypted
 secure-object rows. Integrity sweeps iterate namespaces in a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository` and return
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` and return
 per-namespace
-:class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
 counts; inventory rows expose row metadata and HMAC digests, never natural
 keys or payload bytes. These reports
 back the repair integrity surface and the quarantine dry-run path without
@@ -22,15 +22,15 @@ import, export, and bucket-history command surfaces against registered
 so new maintenance surfaces cannot appear without an explicit namespace policy.
 
 See Also:
-    :mod:`aeat.application.diagnostics`
+    :mod:`cadrumo.application.diagnostics`
         Builds the user-facing repair report and delegates quarantine preview /
         commit flows through this module's active-bucket repair session.
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
         Encrypted SQL repository whose namespace integrity probes and
         quarantine operation supply the repair data.
-    :data:`~aeat.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
+    :data:`~cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
         Central registry copied into repair-policy namespace rows.
-    :mod:`aeat.entrypoints.cli._config._repair_cli`
+    :mod:`cadrumo.entrypoints.cli._config._repair_cli`
         CLI command surface that renders these reports and policy-backed repair
         actions.
 """
@@ -71,7 +71,7 @@ class RepairIntegrityError(CoreError):
 
     Raised by the repair-integrity application layer when an integrity
     invariant or remediation contract is violated. Inherits from
-    :class:`aeat.core.errors.CoreError` so callers can catch either the
+    :class:`cadrumo.core.errors.CoreError` so callers can catch either the
     specific subclass or the broad domain base without importing the full
     repair-integrity module.
     """
@@ -102,10 +102,10 @@ _RepairDecisionOutcome = Literal["preserve", "quarantine", "rebuild", "export-re
 class _SecureObjectRepositoryProtocol(Protocol):
     """Structural interface consumed by the repair-integrity application layer.
 
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     satisfies this protocol. The interface is limited to namespace enumeration,
     integrity probing, key inventory, and
-    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
     iteration so read-only repair reports can be tested against the real
     repository without granting mutation APIs to the report builders.
     """
@@ -128,7 +128,7 @@ class RepairIntegrityReport(BaseModel):
         :func:`build_repair_integrity_report`
             Producer that fills this report from real secure-object
             decryptability probes.
-        :class:`~aeat.application.diagnostics.SecureObjectIntegrityReport`
+        :class:`~cadrumo.application.diagnostics.SecureObjectIntegrityReport`
             Config-repair rollup that uses the same namespace integrity shape.
     """
 
@@ -144,9 +144,9 @@ class RepairListRow(BaseModel):
     """One metadata row in the secure-object repair inventory.
 
     Rows are projected from
-    :class:`~aeat.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectDecryptabilityRow`
     values returned by
-    :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.iter_namespace_decryptability`.
+    :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.iter_namespace_decryptability`.
     ``object_key_digest`` is the stored HMAC digest, not the natural object key.
     ``reason`` is populated only for unreadable rows and must remain a diagnostic
     class of failure rather than decrypted payload context.
@@ -260,12 +260,12 @@ def active_bucket_repair_session() -> Generator[None]:
     repository/runtime readiness result.
 
     See Also:
-        :func:`~aeat.application.diagnostics.preview_quarantine_unreadable_secure_objects`
+        :func:`~cadrumo.application.diagnostics.preview_quarantine_unreadable_secure_objects`
             Dry-run repair flow that uses this context before probing
             decryptability.
-        :func:`~aeat.application.diagnostics.quarantine_unreadable_secure_objects`
+        :func:`~cadrumo.application.diagnostics.quarantine_unreadable_secure_objects`
             Commit flow that uses this context before calling
-            :meth:`~aeat.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
+            :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
     """
     provider: object | None = None
     try:
@@ -400,7 +400,7 @@ class RepairRemediationDecision(BaseModel):
     See Also:
         :class:`RepairRemediationDecisionRepository`
             Profile-local encrypted persistence for these decision records.
-        :data:`~aeat.adapters.persistence.storage.REPAIR_INTEGRITY_DECISION_NAMESPACE`
+        :data:`~cadrumo.adapters.persistence.storage.REPAIR_INTEGRITY_DECISION_NAMESPACE`
             Secure-object namespace used to store the decisions.
     """
 
@@ -723,10 +723,10 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
     :class:`RepairRemediationDecision` governance.
 
     See Also:
-        :data:`~aeat.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
+        :data:`~cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
             Source of secure-object namespace metadata copied into catalog
             policies.
-        :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceDefinition`
+        :class:`~cadrumo.adapters.persistence.storage.SecureObjectNamespaceDefinition`
             Registered namespace declaration projected into policy rows.
     """
     return (

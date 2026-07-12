@@ -12,11 +12,11 @@ posture, logs the validation problem, and lets the rendering layer emit the
 generic extemporaneous-filing warning.
 
 See Also:
-    :func:`aeat.domain.deadlines._plazo.resolve_filing_closes_on`:
+    :func:`cadrumo.domain.deadlines._plazo.resolve_filing_closes_on`:
         Registry-backed lookup for the plazo voluntario close date.
-    :func:`aeat.domain.deadlines._recargo.build_recovery_for_overdue`:
+    :func:`cadrumo.domain.deadlines._recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
-    :func:`aeat.entrypoints.cli._modelo_rendering.work_unit_deadline_output`:
+    :func:`cadrumo.entrypoints.cli._modelo_rendering.work_unit_deadline_output`:
         Projects this summary onto JSON payloads and warning notices.
 """
 
@@ -101,7 +101,7 @@ def modelo_work_deadline_posture(
 
     Args:
         work_unit: The :class:`WorkUnit` whose modelo, filing year, and
-            :class:`~aeat.core.Period` select a registry filing window.
+            :class:`~cadrumo.core.Period` select a registry filing window.
         reference_on: Optional date from which the caller observes the voluntary
             deadline. Defaults to ``date.today()``. It drives the deadline posture
             and conditional preview rate; it is not a presentation date.
@@ -111,7 +111,7 @@ def modelo_work_deadline_posture(
         no deadline window for the work unit's filing axis.
 
     See Also:
-        :func:`aeat.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_posture`:
+        :func:`cadrumo.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_posture`:
             Converts the summary into operator-facing payloads and notices.
     """
     from ...domain.deadlines import DeadlineValidationError, build_recovery_for_overdue, resolve_filing_closes_on

@@ -1,8 +1,8 @@
 """Closed-table IVA classification (issuer / customer / kind / direction).
 
-Layered on top of the :mod:`aeat.domain.iva` substrate (the
-:class:`aeat.domain.iva.IvaCategory` enum, :class:`aeat.domain.iva.IvaRateRecord`
-records, and :func:`aeat.domain.iva.lookup_rate`), this module adds the
+Layered on top of the :mod:`cadrumo.domain.iva` substrate (the
+:class:`cadrumo.domain.iva.IvaCategory` enum, :class:`cadrumo.domain.iva.IvaRateRecord`
+records, and :func:`cadrumo.domain.iva.lookup_rate`), this module adds the
 classification axes needed to tag a transaction deterministically based on
 the parties' tax residency, the customer's IVA status, the transaction kind,
 and the invoice direction.
@@ -81,7 +81,7 @@ class IvaTerritorialScope(StrEnum):
     the role label; the type carries the territorial framing). Parties
     in Canarias, Ceuta or Melilla are NOT subject to LIVA; the
     classifier short-circuits to
-    :attr:`aeat.domain.iva.IvaCategory.DOMESTIC_NOT_SUBJECT` for issuers
+    :attr:`cadrumo.domain.iva.IvaCategory.DOMESTIC_NOT_SUBJECT` for issuers
     in those territories (out of TAI).
 
     Attributes:
@@ -212,11 +212,11 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
         customer_tax_status: Customer's IVA status.
         kind: Kind of supply.
         direction: ``ISSUED`` or ``RECEIVED``.
-        issuer_member_state: Issuer's :class:`aeat.domain.iva.EUMemberState`,
+        issuer_member_state: Issuer's :class:`cadrumo.domain.iva.EUMemberState`,
             required when :attr:`issuer_residency` is
             :attr:`IvaTerritorialScope.EU_MEMBER`.
         customer_member_state: Customer's
-            :class:`aeat.domain.iva.EUMemberState`, required when
+            :class:`cadrumo.domain.iva.EUMemberState`, required when
             :attr:`customer_residency` is :attr:`IvaTerritorialScope.EU_MEMBER`.
         rate_tier: Explicit rate-tier axis for ES-to-ES domestic rules.
     """
@@ -264,7 +264,7 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
           applied at invoice time. Dedicated reverse-charge
           :class:`TransactionKind` values (``CONSTRUCTION``, ``WASTE``,
           ``ELECTRONICS``) are exempted because rules ``R01`` through ``R03``
-          route them to :attr:`aeat.domain.iva.IvaCategory.DOMESTIC_REVERSE_CHARGE`
+          route them to :attr:`cadrumo.domain.iva.IvaCategory.DOMESTIC_REVERSE_CHARGE`
           before ``R05`` runs, so their rate tier is a payload concern not a
           classification axis.
         """
@@ -294,15 +294,15 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
 class IvaClassificationResult(_IvaStrictFrozen):
     """Output record returned by :func:`classify_iva`.
 
-    Exposes the matched :class:`aeat.domain.iva.IvaCategory`, the resolved
-    :class:`aeat.domain.iva.IvaRateRecord` (or ``None`` for rate-irrelevant
+    Exposes the matched :class:`cadrumo.domain.iva.IvaCategory`, the resolved
+    :class:`cadrumo.domain.iva.IvaRateRecord` (or ``None`` for rate-irrelevant
     categories), a reverse-charge flag, the matched rule identifier, and any
     free-form note the resolver emits (typically used for fall-through
     documentation).
 
     Attributes:
         category: Resolved IVA category.
-        rate: Applicable :class:`aeat.domain.iva.IvaRateRecord`, when relevant.
+        rate: Applicable :class:`cadrumo.domain.iva.IvaRateRecord`, when relevant.
         requires_reverse_charge: ``True`` when the rule triggers
             *inversión del sujeto pasivo*.
         matched_rule_id: Stable rule identifier (e.g.
@@ -578,7 +578,7 @@ class _IvaClassificationRule(NamedTuple):
         description: Human-readable summary surfaced as
             :attr:`IvaClassificationResult.notes`.
         predicate: Predicate over a :class:`IvaInvoiceClassificationCriteria`.
-        category: Concrete :class:`aeat.domain.iva.IvaCategory` to assign on a
+        category: Concrete :class:`cadrumo.domain.iva.IvaCategory` to assign on a
             match, or ``None`` when the resolver derives the category from
             other inputs (used by ``R05`` against
             :attr:`IvaInvoiceClassificationCriteria.rate_tier`).
@@ -720,9 +720,9 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
     Iterates the module-level rule table in declaration order, returning the
     first :class:`IvaClassificationResult` whose predicate accepts ``criteria``.
     Falls through to the ``R99`` sentinel
-    (:attr:`aeat.domain.iva.IvaCategory.UNKNOWN`) only when no rule matches —
+    (:attr:`cadrumo.domain.iva.IvaCategory.UNKNOWN`) only when no rule matches —
     a state that requires human review per the
-    :class:`aeat.domain.iva.IvaCategory.UNKNOWN` contract.
+    :class:`cadrumo.domain.iva.IvaCategory.UNKNOWN` contract.
 
     Args:
         criteria: The :class:`IvaInvoiceClassificationCriteria` carrying every
@@ -791,7 +791,7 @@ def _resolve_rate_for_category(
     criteria: IvaInvoiceClassificationCriteria,
     category: IvaCategory,
 ) -> IvaRateRecord | None:
-    """Resolve the :class:`aeat.domain.iva.IvaRateRecord` applicable to ``category``.
+    """Resolve the :class:`cadrumo.domain.iva.IvaRateRecord` applicable to ``category``.
 
     Returns ``None`` for categories whose rate is not directly derivable from
     the substrate (intracomunitarias, exports, imports, exempt, not-subject,
@@ -805,9 +805,9 @@ def _resolve_rate_for_category(
         category: The category whose rate to resolve.
 
     Returns:
-        The matched :class:`aeat.domain.iva.IvaRateRecord`, or ``None`` when the
+        The matched :class:`cadrumo.domain.iva.IvaRateRecord`, or ``None`` when the
         category does not carry a directly-derivable rate or when
-        :func:`aeat.domain.iva.lookup_rate` cannot find one.
+        :func:`cadrumo.domain.iva.lookup_rate` cannot find one.
     """
     tier = _CATEGORY_TO_RATE_TIER.get(category)
     if tier is None:

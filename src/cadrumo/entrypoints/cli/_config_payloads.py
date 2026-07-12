@@ -1045,8 +1045,8 @@ class AuthDiagnosticsReportResult(OutputSchema):
 class ProfileDescendientePayload(OutputSchema):
     """One declared descendant row in the ``config profile descendiente`` surface.
 
-    Mirrors :class:`~aeat.domain.contribuyente.DescendantInfo` as plain JSON;
-    ``index`` is the 0-based position :func:`~aeat.domain.contribuyente.descendant_list_from_facts`
+    Mirrors :class:`~cadrumo.domain.contribuyente.DescendantInfo` as plain JSON;
+    ``index`` is the 0-based position :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`
     assigns, the same index ``descendiente remove`` addresses.
     """
 
@@ -1128,7 +1128,7 @@ class ConfigProfileSandboxUseResult(OutputSchema):
 class SandboxNamespacePayload(OutputSchema):
     """One secure-object namespace row in a sandbox discard preview.
 
-    Mirrors :class:`~aeat.application.bucket_maintenance.SandboxNamespaceInventoryRow`:
+    Mirrors :class:`~cadrumo.application.bucket_maintenance.SandboxNamespaceInventoryRow`:
     only the namespace name and stored-row count, never decrypted payload
     material.
     """
@@ -1198,7 +1198,7 @@ class ConfigProfileSandboxRestoreResult(OutputSchema):
 class SandboxDiskUsageSubdirPayload(OutputSchema):
     """One on-disk subdirectory row in a sandbox disk-usage report.
 
-    Mirrors :class:`~aeat.application.bucket_maintenance.BucketDiskUsageSubdirRow`:
+    Mirrors :class:`~cadrumo.application.bucket_maintenance.BucketDiskUsageSubdirRow`:
     a fixed-layout subdirectory name (``db``, ``blobs``, ``audit``) plus its
     summed regular-file byte total and file count.
     """
@@ -1225,7 +1225,7 @@ class ConfigProfileSandboxUsageResult(OutputSchema):
     at once when no name is given (``total_bytes`` then sums across every
     listed sandbox). The measurement reads only filesystem metadata — never
     decrypted secure-object content — via
-    :meth:`~aeat.application.bucket_maintenance.BucketMaintenanceService`.disk_usage.
+    :meth:`~cadrumo.application.bucket_maintenance.BucketMaintenanceService`.disk_usage.
     """
 
     total_bytes: int
@@ -1238,7 +1238,7 @@ class ConfigProfileSandboxMergeResult(OutputSchema):
 
     Reports the promoted scope, the source sandbox and target profile
     labels, and the per-category row counts merged via
-    :func:`~aeat.application.bucket_maintenance.merge_sandbox`. A re-run
+    :func:`~cadrumo.application.bucket_maintenance.merge_sandbox`. A re-run
     against unchanged sandbox content reports the same counts (an
     idempotent no-op write into the target, never a duplicate row).
     """

@@ -3,12 +3,12 @@
 This module resolves the active bucket to a taxpayer NIF, validates the
 operator-supplied amount, and then delegates the persistence write to the
 calculation layer. Seed and correction flows write
-:class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState` records through
+:class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState` records through
 ``seed_iva_compensation_period`` / ``correct_iva_compensation_period``; override
 flows persist an
-:class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+:class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
 through ``reconcile_modelo_303_iva_compensation``. Every mutation appends a typed
-bucket event via :class:`~aeat.domain.buckets.BucketEventHistoryRepository`.
+bucket event via :class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
 
 The facade is intentionally above the pure writers. It can scan work units and
 calculation revisions before changing an opening carry-forward basis, so
@@ -17,13 +17,13 @@ calculation revisions before changing an opening carry-forward basis, so
 Modelo 303 revision has consumed that basis.
 
 See Also:
-    :mod:`aeat.application.calculations._iva_compensation_history`
+    :mod:`cadrumo.application.calculations._iva_compensation_history`
     Single-writer seed and correction primitives for local IVA compensation
     history.
-    :mod:`aeat.application.calculations._iva_wallet_reconciliation`
+    :mod:`cadrumo.application.calculations._iva_wallet_reconciliation`
     Reconciliation service that turns wallet/local/override evidence into a
     persisted Modelo 303 prior-compensation decision.
-    :mod:`aeat.application.modelo._iva_wallet_gate`
+    :mod:`cadrumo.application.modelo._iva_wallet_gate`
     Calculation/export gate that replays the persisted wallet decision before a
     Modelo 303 revision is allowed to use the binding.
 """
@@ -69,7 +69,7 @@ class ModeloIvaWalletSeedError(ModeloError):
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
     """Raised when the selected bucket cannot provide a taxpayer NIF.
 
-    The seed facade uses :func:`aeat.application.modelo._iva_wallet_gate.taxpayer_nif_for_bucket`
+    The seed facade uses :func:`cadrumo.application.modelo._iva_wallet_gate.taxpayer_nif_for_bucket`
     so the same bucket/profile identity authority feeds seed, correction, override,
     and persisted-decision replay paths.
     """
@@ -133,8 +133,8 @@ def seed_iva_compensation_period_for_bucket(
 ) -> IvaCompensationPeriodState:
     """Seed local IVA compensation history for the bucket taxpayer.
 
-    Returns an :class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState`
-    stored by :func:`aeat.application.calculations.seed_iva_compensation_period`.
+    Returns an :class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState`
+    stored by :func:`cadrumo.application.calculations.seed_iva_compensation_period`.
     The stored state represents an operator-declared opening carry-forward
     balance for a Modelo 303 period that predates local history. It is not a live
     AEAT wallet observation and it does not by itself authorize a Modelo 303
@@ -142,9 +142,9 @@ def seed_iva_compensation_period_for_bucket(
     ``modelo-303-compensacion-pendiente-anteriores`` decision.
 
     See Also:
-        :func:`aeat.application.calculations.seed_iva_compensation_period`
+        :func:`cadrumo.application.calculations.seed_iva_compensation_period`
         Pure single-writer primitive that stores the seeded period state.
-        :func:`aeat.application.modelo._iva_wallet_gate.resolve_iva_compensation_decision_for_calculation`
+        :func:`cadrumo.application.modelo._iva_wallet_gate.resolve_iva_compensation_decision_for_calculation`
         Gate-side resolver that requires a persisted decision before applying
         the prior-compensation binding.
     """
@@ -225,7 +225,7 @@ def correct_iva_compensation_period_for_bucket(
     """Correct a wrong opening IVA compensation balance, guarded and audited.
 
     Returns the corrected
-    :class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState`.
+    :class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState`.
 
     The seed verb is one-shot: it refuses to overwrite an existing record, so a
     wrong opening carry-forward balance for a pre-history period is otherwise
@@ -239,21 +239,21 @@ def correct_iva_compensation_period_for_bucket(
       already-filed return, the same filed-immutability risk the ledger restore
       guard enforces (:class:`ModeloIvaWalletCorrectionSealedError`);
     - delegates the write to the single-writer
-      :func:`~aeat.application.calculations.correct_iva_compensation_period`
+      :func:`~cadrumo.application.calculations.correct_iva_compensation_period`
       primitive (no parallel write path), which refuses to fabricate a record
       where none exists (re-raised as
       :class:`ModeloIvaWalletCorrectionNoRecordError`);
-    - emits a :attr:`~aeat.domain.buckets.BucketEventType.MODELO_IVA_WALLET_CORRECTED`
+    - emits a :attr:`~cadrumo.domain.buckets.BucketEventType.MODELO_IVA_WALLET_CORRECTED`
       audit event carrying the operator ``reason`` and the before/after amounts.
 
     The local app never files; correcting the wallet basis touches no AEAT write
     surface.
 
     See Also:
-        :func:`aeat.application.calculations.correct_iva_compensation_period`
+        :func:`cadrumo.application.calculations.correct_iva_compensation_period`
         Single-writer primitive that replaces the stored seed after this facade's
         filed-basis guard passes.
-        :class:`aeat.domain.buckets.BucketEventType`
+        :class:`cadrumo.domain.buckets.BucketEventType`
         Declares the ``MODELO_IVA_WALLET_CORRECTED`` audit event emitted here.
     """
     if amount < Decimal("0"):
@@ -383,7 +383,7 @@ def record_iva_compensation_override_for_bucket(
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
     Returns the persisted
-    :class:`~aeat.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    :class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
     with the ``taxpayer_override`` source.
 
     The Modelo 303 reconciliation refuses to AUTO-apply a seeded or local-recurrence
@@ -401,8 +401,8 @@ def record_iva_compensation_override_for_bucket(
     - **does not overrule fresh AEAT evidence**
       (:class:`ModeloIvaWalletOverrideFreshWalletError`): refuses when a non-blocked
       ``aeat_wallet`` decision already resolves the period;
-    - builds an :class:`~aeat.domain.iva_compensation.IvaCompensationOverride` and
-      drives :func:`~aeat.application.calculations.reconcile_modelo_303_iva_compensation`
+    - builds an :class:`~cadrumo.domain.iva_compensation.IvaCompensationOverride` and
+      drives :func:`~cadrumo.application.calculations.reconcile_modelo_303_iva_compensation`
       with ``persist=True`` to store a non-blocking ``taxpayer_override`` decision
       keyed by period through the single decision repository; a subsequent
       ``work calculate`` reads it and applies the amount to
@@ -425,13 +425,13 @@ def record_iva_compensation_override_for_bucket(
     corrected. That re-reconciliation is tracked as a separate follow-up.
 
     See Also:
-        :func:`aeat.application.calculations.reconcile_modelo_303_iva_compensation`
+        :func:`cadrumo.application.calculations.reconcile_modelo_303_iva_compensation`
         Persists the non-blocking taxpayer-override wallet decision consumed by
         later Modelo 303 calculations.
-        :class:`aeat.application.calculations.IvaWalletDecisionRepository`
+        :class:`cadrumo.application.calculations.IvaWalletDecisionRepository`
         Repository used to detect an existing fresh AEAT-wallet decision before
         allowing an override.
-        :func:`aeat.application.modelo._iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision`
+        :func:`cadrumo.application.modelo._iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision`
         Replay gate that ensures exported/filed revisions still match the
         persisted decision.
     """

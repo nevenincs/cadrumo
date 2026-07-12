@@ -323,7 +323,7 @@ def load_modelo_directory_without_locales(resolved: Path) -> ModeloDefinition:
 
     Composes the same manifest/revisions/build steps as
     :func:`load_modelo_directory` but skips
-    :func:`~aeat.domain.calculations.registry._loader_locales.apply_locales`,
+    :func:`~cadrumo.domain.calculations.registry._loader_locales.apply_locales`,
     for callers (the schema-local locale-authoring CLI) that must read the
     raw Spanish schema before any translation overlay is injected.
 
@@ -805,10 +805,10 @@ def _validate_legal_parameter_refs(
 def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     """Load only the legal-parameter catalogue from ``root/legal/*.toml``.
 
-    Lightweight cycle-safe entry point. Consumers in ``aeat.domain.iva``
-    and ``aeat.domain.rental`` need parameter values at module-import
+    Lightweight cycle-safe entry point. Consumers in ``cadrumo.domain.iva``
+    and ``cadrumo.domain.rental`` need parameter values at module-import
     time, but the full :func:`load_registry_tree` path pulls in
-    ``_bindings`` which itself imports from ``aeat.domain.iva`` — a
+    ``_bindings`` which itself imports from ``cadrumo.domain.iva`` — a
     circular import.
 
     This function reuses :func:`load_catalogue_file` (already

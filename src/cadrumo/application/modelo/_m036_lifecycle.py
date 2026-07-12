@@ -5,23 +5,23 @@ Per the accepted Modelo 036/037 foundation decision, the local app never files a
 person, then records that fact locally through ``aeat app modelo m036
 {alta,modificacion,baja}``. This module owns the typed application service behind
 that surface: it persists encrypted
-:data:`~aeat.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
+:data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
 emits the matching ``modelo.036.declaration.*`` bucket event, and exposes the
-same :class:`~aeat.application.live.SecureSnapshotRepository` path for list/view
+same :class:`~cadrumo.application.live.SecureSnapshotRepository` path for list/view
 read-back.
 
 The closed event-kind axis comes from
-:class:`~aeat.domain.calculations.registry.CensoModeloEventKind`, whose values are
+:class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, whose values are
 derived from the registry-owned censo foundation. Modelo 037 remains historical
 metadata and is intentionally outside this recording surface.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._censo_modelos`
+    :mod:`cadrumo.domain.calculations.registry._censo_modelos`
         Registry-owned Modelo 036 active-foundation and Modelo 037 historical
         routing.
-    :mod:`aeat.entrypoints.cli._modelo_m036_cli`
+    :mod:`cadrumo.entrypoints.cli._modelo_m036_cli`
         Thin Typer boundary that turns CLI verbs into these application commands.
-    :class:`aeat.domain.buckets.BucketEventType`
+    :class:`cadrumo.domain.buckets.BucketEventType`
         Declares the ``CENSO_DECLARATION_ALTA``,
         ``CENSO_DECLARATION_MODIFICACION``, and ``CENSO_DECLARATION_BAJA`` audit
         events emitted here.
@@ -71,7 +71,7 @@ def derive_m036_declaration_id(
     record, not silently coalesced with the pre-acuse draft.
 
     The ``event_kind`` member is a
-    :class:`~aeat.domain.calculations.registry.CensoModeloEventKind`, so the
+    :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, so the
     digest can only describe one of the registry-backed ``alta``,
     ``modificacion``, or ``baja`` lifecycle events.
     """
@@ -96,7 +96,7 @@ class M036DeclarationCommand(BaseModel):
     any local filing action.
 
     ``event_kind`` is typed as
-    :class:`~aeat.domain.calculations.registry.CensoModeloEventKind`, preserving
+    :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, preserving
     the registry foundation's closed event set at the application boundary.
     """
 
@@ -128,8 +128,8 @@ class M036DeclarationResult(BaseModel):
     re-derivation) read these fields to decide what to recompute.
 
     The record is the payload model for
-    :class:`~aeat.application.live.SecureSnapshotRepository` rows stored under
-    :data:`~aeat.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`.
+    :class:`~cadrumo.application.live.SecureSnapshotRepository` rows stored under
+    :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -239,7 +239,7 @@ def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036De
 
     See Also:
         :func:`list_m036_declarations`
-        :class:`~aeat.application.live.SecureSnapshotRepository`
+        :class:`~cadrumo.application.live.SecureSnapshotRepository`
     """
     return _m036_declaration_repository(bucket_id).resolve(declaration_id)
 
@@ -272,9 +272,9 @@ def record_m036_declaration(
     payload cannot land silently.
 
     See Also:
-        :class:`~aeat.domain.calculations.registry.CensoModeloEventKind`
-        :class:`aeat.domain.buckets.BucketEventType`
-        :data:`~aeat.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`
+        :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`
+        :class:`cadrumo.domain.buckets.BucketEventType`
+        :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`
     """
     declaration_id = derive_m036_declaration_id(
         profile_id=command.profile_id,

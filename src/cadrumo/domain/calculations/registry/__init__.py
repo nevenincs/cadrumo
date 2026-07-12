@@ -76,7 +76,7 @@ from ._ids import (
 )
 
 # Applicability is imported after _schema so its transitive import of
-# aeat.domain.deadlines (which depends on DeadlineWindowDefinition
+# cadrumo.domain.deadlines (which depends on DeadlineWindowDefinition
 # exported above) does not race a partially-initialised registry
 # namespace.
 from ._applicability import (

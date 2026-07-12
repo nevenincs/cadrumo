@@ -1,4 +1,4 @@
-"""Deterministic rule-id generation for :mod:`aeat.domain.manuals`.
+"""Deterministic rule-id generation for :mod:`cadrumo.domain.manuals`.
 
 Rule identifiers are locked at the schema layer so subsequent
 extraction runs cannot collide with each other. The generator is pure

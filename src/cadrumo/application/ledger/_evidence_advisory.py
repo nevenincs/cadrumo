@@ -4,9 +4,9 @@ A non-blocking diagnostic: when an invoice's on-host-extracted text appears to
 print an IVA figure that disagrees with the registry-DERIVED IVA, surface an
 advisory so the operator verifies before filing. The public
 :func:`printed_iva_advisory` helper feeds the ``evidence_advisory`` field on
-:class:`aeat.application.ledger._llm_classification.LLMSaturatedSuggestion`
+:class:`cadrumo.application.ledger._llm_classification.LLMSaturatedSuggestion`
 after the saturation path has resolved evidence through
-:class:`aeat.domain.transactions.PromptSpec`.
+:class:`cadrumo.domain.transactions.PromptSpec`.
 
 The printed figure is parsed deterministically on-host from the evidence text
 (never emitted by the model) and is used ONLY for this advisory -- it is never
@@ -51,7 +51,7 @@ def printed_iva_advisory(
 
     The comparison is a best-effort cross-check between on-host-extracted
     evidence text and the registry-derived IVA amount carried by
-    :class:`aeat.application.ledger._llm_classification.LLMSaturatedSuggestion`;
+    :class:`cadrumo.application.ledger._llm_classification.LLMSaturatedSuggestion`;
     it never supplies a tax value for persistence.
 
     Args:

@@ -5,7 +5,7 @@ below hard-codes the verified canonical AEAT URLs for every
 ``(manual_id, year, part)`` triple the subpackage supports. The
 ``fetch`` CLI looks up a triple in the table, streams the PDF to
 disk, computes its sha256 on the fly, and writes a
-:class:`~aeat.domain.manuals.FetchedManualPart` manifest next to the
+:class:`~cadrumo.domain.manuals.FetchedManualPart` manifest next to the
 raw binary.
 """
 
@@ -161,7 +161,7 @@ class FetchResult(BaseModel):
     """Thin wrapper returned by :func:`fetch_manual_part` to the CLI.
 
     Attributes:
-        manifest: The :class:`~aeat.domain.manuals.FetchedManualPart`
+        manifest: The :class:`~cadrumo.domain.manuals.FetchedManualPart`
             record written next to the raw PDF.
         part_root: Resolved directory root for the manual part.
         pdf_path: Absolute path to the freshly downloaded PDF.
@@ -227,7 +227,7 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
 
 
 def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
-    """Serialise a :class:`~aeat.domain.manuals.FetchedManualPart` as indented JSON on disk.
+    """Serialise a :class:`~cadrumo.domain.manuals.FetchedManualPart` as indented JSON on disk.
 
     Args:
         manifest_path: Destination path for the JSON manifest.

@@ -1,6 +1,6 @@
 """Amendment actions for externally filed modelo baselines.
 
-:func:`~aeat.application.modelo.amend_modelo_revision` starts from a current, externally evidenced
+:func:`~cadrumo.application.modelo.amend_modelo_revision` starts from a current, externally evidenced
 :class:`ModeloRecord`, builds a corrected
 :class:`CalculationRevision` with an explicit
 :class:`CalculationRevisionAmendmentKind`, supersedes the
@@ -22,15 +22,15 @@ new revision keeps legal/source provenance for both overridden and inherited
 casillas.
 
 See Also:
-    :func:`~aeat.application.modelo.import_external_filing_evidence`:
+    :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
         Creates the AEAT-attested baseline that this module amends.
-    :func:`~aeat.application.modelo._calculation_helpers.amendment_observations`:
+    :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
         Carries or rebuilds observation provenance for the corrected casilla map.
     :class:`ExternalEvidence`:
         Filing-record evidence marker required before this amendment path can run.
-    :func:`~aeat.application.modelo._registry_helpers.reject_unknown_override_casillas`:
+    :func:`~cadrumo.application.modelo._registry_helpers.reject_unknown_override_casillas`:
         Canonicalizes amendment override casilla ids against the registry.
-    :func:`~aeat.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
+    :func:`~cadrumo.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
         Reuses the registry completeness gate before the amendment is filed.
 """
 
@@ -177,10 +177,10 @@ def amend_modelo_revision[CasillaKey](
         ``aeat app modelo work amend``:
             CLI command that validates ``--from-filing-record``, ``--kind``,
             ``--reason``, and ``--set`` before calling this service.
-        :func:`~aeat.application.modelo.import_external_filing_evidence`:
+        :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
             Production import path that creates accepted external-evidence
             baselines.
-        :func:`~aeat.application.modelo._calculation_helpers.amendment_observations`:
+        :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
             Builds the :class:`CasillaObservation`
             rows persisted on the amendment revision.
     """

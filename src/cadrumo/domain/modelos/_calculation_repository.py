@@ -5,9 +5,9 @@ This module owns the pure calculation-revision catalogue vocabulary: the
 :func:`upsert_calculation_revision` pure mutator, and the namespace /
 schema-version constants that name the persisted envelope contract. The concrete
 encrypted SQL repository lives in the persistence adapter
-:class:`~aeat.adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`,
+:class:`~cadrumo.adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`,
 behind the read-side
-:class:`~aeat.domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`; the
+:class:`~cadrumo.domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`; the
 domain package depends only on the structural port.
 """
 
@@ -28,7 +28,7 @@ class CalculationRevisionPersistenceError(ModeloError):
     """Raised when the calculation-revision catalogue cannot be persisted or loaded.
 
     This wraps storage-boundary failures from the persistence adapter's
-    :class:`~aeat.adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`
+    :class:`~cadrumo.adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`
     while preserving translated recovery context for callers.
     """
 

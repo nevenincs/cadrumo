@@ -3,7 +3,7 @@
 The ``core`` layer must not import application modules, so it resolves
 the active profile's ``preferences.output_language`` preference through
 a registered callback (see
-:func:`aeat.core.i18n.register_profile_language_resolver`).
+:func:`cadrumo.core.i18n.register_profile_language_resolver`).
 
 This module owns the application-side resolver and registers it as a
 module-import side-effect. Importing it is cheap — every heavyweight
@@ -75,7 +75,7 @@ def register_language_resolver() -> None:
 
     Replaces the prior module-import side-effect registration: callers
     now invoke this function from a known initialiser (the
-    :mod:`aeat.application.user_profile` package import) so the
+    :mod:`cadrumo.application.user_profile` package import) so the
     registration point is explicit and greppable rather than hidden in
     a noqa-protected import line.
     """

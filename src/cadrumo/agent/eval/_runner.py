@@ -3,20 +3,20 @@
 Pure with respect to the CLI: the set of resolvable command keys is injected by
 the caller (the test wires it from the live CLI schema registry), so this module
 never imports the entrypoints layer. The registry snapshot it reads for the
-provenance dimension is a pure registry read through ``aeat.core.resources`` and
+provenance dimension is a pure registry read through ``cadrumo.core.resources`` and
 needs no profile or secret storage. The response-provenance dimension follows the
 same injection pattern: the caller dispatches a real ``modelo.work.calculate``
 through the actual CLI/MCP command handling and passes the decoded JSON
 ``observations`` rows in; this module only asserts over the already-fetched rows
 and never dispatches the call itself. The narration-faithfulness dimension
 (eval-catalogue category 9) follows the identical pattern one layer further: the
-caller runs the real ``aeat.entrypoints.mcp._faithfulness.faithfulness_check``
+caller runs the real ``cadrumo.entrypoints.mcp._faithfulness.faithfulness_check``
 against a narration and the captured calculate JSON, and passes the per-step
 verdict in - this module never imports ``entrypoints.mcp`` (that would invert the
-hexagonal direction, since ``entrypoints.cli`` already imports ``aeat.agent``) and
+hexagonal direction, since ``entrypoints.cli`` already imports ``cadrumo.agent``) and
 never runs the check itself. The confirmation-gate dimension (eval-catalogue
 category 8) follows the same pattern once more: the caller invokes the real
-``aeat.entrypoints.mcp._hitl.confirmation_for_tool`` for a step and hands the
+``cadrumo.entrypoints.mcp._hitl.confirmation_for_tool`` for a step and hands the
 resulting tier in as a :class:`~agent.eval._models.ConfirmationGateCheck`;
 this module never imports ``entrypoints.mcp`` and never resolves a confirmation
 tier itself. The contradiction dimension (eval-catalogue category 4) follows the

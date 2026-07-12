@@ -1,7 +1,7 @@
 """Calendar aggregation and evidence merge for the overview read model.
 
-The facade composes a :class:`~aeat.domain.deadlines.Schedule` from
-:class:`~aeat.domain.deadlines.TaxpayerProfile` facts and projects
+The facade composes a :class:`~cadrumo.domain.deadlines.Schedule` from
+:class:`~cadrumo.domain.deadlines.TaxpayerProfile` facts and projects
 already-loaded local state into :class:`OverviewCalendar` DTOs. Legal
 obligation rows come from the deadline engine; observed
 :class:`OverviewCalendarEvent` rows and :class:`OverviewCalendarFilingEvidence`
@@ -15,18 +15,18 @@ loaded, preserving distinct :class:`OverviewLocalFilingState` and
 :class:`OverviewAeatSubmissionState` axes.
 
 See Also:
-    :mod:`aeat.application.overview`
+    :mod:`cadrumo.application.overview`
         Public facade that re-exports these calendar builders and DTOs.
-    :class:`~aeat.domain.deadlines.DeadlineEngine`
+    :class:`~cadrumo.domain.deadlines.DeadlineEngine`
         Deadline authority that produces the legal obligation schedule merged
         into the overview calendar.
-    :func:`~aeat.application.overview.calendar_filing_evidence_from_sources`
+    :func:`~cadrumo.application.overview.calendar_filing_evidence_from_sources`
         Pure evidence merge for local filing records, live captures,
         filed-declaration observations, and loaded justificante metadata.
-    :class:`~aeat.application.live.JustificanteCaptureSnapshot`
+    :class:`~cadrumo.application.live.JustificanteCaptureSnapshot`
         Persisted live justificante capture projected as AEAT-side evidence
         only when matching metadata is already loaded.
-    :class:`~aeat.domain.modelos.ModeloRecord`
+    :class:`~cadrumo.domain.modelos.ModeloRecord`
         Local filing record projected on the local filing axis, separate from
         AEAT submission state.
 """
@@ -455,9 +455,9 @@ def calendar_events_from_justificante_capture_snapshots(
 ) -> tuple[OverviewCalendarEvent, ...]:
     """Project verified live justificante captures into calendar filing events.
 
-    A :class:`~aeat.application.live.JustificanteCaptureSnapshot` becomes an
+    A :class:`~cadrumo.application.live.JustificanteCaptureSnapshot` becomes an
     :class:`OverviewCalendarEvent` only after loaded
-    :class:`~aeat.domain.justificante.Justificante` metadata proves the same
+    :class:`~cadrumo.domain.justificante.Justificante` metadata proves the same
     CSV/model/year/period/taxpayer tuple. The event therefore carries
     :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED` without opening a
     new live read.
@@ -565,8 +565,8 @@ def actionable_post_filing_events(
     """Return the observed :class:`OverviewCalendarEvent` rows that demand operator attention.
 
     An event is actionable when its
-    :attr:`~aeat.application.overview.OverviewCalendarEvent.post_filing_kind`
-    is a member of :data:`~aeat.core.ACTIONABLE_POST_FILING_EVENT_KINDS` — a
+    :attr:`~cadrumo.application.overview.OverviewCalendarEvent.post_filing_kind`
+    is a member of :data:`~cadrumo.core.ACTIONABLE_POST_FILING_EVENT_KINDS` — a
     requerimiento, a propuesta / acuerdo de liquidación, a procedimiento
     sancionador, or a recaudación enforcement act (providencia de apremio or
     diligencia de embargo). These are the post-filing events an operator must
@@ -592,14 +592,14 @@ def calendar_events_from_modelo_records(
 ) -> tuple[OverviewCalendarEvent, ...]:
     """Project persisted Modelo filing records into calendar filing events.
 
-    A :class:`~aeat.domain.modelos.ModeloRecord` always contributes on the
+    A :class:`~cadrumo.domain.modelos.ModeloRecord` always contributes on the
     :class:`OverviewLocalFilingState` axis. It only contributes
     :class:`OverviewAeatSubmissionState` when its external evidence reference is
-    corroborated by loaded :class:`~aeat.domain.justificante.Justificante`
+    corroborated by loaded :class:`~cadrumo.domain.justificante.Justificante`
     metadata for the same taxpayer and filing target.
 
     Args:
-        filing_records: The persisted :class:`~aeat.domain.modelos.ModeloRecord`
+        filing_records: The persisted :class:`~cadrumo.domain.modelos.ModeloRecord`
             filings to project.
         calendar_range: The window that bounds which records become events.
         justificantes: Optional AEAT justificantes corroborating the filings.
@@ -808,7 +808,7 @@ def build_overview_calendar(
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
-    Composes the existing :class:`~aeat.domain.deadlines.DeadlineEngine`
+    Composes the existing :class:`~cadrumo.domain.deadlines.DeadlineEngine`
     over each year the range spans, filters obligations to those whose
     filing window intersects the range, attaches the user-state
     mapping, merges already-loaded :class:`OverviewCalendarFilingEvidence`,
@@ -817,14 +817,14 @@ def build_overview_calendar(
     not contact AEAT.
 
     Args:
-        profile: The operator's :class:`~aeat.domain.deadlines.TaxpayerProfile`.
+        profile: The operator's :class:`~cadrumo.domain.deadlines.TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         today: Reference date for engine status classification.
-        engine: Optional :class:`~aeat.domain.deadlines.ScheduleProducer` the caller wants to
+        engine: Optional :class:`~cadrumo.domain.deadlines.ScheduleProducer` the caller wants to
             share across queries — a concrete
-            :class:`~aeat.domain.deadlines.DeadlineEngine` or any object
+            :class:`~cadrumo.domain.deadlines.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
-            a default :class:`~aeat.domain.deadlines.DeadlineEngine` is
+            a default :class:`~cadrumo.domain.deadlines.DeadlineEngine` is
             constructed.
         raw_values: Optional mapping of casilla id to raw value, forwarded
             to the engine for user-state annotation. When ``None``, the

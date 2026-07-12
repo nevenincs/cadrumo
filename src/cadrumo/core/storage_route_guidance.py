@@ -8,8 +8,8 @@ deriving an active bucket database.
 
 The module is text-only by design. Route classification remains in
 :func:`core.config.classify_storage_route`, runtime readiness remains in
-``aeat.adapters.persistence.storage.runtime``, and write-policy decisions remain
-in ``aeat.application.storage_write_policy``. Keeping this recovery hint in core
+``cadrumo.adapters.persistence.storage.runtime``, and write-policy decisions remain
+in ``cadrumo.application.storage_write_policy``. Keeping this recovery hint in core
 lets those layers share one operator message without exposing database paths,
 bucket identifiers, profile identifiers, or key material.
 """

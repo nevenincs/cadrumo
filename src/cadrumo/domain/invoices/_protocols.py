@@ -1,7 +1,7 @@
 """Domain-level repository Protocol for the invoice catalogue.
 
 Application-layer code that persists or loads the :class:`InvoiceCatalogue`
-depends on :class:`~aeat.domain.invoices.InvoiceCatalogueRepositoryProtocol`,
+depends on :class:`~cadrumo.domain.invoices.InvoiceCatalogueRepositoryProtocol`,
 not on the concrete secure-object-backed :class:`InvoiceCatalogueRepository`.
 This keeps callers typed against the narrow port while the concrete repository
 owns the adapter integration.

@@ -28,7 +28,7 @@ entry point is for secure-storage flows that should never materialise source
 PDF bytes as a plaintext temporary file.
 
 The ``pdfminer`` logger level is governed centrally by
-``aeat.core.logging.configure_logging()`` dictConfig (``WARNING``).
+``cadrumo.core.logging.configure_logging()`` dictConfig (``WARNING``).
 """
 
 from __future__ import annotations

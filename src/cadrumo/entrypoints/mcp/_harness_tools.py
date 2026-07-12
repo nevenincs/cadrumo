@@ -17,7 +17,7 @@ directly, while :func:`build_harness_floor_tool` lazily adapts the payload
 surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
 server still refuses gracefully) when the ``aeat-cli[agent]`` extra is absent.
 
-The operating-layer text is read through the ``aeat.agent`` package facade
+The operating-layer text is read through the ``cadrumo.agent`` package facade
 (:func:`~agent.operator_rules_text` and
 :func:`~agent.iter_personas`), never a private submodule, per the
 ``service-imports-via-top-level-reexports`` discipline.

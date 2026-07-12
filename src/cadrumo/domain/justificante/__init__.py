@@ -6,7 +6,7 @@ record, :class:`JustificanteParserBackend` parser contract, and the
 :class:`PdfModeloImportError` / :class:`JustificanteError` hierarchy used by
 PDF filing-import flows. The encrypted AUDIT store lives in the persistence
 adapter as
-:class:`~aeat.adapters.persistence.profile.justificante.JustificanteRepository`.
+:class:`~cadrumo.adapters.persistence.profile.justificante.JustificanteRepository`.
 
 This package is scoped to the AEAT *justificante de presentación* receipt:
 CSV, modelo, period, presentation timestamp, taxpayer id, totals, source path,
@@ -37,7 +37,7 @@ See Also:
         evidence.
     :func:`application.modelo.import_external_filing_evidence`
         Modelo work-unit import path that requires matching
-        :class:`~aeat.adapters.persistence.profile.justificante.JustificanteRepository`
+        :class:`~cadrumo.adapters.persistence.profile.justificante.JustificanteRepository`
         metadata for receipt-bound evidence kinds.
     :mod:`domain.submission`
         Local-only :class:`domain.submission.ModeloPresentado` audit trail

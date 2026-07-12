@@ -38,8 +38,8 @@ from ._config_support import (
     LLMProviderSetting,
     SecretStoreBackend,
     StorageRouteClassification,
-    StorageRouteKind,  # noqa: F401 - public re-export from aeat.core.config
-    unwrap_optional_secret,  # noqa: F401 - public re-export from aeat.core.config
+    StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
+    unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
 )
 from ._config_support import coerce_output_language_setting as _coerce_output_language_setting
 from ._config_support import default_aeat_sede_origin as _default_aeat_sede_origin
@@ -286,7 +286,7 @@ class Settings(AeatIntegrationSettings):
         return _live_test_config.strict_live_test_opt_in(self.aeat_live_tests_google)
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
-    # Set by ``aeat.core.observability._replay.replay_run`` on the parent
+    # Set by ``cadrumo.core.observability._replay.replay_run`` on the parent
     # process before it re-enters the CLI, then read by ``run_context`` in
     # the child invocation so the persisted trace can label its
     # ``replay_of`` field with the original run id. Subprocess IPC writes
@@ -371,7 +371,7 @@ class Settings(AeatIntegrationSettings):
         ),
     )
 
-    # ── Manuals corpus (aeat.domain.manuals) ───────────────────────────────────────
+    # ── Manuals corpus (cadrumo.domain.manuals) ───────────────────────────────────────
     aeat_manuals_root: Path = Field(
         default_factory=lambda: bundled_path("corpus", "manuals"),
         description="Root directory for the structured AEAT Manual práctico corpus",
@@ -388,7 +388,7 @@ class Settings(AeatIntegrationSettings):
         description="Root directory for the bundled legal normatives corpus",
     )
 
-    # ── IVA catalogue (aeat.domain.iva) ──────────────────────────────────
+    # ── IVA catalogue (cadrumo.domain.iva) ──────────────────────────────────
     aeat_iva_catalogue_root: Path = Field(
         default_factory=lambda: bundled_path("registry", "aeat", "iva", "catalogues"),
         description="Root directory for the hand-reviewed IVA taxonomy catalogue",

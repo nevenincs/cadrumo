@@ -224,13 +224,13 @@ class Modelo232VinculadaRow(BaseModel):
 
 # Country-specific NIF-IVA format patterns for Modelo 349. Every current EU
 # Member State (plus post-Brexit Northern Ireland ``XI``) routes through the
-# canonical :data:`aeat.core.identity.NIF_IVA_FORMATS` authority so the
+# canonical :data:`cadrumo.core.identity.NIF_IVA_FORMATS` authority so the
 # structural pattern lives in exactly one place (per the
 # binding-source-kind-single-taxonomy discipline: a per-family collection is
 # derived from the core table, never hand-maintained as a parallel literal
 # set). ``GB`` is the sole deliberate exception: post-Brexit UK is not an EU
 # Member State, so the general IVA/invoice counterparty boundary
-# (:mod:`aeat.domain.invoices`) correctly carries no GB structural pattern and
+# (:mod:`cadrumo.domain.invoices`) correctly carries no GB structural pattern and
 # falls back to its generic non-EU shape check. Modelo 349's Brexit-transition
 # filing rules (:func:`validate_m349_country_prefix_context`) still permit a
 # historical ``GB`` prefix for pre-2021 rectifications and the 2021 1M/1T
@@ -412,7 +412,7 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
 
     Every current EU Member State (plus ``XI``) resolves its structural
-    pattern from the canonical :func:`aeat.core.identity.nif_iva_format_for_country`
+    pattern from the canonical :func:`cadrumo.core.identity.nif_iva_format_for_country`
     authority. ``GB`` is validated against Modelo 349's own Brexit-transition
     pattern (see :data:`_M349_GB_NIF_PATTERN`), since post-Brexit UK carries no
     entry in the general EU NIF-IVA authority. Unsupported country prefixes

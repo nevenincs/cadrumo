@@ -2,7 +2,7 @@
 
 These guard-violation errors are raised by the pure carry-forward,
 reconciliation, and balance logic. Each inherits from both
-:class:`~aeat.core.errors.AeatError` (so the failure reaches the typed error
+:class:`~cadrumo.core.errors.AeatError` (so the failure reaches the typed error
 registry with a stable code and structured context) and :exc:`ValueError` (so
 scalar validation and coercion failures retain the standard Python error
 category).

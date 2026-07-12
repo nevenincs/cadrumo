@@ -1,16 +1,16 @@
 """Cross-model relation and previous-filing source validation helpers.
 
 Validates cross-model relations declared on each
-:class:`~aeat.domain.calculations.registry.ModeloRevision` against the source
-:class:`~aeat.domain.calculations.registry.ModeloDefinition`, checking selector
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` against the source
+:class:`~cadrumo.domain.calculations.registry.ModeloDefinition`, checking selector
 coverage, source-casilla-id existence, and period alignment.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._validate_source_casilla_ids`
+    :mod:`cadrumo.domain.calculations.registry._validate_source_casilla_ids`
         Shared source-casilla membership and non-canonical token diagnostics.
-    :mod:`aeat.domain.calculations.registry._validate_relation_periods`
+    :mod:`cadrumo.domain.calculations.registry._validate_relation_periods`
         Source revision selection and period/year coverage gates.
-    :mod:`aeat.domain.calculations.registry._validate_previous_filing_sources`
+    :mod:`cadrumo.domain.calculations.registry._validate_previous_filing_sources`
         Sibling closure check for previous-filing binding selectors.
 """
 
@@ -70,11 +70,11 @@ def validate_relation_closure(
 
     Args:
         modelos: Iterable of
-            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
-            entries whose :class:`~aeat.domain.calculations.registry.ModeloRevision`
+            :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
+            entries whose :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
             relations are checked.
         modelos_by_id: Mapping of modelo id to
-            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
             used to resolve each relation's source modelo.
     """
     failures: list[str] = []
@@ -162,8 +162,8 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
     """Return whether the relation is a prior-year carry of a historical filing.
 
     The relation is a
-    :class:`~aeat.domain.calculations.registry.RelationDefinition` declared on
-    the supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`.
+    :class:`~cadrumo.domain.calculations.registry.RelationDefinition` declared on
+    the supplied :class:`~cadrumo.domain.calculations.registry.ModeloRevision`.
     Two conditions, both required:
 
     - The relation's target binding has ``source = "previous_filing"`` — the
@@ -242,10 +242,10 @@ def validate_slot_source_hygiene(
 
     Args:
         modelos: Iterable of
-            :class:`~aeat.domain.calculations.registry.ModeloDefinition` entries
+            :class:`~cadrumo.domain.calculations.registry.ModeloDefinition` entries
             to validate.
         modelos_by_id: Mapping of modelo id to
-            :class:`~aeat.domain.calculations.registry.ModeloDefinition` (unused
+            :class:`~cadrumo.domain.calculations.registry.ModeloDefinition` (unused
             here; accepted for signature parity with the sibling closure gates).
     """
     del modelos_by_id  # signature parity with sibling closure validators

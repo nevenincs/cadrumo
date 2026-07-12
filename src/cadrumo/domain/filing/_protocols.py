@@ -218,7 +218,7 @@ rather than defining a narrower divergent alias.
 class ModeloDraftRepositoryProtocol(Protocol):
     """Narrow domain-facing contract for the filing-draft repository.
 
-    :class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
+    :class:`~cadrumo.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
     structurally conforms to this Protocol; domain service code that only
     needs to load or save drafts should depend inward on this port.
     """
@@ -245,7 +245,7 @@ class ModeloDraftRepositoryProtocol(Protocol):
 class ModeloAmendmentRepositoryProtocol(Protocol):
     """Narrow domain-facing contract for the filing-amendment repository.
 
-    :class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
+    :class:`~cadrumo.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
     structurally conforms to this Protocol; domain service code that only
     needs to load, save, or list amendments should depend inward on this
     port.

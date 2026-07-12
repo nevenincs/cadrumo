@@ -1,7 +1,7 @@
 """Portable profile-bundle serialisation for bucket export/import.
 
 This module composes
-:class:`~aeat.domain.user_profile.UserProfilePortableExport` payloads at
+:class:`~cadrumo.domain.user_profile.UserProfilePortableExport` payloads at
 the application boundary. A v3 bundle contains the profile record plus
 the four bucket-local history categories that must move with it: work
 units, ledger transactions, calculation revisions, and filing records.
@@ -9,8 +9,8 @@ The v3 shape additionally carries the generic secure-object custody
 schema and coverage manifest, default-empty until the transport-aware
 phases populate them.
 The ledger category is loaded as a
-:class:`~aeat.domain.transactions.TransactionCatalogue` through
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
+:class:`~cadrumo.domain.transactions.TransactionCatalogue` through
+:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository`.
 
 Bundles carry typed domain-model payloads, not encrypted blobs, key
 material, or raw secure-storage rows. Export reads domain records from
@@ -82,7 +82,7 @@ def validate_bundle_payload(
     :data:`BUNDLE_DURABILITY_FLOOR`, chain-upgrades an older supported
     payload hop by hop through :data:`BUNDLE_PAYLOAD_UPGRADERS`, and
     validates the result against the current strict
-    :class:`~aeat.domain.user_profile.UserProfilePortableExport` model.
+    :class:`~cadrumo.domain.user_profile.UserProfilePortableExport` model.
 
     Args:
         raw_json: The serialized bundle payload (decrypted transport bytes
@@ -162,7 +162,7 @@ def serialize_profile_bundle(
     bucket_id: str,
     custody_profile: StorageCustodyProfile | str = StorageCustodyProfile.STRUCTURED,
 ) -> UserProfilePortableExport:
-    """Build a v3 :class:`~aeat.domain.user_profile.UserProfilePortableExport`.
+    """Build a v3 :class:`~cadrumo.domain.user_profile.UserProfilePortableExport`.
 
     Reads the profile record and all four financial-history categories
     from ``bucket_id``'s encrypted repositories and assembles them into
@@ -172,7 +172,7 @@ def serialize_profile_bundle(
     Args:
         bucket_id: Profile bucket whose domain repositories are exported.
         custody_profile: Secure-object custody scope to apply, as a
-            :class:`~aeat.adapters.persistence.storage.StorageCustodyProfile`
+            :class:`~cadrumo.adapters.persistence.storage.StorageCustodyProfile`
             or one of its string values.
 
     The bundle carries only decrypted pydantic domain-model payloads

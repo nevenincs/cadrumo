@@ -31,7 +31,7 @@ link must be resolved to bytes before :func:`add_attachment_bytes`; there is no
 link-only attachment path.
 
 Callers must import public models, errors, enums, protocols, and service
-helpers from ``aeat.domain.attachments`` and must not reach into private
+helpers from ``cadrumo.domain.attachments`` and must not reach into private
 underscore modules inside this package.
 
 See Also:

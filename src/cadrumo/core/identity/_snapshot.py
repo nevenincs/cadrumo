@@ -8,7 +8,7 @@ verify content addressing offline without contacting AEAT.
 The hex-64 constraint is pinned at the pydantic boundary so a malformed
 identifier is rejected on construction rather than leaking into
 persisted records or wire payloads. The alias lives in
-:mod:`aeat.core.identity` because snapshot surfaces are owned by
+:mod:`cadrumo.core.identity` because snapshot surfaces are owned by
 application services but consumed by adapters and persistence with no
 single application-layer owner.
 

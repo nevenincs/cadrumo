@@ -286,7 +286,7 @@ class EvidenceExtractResult(OutputSchema):
     Mirrors ``InvoiceDraft.model_dump(mode='json')`` (the on-host best-effort
     extraction) plus the resolved reference id the operator supplied. This is a
     reviewable draft only: extracting never mints or persists an
-    ``aeat.domain.invoices.Invoice`` -- the operator confirms the fields (via
+    ``cadrumo.domain.invoices.Invoice`` -- the operator confirms the fields (via
     ``aeat app ledger invoice add`` / ``invoice catalogue create``) before any
     invoice record is created.
     """
