@@ -21,6 +21,7 @@ from ..config import PROJECT_ROOT, _settings_override, load_settings
 from ..errors import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
+from ..product_identity import PRODUCT_IDENTITY
 
 _log = get_logger(__name__)
 _INITIALISED = False
@@ -82,7 +83,7 @@ def _ensure_initialised() -> None:
     global _INITIALISED
     if _INITIALISED:
         return
-    i18n.load_path.append(str(importlib.resources.files("aeat").joinpath("locales")))
+    i18n.load_path.append(str(importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales")))
     i18n.set("filename_format", "{locale}.{format}")
     i18n.set("file_format", "yml")
     i18n.set("skip_locale_root_data", True)
@@ -241,7 +242,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
 def _locale_map(locale: str) -> dict[str, str]:
-    resource = importlib.resources.files("aeat").joinpath("locales", f"{locale}.yml")
+    resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
     with resource.open("r", encoding="utf-8") as handle:
         loaded = yaml.safe_load(handle) or {}
     return _flatten_translations(loaded)
