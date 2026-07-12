@@ -608,7 +608,13 @@ if missing:
     raise SystemExit(f"missing installed bundled data leaves: {{missing!r}}")
 print(root)
 """
-    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir)
+    runtime_root = work_dir / "installed-data-state"
+    env = {
+        **_clean_product_env(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
+    }
+    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir, env=env)
 
 
 def _assert_attachment_and_llm_surfaces(work_dir: Path, venv: Path) -> None:
