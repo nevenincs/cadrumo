@@ -212,6 +212,14 @@ non-recursive literal-path operations. A complete follow-up scan found zero
 remaining collision artifacts. No tracked source or ordinary Python bytecode was
 deleted.
 
+### relocated-bytecode-debris-final-resolution | resolved | Suffixed collision variant removed
+
+The closure review found one ignored
+`__init__.cpython-313.pyc.relocated-aeat-2` variant that the first exact suffix
+filter did not match. Its resolved path was verified inside the workspace and
+removed with a literal-path operation. A wildcard suffix scan for
+`*.pyc.relocated-aeat*` now returns zero files.
+
 ### phase-p03-critical-findings | critical | No critical Phase W02.P03 finding identified
 
 The review found no evidence that official AEAT corpus bytes, registry taxonomy,
