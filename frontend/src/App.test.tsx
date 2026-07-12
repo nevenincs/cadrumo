@@ -15,6 +15,8 @@ function renderApp() {
 
 afterEach(() => {
   document.cookie = 'cadrumo_lang=; max-age=0; path=/'
+  window.localStorage.clear()
+  window.location.hash = ''
 })
 
 describe('App', () => {
@@ -68,7 +70,7 @@ describe('App', () => {
     const user = userEvent.setup()
     renderApp()
 
-    await user.click(screen.getByRole('button', { name: 'Español' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'es')
 
     expect(
       screen.getByRole('heading', {
@@ -91,5 +93,37 @@ describe('App', () => {
         name: /motor de càlcul fiscal, assistit per agents\./i,
       }),
     ).toBeVisible()
+  })
+
+  it('shows the privacy notice banner once and remembers dismissal', async () => {
+    const user = userEvent.setup()
+    renderApp()
+
+    const banner = screen.getByRole('region', { name: 'Privacy notice' })
+    expect(banner).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Understood' }))
+    expect(screen.queryByRole('region', { name: 'Privacy notice' })).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('cadrumo_notice_ack')).toBe('1')
+  })
+
+  it('renders the localized legal page on the #/legal route', () => {
+    window.location.hash = '#/legal'
+    renderApp()
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: /legal notice, privacy & cookies/i }),
+    ).toBeVisible()
+    expect(screen.getByText(/published by/i)).toBeVisible()
+    expect(screen.getAllByText(/Gergely Wootsch/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/collects no personal data/i)).toBeVisible()
+    expect(screen.getByRole('heading', { name: /no relation to the aeat/i })).toBeVisible()
+  })
+
+  it('qualifies the AEAT-compatible claim with a footnote linking to the legal notice', () => {
+    renderApp()
+
+    expect(screen.getByText(/independent project with no relation to the AEAT/i)).toBeVisible()
+    expect(screen.getByRole('link', { name: 'legal notice' })).toHaveAttribute('href', '#/legal')
   })
 })

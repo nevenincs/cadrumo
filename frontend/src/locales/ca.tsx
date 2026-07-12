@@ -28,6 +28,14 @@ export const ca: Copy = {
     ),
     lead2:
       'Està dissenyada per usar-se com a plugin de Claude Cowork, de manera que actuï com a arnès per gestionar les teves obligacions fiscals de manera col·laborativa.',
+    footnote: (
+      <>
+        * «Compatible amb l&rsquo;AEAT» descriu únicament que Cadrumo calcula d&rsquo;acord amb
+        els models i regles publicats per l&rsquo;Agencia Estatal de Administración Tributaria.
+        Cadrumo és un projecte independent sense cap relació amb l&rsquo;AEAT — consulta
+        l&rsquo;<a href="#/legal">avís legal</a>.
+      </>
+    ),
   },
   harness: {
     kicker: "Un moment... què és un arnès d'agents?",
@@ -173,6 +181,155 @@ export const ca: Copy = {
       },
     ],
   },
+  legal: {
+    linkLabel: 'Avís legal, privadesa i galetes',
+    title: 'Avís legal, privadesa i galetes',
+    updated: 'Darrera actualització: 12 de juliol de 2026',
+    backToHome: 'Torna a la pàgina d’inici',
+    identity: {
+      heading: 'Titular del lloc',
+      body: [
+        <>
+          Aquest lloc web, <strong>cadrumo.neve.md</strong>, i el domini{' '}
+          <strong>neve.md</strong> són publicats per <strong>Gergely Wootsch</strong>,
+          l&rsquo;entitat legal darrere de neve.md i del projecte Cadrumo. Aquesta
+          identificació es facilita als efectes de l&rsquo;article 10 de la Llei 34/2002
+          (LSSI-CE).
+        </>,
+        <>
+          Contacte: a través del repositori canònic del projecte,{' '}
+          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (allà
+          s&rsquo;indiquen els canals d&rsquo;incidències i de seguretat).
+        </>,
+      ],
+    },
+    nonAffiliation: {
+      heading: 'Sense relació amb l’AEAT',
+      body: [
+        <>
+          Cadrumo és un <strong>projecte independent de codi obert</strong>. No és un producte
+          de l&rsquo;Agencia Estatal de Administración Tributaria (AEAT) ni hi està afiliat,
+          ni està avalat, patrocinat o aprovat per ella ni per cap altra administració
+          pública. No és programari oficial i no substitueix les eines pròpies de
+          l&rsquo;AEAT.
+        </>,
+        <>
+          Les referències en aquest lloc i en el programari a «AEAT», a números de model (com
+          100, 130 o 303) i a caselles són purament descriptives: anomenen els formularis i
+          regles públiques oficials amb què calcula el programari. Tots els noms i signes
+          oficials pertanyen als seus titulars. Els impostos es presenten únicament a través
+          dels canals oficials de l&rsquo;AEAT; Cadrumo mai presenta res en nom teu.
+          L&rsquo;asterisc després de «compatible amb l&rsquo;AEAT» a la portada remet a
+          aquest avís.
+        </>,
+      ],
+    },
+    noAdvice: {
+      heading: 'No és assessorament fiscal',
+      body: [
+        <>
+          Cadrumo calcula i comprova xifres a partir de regles publicades; no avalua la teva
+          situació personal i no constitueix assessorament fiscal, legal ni financer. En cas
+          de dubte, consulta un professional qualificat. Continues sent responsable de cada
+          declaració que presentis.
+        </>,
+      ],
+    },
+    privacy: {
+      heading: 'Privadesa: no recollim res',
+      body: [
+        <>
+          Aquest lloc web <strong>no recull cap dada personal</strong>. No hi ha comptes, ni
+          formularis, ni analítica, ni publicitat, ni píxels de seguiment, ni fingerprinting,
+          i no es comparteix ni es demana res a tercers. Tots els recursos d&rsquo;aquesta
+          pàgina, incloses les seves tipografies, se serveixen des d&rsquo;aquest mateix
+          domini.
+        </>,
+        <>
+          El lloc és un conjunt de fitxers estàtics servits des d&rsquo;infraestructura
+          d&rsquo;Amazon Web Services (S3 i CloudFront). La nostra configuració no activa cap
+          registre d&rsquo;accessos: les dades de connexió, com la teva adreça IP, les
+          processa aquesta infraestructura de manera transitòria només en la mesura
+          tècnicament necessària per servir la pàgina, i nosaltres ni activem, ni rebem, ni
+          emmagatzemem registres d&rsquo;accés.
+        </>,
+        <>
+          El programari Cadrumo segueix la mateixa política: els teus registres financers
+          romanen xifrats a la teva pròpia màquina i el programari no ens envia cap
+          telemetria. Consulta la{' '}
+          <a href="https://github.com/nevenincs/aeat/blob/main/PRIVACY.md">
+            política de privadesa
+          </a>{' '}
+          del projecte.
+        </>,
+        <>
+          Com que no disposem de cap dada personal teva, les sol·licituds de drets dels
+          articles 15 a 22 del RGPD no tenen objecte sobre el qual operar. Si creus el
+          contrari, contacta&rsquo;ns a través del repositori i respondrem.
+        </>,
+      ],
+    },
+    cookies: {
+      heading: 'Galetes',
+      body: [
+        <>
+          El lloc estableix una única galeta funcional de primera part,{' '}
+          <code>cadrumo_lang</code>, i només si tries explícitament un idioma. Desa aquesta
+          tria durant un màxim d&rsquo;un any, no és cap rastrejador i només la llegeix aquest
+          lloc. Tancar la barra d&rsquo;avís desa un indicador similar (
+          <code>cadrumo_notice_ack</code>) al localStorage del teu navegador.
+        </>,
+        <>
+          D&rsquo;acord amb l&rsquo;article 22.2 de la LSSI-CE i la guia sobre l&rsquo;ús de
+          galetes de l&rsquo;AEPD, les galetes de preferències establertes a petició expressa
+          de l&rsquo;usuari estan exemptes de consentiment previ; tot i això, les declarem
+          aquí. Pots eliminar-les en qualsevol moment des de la configuració del teu navegador
+          i el lloc funciona plenament sense elles.
+        </>,
+      ],
+    },
+    licences: {
+      heading: 'Llicències i què distribueix aquest lloc',
+      body: [
+        <>
+          Cadrumo és codi obert sota la <strong>Apache License 2.0</strong>. El codi
+          d&rsquo;aquest lloc i del programari viu a{' '}
+          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a>.
+        </>,
+        <>
+          La pàgina que estàs llegint distribueix React i ReactDOM (llicència MIT) i les
+          tipografies Hanken Grotesk, Instrument Serif i JetBrains Mono (SIL Open Font License
+          1.1), totes autoallotjades. L&rsquo;atribució completa és als avisos de tercers del
+          repositori.
+        </>,
+      ],
+    },
+    liability: {
+      heading: 'Garanties i responsabilitat',
+      body: [
+        <>
+          El programari i aquest lloc es proporcionen «tal com són», sense garanties ni
+          condicions de cap mena, segons les seccions 7 i 8 de la Apache License 2.0. Cadrumo
+          és en beta: les funcions poden canviar i la cobertura fiscal no és completa.
+          Verifica cada càlcul abans de presentar. En la mesura que ho permeti la llei
+          aplicable, els autors no assumeixen responsabilitat per errors de càlcul, errors de
+          presentació ni per cap dany derivat de l&rsquo;ús del programari o d&rsquo;aquest
+          lloc.
+        </>,
+      ],
+    },
+  },
+  cookieBanner: {
+    ariaLabel: 'Avís de privadesa',
+    message: (
+      <>
+        Aquest lloc no instal·la rastrejadors ni recull dades. Una galeta funcional desa el
+        teu idioma — només si en tries un.
+      </>
+    ),
+    details: 'Avís legal i privadesa',
+    dismiss: 'Entesos',
+  },
   footer: {
     brandName: 'cadrumo',
     brandSummary:
@@ -185,6 +342,7 @@ export const ca: Copy = {
     disclaimerPill: 'cadrumo',
     disclaimerText:
       "és un projecte independent de codi obert (Apache-2.0). No està afiliat a l'AEAT i mai presenta declaracions; tu presentes a través dels canals oficials de l'AEAT i continues sent responsable de cada declaració.",
-    copyright: '© 2026 els autors de cadrumo.',
+    legalLink: 'Avís legal, privadesa i galetes',
+    copyright: '© 2026 Gergely Wootsch i els contribuïdors de cadrumo.',
   },
 }
