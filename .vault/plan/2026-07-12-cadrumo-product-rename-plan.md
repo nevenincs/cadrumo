@@ -126,7 +126,7 @@ Regenerate dependency state and prove clean installed artifacts.
 
 - [x] `W03.P07.S36` - Regenerate all root and companion dependency records after metadata converges; `uv.lock`.
 - [x] `W03.P07.S37` - Update the slim-wheel clean-install probe to Cadrumo names; `dev/packaging/smoke_core.py`.
-- [ ] `W03.P07.S38` - Update the extras clean-install probe to Cadrumo names; `dev/packaging/smoke_extras.py`.
+- [x] `W03.P07.S38` - Update the extras clean-install probe to Cadrumo names; `dev/packaging/smoke_extras.py`.
 - [ ] `W03.P07.S39` - Update the Docker clean-install probe to Cadrumo names; `dev/packaging/smoke_docker.py`.
 - [ ] `W03.P07.S40` - Update the split-companion install probe and wheel globs; `dev/packaging/smoke_split_install.py`.
 - [ ] `W03.P07.S41` - Build and inspect the root wheel for only cadrumo import members; `local root wheel artifact`.
