@@ -30,6 +30,11 @@ from ....domain.buckets import (
 )
 from ....domain.user_profile import ProfileExportError, ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
+from ...modelo import (
+    M145CommunicationCreateCommand,
+    create_m145_communication_record,
+    read_m145_communication_record,
+)
 from ...user_profile import RegisterProfileCommand, profile_storage_session
 from ...workflow import read_profile_bucket_by_id
 from .._contracts import ExportBucketCommand, ImportBucketCommand
@@ -129,6 +134,19 @@ def test_sealed_archive_restores_evidence_and_audit_trail_in_fresh_root(
 ) -> None:
     seeded_event_id = seeded_bucket
     sha = AttachmentStore().put_bytes(_EVIDENCE)  # idempotent: returns the digest
+    communication = create_m145_communication_record(
+        M145CommunicationCreateCommand(
+            communication_year=2026,
+            field_values={
+                "perceptor.nif": "12345678Z",
+                "perceptor.primer-apellido": "Garcia",
+                "perceptor.segundo-apellido": "Lopez",
+                "perceptor.nombre": "Ana",
+                "perceptor.anio-nacimiento": "1981",
+            },
+        ),
+        bucket_id=runtime.bucket_id,
+    )
     archive = tmp_path / "exports" / "bucket.cadrumo-bucket.tar.gz"
 
     BucketMaintenanceService().export(
@@ -149,6 +167,11 @@ def test_sealed_archive_restores_evidence_and_audit_trail_in_fresh_root(
             restored = BucketEventHistoryRepository().load()
             assert seeded_event_id in restored.events
             assert BucketEventType.BUCKET_IMPORTED in {e.event_type for e in restored.events.values()}
+            restored_communication = read_m145_communication_record(
+                communication.communication_record_id,
+                bucket_id=runtime.bucket_id,
+            )
+            assert restored_communication == communication
 
 
 def test_carried_evidence_carry_is_not_tautological(tmp_path: Path) -> None:

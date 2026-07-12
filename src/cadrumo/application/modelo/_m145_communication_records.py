@@ -162,7 +162,7 @@ class M145CommunicationValidationResult(BaseModel):
     bucket_id: BucketId
     service_owner: str = Field(
         default=M145_COMMUNICATION_SERVICE_OWNER,
-        pattern=r"^aeat\.application\.modelo$",
+        pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
@@ -185,7 +185,7 @@ class M145CommunicationExportResult(BaseModel):
     bucket_id: BucketId
     service_owner: str = Field(
         default=M145_COMMUNICATION_SERVICE_OWNER,
-        pattern=r"^aeat\.application\.modelo$",
+        pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
@@ -233,7 +233,7 @@ class M145CommunicationRecord(BaseModel):
     bucket_id: BucketId
     service_owner: str = Field(
         default=M145_COMMUNICATION_SERVICE_OWNER,
-        pattern=r"^aeat\.application\.modelo$",
+        pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)

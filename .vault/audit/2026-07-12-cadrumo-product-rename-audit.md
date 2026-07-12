@@ -429,6 +429,18 @@ was identified. The unresolved Modelo 145 custody resolver is high severity and
 must remain a release blocker, but current evidence does not establish a
 critical-severity defect.
 
+### phase-p04-custody-resolver-gap-resolution | resolved | Modelo 145 custody now derives its production natural key
+
+The custody registry now parses the stored Modelo 145 envelope through
+`M145CommunicationRecord`, rejects a payload whose bucket differs from the custody
+bucket, and delegates key derivation to the production
+`m145_communication_record_object_key` authority. The same correction aligns the
+three Modelo 145 service-owner validators with their existing Cadrumo default and
+write path. Real-behavior coverage creates a registry-valid Modelo 145 record, carries
+it through a sealed bucket export, imports it under a fresh storage root, and reads the
+same record identity and content. The exact namespace-completeness gate, sealed
+archive round trip, and authoritative persistence test pass together (3 passed).
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
