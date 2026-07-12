@@ -1,0 +1,116 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "131",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 8,
+  "artefacts": [
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicios 2026 (actualizado 04/03/26) (180 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_26/DR131_2026.xlsx",
+      "stored_path": "files/01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx",
+      "original_filename": "DR131_2026.xlsx",
+      "content_type": "",
+      "bytes": 183978,
+      "sha256": "6d7704aa438c30dd538dbba471ac68f28d22e478bcd679ba8b49b2776a6c964a",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicio 2008 (Primer Trimestre) (49 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr131.pdf",
+      "stored_path": "files/02-131-ejercicio-2008-primer-trimestre-49-kb-pdf.pdf",
+      "original_filename": "dr131.pdf",
+      "content_type": "application/pdf",
+      "bytes": 30709,
+      "sha256": "a057c43d75c01c006e2d73820e46cf19e671204b33611d86c255f1a77820224e",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicio 2008 (Trimestre 2º, 3º y 4º) (31 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr131.08.pdf",
+      "stored_path": "files/03-131-ejercicio-2008-trimestre-2o-3o-y-4o-31-kb-pdf.pdf",
+      "original_filename": "dr131.08.pdf",
+      "content_type": "application/pdf",
+      "bytes": 141113,
+      "sha256": "1f140bd19597b4b83f3990dc33080cffb1504229fc32fb7147bf308113f9d452",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicios 2015, 2016, 2017 y 2018 (29,8 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR131e2015_v1.02.pdf",
+      "stored_path": "files/04-131-ejercicios-2015-2016-2017-y-2018-29-8-kb-pdf.pdf",
+      "original_filename": "DR131e2015_v1.02.pdf",
+      "content_type": "application/pdf",
+      "bytes": 30521,
+      "sha256": "a5c9c5c22aee9f6e8bd9f7881ef6995a15e1f8005d670e4b450df6f17aa751c6",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicios 2019 a 2023 (116 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/DR131e2020_v1.01.xlsx",
+      "stored_path": "files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx",
+      "original_filename": "DR131e2020_v1.01.xlsx",
+      "content_type": "",
+      "bytes": 115613,
+      "sha256": "2b36ae9d4712a94d3b0a798d813c9f560b29fdd2a00062b7d7b4ba9f72f970f3",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicios 2024 (actualizado 13/12/24) (180 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR131e2024.xlsx",
+      "stored_path": "files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
+      "original_filename": "DR131e2024.xlsx",
+      "content_type": "",
+      "bytes": 184936,
+      "sha256": "83e40d7d4d64c3b2da570d5e70a650685de036277df3ce077b0569a2235aa06f",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicios 2025 (actualizado 11/12/25) (179 KB - xlsx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DR131e2025.xlsx",
+      "stored_path": "files/07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx",
+      "original_filename": "DR131e2025.xlsx",
+      "content_type": "",
+      "bytes": 183949,
+      "sha256": "df4c23a10d836c7d1b4ba16a7758e735c6ae113c5c6c01ff6c439692d0ad4935",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Orden EHA/580/2009 (Ejercicios 2009 a 2014) (26 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr131.09.pdf",
+      "stored_path": "files/08-131-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-pdf.pdf",
+      "original_filename": "dr131.09.pdf",
+      "content_type": "application/pdf",
+      "bytes": 26903,
+      "sha256": "d55417b8efc679085b26c0f5215ea76e10072b8ef06ed29fee7ccaa0892df31c",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

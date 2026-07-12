@@ -1,0 +1,56 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "180",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 3,
+  "artefacts": [
+    {
+      "modelo": "180",
+      "title": "180 - Orden HAP/1732/2014 (actualizado por Orden HFP/1284/2023 de 28 de noviembre) (251 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_180_2023.pdf",
+      "stored_path": "files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf",
+      "original_filename": "DR_Mod_180_2023.pdf",
+      "content_type": "application/pdf",
+      "bytes": 256994,
+      "sha256": "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "180",
+      "title": "180 - Orden de 20 de noviembre de 2000 (12 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/TIPOS18000.pdf",
+      "stored_path": "files/02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf",
+      "original_filename": "TIPOS18000.pdf",
+      "content_type": "application/pdf",
+      "bytes": 454595,
+      "sha256": "d24f733078f69cd28923ac7d9a3ccab5222634c0cd9d1fb725c1c53214e4ad1f",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "180",
+      "title": "180 - Orden HAP/1732/2014, de 24 de septiembre (105 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/180.pdf",
+      "stored_path": "files/03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf",
+      "original_filename": "180.pdf",
+      "content_type": "application/pdf",
+      "bytes": 107660,
+      "sha256": "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

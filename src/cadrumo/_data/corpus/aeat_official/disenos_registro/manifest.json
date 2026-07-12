@@ -1,0 +1,127 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "retrieved_at": "2026-05-03",
+  "supported_corpus_modelos": [
+    "036",
+    "037",
+    "100",
+    "111",
+    "115",
+    "123",
+    "130",
+    "131",
+    "180",
+    "190",
+    "193",
+    "200",
+    "202",
+    "232",
+    "303",
+    "347",
+    "349",
+    "369",
+    "390",
+    "720",
+    "840"
+  ],
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "model_count": 21,
+  "artefact_count": 151,
+  "modelos": [
+    {
+      "modelo": "036",
+      "artefact_count": 5
+    },
+    {
+      "modelo": "037",
+      "artefact_count": 0
+    },
+    {
+      "modelo": "100",
+      "artefact_count": 29
+    },
+    {
+      "modelo": "111",
+      "artefact_count": 6
+    },
+    {
+      "modelo": "115",
+      "artefact_count": 3
+    },
+    {
+      "modelo": "123",
+      "artefact_count": 4
+    },
+    {
+      "modelo": "130",
+      "artefact_count": 5
+    },
+    {
+      "modelo": "131",
+      "artefact_count": 8
+    },
+    {
+      "modelo": "180",
+      "artefact_count": 3
+    },
+    {
+      "modelo": "190",
+      "artefact_count": 4
+    },
+    {
+      "modelo": "193",
+      "artefact_count": 7
+    },
+    {
+      "modelo": "200",
+      "artefact_count": 17
+    },
+    {
+      "modelo": "202",
+      "artefact_count": 14
+    },
+    {
+      "modelo": "232",
+      "artefact_count": 2
+    },
+    {
+      "modelo": "303",
+      "artefact_count": 15
+    },
+    {
+      "modelo": "347",
+      "artefact_count": 4
+    },
+    {
+      "modelo": "349",
+      "artefact_count": 3
+    },
+    {
+      "modelo": "369",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "390",
+      "artefact_count": 19
+    },
+    {
+      "modelo": "720",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "840",
+      "artefact_count": 1
+    }
+  ]
+}
