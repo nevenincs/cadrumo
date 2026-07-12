@@ -632,6 +632,54 @@ command. The former `aeat` executable and import root are explicitly absent.
 This aligns every active plan statement with the accepted Cadrumo ADR, checked
 S24/S25 rows, source metadata, and inspected wheel.
 
+### phase-p06-companion-package-review | resolved | Both wheels form one disjoint Cadrumo data namespace
+
+Review of the overtaking `f99ee0c821` change and follow-ups `cb372f0b26`,
+`0891bedfd5`, `f40e91cfcc`, and `de9ed47ef8` confirms the two companion projects
+implement the accepted split. The former project directories are absent; each
+canonical directory carries the same three logical project files; distribution
+names, version `0.1.1`, repository URLs, root source mappings, and install
+guidance match the root Cadrumo metadata tuple.
+
+Both real Hatch hooks write only beneath `cadrumo_data/_data/corpus` and ship no
+namespace initializer. Manuals owns only `manuals`; official owns only
+`aeat_official` and `normatives`. The latter spelling and associated AEAT prose
+correctly identify Spanish-authority evidence rather than the former product.
+Runtime discovery derives the single `cadrumo_data` namespace from
+`PRODUCT_IDENTITY` and contains no `aeat_data` alias, fallback, or dual lookup.
+
+The focused real-artifact suite passes (`12 passed`): it builds both wheels,
+derives expected members independently from Git-tracked source binaries, proves
+each partition exact, their intersection empty, their union exhaustive, both
+versions equal to the root, both archives below the 100 MB publication cap, and
+byte-exact runtime reads across both PEP 420 portions. The tests introduce no
+fake, mock, stub, patch, monkeypatch, skip, or xfail. The overtaken Step records
+truthfully distinguish directory reconciliation from the content work already
+combined in `f99ee0c821`; later S34/S35 commits exclude unrelated staged work
+through explicit path scopes.
+
+### phase-p06-ignored-hook-bytecode | low | Both companion directories again contain ignored build caches
+
+S28 and S31 record verified removal of ignored Hatch bytecode, but current
+inspection finds `__pycache__/hatch_build.cpython-313.pyc` beneath both companion
+project directories. Real builds/imports can recreate these files, and the
+wheel ownership gates prove neither cache is packaged, so this is not a move- or
+artifact-integrity defect. The cleanup outcome is nevertheless non-durable.
+Keep build caches outside reviewed source directories or perform a final
+verified ignored-debris sweep immediately before artifact acceptance.
+
+### phase-p06-review-high-findings | high | No high-severity W03.P06 finding identified
+
+Move integrity, namespace exclusivity, partition completeness, version parity,
+and installed resource resolution all have independent evidence. No missing or
+duplicated corpus payload, former namespace reader, or publication-size blocker
+was found.
+
+### phase-p06-review-critical-findings | critical | No critical W03.P06 finding identified
+
+The review found no official-evidence loss or mutation, namespace collision,
+former-product compatibility path, or other critical defect.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
@@ -655,3 +703,4 @@ S24/S25 rows, source metadata, and inspected wheel.
 19. Reconcile S05, S07, S24, and S25 plan status through the canonical plan workflow. Do not let a Step commit carry unrelated checkbox reversions from a stale shared-plan snapshot.
 20. Build a fresh wheel from the reconciled committed tree and record the exact console-entrypoint pair, absence of an `aeat` import root, and installed `--help`/`--version` behavior. Keep MCP wire-identity changes assigned to W04.
 21. Reconcile the plan description, W03.P05 phase description, and verification item 2 from the former `aeat` executable wording to the accepted sole `cadrumo` command before plan closure.
+22. Prevent or sweep the two companion `__pycache__/hatch_build.cpython-313.pyc` files immediately before final artifact inspection; verify by literal companion-directory scans and do not treat their temporary removal as durable across builds.
