@@ -102,7 +102,7 @@ Depends on W02 and produces installable local artifacts before integration regen
 Make the Cadrumo distribution expose the sole human `aeat` command and the
 distinct `cadrumo-mcp` command.
 
-- [ ] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts so the sole human `aeat` command launches Cadrumo and `cadrumo-mcp` launches MCP; `pyproject.toml`.
+- [x] `W03.P05.S24` - Rename root metadata, package selection, extras, URLs, and scripts so the sole human `aeat` command launches Cadrumo and `cadrumo-mcp` launches MCP; `pyproject.toml`.
 - [ ] `W03.P05.S25` - Project Cadrumo product identity while retaining `aeat` as the sole human CLI and help-surface command; `src/cadrumo/entrypoints/cli`.
 - [ ] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp/__init__.py`.
 - [ ] `W03.P05.S27` - Update optional-extra installation guidance to Cadrumo distributions; `src/cadrumo/core/_optional_extras.py`.
