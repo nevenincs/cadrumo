@@ -10,8 +10,8 @@ package; ``call_tool`` runs the deterministic CLI in a subprocess and returns it
 JSON envelope as structured content. Alongside the per-verb tools the server
 advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floor
 tool (the universal operating-layer channel of ADR R4), and serves the operating
-layer through real ``resources`` handlers - the concrete ``aeat://`` skill / rule
-/ persona set, the three ``aeat://<kind>/{name}`` templates, and a ``read``
+layer through real ``resources`` handlers - the concrete ``cadrumo://`` skill / rule
+/ persona set, the three ``cadrumo://<kind>/{name}`` templates, and a ``read``
 resolver - and through real ``prompts`` handlers: the guided-workflow catalogue
 and each prompt's embedded skill / rules, derived from ``_prompts.py``.
 :func:`build_server` owns that registration and is unit-tested against the real
@@ -136,7 +136,7 @@ if TYPE_CHECKING:
     from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[agent]'"
-_SERVER_NAME = "aeat"
+_SERVER_NAME = "cadrumo"
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
 # toolsets. They are advertised alongside the per-verb tools and are never
@@ -273,7 +273,7 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
         seconds=int(timeout_s),
         default=(
             "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled. "
-            "Retry, or run the equivalent aeat command directly in a terminal for a long operation."
+            "Retry, or run the equivalent Cadrumo command directly in a terminal for a long operation."
         ),
     )
     return {"status": "error", "refusal": message, "timed_out": True}
@@ -308,7 +308,7 @@ def _run_subprocess_tool(
         open_world=descriptor.annotations.open_world_hint,
     )
     timeout_s = timeout_seconds(tier)
-    argv = ["aeat", *cli_argv_for(descriptor.verb_schema, arguments)]
+    argv = ["cadrumo", *cli_argv_for(descriptor.verb_schema, arguments)]
     result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
     if result.timed_out:
         return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
@@ -338,7 +338,7 @@ def build_meta_sdk_tools() -> list[Tool]:
         Tool(
             name=_META_SEARCH_TOOL,
             description=(
-                "Search aeat commands by keyword; returns matching command keys with mutability hints. "
+                "Search Cadrumo commands by keyword; returns matching command keys with mutability hints. "
                 "Pass a hit to describe for its full schema before you run it, or activate a toolset to "
                 "advertise a whole domain's verbs directly."
             ),
@@ -357,7 +357,7 @@ def build_meta_sdk_tools() -> list[Tool]:
         Tool(
             name=_META_EXECUTE_TOOL,
             description=(
-                "Execute one aeat command by key with named arguments, through the same safety gates. "
+                "Execute one Cadrumo command by key with named arguments, through the same safety gates. "
                 "Call describe first to read the command's full input schema before you build the arguments."
             ),
             inputSchema={
@@ -401,7 +401,7 @@ def build_meta_sdk_tools() -> list[Tool]:
         Tool(
             name=_META_DESCRIBE_TOOL,
             description=(
-                "Return one aeat command's full descriptor by key: schema, annotations, confirmation "
+                "Return one Cadrumo command's full descriptor by key: schema, annotations, confirmation "
                 "tier, risk, owning toolset, and which personas may call it."
             ),
             inputSchema={
@@ -977,8 +977,8 @@ def build_server(
         )
         return GetPromptResult(description=document.prompt.description, messages=messages)
 
-    # Operating-layer resource channel (ADR R4): the concrete ``aeat://`` resource
-    # set and the three ``aeat://<kind>/{name}`` templates are derived from the
+    # Operating-layer resource channel (ADR R4): the concrete ``cadrumo://`` resource
+    # set and the three ``cadrumo://<kind>/{name}`` templates are derived from the
     # shipped harness tree in ``_resources.py``; ``read`` resolves a URI to the
     # document text as ``text/markdown``.
     @server.list_resources()
