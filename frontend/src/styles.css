@@ -238,6 +238,50 @@ h2 {
   gap: 0.75rem;
 }
 
+/* Language picker */
+
+.lang-picker {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  margin-left: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-page);
+}
+
+.lang-option {
+  border: 0;
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.lang-option[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-rust);
+}
+
+.lang-option:focus-visible {
+  outline: 3px solid var(--color-rust);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .lang-option:hover {
+    color: var(--color-text);
+  }
+}
+
 /* Banner */
 
 .banner {
