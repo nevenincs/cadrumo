@@ -51,7 +51,7 @@ Establish path ownership and explicit product-versus-authority classification be
 - [x] `W01.P01.S01` - Inventory dirty and untracked paths and record path ownership before rename edits; `shared worktree ownership ledger`.
 - [x] `W01.P01.S02` - Classify every public environment variable as product-owned or authority-owned; `product and authority environment-variable matrix`.
 - [x] `W01.P01.S03` - Classify every persistence root, database, namespace, session directory, and bundle suffix; `persistence identity matrix`.
-- [ ] `W01.P01.S04` - Classify external package, repository, marketplace, executable, domain, and trademark reservations; `issue #476 external reservation register`.
+- [x] `W01.P01.S04` - Classify external package, repository, marketplace, executable, domain, and trademark reservations; `issue #476 external reservation register`.
 
 ### Phase `W01.P02` - create the canonical runtime identity
 
