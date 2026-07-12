@@ -25,6 +25,10 @@ from pathlib import Path
 from pydantic import BaseModel, Field, JsonValue, TypeAdapter
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.auth_session_keys import (
+    former_product_auth_session_path_for,
+    is_former_product_auth_session_path,
+)
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now
@@ -40,6 +44,10 @@ type PlaywrightStorageState = JsonObject
 type ProviderSessionMetadata = JsonObject
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
+
+
+class FormerProductAuthSessionStateError(RuntimeError):
+    """Raised when Cadrumo detects retired product session custody."""
 
 
 class PersistedBrowserSession(BaseModel):
@@ -73,7 +81,8 @@ def exists(path: Path) -> bool:
     :func:`~application.auth.storage_state_paths` or provider-specific
     helpers, not a plaintext file path to inspect.
     """
-    return _repository().exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
+    repository = _repository_for_path(path)
+    return repository.exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
 
 def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
@@ -88,12 +97,13 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     caller-facing boundary stays the wide ``Mapping[str, object]`` shape
     :class:`~._authenticator_types.BrowserContextLike` exposes.
     """
+    repository = _repository_for_path(path)
     payload = PersistedBrowserSession(
         storage_state=_JSON_OBJECT_ADAPTER.validate_python(storage_state),
         metadata=_JSON_OBJECT_ADAPTER.validate_python(metadata),
         written_at=now(),
     )
-    _repository().save(
+    repository.save(
         namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         object_key=_key(path),
         classification=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
@@ -113,7 +123,8 @@ def load(path: Path) -> PersistedBrowserSession | None:
     :class:`~adapters.persistence.storage.SensitivityClass` and current
     namespace schema version.
     """
-    record = _repository().load(
+    repository = _repository_for_path(path)
+    record = repository.load(
         AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         _key(path),
         expected_class=AEAT_BROWSER_SESSION_NAMESPACE.sensitivity,
@@ -126,7 +137,8 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
 def delete(path: Path) -> bool:
     """Delete the encrypted browser session for logical ``path``."""
-    return _repository().delete(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
+    repository = _repository_for_path(path)
+    return repository.delete(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
 
 def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
@@ -157,6 +169,22 @@ def _key(path: Path) -> str:
 
 def _repository() -> SecureObjectRepository:
     return secure_object_repository_for_active_bucket()
+
+
+def _repository_for_path(path: Path) -> SecureObjectRepository:
+    """Return the repository after enforcing the one-way Cadrumo custody cut."""
+    if is_former_product_auth_session_path(path):
+        raise FormerProductAuthSessionStateError(
+            "Cadrumo refuses former-product AEAT session custody and will not read, move, re-key, delete, or adopt it",
+        )
+    repository = _repository()
+    former_path = former_product_auth_session_path_for(path)
+    if former_path is not None and repository.exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(former_path)):
+        raise FormerProductAuthSessionStateError(
+            "Cadrumo detected incompatible former-product AEAT session state and will not read, move, re-key, "
+            "delete, or adopt it",
+        )
+    return repository
 
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:

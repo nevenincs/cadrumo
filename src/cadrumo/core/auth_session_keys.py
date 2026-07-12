@@ -18,13 +18,31 @@ from __future__ import annotations
 
 from pathlib import Path
 
-AEAT_AUTH_SESSION_LOGICAL_ROOT = Path(".aeat") / "auth" / "sessions"
+from .product_identity import PRODUCT_IDENTITY
+
+AEAT_AUTH_SESSION_LOGICAL_ROOT = Path(f".{PRODUCT_IDENTITY.python_package}") / "auth" / "sessions"
 """Stable logical root for encrypted AEAT browser-session object keys.
 
 The root is part of the secure-object logical key. It names the auth-session
 namespace for humans and tests, but it is not a directory this module creates or
 writes.
 """
+
+_FORMER_PRODUCT_AUTH_SESSION_LOGICAL_ROOT = Path(".aeat") / "auth" / "sessions"
+
+
+def is_former_product_auth_session_path(path: Path) -> bool:
+    """Return whether ``path`` names retired product auth-session custody."""
+    return Path(path).is_relative_to(_FORMER_PRODUCT_AUTH_SESSION_LOGICAL_ROOT)
+
+
+def former_product_auth_session_path_for(path: Path) -> Path | None:
+    """Map a canonical Cadrumo session key to its refusal-only former key."""
+    candidate = Path(path)
+    if not candidate.is_relative_to(AEAT_AUTH_SESSION_LOGICAL_ROOT):
+        return None
+    relative = candidate.relative_to(AEAT_AUTH_SESSION_LOGICAL_ROOT)
+    return _FORMER_PRODUCT_AUTH_SESSION_LOGICAL_ROOT / relative
 
 
 def aeat_auth_session_storage_state_path(bucket_id: str, storage_stem: str) -> Path:
