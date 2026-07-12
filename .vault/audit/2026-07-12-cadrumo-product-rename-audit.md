@@ -116,6 +116,24 @@ Resolved the preceding medium finding through
 delivered `.vaultspec/rules/cadrumo-product-authority-names.md` artifact. The
 registered rule was not moved or duplicated.
 
+### s11-missed-i18n-resource-anchors | high | Locale loading retained two former product package anchors
+
+The completed S11 resource-boundary change covered `core.resources`, but
+`src/cadrumo/core/i18n/_render.py` independently called
+`importlib.resources.files("aeat")` in both the python-i18n load path and direct
+YAML catalogue reader. After removal of the former import root, either fallback
+translation or direct locale loading could fail despite the primary bundled-data
+boundary being correct. These are product package anchors, not references to the
+external authority.
+
+### s11-missed-i18n-resource-anchors-resolution | resolved | Locale loading consumes canonical Cadrumo identity
+
+Resolved both anchors through `PRODUCT_IDENTITY.python_package`, imported from
+the layer-safe core identity leaf. There is no literal former package name,
+fallback, alias, or duplicate product constant. Authority-owned locale content
+and AEAT terminology remain unchanged. Focused real-catalogue tests and direct
+adapter import smoke cover the corrected loading path.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
