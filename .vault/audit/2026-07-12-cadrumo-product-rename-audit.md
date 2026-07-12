@@ -109,6 +109,13 @@ No review evidence shows unsafe state mutation, architecture inversion, secret o
 authority-evidence exposure, compatibility machinery, a tautological calculation
 test, or another critical failure in the phase.
 
+### rule-artifact-scope-resolution | resolved | Canonical plan now names the promoted rule
+
+Resolved the preceding medium finding through
+`vaultspec-core vault plan step edit`. The closed `S08` row now scopes the
+delivered `.vaultspec/rules/cadrumo-product-authority-names.md` artifact. The
+registered rule was not moved or duplicated.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
