@@ -49,7 +49,7 @@ from . import (
 from ._repository import UserProfileLifecycleRepository
 from ._validation import ProfileValidationService
 
-_PROFILE_LIFECYCLE_ACTOR = "aeat.application.user_profile"
+_PROFILE_LIFECYCLE_ACTOR = "cadrumo.application.user_profile"
 _PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
 _PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
 _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE = "tombstoned profile cannot be duplicated"

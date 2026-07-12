@@ -152,7 +152,7 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
 #: ``ctx.args`` / the protected list ahead of the group-callback run.
 #: The root callback's introspection-only gate reads it to decide
 #: whether the invocation can only render help or a usage error.
-INVOCATION_REMAINDER_META_KEY = "aeat.invocation_remainder"
+INVOCATION_REMAINDER_META_KEY = "cadrumo.invocation_remainder"
 
 
 class AeatTyperGroup(TyperGroup):

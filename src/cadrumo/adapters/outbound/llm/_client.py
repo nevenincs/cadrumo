@@ -74,7 +74,7 @@ class LLMClient:
         usage_recorder: UsageRecorder | None = None,
         run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
         prompt_registry: PromptRegistry | None = None,
-        caller: str = "aeat.adapters.outbound.llm.client",
+        caller: str = "cadrumo.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
         adapter_override: _ProviderAdapter | None = None,
     ) -> None:

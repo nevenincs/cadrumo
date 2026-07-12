@@ -79,7 +79,7 @@ class LocalVisionLLMClassifier:
             if client is not None
             else LLMClient(
                 settings=vision_settings,
-                caller="aeat.application.ledger.vision",
+                caller="cadrumo.application.ledger.vision",
                 prompt_id="ledger-vision-classify",
             )
         )

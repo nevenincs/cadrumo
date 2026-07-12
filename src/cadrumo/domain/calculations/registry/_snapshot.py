@@ -49,7 +49,7 @@ _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
 # Protocol declares. ``_install_cross_domain_snapshot_checks`` imports them by
 # name so the registration is deterministic at snapshot build, independent of
 # whatever else the importing process happened to load first.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = ("aeat.domain.renta._first_slice_routing_integrity",)
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = ("cadrumo.domain.renta._first_slice_routing_integrity",)
 
 _cross_domain_checks_installed = False
 
@@ -61,7 +61,7 @@ def _install_cross_domain_snapshot_checks() -> None:
     is itself idempotent and the module cache makes a second ``import_module``
     a no-op, but the module-level flag short-circuits the common path. Called
     at the start of every snapshot build so a Modelo 100 snapshot validated on
-    an import path that never imported ``aeat.domain.renta`` still has the
+    an import path that never imported ``cadrumo.domain.renta`` still has the
     renta first-slice routing referential-integrity gate registered. This
     removes the import-order dependency: registration no longer relies on a
     composition root happening to import ``renta`` before the first M100
