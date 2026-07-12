@@ -37,6 +37,12 @@ describe('App', () => {
     }
   })
 
+  it('offers keyboard users a skip-to-content link', () => {
+    render(<App />)
+
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute('href', '#top')
+  })
+
   it('keeps the independence disclaimer visible', () => {
     render(<App />)
 

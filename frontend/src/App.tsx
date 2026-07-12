@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import bannerImage from './assets/cadrumo/banner.png'
 import harnessIllustration from './assets/cadrumo/harness-illustration.png'
 import iconArrowCta from './assets/cadrumo/icon-arrow-cta.svg'
@@ -144,10 +146,63 @@ const footerColumns = [
   },
 ]
 
+function useScrollReveal() {
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const elements = Array.from(document.querySelectorAll('[data-reveal]'))
+    for (const element of elements) element.classList.add('reveal-init')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed')
+            observer.unobserve(entry.target)
+          }
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+    )
+    for (const element of elements) observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+}
+
+function useScrollProgress() {
+  useEffect(() => {
+    const bar = document.querySelector<HTMLElement>('.scroll-progress')
+    if (!bar) return
+    let frame = 0
+    const update = () => {
+      const root = document.documentElement
+      const max = root.scrollHeight - root.clientHeight
+      bar.style.transform = `scaleX(${max > 0 ? root.scrollTop / max : 0})`
+      frame = 0
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [])
+}
+
 export function App() {
+  useScrollReveal()
+  useScrollProgress()
+
   return (
     <div className="site-shell">
+      <a className="skip-link" href="#top">
+        Skip to content
+      </a>
       <header className="site-header">
+        <span className="scroll-progress" aria-hidden="true" />
         <div className="page-container header-content">
           <a className="brand" href="#top" aria-label="Cadrumo home">
             <img className="brand-logo" src={logo} alt="" />
@@ -172,7 +227,7 @@ export function App() {
           <img src={bannerImage} alt="A carefully arranged desk of folders, notes, and a calculator" />
         </div>
 
-        <section className="hero page-container" aria-labelledby="hero-heading">
+        <section className="hero page-container" aria-labelledby="hero-heading" data-reveal>
           <h1 id="hero-heading">
             Tax calculation engine, <em>assisted</em> by agents.
           </h1>
@@ -190,7 +245,7 @@ export function App() {
 
         <section id="harness" className="harness" aria-labelledby="harness-heading">
           <p className="kicker">But wait...what is an agent harness?</p>
-          <div className="harness-row">
+          <div className="harness-row" data-reveal>
             <div className="harness-figure" aria-hidden="true">
               <img src={harnessIllustration} alt="" />
             </div>
@@ -216,7 +271,7 @@ export function App() {
 
         <section id="download" className="download page-container" aria-labelledby="download-heading">
           <p className="kicker">Download &amp; Documentation</p>
-          <div className="download-card">
+          <div className="download-card" data-reveal>
             <h2 id="download-heading">Download</h2>
             <div className="download-actions">
               <a className="button button-primary" href={downloadUrl}>
@@ -242,8 +297,13 @@ export function App() {
         <section className="pillars" aria-label="What makes Cadrumo different">
           <p className="kicker">What are the steps for preparing a modelo?</p>
           <div className="pillars-row">
-            {pillars.map((pillar) => (
-              <article className="pillar" key={pillar.title}>
+            {pillars.map((pillar, index) => (
+              <article
+                className="pillar"
+                key={pillar.title}
+                data-reveal
+                style={{ transitionDelay: `${index * 90}ms` }}
+              >
                 <p className="pillar-label">{pillar.label}</p>
                 <h3>{pillar.title}</h3>
                 <p className="pillar-description">{pillar.description}</p>
@@ -257,8 +317,13 @@ export function App() {
             <p className="kicker">What are the steps for preparing a modelo?</p>
             <h2 id="steps-heading">The calculation steps.</h2>
             <div className="steps-grid">
-              {calculationSteps.map((step) => (
-                <article className="step-card" key={step.number}>
+              {calculationSteps.map((step, index) => (
+                <article
+                  className="step-card"
+                  key={step.number}
+                  data-reveal
+                  style={{ transitionDelay: `${(index % 3) * 90}ms` }}
+                >
                   <img className="step-icon" src={step.icon} alt="" />
                   <h3 className="step-title">
                     {step.number}{' '}
@@ -274,7 +339,7 @@ export function App() {
         </section>
 
         <section className="docs-cta" aria-labelledby="docs-heading">
-          <div className="docs-cta-intro">
+          <div className="docs-cta-intro" data-reveal>
             <p className="kicker kicker-with-icon">
               <img src={iconDocs} alt="" />
               Documentation
@@ -290,8 +355,14 @@ export function App() {
             </a>
           </div>
           <nav className="docs-cta-list" aria-label="Documentation sections">
-            {documentationLinks.map((link) => (
-              <a className="docs-link" href={link.href} key={link.title}>
+            {documentationLinks.map((link, index) => (
+              <a
+                className="docs-link"
+                href={link.href}
+                key={link.title}
+                data-reveal
+                style={{ transitionDelay: `${index * 70}ms` }}
+              >
                 <span className="docs-link-text">
                   <span className="docs-link-title">{link.title}</span>
                   <span className="docs-link-description">{link.description}</span>

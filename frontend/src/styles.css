@@ -57,6 +57,57 @@ a:focus-visible {
   overflow: clip;
 }
 
+section,
+[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+.skip-link {
+  position: fixed;
+  top: -4rem;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  background: var(--color-rust);
+  color: var(--color-text-inverse);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
+.scroll-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--color-rust);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  z-index: 11;
+  pointer-events: none;
+}
+
+/* Scroll reveals — applied only when JS runs and motion is allowed */
+
+.reveal-init {
+  opacity: 0;
+  translate: 0 1.5rem;
+}
+
+.is-revealed {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+    translate 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 .page-container {
   width: 100%;
   max-width: 72rem;
@@ -102,13 +153,20 @@ h2 {
   white-space: nowrap;
 }
 
+.button {
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
 .button-primary {
   background: var(--color-rust);
   color: var(--color-text-inverse);
-}
-
-.button-primary:hover {
-  background: #a94931;
 }
 
 .button-secondary {
@@ -116,12 +174,17 @@ h2 {
   border: 1px solid var(--color-border);
 }
 
-.button-secondary:hover {
-  background: var(--color-surface);
-}
+@media (hover: hover) {
+  .button-primary:hover {
+    background: #a94931;
+    box-shadow: 0 6px 16px rgb(196 85 59 / 0.28);
+    transform: translateY(-1px);
+  }
 
-.button-ghost:hover {
-  background: var(--color-surface);
+  .button-secondary:hover,
+  .button-ghost:hover {
+    background: var(--color-surface);
+  }
 }
 
 /* Header */
@@ -192,7 +255,7 @@ h2 {
 }
 
 .hero em {
-  font-style: italic;
+  font-style: normal;
   color: var(--color-rust);
 }
 
@@ -376,6 +439,18 @@ h2 {
   background: var(--color-elevated);
   border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+@media (hover: hover) {
+  .step-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-border);
+    box-shadow: 0 12px 28px rgb(28 26 23 / 0.07);
+  }
 }
 
 .step-icon {
@@ -462,8 +537,25 @@ h2 {
   border-radius: 8px;
 }
 
-.docs-link:hover {
+.docs-link {
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.docs-link:hover,
+.docs-link:focus-visible {
   background: var(--color-surface);
+}
+
+@media (hover: hover) {
+  .docs-link:hover {
+    transform: translateX(0.25rem);
+  }
+}
+
+.docs-link:active {
+  transform: scale(0.99);
 }
 
 .docs-link-text {
@@ -722,5 +814,17 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .button,
+  .step-card,
+  .docs-link,
+  .is-revealed {
+    transition: none;
+  }
+
+  .button:active,
+  .docs-link:active {
+    transform: none;
   }
 }
