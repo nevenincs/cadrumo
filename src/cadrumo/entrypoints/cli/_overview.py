@@ -11,14 +11,14 @@ This module is the transport adapter over the application overview builders:
 :func:`build_overview_calendar_events`,
 :func:`calendar_events_from_modelo_records`,
 :func:`calendar_filing_evidence_from_sources`,
-:func:`~aeat.application.overview.build_data_prep_walkthrough`, and
-:func:`~aeat.application.overview.build_pipeline_health_report`. Each command
+:func:`~cadrumo.application.overview.build_data_prep_walkthrough`, and
+:func:`~cadrumo.application.overview.build_pipeline_health_report`. Each command
 emits a typed payload such as :class:`OverviewStatusResult`,
 :class:`OverviewCalendarResult`, :class:`OverviewAgendaResult`,
 :class:`OverviewBacklogResult`, :class:`OverviewExplainResult`,
 :class:`OverviewPrepareResult`, or :class:`OverviewPipelineResult` through
 :func:`_emit_envelope`. The ``pipeline`` verb resolves each period work
-unit's current :class:`~aeat.domain.modelos.CalculationRevision` to derive its
+unit's current :class:`~cadrumo.domain.modelos.CalculationRevision` to derive its
 readiness row.
 """
 
@@ -1015,7 +1015,7 @@ def overview_prepare(
     """Emit the ordered data-prep walkthrough for one (modelo, period) scope.
 
     Delegates the readiness composition to
-    :func:`~aeat.application.overview.build_data_prep_walkthrough`; this
+    :func:`~cadrumo.application.overview.build_data_prep_walkthrough`; this
     adapter resolves the active bucket, validates the modelo/period against
     the registry, loads the ledger/invoice/evidence/work-unit state, and
     renders the typed envelope plus per-step next-command notices.
@@ -1107,7 +1107,7 @@ def overview_pipeline(
     """Emit the cross-domain pipeline health report for one (filing_year, period) scope.
 
     Delegates the readiness composition to
-    :func:`~aeat.application.overview.build_pipeline_health_report`; this
+    :func:`~cadrumo.application.overview.build_pipeline_health_report`; this
     adapter resolves the active bucket, loads the period-scoped ledger status
     report, the period's modelo work units, their current calculation
     revisions, and the latest verification report per revision, then renders

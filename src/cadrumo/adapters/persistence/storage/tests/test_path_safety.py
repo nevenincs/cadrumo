@@ -122,7 +122,7 @@ class TestErrorCodeBinding:
         with pytest.raises(PathContainmentError) as excinfo:
             safe_subpath(Path("records"), "../escape", context="path")
 
-        with override_settings(aeat_output_language="en"):
+        with override_settings(cadrumo_output_language="en"):
             message = resolve_error_message(excinfo.value)
 
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_path_containment"

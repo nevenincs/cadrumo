@@ -86,13 +86,13 @@ _MCP_SERVER_NAME = "aeat"
 _MCP_LAUNCHER = "uvx"
 _MCP_CONSOLE_SCRIPT = "aeat-mcp"
 _PYPI_DISTRIBUTION = "aeat-cli"
-_MCP_PERSONA_ENV = "AEAT_MCP_PERSONA"
+_MCP_PERSONA_ENV = "CADRUMO_MCP_PERSONA"
 _MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
 # The advertised-tool-surface toggle (ADR mcp-progressive-discovery P1). ``core``
 # (default) advertises only the orientation slice; ``full`` restores the flat
 # per-verb surface. Wired from the ``userConfig`` surface option; the server
 # validates the value and refuses an unknown one.
-_MCP_SURFACE_ENV = "AEAT_MCP_SURFACE"
+_MCP_SURFACE_ENV = "CADRUMO_MCP_SURFACE"
 _MCP_SURFACE_INTERPOLATION = "${user_config.surface}"
 
 # --- Claude marketplace layout --------------------------------------------

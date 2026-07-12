@@ -1,7 +1,7 @@
 """Opt-in live application test for the AEAT justificante capture.
 
 Gated by the ``aeat_live`` marker (deselected by default) and
-``requires_live_enabled()`` (the ``AEAT_LIVE_TESTS_ENABLED`` opt-in). It
+``requires_live_enabled()`` (the ``CADRUMO_LIVE_TESTS_ENABLED`` opt-in). It
 pulls a real signed justificante from the authenticated sede surface and
 asserts structural, relational invariants only — never embedding the
 operator's expediente ids, CSV handles, or PDF bytes into source-controlled

@@ -10,7 +10,7 @@ the failure back to a localised prompt.
 
 Tax-ID-shaped questions (any question whose id matches ``tax-id`` or
 ends with ``-tax-id``) route through
-:func:`aeat.core.identity.validate_identity` so the Spanish NIF / NIE
+:func:`cadrumo.core.identity.validate_identity` so the Spanish NIF / NIE
 / CIF checksum is enforced at every write surface: interactive,
 ``--quiet`` flag, and profile wizard mutations.
 """
@@ -84,7 +84,7 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
 
     Tax-id-shaped questions additionally route through the Spanish
     NIF / NIE / CIF checksum validator from
-    :mod:`aeat.core.identity`. Malformed values raise
+    :mod:`cadrumo.core.identity`. Malformed values raise
     :class:`WizardValidationError` carrying
     ``wizard.errors.invalid_tax_id``. The validator's resolved,
     localised diagnostic — which names the correct check letter or

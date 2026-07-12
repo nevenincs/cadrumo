@@ -54,14 +54,14 @@ def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
 
 def test_wizard_prose_renders_english_under_english_override() -> None:
     """The wizard title and first prompt render in English under an English override."""
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         assert tr(_TITLE_KEY) == "Setup wizard"
         assert tr(_PROMPT_KEY) == "Entity type"
 
 
 def test_wizard_prose_renders_spanish_under_spanish_override() -> None:
     """The wizard title and first prompt render in Spanish under a Spanish override."""
-    with override_settings(aeat_output_language="es"):
+    with override_settings(cadrumo_output_language="es"):
         assert tr(_TITLE_KEY) == "Asistente de configuración"
         assert tr(_PROMPT_KEY) == "Tipo de entidad"
 
@@ -70,7 +70,7 @@ def test_wizard_prose_renders_spanish_under_spanish_override() -> None:
 def _clean_install(tmp_path: Path) -> Iterator[None]:
     """Model a clean install: no active profile, no forced-language env var.
 
-    The test/CI shell exports ``AEAT_OUTPUT_LANGUAGE=en``; a clean install
+    The test/CI shell exports ``CADRUMO_OUTPUT_LANGUAGE=en``; a clean install
     carries neither that env var nor an active profile, so both are stripped
     to exercise the Spanish settings default.
     """

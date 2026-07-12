@@ -45,8 +45,8 @@ def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> 
 
     The capability resolution (``resolve_active_capability``) is the single place
     the posture is computed: the gestor-mode bar is applied first and absolutely
-    (``aeat_evidence_gestor_mode``), then the active profile's opt-in/out fact, then
-    — when no profile fact is set — the global ``aeat_evidence_cloud_upload_permitted``
+    (``cadrumo_evidence_gestor_mode``), then the active profile's opt-in/out fact, then
+    — when no profile fact is set — the global ``cadrumo_evidence_cloud_upload_permitted``
     flag as the fallback default (so existing deployments behave unchanged until a
     profile sets the capability). A capability can only NARROW this floor, never
     widen it. The acknowledgement is never sticky -- it must be re-affirmed each
@@ -91,7 +91,7 @@ class EvidenceInput(BaseModel):
         evidence_id: Originating purchase-invoice ``evidence_id`` when the bytes
             came from a :class:`PurchaseInvoiceEvidence` record, else ``None``.
         attachment_id: Originating ``attachment_id`` when the bytes came from an
-            :class:`~aeat.domain.attachments.Attachment`, else ``None``.
+            :class:`~cadrumo.domain.attachments.Attachment`, else ``None``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -162,7 +162,7 @@ def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentSt
     """Read a linked attachment's bytes from secure storage into an ``EvidenceInput``.
 
     Loads the attachment manifest and its encrypted blob from the
-    :class:`~aeat.domain.attachments.AttachmentStoreProtocol` (active bucket)
+    :class:`~cadrumo.domain.attachments.AttachmentStoreProtocol` (active bucket)
     into memory. No file is written.
 
     Args:

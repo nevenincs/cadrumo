@@ -3,26 +3,26 @@
 The classes in this module are the stable application-layer errors raised by
 modelo work-unit lifecycle, calculation, verification, filing, amendment,
 external-import, and workflow-gate services. They all inherit from
-:class:`aeat.domain.modelos._errors.ModeloError` so CLI and API error
+:class:`cadrumo.domain.modelos._errors.ModeloError` so CLI and API error
 boundaries can route them through the central error-code registry without
 depending on the implementation module that raised them.
 
 Most classes are deliberately thin taxonomy markers whose operator-facing code,
-message key, and suggestion live in :mod:`aeat.core.errors.registry`. The richer
+message key, and suggestion live in :mod:`cadrumo.core.errors.registry`. The richer
 contracts are kept here when the exception must preserve domain context without
 leaking it into rendered error payloads, as with
 :class:`ModeloWorkflowGateError` and its private
-:class:`~aeat.application.workflow.WorkflowResult`.
+:class:`~cadrumo.application.workflow.WorkflowResult`.
 
 See Also:
-    :mod:`aeat.application.modelo`:
+    :mod:`cadrumo.application.modelo`:
         Public package facade for these action errors.
-    :mod:`aeat.core.errors.registry`:
+    :mod:`cadrumo.core.errors.registry`:
         Maps these exception classes to stable error codes and suggestions.
-    :mod:`aeat.application.modelo._workflow_gate`:
+    :mod:`cadrumo.application.modelo._workflow_gate`:
         Raises :class:`ModeloWorkflowGateError` after persisting an aborted
         workflow run.
-    :mod:`aeat.application.modelo._profile_readiness_gate`:
+    :mod:`cadrumo.application.modelo._profile_readiness_gate`:
         Raises :class:`ModeloProfileReadinessError` for filing-grade profile
         preflight failures.
 """
@@ -90,7 +90,7 @@ class AmendmentKindNotPermittedError(ModeloError):
     rectificativa (LGT art. 120.4, RD 117/2024) replaced the dual
     complementaria/solicitud-de-rectificación regime (LGT art. 122.2 /
     art. 120.3) only from the period each modelo's own orden establishes (see
-    :mod:`aeat.core._amendment_kind_regime`). Requesting ``rectificativa`` for
+    :mod:`cadrumo.core._amendment_kind_regime`). Requesting ``rectificativa`` for
     a pre-adoption period, or ``complementaria`` for a modelo/period where
     rectificativa has replaced it as the ordinary correction mechanism, is
     refused rather than silently accepted or silently downgraded — the accepted
@@ -135,16 +135,16 @@ class ModeloCrossPeriodCleanStateError(ModeloError):
 class ModeloWorkflowGateError(ModeloError):
     """Raised when the workflow gate refuses an internal file transition.
 
-    The constructor stores the live :class:`~aeat.application.workflow.WorkflowResult`
+    The constructor stores the live :class:`~cadrumo.application.workflow.WorkflowResult`
     on a private attribute and exposes it through :attr:`result`. The rendered
     error context contains only primitive machine codes (``abort_code`` and
     ``stage``), which keeps CLI JSON/text payloads stable while allowing
     telemetry and tests to inspect the full workflow run.
 
     See Also:
-        :func:`aeat.application.modelo._workflow_gate.run_revision_workflow_gate`:
+        :func:`cadrumo.application.modelo._workflow_gate.run_revision_workflow_gate`:
             Persists the workflow run and raises this error for aborted results.
-        :func:`aeat.core.errors.render_error_text`:
+        :func:`cadrumo.core.errors.render_error_text`:
             Renders the primitive context without serialising the live result.
     """
 
@@ -168,7 +168,7 @@ class ModeloWorkflowGateError(ModeloError):
 
     @property
     def result(self) -> WorkflowResult:
-        """Return the live :class:`~aeat.application.workflow.WorkflowResult` that triggered the abort."""
+        """Return the live :class:`~cadrumo.application.workflow.WorkflowResult` that triggered the abort."""
         return self._result
 
 

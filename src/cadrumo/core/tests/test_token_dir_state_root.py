@@ -1,10 +1,10 @@
-"""Focused tests for the `aeat_token_dir` one-state-root contract.
+"""Focused tests for the `cadrumo_token_dir` one-state-root contract.
 
 The profile-state aggregate contract requires every profile store -
 token and lock files included - is rooted under
-`aeat_local_storage_root`. The `aeat_token_dir` model validator
+`cadrumo_local_storage_root`. The `cadrumo_token_dir` model validator
 enforces this: when the field is not explicitly supplied, it derives
-`<aeat_local_storage_root>/tokens`; an explicit `AEAT_TOKEN_DIR`
+`<cadrumo_local_storage_root>/tokens`; an explicit `CADRUMO_TOKEN_DIR`
 override still wins.
 
 These tests construct real `Settings` instances and exercise the real
@@ -12,7 +12,7 @@ validator chain - no mocks, no fakes. Inputs are injected via
 constructor kwargs (highest priority in pydantic-settings) so the
 tests do not depend on or mutate the ambient environment. A small
 `_without_token_dir_env` scope helper guards the derive-default branch
-against an ambient `AEAT_TOKEN_DIR` leaking in via env precedence.
+against an ambient `CADRUMO_TOKEN_DIR` leaking in via env precedence.
 """
 
 from __future__ import annotations
@@ -29,20 +29,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _without_token_dir_env():
-    """Suppress an ambient ``AEAT_TOKEN_DIR`` for the with-block.
+    """Suppress an ambient ``CADRUMO_TOKEN_DIR`` for the with-block.
 
     The validator-derives-default branch must observe an unset
-    ``aeat_token_dir``. Constructor kwargs win against env, but the
+    ``cadrumo_token_dir``. Constructor kwargs win against env, but the
     tests that want the *derived* path pass no kwarg, so env precedence
     would surface here. Delegates to the centralized
     :func:`aeat-tests.env_scope.scoped_env_var` helper.
     """
-    return scoped_env_var("AEAT_TOKEN_DIR", None)
+    return scoped_env_var("CADRUMO_TOKEN_DIR", None)
 
 
 def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
-    """With no explicit `AEAT_TOKEN_DIR`, the token directory resolves
-    to `<aeat_local_storage_root>/tokens` for any storage-root shape.
+    """With no explicit `CADRUMO_TOKEN_DIR`, the token directory resolves
+    to `<cadrumo_local_storage_root>/tokens` for any storage-root shape.
     """
 
     cases: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -53,12 +53,12 @@ def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
     for case_id, storage_root_parts in cases:
         storage_root = tmp_path.joinpath(*storage_root_parts)
         with _without_token_dir_env():
-            settings = Settings(aeat_local_storage_root=storage_root)
+            settings = Settings(cadrumo_local_storage_root=storage_root)
 
-        assert settings.aeat_token_dir == storage_root / "tokens", case_id
+        assert settings.cadrumo_token_dir == storage_root / "tokens", case_id
         # The token directory is genuinely nested under the storage root,
         # not merely a sibling that happens to share a prefix.
-        assert settings.aeat_local_storage_root in settings.aeat_token_dir.parents, case_id
+        assert settings.cadrumo_local_storage_root in settings.cadrumo_token_dir.parents, case_id
 
 
 def test_explicit_token_dir_constructor_override_wins(tmp_path: Path) -> None:
@@ -69,12 +69,12 @@ def test_explicit_token_dir_constructor_override_wins(tmp_path: Path) -> None:
     storage_root = tmp_path / "state-root"
     explicit_token_dir = tmp_path / "constructor-tokens"
     settings = Settings(
-        aeat_local_storage_root=storage_root,
-        aeat_token_dir=explicit_token_dir,
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_token_dir=explicit_token_dir,
     )
 
-    assert settings.aeat_token_dir == resolve_project_path(explicit_token_dir)
-    assert settings.aeat_token_dir != storage_root / "tokens"
+    assert settings.cadrumo_token_dir == resolve_project_path(explicit_token_dir)
+    assert settings.cadrumo_token_dir != storage_root / "tokens"
 
 
 def test_token_dir_default_is_not_the_repo_root(tmp_path: Path) -> None:
@@ -84,7 +84,7 @@ def test_token_dir_default_is_not_the_repo_root(tmp_path: Path) -> None:
 
     storage_root = tmp_path / "state-root"
     with _without_token_dir_env():
-        settings = Settings(aeat_local_storage_root=storage_root)
+        settings = Settings(cadrumo_local_storage_root=storage_root)
 
-    assert settings.aeat_token_dir != resolve_project_path(Path())
-    assert settings.aeat_token_dir.name == "tokens"
+    assert settings.cadrumo_token_dir != resolve_project_path(Path())
+    assert settings.cadrumo_token_dir.name == "tokens"

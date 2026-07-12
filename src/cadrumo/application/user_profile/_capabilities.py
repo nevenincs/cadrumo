@@ -86,7 +86,7 @@ def resolve_capability(
     """
     if capability is ServiceCapability.CLOUD_EVIDENCE_UPLOAD:
         # The gestor bar is absolute and applied first: no profile opt-in re-enables it.
-        if settings.aeat_evidence_gestor_mode:
+        if settings.cadrumo_evidence_gestor_mode:
             return CapabilityDecision(
                 capability=capability,
                 enabled=False,
@@ -106,13 +106,13 @@ def resolve_capability(
                 ),
             )
         # No profile fact: the global deployment flag is the fallback default.
-        enabled = settings.aeat_evidence_cloud_upload_permitted
+        enabled = settings.cadrumo_evidence_cloud_upload_permitted
         return CapabilityDecision(
             capability=capability,
             enabled=enabled,
             source=CapabilitySource.GLOBAL_SETTING,
             reason=(
-                "global aeat_evidence_cloud_upload_permitted is set"
+                "global cadrumo_evidence_cloud_upload_permitted is set"
                 if enabled
                 else "cloud evidence upload is off by default (no profile opt-in, global flag unset)"
             ),

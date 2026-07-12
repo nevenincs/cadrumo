@@ -159,7 +159,7 @@ def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> N
 def test_m210_engine_live_flag_only_bypasses_m210_guard() -> None:
     """The M210 live-engine flag must not disable other unsupported-model refusals."""
 
-    with override_settings(aeat_m210_engine_live=True):
+    with override_settings(cadrumo_m210_engine_live=True):
         guard_unsupported_work_modelo("210")
         for other in ("151", "600", "620", "650", "660", "714", "721"):
             with pytest.raises(CliRefusedBoundaryError):
@@ -169,7 +169,7 @@ def test_m210_engine_live_flag_only_bypasses_m210_guard() -> None:
 def test_m210_guard_refuses_when_engine_live_flag_is_unset() -> None:
     """By default, M210 still refuses with a typed refusal carrying modelo context."""
 
-    assert Settings().aeat_m210_engine_live is False, (
+    assert Settings().cadrumo_m210_engine_live is False, (
         "M210 engine-live must default False until full local-work support is accepted"
     )
 

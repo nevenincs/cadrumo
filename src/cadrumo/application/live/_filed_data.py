@@ -2,15 +2,15 @@
 
 This module is the read-only selector boundary between the authenticated
 Sede declaration register and the heavier capture pipeline. It works only
-with :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` register rows:
+with :class:`~cadrumo.adapters.outbound.aeat.sede.Declaracion` register rows:
 listing reports expose which AEAT artefact links are available, and selector
 helpers narrow one in-memory register result by period, expediente id, and
 caller limit before any artefact is downloaded.
 
 The helpers do not authenticate, open browser sessions, persist observations,
 or stamp filing records. Those effects belong to
-:mod:`aeat.application.live._filed_data_capture` and
-:mod:`aeat.application.live._filed_observation_persistence` after the
+:mod:`cadrumo.application.live._filed_data_capture` and
+:mod:`cadrumo.application.live._filed_observation_persistence` after the
 live-read gate and registry checks have run.
 """
 
@@ -75,7 +75,7 @@ def select_declarations_for_capture(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> tuple[Declaracion, ...]:
-    """Select register :class:`~aeat.adapters.outbound.aeat.sede.Declaracion` rows.
+    """Select register :class:`~cadrumo.adapters.outbound.aeat.sede.Declaracion` rows.
 
     Selection is an in-memory filter over one already-read register result. It
     does not fetch AEAT artefacts or persist local evidence; the capture service

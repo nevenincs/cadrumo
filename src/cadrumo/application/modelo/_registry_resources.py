@@ -11,11 +11,11 @@ input that names a modelo revision or filing period the committed registry does
 not declare, before a work unit records a law-determined registry identity.
 
 See Also:
-    :mod:`aeat.core.resources`:
+    :mod:`cadrumo.core.resources`:
         Owns the packaged resource registry and bundled-path resolution.
-    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`:
+    :class:`cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`:
         Loads and validates modelo definitions, then serves registry snapshots.
-    :mod:`aeat.application.modelo._registry_helpers`:
+    :mod:`cadrumo.application.modelo._registry_helpers`:
         Uses this authority helper for import/amendment registry checks.
 """
 

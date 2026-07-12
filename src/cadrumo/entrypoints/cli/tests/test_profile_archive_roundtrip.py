@@ -154,7 +154,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
     from ....core.config import override_settings
 
     with (
-        override_settings(aeat_active_profile=source_bucket_id),
+        override_settings(cadrumo_active_profile=source_bucket_id),
         activate_master_key_provider(get_master_key_provider()),
     ):
         original_transactions = tuple(TransactionCatalogueRepository(bucket_id=source_bucket_id).load())
@@ -173,7 +173,7 @@ def test_archive_export_import_recovery_wrap_roundtrip(tmp_path: Path) -> None:
         assert restored_bucket_id == source_bucket_id  # D5 identity: bundle profile_id preserved verbatim
 
         with (
-            override_settings(aeat_active_profile=restored_bucket_id),
+            override_settings(cadrumo_active_profile=restored_bucket_id),
             activate_master_key_provider(get_master_key_provider()),
         ):
             restored_transactions = tuple(TransactionCatalogueRepository(bucket_id=restored_bucket_id).load())

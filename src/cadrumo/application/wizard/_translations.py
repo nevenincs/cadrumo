@@ -8,7 +8,7 @@ keys that fail to resolve in any of the four locale catalogues.
 
 ``audit_cli_translations`` runs the same locale-resolution sweep over
 every ``cli.<group>.*`` translation key referenced at a ``tr(...)``
-call site in any module under :mod:`aeat.entrypoints.cli`. The audit
+call site in any module under :mod:`cadrumo.entrypoints.cli`. The audit
 treats a locale that returns the literal key text -- the python-i18n
 fallback behaviour when a key is absent or its value mirrors the key
 itself -- as a structured failure.
@@ -105,7 +105,7 @@ def _cli_entrypoints_root() -> Path:
 def cli_keys_referenced_in_source() -> tuple[str, ...]:
     """Return every ``cli.<group>.*`` translation key referenced statically.
 
-    Walks every ``.py`` module under :mod:`aeat.entrypoints.cli` and
+    Walks every ``.py`` module under :mod:`cadrumo.entrypoints.cli` and
     extracts literal ``cli.<group>.<rest>`` strings by regex. f-string
     interpolations that build keys at runtime (for example
     ``f"cli.config.{flow.id}.help"``) are not captured here; those keys

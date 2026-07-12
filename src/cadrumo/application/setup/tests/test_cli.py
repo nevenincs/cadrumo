@@ -16,13 +16,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _env(tmp_path: Path) -> dict[str, str]:
     return {
-        "AEAT_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
-        "AEAT_SECRET_PASSPHRASE": dev_test_database_password(),
-        "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-        "AEAT_RUNS_DIR": str(tmp_path / "runs"),
-        "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-        "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
-        "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
+        "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+        "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+        "CADRUMO_RUNS_DIR": str(tmp_path / "runs"),
+        "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
+        "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
+        "CADRUMO_DRAFTS_DIR": str(tmp_path / "drafts"),
     }
 
 

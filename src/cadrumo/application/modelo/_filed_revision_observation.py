@@ -1,19 +1,19 @@
 """Persist a locally-filed calculation revision as a cross-period observation.
 
 This is the local-filing sibling of the live-AEAT-capture persistence path
-(:func:`~aeat.application.live.persist_filed_calculation_observation`). It does
+(:func:`~cadrumo.application.live.persist_filed_calculation_observation`). It does
 NOT introduce a parallel write path: it is an additional projection of the
 single-writer filing transition
-(:func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`),
+(:func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`),
 co-emitted with ``MODELO_FILED``, that records the filed
-:class:`~aeat.domain.modelos.CalculationRevision` outputs into the
+:class:`~cadrumo.domain.modelos.CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
 forward automatically via the ``previous_filing`` resolver.
 
 The persisted observation is stamped with a NON-official ``source_kind``
 (``app_filing``): a value an operator filed through the app is not external AEAT
 evidence. The cross-period clean-state guard
-(:mod:`~aeat.application.calculations._cross_period_clean_state`) treats any
+(:mod:`~cadrumo.application.calculations._cross_period_clean_state`) treats any
 ``source_kind`` outside its official set as the
 ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`` blocker, so this carry feeds
 calculate/draft but never satisfies the filing gate for a dependent period —
@@ -27,24 +27,24 @@ aggregation enumerates; member-row persistence for the local filing flow is out
 of scope (ADR ``2026-06-09-modelo-iva-routing-carry`` ruling D4) and remains a
 live-capture concern.
 
-The projection reads :class:`~aeat.domain.modelos.CalculationRevision`
+The projection reads :class:`~cadrumo.domain.modelos.CalculationRevision`
 observations, rewrites the affected
-:class:`~aeat.domain.calculations.registry.CasillaObservation` rows for refunded
+:class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows for refunded
 Modelo 303 filings, and persists a
-:class:`~aeat.domain.calculations.registry.RegistryModeloObservation` record.
+:class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` record.
 
 See Also:
-    :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
+    :func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`:
         Calls this projection after the filing catalogue write and
         ``MODELO_FILED`` event succeed.
-    :func:`~aeat.domain.calculations.registry.resolve_previous_filing_binding_values`:
+    :func:`~cadrumo.domain.calculations.registry.resolve_previous_filing_binding_values`:
         Consumes stored
-        :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+        :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation`
         rows for ``previous_filing`` bindings during calculation.
-    :mod:`~aeat.application.calculations._cross_period_clean_state`:
+    :mod:`~cadrumo.application.calculations._cross_period_clean_state`:
         Classifies ``app_filing`` as non-official evidence for filing-grade
         readiness.
-    :func:`~aeat.application.calculations.iva_compensation_state_from_registry_observation`:
+    :func:`~cadrumo.application.calculations.iva_compensation_state_from_registry_observation`:
         Projects local Modelo 303 observations into the IVA compensation history.
 """
 
@@ -83,7 +83,7 @@ cross-period clean-state filing gate. See ADR
 def _casilla_id(value: object) -> CasillaId:
     """Validate a static filed-observation casilla constant.
 
-    Returns a :class:`~aeat.domain.calculations.registry.CasillaId`.
+    Returns a :class:`~cadrumo.domain.calculations.registry.CasillaId`.
     """
     try:
         return validated_casilla_id(value, surface="filed-revision observation casilla constant")
@@ -120,10 +120,10 @@ def _refunded_303_observations(
     one disposition-determined correction.
 
     The rewrite is applied only to the
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` rows that
+    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows that
     encode the generated compensation credit. It leaves the filed revision's
     remaining observations and provenance unchanged so the saved
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` still
+    :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` still
     represents the local filing.
     """
     by_id = {item.casilla_id: item for item in observations}
@@ -159,21 +159,21 @@ def persist_filed_revision_observation(
     """Persist a filed revision's casilla observations as a cross-period record.
 
     Projects the filed revision's provenance-bearing
-    :class:`~aeat.domain.modelos.CalculationRevision` ``observations`` (every
+    :class:`~cadrumo.domain.modelos.CalculationRevision` ``observations`` (every
     casilla — inputs, bound, and computed alike, each already carrying
     ``legal_refs`` / ``source_refs`` / formula provenance) into a single
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` keyed
+    :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` keyed
     by the work unit's ``(modelo, filing_year, period)`` and saves it through the
     bucket-scoped
-    :class:`~aeat.application.calculations.CalculationObservationRepository` with
+    :class:`~cadrumo.application.calculations.CalculationObservationRepository` with
     the NON-official ``source_kind = "app_filing"``.
 
     Args:
         revision: The just-filed
-            :class:`~aeat.domain.modelos.CalculationRevision` whose typed
+            :class:`~cadrumo.domain.modelos.CalculationRevision` whose typed
             observations are projected.
         work_unit: The revision's parent
-            :class:`~aeat.domain.modelos.WorkUnit`, supplying the ``(modelo,
+            :class:`~cadrumo.domain.modelos.WorkUnit`, supplying the ``(modelo,
             filing_year, period)`` key.
         repository: The bucket-scoped observation repository (the same instance
             the filing transition threads through, so the write lands in the
@@ -200,24 +200,24 @@ def persist_filed_revision_observation(
         was stored under.
 
     The saved
-    :class:`~aeat.domain.calculations.registry.RegistryModeloObservation` feeds
+    :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` feeds
     later calculations through the registry ``previous_filing`` path, but its
     ``source_kind = "app_filing"`` keeps it outside official evidence. For
     locally filed Modelo 303 rows with a taxpayer NIF, the same observation is
     also converted into an
-    :class:`~aeat.domain.iva_compensation.IvaCompensationPeriodState` via
-    :func:`~aeat.application.calculations.iva_compensation_state_from_registry_observation`
+    :class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState` via
+    :func:`~cadrumo.application.calculations.iva_compensation_state_from_registry_observation`
     and saved through
-    :class:`~aeat.application.calculations.IvaCompensationHistoryRepository`;
+    :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepository`;
     that history is read only by the explicit IVA-wallet recurrence comparison
     path, not as a second direct owner of the effective casilla 110 value.
 
     See Also:
-        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+        :class:`~cadrumo.application.calculations.CalculationObservationRepository`:
             Stores the non-official cross-period observation envelope.
-        :class:`~aeat.application.calculations.IvaCompensationHistoryRepository`:
+        :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepository`:
             Stores the profile-local Modelo 303 compensation period state.
-        :func:`~aeat.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
+        :func:`~cadrumo.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
             Reads the local IVA history for wallet reconciliation.
     """
     observations = revision.observations

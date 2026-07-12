@@ -3,7 +3,7 @@
 Provides :func:`get_logger` as the consistent logger factory to avoid scattered
 bare logging instances, with :func:`configure_logging` installing the project
 defaults. The installed log-record factory reads
-:func:`aeat.core.observability.current_run_context` state indirectly through
+:func:`cadrumo.core.observability.current_run_context` state indirectly through
 contextvars, so every record automatically picks up the active ``run_id`` /
 ``step_id`` while a run context is bound.
 
@@ -11,13 +11,13 @@ This module attaches the log-record secret scrubber. Every handler
 attached through :func:`configure_logging` receives a
 :class:`SecretScrubbingFilter` so sensitive fields are redacted before
 formatting. Shape-based NIF, URL, and bearer-token matching is delegated
-to :func:`~aeat.core.redaction.redact_for_log`; this module keeps only
+to :func:`~cadrumo.core.redaction.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes. Per-run JSONL handlers are attached with
 :func:`attach_run_sink` so the same filter protects observability output.
 
 Logging is a diagnostic channel, not the CLI result contract. Operator-facing
-success payloads and typed :class:`~aeat.core.json_contract.Notice` values are
+success payloads and typed :class:`~cadrumo.core.json_contract.Notice` values are
 rendered through the JSON/text output stack; this module only prepares redacted
 log records and plaintext diagnostic log files rooted by settings.
 """
@@ -191,8 +191,8 @@ class SecretScrubbingFilter(logging.Filter):
     The filter mutates each :class:`logging.LogRecord` in place so handlers,
     stderr diagnostics, and JSONL run sinks see the same scrubbed record. It is
     deliberately narrower than CLI output redaction: structured command results
-    still route through :mod:`aeat.core.output_rendering` or
-    :mod:`aeat.core.json_contract`, while this filter protects logging-only
+    still route through :mod:`cadrumo.core.output_rendering` or
+    :mod:`cadrumo.core.json_contract`, while this filter protects logging-only
     message text, %-format args, exception text, and ``extra`` fields.
     """
 
@@ -245,10 +245,10 @@ class SecretScrubbingFilter(logging.Filter):
 def _install_run_context_record_factory() -> None:
     """Install a :class:`LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
-    The contextvars live in :mod:`aeat.core.observability._context`. They are
+    The contextvars live in :mod:`cadrumo.core.observability._context`. They are
     imported lazily inside the closure so this function never triggers
-    a partial import of :mod:`aeat.core.observability` (which would create a
-    cycle through :mod:`aeat.core.config` → :mod:`aeat.adapters.outbound.aeat.auth` → this module).
+    a partial import of :mod:`cadrumo.core.observability` (which would create a
+    cycle through :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
     """
     global _FACTORY_INSTALLED
     if _FACTORY_INSTALLED:
@@ -289,7 +289,7 @@ class _DropRunEventFilter(logging.Filter):
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
     diet — they're already persisted to ``events.jsonl`` via
-    :class:`~aeat.core.observability._sink.JsonlRunSink`. Echoing them
+    :class:`~cadrumo.core.observability._sink.JsonlRunSink`. Echoing them
     on stderr as well would spam the console with one
     ``run.event NAVIGATION`` line per step; suppressing them here
     removes the noise while leaving the record intact for any other
@@ -304,18 +304,18 @@ class _DropRunEventFilter(logging.Filter):
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs.
 
-    The diagnostic log is rooted under ``aeat_log_dir``, which the
-    :class:`~aeat.core.config.Settings` validator derives from
-    ``<aeat_local_storage_root>/logs`` when no explicit ``AEAT_LOG_DIR``
+    The diagnostic log is rooted under ``cadrumo_log_dir``, which the
+    :class:`~cadrumo.core.config.Settings` validator derives from
+    ``<cadrumo_local_storage_root>/logs`` when no explicit ``CADRUMO_LOG_DIR``
     override is supplied — so the log stays isolated per workspace
     rather than mixing every session's records into a single
     system-wide file.
     """
     from .config import load_settings
 
-    log_dir = load_settings().aeat_log_dir
+    log_dir = load_settings().cadrumo_log_dir
     if log_dir is None:  # pragma: no cover - validator always populates the field
-        log_dir = load_settings().aeat_local_storage_root / "logs"
+        log_dir = load_settings().cadrumo_local_storage_root / "logs"
     return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
@@ -327,7 +327,7 @@ def _prepare_log_directory(log_file: Path) -> str | None:
     an :exc:`OSError`.
 
     File logging is a best-effort diagnostic channel, not the operator result
-    contract. An ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR`` that the
+    contract. An ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR`` that the
     process cannot create — an inaccessible Windows path the operator's
     account may not write, a path routed under a non-directory, a
     ``PermissionError`` — MUST degrade to stderr-only logging rather than
@@ -354,7 +354,7 @@ def configure_logging() -> None:
     persist them through secure-object repositories.
 
     When the diagnostic log directory cannot be created (an inaccessible
-    ``AEAT_LOCAL_STORAGE_ROOT`` / ``AEAT_LOG_DIR``), logging degrades to
+    ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR``), logging degrades to
     stderr-only and records an instructive diagnostic naming the likely
     remedy — it never crashes CLI startup with a raw traceback.
 
@@ -374,7 +374,7 @@ def configure_logging() -> None:
     settings = load_settings()
     configured_handlers: dict[str, dict[str, Any]] = {
         "stderr": {
-            "level": settings.aeat_log_stderr_level,
+            "level": settings.cadrumo_log_stderr_level,
             "formatter": "standard",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
@@ -384,7 +384,7 @@ def configure_logging() -> None:
     root_handlers = ["stderr"]
     if file_logging_enabled:
         configured_handlers["file"] = {
-            "level": settings.aeat_log_file_level,
+            "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
             "class": "logging.FileHandler",
             "filename": str(log_file),
@@ -405,7 +405,7 @@ def configure_logging() -> None:
             "handlers": configured_handlers,
             "root": {
                 "handlers": root_handlers,
-                "level": settings.aeat_log_root_level,
+                "level": settings.cadrumo_log_root_level,
             },
             "loggers": {
                 "alembic.runtime.plugins": {
@@ -424,7 +424,7 @@ def configure_logging() -> None:
         },
     )
 
-    # Local import: the observability layer imports ``aeat.core.logging`` for
+    # Local import: the observability layer imports ``cadrumo.core.logging`` for
     # its own get_logger() seed, so attaching the filter at module
     # import time would create a circular import. Inside this function
     # the import is safe because configure_logging() runs after both
@@ -447,9 +447,9 @@ def configure_logging() -> None:
         # import-time traceback this degrade replaces.
         logging.getLogger(__name__).error(
             "Diagnostic file logging disabled: cannot create the log directory %s (%s). "
-            "Continuing with stderr-only logging. Ensure AEAT_LOCAL_STORAGE_ROOT / AEAT_LOG_DIR "
+            "Continuing with stderr-only logging. Ensure CADRUMO_LOCAL_STORAGE_ROOT / CADRUMO_LOG_DIR "
             "points at a path your account can write; on Windows check the folder's permissions, "
-            "run from a directory you own, or set AEAT_LOCAL_STORAGE_ROOT to a writable location.",
+            "run from a directory you own, or set CADRUMO_LOCAL_STORAGE_ROOT to a writable location.",
             log_file.parent,
             log_directory_failure,
         )
@@ -495,7 +495,7 @@ def attach_run_sink(sink: logging.Handler) -> None:
 
     Args:
         sink: The :class:`logging.Handler` (typically
-            :class:`aeat.core.observability._sink.JsonlRunSink`) to
+            :class:`cadrumo.core.observability._sink.JsonlRunSink`) to
             attach to the root logger.
 
     The sink is a diagnostic observability target. It receives redacted log

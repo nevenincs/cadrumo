@@ -9,14 +9,14 @@ authorize a live AEAT write; live-write refusal stays with the core access gate
 and application facades compose these records into draft/import flows.
 
 See Also:
-    :class:`aeat.domain.submission.SubmissionEngine`
+    :class:`cadrumo.domain.submission.SubmissionEngine`
         Runs preflight and reads these records from the repository.
-    :func:`aeat.application.filing.import_filing_from_justificante`
+    :func:`cadrumo.application.filing.import_filing_from_justificante`
         Builds a companion :class:`ModeloPresentado` when an offline
         justificante PDF is imported.
-    :class:`aeat.domain.modelos.ModeloRecord`
+    :class:`cadrumo.domain.modelos.ModeloRecord`
         Work-unit filing record used by the modelo application facade.
-    :mod:`aeat.application.live`
+    :mod:`cadrumo.application.live`
         Read-only live-capture surface that may attach AEAT evidence to
         existing local filing records.
 """
@@ -103,7 +103,7 @@ class ModeloPresentado(BaseModel):
             :func:`make_submission_id`.
         draft_id: The upstream draft identifier.
         modelo: The AEAT modelo identifier.
-        period: The :class:`~aeat.core.Period` covered, serialised as
+        period: The :class:`~cadrumo.core.Period` covered, serialised as
             ``{"filing_year": int, "code": str}`` across the persistence
             boundary.
         profile_tax_id: The validated taxpayer identity value carried

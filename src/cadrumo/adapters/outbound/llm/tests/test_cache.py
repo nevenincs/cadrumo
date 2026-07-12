@@ -127,7 +127,7 @@ def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
     """Direct cache construction must honor the centralized cache directory setting."""
 
     configured_root = tmp_path / "configured-cache"
-    with override_settings(aeat_llm_cache_dir=configured_root):
+    with override_settings(cadrumo_llm_cache_dir=configured_root):
         cache = LLMCache()
 
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")

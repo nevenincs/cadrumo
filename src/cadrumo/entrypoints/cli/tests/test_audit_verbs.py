@@ -37,7 +37,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     audit_dir = tmp_path / "audit"
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(aeat_audit_dir=audit_dir),
+        override_settings(cadrumo_audit_dir=audit_dir),
         profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(

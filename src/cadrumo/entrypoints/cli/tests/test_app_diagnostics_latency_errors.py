@@ -43,7 +43,7 @@ def _json_result(result: Result) -> dict[str, Any]:
 @pytest.fixture
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_BUCKET_ID),
     ):

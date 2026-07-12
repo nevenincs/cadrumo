@@ -1,6 +1,6 @@
 """Domain exceptions for the invoice catalogue.
 
-Defines the typed error hierarchy raised by :mod:`aeat.domain.invoices`.
+Defines the typed error hierarchy raised by :mod:`cadrumo.domain.invoices`.
 Every failure path inherits from :class:`InvoiceError` so callers can
 catch the whole domain, while :class:`InvoiceCatalogueError` and its
 subclasses narrow to catalogue-level faults (persistence, missing

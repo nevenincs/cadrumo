@@ -11,10 +11,10 @@ non-PDF/non-image source paths with a typed
 
 Persistence is bucket-scoped encrypted secure-object storage. The evidence
 catalogue is a :class:`PurchaseInvoiceEvidenceDocument` persisted through
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` under
-:data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
+:class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` under
+:data:`cadrumo.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
 At ``add`` time the source file's bytes are copied into the encrypted
-:class:`~aeat.adapters.persistence.storage.AttachmentStore` (active bucket) and
+:class:`~cadrumo.adapters.persistence.storage.AttachmentStore` (active bucket) and
 the resulting content-addressed ``attachment_id`` is recorded on the evidence
 record; the bytes thereafter live only in secure storage. ``source_path`` is
 retained as a provenance breadcrumb and is never read for bytes
@@ -150,7 +150,7 @@ def derive_purchase_invoice_evidence_id(
 ) -> str:
     """Return the content-addressed id for a purchase-invoice evidence record.
 
-    Mirrors :func:`aeat.domain.transactions.derive_transaction_id`: the id is a
+    Mirrors :func:`cadrumo.domain.transactions.derive_transaction_id`: the id is a
     SHA-256 digest (truncated to 16 hex chars, the prior surrogate's width) over
     the record's identifying fields, so it is stable under a frozen-clock replay
     and directly referenceable as an ``aeat app ledger evidence`` argument,
@@ -235,15 +235,15 @@ class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvi
 
     The namespace, sensitivity, schema version, and object-key contract come
     from
-    :data:`aeat.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    :data:`cadrumo.adapters.persistence.storage.LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`.
+    The :class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` base
     wraps each :class:`PurchaseInvoiceEvidenceDocument` in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` before writing it.
+    :class:`~cadrumo.adapters.persistence.storage.Envelope` before writing it.
 
     See Also:
         :class:`PurchaseInvoiceEvidenceService`
             CRUD service that mutates this repository and emits bucket events.
-        :class:`~aeat.adapters.persistence.storage.AttachmentStore`
+        :class:`~cadrumo.adapters.persistence.storage.AttachmentStore`
             Encrypted byte store that holds the referenced source files.
     """
 
@@ -371,7 +371,7 @@ class PurchaseInvoiceEvidenceService:
         Resolves ``source_path`` to an absolute path, verifies the file
         exists, infers the ``MediaKind`` from the extension, copies the file's
         bytes into the encrypted
-        :class:`~aeat.adapters.persistence.storage.AttachmentStore` (active
+        :class:`~cadrumo.adapters.persistence.storage.AttachmentStore` (active
         bucket) and records the resulting content-addressed ``attachment_id`` on
         the record (the bytes thereafter live only in secure storage;
         ``source_path`` is a provenance breadcrumb), creates a

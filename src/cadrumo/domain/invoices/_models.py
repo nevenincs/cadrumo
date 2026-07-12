@@ -1,13 +1,13 @@
 """Strict immutable models for the invoice catalogue.
 
-Defines the pydantic v2 records that back :mod:`aeat.domain.invoices`:
+Defines the pydantic v2 records that back :mod:`cadrumo.domain.invoices`:
 :class:`InvoiceLine`, :class:`Invoice`, and the keyed
 :class:`InvoiceCatalogue`. Every model is strict, frozen, and forbids
 extra fields; identity-bearing fields on :class:`Invoice` are
 canonicalised in a ``model_validator`` and the stable
 :attr:`Invoice.invoice_id` is derived via :func:`derive_invoice_id`.
 Counterparty identity validation is delegated to
-:mod:`aeat.domain.invoices._validators`.
+:mod:`cadrumo.domain.invoices._validators`.
 """
 
 from __future__ import annotations
@@ -483,8 +483,8 @@ class Invoice(BaseModel):
         intra-community classification, OSS classifier dispatch) work
         with the closed substrate enum without a per-call lowercase /
         membership check. Anchored to
-        :data:`aeat.domain.invoices.EU_MEMBER_STATE_CODES` which
-        derives from :class:`aeat.domain.iva.EUMemberState`.
+        :data:`cadrumo.domain.invoices.EU_MEMBER_STATE_CODES` which
+        derives from :class:`cadrumo.domain.iva.EUMemberState`.
         """
         if not is_eu_member_state_code(self.counterparty_country):
             return None

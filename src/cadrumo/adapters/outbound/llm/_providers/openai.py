@@ -19,7 +19,7 @@ from .._errors import LLMConfigError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
 
-_OPENAI_CHAT_URL = Settings().aeat_llm_openai_chat_completions_url
+_OPENAI_CHAT_URL = Settings().cadrumo_llm_openai_chat_completions_url
 
 _logger = get_logger(__name__)
 
@@ -93,7 +93,7 @@ class OpenAIAdapter(_ProviderAdapter):
             LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
-            msg = "AEAT_LLM_OPENAI_API_KEY must be set for the OpenAI provider."
+            msg = "CADRUMO_LLM_OPENAI_API_KEY must be set for the OpenAI provider."
             raise LLMConfigError(msg)
         self._api_key = api_key
         self._timeout_s = timeout_s

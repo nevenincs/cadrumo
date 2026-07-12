@@ -55,7 +55,7 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
         label=_PROFILE_LABEL,
     ) as profile:
         write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-        with override_settings(aeat_active_profile=None):
+        with override_settings(cadrumo_active_profile=None):
             health = assess_active_profile_health()
 
     assert health.active_profile == _BUCKET_ID
@@ -74,7 +74,7 @@ def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
         label=_PROFILE_LABEL,
     ) as profile:
         write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
-        with override_settings(aeat_active_profile=None):
+        with override_settings(cadrumo_active_profile=None):
             dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
             assert dry_run.dry_run is True
             assert dry_run.cleared_pointer is False
@@ -98,7 +98,7 @@ def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
         _seed_ready_profile_record(_BUCKET_ID, profile.repository)
         write_pointer(profile.storage_root, BucketPointer(bucket_id=_BUCKET_ID, schema_version=1))
 
-        with override_settings(aeat_active_profile=None):
+        with override_settings(cadrumo_active_profile=None):
             health = assess_active_profile_health()
             repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
@@ -126,5 +126,5 @@ def test_manifest_without_status_is_not_backfilled_from_profile_record(tmp_path:
 
         assert broken.status == "manifest_unreadable"
         assert broken.repairable_by_clearing_pointer is False
-        assert broken.next_action == "unset AEAT_ACTIVE_PROFILE or switch to a readable profile"
+        assert broken.next_action == "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
         assert "status = " not in target.read_text(encoding="utf-8")

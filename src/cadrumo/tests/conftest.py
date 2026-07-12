@@ -13,7 +13,7 @@ This module enforces the following invariants at collection time:
    it receives and filters in-place.
 2. No file containing an ``aeat_live`` item may import
    any symbol in :data:`BANNED_LIVE_IMPORTS`.
-3. ``aeat_live`` items are skipped unless ``AEAT_LIVE_TESTS_ENABLED`` is
+3. ``aeat_live`` items are skipped unless ``CADRUMO_LIVE_TESTS_ENABLED`` is
    truthy.
 
 The ``env/.env`` auto-load happens at module-load time in the repo-root
@@ -58,7 +58,7 @@ BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
 )
 """Import targets that may never appear in a file containing a live-marked test."""
 
-LIVE_OPT_IN_ENV: str = "AEAT_LIVE_TESTS_ENABLED"
+LIVE_OPT_IN_ENV: str = "CADRUMO_LIVE_TESTS_ENABLED"
 """Environment variable that opts ``aeat_live`` tests into execution."""
 
 _TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})

@@ -14,9 +14,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _isolated_env(tmp_path: Path) -> dict[str, str | None]:
     return {
-        "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "aeat-local"),
-        "AEAT_SECRET_PASSPHRASE": "profile-choice-help-passphrase",
-        "AEAT_DATABASE_URL": None,
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "aeat-local"),
+        "CADRUMO_SECRET_PASSPHRASE": "profile-choice-help-passphrase",
+        "CADRUMO_DATABASE_URL": None,
         "COLUMNS": "220",
     }
 

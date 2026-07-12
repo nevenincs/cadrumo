@@ -17,7 +17,7 @@ the composition-service single-writer discipline); it is a read-side cache, neve
 a second source of truth, and is fully rebuildable from the revision catalogue.
 
 The index is keyed by ``transaction_id`` and persisted one secure
-:class:`~aeat.adapters.persistence.storage.Envelope` per transaction, so a
+:class:`~cadrumo.adapters.persistence.storage.Envelope` per transaction, so a
 revision over N contributing transactions co-emits N index upserts. Each upsert
 merges its new participation into that transaction's entry without disturbing
 the participations already recorded for it.
@@ -25,7 +25,7 @@ the participations already recorded for it.
 See :func:`derive_participation_index_id` for the object-key grammar, and the
 ``TransactionParticipationIndexRepository`` for the encrypted persistence
 boundary mirroring the :class:`CalculationRevision` catalogue repository at
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` FINANCIAL.
+:class:`~cadrumo.adapters.persistence.storage.SensitivityClass` FINANCIAL.
 """
 
 from __future__ import annotations

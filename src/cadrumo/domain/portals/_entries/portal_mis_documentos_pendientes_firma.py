@@ -3,7 +3,7 @@
 Defines the :class:`PortalMetadata` record for :class:`Portal`
 ``PORTAL_MIS_DOCUMENTOS_PENDIENTES_FIRMA`` under
 :class:`PortalCategory` ``CONSULTATION``, exposed as :data:`ENTRY`
-and consumed by :data:`aeat.domain.portals.PORTAL_REGISTRY`.
+and consumed by :data:`cadrumo.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

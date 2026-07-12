@@ -11,9 +11,9 @@ and tests assert against members rather than raw strings.
 :class:`LedgerSortOrder` selects the direction. The CLI parser and the
 ledger projection service both use these enum members rather than raw
 string tokens, threading them through
-:func:`aeat.entrypoints.cli._ledger_read_cli._register_ledger_list_command`,
-:func:`aeat.entrypoints.cli._ledger_list.project_ledger_list`, and the stable
-:func:`aeat.entrypoints.cli._ledger_list._sort_results` helper.
+:func:`cadrumo.entrypoints.cli._ledger_read_cli._register_ledger_list_command`,
+:func:`cadrumo.entrypoints.cli._ledger_list.project_ledger_list`, and the stable
+:func:`cadrumo.entrypoints.cli._ledger_list._sort_results` helper.
 
 This module deliberately declares tokens only. It does not project
 transactions, compare rows, page results, or decide missing-key ordering; those
@@ -39,9 +39,9 @@ class LedgerSortField(StrEnum):
     last under both orders, never crashing the sort.
 
     The value set is consumed as a Typer choice and by
-    :func:`aeat.entrypoints.cli._ledger_list._sort_field_value`, so any new
+    :func:`cadrumo.entrypoints.cli._ledger_list._sort_field_value`, so any new
     member must be added with a projection over
-    :class:`~aeat.domain.transactions.Transaction` and covered by the real
+    :class:`~cadrumo.domain.transactions.Transaction` and covered by the real
     repository sort tests.
 
     Attributes:
@@ -73,7 +73,7 @@ class LedgerSortOrder(StrEnum):
     :class:`LedgerSortOrder` controls only the primary axis selected by
     :class:`LedgerSortField`; the final content-addressed ``transaction_id``
     tie-break remains ascending in
-    :func:`aeat.entrypoints.cli._ledger_list._sort_results`.
+    :func:`cadrumo.entrypoints.cli._ledger_list._sort_results`.
 
     Attributes:
         ASC: Sort the primary axis ascending.

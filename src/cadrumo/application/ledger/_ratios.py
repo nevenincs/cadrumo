@@ -205,7 +205,7 @@ def set_usage_ratio(*, bucket_id: str, category: SpendingCategory, ratio: Decima
     load/save primitives directly.
 
     The load-modify-save runs under the per-bucket
-    :func:`aeat.domain.usage_ratios.usage_ratio_bucket_lock` so two concurrent
+    :func:`cadrumo.domain.usage_ratios.usage_ratio_bucket_lock` so two concurrent
     writers cannot read the same snapshot and lose one another's override.
     """
     with usage_ratio_bucket_lock(bucket_id):
@@ -224,7 +224,7 @@ def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal 
     CLI ``ledger ratios unset`` verb.
 
     The load-modify-save runs under the per-bucket
-    :func:`aeat.domain.usage_ratios.usage_ratio_bucket_lock` so a concurrent
+    :func:`cadrumo.domain.usage_ratios.usage_ratio_bucket_lock` so a concurrent
     ``set`` on a sibling category cannot be lost by this clear.
     """
     with usage_ratio_bucket_lock(bucket_id):
@@ -264,7 +264,7 @@ def censo_business_pct_for(
     """Return the legally-effective business_pct for a category from censo.
 
     The per-category projection of
-    :func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_censo`:
+    :func:`cadrumo.domain.usage_ratios.derive_home_office_ratios_from_censo`:
     given a single :class:`SpendingCategory` and the operator's bound
     censo ``office_m2 / total_m2``, returns the
     ``raw_afectacion_ratio * statutory_multiplier`` value the classify

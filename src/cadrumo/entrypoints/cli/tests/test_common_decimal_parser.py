@@ -44,7 +44,7 @@ _ACCEPTED_NONNEGATIVE = (
 @pytest.fixture(autouse=True)
 def _english_locale() -> object:
     """Pin output language to English so refusal rendering is deterministic."""
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         clear_output_language_cache()
         yield
     clear_output_language_cache()

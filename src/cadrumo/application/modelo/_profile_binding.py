@@ -348,7 +348,7 @@ def _inject_derived_minimo_descendientes_facts(
     Reads the existing ``renta_family.descendiente.{n}.*`` facts, ranks every
     Art. 58.1-eligible descendant by ``birth_date``, and computes two
     aggregates via
-    :meth:`~aeat.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`
+    :meth:`~cadrumo.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`
     (a CCAA-agnostic birth-order-tranche aggregator despite its name — it takes
     the tranche amounts as caller-supplied parameters, never a hardcoded euro
     figure per `aeat-schema-central-config`):

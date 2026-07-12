@@ -1,7 +1,7 @@
 """Filesystem persistence for run traces and JSONL event logs.
 
 One subdirectory per ``run_id`` under
-:attr:`core.config.Settings.aeat_runs_dir`, containing
+:attr:`core.config.Settings.cadrumo_runs_dir`, containing
 ``trace.json`` and ``events.jsonl``. Both files round-trip through the
 strict pydantic models in :mod:`core.observability._models`.
 
@@ -89,7 +89,7 @@ def runs_dir(settings: Settings | None = None) -> Path:
         Absolute path to the per-process runs root.
     """
     cfg = settings or load_settings()
-    target = cfg.aeat_runs_dir
+    target = cfg.cadrumo_runs_dir
     try:
         target.mkdir(parents=True, exist_ok=True)
     except OSError as exc:

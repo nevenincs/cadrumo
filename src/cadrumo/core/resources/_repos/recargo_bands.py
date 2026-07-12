@@ -14,7 +14,7 @@ from .._repository import ResourceCacheRepository
 class RecargoBandsRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the Ley 58/2003 recargo bands.
 
-    Wraps :func:`aeat.domain.deadlines.load_recargo_bands` behind
+    Wraps :func:`cadrumo.domain.deadlines.load_recargo_bands` behind
     the shared :class:`ResourceCacheRepository` cache.
     """
 

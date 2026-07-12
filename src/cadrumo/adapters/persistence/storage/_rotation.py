@@ -71,22 +71,22 @@ def _path_log_marker(path: Path) -> str:
 class _RotationPlanSettings(Protocol):
     """Minimal settings surface required by :func:`default_rotation_plan`."""
 
-    aeat_financial_txs_dir: Path
-    aeat_invoices_dir: Path
-    aeat_attachments_dir: Path
-    aeat_usage_ratios_path: Path
-    aeat_drafts_dir: Path
-    aeat_submissions_dir: Path
-    aeat_justificantes_dir: Path
-    aeat_filing_history_dir: Path
-    aeat_workflow_runs_dir: Path
+    cadrumo_financial_txs_dir: Path
+    cadrumo_invoices_dir: Path
+    cadrumo_attachments_dir: Path
+    cadrumo_usage_ratios_path: Path
+    cadrumo_drafts_dir: Path
+    cadrumo_submissions_dir: Path
+    cadrumo_justificantes_dir: Path
+    cadrumo_filing_history_dir: Path
+    cadrumo_workflow_runs_dir: Path
 
 
 class _BlobStoreSettings(Protocol):
     """Minimal settings surface required by :func:`default_blob_store_roots`."""
 
-    aeat_blob_store_dir: Path
-    aeat_attachments_dir: Path
+    cadrumo_blob_store_dir: Path
+    cadrumo_attachments_dir: Path
 
 
 class RotationPlanEntry(BaseModel):
@@ -406,60 +406,60 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
     """
     return (
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_financial_txs_dir),
+            store_dir=Path(settings.cadrumo_financial_txs_dir),
             hkdf_context=b"aeat.domain.transactions.catalogue.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_invoices_dir),
+            store_dir=Path(settings.cadrumo_invoices_dir),
             hkdf_context=b"aeat.domain.invoices.catalogue.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_attachments_dir) / "manifests",
+            store_dir=Path(settings.cadrumo_attachments_dir) / "manifests",
             hkdf_context=b"aeat.domain.attachments.manifest.v1",
         ),
         RotationPlanEntry(
-            # Single-file envelope: ``aeat_usage_ratios_path`` defaults
+            # Single-file envelope: ``cadrumo_usage_ratios_path`` defaults
             # to ``var/financial/usage-ratios.json`` — the suffix is
             # ``.json`` not ``.envelope.json``, so target the exact
             # filename rather than relying on the directory walk's
             # default suffix match (which would miss this file).
-            store_dir=Path(settings.aeat_usage_ratios_path).parent,
+            store_dir=Path(settings.cadrumo_usage_ratios_path).parent,
             hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
-            target_filename=Path(settings.aeat_usage_ratios_path).name,
+            target_filename=Path(settings.cadrumo_usage_ratios_path).name,
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_drafts_dir),
+            store_dir=Path(settings.cadrumo_drafts_dir),
             hkdf_context=b"aeat.application.filing.draft.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_submissions_dir),
+            store_dir=Path(settings.cadrumo_submissions_dir),
             hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
         ),
         # Amendments share one HKDF context across two store dirs.
         # ``ModeloAmendmentRepository`` is one consumer identity but it
-        # binds to two sibling subdirectories under ``aeat_submissions_dir``
+        # binds to two sibling subdirectories under ``cadrumo_submissions_dir``
         # (``amendment-results/`` and ``amendments/``). Both directories
         # therefore appear here as separate plan entries with the same
         # HKDF context — DO NOT deduplicate. Removing either entry breaks
         # rotation for the corresponding directory's envelopes.
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_submissions_dir) / "amendment-results",
+            store_dir=Path(settings.cadrumo_submissions_dir) / "amendment-results",
             hkdf_context=b"aeat.application.filing.amendment.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_submissions_dir) / "amendments",
+            store_dir=Path(settings.cadrumo_submissions_dir) / "amendments",
             hkdf_context=b"aeat.application.filing.amendment.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_justificantes_dir),
+            store_dir=Path(settings.cadrumo_justificantes_dir),
             hkdf_context=b"aeat.domain.justificante.metadata.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_filing_history_dir),
+            store_dir=Path(settings.cadrumo_filing_history_dir),
             hkdf_context=b"aeat.application.filing.history.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_workflow_runs_dir),
+            store_dir=Path(settings.cadrumo_workflow_runs_dir),
             hkdf_context=b"aeat.application.workflow.run.v1",
         ),
     )
@@ -515,10 +515,10 @@ def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
 
     The substrate persists wrapped DEKs in:
 
-    - The secret-store's blob store (``aeat_blob_store_dir``), wired up
+    - The secret-store's blob store (``cadrumo_blob_store_dir``), wired up
       by :func:`adapters.persistence.storage.get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.
-    - The financial-attachments store (``aeat_attachments_dir``), wired
+    - The financial-attachments store (``cadrumo_attachments_dir``), wired
       up by :class:`adapters.persistence.storage.AttachmentStore` for
       receipts, invoices, and bank statements.
 
@@ -534,8 +534,8 @@ def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     seen: set[Path] = set()
     roots: list[Path] = []
     for setting_path in (
-        Path(settings.aeat_blob_store_dir),
-        Path(settings.aeat_attachments_dir),
+        Path(settings.cadrumo_blob_store_dir),
+        Path(settings.cadrumo_attachments_dir),
     ):
         if not setting_path.exists():
             continue

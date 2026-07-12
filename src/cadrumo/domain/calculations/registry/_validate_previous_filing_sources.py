@@ -1,18 +1,18 @@
 """Previous-filing source validation helpers.
 
 Validates that every ``previous_filing``
-:class:`~aeat.domain.calculations.registry.DataBindingDefinition` declared on a
-:class:`~aeat.domain.calculations.registry.ModeloDefinition` resolves to a
+:class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` declared on a
+:class:`~cadrumo.domain.calculations.registry.ModeloDefinition` resolves to a
 known source modelo and that its declared
-:class:`~aeat.domain.calculations.registry.CasillaId` values exist in the
+:class:`~cadrumo.domain.calculations.registry.CasillaId` values exist in the
 matching source revisions.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+    :mod:`cadrumo.domain.calculations.registry._bindings_previous_filing`
         Selector parsing into canonical source modelo, period, and casilla ids.
-    :mod:`aeat.domain.calculations.registry._validate_source_casilla_ids`
+    :mod:`cadrumo.domain.calculations.registry._validate_source_casilla_ids`
         Shared source-revision membership check and non-canonical diagnostics.
-    :mod:`aeat.domain.calculations.registry._validate_relation_sources`
+    :mod:`cadrumo.domain.calculations.registry._validate_relation_sources`
         Sibling closure validation for relation source selectors.
 """
 
@@ -35,10 +35,10 @@ def validate_previous_filing_binding_closure(
 
     Args:
         modelos: Iterable of
-            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
             entries whose ``previous_filing`` bindings are checked.
         modelos_by_id: Mapping of modelo id to
-            :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+            :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
             used to resolve each binding's source modelo.
     """
     failures: list[str] = []
@@ -66,11 +66,11 @@ def _validate_previous_filing_binding(
 ) -> list[str]:
     """Validate one previous-filing binding against its source modelo.
 
-    The supplied :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+    The supplied :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
     is parsed by
-    :func:`aeat.domain.calculations.registry._bindings_previous_filing.previous_filing_source_reference`,
+    :func:`cadrumo.domain.calculations.registry._bindings_previous_filing.previous_filing_source_reference`,
     then each matching source revision is checked through
-    :func:`aeat.domain.calculations.registry._validate_source_casilla_ids.source_casilla_id_reference_failure`.
+    :func:`cadrumo.domain.calculations.registry._validate_source_casilla_ids.source_casilla_id_reference_failure`.
     """
     failures: list[str] = []
     try:

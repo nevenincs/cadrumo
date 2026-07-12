@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParameter"], None]):
     """Singleton-keyed repository for the registry-wide legal parameters.
 
-    Wraps :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
+    Wraps :func:`cadrumo.domain.calculations.registry.load_legal_parameters_only`
     rooted at the bundled registry tree and returns
     :class:`LegalParameter` records.
     """

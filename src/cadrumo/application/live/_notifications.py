@@ -1,7 +1,7 @@
 """Bucket-scoped notifications snapshot service.
 
 Wraps the read-only AEAT sede notifications adapter
-(:mod:`aeat.adapters.outbound.aeat.sede._notifications`) with
+(:mod:`cadrumo.adapters.outbound.aeat.sede._notifications`) with
 bucket-scoped persistence and a read-only verb surface. The service
 persists snapshots captured by an upstream fetch, exposes
 list / show / latest, and never invokes

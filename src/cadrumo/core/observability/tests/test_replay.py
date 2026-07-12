@@ -8,7 +8,7 @@ Covers:
   diagnostic).
 * Refusal on traces captured with a removed live-write flag.
 * End-to-end ``replay_of`` propagation via the
-  ``AEAT_REPLAY_ACTIVE`` env var, and the matching
+  ``CADRUMO_REPLAY_ACTIVE`` env var, and the matching
   non-canonical-value sanitisation.
 * End-to-end CLI replay of a wrapped command with a boolean ``--json``
   flag (the recorded argv must round-trip without the bare flag form
@@ -63,7 +63,7 @@ class TestReplayRun:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
             trace = _build_trace("0123456789abcdef", corpus_sha256=current_corpus)
             save_trace(trace)
@@ -75,7 +75,7 @@ class TestReplayRun:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             trace = _build_trace("fedcba9876543210", corpus_sha256="0" * 64)
             save_trace(trace)
             with pytest.raises(AeatCorpusDriftError, match=r"aeat|corpus|drift") as excinfo:
@@ -94,7 +94,7 @@ class TestReplayRun:
         tmp_path: Path,
     ) -> None:
         """Replay must refuse traces captured with the removed write flag."""
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
             legacy_trace = RunTrace(
                 run_id="aaaabbbbccccdddd",
@@ -126,7 +126,7 @@ class TestReplayRun:
         )
         from .._store import load_trace
 
-        with override_settings(aeat_runs_dir=tmp_path):
+        with override_settings(cadrumo_runs_dir=tmp_path):
             current_corpus = _compute_corpus_sha256(_PROJECT_ROOT / ".vault", _Settings())
             original = RunTrace(
                 run_id="1111222233334444",
@@ -145,7 +145,7 @@ class TestReplayRun:
             # Settings field is consulted by ``run_context`` via
             # ``load_settings()`` at re-entry.
             with (
-                override_settings(aeat_runs_dir=tmp_path, aeat_replay_active=original.run_id),
+                override_settings(cadrumo_runs_dir=tmp_path, cadrumo_replay_active=original.run_id),
                 run_context(entrypoint="aeat test replay-child", arguments=()) as info,
             ):
                 child_run_id = info.run_id
@@ -158,7 +158,7 @@ class TestReplayRun:
         from .. import run_context
         from .._store import load_trace
 
-        with override_settings(aeat_runs_dir=tmp_path, aeat_replay_active="1"):
+        with override_settings(cadrumo_runs_dir=tmp_path, cadrumo_replay_active="1"):
             with run_context(entrypoint="aeat test", arguments=()) as info:
                 rid = info.run_id
 
@@ -195,9 +195,9 @@ class TestReplayEndToEndBooleanFlag:
 
     def test_replay_of_workflow_list_json(self, tmp_path: Path) -> None:
         with override_settings(
-            aeat_runs_dir=tmp_path,
+            cadrumo_runs_dir=tmp_path,
             # A fresh workflow-runs dir so list has nothing to render.
-            aeat_workflow_runs_dir=tmp_path / "workflow-runs",
+            cadrumo_workflow_runs_dir=tmp_path / "workflow-runs",
         ):
             current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
             recorded = RunTrace(
@@ -326,7 +326,7 @@ class TestArgvReconstruction:
                 "aeat run show",
                 (
                     ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
-                    ArgumentRecord(name="aeat_runs_dir", value="var/runs", source=ArgumentSource.ENV),
+                    ArgumentRecord(name="cadrumo_runs_dir", value="var/runs", source=ArgumentSource.ENV),
                     ArgumentRecord(name="mode", value="quiet", source=ArgumentSource.DEFAULT),
                 ),
                 ("run", "show", "abc"),
@@ -372,7 +372,7 @@ class TestArgvReconstruction:
 class TestReplayActiveEnvVarCanonicity:
     """Assert that REPLAY_ACTIVE_ENV_VAR has exactly one definition site.
 
-    The literal string ``"AEAT_REPLAY_ACTIVE"`` must appear only in
+    The literal string ``"CADRUMO_REPLAY_ACTIVE"`` must appear only in
     ``_replay.py`` at line 26 (the canonical assignment).  Any duplicate
     definition in another module is an authoring error that this test
     catches at the source level.

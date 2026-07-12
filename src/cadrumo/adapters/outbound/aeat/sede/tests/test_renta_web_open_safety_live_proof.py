@@ -10,7 +10,7 @@ routes through ``assert_click_target_safe``). The expected outcome is
 that the safety guard blocks the click before Playwright issues it,
 raising :class:`SedeNavigationError` with the matched forbidden token.
 
-Running this test under ``AEAT_LIVE_TESTS_ENABLED=1`` confirms the
+Running this test under ``CADRUMO_LIVE_TESTS_ENABLED=1`` confirms the
 safety hardening works against the LIVE button — not just unit-test
 fixtures.
 

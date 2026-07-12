@@ -3,7 +3,7 @@
 :class:`TransactionCatalogueRepository` is the only sanctioned read/write path
 for the transaction catalogue. It stores **one encrypted secure-object row per
 transaction** — keyed ``transaction:{bucket_id}:{transaction_id}`` inside the
-``aeat.domain.transactions.bucket`` namespace at
+``cadrumo.domain.transactions.bucket`` namespace at
 :class:`~adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` — so a
 single-transaction mutation rewrites only that row instead of re-encrypting the
 whole catalogue (the prior single-blob shape was O(n) write amplification per

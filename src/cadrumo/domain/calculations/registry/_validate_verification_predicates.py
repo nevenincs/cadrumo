@@ -50,7 +50,7 @@ __all__ = [
 # The known predicate operator set was previously a module-level constant
 # here that mirrored the runtime evaluator's regex set. Drift between the
 # two was a silent-pass hazard. The canonical set now lives at
-# aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS
+# cadrumo.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS
 # and both the validator (here) and a gate test against the runtime
 # evaluator reference it.
 def _predicate_operator_name(expression: str) -> str | None:
@@ -123,7 +123,7 @@ def _casilla_list_predicate_failures(
 # roll_forward_balances(["closing", "opening", "applied", "base"]) — the
 # carry-forward continuity operator must name EXACTLY four casilla ids, each an
 # existing casilla on the revision. Mirrors the runtime regex in
-# aeat.application.modelo._verification_actions._PREDICATE_ROLL_FORWARD_BALANCES;
+# cadrumo.application.modelo._verification_actions._PREDICATE_ROLL_FORWARD_BALANCES;
 # this authoring-time gate fails a malformed arity / typo'd id at registry load
 # rather than letting the runtime evaluator's bad-arity branch silently hold (or,
 # for the ADVISORY form, silently never fire).

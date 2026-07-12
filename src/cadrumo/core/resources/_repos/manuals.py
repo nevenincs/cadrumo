@@ -2,7 +2,7 @@
 
 The composite key is ``(manual_id, year, part)`` modelled as a
 frozen :class:`ManualKey` record. The :class:`ManualRepository`
-wraps the existing loader chain in :mod:`aeat.domain.manuals`;
+wraps the existing loader chain in :mod:`cadrumo.domain.manuals`;
 the Settings env-override for ``AEAT_MANUALS_ROOT`` is preserved
 verbatim by passing the operator-resolved root through the
 constructor.
@@ -47,7 +47,7 @@ class ManualKey(TypedResourceKey):
 class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
     """Composite-key repository for the bundled Manual catalogue.
 
-    Wraps :func:`aeat.domain.manuals.load_manual` and stays in
+    Wraps :func:`cadrumo.domain.manuals.load_manual` and stays in
     lockstep with the env-override seam on
     ``Settings.aeat_manuals_root``. The repository returns
     :class:`Manual` records keyed by :class:`ManualKey`.
@@ -94,7 +94,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         kind: RuleKind | None = None,
         lang: str | None = None,
     ) -> Iterator[Rule]:
-        """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries.
+        """Delegate to :func:`cadrumo.domain.manuals.find_rules` for rule queries.
 
         Yields each matching :class:`Rule` from the catalogue in
         encounter order.
@@ -110,7 +110,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         )
 
     def iter_sections(self, manual: Manual) -> Iterator[Section]:
-        """Delegate to :func:`aeat.domain.manuals.iter_sections` for section iteration.
+        """Delegate to :func:`cadrumo.domain.manuals.iter_sections` for section iteration.
 
         Yields each :class:`Section` from ``manual`` in document order.
         """

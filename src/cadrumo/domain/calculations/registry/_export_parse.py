@@ -421,7 +421,7 @@ _REGISTRY_FALSY = frozenset({"0", "n", "no", "false"})
 
 
 def _parse_boolean(raw: str) -> bool | None:
-    """Thin wrapper around :func:`aeat.core.parsing.parse_bool`.
+    """Thin wrapper around :func:`cadrumo.core.parsing.parse_bool`.
 
     The registry export format uses uppercase affirmative tokens ("X", "S",
     "SI") that extend the core truthy set.  This wrapper normalises the raw

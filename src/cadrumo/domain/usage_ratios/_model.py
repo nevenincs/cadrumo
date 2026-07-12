@@ -3,7 +3,7 @@
 Defines :class:`UsageRatioProfile` — the strict, frozen pydantic v2 record
 that captures the operator's persisted business / personal split coefficients
 — plus :func:`resolve_user_ratio`, the pure helper consumed by
-``aeat.domain.deductibility`` to look up an override before falling back to
+``cadrumo.domain.deductibility`` to look up an override before falling back to
 the statutory :attr:`domain.categories.ProportionalityRule.default_ratio`.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived once at
 import time from :data:`domain.categories.CATEGORY_PROFILES_2025`.
@@ -141,7 +141,7 @@ class UsageRatioProfile(BaseModel):
 def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -> Decimal | None:
     """Return the operator's persisted ratio for ``category``, or ``None`` if unset.
 
-    Pure helper consumed by ``aeat.domain.deductibility``. When the return
+    Pure helper consumed by ``cadrumo.domain.deductibility``. When the return
     value is ``None`` the caller falls back to
     :attr:`domain.categories.ProportionalityRule.default_ratio` and
     records the resolution source in the transaction trace fields.

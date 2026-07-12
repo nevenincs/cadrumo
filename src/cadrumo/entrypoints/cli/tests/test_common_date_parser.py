@@ -35,7 +35,7 @@ _REJECTED = ("15/01/2026", "01-15-2026", "2026/01/15", "15-01-2026", "2026.01.15
 
 @pytest.fixture(autouse=True)
 def _english_locale() -> object:
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         clear_output_language_cache()
         yield
     clear_output_language_cache()

@@ -103,8 +103,8 @@ class NarrationFaithfulness(BaseModel):
     describes. This model deliberately mirrors
     :class:`entrypoints.mcp._faithfulness.FaithfulnessResult` field-for-field
     (``faithful``, ``blocking``, ``flagged_values``, the derived ``blocks``
-    property) rather than importing that class: ``aeat.agent`` is a read-accessor
-    package consumed BY ``aeat.entrypoints`` (e.g.
+    property) rather than importing that class: ``cadrumo.agent`` is a read-accessor
+    package consumed BY ``cadrumo.entrypoints`` (e.g.
     ``entrypoints.cli._app_agent_workspace`` imports ``agent.materialise_workspace``),
     so ``agent.eval`` importing back from ``entrypoints.mcp`` would invert the
     hexagonal direction and create a package cycle. The caller (a test, or a
@@ -138,11 +138,11 @@ class NarrationFaithfulness(BaseModel):
 
 
 class ConfirmationTier(StrEnum):
-    """Mirror of ``aeat.entrypoints.mcp._hitl.ConfirmationPolicy``'s value set.
+    """Mirror of ``cadrumo.entrypoints.mcp._hitl.ConfirmationPolicy``'s value set.
 
     Declared locally rather than imported, for the identical hexagonal-direction
-    reason documented on :class:`NarrationFaithfulness`: ``aeat.agent`` is a
-    read-accessor package consumed BY ``aeat.entrypoints``, so ``agent.eval``
+    reason documented on :class:`NarrationFaithfulness`: ``cadrumo.agent`` is a
+    read-accessor package consumed BY ``cadrumo.entrypoints``, so ``agent.eval``
     importing back from ``entrypoints.mcp`` would invert the direction and create
     a package cycle. The three members mirror ``ConfirmationPolicy`` byte-for-byte
     (``auto_approve`` / ``confirm`` / ``block``) so a caller-injected real verdict
@@ -167,7 +167,7 @@ class ConfirmationGateCheck(BaseModel):
 
     ``actual_tier`` is caller-injected (mirroring ``NarrationFaithfulness``): the
     caller invokes the real ``confirmation_for_tool`` from
-    ``aeat.entrypoints.mcp._hitl`` against the step's real annotations and hands
+    ``cadrumo.entrypoints.mcp._hitl`` against the step's real annotations and hands
     the resulting tier in as a :class:`ConfirmationTier`. This model performs no
     check itself.
 

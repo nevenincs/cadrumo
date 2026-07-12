@@ -1,14 +1,14 @@
 """Formula expression and dependency graph validation helpers.
 
 Validates formula expressions and the DAG formed by formula targets
-declared on a :class:`~aeat.domain.calculations.registry.ModeloRevision`,
+declared on a :class:`~cadrumo.domain.calculations.registry.ModeloRevision`,
 checking casilla, binding, parameter, and relation reference closure and
 detecting cycles.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._runtime_graph.expression_casilla_refs`
+    :func:`cadrumo.domain.calculations.registry._runtime_graph.expression_casilla_refs`
         Formula-expression walker used to derive target dependencies.
-    :func:`aeat.domain.calculations.registry._runtime_graph.formula_evaluation_order`
+    :func:`cadrumo.domain.calculations.registry._runtime_graph.formula_evaluation_order`
         Runtime topological order builder that assumes this validator has
         rejected cycles.
 """
@@ -25,7 +25,7 @@ from ._schema import FormulaExpression, ModeloRevision
 def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:
     """Return dependency-cycle failures for a revision's computed formulas.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     formula targets and expressions. Only dependencies that point at another
     computed target participate in the DAG; registry membership and reference
     existence are handled by :func:`validate_formula_expression`.
@@ -56,10 +56,10 @@ def validate_formula_expression(
 ) -> list[str]:
     """Return reference-closure failures for one formula expression tree.
 
-    The :class:`~aeat.domain.calculations.registry.FormulaExpression` may refer
-    to :class:`~aeat.domain.calculations.registry.CasillaId`,
-    :class:`~aeat.domain.calculations.registry.BindingId`, parameter, and
-    :class:`~aeat.domain.calculations.registry.RelationId` values. This recursive
+    The :class:`~cadrumo.domain.calculations.registry.FormulaExpression` may refer
+    to :class:`~cadrumo.domain.calculations.registry.CasillaId`,
+    :class:`~cadrumo.domain.calculations.registry.BindingId`, parameter, and
+    :class:`~cadrumo.domain.calculations.registry.RelationId` values. This recursive
     validator keeps every nested expression node inside the selected revision's
     declared id sets.
     """

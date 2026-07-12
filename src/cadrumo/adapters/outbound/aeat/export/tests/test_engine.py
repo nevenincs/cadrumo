@@ -97,8 +97,8 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
         deadline_checker=_OpenDeadlines(),
         repository=SubmissionRepository(),
         settings=Settings(
-            aeat_submissions_dir=tmp_path / "submissions",
-            aeat_submission_browser_trace_dir=tmp_path / "traces",
+            cadrumo_submissions_dir=tmp_path / "submissions",
+            cadrumo_submission_browser_trace_dir=tmp_path / "traces",
         ),
     )
 

@@ -304,8 +304,8 @@ def _probe_certificate_bundle(
         bundle_health = evaluate_certificate_health(
             path,
             password=password,
-            warn_days=resolved_settings.aeat_cert_warn_days,
-            critical_days=resolved_settings.aeat_cert_critical_days,
+            warn_days=resolved_settings.cadrumo_cert_warn_days,
+            critical_days=resolved_settings.cadrumo_cert_critical_days,
             friendly_name=resolved_settings.aeat_certificate_friendly_name,
             backend=resolved_settings.aeat_certificate_backend,
         )

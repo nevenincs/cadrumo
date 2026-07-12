@@ -3,7 +3,7 @@
 Defines the :class:`PortalMetadata` record for :class:`Portal`
 ``PORTAL_SEDE_ROOT`` under :class:`PortalCategory` ``AUTH``, exposed
 as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+:data:`cadrumo.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

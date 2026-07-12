@@ -3,7 +3,7 @@
 Wraps :func:`register_active_profile` with a curated set of required
 schema-validated placeholder facts so unit tests can register a profile
 in one call without reciting six placeholder values every time. An
-explicit :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+explicit :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
 may be injected to bind the helper to an in-process ephemeral store.
 
 This is a TEST helper and lives in the canonical package because it
@@ -77,7 +77,7 @@ def register_minimal_profile(
             of the placeholder facts (also accepts paths not in the
             required set; they merge in).
         secure_objects: Optional injected
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+            :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`.
         enforce_unique_tax_id: When ``False``, skip the cross-bucket
             tax-id uniqueness scan. Use in per-bucket-storage test
             scenarios where each profile's encrypted record lives in its

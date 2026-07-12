@@ -97,12 +97,12 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
     Raises:
         :exc:`adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`:
             When
-            ``aeat_secret_store_backend=unsecured`` and ``tax_id`` parses as a
+            ``cadrumo_secret_store_backend=unsecured`` and ``tax_id`` parses as a
             real Spanish tax identifier per
             :func:`adapters.persistence.storage.master_key.looks_like_real_tax_id`.
     """
     settings = load_settings()
-    if settings.aeat_secret_store_backend is not SecretStoreBackend.UNSECURED:
+    if settings.cadrumo_secret_store_backend is not SecretStoreBackend.UNSECURED:
         return
     cleaned = tax_id.strip()
     if cleaned and looks_like_real_tax_id(cleaned):

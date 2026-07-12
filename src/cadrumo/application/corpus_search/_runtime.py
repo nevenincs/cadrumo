@@ -47,7 +47,7 @@ _DEFAULT_LIMIT = 8
 def corpus_search_dir(settings: Settings | None = None) -> Path:
     """Return the app-controlled corpus-search cache directory."""
     resolved = settings or load_settings()
-    return resolved.aeat_local_storage_root / _INDEX_SUBDIR
+    return resolved.cadrumo_local_storage_root / _INDEX_SUBDIR
 
 
 def corpus_index_path(settings: Settings | None = None) -> Path:

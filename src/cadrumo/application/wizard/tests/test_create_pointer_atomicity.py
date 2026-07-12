@@ -92,7 +92,7 @@ def test_first_run_create_succeeds_and_points_at_the_new_profile(_backend: Path)
 
     _quiet_create("Primero")
 
-    pointer = read_pointer(load_settings().aeat_local_storage_root)
+    pointer = read_pointer(load_settings().cadrumo_local_storage_root)
     assert pointer is not None
     first_id = pointer.bucket_id
 
@@ -114,7 +114,7 @@ def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path)
     """
 
     _quiet_create("Clash")
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     before = read_pointer(root)
     assert before is not None
     surviving_id = before.bucket_id
@@ -140,7 +140,7 @@ def test_full_flow_edit_refuses_branch_change_without_legal_name(_backend: Path)
     """A full-flow edit must not persist a legal entity without legal name."""
 
     _quiet_create("Editable")
-    pointer = read_pointer(load_settings().aeat_local_storage_root)
+    pointer = read_pointer(load_settings().cadrumo_local_storage_root)
     assert pointer is not None
 
     with pytest.raises(WizardMissingFlagError) as excinfo:

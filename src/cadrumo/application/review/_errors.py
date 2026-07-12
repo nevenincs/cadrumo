@@ -1,10 +1,10 @@
 """Error hierarchy for the unified review queue.
 
 All review-layer errors inherit from :class:`ReviewError`, which in
-turn inherits from :class:`aeat.core.errors.AeatError` per the
+turn inherits from :class:`cadrumo.core.errors.AeatError` per the
 project's package-wide error-base mandate. Callers can therefore catch
 either :class:`ReviewError` for review-specific failures or the
-package-wide :exc:`aeat.core.errors.AeatError` to handle every aeat
+package-wide :exc:`cadrumo.core.errors.AeatError` to handle every aeat
 domain error uniformly.
 """
 
@@ -14,7 +14,7 @@ from ...core.errors import AeatError
 
 
 class ReviewError(AeatError):
-    """Base class for every error raised by :mod:`aeat.application.review`."""
+    """Base class for every error raised by :mod:`cadrumo.application.review`."""
 
 
 class ReviewSourceLoadError(ReviewError):
@@ -124,7 +124,7 @@ class ReviewKindReservedError(ReviewError):
     """Raised when the CLI receives a reserved kind token.
 
     Carries the blocking reason returned by
-    :func:`aeat.application.review._enums.reserved_kind_reason`.
+    :func:`cadrumo.application.review._enums.reserved_kind_reason`.
 
     Attributes:
         token: The ``--kind`` value supplied by the user.

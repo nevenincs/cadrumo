@@ -77,7 +77,7 @@ def _require_spanish(text: str, field_name: str) -> None:
 class _ManualStrictFrozen(BaseModel):
     """Shared config: strict validation, immutable instances, no extras.
 
-    Deliberately NOT the canonical :data:`~aeat.core.STRICT_FROZEN_CONFIG`. This
+    Deliberately NOT the canonical :data:`~cadrumo.core.STRICT_FROZEN_CONFIG`. This
     base adds an explicit ``str_strip_whitespace=False`` to guarantee that
     authoritative Spanish manual text (rule bodies, paragraphs, section titles)
     is preserved byte-for-byte, including leading and trailing whitespace that
@@ -166,7 +166,7 @@ class Rule(_ManualStrictFrozen):
 
     Attributes:
         rule_id: Stable kebab-case identifier produced by
-            :func:`~aeat.domain.manuals.generate_rule_id`.
+            :func:`~cadrumo.domain.manuals.generate_rule_id`.
         manual_id: Owning handbook identifier.
         year: Tax year the rule applies to.
         part: Volume split within the year.

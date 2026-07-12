@@ -10,13 +10,13 @@ trimestre it adds the positive part of casilla ``07`` and subtracts casilla
 ``04 - 05 - 06``.
 
 This module does not compute the carry. It emits non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` advisories
+:class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` advisories
 for the two calculate-path degradation cases around the live carry:
 
 * ``prior_payment_not_deducted`` fires only when a non-first trimestre has
   positive cumulative ingresos, casilla ``05`` still resolved to zero, and a
   real prior-trimestre Modelo 130 filing exists in the local
-  :class:`~aeat.application.calculations.CalculationObservationRepository`.
+  :class:`~cadrumo.application.calculations.CalculationObservationRepository`.
   Under the Stage-2 carry, normal readable prior filings populate casilla ``05``
   and this prior over-payment advisory stays silent.
 * ``prior_payment_minoracion_not_captured`` fires when a carried prior filing
@@ -30,12 +30,12 @@ period token: a 1T target or a genuine first-obligation quarter has no prior
 trimestre to carry, so casilla ``05`` materialises zero absent-by-design.
 
 See Also:
-    :func:`~aeat.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
+    :func:`~cadrumo.application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
         Wires these advisories into the bucket-aggregation calculate path.
-    :class:`~aeat.application.calculations.CalculationObservationRepository`:
+    :class:`~cadrumo.application.calculations.CalculationObservationRepository`:
         Supplies the persisted prior-filing observations inspected by both
         advisories.
-    :class:`~aeat.domain.calculations.registry.CasillaId`:
+    :class:`~cadrumo.domain.calculations.registry.CasillaId`:
         The validated registry casilla key type used for the carry and advisory
         targets.
 """
@@ -139,7 +139,7 @@ def collect_prior_payment_not_deducted_diagnostics(
 
     Args:
         casilla_values: The computed casilla values (engine result), keyed by
-            :class:`~aeat.domain.calculations.registry.CasillaId`.
+            :class:`~cadrumo.domain.calculations.registry.CasillaId`.
         modelo: The modelo identifier of the filing being calculated. Used to
             confirm the modelo is 130 (the cumulative pago-fraccionado form this
             carry applies to) before any catalogue scan.
@@ -147,12 +147,12 @@ def collect_prior_payment_not_deducted_diagnostics(
             ``"2T"``).
         filing_year: The ejercicio whose prior trimestres are scanned.
         observation_repository: The local
-            :class:`~aeat.application.calculations.CalculationObservationRepository`
+            :class:`~cadrumo.application.calculations.CalculationObservationRepository`
             scanned for a prior-period filing — the first-filer safeguard.
 
     Returns:
         A tuple of
-        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`
         advisories — empty when no under-deduction is detected, otherwise the
         single advisory.
 
@@ -160,7 +160,7 @@ def collect_prior_payment_not_deducted_diagnostics(
         :func:`collect_prior_payment_minoracion_not_captured_diagnostics`:
             Covers the companion evidence-gap case where the carry resolves but
             a prior casilla-16 minoración was absent from the stored observation.
-        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+        :class:`~cadrumo.application.calculations.CalculationObservationRepository`:
             Provides the first-filer safeguard and prior-filing evidence.
     """
     if modelo != Modelo.M130.value:
@@ -228,12 +228,12 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
         period_token: The bare registry period code of the target filing.
         filing_year: The ejercicio whose prior trimestres are scanned.
         observation_repository: The local
-            :class:`~aeat.application.calculations.CalculationObservationRepository`
+            :class:`~cadrumo.application.calculations.CalculationObservationRepository`
             scanned for prior-period observations.
 
     Returns:
         A tuple of
-        :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+        :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`
         advisories — empty when every carried prior filing captured its
         casilla-16 minoración, otherwise the single
         ``prior_payment_minoracion_not_captured`` advisory.
@@ -242,7 +242,7 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
         :func:`collect_prior_payment_not_deducted_diagnostics`:
             Covers the degraded carry case where casilla 05 stayed zero despite
             a real prior M130 filing.
-        :class:`~aeat.application.calculations.CalculationObservationRepository`:
+        :class:`~cadrumo.application.calculations.CalculationObservationRepository`:
             Supplies the prior-filing observations whose casilla-16 presence
             distinguishes filed zero from not captured.
     """

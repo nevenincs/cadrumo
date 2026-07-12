@@ -17,7 +17,7 @@ directly, while :func:`build_harness_floor_tool` lazily adapts the payload
 surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
 server still refuses gracefully) when the ``aeat-cli[agent]`` extra is absent.
 
-The operating-layer text is read through the ``aeat.agent`` package facade
+The operating-layer text is read through the ``cadrumo.agent`` package facade
 (:func:`~agent.operator_rules_text` and
 :func:`~agent.iter_personas`), never a private submodule, per the
 ``service-imports-via-top-level-reexports`` discipline.
@@ -125,7 +125,7 @@ class HarnessFloorPayload(BaseModel):
     interaction. ``operator_rules`` is the concatenated shipped operator
     operating-rule text - the always-on operating contract every session carries.
     ``active_persona`` is the persona document resolved from the session's
-    ``AEAT_MCP_PERSONA`` scope, or ``None`` for an un-personified session (the
+    ``CADRUMO_MCP_PERSONA`` scope, or ``None`` for an un-personified session (the
     full, unscoped surface). ``identity`` is the same active-taxpayer block the
     ``whoami`` tool returns, so session orientation (this floor tool's job)
     carries WHO is active; it is ``None`` when the caller does not inject it (the

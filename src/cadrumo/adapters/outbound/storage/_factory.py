@@ -5,10 +5,10 @@ CLI commands, application services) call to obtain a
 :class:`adapters.outbound.storage.StorageProvider` configured for the
 active profile. :class:`core.config.Settings` drives the choice:
 
-- ``aeat_storage_provider_kind`` selects the backend.
-- ``aeat_local_storage_root`` chooses the root directory for the local
+- ``cadrumo_storage_provider_kind`` selects the backend.
+- ``cadrumo_local_storage_root`` chooses the root directory for the local
   backend.
-- ``aeat_google_drive_root_folder_id`` plus the per-profile persisted
+- ``cadrumo_google_drive_root_folder_id`` plus the per-profile persisted
   :class:`~core.GoogleCredentialSourceKind` selection
   (:class:`~adapters.outbound.google.GoogleCredentialSourceSelection`,
   loaded via :mod:`adapters.outbound.google._session_store`) parameterise
@@ -25,7 +25,7 @@ Composition order:
 2. Read settings via :func:`~core.config.load_settings`.
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    :class:`adapters.outbound.storage._local.LocalFileSystemProvider`
-   rooted at ``aeat_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
+   rooted at ``cadrumo_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
    :func:`build_google_credentials`, which reads the profile's persisted
    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` (a
    missing selection defaults to
@@ -35,7 +35,7 @@ Composition order:
    :func:`~adapters.outbound.google.resolve_impersonated_credentials`, then
    instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
-   keyed on ``aeat_google_drive_root_folder_id``.
+   keyed on ``cadrumo_google_drive_root_folder_id``.
 4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
 """
 
@@ -57,7 +57,7 @@ def _parse_kind(raw: str) -> ProviderKind:
     cleaned = raw.strip().lower()
     if not cleaned:
         raise OutboundStorageValidationError(
-            "aeat_storage_provider_kind is empty",
+            "cadrumo_storage_provider_kind is empty",
             context={"value": raw},
             translated_message="adapters.outbound.storage.factory.errors.kind_empty",
         )
@@ -66,7 +66,7 @@ def _parse_kind(raw: str) -> ProviderKind:
     except ValueError as exc:
         valid = sorted(kind.value for kind in ProviderKind)
         raise OutboundStorageValidationError(
-            "aeat_storage_provider_kind is not a recognised ProviderKind",
+            "cadrumo_storage_provider_kind is not a recognised ProviderKind",
             context={"value": raw, "expected": ", ".join(valid)},
             translated_message="adapters.outbound.storage.factory.errors.kind_unknown",
         ) from exc
@@ -179,9 +179,9 @@ def _resolve_profile() -> str:
 def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
     """Resolve the Drive root folder id with the canonical precedence.
 
-    1. ``AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID`` env var / ``.env`` value
+    1. ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` env var / ``.env`` value
        (:class:`core.config.Settings`
-       ``aeat_google_drive_root_folder_id``; overrides for one-off / CI /
+       ``cadrumo_google_drive_root_folder_id``; overrides for one-off / CI /
        debugging without persisting state)
     2. Per-profile persisted
        :class:`adapters.outbound.google.DriveConfig` record (canonical
@@ -191,8 +191,8 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
     """
     from ..google import load_drive_config
 
-    if settings.aeat_google_drive_root_folder_id:
-        return str(settings.aeat_google_drive_root_folder_id).strip()
+    if settings.cadrumo_google_drive_root_folder_id:
+        return str(settings.cadrumo_google_drive_root_folder_id).strip()
     config = load_drive_config(profile)
     if config is not None:
         return config.root_folder_id.strip()
@@ -216,18 +216,18 @@ def get_storage_provider(
     Raises:
         :class:`OutboundStorageValidationError`: When the settings value is
             unknown, the Drive backend is selected without
-            ``aeat_google_drive_root_folder_id``, or the profile lacks the
+            ``cadrumo_google_drive_root_folder_id``, or the profile lacks the
             records the chosen backend needs.
     """
     settings_resolved = settings if settings is not None else load_settings()
-    kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)
+    kind = _parse_kind(settings_resolved.cadrumo_storage_provider_kind)
     profile = _resolve_profile()
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
         from ...persistence.storage.bucket import bucket_paths
         from ._local import LocalFileSystemProvider
 
-        root = bucket_paths(settings_resolved.aeat_local_storage_root, profile).blobs_dir
+        root = bucket_paths(settings_resolved.cadrumo_local_storage_root, profile).blobs_dir
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
@@ -245,7 +245,7 @@ def get_storage_provider(
         return GoogleDriveProvider(
             credentials=credentials,
             root_folder_id=root_folder_id,
-            vault_folder_name=settings_resolved.aeat_google_drive_vault_folder_name,
+            vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
         )
 
     # Should never be reached — _parse_kind already refused unknown kinds.

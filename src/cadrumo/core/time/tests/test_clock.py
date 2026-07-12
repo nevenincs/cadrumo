@@ -72,7 +72,7 @@ class TestFrozenClockSeam:
     def test_refuses_under_live_test_opt_in(self) -> None:
         """The seam must stay off in live-marked test runs (no global freeze)."""
         with (
-            override_settings(aeat_live_tests_enabled="1"),
+            override_settings(cadrumo_live_tests_enabled="1"),
             pytest.raises(CoreValidationError, match="live-test opt-in"),
             frozen_clock(self._INSTANT),
         ):

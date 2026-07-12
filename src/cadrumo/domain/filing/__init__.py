@@ -12,10 +12,10 @@ consumed by :mod:`application.filing`, the LGT Art. 122 amendment records
 :class:`ModeloComplementaria` and :class:`ModeloSustitutiva`, their
 :class:`CasillaChange` deltas, and the governed repository contracts. Drafts
 persist through
-:class:`~aeat.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
+:class:`~cadrumo.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`
 (behind :class:`ModeloDraftRepositoryProtocol`) in FINANCIAL encrypted storage;
 amendments persist through
-:class:`~aeat.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
+:class:`~cadrumo.adapters.persistence.profile.filing_amendments.ModeloAmendmentRepository`
 (behind :class:`ModeloAmendmentRepositoryProtocol`) in AUDIT encrypted storage.
 
 The orchestration entry points (:func:`application.filing.build_draft`,

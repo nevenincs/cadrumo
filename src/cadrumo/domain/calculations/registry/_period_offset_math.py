@@ -6,10 +6,10 @@ calendar-year boundaries and return the derived period plus the relative year
 delta.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+    :mod:`cadrumo.domain.calculations.registry._bindings_previous_filing`
         Previous-filing selectors that derive target-relative source period
         anchors.
-    :mod:`aeat.domain.calculations.registry._relations`
+    :mod:`cadrumo.domain.calculations.registry._relations`
         Relation source requirements that use the same offset arithmetic.
 """
 
@@ -32,11 +32,11 @@ def apply_period_offset(offset: int, *, target_period: str) -> tuple[int, str]:
     number of calendar years by which the derived period precedes or follows
     the target year (negative = prior year, positive = following year). The
     tuple is consumed by previous-filing and
-    :class:`~aeat.domain.calculations.registry.RelationDefinition`
+    :class:`~cadrumo.domain.calculations.registry.RelationDefinition`
     ``source_period_offset_from_target`` resolution.
 
     Raises:
-        :exc:`~aeat.domain.calculations.registry.RegistryValidationError`: When
+        :exc:`~cadrumo.domain.calculations.registry.RegistryValidationError`: When
         ``target_period`` is not a recognised period-code format.
     """
     if target_period in _QUARTERLY_PERIOD_ORDINAL:

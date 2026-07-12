@@ -1046,7 +1046,7 @@ SETUP_FLOW = WizardFlow(
 WIZARD_FLOWS: tuple[WizardFlow, ...] = (SETUP_FLOW,)
 
 # Register the canonical descriptors into the core slot so domain modules
-# that import from aeat.core.wizard_catalogue receive the real objects
+# that import from cadrumo.core.wizard_catalogue receive the real objects
 # without making upward imports into the application layer.
 register_wizard_catalogue(SETUP_FLOW, WIZARD_FLOWS)
 

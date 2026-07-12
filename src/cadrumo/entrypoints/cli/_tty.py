@@ -5,14 +5,14 @@ emit ANSI colour, render a rich progress widget, or refuse a request
 that requires interactive stdin. Resolution merges three signals — the
 active CLI flag context (via :func:`current_cli_flag`),
 explicit per-call overrides, and the operator's environment
-(``NO_COLOR``, ``AEAT_FORCE_COLOR``, surfaced through
+(``NO_COLOR``, ``CADRUMO_FORCE_COLOR``, surfaced through
 :class:`Settings`) — so call sites never need to re-implement the
 precedence rules.
 
 Environment variables flow through :class:`Settings`
 rather than direct ``os.environ`` reads: ``NO_COLOR`` populates
-:attr:`Settings.no_color`, and ``AEAT_FORCE_COLOR`` populates
-:attr:`Settings.aeat_force_color`. Pydantic-settings handles the
+:attr:`Settings.no_color`, and ``CADRUMO_FORCE_COLOR`` populates
+:attr:`Settings.cadrumo_force_color`. Pydantic-settings handles the
 ``.env`` + ``os.environ`` merge order; this module never reaches
 into the process environment directly.
 """
@@ -83,7 +83,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
 
     Precedence: explicit ``--no-color`` (via either the active CLI flag
     context or the ``no_color`` argument) and the standard ``NO_COLOR``
-    environment variable both disable colour. ``AEAT_FORCE_COLOR``
+    environment variable both disable colour. ``CADRUMO_FORCE_COLOR``
     forces colour on even outside a TTY. Otherwise colour is enabled
     only when stdout is interactive.
 
@@ -99,7 +99,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
     resolved_no_color = current_cli_flag("no_color") or bool(no_color)
     if resolved_no_color or settings.no_color:
         return False
-    if settings.aeat_force_color:
+    if settings.cadrumo_force_color:
         return True
     return is_stdout_tty()
 

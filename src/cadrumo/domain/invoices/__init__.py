@@ -26,14 +26,14 @@ before aggregation treats them as purchase evidence.
 
 Persistence is exposed through the narrow
 :class:`InvoiceCatalogueRepositoryProtocol` port; the concrete
-:class:`~aeat.adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
+:class:`~cadrumo.adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
 lives in the persistence adapter and stores the active-bucket catalogue
 singleton through
 :class:`adapters.persistence.storage.SecureObjectRepository` as
 ``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
 payloads wrapped in :class:`adapters.persistence.storage.Envelope`; no
 plaintext invoice row, JSON catalogue, or envelope file is the durable store.
-Callers must import public objects from ``aeat.domain.invoices`` and must not
+Callers must import public objects from ``cadrumo.domain.invoices`` and must not
 reach into the private underscore modules inside this package.
 
 See Also:

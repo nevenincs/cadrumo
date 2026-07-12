@@ -26,13 +26,13 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
     """Pin the unset-language state via ContextVar and bootstrap a
     real profile storage span.
 
-    Empty-string ``aeat_output_language`` shadows any ambient env
+    Empty-string ``cadrumo_output_language`` shadows any ambient env
     value; the storage-isolation + profile-create span gives the
     locale resolver a real backing store to read from.
     """
 
     with (
-        override_settings(aeat_output_language=""),
+        override_settings(cadrumo_output_language=""),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
@@ -72,7 +72,7 @@ def test_environment_output_language_override_wins_over_profile(
     del isolated_language_state
     _seed_profile_language("ca")
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         assert output_language() == "en"
 
 
@@ -82,7 +82,7 @@ def test_environment_output_language_override_is_canonical(
     del isolated_language_state
     _seed_profile_language("ca")
 
-    with override_settings(aeat_output_language="es"):
+    with override_settings(cadrumo_output_language="es"):
         assert output_language() == "es"
 
 

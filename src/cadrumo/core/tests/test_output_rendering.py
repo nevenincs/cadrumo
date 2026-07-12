@@ -124,7 +124,7 @@ def test_render_command_output_json_identifier_redaction_honours_reveal_opt_in()
     }
     assert _PROFILE_ID not in default_rendered.text
 
-    with override_settings(aeat_cli_reveal_identifiers=True):
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
         revealed_rendered = render_command_output(
             format_name="json",
             payload={"bucket_id": _PROFILE_ID, "profile_id": _PROFILE_ID, "tax_id": _NIF},
@@ -188,5 +188,5 @@ def test_render_command_output_errors_use_registered_error_contract() -> None:
         error = excinfo.value
         assert error.args == ()
         assert error.context == expected_context
-        with override_settings(aeat_output_language="en"):
+        with override_settings(cadrumo_output_language="en"):
             assert render_error_text(error).startswith(english_prefix)

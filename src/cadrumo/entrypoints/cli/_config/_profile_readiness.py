@@ -77,7 +77,7 @@ def _activate_bucket_output_language_hint(ctx: typer.Context, *, bucket_id: str)
     language = resolve_profile_output_language_hint(bucket_id)
     if language is None:
         return
-    ctx.with_resource(override_settings(aeat_output_language=language))
+    ctx.with_resource(override_settings(cadrumo_output_language=language))
     clear_output_language_cache()
 
 
@@ -89,9 +89,9 @@ def _settings_has_explicit_output_language() -> bool:
         settings = load_settings()
     except (AttributeError, KeyError, ValueError):
         return False
-    if "aeat_output_language" not in settings.model_fields_set:
+    if "cadrumo_output_language" not in settings.model_fields_set:
         return False
-    raw = str(getattr(settings.aeat_output_language, "value", settings.aeat_output_language)).strip().lower()
+    raw = str(getattr(settings.cadrumo_output_language, "value", settings.cadrumo_output_language)).strip().lower()
     return raw in SUPPORTED_OUTPUT_LANGUAGES
 
 

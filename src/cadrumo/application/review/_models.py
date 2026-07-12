@@ -15,9 +15,9 @@ Concrete models:
 * :class:`FindingReviewItem` — pending findings on filing drafts.
 
 ``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are re-exported here from
-:mod:`aeat.application._workflow_review_models`, which owns them jointly with
-:class:`~aeat.application.workflow.WorkflowEvent` because
-:class:`~aeat.application.workflow.WorkflowState` embeds both review records
+:mod:`cadrumo.application._workflow_review_models`, which owns them jointly with
+:class:`~cadrumo.application.workflow.WorkflowEvent` because
+:class:`~cadrumo.application.workflow.WorkflowState` embeds both review records
 as field types — a genuine mutual runtime dependency between
 ``application.review`` and ``application.workflow`` that the shared leaf
 module resolves.
@@ -81,7 +81,7 @@ class TransactionReviewItem(_ReviewItemBase):
     Attributes:
         kind: Literal discriminator pinned to
             :attr:`ReviewItemKind.TRANSACTION`.
-        source: The verbatim :class:`aeat.domain.transactions.Transaction`.
+        source: The verbatim :class:`cadrumo.domain.transactions.Transaction`.
     """
 
     kind: Literal[ReviewItemKind.TRANSACTION] = ReviewItemKind.TRANSACTION
@@ -94,7 +94,7 @@ class InvoiceReviewItem(_ReviewItemBase):
     Attributes:
         kind: Literal discriminator pinned to
             :attr:`ReviewItemKind.INVOICE`.
-        source: The verbatim :class:`aeat.domain.invoices.Invoice`.
+        source: The verbatim :class:`cadrumo.domain.invoices.Invoice`.
     """
 
     kind: Literal[ReviewItemKind.INVOICE] = ReviewItemKind.INVOICE
@@ -107,7 +107,7 @@ class FindingReviewItem(_ReviewItemBase):
     ``source`` is ``None`` for the placeholder row emitted when a draft
     has no findings but is in a DRAFT or VALIDATED status. Otherwise it
     carries the verbatim
-    :class:`aeat.application.filing.ModeloValidationFinding`.
+    :class:`cadrumo.application.filing.ModeloValidationFinding`.
 
     Attributes:
         kind: Literal discriminator pinned to

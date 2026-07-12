@@ -44,43 +44,43 @@ def _expected_path(*parts: str) -> Path:
 
 
 def test_override_settings_swaps_scalar_field_inside_block() -> None:
-    baseline_log_dir = load_settings().aeat_log_dir
+    baseline_log_dir = load_settings().cadrumo_log_dir
 
     target = Path(_NONEXISTENT_PATH_PREFIX, "aeat-test-logs")
     expected = _expected_path("aeat-test-logs")
-    with override_settings(aeat_log_dir=target) as overridden:
-        assert overridden.aeat_log_dir == expected
+    with override_settings(cadrumo_log_dir=target) as overridden:
+        assert overridden.cadrumo_log_dir == expected
         # load_settings inside the block returns the same overridden
         # instance — the ContextVar is honoured, not bypassed.
-        assert load_settings().aeat_log_dir == expected
-    assert load_settings().aeat_log_dir == baseline_log_dir
+        assert load_settings().cadrumo_log_dir == expected
+    assert load_settings().cadrumo_log_dir == baseline_log_dir
 
 
 def test_override_settings_restores_prior_value_on_exception() -> None:
     """A user-raised exception inside the block must not leak the override."""
 
-    baseline_log_dir = load_settings().aeat_log_dir
+    baseline_log_dir = load_settings().cadrumo_log_dir
 
     scratch = Path(_NONEXISTENT_PATH_PREFIX, "scratch")
-    with pytest.raises(RuntimeError, match="planned-failure"), override_settings(aeat_log_dir=scratch):
-        assert load_settings().aeat_log_dir == _expected_path("scratch")
+    with pytest.raises(RuntimeError, match="planned-failure"), override_settings(cadrumo_log_dir=scratch):
+        assert load_settings().cadrumo_log_dir == _expected_path("scratch")
         raise RuntimeError("planned-failure")
 
     # The finally branch of the context manager restored the prior
     # ContextVar value despite the exception.
-    assert load_settings().aeat_log_dir == baseline_log_dir
+    assert load_settings().cadrumo_log_dir == baseline_log_dir
 
 
 def test_override_settings_rejects_malformed_override_at_entry() -> None:
     """An override that fails Pydantic validation raises before the
     ContextVar is set, so the prior value survives unchanged."""
 
-    baseline_log_dir = load_settings().aeat_log_dir
+    baseline_log_dir = load_settings().cadrumo_log_dir
 
-    with pytest.raises(ValidationError), override_settings(aeat_cert_warn_days=-1):  # gt=0 constraint
+    with pytest.raises(ValidationError), override_settings(cadrumo_cert_warn_days=-1):  # gt=0 constraint
         pytest.fail("the with-block must not execute when override is invalid")
 
-    assert load_settings().aeat_log_dir == baseline_log_dir
+    assert load_settings().cadrumo_log_dir == baseline_log_dir
 
 
 def test_override_settings_nested_blocks_compose_lifo() -> None:
@@ -88,20 +88,20 @@ def test_override_settings_nested_blocks_compose_lifo() -> None:
     and exiting the inner block restores the outer override (not the
     pre-outer baseline)."""
 
-    baseline_log_dir = load_settings().aeat_log_dir
+    baseline_log_dir = load_settings().cadrumo_log_dir
 
     outer_path = Path(_NONEXISTENT_PATH_PREFIX, "outer")
     inner_path = Path(_NONEXISTENT_PATH_PREFIX, "inner")
 
-    with override_settings(aeat_log_dir=outer_path):
-        assert load_settings().aeat_log_dir == _expected_path("outer")
-        with override_settings(aeat_log_dir=inner_path):
-            assert load_settings().aeat_log_dir == _expected_path("inner")
+    with override_settings(cadrumo_log_dir=outer_path):
+        assert load_settings().cadrumo_log_dir == _expected_path("outer")
+        with override_settings(cadrumo_log_dir=inner_path):
+            assert load_settings().cadrumo_log_dir == _expected_path("inner")
         # The inner block exited; the outer override is observable
         # again, not the pre-outer baseline.
-        assert load_settings().aeat_log_dir == _expected_path("outer")
+        assert load_settings().cadrumo_log_dir == _expected_path("outer")
 
-    assert load_settings().aeat_log_dir == baseline_log_dir
+    assert load_settings().cadrumo_log_dir == baseline_log_dir
 
 
 def test_override_settings_preserves_explicit_fields_set_signal() -> None:
@@ -113,15 +113,15 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
 
     baseline = load_settings()
     baseline_explicit = set(baseline.model_fields_set)
-    assert "aeat_log_dir" not in baseline_explicit
+    assert "cadrumo_log_dir" not in baseline_explicit
 
-    with override_settings(aeat_log_dir=Path(f"{_NONEXISTENT_PATH_PREFIX}/explicit")):
+    with override_settings(cadrumo_log_dir=Path(f"{_NONEXISTENT_PATH_PREFIX}/explicit")):
         overridden = load_settings()
         # The override key is now in the explicit set.
-        assert "aeat_log_dir" in overridden.model_fields_set
+        assert "cadrumo_log_dir" in overridden.model_fields_set
         # Defaults that were not overridden remain NOT in the explicit
         # set — operator did not touch them in this override block.
-        assert "aeat_cert_warn_days" not in overridden.model_fields_set
+        assert "cadrumo_cert_warn_days" not in overridden.model_fields_set
 
 
 def test_override_settings_carries_secretstr_through_validation() -> None:
@@ -130,11 +130,11 @@ def test_override_settings_carries_secretstr_through_validation() -> None:
     produce the same shape callers get from .env."""
 
     baseline = load_settings()
-    assert baseline.aeat_secret_passphrase is None
+    assert baseline.cadrumo_secret_passphrase is None
 
-    with override_settings(aeat_secret_passphrase=SecretStr("test-pass")):
+    with override_settings(cadrumo_secret_passphrase=SecretStr("test-pass")):
         overridden = load_settings()
-        assert overridden.aeat_secret_passphrase is not None
-        assert overridden.aeat_secret_passphrase.get_secret_value() == "test-pass"
+        assert overridden.cadrumo_secret_passphrase is not None
+        assert overridden.cadrumo_secret_passphrase.get_secret_value() == "test-pass"
 
-    assert load_settings().aeat_secret_passphrase is None
+    assert load_settings().cadrumo_secret_passphrase is None

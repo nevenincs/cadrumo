@@ -5,7 +5,7 @@ persistence adapter raises when the encrypted
 :class:`BucketEventHistoryCatalogue` cannot be loaded or persisted safely;
 :func:`append_bucket_event` is the pure insertion helper over a catalogue. The
 concrete encrypted-SQL repository lives in the persistence adapter
-(:class:`aeat.adapters.persistence.profile.buckets.BucketEventHistoryRepository`),
+(:class:`cadrumo.adapters.persistence.profile.buckets.BucketEventHistoryRepository`),
 behind :class:`BucketEventHistoryRepositoryProtocol`; this module owns only the
 domain error and the pure helper.
 """
@@ -20,7 +20,7 @@ class BucketEventHistoryPersistenceError(BucketsError):
     """Raised when the bucket-event-history catalogue cannot be persisted or loaded.
 
     This wraps storage-boundary failures from the persistence adapter's
-    :class:`aeat.adapters.persistence.profile.buckets.BucketEventHistoryRepository`
+    :class:`cadrumo.adapters.persistence.profile.buckets.BucketEventHistoryRepository`
     while preserving translated recovery context for callers.
     """
 

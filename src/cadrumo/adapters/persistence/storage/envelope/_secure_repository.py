@@ -68,7 +68,7 @@ class SecureBoundRepository[T: BaseModel]:
     - :attr:`namespace`: the
       :class:`adapters.persistence.storage.SecureObjectRepository`
       namespace string for this payload family
-      (e.g. ``"aeat.domain.filing.drafts"``).
+      (e.g. ``"cadrumo.domain.filing.drafts"``).
     - :attr:`payload_type`: the typed Pydantic model class wrapped by the
       envelope.
     - :attr:`sensitivity`: the

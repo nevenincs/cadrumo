@@ -10,7 +10,7 @@ reports ``False`` and the retrieval layer degrades to lexical-only, while
 constructing/using a :class:`QueryEmbedder` refuses with the install hint.
 
 The model download is app-controlled: the cache directory is rooted under the
-Settings ``aeat_local_storage_root`` (``<root>/search-models``) rather than the
+Settings ``cadrumo_local_storage_root`` (``<root>/search-models``) rather than the
 user's global Hugging Face cache, so a bundled Desktop Extension keeps its model
 state inside the one app state root. The model is loaded lazily on first embed
 and cached for the embedder's lifetime, so repeated queries pay the load once.
@@ -45,7 +45,7 @@ def search_extra_available() -> bool:
 def search_model_cache_dir(settings: Settings | None = None) -> Path:
     """Return the app-controlled model cache directory under the storage root."""
     resolved = settings or load_settings()
-    return resolved.aeat_local_storage_root / _SEARCH_MODEL_CACHE_SUBDIR
+    return resolved.cadrumo_local_storage_root / _SEARCH_MODEL_CACHE_SUBDIR
 
 
 class QueryEmbedder:

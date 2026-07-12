@@ -1,9 +1,9 @@
-"""Domain errors for the :mod:`aeat.domain.manuals` subpackage.
+"""Domain errors for the :mod:`cadrumo.domain.manuals` subpackage.
 
 Every exception raised by loading, verifying, fetching, or extracting
 from the AEAT *Manual práctico* corpus inherits from
 :class:`ManualError`, which in turn inherits from
-:class:`aeat.core.errors.AeatError`.
+:class:`cadrumo.core.errors.AeatError`.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from ...core.errors import AeatError
 
 
 class ManualError(AeatError):
-    """Base error for every :mod:`aeat.domain.manuals` failure mode."""
+    """Base error for every :mod:`cadrumo.domain.manuals` failure mode."""
 
 
 class ManualNotFoundError(ManualError):
@@ -26,9 +26,9 @@ class ManualParseError(ManualError):
 class ManualReviewRequiredError(ManualError):
     """Raised when a persisted record lacks reviewer metadata.
 
-    The verify CLI rejects any :class:`~aeat.domain.manuals.Manual`,
-    :class:`~aeat.domain.manuals.Section`, or
-    :class:`~aeat.domain.manuals.Rule` record missing
+    The verify CLI rejects any :class:`~cadrumo.domain.manuals.Manual`,
+    :class:`~cadrumo.domain.manuals.Section`, or
+    :class:`~cadrumo.domain.manuals.Rule` record missing
     ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
     ``AEAT_MANUALS_REVIEW_REQUIRED`` setting is enabled.
     """
@@ -39,7 +39,7 @@ class RuleExtractionError(ManualError):
 
     The ``structure``, ``extract-rules``, and ``translate`` subcommands
     define their public CLI shape but raise this exception until the
-    :mod:`aeat.adapters.outbound.llm` subpackage is available.
+    :mod:`cadrumo.adapters.outbound.llm` subpackage is available.
     """
 
 

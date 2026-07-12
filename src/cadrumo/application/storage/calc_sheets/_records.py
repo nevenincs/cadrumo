@@ -19,7 +19,7 @@ tab + row + column at construction time, so callers never hand-roll
 A1 strings — they always go through this record.
 
 See Also:
-    :class:`aeat.domain.calculations.registry.RegistrySnapshot`
+    :class:`cadrumo.domain.calculations.registry.RegistrySnapshot`
         Registry snapshot compiled into these records by the engine.
     :class:`SheetEvidenceFacet`
         Evidence facet carried by the plan and rendered by both workbook

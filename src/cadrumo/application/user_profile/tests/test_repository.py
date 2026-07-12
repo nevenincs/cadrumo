@@ -145,9 +145,9 @@ def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Pa
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         override_settings(
-            aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-            aeat_local_storage_root=storage_root,
-            aeat_active_profile=None,
+            cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+            cadrumo_local_storage_root=storage_root,
+            cadrumo_active_profile=None,
         ),
         pytest.raises(StorageValidationError, match="not attached to an active profile bucket"),
     ):
@@ -161,7 +161,7 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
     profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(StorageValidationError, match="storage runtime is not ready"),
     ):
         UserProfileLifecycleRepository(bucket_id=profile_id)

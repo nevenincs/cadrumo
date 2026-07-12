@@ -133,7 +133,7 @@ def test_ensure_corpus_embeddings_is_none_without_the_extra(tmp_path: Path) -> N
     # Bare-core default: no extra -> no build, no download, lexical-only. The
     # explicit runtime input keeps this assertion stable even in an env where
     # the extra happens to be installed.
-    with override_settings(aeat_local_storage_root=tmp_path):
+    with override_settings(cadrumo_local_storage_root=tmp_path):
         assert ensure_corpus_embeddings(semantic_available=False) is None
         assert not (corpus_search_dir() / "corpus-vectors.npy").exists()
 
@@ -143,11 +143,11 @@ def test_ensure_corpus_embeddings_builds_once_behind_the_extra(tmp_path: Path) -
     # into the app cache and reused. A small chunk set stands in for the whole
     # bundled corpus so the test does not embed thousands of chunks.
     if not search_extra_available():
-        with override_settings(aeat_local_storage_root=tmp_path):
+        with override_settings(cadrumo_local_storage_root=tmp_path):
             assert ensure_corpus_embeddings(corpus_chunks=_CHUNKS) is None
         return
 
-    with override_settings(aeat_local_storage_root=tmp_path):
+    with override_settings(cadrumo_local_storage_root=tmp_path):
         first = ensure_corpus_embeddings(corpus_chunks=_CHUNKS)
         assert first is not None
         matrix, chunk_ids = first

@@ -3,7 +3,7 @@
 Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
 by the :class:`Portal` code ``PORTAL_M111_RETENCIONES_TRABAJO`` under
 the :class:`PortalCategory` member
-:attr:`aeat.domain.portals.PortalCategory.FILING`. Backs the periodic
+:attr:`cadrumo.domain.portals.PortalCategory.FILING`. Backs the periodic
 self-assessment of withholdings and on-account payments on labour income
 and economic activities.
 """

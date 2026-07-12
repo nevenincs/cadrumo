@@ -207,7 +207,7 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
     """
     docs_source = tmp_path / "docs-source"
     shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
-    env = {**os.environ, "AEAT_DOCS_OFFLINE": "1", "AEAT_DOCS_PROJECT_ROOT": str(_REPO_ROOT)}
+    env = {**os.environ, "AEAT_DOCS_OFFLINE": "1", "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT)}
     result = subprocess.run(
         [
             sys.executable,

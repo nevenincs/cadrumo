@@ -60,7 +60,7 @@ def isolated_default_secure_sql(tmp_path: Path, request: pytest.FixtureRequest) 
         yield
         return
     db_path = tmp_path / "repair-integrity.db"
-    with override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
         dispose_engine(settings)
         try:
             yield

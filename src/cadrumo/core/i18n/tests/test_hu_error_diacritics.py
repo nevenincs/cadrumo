@@ -80,7 +80,7 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
 def test_hu_error_strings_render_with_diacritics() -> None:
     """The corrected Hungarian error strings render with proper diacritics."""
     for key, kwargs, must_contain, must_not_contain in _CASES:
-        with override_settings(aeat_output_language="hu"):
+        with override_settings(cadrumo_output_language="hu"):
             rendered = tr(key, **kwargs)
 
         for fragment in must_contain:

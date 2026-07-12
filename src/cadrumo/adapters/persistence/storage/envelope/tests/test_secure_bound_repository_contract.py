@@ -120,7 +120,7 @@ def test_contract_repository_engine_is_real_sqlite(tmp_path: Path) -> None:
 
     db_path = tmp_path / "sanity.db"
     engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+        Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"),
     )
     try:
         assert isinstance(engine, Engine)

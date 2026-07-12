@@ -18,7 +18,7 @@ def test_unbound_profile_uses_localised_suggestion(tmp_path: Path) -> None:
     """The resolver raises the adapter error with translated operator guidance."""
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(GoogleAuthProfileUnboundError) as exc_info,
     ):
         resolve_active_profile()

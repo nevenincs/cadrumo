@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class TopicCatalogueRepository(ResourceCacheRepository["TopicCatalogue", None]):
     """Singleton-keyed repository for the topic catalogue.
 
-    Wraps :func:`aeat.core.topics.load_topic_catalogue` and exposes
+    Wraps :func:`cadrumo.core.topics.load_topic_catalogue` and exposes
     the resulting :class:`TopicCatalogue` through ``singleton``.
     """
 

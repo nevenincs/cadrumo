@@ -10,7 +10,7 @@ the surfaces the operator rules mandate reading first). The full per-verb
 universe stays reachable through the ``search`` + ``execute`` meta pair and
 through runtime toolset activation; it is not advertised up front.
 
-The ``AEAT_MCP_SURFACE`` environment toggle preserves the flat surface for an
+The ``CADRUMO_MCP_SURFACE`` environment toggle preserves the flat surface for an
 operator who wants it (``full``) and for the core-vs-full A/B measurement; the
 shipped default is ``core``. This module is SDK-independent and pure - it
 classifies descriptors by command key - so the policy is unit-tested directly
@@ -24,7 +24,7 @@ from enum import StrEnum
 from ._tools import McpToolDescriptor
 
 #: The environment variable selecting the advertised tool surface.
-SURFACE_ENV_VAR = "AEAT_MCP_SURFACE"
+SURFACE_ENV_VAR = "CADRUMO_MCP_SURFACE"
 
 #: Command-key prefixes whose verbs are part of the orientation slice. The
 #: ``overview`` family derives the taxpayer's obligations from the live surface -
@@ -51,7 +51,7 @@ class SurfaceMode(StrEnum):
 
 
 def resolve_surface_mode(raw: str | None) -> SurfaceMode:
-    """Resolve the ``AEAT_MCP_SURFACE`` value to a :class:`SurfaceMode`.
+    """Resolve the ``CADRUMO_MCP_SURFACE`` value to a :class:`SurfaceMode`.
 
     An unset or blank value is the shipped ``core`` default. A set value must
     name a mode exactly (case-insensitively); an unrecognised value raises with

@@ -5,7 +5,7 @@ templates ``aeat://skill/{name}``, ``aeat://rule/{name}`` and
 ``aeat://persona/{name}`` let a resources-capable client enumerate and pull the
 shipped operating layer verbatim as ``text/markdown``. The concrete resource set
 and the read resolution are both DERIVED from the shipped ``aeat/_data/agent/``
-tree through the ``aeat.agent`` package facade (``iter_skill_documents``,
+tree through the ``cadrumo.agent`` package facade (``iter_skill_documents``,
 ``iter_operator_rules``, ``iter_personas``), never hand-listed, so a new skill,
 rule, or persona ships as a new resource with zero registration and the surface
 cannot drift from the data.

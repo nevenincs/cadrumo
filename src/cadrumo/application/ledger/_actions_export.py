@@ -1,11 +1,11 @@
 """Application export service for bucket-scoped manual ledger snapshots.
 
 The export action reads a loaded
-:class:`~aeat.domain.transactions.TransactionCatalogue`, projects
-:class:`~aeat.application.ledger.LedgerExportRow` instances, serializes them
-with :func:`~aeat.application.export.serialize_tabular_rows`, emits a
+:class:`~cadrumo.domain.transactions.TransactionCatalogue`, projects
+:class:`~cadrumo.application.ledger.LedgerExportRow` instances, serializes them
+with :func:`~cadrumo.application.export.serialize_tabular_rows`, emits a
 ``LEDGER_TRANSACTION_EXPORTED`` bucket event, and returns
-:class:`~aeat.application.ledger.LedgerExportResult`.
+:class:`~cadrumo.application.ledger.LedgerExportResult`.
 """
 
 from __future__ import annotations
@@ -87,10 +87,10 @@ def export_ledger_transactions(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
-    """Export rows for a :class:`~aeat.application.ledger.LedgerExportCommand`.
+    """Export rows for a :class:`~cadrumo.application.ledger.LedgerExportCommand`.
 
     Returns:
-        :class:`~aeat.application.ledger.LedgerExportResult`: The export outcome.
+        :class:`~cadrumo.application.ledger.LedgerExportResult`: The export outcome.
     """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)

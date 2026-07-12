@@ -6,7 +6,7 @@ rejection, the ``Pydantic`` observation/result models, and the
 ``extract_verdict_from_response_text`` parser.
 
 Live navigation tests live behind ``@pytest.mark.aeat_live`` and require
-``AEAT_LIVE_TESTS_ENABLED=1`` plus a working AEAT browser session.
+``CADRUMO_LIVE_TESTS_ENABLED=1`` plus a working AEAT browser session.
 """
 
 from __future__ import annotations

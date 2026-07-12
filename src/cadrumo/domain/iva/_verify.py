@@ -1,13 +1,13 @@
-"""Catalogue-level verification for :mod:`aeat.domain.iva`.
+"""Catalogue-level verification for :mod:`cadrumo.domain.iva`.
 
 Runs cross-record checks on top of the per-model validation that pydantic
 already performs:
 
-* Every :class:`aeat.domain.iva.IvaCategory` member must be present.
+* Every :class:`cadrumo.domain.iva.IvaCategory` member must be present.
 * Every regulation must carry at least one
-  :class:`aeat.domain.iva.IvaCitation`.
+  :class:`cadrumo.domain.iva.IvaCitation`.
 * Every citation must have non-empty
-  :attr:`aeat.domain.iva.IvaCitation.quoted_text`.
+  :attr:`cadrumo.domain.iva.IvaCitation.quoted_text`.
 * Every ``boe_references`` id must match the kebab-case document-id
   shape used by the registry legal catalogue.
 """
@@ -33,10 +33,10 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
     """Run every cross-record check on ``catalogue``.
 
     Args:
-        catalogue: The :class:`aeat.domain.iva.IvaCatalogue` under audit.
+        catalogue: The :class:`cadrumo.domain.iva.IvaCatalogue` under audit.
 
     Returns:
-        A :class:`aeat.domain.iva.IvaVerificationReport` aggregating every
+        A :class:`cadrumo.domain.iva.IvaVerificationReport` aggregating every
         finding.
     """
     issues: list[IvaVerificationIssue] = []

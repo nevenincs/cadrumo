@@ -1,7 +1,7 @@
 """Enumeration of AEAT portal identifiers tracked by the portal registry.
 
 The :class:`Portal` members name every portal that the v1 catalogue
-materialises under :mod:`aeat.domain.portals`. Member values are the member
+materialises under :mod:`cadrumo.domain.portals`. Member values are the member
 name lowercased (e.g. ``"portal_m303_iva_autoliquidacion"``), which
 gives callers a stable, machine-predictable identifier safe to emit
 over CLI / JSON without further mapping.
@@ -28,8 +28,8 @@ class Portal(StrEnum):
 
     Values are the member name lowercased. Adding a new member is a
     first-class enum widening and must be accompanied by a new entry
-    file under :mod:`aeat.domain.portals._entries` or registry assembly will
-    abort with :class:`aeat.domain.portals.PortalIntegrityError`.
+    file under :mod:`cadrumo.domain.portals._entries` or registry assembly will
+    abort with :class:`cadrumo.domain.portals.PortalIntegrityError`.
     """
 
     # Authentication (8)

@@ -23,7 +23,7 @@ sensitive in a tax / PII sense:
   fragments with file paths or captured user input.
 * :class:`ArgumentRecord` values are redacted for secret-named
   parameters by
-  :func:`aeat.entrypoints.cli._observability.build_arguments`
+  :func:`cadrumo.entrypoints.cli._observability.build_arguments`
   (``password`` / ``secret`` / ``token`` / etc. → ``"***"``). Other
   argument values are recorded verbatim.
 * :attr:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
@@ -122,7 +122,7 @@ class ArgumentRecord(BaseModel):
         cli_flag: Optional override carrying the actual Typer option
             spelling (e.g. ``"--json"``) when the Python parameter name
             differs from the user-facing flag. Without the override,
-            :func:`aeat.core.observability._replay._argv_from_arguments`
+            :func:`cadrumo.core.observability._replay._argv_from_arguments`
             derives the flag by replacing underscores with dashes —
             which is wrong for renamed options like
             ``typer.Option(False, "--json")`` bound to parameter
@@ -315,7 +315,7 @@ class RunEventPayload(BaseModel):
 def _require_tz_aware(value: datetime) -> datetime:
     """Reject naive or non-UTC datetimes at the pydantic boundary.
 
-    The sort in :func:`aeat.core.observability.iter_runs` crashes with
+    The sort in :func:`cadrumo.core.observability.iter_runs` crashes with
     ``TypeError: can't compare offset-naive and offset-aware datetimes``
     if the runs directory mixes both shapes. Every writer inside the
     observability layer constructs datetimes with ``tzinfo=UTC``, but a
@@ -371,7 +371,7 @@ class RunTrace(BaseModel):
         entrypoint: Stable CLI entrypoint string.
         arguments: Tuple of :class:`ArgumentRecord` captured for replay.
         corpus_sha256: Fingerprint of ``.vault/`` plus
-            :class:`aeat.core.config.Settings` plus ``env/.env`` at
+            :class:`cadrumo.core.config.Settings` plus ``env/.env`` at
             enter time; gates :func:`replay_run`.
         db_sha256: Fingerprint of the local ``var/`` state tree at
             enter time.

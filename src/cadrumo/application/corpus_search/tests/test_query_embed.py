@@ -29,7 +29,7 @@ def test_search_extra_available_reflects_environment() -> None:
 
 
 def test_cache_dir_is_rooted_in_storage_root(tmp_path: Path) -> None:
-    with override_settings(aeat_local_storage_root=tmp_path):
+    with override_settings(cadrumo_local_storage_root=tmp_path):
         assert search_model_cache_dir() == tmp_path / "search-models"
         embedder = QueryEmbedder()
         assert embedder.cache_dir == tmp_path / "search-models"

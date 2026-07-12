@@ -41,7 +41,7 @@ See Also:
 
 Examples:
     >>> from datetime import date
-    >>> from aeat.domain.deadlines import (
+    >>> from cadrumo.domain.deadlines import (
     ...     TaxpayerProfile,
     ...     DeadlineEngine,
     ...     IVARegime,

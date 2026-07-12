@@ -1,20 +1,20 @@
 """Relation, dependency-classification, and filing-schedule validation helpers.
 
 Validates relations, dependency classifications, and filing schedules
-declared on a :class:`~aeat.domain.calculations.registry.ModeloRevision` for
+declared on a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` for
 reference closure and legal grounding.
 
 Relation validation ties
-:class:`~aeat.domain.calculations.registry._schema.RelationDefinition` records
-back to declared :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+:class:`~cadrumo.domain.calculations.registry._schema.RelationDefinition` records
+back to declared :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
 targets. Dependency classification validation checks
-:class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+:class:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition`
 rows against constructs, relations, and official-source evidence.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+    :func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes these section validators.
-    :func:`aeat.domain.calculations.registry.relation_source_requirements`
+    :func:`cadrumo.domain.calculations.registry.relation_source_requirements`
         Runtime relation requirement projection that relies on validated
         relation/dependency metadata.
 """
@@ -51,9 +51,9 @@ def validate_relation_section(
 ) -> None:
     """Append relation reference, period, and grounding failures.
 
-    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    The supplied :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
     contributes relation declarations. Each relation must target a known
-    :class:`~aeat.domain.calculations.registry.BindingId`, include the legal and
+    :class:`~cadrumo.domain.calculations.registry.BindingId`, include the legal and
     source refs carried by that target binding, and stay inside the revision
     period selector.
     """
@@ -99,9 +99,9 @@ def validate_dependency_classification_section(
 ) -> None:
     """Append dependency-classification closure and duplicate failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     dependency classifications and relations. Each
-    :class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+    :class:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition`
     must cite known refs, point at declared constructs/relations, and cover every
     relation source modelo with a dependency-bearing treatment.
     """
@@ -157,9 +157,9 @@ def _validate_single_dependency_classification(
     """Append failures for one dependency-classification declaration.
 
     The
-    :class:`~aeat.domain.calculations.registry.DependencyClassificationDefinition`
+    :class:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition`
     must be grounded by the supplied legal/source maps, target declared
-    :class:`~aeat.domain.calculations.registry.ConstructDefinition` rows, and
+    :class:`~cadrumo.domain.calculations.registry.ConstructDefinition` rows, and
     mirror the source-modelo plus refs of each referenced relation.
     """
     owner = f"dependency classification {classification.id}"
@@ -210,7 +210,7 @@ def validate_filing_schedule_section(
 ) -> None:
     """Append filing-schedule reference and period-selector failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
     accepted period selector and filing-schedule declarations. Each schedule and
     profile condition must be legally/source grounded and may only name periods
     declared by the revision selector.

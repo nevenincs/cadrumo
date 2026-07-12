@@ -11,10 +11,10 @@ the captured justificante matches the filed observation and an existing current
 overwrite conflicting :class:`ExternalEvidence`.
 
 See Also:
-    :class:`aeat.domain.modelos.ExternalEvidenceKind`
+    :class:`cadrumo.domain.modelos.ExternalEvidenceKind`
         Closed evidence-kind catalogue; live captures stamp
         ``AEAT_LIVE_CAPTURE``.
-    :class:`aeat.application.calculations.CalculationObservationRepository`
+    :class:`cadrumo.application.calculations.CalculationObservationRepository`
         Repository that receives the registry-grounded filed-declaration
         observations consumed by cross-period resolvers.
 """
@@ -119,7 +119,7 @@ def persist_filed_calculation_observation(
     """Promote one AEAT filed-declaration observation into calculation history.
 
     The persisted row is a registry-grounded
-    :class:`aeat.domain.calculations.registry.RegistryModeloObservation`
+    :class:`cadrumo.domain.calculations.registry.RegistryModeloObservation`
     stamped with the law-selected registry revision when it can be resolved.
     """
     if not _is_active_filed_observation(observation):

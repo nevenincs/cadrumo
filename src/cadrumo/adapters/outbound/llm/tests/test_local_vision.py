@@ -94,7 +94,7 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
         images=images,
     )
     try:
-        with override_settings(aeat_llm_ollama_chat_url=endpoint):
+        with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
             completion = asyncio.run(LocalAdapter(timeout_s=3).complete(request))
     finally:
         server.shutdown()

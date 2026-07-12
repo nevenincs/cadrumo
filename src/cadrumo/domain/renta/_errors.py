@@ -1,4 +1,4 @@
-"""Domain errors for the :mod:`aeat.domain.renta` subpackage."""
+"""Domain errors for the :mod:`cadrumo.domain.renta` subpackage."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from ...core.errors import AeatError
 
 
 class RentaError(AeatError):
-    """Base error for every :mod:`aeat.domain.renta` failure mode."""
+    """Base error for every :mod:`cadrumo.domain.renta` failure mode."""
 
 
 class RentaValidationError(RentaError, ValueError):

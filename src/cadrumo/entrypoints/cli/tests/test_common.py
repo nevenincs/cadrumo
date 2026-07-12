@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.fixture
 def _active_profile_env(tmp_path: Path) -> Iterator[Path]:
     """Active-profile runtime with CLI directories isolated; no drafts present."""
-    with override_settings(aeat_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path) as runtime:
+    with override_settings(cadrumo_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path) as runtime:
         yield runtime.storage_root
 
 
@@ -79,7 +79,7 @@ def test_draft_by_id_error_message_contains_draft_id_interpolation(
 @pytest.fixture
 def _sessionless_env(tmp_path: Path) -> Iterator[Path]:
     """Pristine storage root with no profile, English locale."""
-    with override_settings(aeat_output_language="en"), isolated_sessionless_storage_root(tmp_path=tmp_path) as root:
+    with override_settings(cadrumo_output_language="en"), isolated_sessionless_storage_root(tmp_path=tmp_path) as root:
         yield root
 
 

@@ -97,7 +97,7 @@ def register_wizard_catalogue(
 
 
 # ANY-RETURN-RATIONALE-CATALOGUE-SLOT:
-# Concrete wizard-flow type registered at runtime; not importable from aeat.core
+# Concrete wizard-flow type registered at runtime; not importable from cadrumo.core
 # without circular import.
 def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT
     """Return the registered ``SETUP_FLOW`` descriptor.
@@ -118,7 +118,7 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT
 
 
 # ANY-RETURN-RATIONALE-CATALOGUE-SLOT:
-# Concrete wizard-flow type registered at runtime; not importable from aeat.core
+# Concrete wizard-flow type registered at runtime; not importable from cadrumo.core
 # without circular import.
 def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT
     """Return the registered ``WIZARD_FLOWS`` tuple.

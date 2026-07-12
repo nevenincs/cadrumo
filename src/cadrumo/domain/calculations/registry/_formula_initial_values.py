@@ -1,20 +1,20 @@
 """Initial-value assembly for registry formula evaluation.
 
-The :class:`~aeat.domain.calculations.registry.ModeloRevision` declares the
+The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` declares the
 casilla and binding slots that seed
-:func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`;
+:func:`cadrumo.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`;
 materialisation emits
-:class:`~aeat.domain.calculations.registry.CasillaObservation` rows carrying
+:class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows carrying
 registry provenance.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._formula_runtime`
+    :mod:`cadrumo.domain.calculations.registry._formula_runtime`
         Runtime caller that consumes the initial values and materialised
         observations produced here.
-    :mod:`aeat.domain.calculations.registry._bindings`
+    :mod:`cadrumo.domain.calculations.registry._bindings`
         Binding helpers that resolve bound casilla values and equivalent binding
         groups before provenance materialisation.
-    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+    :mod:`cadrumo.domain.calculations.registry._bindings_previous_filing`
         Previous-filing selector model used to decide whether a missing bound
         slot is absent by design for the target period.
 """
@@ -46,9 +46,9 @@ def materialise_observations(
     """Project per-casilla runtime state into the canonical observation tuple.
 
     Each returned
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` is either
+    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` is either
     preserved from computed provenance or rebuilt from a
-    :class:`~aeat.domain.calculations.registry.CasillaDefinition` legal/source
+    :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` legal/source
     reference set.
     """
     materialised: list[CasillaObservation] = []
@@ -91,9 +91,9 @@ def initial_values(
 ) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
     """Build initial numeric casilla values and absent-by-design markers.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~aeat.domain.calculations.registry.CasillaId` membership, formula
-    targets, and :class:`~aeat.domain.calculations.registry.BindingId` slots
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
+    :class:`~cadrumo.domain.calculations.registry.CasillaId` membership, formula
+    targets, and :class:`~cadrumo.domain.calculations.registry.BindingId` slots
     before formula evaluation starts.
     """
     casillas = casillas_by_id(revision)
@@ -144,9 +144,9 @@ def binding_values_with_absent_by_design_defaults(
 ) -> dict[BindingId, Decimal]:
     """Add structural zeroes for absent-by-design binding slots.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` binding
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` binding
     declarations are inspected through
-    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` so
+    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` so
     previous-filing and relation-prefill slots can default only when the
     selected target period has no required source period.
     """
@@ -173,7 +173,7 @@ def _reject_unknown_inputs(
     inputs: Mapping[CasillaId, Decimal],
     casillas: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
-    """Reject supplied :class:`~aeat.domain.calculations.registry.CasillaId` keys."""
+    """Reject supplied :class:`~cadrumo.domain.calculations.registry.CasillaId` keys."""
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
         raise RegistryValidationError(
@@ -215,7 +215,7 @@ def _observation_backed_bindings_for_bound_casilla(
     casilla: CasillaDefinition,
     bindings_by_id: Mapping[BindingId, DataBindingDefinition],
 ) -> tuple[DataBindingDefinition, ...]:
-    """Return bound :class:`~aeat.domain.calculations.registry.DataBindingDefinition` slots."""
+    """Return bound :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` slots."""
     if casilla.input_kind != InputKind.BOUND:
         return ()
     return tuple(

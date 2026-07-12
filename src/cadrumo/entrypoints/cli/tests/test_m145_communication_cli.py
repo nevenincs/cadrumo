@@ -123,12 +123,12 @@ _FORBIDDEN_HELP_PHRASES = (
 def isolated_m145_cli_backend(tmp_path: Path) -> Iterator[str]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         env = {
-            "AEAT_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
-            "AEAT_ACTIVE_PROFILE": runtime.bucket_id,
-            "AEAT_SECRET_STORE_BACKEND": "file",
-            "AEAT_SECRET_STORE_DIR": str(tmp_path / "secrets"),
-            "AEAT_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
-            "AEAT_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
+            "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
+            "CADRUMO_SECRET_STORE_BACKEND": "file",
+            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
+            "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
         }
         old_env = {key: os.environ.get(key) for key in env}
         try:

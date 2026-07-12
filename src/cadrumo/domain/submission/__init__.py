@@ -14,8 +14,8 @@ exported adapter contract, not a dependency consumed by :class:`SubmissionEngine
 :class:`ModeloPresentado` is a strict local-only historical/imported audit
 record persisted through the :class:`SubmissionRepositoryProtocol` port —
 implemented by the adapter
-:class:`~aeat.adapters.persistence.profile.submission.SubmissionRepository` — as
-encrypted AUDIT data under ``aeat.domain.submission.records``. It is distinct from
+:class:`~cadrumo.adapters.persistence.profile.submission.SubmissionRepository` — as
+encrypted AUDIT data under ``cadrumo.domain.submission.records``. It is distinct from
 :class:`domain.modelos.ModeloRecord`:
 :func:`application.modelo.file_modelo_revision` creates a local work-unit filing
 record with ``aeat_accepted=False`` and no external evidence, while

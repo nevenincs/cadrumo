@@ -121,7 +121,7 @@ def _register_compiled_keys() -> None:
     """Register compiled PROFILE_KEYS into the domain registry at import time.
 
     Called once when this module is first imported. The domain's
-    :func:`~aeat.domain.contribuyente._keys.register_profile_keys` receives the
+    :func:`~cadrumo.domain.contribuyente._keys.register_profile_keys` receives the
     compiled tuple so the domain layer never needs to import application
     modules to populate its registry.
     """

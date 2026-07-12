@@ -8,10 +8,10 @@ richer surfaces of its sibling subpackages.
 
 - :class:`AuthProviderProbe` — narrow auth-provider surface for the preflight gate.
 - :class:`DeadlineWindowChecker` — narrow surface over
-  :mod:`aeat.domain.deadlines` used by preflight.
+  :mod:`cadrumo.domain.deadlines` used by preflight.
 - :class:`ModeloFinding` / :class:`ModeloDraftLike` /
   :class:`ModeloDraftLoader` — narrow filing draft surfaces;
-  :class:`aeat.application.filing.ModeloDraft` structurally conforms to
+  :class:`cadrumo.application.filing.ModeloDraft` structurally conforms to
   :class:`ModeloDraftLike`.
 
 Every record is either a strict+frozen pydantic v2 model or a
@@ -98,7 +98,7 @@ class AuthProviderProbe(Protocol):
 
 @runtime_checkable
 class DeadlineWindowChecker(Protocol):
-    """Narrow surface over :mod:`aeat.domain.deadlines` for the preflight gate."""
+    """Narrow surface over :mod:`cadrumo.domain.deadlines` for the preflight gate."""
 
     def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         """Return ``True`` iff the AEAT filing window for ``modelo`` / ``period`` is open on ``today``."""
@@ -108,7 +108,7 @@ class DeadlineWindowChecker(Protocol):
 class ModeloFinding(BaseModel):
     """Minimal finding record consumed by the preflight gate.
 
-    Distinct from :class:`aeat.application.filing.ModeloValidationFinding`,
+    Distinct from :class:`cadrumo.application.filing.ModeloValidationFinding`,
     which carries the validator's full provenance graph; the submission
     engine reads only ``severity`` to decide whether the draft is
     blocked.
@@ -163,7 +163,7 @@ class ModeloDraftStatus(StrEnum):
 class ModeloDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
-    :class:`aeat.application.filing.ModeloDraft` structurally conforms to
+    :class:`cadrumo.application.filing.ModeloDraft` structurally conforms to
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
 
@@ -208,9 +208,9 @@ class SubmissionRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the submission engine.
 
     The concrete
-    :class:`~aeat.adapters.persistence.profile.submission.SubmissionRepository`
+    :class:`~cadrumo.adapters.persistence.profile.submission.SubmissionRepository`
     lives in the persistence adapter and inherits from the adapter-layer
-    :class:`~aeat.adapters.persistence.storage.SecureBoundRepository`. This
+    :class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository`. This
     Protocol captures only the surface the engine consumes so the domain
     depends inward on this port, and the application layer constructs the
     concrete repository and injects it into :class:`SubmissionEngine`.

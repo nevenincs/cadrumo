@@ -172,7 +172,7 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
 def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None:
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
-            override_settings(aeat_local_storage_root=tmp_path / case_name, aeat_active_profile=_BUCKET_A_ID),
+            override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
             pytest.raises(StorageValidationError, match="no active bucket session"),
         ):
             operation()
@@ -181,7 +181,7 @@ def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None
 def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) -> None:
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
-            override_settings(aeat_local_storage_root=tmp_path / case_name, aeat_active_profile=_BUCKET_A_ID),
+            override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
             activate_session(_session(_BUCKET_B_ID)),
             pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"),
         ):
@@ -194,7 +194,7 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
 ) -> None:
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_A_ID):
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
         assert secure_object_unreadable_total() == 0
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
@@ -208,7 +208,7 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_A_ID),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID),
         activate_session(_session(_BUCKET_B_ID)),
     ):
         assert secure_object_unreadable_total() == 0

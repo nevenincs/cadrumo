@@ -8,7 +8,7 @@ The result is renderer-neutral: Google Sheets and offline XLSX renderers both
 consume the same :class:`SheetExportPlan`. The engine stamps registry identity,
 formula provenance, relation prefills, styling facets, and row-set layout; the
 ledger-evidence facet is supplied separately when the caller has bundled
-:class:`aeat.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`.
+:class:`cadrumo.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`.
 """
 
 from __future__ import annotations
@@ -975,7 +975,7 @@ def build_export_plan(
         relation_resolver: Optional callable that resolves the
             snapshot's relations from a structured source (typically
             the local observation store via
-            `aeat.application.calculations.resolve_relations_from_local_store`).
+            `cadrumo.application.calculations.resolve_relations_from_local_store`).
             When supplied AND `relation_values` is None, the engine
             invokes the resolver and stamps each resolved value's
             provenance onto the workbook so the pull adapter can

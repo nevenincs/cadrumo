@@ -3,7 +3,7 @@
 Provides a profile-free function to ask "when does the plazo voluntario
 close for this modelo + filing year + period?" directly from the registry
 deadline windows.  The result feeds the extemporaneidad detection surface
-in :func:`aeat.entrypoints.cli._modelo._work_unit_plazo_lines` and in the
+in :func:`cadrumo.entrypoints.cli._modelo._work_unit_plazo_lines` and in the
 anti-tautology test suite.
 """
 
@@ -20,7 +20,7 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
 
     Queries the validated registry authority for ``filing_year`` and
     returns the ``closes_on`` of the first matching
-    :class:`~aeat.domain.calculations.registry.DeadlineWindowDefinition`.
+    :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`.
 
     Matching rule: the registry window period must carry the same
     filing year and bare registry period token as the supplied WorkUnit

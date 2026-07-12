@@ -4,7 +4,7 @@ This module owns the typed period-state and carry-forward-lot records, the
 FIFO projection that turns filed-period states into source-period lots, and
 the four-year-window expiry policy. All logic here is pure: it depends only on
 :mod:`decimal`, :mod:`datetime`, pydantic, and :data:`STRICT_FROZEN_CONFIG`
-from :mod:`aeat.core`. Repositories, port adapters, and orchestration that wire
+from :mod:`cadrumo.core`. Repositories, port adapters, and orchestration that wire
 these pure pieces to persistence live in the application layer.
 """
 

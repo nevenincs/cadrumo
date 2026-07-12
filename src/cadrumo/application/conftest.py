@@ -1,7 +1,7 @@
 """Pytest fixtures shared across ``application/`` tests.
 
 The autouse ``_isolated_aeat_root`` fixture redirects the
-``aeat_local_storage_root`` field on :class:`~cadrumo.core.config.Settings` to a
+``cadrumo_local_storage_root`` field on :class:`~cadrumo.core.config.Settings` to a
 function-scoped ``tmp_path`` for unit tests under this package, so the
 :class:`~cadrumo.core.BucketPointer` file materialised by
 :func:`~cadrumo.application.user_profile.register_active_profile` and
@@ -38,5 +38,5 @@ def isolated_aeat_root(request: pytest.FixtureRequest, tmp_path: Path) -> Iterat
     if request.node.get_closest_marker("aeat_live"):
         yield
         return
-    with temporary_env(AEAT_LOCAL_STORAGE_ROOT=str(tmp_path)):
+    with temporary_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path)):
         yield

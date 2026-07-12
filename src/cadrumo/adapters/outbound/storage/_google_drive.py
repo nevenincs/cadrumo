@@ -5,8 +5,8 @@ the Drive API:
 
 - Each namespace is a folder directly under the operator-configured
   ``aeat-vault/`` root. The root folder ID is required when
-  ``aeat_storage_provider_kind=google_drive`` and the vault folder is created
-  lazily under ``aeat_google_drive_root_folder_id``.
+  ``cadrumo_storage_provider_kind=google_drive`` and the vault folder is created
+  lazily under ``cadrumo_google_drive_root_folder_id``.
 - Each object is a ``files().create(...)`` upload with
   ``mimeType=application/octet-stream``, named
   ``<hmac_prefix_8>--<label>.bin``. The Drive ``appProperties`` field carries
@@ -195,7 +195,9 @@ class GoogleDriveProvider:
                 translated_message="adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
             )
         vault_folder_name_resolved = (
-            vault_folder_name if vault_folder_name is not None else load_settings().aeat_google_drive_vault_folder_name
+            vault_folder_name
+            if vault_folder_name is not None
+            else load_settings().cadrumo_google_drive_vault_folder_name
         ).strip()
         if not vault_folder_name_resolved:
             raise OutboundStorageValidationError(

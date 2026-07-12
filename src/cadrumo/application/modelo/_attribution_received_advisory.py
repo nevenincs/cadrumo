@@ -26,10 +26,10 @@ See Also:
     :func:`~application.modelo._verification_actions._append_revision_advisory_findings`:
         Verification collector that appends this advisory beside the reduction
         and objective-estimation advisories.
-    :class:`~aeat.domain.user_profile.UserProfileRecord`:
+    :class:`~cadrumo.domain.user_profile.UserProfileRecord`:
         Active taxpayer profile the advisory reads ``attribution_received``
         facts from.
-    :class:`~aeat.domain.modelos.WorkUnit`:
+    :class:`~cadrumo.domain.modelos.WorkUnit`:
         Supplies the modelo, filing year, and bucket that bound the advisory.
 """
 

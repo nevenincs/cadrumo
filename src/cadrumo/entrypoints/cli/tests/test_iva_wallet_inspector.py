@@ -103,7 +103,7 @@ def test_cli_balance_verb_emits_expected_keys(
 
         result = invoke_cached_cli(
             ["--format", "json", "app", "modelo", "iva-wallet", "balance", "--as-of-year", "2026"],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code == 0, result.output
@@ -127,7 +127,7 @@ def test_cli_balance_verb_text_output_lines(
 
         result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "balance", "--as-of-year", "2026"],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code == 0, result.output

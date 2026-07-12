@@ -594,7 +594,7 @@ class BucketMaintenanceService:
         from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path
         from ...core.config import load_settings
 
-        paths = bucket_paths(load_settings().aeat_local_storage_root, command.bucket_id)
+        paths = bucket_paths(load_settings().cadrumo_local_storage_root, command.bucket_id)
         manifest = manifest_path(paths)
         subdir_specs = (
             (BUCKET_DB_DIRNAME, paths.db_dir, (manifest,)),
@@ -662,7 +662,7 @@ class BucketMaintenanceService:
                 bucket_id=command.bucket_id,
                 custody_profile=StorageCustodyProfile.FULL,
             )
-            manifest = read_manifest(bucket_paths(load_settings().aeat_local_storage_root, command.bucket_id))
+            manifest = read_manifest(bucket_paths(load_settings().cadrumo_local_storage_root, command.bucket_id))
             manifest_digest = compute_manifest_digest(manifest)
             occurred_at = now()
             recovery_wrap_bytes: bytes | None = None

@@ -5,9 +5,9 @@ This module owns the pure filing-record catalogue vocabulary: the
 :func:`upsert_filing_record` pure mutator, and the namespace / schema-version
 constants that name the persisted envelope contract. The concrete encrypted
 SQL repository lives in the persistence adapter
-:class:`~aeat.adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`,
+:class:`~cadrumo.adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`,
 behind the read-side
-:class:`~aeat.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`; the
+:class:`~cadrumo.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`; the
 domain package depends only on the structural port.
 """
 
@@ -29,7 +29,7 @@ class ModeloRecordPersistenceError(ModeloError):
     """Raised when the filing-record catalogue cannot be persisted or loaded.
 
     This wraps storage-boundary failures from
-    :class:`~aeat.adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
+    :class:`~cadrumo.adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
     while preserving translated recovery context for callers.
     """
 

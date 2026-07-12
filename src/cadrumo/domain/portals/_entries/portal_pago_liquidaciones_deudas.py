@@ -3,7 +3,7 @@
 Defines the :class:`PortalMetadata` record for :class:`Portal`
 ``PORTAL_PAGO_LIQUIDACIONES_DEUDAS`` under :class:`PortalCategory`
 ``PAYMENT``, exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+:data:`cadrumo.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

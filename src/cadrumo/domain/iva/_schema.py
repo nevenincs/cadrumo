@@ -1,4 +1,4 @@
-"""Strict pydantic v2 schema for the :mod:`aeat.domain.iva` subpackage.
+"""Strict pydantic v2 schema for the :mod:`cadrumo.domain.iva` subpackage.
 
 Every record the subpackage exposes — enumerations, per-rate values,
 citations, regulations, catalogues, verification reports — is defined here.
@@ -7,7 +7,7 @@ matching the current registry-backed legal grounding conventions.
 
 Closed catalogues (:class:`IvaCategory`, :class:`EUMemberState`,
 :class:`IvaRateKind`, :class:`IvaCitationSource`) are :class:`enum.StrEnum`
-subclasses. Multilingual fields use :class:`aeat.core.i18n.tr` to ensure
+subclasses. Multilingual fields use :class:`cadrumo.core.i18n.tr` to ensure
 the internationalization engine can dynamically resolve the correct locale
 at runtime for UI labels and descriptions. Legal quotes remain Spanish-
 authoritative.
@@ -295,7 +295,7 @@ _ManualRef = Annotated[
 
 
 def _require_translatable(translatable: tr, field_name: str) -> None:
-    """Assert a :class:`aeat.core.i18n.tr` carries a non-empty translation key.
+    """Assert a :class:`cadrumo.core.i18n.tr` carries a non-empty translation key.
 
     Args:
         translatable: The translatable mapping under validation.
@@ -412,7 +412,7 @@ class IvaRegulation(_IvaStrictFrozen):
 
     Every regulation carries at least one :class:`IvaCitation`. The
     substrate-level invariant enforced by
-    :func:`aeat.domain.iva.verify_catalogue` additionally requires every
+    :func:`cadrumo.domain.iva.verify_catalogue` additionally requires every
     shipped regulation to cite real legal articles so downstream tools
     can surface the legal backing of any classification.
 
@@ -520,7 +520,7 @@ class IvaCatalogue(_IvaStrictMutable):
 
 
 class IvaVerificationIssue(_IvaStrictFrozen):
-    """A single finding produced by :func:`aeat.domain.iva.verify_catalogue`.
+    """A single finding produced by :func:`cadrumo.domain.iva.verify_catalogue`.
 
     Attributes:
         level: Severity, either ``"error"`` or ``"warning"``.
@@ -543,7 +543,7 @@ class IvaVerificationReport(_IvaStrictFrozen):
 
     Attributes:
         issues: All findings produced by
-            :func:`aeat.domain.iva.verify_catalogue`.
+            :func:`cadrumo.domain.iva.verify_catalogue`.
     """
 
     issues: tuple[IvaVerificationIssue, ...] = Field(default_factory=tuple)

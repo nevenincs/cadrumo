@@ -83,7 +83,7 @@ def auth_acquisition_lock_path(settings: Settings, kind: AuthProviderKind) -> Pa
     """Return the profile/provider-scoped lock path."""
     from ...core import require_active_bucket_id
 
-    return settings.aeat_token_dir / f"{require_active_bucket_id()}-{kind.value}-auth.lock"
+    return settings.cadrumo_token_dir / f"{require_active_bucket_id()}-{kind.value}-auth.lock"
 
 
 def inspect_auth_acquisition_lock(
@@ -227,8 +227,8 @@ def acquire_auth_acquisition_lock(
 def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
     """Return the acquisition-lock TTL for a provider."""
     if kind is AuthProviderKind.CLAVE_MOVIL:
-        return int(settings.aeat_clave_movil_timeout_ms / 1000) + settings.aeat_auth_clave_movil_lock_buffer_s
-    return settings.aeat_auth_certificate_lock_ttl_s
+        return int(settings.aeat_clave_movil_timeout_ms / 1000) + settings.cadrumo_auth_clave_movil_lock_buffer_s
+    return settings.cadrumo_auth_certificate_lock_ttl_s
 
 
 def _status_context(status: AuthAcquisitionLockStatus) -> Mapping[str, object]:

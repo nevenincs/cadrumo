@@ -42,9 +42,9 @@ def _state(*, profile: str, bucket_id: str) -> WorkflowState:
     """Build a WorkflowState — the state is a passthrough here.
 
     ``active_transaction_catalogue_repository`` resolves the active
-    bucket via the precedence chain (``Settings.aeat_active_profile``
+    bucket via the precedence chain (``Settings.cadrumo_active_profile``
     override or pointer file), not via any field on the state record.
-    Callers set ``override_settings(aeat_active_profile=...)`` per
+    Callers set ``override_settings(cadrumo_active_profile=...)`` per
     assertion. The ``profile`` and ``bucket_id`` arguments are kept
     for call-site readability.
     """
@@ -86,12 +86,12 @@ def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket
     second_state = _state(profile="beta", bucket_id=_SECOND_BUCKET_ID)
     first_transaction = _transaction("same-provider-row")
 
-    with override_settings(aeat_active_profile=_FIRST_BUCKET_ID):
+    with override_settings(cadrumo_active_profile=_FIRST_BUCKET_ID):
         active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
             TransactionCatalogue.from_transactions((first_transaction,)),
         )
         first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
-    with override_settings(aeat_active_profile=_SECOND_BUCKET_ID):
+    with override_settings(cadrumo_active_profile=_SECOND_BUCKET_ID):
         second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
 
     assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)

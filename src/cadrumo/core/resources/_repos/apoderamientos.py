@@ -15,7 +15,7 @@ from .._repository import ResourceCacheRepository
 class ApoderamientosRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the apoderamientos scope catalogue.
 
-    Wraps :func:`aeat.domain.auth.apoderamientos.load_default_catalogue`
+    Wraps :func:`cadrumo.domain.auth.apoderamientos.load_default_catalogue`
     behind the shared :class:`ResourceCacheRepository` cache.
     """
 

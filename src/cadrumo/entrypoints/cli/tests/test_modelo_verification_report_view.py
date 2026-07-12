@@ -113,7 +113,7 @@ def test_refused_verification_report_next_action_line_uses_selected_language(
         granted_verificado_completo=False,
     )
 
-    with override_settings(aeat_output_language=language):
+    with override_settings(cadrumo_output_language=language):
         next_action_line = next(
             line for line in _verification_report_lines(report) if line.startswith("next_action\t")
         )

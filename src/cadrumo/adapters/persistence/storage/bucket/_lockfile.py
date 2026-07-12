@@ -54,7 +54,7 @@ def _poll_interval_seconds() -> float:
     module-level constant that snapshotted settings at import time
     and could not be overridden after the module had loaded.
     """
-    return _load_settings().aeat_bucket_lock_poll_interval_s
+    return _load_settings().cadrumo_bucket_lock_poll_interval_s
 
 
 def lock_path(paths: BucketPaths) -> Path:

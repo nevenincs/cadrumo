@@ -3,7 +3,7 @@
 The live justificante pull retrieves the authentic, AEAT-signed
 *justificante de presentación* PDF for a filed work unit through the
 read-only sede surface (``capture_justificante`` →
-:class:`~aeat.adapters.outbound.aeat.sede.SedeCapture`) and persists it
+:class:`~cadrumo.adapters.outbound.aeat.sede.SedeCapture`) and persists it
 as a bucket-scoped, content-addressed secure object. The persisted
 artefact is the durable, official evidence the local reconciler reads —
 the operator no longer hand-downloads the receipt.
@@ -12,9 +12,9 @@ This service is a stateful :class:`SnapshotService` sibling of the
 Modelo 100 borrador service: it keys supersession on the
 ``(modelo, filing_year, period)`` axis so a re-filed period's fresh
 capture supersedes the prior ACTIVE one, and it persists each snapshot
-through a :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+through a :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
 at FINANCIAL sensitivity under
-:data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
+:data:`cadrumo.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
 and records each capture as a lifecycle event via
 :class:`BucketEventHistoryRepository`.
 
@@ -24,21 +24,21 @@ raw-bytes ``pdf_sha256`` is the content address used for snapshot-id
 derivation and dedup.
 
 See Also:
-    :mod:`aeat.application.live`
+    :mod:`cadrumo.application.live`
         Public read-only live facade that orchestrates capture and reports
-        :class:`~aeat.application.live.JustificanteCaptureOutcome`.
-    :func:`aeat.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+        :class:`~cadrumo.application.live.JustificanteCaptureOutcome`.
+    :func:`cadrumo.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
         Filed-history path that performs the same metadata registration and
         current-record evidence stamping from declaration-register artefacts.
-    :mod:`aeat.application.overview`
+    :mod:`cadrumo.application.overview`
         Calendar projection that reads :class:`JustificanteCaptureSnapshot`
         rows and matching domain justificante metadata as AEAT-side evidence.
-    :class:`aeat.application.live._snapshot_base.SecureSnapshotRepository`
+    :class:`cadrumo.application.live._snapshot_base.SecureSnapshotRepository`
         Shared encrypted snapshot repository used by this bucket-scoped
         capture repository.
-    :class:`~aeat.domain.modelos.ModeloRecord`
+    :class:`~cadrumo.domain.modelos.ModeloRecord`
         Local filing record stamped with live
-        :class:`~aeat.domain.modelos.ExternalEvidence` only after the receipt
+        :class:`~cadrumo.domain.modelos.ExternalEvidence` only after the receipt
         matches the current filing axis.
 """
 
@@ -166,7 +166,7 @@ def justificante_capture_snapshot_object_key(bucket_id: str, snapshot_id: str) -
     """Return the secure-object key for one bucket's justificante-capture snapshot.
 
     The key shape is the object-key grammar declared by
-    :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
     """
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
@@ -270,11 +270,11 @@ class JustificanteCaptureSnapshotRepository:
     a deliberate divergence from the shared base.
 
     The namespace, sensitivity, schema version, and key grammar come from
-    :data:`aeat.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
     Each :class:`JustificanteCaptureSnapshot` is written through an
-    :class:`~aeat.adapters.persistence.storage.Envelope` so the captured PDF,
+    :class:`~cadrumo.adapters.persistence.storage.Envelope` so the captured PDF,
     CSV, and expediente metadata stay inside the encrypted
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     bucket store.
     """
 
@@ -602,7 +602,7 @@ def register_capture_as_filing_evidence(
     referenced justificante record loads. Emits a
     ``MODELO_LIVE_EVIDENCE_STAMPED`` bucket event recording the action.
 
-    Returns the stamped :class:`~aeat.domain.modelos.ModeloRecord`.
+    Returns the stamped :class:`~cadrumo.domain.modelos.ModeloRecord`.
 
     Raises:
         LiveApplicationInputError: when no current filing record exists for the

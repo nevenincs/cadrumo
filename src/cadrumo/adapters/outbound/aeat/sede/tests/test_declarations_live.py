@@ -3,7 +3,7 @@
 Drives the *Consultar declaraciones presentadas* form against
 the real AEAT sede with a Cl@ve-móvil session. It is deselected when:
 
-* ``AEAT_LIVE_TESTS_ENABLED`` is unset (every live test gates on
+* ``CADRUMO_LIVE_TESTS_ENABLED`` is unset (every live test gates on
   this), OR
 * Cl@ve-móvil credentials are not configured for the live backend.
 

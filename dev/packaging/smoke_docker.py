@@ -104,7 +104,7 @@ def _docker_cli() -> DockerCli:
     """Resolve the Docker CLI backend, preferring native WSL Docker on Windows."""
     if os.name == "nt":
         wsl = shutil.which("wsl")
-        distro = os.environ.get("AEAT_WSL_DOCKER_DISTRO", "Ubuntu")
+        distro = os.environ.get("CADRUMO_WSL_DOCKER_DISTRO", "Ubuntu")
         if wsl is not None:
             candidate = DockerCli((wsl, "-d", distro, "--", "docker"), f"wsl:{distro}", distro)
             if _docker_responds(candidate):
@@ -214,9 +214,9 @@ storage_root = Path("/work/profile-root")
 storage_root.mkdir(parents=True, exist_ok=True)
 env = {
     **os.environ,
-    "AEAT_LOCAL_STORAGE_ROOT": str(storage_root),
-    "AEAT_OUTPUT_LANGUAGE": "en",
-    "AEAT_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
+    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+    "CADRUMO_OUTPUT_LANGUAGE": "en",
+    "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
 }
 create = run(
     [
@@ -281,8 +281,8 @@ from aeat.domain.attachments import (
 root = Path("/work/runtime-surfaces")
 root.mkdir(parents=True, exist_ok=True)
 settings = Settings(
-    aeat_database_url=f"sqlite:///{(root / 'attachments.db').as_posix()}",
-    aeat_local_storage_root=root / "state",
+    cadrumo_database_url=f"sqlite:///{(root / 'attachments.db').as_posix()}",
+    cadrumo_local_storage_root=root / "state",
 )
 session = BucketSession.open(
     bucket_id="packaging-smoke",
@@ -324,7 +324,7 @@ finally:
     dispose_engine(settings)
 
 try:
-    LLMClient(settings=Settings(aeat_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
+    LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state"))._build_adapter(LLMProvider.ANTHROPIC)
 except LLMConfigError as exc:
     if exc.suggestion != "pip install aeat-cli[anthropic]":
         raise SystemExit(f"unexpected Anthropic install hint: {exc.suggestion!r}")
@@ -366,12 +366,12 @@ env = {
     **os.environ,
     "AEAT_BROWSER_CHANNEL": "chromium",
     "AEAT_BROWSER_HEADLESS": "true",
-    "AEAT_LOCAL_STORAGE_ROOT": "/work/profile-root",
-    "AEAT_OUTPUT_LANGUAGE": "en",
+    "CADRUMO_LOCAL_STORAGE_ROOT": "/work/profile-root",
+    "CADRUMO_OUTPUT_LANGUAGE": "en",
     "PLAYWRIGHT_BROWSERS_PATH": "/work/playwright-browsers",
 }
 os.environ.update(env)
-Path(env["AEAT_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
+Path(env["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
 Path(env["PLAYWRIGHT_BROWSERS_PATH"]).mkdir(parents=True, exist_ok=True)
 
 target = f"aeat-cli[browser] @ {wheel.as_uri()}"

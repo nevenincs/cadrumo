@@ -235,8 +235,8 @@ class AeatAuthenticator:
         cert = self.load_certificate()
         return evaluate_loaded_certificate_health(
             cert,
-            warn_days=self._settings.aeat_cert_warn_days,
-            critical_days=self._settings.aeat_cert_critical_days,
+            warn_days=self._settings.cadrumo_cert_warn_days,
+            critical_days=self._settings.cadrumo_cert_critical_days,
             now=now,
         )
 
@@ -628,8 +628,8 @@ class AeatAuthenticator:
             health = self._certificate_health_check(
                 self._settings.aeat_certificate_path,
                 password=self._settings.aeat_certificate_password_secret,
-                warn_days=self._settings.aeat_cert_warn_days,
-                critical_days=self._settings.aeat_cert_critical_days,
+                warn_days=self._settings.cadrumo_cert_warn_days,
+                critical_days=self._settings.cadrumo_cert_critical_days,
                 backend=backend,
                 friendly_name=self._settings.aeat_certificate_friendly_name,
             )

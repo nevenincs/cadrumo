@@ -51,7 +51,7 @@ def test_usage_default_root_uses_central_settings(tmp_path: Path) -> None:
     """Direct usage-recorder construction must honor the centralized usage directory."""
 
     configured_root = tmp_path / "configured-usage"
-    with override_settings(aeat_llm_usage_dir=configured_root):
+    with override_settings(cadrumo_llm_usage_dir=configured_root):
         recorder = UsageRecorder()
 
     response = LLMResponse(

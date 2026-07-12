@@ -4,23 +4,23 @@ The module separates stored-evidence reads from live acquisition. Listing and
 load helpers read encrypted local IVA compensation history, wallet decisions,
 wallet observations, and acquisition manifests without contacting AEAT. Capture
 helpers enforce the live-read gate, acquire an authenticated
-:class:`~aeat.adapters.outbound.aeat.auth.AeatSession`,
+:class:`~cadrumo.adapters.outbound.aeat.auth.AeatSession`,
 then persist filed-history and wallet evidence before reconciliation consumes it.
 
 Encrypted acquisition manifests are stored through the active bucket's
 :class:`SecureObjectRepository` via the
 typed manifest repository under
-:data:`~aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
+:data:`~cadrumo.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
 The manifest is redacted operational evidence of the acquisition attempt; it is
 not a remote submission record.
 
 See Also:
-    :class:`~aeat.application.live.IvaRemoteStateStoredEvidenceReport`
+    :class:`~cadrumo.application.live.IvaRemoteStateStoredEvidenceReport`
         Stored-evidence report returned without a live AEAT read.
-    :class:`~aeat.application.live.IvaRemoteStateAcquisitionReport`
+    :class:`~cadrumo.application.live.IvaRemoteStateAcquisitionReport`
         Combined read-only acquisition report for filed history and wallet
         surfaces.
-    :func:`~aeat.application.live._session.active_verified_session`
+    :func:`~cadrumo.application.live._session.active_verified_session`
         Shared read-only authenticated-session helper used by individual
         capture surfaces.
 """
@@ -119,10 +119,10 @@ class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemo
 
     The namespace, sensitivity, schema version, and object-key grammar come
     from
-    :data:`~aeat.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    :data:`~cadrumo.adapters.persistence.storage.LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE`.
+    The :class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` base
     writes each manifest through an
-    :class:`~aeat.adapters.persistence.storage.Envelope` so acquisition ids and
+    :class:`~cadrumo.adapters.persistence.storage.Envelope` so acquisition ids and
     redacted surface summaries stay inside the encrypted secure-object store.
     """
 
@@ -659,7 +659,7 @@ async def _capture_iva_compensation_wallet_with_session(
         taxpayer_nif=taxpayer_nif,
         settings=settings,
     )
-    store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-wallet"
+    store_root = output_root if output_root is not None else settings.cadrumo_audit_dir / "live" / "iva-wallet"
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 
 
@@ -717,7 +717,9 @@ async def _capture_iva_remote_state_for_active_storage(
             )
 
         _AeatAccessGate(settings).require_live_read()
-        store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
+        store_root = (
+            output_root if output_root is not None else settings.cadrumo_audit_dir / "live" / "iva-remote-state"
+        )
         filed_history: IvaCompensationHistoryCaptureReport | None = None
         wallet: IvaWalletCaptureReport | None = None
         auth_result: _AuthenticatedAeatSessionResult | None = None

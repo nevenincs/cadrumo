@@ -69,8 +69,8 @@ class CensoSyncService:
 
         Used by the ledger ratios CLI and the manual-transaction
         classify path to apply the legally-effective
-        :func:`aeat.application.ledger._ratios.censo_override_warning`
-        and :func:`aeat.application.ledger._ratios.censo_business_pct_for`
+        :func:`cadrumo.application.ledger._ratios.censo_override_warning`
+        and :func:`cadrumo.application.ledger._ratios.censo_business_pct_for`
         helpers without each consumer re-implementing the profile-fact
         lookup. Reads the encrypted profile record's canonical path-value
         projection — the same operator-declared facts ``config profile

@@ -76,7 +76,7 @@ def diagnostics_telemetry_status(
         help=tr(
             "cli.diagnostics.telemetry.opt_in_help",
             default=(
-                "Preview the posture as if AEAT_TELEMETRY_OPT_IN were this value for this "
+                "Preview the posture as if CADRUMO_TELEMETRY_OPT_IN were this value for this "
                 "invocation only; omit to report the deployment's actual configured setting."
             ),
         ),
@@ -87,7 +87,7 @@ def diagnostics_telemetry_status(
         help=tr(
             "cli.diagnostics.telemetry.tier_help",
             default=(
-                "Preview the posture as if AEAT_TELEMETRY_TIER were this value (off / crash_only / "
+                "Preview the posture as if CADRUMO_TELEMETRY_TIER were this value (off / crash_only / "
                 "full) for this invocation only; omit to report the deployment's actual configured tier."
             ),
         ),
@@ -98,7 +98,7 @@ def diagnostics_telemetry_status(
         help=tr(
             "cli.diagnostics.telemetry.endpoint_help",
             default=(
-                "Preview the posture as if AEAT_TELEMETRY_ENDPOINT were this URL for this invocation "
+                "Preview the posture as if CADRUMO_TELEMETRY_ENDPOINT were this URL for this invocation "
                 "only; omit to report the deployment's actual configured endpoint."
             ),
         ),
@@ -111,11 +111,11 @@ def diagnostics_telemetry_status(
 
     overrides: dict[str, object] = {}
     if opt_in is not None:
-        overrides["aeat_telemetry_opt_in"] = opt_in
+        overrides["cadrumo_telemetry_opt_in"] = opt_in
     if tier is not None:
-        overrides["aeat_telemetry_tier"] = _parse_tier(tier)
+        overrides["cadrumo_telemetry_tier"] = _parse_tier(tier)
     if endpoint is not None:
-        overrides["aeat_telemetry_endpoint"] = endpoint
+        overrides["cadrumo_telemetry_endpoint"] = endpoint
 
     if overrides:
         ctx.with_resource(override_settings(**overrides))
@@ -143,8 +143,8 @@ def diagnostics_telemetry_status(
             tr(
                 "cli.diagnostics.telemetry.status.off_hint",
                 default=(
-                    "Telemetry stays fully local by default. To opt in, set AEAT_TELEMETRY_OPT_IN=true "
-                    "and AEAT_TELEMETRY_TIER to crash_only or full in env/.env."
+                    "Telemetry stays fully local by default. To opt in, set CADRUMO_TELEMETRY_OPT_IN=true "
+                    "and CADRUMO_TELEMETRY_TIER to crash_only or full in env/.env."
                 ),
             ),
         )
@@ -178,7 +178,7 @@ def diagnostics_telemetry_flush(
         help=tr(
             "cli.diagnostics.telemetry.opt_in_help",
             default=(
-                "Preview/send as if AEAT_TELEMETRY_OPT_IN were this value for this invocation only; "
+                "Preview/send as if CADRUMO_TELEMETRY_OPT_IN were this value for this invocation only; "
                 "omit to use the deployment's actual configured setting."
             ),
         ),
@@ -189,7 +189,7 @@ def diagnostics_telemetry_flush(
         help=tr(
             "cli.diagnostics.telemetry.tier_help",
             default=(
-                "Preview/send as if AEAT_TELEMETRY_TIER were this value (off / crash_only / full) for "
+                "Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off / crash_only / full) for "
                 "this invocation only; omit to use the deployment's actual configured tier."
             ),
         ),
@@ -200,7 +200,7 @@ def diagnostics_telemetry_flush(
         help=tr(
             "cli.diagnostics.telemetry.endpoint_help",
             default=(
-                "Preview/send as if AEAT_TELEMETRY_ENDPOINT were this URL for this invocation only; "
+                "Preview/send as if CADRUMO_TELEMETRY_ENDPOINT were this URL for this invocation only; "
                 "omit to use the deployment's actual configured endpoint."
             ),
         ),
@@ -225,11 +225,11 @@ def diagnostics_telemetry_flush(
 
     overrides: dict[str, object] = {}
     if opt_in is not None:
-        overrides["aeat_telemetry_opt_in"] = opt_in
+        overrides["cadrumo_telemetry_opt_in"] = opt_in
     if tier is not None:
-        overrides["aeat_telemetry_tier"] = _parse_tier(tier)
+        overrides["cadrumo_telemetry_tier"] = _parse_tier(tier)
     if endpoint is not None:
-        overrides["aeat_telemetry_endpoint"] = endpoint
+        overrides["cadrumo_telemetry_endpoint"] = endpoint
 
     if overrides:
         ctx.with_resource(override_settings(**overrides))
@@ -314,7 +314,7 @@ def diagnostics_telemetry_flush(
                 code="diagnostics.telemetry.flush.no_endpoint",
                 message=tr(
                     "cli.diagnostics.telemetry.flush.no_endpoint_notice",
-                    default="Nothing was sent: no AEAT_TELEMETRY_ENDPOINT is configured.",
+                    default="Nothing was sent: no CADRUMO_TELEMETRY_ENDPOINT is configured.",
                 ),
             ),
         )

@@ -159,7 +159,7 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
             "--iva-amount",
             "50.00",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
@@ -220,7 +220,7 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
             "--irpf-category",
             "actividad_economica",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert classified.exit_code == 0, classified.output
 
@@ -276,7 +276,7 @@ def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_siz
             "--irpf-category",
             "actividad_economica",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "120"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "120"},
     )
 
     assert classified.exit_code != 0
@@ -335,7 +335,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
             "--actor",
             "Javier",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert classified.exit_code == 0, classified.output
 
@@ -405,7 +405,7 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
             "--actor",
             "Javier",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert classified.exit_code == 0, classified.output
 
@@ -468,7 +468,7 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
             "--irpf-category",
             "rental_withholding",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "160"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "160"},
     )
 
     assert classified.exit_code != 0
@@ -570,7 +570,7 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
             "--business-pct",
             "1.5",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
@@ -677,7 +677,7 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
         ["app", "ledger", "add", "--help"],
         ["app", "ledger", "allocate", "--help"],
     ):
-        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+        result = _invoke(args, env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
 
         assert result.exit_code == 0, result.output
         flat = _flatten_box(result.output or "")
@@ -697,7 +697,7 @@ def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> 
         ["app", "ledger", "classify", "--help"],
         ["app", "ledger", "allocate", "--help"],
     ):
-        result = _invoke(args, env={"AEAT_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+        result = _invoke(args, env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
 
         assert result.exit_code == 0, result.output
         flat = _flatten_box(result.output or "")
@@ -729,13 +729,13 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
             "--category-id",
             "telefonia_movil",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert classified.exit_code == 0, classified.output
 
     preflight = _invoke(
         ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert preflight.exit_code == 0, preflight.output
     assert "ready\tfalse" in preflight.output, preflight.output
@@ -758,7 +758,7 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
 
     ratios_set = _invoke(
         ["app", "ledger", "ratios", "set", "telefonia_movil", "0.5"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert ratios_set.exit_code == 0, ratios_set.output
 
@@ -775,13 +775,13 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
             "--category-id",
             "telefonia_movil",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert allocate.exit_code == 0, allocate.output
 
     preflight = _invoke(
         ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert preflight.exit_code == 0, preflight.output
     assert "issues\t0" in preflight.output, preflight.output
@@ -806,7 +806,7 @@ def test_ledger_classify_refuses_pipeline_managed_state(tmp_path: Path, system_s
 
     result = _invoke(
         ["app", "ledger", "classify", txn_id, "--classification", system_state],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
@@ -833,7 +833,7 @@ def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state:
             "--classification",
             system_state,
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code != 0, result.output
@@ -865,7 +865,7 @@ def test_ledger_add_default_classification_is_accepted(tmp_path: Path) -> None:
             "--description",
             "office supplies",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]

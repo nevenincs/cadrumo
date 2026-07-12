@@ -105,7 +105,7 @@ def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> No
     with pytest.raises(ProfileSchemaValidationError):
         _register(_VICTIM_PROFILE_ID, facts=_INCOMPLETE_FACTS)
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     paths = bucket_paths(root, _VICTIM_PROFILE_ID)
 
     # The existence claims are gone: no manifest, no pointer.
@@ -131,7 +131,7 @@ def test_successful_atomic_create_lands_the_artifacts_a_failure_clears(_backend:
 
     _register(_SURVIVOR_PROFILE_ID, facts=_VALID_FACTS)
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     paths = bucket_paths(root, _SURVIVOR_PROFILE_ID)
 
     assert manifest_path(paths).is_file()

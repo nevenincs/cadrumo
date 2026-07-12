@@ -655,9 +655,9 @@ def _expired_live_session_env(tmp_path: Path) -> dict[str, str]:
         idle_deadline=_EXPIRED_LIVE_SESSION_REFERENCE - timedelta(minutes=1),
     )
     return {
-        "AEAT_TOKEN_DIR": str(tmp_path),
-        "AEAT_ACTIVE_PROFILE": "default",
-        "AEAT_OUTPUT_LANGUAGE": "en",
+        "CADRUMO_TOKEN_DIR": str(tmp_path),
+        "CADRUMO_ACTIVE_PROFILE": "default",
+        "CADRUMO_OUTPUT_LANGUAGE": "en",
     }
 
 
@@ -688,7 +688,7 @@ def test_live_cli_requires_live_gate_before_remote_read_or_local_writes(
     )
 
     assert result.exit_code != 0
-    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
+    assert "live AEAT reads require CADRUMO_LIVE_TESTS_ENABLED" in result.output
     if output_root is not None:
         assert not output_root.exists()
 
@@ -702,7 +702,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
     )
     output_root = tmp_path / "captured-sources"
 
-    with pytest.raises(AeatLiveReadNotEnabledError, match=r"live AEAT reads require AEAT_LIVE_TESTS_ENABLED"):
+    with pytest.raises(AeatLiveReadNotEnabledError, match=r"live AEAT reads require CADRUMO_LIVE_TESTS_ENABLED"):
         asyncio.run(
             capture_source_filed_data(
                 modelo="180",

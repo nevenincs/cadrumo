@@ -460,7 +460,7 @@ class TestSearchOptionSelection:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = Settings(aeat_token_dir=tmp_path)
+        settings = Settings(cadrumo_token_dir=tmp_path)
         profile = Profile(name="test-declarations", storage_state_path=tmp_path / "state.json")
         async with (
             shared_playwright_runtime() as playwright,

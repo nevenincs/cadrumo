@@ -117,7 +117,7 @@ def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Pa
     """A log directory routed under a real file cannot be created and reports why.
 
     Reproduces the class of failure the Windows PowerShell testimonial hit: an
-    ``AEAT_LOCAL_STORAGE_ROOT`` that resolves to an inaccessible / non-directory
+    ``CADRUMO_LOCAL_STORAGE_ROOT`` that resolves to an inaccessible / non-directory
     path. The helper must return a diagnostic reason string instead of letting
     the underlying ``OSError`` escape.
     """
@@ -141,7 +141,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
     """An uncreatable log directory must NOT crash startup with a raw traceback.
 
     Real-behavior reproduction of Windows PowerShell issue #577: the log
-    directory derived from an inaccessible ``AEAT_LOCAL_STORAGE_ROOT`` cannot be
+    directory derived from an inaccessible ``CADRUMO_LOCAL_STORAGE_ROOT`` cannot be
     created, and ``configure_logging`` runs at import time — before any CLI
     error boundary. The contract: no exception escapes, logging degrades to
     stderr-only (no ``FileHandler`` for the dead path), and an instructive,
@@ -156,7 +156,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
     original_configured = _logging_mod._CONFIGURED
     try:
         _logging_mod._CONFIGURED = False
-        with override_settings(aeat_log_dir=dead_log_dir):
+        with override_settings(cadrumo_log_dir=dead_log_dir):
             # Must not raise despite the uncreatable directory.
             configure_logging()
 
@@ -172,7 +172,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
 
         captured = capsys.readouterr()
         assert "stderr-only" in captured.err
-        assert "AEAT_LOCAL_STORAGE_ROOT" in captured.err
+        assert "CADRUMO_LOCAL_STORAGE_ROOT" in captured.err
         assert not dead_log_dir.exists()
     finally:
         # Rebuild the normal configuration so sibling tests see a healthy logger.

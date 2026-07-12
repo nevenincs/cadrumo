@@ -438,7 +438,7 @@ def _build_env(repo_root: Path) -> dict[str, str]:
     """
     return {
         **os.environ,
-        "AEAT_DOCS_PROJECT_ROOT": str(repo_root),
+        "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
         "AEAT_DOCS_FORCE_DEFERRED_MODELS": "1",
         "AEAT_DOCS_FORCE_CLI_REFERENCE": "1",
     }

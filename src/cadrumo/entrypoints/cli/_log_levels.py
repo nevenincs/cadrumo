@@ -1,7 +1,7 @@
 """CLI log-level resolution for quiet/default/verbose/debug modes.
 
 Encapsulates the contract for translating the CLI's ``--quiet`` /
-``--verbose`` / ``--debug`` flag triple plus the ``AEAT_LOG_LEVEL``
+``--verbose`` / ``--debug`` flag triple plus the ``CADRUMO_LOG_LEVEL``
 environment variable into a single
 :class:`LogLevel` value, and applies that
 value to the configured root logger via
@@ -25,7 +25,7 @@ class LogLevelResolutionError(AeatError):
     """Raised when the requested CLI log-level inputs are contradictory.
 
     Examples include passing more than one of ``--quiet`` / ``--verbose``
-    / ``--debug`` together, or setting ``AEAT_LOG_LEVEL`` to a value
+    / ``--debug`` together, or setting ``CADRUMO_LOG_LEVEL`` to a value
     outside the :class:`LogLevel`
     vocabulary.
     """
@@ -65,7 +65,7 @@ def resolve_log_level(
     """Resolve the effective CLI log level from flags and environment.
 
     Flags take precedence over the environment in the order
-    ``debug > verbose > quiet``. When no flag is set, ``AEAT_LOG_LEVEL``
+    ``debug > verbose > quiet``. When no flag is set, ``CADRUMO_LOG_LEVEL``
     is consulted; an empty value falls back to
     :attr:`LogLevel.DEFAULT`.
 
@@ -82,7 +82,7 @@ def resolve_log_level(
 
     Raises:
         LogLevelResolutionError: If more than one verbosity flag is
-            active simultaneously, or if ``AEAT_LOG_LEVEL`` carries a
+            active simultaneously, or if ``CADRUMO_LOG_LEVEL`` carries a
             value outside the
             :class:`LogLevel` vocabulary.
     """
@@ -99,7 +99,7 @@ def resolve_log_level(
         return LogLevel.QUIET
 
     if env is not None:
-        raw_value = env.get("AEAT_LOG_LEVEL", "").strip().lower()
+        raw_value = env.get("CADRUMO_LOG_LEVEL", "").strip().lower()
     else:
         # No explicit env mapping: read via Settings (single AEAT-config surface).
         # The env parameter remains for tests that need to inject an isolated
@@ -107,7 +107,7 @@ def resolve_log_level(
         from ...core.config import load_settings
 
         try:
-            raw_value = load_settings().aeat_log_level.strip().lower()
+            raw_value = load_settings().cadrumo_log_level.strip().lower()
         except (KeyError, ValueError, AttributeError):
             raw_value = ""
     if not raw_value:

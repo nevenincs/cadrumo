@@ -1,20 +1,20 @@
 """Logging handler that bridges :mod:`logging` to JSONL run events.
 
 The handler subscribes to the standard :mod:`logging` machinery so any
-caller using :func:`aeat.core.logging.get_logger` automatically picks
+caller using :func:`cadrumo.core.logging.get_logger` automatically picks
 up the JSONL sink while a
-:func:`aeat.core.observability.run_context` is active. Records that do
+:func:`cadrumo.core.observability.run_context` is active. Records that do
 not carry a ``run_event`` extra are skipped — bare log lines never
 leak into ``events.jsonl``.
 
 The ``run_id`` / ``step_id`` attributes are stamped onto every
 :class:`logging.LogRecord` by the factory installed in
-:mod:`aeat.core.logging`.
+:mod:`cadrumo.core.logging`.
 
 Each sink instance is bound to a single ``run_id`` and filters any
 event whose ``run_id`` does not match. This prevents cross-run
 contamination when several
-:func:`aeat.core.observability.run_context` blocks execute concurrently
+:func:`cadrumo.core.observability.run_context` blocks execute concurrently
 (e.g. tasks in an :mod:`asyncio` event loop) and therefore have
 competing sinks attached to the root logger at the same time.
 """
@@ -40,10 +40,10 @@ logger = get_logger(__name__)
 
 
 class JsonlRunSink(logging.Handler):
-    """Append-only JSONL sink for :class:`aeat.core.observability.RunEvent` records.
+    """Append-only JSONL sink for :class:`cadrumo.core.observability.RunEvent` records.
 
     The handler opens the target path lazily on first emit so a
-    :func:`aeat.core.observability.run_context` enter is cheap when no
+    :func:`cadrumo.core.observability.run_context` enter is cheap when no
     events ever fire. Each emit flushes the file handle;
     :meth:`close` additionally calls :func:`os.fsync` so a process kill
     mid-run still leaves a durable JSONL trailer on disk.

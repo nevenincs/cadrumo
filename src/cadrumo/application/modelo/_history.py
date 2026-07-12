@@ -6,16 +6,16 @@ verifications, filings, supersessions, amendments, and discards.
 
 The catalogue substrate is the bucket-scoped append-only event log loaded from
 :class:`BucketEventHistoryRepository`. Events scoped to a work unit land under
-four :class:`aeat.domain.buckets.BucketEventObjectType` values:
+four :class:`cadrumo.domain.buckets.BucketEventObjectType` values:
 ``WORK_UNIT``, ``CALCULATION_REVISION``, ``VERIFICATION_REPORT``, and
 ``FILING_RECORD``. The assembler walks each related object id and merges the
-emitted :class:`aeat.domain.buckets.BucketEvent` streams in
+emitted :class:`cadrumo.domain.buckets.BucketEvent` streams in
 chronological order.
 
 The normalized records remain the source of relational truth:
-:class:`aeat.domain.modelos.WorkUnit` selects the lifecycle root,
+:class:`cadrumo.domain.modelos.WorkUnit` selects the lifecycle root,
 :class:`CalculationRevision` identifies calculation attempts under it,
-:class:`aeat.domain.modelos.VerificationReport` identifies verification outcomes
+:class:`cadrumo.domain.modelos.VerificationReport` identifies verification outcomes
 for those revisions, and :class:`ModeloRecord` identifies local filing records.
 The event history explains how those records changed; it does not replace their
 catalogues.
@@ -23,13 +23,13 @@ catalogues.
 The assembler is pure read: no mutation, no remote contact.
 
 See Also:
-    :func:`aeat.application.modelo.create_work_unit`:
+    :func:`cadrumo.application.modelo.create_work_unit`:
         Emits work-unit create, rename, and discard events.
-    :func:`aeat.application.modelo.calculate_modelo_work_revision`:
+    :func:`cadrumo.application.modelo.calculate_modelo_work_revision`:
         Persists calculation revisions and ``MODELO_CALCULATION_CREATED`` events.
-    :func:`aeat.application.modelo.verify_modelo_revision`:
+    :func:`cadrumo.application.modelo.verify_modelo_revision`:
         Persists verification reports and verification pass/refusal events.
-    :func:`aeat.application.modelo.file_modelo_revision`:
+    :func:`cadrumo.application.modelo.file_modelo_revision`:
         Persists local filing records and filing/supersession events.
 """
 
@@ -57,7 +57,7 @@ from ._action_errors import WorkUnitNotFoundError
 
 
 class WorkUnitHistoryEvent(BaseModel):
-    """One projected :class:`aeat.domain.buckets.BucketEvent` row in a work-unit history stream."""
+    """One projected :class:`cadrumo.domain.buckets.BucketEvent` row in a work-unit history stream."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -71,7 +71,7 @@ class WorkUnitHistoryEvent(BaseModel):
 
 
 class WorkUnitHistory(BaseModel):
-    """Chronologically ordered event timeline for one :class:`aeat.domain.modelos.WorkUnit`."""
+    """Chronologically ordered event timeline for one :class:`cadrumo.domain.modelos.WorkUnit`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -92,10 +92,10 @@ def assemble_work_unit_history(
     """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
     Events are merged from object-scoped
-    :class:`aeat.domain.buckets.BucketEvent` streams and ordered by
+    :class:`cadrumo.domain.buckets.BucketEvent` streams and ordered by
     ``occurred_at`` ascending. The work unit itself is loaded to confirm it
     exists (raising :class:`WorkUnitNotFoundError` if not) and to discover every
-    :class:`CalculationRevision`, :class:`aeat.domain.modelos.VerificationReport`,
+    :class:`CalculationRevision`, :class:`cadrumo.domain.modelos.VerificationReport`,
     and :class:`ModeloRecord` id that belongs to its lifecycle.
 
     The returned :class:`WorkUnitHistoryEvent` rows copy event payloads into a
@@ -104,7 +104,7 @@ def assemble_work_unit_history(
     the lifecycle services that produce the underlying records.
 
     See Also:
-        :meth:`aeat.domain.buckets.BucketEventHistoryCatalogue.for_object`:
+        :meth:`cadrumo.domain.buckets.BucketEventHistoryCatalogue.for_object`:
             Supplies each object-scoped event stream merged here.
         :class:`WorkUnitHistory`:
             The immutable read model returned to callers.

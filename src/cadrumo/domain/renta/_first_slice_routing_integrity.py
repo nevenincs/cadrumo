@@ -8,9 +8,9 @@ snapshot-build error, not a silent runtime ``KeyError`` when the renta
 deductibility validator runs.
 
 This check is intentionally scoped to each revision's OWN bindings
-(:func:`~aeat.domain.calculations.registry.renta_first_slice_binding_target_casillas`),
+(:func:`~cadrumo.domain.calculations.registry.renta_first_slice_binding_target_casillas`),
 not the universal BOE-prescribed
-:data:`aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
+:data:`cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
 codomain spanning every filing year. Casilla ids are added, split, and
 renumbered across Modelo 100 revisions -- for example "Aportaciones a
 mutualidades alternativas" shares a combined casilla with Seguridad
@@ -25,11 +25,11 @@ This check is owned by the ``renta`` domain because the routing table
 is renta domain knowledge. The registry must not import ``renta``
 directly -- that reverses the dependency direction the hexagonal
 architecture enforces. Instead this module registers a
-:class:`~aeat.domain.calculations.registry.CrossDomainSnapshotCheck`
+:class:`~cadrumo.domain.calculations.registry.CrossDomainSnapshotCheck`
 with the registry validator via
-:func:`~aeat.domain.calculations.registry.register_cross_domain_snapshot_check`.
+:func:`~cadrumo.domain.calculations.registry.register_cross_domain_snapshot_check`.
 The registration runs at ``renta`` package import time (see
-:mod:`aeat.domain.renta` ``__init__``); the registry calls the check
+:mod:`cadrumo.domain.renta` ``__init__``); the registry calls the check
 through the abstract Protocol without naming ``renta``.
 """
 

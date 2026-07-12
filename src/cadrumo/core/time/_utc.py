@@ -7,7 +7,7 @@ Two semantics exist across the codebase for handling naive datetimes:
   naive datetimes (e.g. PKCS#12 certificate timestamps).
 
 * :func:`validate_utc_aware` — reject naive datetimes or non-UTC
-  datetimes with :class:`~aeat.core.errors.CoreValidationError`.  Used
+  datetimes with :class:`~cadrumo.core.errors.CoreValidationError`.  Used
   at persistence and model boundaries where a naive datetime indicates
   a programming error.
 
@@ -55,7 +55,7 @@ def coerce_utc_aware(value: datetime) -> datetime:
 def validate_utc_aware(value: datetime) -> datetime:
     """Return *value* unchanged if it is a UTC-aware datetime.
 
-    Raises :class:`aeat.core.errors.CoreValidationError` when *value*
+    Raises :class:`cadrumo.core.errors.CoreValidationError` when *value*
     is naive (no ``tzinfo``) or when its UTC offset is not zero
     (i.e. not UTC).
 

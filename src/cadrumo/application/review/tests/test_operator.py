@@ -75,7 +75,7 @@ def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
 
 def test_reserved_review_kind_error_omits_raw_operator_value() -> None:
     sensitive_kind = "client-tax-id-12345678Z-private-note"
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         error = ReviewKindReservedError(sensitive_kind, "classification decisions are not emitted review items")
         rendered = resolve_error_message(error)
 

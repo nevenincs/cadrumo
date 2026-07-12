@@ -1,4 +1,4 @@
-"""Real-subprocess proof of the ``AEAT_PYTEST_WORKERS`` conftest hook.
+"""Real-subprocess proof of the ``CADRUMO_PYTEST_WORKERS`` conftest hook.
 
 :mod:`cadrumo.tests._worker_count_hook` is a ``pytest_xdist_auto_num_workers``
 hook, consulted by pytest-xdist only during ``-n auto`` resolution (not
@@ -60,7 +60,7 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
     process) to a sentinel file.
 
     Args:
-        env_var_value: Value to set for ``AEAT_PYTEST_WORKERS`` in the
+        env_var_value: Value to set for ``CADRUMO_PYTEST_WORKERS`` in the
             subprocess environment, or ``None`` to leave it unset.
 
     Returns:
@@ -74,9 +74,9 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
         (tmp_path / "test_probe.py").write_text(_PROBE_TEST, encoding="utf-8")
 
         env = dict(os.environ)
-        env.pop("AEAT_PYTEST_WORKERS", None)
+        env.pop("CADRUMO_PYTEST_WORKERS", None)
         if env_var_value is not None:
-            env["AEAT_PYTEST_WORKERS"] = env_var_value
+            env["CADRUMO_PYTEST_WORKERS"] = env_var_value
 
         result = subprocess.run(
             [
@@ -118,20 +118,20 @@ def _xdist_default_worker_count() -> int:
 
 
 def test_worker_count_is_capped_when_env_var_set() -> None:
-    """``AEAT_PYTEST_WORKERS=2`` resolves ``-n auto`` to exactly 2 workers."""
+    """``CADRUMO_PYTEST_WORKERS=2`` resolves ``-n auto`` to exactly 2 workers."""
     assert callable(resolve_auto_num_workers)
     worker_count, _stderr = _resolved_worker_count(env_var_value="2")
     assert worker_count == 2
 
 
 def test_worker_count_falls_through_to_xdist_default_when_unset() -> None:
-    """An unset ``AEAT_PYTEST_WORKERS`` falls through byte-for-byte to xdist's own default."""
+    """An unset ``CADRUMO_PYTEST_WORKERS`` falls through byte-for-byte to xdist's own default."""
     worker_count, _stderr = _resolved_worker_count(env_var_value=None)
     assert worker_count == _xdist_default_worker_count()
 
 
 def test_worker_count_falls_through_when_invalid_not_a_crash() -> None:
-    """An invalid ``AEAT_PYTEST_WORKERS`` falls through to the default and warns, never crashes."""
+    """An invalid ``CADRUMO_PYTEST_WORKERS`` falls through to the default and warns, never crashes."""
     worker_count, stderr = _resolved_worker_count(env_var_value="notanumber")
     assert worker_count == _xdist_default_worker_count()
-    assert "AEAT_PYTEST_WORKERS is not a number" in stderr
+    assert "CADRUMO_PYTEST_WORKERS is not a number" in stderr

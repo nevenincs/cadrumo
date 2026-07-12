@@ -92,7 +92,7 @@ def read_profile_bucket(
     Args:
         label: Operator-facing profile label. Must be non-empty.
         root: Optional AEAT root override. When ``None``, resolves
-            ``Settings.aeat_local_storage_root`` via ``load_settings``.
+            ``Settings.cadrumo_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, a tombstoned profile is also
             a candidate; default ``False`` matches only live profiles.
 
@@ -161,11 +161,11 @@ def resolve_profile_bucket(
 ) -> ProfileBucketPointer | None:
     """Resolve a profile identifier that may be a UUID bucket id OR a display label.
 
-    The active-profile precedence chain (``AEAT_ACTIVE_PROFILE`` env var, the
+    The active-profile precedence chain (``CADRUMO_ACTIVE_PROFILE`` env var, the
     ``active-profile`` pointer file) and operator input both carry whichever
     identifier the operator knows. An operator addresses a profile by the
     label they chose at ``profile create`` — they never see the immutable
-    UUIDv4 bucket id — so ``AEAT_ACTIVE_PROFILE=<label>`` is a natural,
+    UUIDv4 bucket id — so ``CADRUMO_ACTIVE_PROFILE=<label>`` is a natural,
     intended operator action. Resolving the value as a UUID bucket directory
     only would hard-miss on a label (``buckets/<label>`` does not exist),
     refusing every profile-scoped command with a "no manifest" error.
@@ -181,7 +181,7 @@ def resolve_profile_bucket(
     Args:
         identifier: A profile UUID bucket id or an operator display label.
         root: Optional AEAT root override. When ``None``, resolves
-            ``Settings.aeat_local_storage_root`` via ``load_settings``.
+            ``Settings.cadrumo_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, inspect surfaces can resolve a
             deleted profile by UUID or name; default ``False`` matches only
             live profiles.
@@ -220,7 +220,7 @@ def list_profile_buckets(
 
     Args:
         root: Optional AEAT root override. When ``None``, resolves
-            ``Settings.aeat_local_storage_root`` via ``load_settings``.
+            ``Settings.cadrumo_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, tombstoned profiles are
             included; default ``False`` returns only live profiles.
 
@@ -331,7 +331,7 @@ def _resolve_root(root: Path | None) -> Path:
         return root
     from ...core.config import load_settings
 
-    return load_settings().aeat_local_storage_root
+    return load_settings().cadrumo_local_storage_root
 
 
 __all__ = [

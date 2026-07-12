@@ -37,18 +37,18 @@ import warnings
 
 import pytest
 
-_ENV_VAR = "AEAT_PYTEST_WORKERS"
+_ENV_VAR = "CADRUMO_PYTEST_WORKERS"
 
 
 def resolve_auto_num_workers(config: pytest.Config) -> int | None:
-    """Return the ``AEAT_PYTEST_WORKERS`` worker cap, or ``None`` to defer to xdist.
+    """Return the ``CADRUMO_PYTEST_WORKERS`` worker cap, or ``None`` to defer to xdist.
 
     Args:
         config: The active :class:`pytest.Config` (required by the
             ``pytest_xdist_auto_num_workers`` hook signature; unused here).
 
     Returns:
-        The parsed integer cap when ``AEAT_PYTEST_WORKERS`` is set to a valid
+        The parsed integer cap when ``CADRUMO_PYTEST_WORKERS`` is set to a valid
         integer; ``None`` when the variable is unset, blank, or not a valid
         integer -- in every ``None`` case, resolution falls through to
         xdist's own hookimpl unchanged.

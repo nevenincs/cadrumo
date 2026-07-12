@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
-        override_settings(aeat_local_storage_root=tmp_path / "storage", aeat_output_language="en"),
+        override_settings(cadrumo_local_storage_root=tmp_path / "storage", cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         yield

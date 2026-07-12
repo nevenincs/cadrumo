@@ -1,6 +1,6 @@
 """Live-gated service-account impersonation integration test.
 
-Deselected unless `AEAT_LIVE_TESTS_GOOGLE=1` AND the operator has provisioned
+Deselected unless `CADRUMO_LIVE_TESTS_GOOGLE=1` AND the operator has provisioned
 a real target service account and granted the ADC identity
 `roles/iam.serviceAccountTokenCreator` on it. This is the live counterpart to
 the hermetic tests in `test_impersonation.py` (which prove the ADC-discovery
@@ -8,7 +8,7 @@ failure path and every typed-record contract with no network access).
 
 Required environment for a live run:
 
-- `AEAT_LIVE_TESTS_GOOGLE=1` — the opt-in itself.
+- `CADRUMO_LIVE_TESTS_GOOGLE=1` — the opt-in itself.
 - `AEAT_IMPERSONATION_TARGET_PRINCIPAL` — the fully-qualified service-account
   email to impersonate (e.g.
   `aeat-export@my-project.iam.gserviceaccount.com`). The ADC identity

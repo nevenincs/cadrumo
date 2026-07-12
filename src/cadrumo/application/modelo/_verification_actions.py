@@ -10,7 +10,7 @@ Verification findings are the operator-facing gate vocabulary. BLOCKING-severity
 findings refuse the verified-complete transition; WARNING-severity ADVISORY
 findings remain visible in the report without bricking verify, file, or export.
 Calculate-path source diagnostics are separate
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` advisories;
+:class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` advisories;
 this module converts only verify-time registry, profile, provenance, and
 cross-period facts into :class:`ModeloVerificationFinding` records.
 
@@ -21,11 +21,11 @@ Verification emits bucket-history entries through
 transactions.
 
 See Also:
-    :func:`~aeat.application.calculations.evaluate_cross_period_clean_state`:
+    :func:`~cadrumo.application.calculations.evaluate_cross_period_clean_state`:
         Shared cross-period gate used by verify, file, and export.
-    :mod:`~aeat.application.modelo._calculation_diagnostics`:
+    :mod:`~cadrumo.application.modelo._calculation_diagnostics`:
         Calculate-path diagnostics that feed advisory observations before verify.
-    :mod:`~aeat.domain.modelos`:
+    :mod:`~cadrumo.domain.modelos`:
         Finding kind, severity, and completeness-status authority.
 """
 
@@ -374,7 +374,7 @@ def _missing_evidence_findings(
     Loads the :class:`CalculationRevision` source transactions for the supplied
     :class:`WorkUnit` and
     projects each
-    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
     :class:`ModeloVerificationFinding`. Deductible input-IVA and output-IVA gaps
     remain advisory on the verify path. A revision with no contributing
@@ -556,7 +556,7 @@ def verify_modelo_revision(
             repository co-emitted with verified revisions.
         cross_period_expected_member_sets: Optional expected-member overrides
             for the cross-period clean-state gate.
-        workflow_engine: Optional :class:`~aeat.application.workflow.WorkflowEngine`
+        workflow_engine: Optional :class:`~cadrumo.application.workflow.WorkflowEngine`
             override for tests and controlled workflow runs.
         workflow_runs_dir: Optional workflow-runs directory override.
         settings: Optional runtime settings for workflow-engine construction.
@@ -566,14 +566,14 @@ def verify_modelo_revision(
         The persisted :class:`VerificationReport`.
 
     Raises:
-        :class:`~aeat.application.modelo.CalculationRevisionNotFoundError`: The
+        :class:`~cadrumo.application.modelo.CalculationRevisionNotFoundError`: The
             requested calculation revision does not exist in the active
             catalogue.
-        :class:`~aeat.application.modelo.CalculationRevisionStateError`: The
+        :class:`~cadrumo.application.modelo.CalculationRevisionStateError`: The
             revision is not in ``BORRADOR`` state.
-        :class:`~aeat.application.modelo.WorkUnitNotFoundError`: The owning work
+        :class:`~cadrumo.application.modelo.WorkUnitNotFoundError`: The owning work
             unit is missing.
-        :class:`~aeat.application.modelo.ModeloCrossPeriodCleanStateError`: A
+        :class:`~cadrumo.application.modelo.ModeloCrossPeriodCleanStateError`: A
             required cross-period dependency has a blocking clean-state finding.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -762,7 +762,7 @@ def _build_participation_writes(
 
     For each ``source_transaction_id`` of the verified revision, load that
     transaction's existing
-    :class:`~aeat.domain.modelos.TransactionRevisionParticipationIndex`, upsert
+    :class:`~cadrumo.domain.modelos.TransactionRevisionParticipationIndex`, upsert
     the new ``VERIFICADO_COMPLETO`` participation (replacing any prior entry for
     the same revision), and return the resulting ``SecureObjectWrite`` so the
     caller co-emits them in the same atomic unit of work as the revision save. A

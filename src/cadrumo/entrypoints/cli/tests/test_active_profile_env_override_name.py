@@ -1,11 +1,11 @@
-"""Real-operator test: ``AEAT_ACTIVE_PROFILE`` accepts the display label.
+"""Real-operator test: ``CADRUMO_ACTIVE_PROFILE`` accepts the display label.
 
 An operator addresses their profile by the display label they chose at
 ``profile create`` — the immutable UUIDv4 bucket id is never surfaced to them.
-The active-profile env override ``AEAT_ACTIVE_PROFILE`` is the highest-precedence
+The active-profile env override ``CADRUMO_ACTIVE_PROFILE`` is the highest-precedence
 rung of the active-profile precedence chain, and the canonical ``core.config``
 storage-route resolver keys directly on ``buckets/<value>``. Before the
-entrypoint name→UUID normalization, a label-valued ``AEAT_ACTIVE_PROFILE`` made
+entrypoint name→UUID normalization, a label-valued ``CADRUMO_ACTIVE_PROFILE`` made
 every profile-bound command hard-miss with a "no registered bucket manifest"
 refusal. This module pins the fixed behaviour by driving the REAL CLI root
 callback (the normalization site) against a REAL profile created through the real
@@ -82,10 +82,10 @@ def _create_profile_and_resolve_uuid() -> str:
 
 
 def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
-    """``AEAT_ACTIVE_PROFILE=<label>`` resolves the operator's bucket (the fixed bug).
+    """``CADRUMO_ACTIVE_PROFILE=<label>`` resolves the operator's bucket (the fixed bug).
 
     The real operator path: a fresh resolution whose active profile comes from
-    the ``AEAT_ACTIVE_PROFILE`` env override set to the LABEL the operator chose.
+    the ``CADRUMO_ACTIVE_PROFILE`` env override set to the LABEL the operator chose.
     Before the entrypoint normalization this refused with "no registered bucket
     manifest at buckets/<label>"; the root callback now normalizes the label to
     its UUID via the single profile resolver, so a profile-bound command resolves.
@@ -93,7 +93,7 @@ def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
     uuid = _create_profile_and_resolve_uuid()
     assert uuid != _LABEL, "the bucket id must be a minted UUID, not the label"
 
-    with override_settings(aeat_active_profile=_LABEL):
+    with override_settings(cadrumo_active_profile=_LABEL):
         listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert listed.exit_code == 0, listed.output
@@ -105,7 +105,7 @@ def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
 
 
 def test_env_override_by_uuid_is_unchanged() -> None:
-    """``AEAT_ACTIVE_PROFILE=<uuid>`` resolves through the direct bucket-id route.
+    """``CADRUMO_ACTIVE_PROFILE=<uuid>`` resolves through the direct bucket-id route.
 
     The UUID fast path is current behavior: normalization only fires when the
     direct UUID-bucket lookup misses, so a UUID-valued override never reaches the
@@ -113,7 +113,7 @@ def test_env_override_by_uuid_is_unchanged() -> None:
     """
     uuid = _create_profile_and_resolve_uuid()
 
-    with override_settings(aeat_active_profile=uuid):
+    with override_settings(cadrumo_active_profile=uuid):
         listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert listed.exit_code == 0, listed.output
@@ -139,7 +139,7 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     from ....adapters.persistence.storage.master_key import KdfParams
     from ....core.config import load_settings
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
     provision_bucket_directory(root, duplicate_uuid)
     write_manifest(
@@ -195,7 +195,7 @@ def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
     _create_profile_and_resolve_uuid()  # bucket 1: label "operator"
     _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
 
-    with override_settings(aeat_active_profile=_LABEL):
+    with override_settings(cadrumo_active_profile=_LABEL):
         listed = invoke_cached_cli(["--language", "en", "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output
@@ -233,7 +233,7 @@ def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
 
 
 def test_env_override_unknown_label_does_not_resolve() -> None:
-    """An ``AEAT_ACTIVE_PROFILE`` label matching no live profile does not resolve.
+    """An ``CADRUMO_ACTIVE_PROFILE`` label matching no live profile does not resolve.
 
     The normalization no-ops on an unknown label (neither a UUID bucket nor a live
     label); the per-command active-profile guard then refuses rather than silently
@@ -241,7 +241,7 @@ def test_env_override_unknown_label_does_not_resolve() -> None:
     """
     _create_profile_and_resolve_uuid()
 
-    with override_settings(aeat_active_profile="no-such-profile"):
+    with override_settings(cadrumo_active_profile="no-such-profile"):
         listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output

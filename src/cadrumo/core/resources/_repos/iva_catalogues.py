@@ -17,10 +17,10 @@ from .._repository import ResourceCacheRepository
 class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
     """Year-keyed repository for the bundled IVA regulation catalogue.
 
-    Wraps :func:`aeat.domain.iva._catalogue.load_iva_catalogues`. The
+    Wraps :func:`cadrumo.domain.iva._catalogue.load_iva_catalogues`. The
     Settings env-override seam for ``AEAT_IVA_CATALOGUE_ROOT`` is
     threaded through the constructor's ``root`` parameter; the
-    :func:`aeat.core.resources.resources` factory reads Settings and
+    :func:`cadrumo.core.resources.resources` factory reads Settings and
     passes the resolved root once at construction. Missing years raise
     :class:`ResourceNotFoundError`.
     """

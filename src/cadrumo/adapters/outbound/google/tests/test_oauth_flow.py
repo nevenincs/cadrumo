@@ -74,9 +74,9 @@ def test_local_server_error_classifier_wraps_unclassified_failures() -> None:
 def test_resolve_active_tax_id_refuses_missing_profile_bucket(tmp_path: Path) -> None:
     with (
         override_settings(
-            aeat_active_profile="missing-profile",
-            aeat_local_storage_root=tmp_path,
-            aeat_secret_store_backend="unsecured",
+            cadrumo_active_profile="missing-profile",
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_secret_store_backend="unsecured",
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
@@ -169,7 +169,7 @@ def test_interactive_terminal_guard_refuses_a_non_tty_stdin() -> None:
 def test_login_flow_refuses_missing_profile_record_before_oauth_network(tmp_path: Path) -> None:
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-profile-missing") as profile,
-        override_settings(aeat_secret_store_backend="unsecured"),
+        override_settings(cadrumo_secret_store_backend="unsecured"),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
         run_login_flow(_valid_oauth_client(), profile.bucket_id)

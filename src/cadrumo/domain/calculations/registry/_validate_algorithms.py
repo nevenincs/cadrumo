@@ -1,20 +1,20 @@
 """Algorithm provider and binding validation helpers.
 
 Validates algorithm provider and binding sections declared on a
-:class:`~aeat.domain.calculations.registry.ModeloRevision` for legal and source
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` for legal and source
 reference closure.
 
 Provider declarations define deterministic callable contracts; binding
 declarations connect those contracts to
-:class:`~aeat.domain.calculations.registry.CasillaId` inputs and outputs. Both
-must carry :class:`~aeat.domain.calculations.registry.LegalReference` and
-:class:`~aeat.domain.calculations.registry.SourceReference` grounding enforced by
-the :class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~cadrumo.domain.calculations.registry.CasillaId` inputs and outputs. Both
+must carry :class:`~cadrumo.domain.calculations.registry.LegalReference` and
+:class:`~cadrumo.domain.calculations.registry.SourceReference` grounding enforced by
+the :class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+    :func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that calls these algorithm validators.
-    :func:`aeat.domain.calculations.registry._validate_reference_sections.check_algorithm_binding_refs`
+    :func:`cadrumo.domain.calculations.registry._validate_reference_sections.check_algorithm_binding_refs`
         General id-reference checker for algorithm-binding references.
 """
 
@@ -43,8 +43,8 @@ def validate_algorithm_provider_section(
 ) -> None:
     """Append provider reference and source-tier failures.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` contributes
-    :class:`~aeat.domain.calculations.registry._schema.AlgorithmProviderDefinition`
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` contributes
+    :class:`~cadrumo.domain.calculations.registry._schema.AlgorithmProviderDefinition`
     rows. Each provider must cite known legal/source refs and carry
     ``official_source_guidance`` evidence.
     """
@@ -70,12 +70,12 @@ def validate_algorithm_binding_section(
 ) -> None:
     """Append binding reference, schema-shape, and source-tier failures.
 
-    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    The supplied :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
     provides the algorithm bindings. The validator checks each
-    :class:`~aeat.domain.calculations.registry._schema.AlgorithmBindingDefinition`
+    :class:`~cadrumo.domain.calculations.registry._schema.AlgorithmBindingDefinition`
     against its
-    :class:`~aeat.domain.calculations.registry._schema.AlgorithmProviderDefinition`,
-    declared :class:`~aeat.domain.calculations.registry.CasillaId` values,
+    :class:`~cadrumo.domain.calculations.registry._schema.AlgorithmProviderDefinition`,
+    declared :class:`~cadrumo.domain.calculations.registry.CasillaId` values,
     resolvable input values, constants, and evidence-grounding requirements.
     """
     for alg_binding in revision.algorithm_bindings:

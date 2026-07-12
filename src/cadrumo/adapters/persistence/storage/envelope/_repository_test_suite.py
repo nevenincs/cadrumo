@@ -107,7 +107,7 @@ class SecureRepositoryContractCase[T: BaseModel]:
       route its underlying :class:`SecureObjectRepository` at the
       currently-active process-default engine (i.e. construct
       ``Concrete()`` rather than passing an explicit engine), because
-      the contract harness rebinds ``AEAT_DATABASE_URL`` to a fresh
+      the contract harness rebinds ``CADRUMO_DATABASE_URL`` to a fresh
       SQLite file per check and disposes cached engines between
       checks.
     * ``first_payload`` / ``second_payload`` - two distinct,
@@ -145,8 +145,8 @@ def _activated_engine(db_path: Path):
     dispose_engine()
     url = f"sqlite:///{db_path.as_posix()}"
     with override_settings(
-        aeat_local_storage_root=db_path.parent / "storage-root",
-        aeat_database_url=url,
+        cadrumo_local_storage_root=db_path.parent / "storage-root",
+        cadrumo_database_url=url,
     ) as settings:
         engine = create_engine_from_settings(settings)
         try:
@@ -351,7 +351,7 @@ def assert_secure_repository_contract[T: BaseModel](
     For each check the function:
 
       1. Disposes any cached process-default engine.
-      2. Rebinds ``AEAT_DATABASE_URL`` and ``AEAT_LOCAL_STORAGE_ROOT``
+      2. Rebinds ``CADRUMO_DATABASE_URL`` and ``CADRUMO_LOCAL_STORAGE_ROOT``
          through ``override_settings`` to a fresh SQLite file under ``tmp_path``.
       3. Builds a real engine for that URL and materialises the ORM
          schema.

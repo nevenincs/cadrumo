@@ -70,7 +70,7 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
     state on exit, and is async-context-safer than token-based reset.
     """
     dispose_engine()
-    dev_test_passphrase = load_settings().aeat_dev_test_database_password
+    dev_test_passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
         aeat_auth_provider=None,
         aeat_certificate_path=None,
@@ -78,17 +78,17 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
         aeat_clave_movil_dni_nie=None,
         aeat_clave_movil_dni_fecha=None,
         aeat_clave_movil_nie_soporte=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=dev_test_passphrase,
-        aeat_secret_store_dir=tmp_path / "secrets",
-        aeat_allow_unencrypted="",
-        aeat_active_profile=None,
-        aeat_local_storage_root=tmp_path / "storage",
-        aeat_token_dir=tmp_path / "tokens",
-        aeat_runs_dir=tmp_path / "runs",
-        aeat_financial_txs_dir=tmp_path / "txs",
-        aeat_invoices_dir=tmp_path / "invoices",
-        aeat_drafts_dir=tmp_path / "drafts",
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_passphrase=dev_test_passphrase,
+        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_allow_unencrypted="",
+        cadrumo_active_profile=None,
+        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_token_dir=tmp_path / "tokens",
+        cadrumo_runs_dir=tmp_path / "runs",
+        cadrumo_financial_txs_dir=tmp_path / "txs",
+        cadrumo_invoices_dir=tmp_path / "invoices",
+        cadrumo_drafts_dir=tmp_path / "drafts",
     ):
         try:
             yield tmp_path

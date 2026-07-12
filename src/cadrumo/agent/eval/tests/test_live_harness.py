@@ -44,7 +44,7 @@ _LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
 
 # INTENTIONAL: local-eval-harness because "live" in this filename names the
 # live-EVAL harness under test (a local ``aeat-mcp`` stdio session it spawns),
-# not live-AEAT network access — so no ``AEAT_LIVE_TESTS_ENABLED`` gate applies.
+# not live-AEAT network access — so no ``CADRUMO_LIVE_TESTS_ENABLED`` gate applies.
 
 _SCENARIO_PATH = Path(__file__).resolve().parent.parent / "scenarios" / "modelo_130.toml"
 _GROUNDED_FIGURE = "500.00"

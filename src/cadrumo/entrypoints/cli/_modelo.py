@@ -253,7 +253,7 @@ def _require_active_profile() -> None:
 
     Work commands open the active profile's encrypted bucket database.
     Without an active profile that path raises a raw ``StorageError``
-    (``aeat_database_url is empty``) or a low-level ``no active bucket
+    (``cadrumo_database_url is empty``) or a low-level ``no active bucket
     session`` message — both leak internal plumbing. This guard fires
     first so every cold-start work command produces the same clean,
     translated ``profile create`` guidance that the ledger surface

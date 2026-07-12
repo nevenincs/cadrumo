@@ -115,9 +115,9 @@ def test_scripted_provider_satisfies_auth_provider_protocol() -> None:
 def _active_profile(tmp_path: Path) -> Iterator[None]:
     with override_settings(
         aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
-        aeat_local_storage_root=tmp_path,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+        cadrumo_local_storage_root=tmp_path,
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_passphrase=SecretStr(dev_test_database_password()),
     ):
         dispose_engine()
         with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
@@ -145,7 +145,7 @@ def _settings(tmp_path: Path) -> Settings:
     """
     return Settings(
         aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
-        aeat_token_dir=tmp_path / "tokens",
+        cadrumo_token_dir=tmp_path / "tokens",
     )
 
 

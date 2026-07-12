@@ -1,11 +1,11 @@
 """Date-boundary helpers for filing-period registry tokens.
 
-:class:`~aeat.core.Period` is the backend filing-period authority: a filing
+:class:`~cadrumo.core.Period` is the backend filing-period authority: a filing
 year plus registry token, constructed with ``Period.from_year_and_code``.
 This module provides only date-boundary helpers for bare registry tokens.
 
 Do not treat this module as canonical period storage. Prefer typed
-:class:`~aeat.core.Period` at domain boundaries and decompose to
+:class:`~cadrumo.core.Period` at domain boundaries and decompose to
 ``filing_year`` plus ``registry_token`` only at registry/helper seams.
 
 The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado

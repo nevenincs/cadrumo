@@ -133,10 +133,10 @@ def build_telemetry_status_report(*, settings: Settings | None = None) -> Teleme
     """
     resolved_settings = settings if settings is not None else load_settings()
     return TelemetryStatusReport(
-        opt_in=resolved_settings.aeat_telemetry_opt_in,
-        tier=resolved_settings.aeat_telemetry_tier,
-        gestor_mode=resolved_settings.aeat_telemetry_gestor_mode,
-        endpoint=resolved_settings.aeat_telemetry_endpoint,
+        opt_in=resolved_settings.cadrumo_telemetry_opt_in,
+        tier=resolved_settings.cadrumo_telemetry_tier,
+        gestor_mode=resolved_settings.cadrumo_telemetry_gestor_mode,
+        endpoint=resolved_settings.cadrumo_telemetry_endpoint,
         would_emit_if_acknowledged=telemetry_emit_permitted(resolved_settings, acknowledged=True),
     )
 
@@ -144,7 +144,7 @@ def build_telemetry_status_report(*, settings: Settings | None = None) -> Teleme
 def _build_flush_payload(settings: Settings) -> TelemetryEventPayload:
     report = build_run_health_report()
     return build_telemetry_payload(
-        workspace_hash=workspace_hash(settings.aeat_local_storage_root),
+        workspace_hash=workspace_hash(settings.cadrumo_local_storage_root),
         command=_FLUSH_COMMAND,
         counters={
             "runs": report.total_runs,
@@ -192,7 +192,7 @@ def build_telemetry_flush_preview(
     resolved_settings = settings if settings is not None else load_settings()
     payload = _build_flush_payload(resolved_settings)
     gate_permits = telemetry_emit_permitted(resolved_settings, acknowledged=acknowledged)
-    endpoint_configured = bool(resolved_settings.aeat_telemetry_endpoint)
+    endpoint_configured = bool(resolved_settings.cadrumo_telemetry_endpoint)
     return TelemetryFlushPreview(
         payload=payload,
         gate_permits=gate_permits,
@@ -215,7 +215,7 @@ def flush_telemetry(*, settings: Settings | None = None, acknowledged: bool) -> 
 
     A real send requires ALL of: the consent gate permits (deployment opt-in,
     non-``off`` tier, gestor mode off) AND ``acknowledged`` is ``True`` for
-    THIS invocation (never sticky) AND ``settings.aeat_telemetry_endpoint`` is
+    THIS invocation (never sticky) AND ``settings.cadrumo_telemetry_endpoint`` is
     configured. Any missing condition makes this call a pure no-op -- nothing
     is sent -- mirroring :func:`~core.telemetry.emit_telemetry_event`'s own
     no-op contract.
@@ -234,6 +234,6 @@ def flush_telemetry(*, settings: Settings | None = None, acknowledged: bool) -> 
     """
     resolved_settings = settings if settings is not None else load_settings()
     preview = build_telemetry_flush_preview(settings=resolved_settings, acknowledged=acknowledged)
-    sink = HttpTelemetrySink(endpoint=resolved_settings.aeat_telemetry_endpoint)
+    sink = HttpTelemetrySink(endpoint=resolved_settings.cadrumo_telemetry_endpoint)
     emit_telemetry_event(preview.payload, settings=resolved_settings, acknowledged=acknowledged, sink=sink)
     return preview

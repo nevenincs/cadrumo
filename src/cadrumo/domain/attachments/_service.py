@@ -213,7 +213,7 @@ def link_attachment_invoice(
     Closes the provenance loop the other direction from ``add_attachment(_bytes)``'s
     ``link_invoice_ids`` parameter: that parameter can only be populated for an
     invoice that already exists *before* the evidence is captured, but the
-    evidence-confirmation flow mints the :class:`~aeat.domain.invoices.Invoice`
+    evidence-confirmation flow mints the :class:`~cadrumo.domain.invoices.Invoice`
     *after* the attachment is already stored. This helper re-persists the same
     manifest (attachment id and bytes unchanged) through the same
     :meth:`AttachmentStoreProtocol.write_manifest` write path
@@ -228,7 +228,7 @@ def link_attachment_invoice(
     Args:
         store: Backing :class:`AttachmentStoreProtocol`.
         attachment_id: SHA-256 of the attachment bytes to update.
-        invoice_id: Stable :class:`~aeat.domain.invoices.Invoice` identifier
+        invoice_id: Stable :class:`~cadrumo.domain.invoices.Invoice` identifier
             to record as evidenced by this attachment.
 
     Returns:

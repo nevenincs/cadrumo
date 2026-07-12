@@ -2,11 +2,11 @@
 
 Split operations load a :class:`TransactionCatalogue` through a
 :class:`TransactionCatalogueRepository`, mark parent and child rows with
-:class:`~aeat.domain.transactions.SplitLineage`, append audit events through a
+:class:`~cadrumo.domain.transactions.SplitLineage`, append audit events through a
 :class:`BucketEventHistoryRepository`, and return
-:class:`~aeat.application.ledger.SplitTransactionResult`. Merge operations
+:class:`~cadrumo.application.ledger.SplitTransactionResult`. Merge operations
 verify the complete child cohort and return
-:class:`~aeat.application.ledger.MergeTransactionsResult`.
+:class:`~cadrumo.application.ledger.MergeTransactionsResult`.
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def split_transaction(
       whole lineage chain in chronological order.
     - Catalogue + event are persisted atomically.
 
-    Returns a :class:`~aeat.application.ledger.SplitTransactionResult`.
+    Returns a :class:`~cadrumo.application.ledger.SplitTransactionResult`.
     """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger split")
@@ -394,7 +394,7 @@ def merge_transactions(
 ) -> MergeTransactionsResult:
     """Re-merge a complete cohort of split children into a fresh transaction.
 
-    Returns a :class:`~aeat.application.ledger.MergeTransactionsResult`.
+    Returns a :class:`~cadrumo.application.ledger.MergeTransactionsResult`.
 
     Pre-conditions:
 

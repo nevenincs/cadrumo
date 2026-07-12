@@ -5,14 +5,14 @@ expose the canonical five-verb CRUD spine
 ``add``/``remove``/``update``/``view``/``list``. Records are
 bucket-scoped and persisted as encrypted :class:`BusinessOperationInvoiceDocument`
 payloads through
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` per
+:class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` per
 noun-kind, under the
-:data:`aeat.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`
+:data:`cadrumo.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`
 namespace contract.
 
 The records are intentionally slim. Business-detail enrichment (line
 items, IVA breakdown, reconciliation linkages) belongs to the
-:mod:`aeat.domain.invoices` richer ``Invoice`` aggregate consumed by
+:mod:`cadrumo.domain.invoices` richer ``Invoice`` aggregate consumed by
 modelo aggregation pipelines. The noun-group records here are the
 canonical operator-edit surface for the two source-kind variants
 covered.
@@ -224,7 +224,7 @@ def derive_business_operation_invoice_id(
 ) -> str:
     """Return the content-addressed id for a business-operation invoice record.
 
-    Mirrors :func:`aeat.domain.transactions.derive_transaction_id`: a SHA-256
+    Mirrors :func:`cadrumo.domain.transactions.derive_transaction_id`: a SHA-256
     digest (truncated to 16 hex chars, the prior surrogate's width) over the
     record's identifying fields, so the id is stable under a frozen-clock replay
     and directly referenceable as an ``aeat app ledger invoice`` argument,
@@ -305,10 +305,10 @@ class BusinessOperationInvoiceRepository(SecureBoundRepository[BusinessOperation
 
     The namespace, sensitivity, schema version, and object-key contract come
     from
-    :data:`aeat.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`.
-    The :class:`~aeat.adapters.persistence.storage.SecureBoundRepository` base
+    :data:`cadrumo.adapters.persistence.storage.LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`.
+    The :class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` base
     wraps each :class:`BusinessOperationInvoiceDocument` in a
-    :class:`~aeat.adapters.persistence.storage.Envelope` before writing it.
+    :class:`~cadrumo.adapters.persistence.storage.Envelope` before writing it.
 
     See Also:
         :class:`BusinessOperationInvoiceDocument`

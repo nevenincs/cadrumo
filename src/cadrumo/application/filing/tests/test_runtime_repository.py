@@ -44,7 +44,7 @@ _ACTIVE_BUCKET_ID = "34245238-a76d-4ebf-a515-8e5af83cfc0c"
 
 @pytest.fixture(autouse=True)
 def _isolated_storage(tmp_path: Path):
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None) as settings:
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -65,7 +65,7 @@ def test_resolve_application_filing_bucket_id_accepts_explicit_or_active_bucket(
     active_profile: str,
     expected: str,
 ) -> None:
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_profile):
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=active_profile):
         assert resolve_application_filing_bucket_id(bucket_id) == expected
 
 
@@ -83,7 +83,7 @@ def test_resolve_application_filing_bucket_id_rejects_missing_bucket(
     expected_reason: str,
 ) -> None:
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_profile),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=active_profile),
         pytest.raises(ModeloApplicationError) as raised,
     ):
         resolve_application_filing_bucket_id(explicit_bucket_id)
@@ -94,7 +94,7 @@ def test_resolve_application_filing_bucket_id_rejects_missing_bucket(
 
 def test_secure_objects_for_application_filing_bucket_refuses_unready_runtime(tmp_path: Path) -> None:
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_ACTIVE_BUCKET_ID),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
         pytest.raises(
             StorageValidationError,
             match=r"storage runtime is not ready|no active bucket session|route does not match",

@@ -7,9 +7,9 @@ input or computed casilla, and converts any persisted-data drift into an
 ordinary verification finding.
 
 See Also:
-    :func:`aeat.domain.modelos.validate_m210_agrupacion_renta_rows`:
+    :func:`cadrumo.domain.modelos.validate_m210_agrupacion_renta_rows`:
         Domain-owned Article 2 compatibility validation for the row set.
-    :func:`aeat.application.modelo.calculate_modelo_revision`:
+    :func:`cadrumo.application.modelo.calculate_modelo_revision`:
         Calculation boundary that refuses an invalid row set before formula
         execution and revision persistence.
 """

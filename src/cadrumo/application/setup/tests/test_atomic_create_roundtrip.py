@@ -45,7 +45,7 @@ def _cli_storage(tmp_path: Path) -> Iterator[Path]:
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
-        override_settings(aeat_output_language="en"),
+        override_settings(cadrumo_output_language="en"),
     ):
         yield storage_root
 
@@ -231,7 +231,7 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
     # Re-point the storage root so the imported profile lands in a
     # clean workspace — the recovery-from-backup scenario.
     fresh_root = tmp_path / "fresh-root"
-    with override_settings(aeat_local_storage_root=fresh_root, aeat_active_profile=None):
+    with override_settings(cadrumo_local_storage_root=fresh_root, cadrumo_active_profile=None):
         importer = _invoke(["--format", "json", "config", "profile", "import", str(bundle)])
         assert importer.exit_code == 0, importer.output
         # Profile UUIDs are redacted at the CLI boundary; the operator-facing

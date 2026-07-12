@@ -117,7 +117,7 @@ def _emit_envelope(
     terminal output is unaffected.
 
     When the active profile bucket is a sandbox
-    (:func:`~aeat.application.bucket_maintenance.is_sandbox_label`), a
+    (:func:`~cadrumo.application.bucket_maintenance.is_sandbox_label`), a
     persistent info :class:`Notice` naming the sandbox is prepended to
     ``notices`` (JSON mode) and a matching banner line is prepended ahead
     of ``lines`` (text mode), so an operator can never mistake a sandbox
@@ -169,14 +169,14 @@ def _active_sandbox_notice() -> Notice | None:
     """Return the persistent sandbox-active :class:`Notice`, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain
-    every command uses (:func:`~aeat.core.resolve_active_bucket_id`), then
+    every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
     reads its plaintext manifest label directly through the light
     ``adapters.persistence.storage.bucket`` primitives — the same tolerant
-    read :func:`~aeat.application.workflow.read_profile_bucket_by_id`
+    read :func:`~cadrumo.application.workflow.read_profile_bucket_by_id`
     performs, but reached without importing the heavy ``workflow`` /
     ``bucket_maintenance`` facades (which pull the registry) — and checks it
     against the reserved sandbox label prefix
-    (:data:`~aeat.core.external_constants.SANDBOX_LABEL_PREFIX`). This keeps
+    (:data:`~cadrumo.core.external_constants.SANDBOX_LABEL_PREFIX`). This keeps
     the state-free CLI surface (``aeat`` / ``--help`` / ``--version``, which
     reach this helper via :func:`_emit_envelope`) off the registry-loading
     import path, honouring this module's lazy-import contract. Returns
@@ -199,7 +199,7 @@ def _active_sandbox_notice() -> Notice | None:
     if bucket_id is None:
         return None
     try:
-        paths = bucket_paths(load_settings().aeat_local_storage_root, bucket_id)
+        paths = bucket_paths(load_settings().cadrumo_local_storage_root, bucket_id)
         if not manifest_path(paths).is_file():
             return None
         label = read_manifest(paths).label
@@ -226,9 +226,9 @@ def _active_profile_label() -> str | None:
     """Return the active taxpayer profile's display label, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain
-    every command uses (:func:`~aeat.core.resolve_active_bucket_id`), then
+    every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
     reads its plaintext manifest label
-    (:func:`~aeat.application.workflow.read_profile_bucket_by_id`) — the
+    (:func:`~cadrumo.application.workflow.read_profile_bucket_by_id`) — the
     same non-secret display name :func:`_active_sandbox_notice` reads,
     never opening the encrypted per-bucket database and never touching the
     redacted profile/bucket UUID. Returns ``None`` when no profile is
@@ -237,7 +237,7 @@ def _active_profile_label() -> str | None:
     both leave the envelope spine's ``active_profile`` null rather than
     breaking the emit. This is the identity anchor injected at the CLI
     transport boundary because the ``core`` layer that builds the envelope
-    (:func:`~aeat.core.json_contract.emit_json_success`) never scans
+    (:func:`~cadrumo.core.json_contract.emit_json_success`) never scans
     profile manifests.
     """
     from ...adapters.persistence.storage import StorageValidationError
@@ -279,7 +279,7 @@ def _state() -> WorkflowState:
 
     # Without an active profile there is no bucket database to open;
     # workflow_state_repository().load() would raise a raw StorageError
-    # ("aeat_database_url is empty") that leaks internal plumbing to the
+    # ("cadrumo_database_url is empty") that leaks internal plumbing to the
     # operator. Refuse early with the operator-facing no-active-profile
     # message instead.
     if resolve_active_bucket_id() is None:
@@ -443,7 +443,7 @@ def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
 # separator, an optional one- or two-digit (euro-cent) fractional part, no
 # thousands grouping, no scientific notation, no ``NaN``/``Infinity``. This is
 # the ``_DECIMAL_RE`` shape the declaration-edit path enforces
-# (``aeat.application.review._edit``), tightened to a two-digit fractional cap so
+# (``cadrumo.application.review._edit``), tightened to a two-digit fractional cap so
 # the Spanish thousands-grouping shape ``1.000`` (a dot followed by three digits)
 # refuses rather than silently becoming ``1.0`` — the F1 silent-misparse the
 # input-localisation ADR closes. ``1234.56`` (two fractional digits) and a bare
@@ -600,5 +600,5 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
     from ...core.config import override_settings
     from ...core.i18n import clear_output_language_cache
 
-    ctx.with_resource(override_settings(aeat_output_language=language))
+    ctx.with_resource(override_settings(cadrumo_output_language=language))
     clear_output_language_cache()

@@ -358,7 +358,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     """Default ledger list JSON redacts ``bucket_id``; the reveal opt-out shows the real UUID.
 
     Multi-client gestors must be able to disambiguate which bucket a command
-    addressed. The ``AEAT_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the
+    addressed. The ``CADRUMO_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the
     profile/bucket identifier surfaces while the paste-safe placeholder stays
     the default.
     """
@@ -370,7 +370,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     assert default_listed["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert bucket_id not in json.dumps(default_listed, sort_keys=True)
 
-    with override_settings(aeat_cli_reveal_identifiers=True):
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
         revealed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert revealed.exit_code == 0, revealed.output
     revealed_payload = _json(revealed)
@@ -384,7 +384,7 @@ def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
     ``config profile show`` is the profile inspection surface. The
     centralised-output-redaction policy rewrites the ``profile_id`` field to the
     paste-safe ``<profile-id>`` placeholder by default; the
-    ``AEAT_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
+    ``CADRUMO_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
     a multi-client gestor's automation can key on the addressed profile.
     """
     create_cli_surface_profile()
@@ -394,7 +394,7 @@ def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
     assert default_shown["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert profile_id not in json.dumps(default_shown, sort_keys=True)
 
-    with override_settings(aeat_cli_reveal_identifiers=True):
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
         revealed = invoke_cached_cli(["--format", "json", "config", "profile", "show"])
     assert revealed.exit_code == 0, revealed.output
     revealed_payload = _json(revealed)

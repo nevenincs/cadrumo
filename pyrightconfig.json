@@ -1,6 +1,6 @@
 {
   "include": [
-    "src/aeat"
+    "src/cadrumo"
   ],
   "exclude": [
     "**/__pycache__",
@@ -17,7 +17,7 @@
   "typeCheckingMode": "standard",
   "executionEnvironments": [
     {
-      "root": "src/aeat/domain",
+      "root": "src/cadrumo/domain",
       "reportMissingParameterType": "error",
       "reportMissingTypeArgument": "error",
       "reportIncompatibleMethodOverride": "error",
@@ -30,7 +30,7 @@
       "reportUnhashable": "error"
     },
     {
-      "root": "src/aeat/application",
+      "root": "src/cadrumo/application",
       "reportMissingParameterType": "error",
       "reportMissingTypeArgument": "error",
       "reportIncompatibleMethodOverride": "error",

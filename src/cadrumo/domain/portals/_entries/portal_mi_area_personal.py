@@ -3,8 +3,8 @@
 Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
 code ``PORTAL_MI_AREA_PERSONAL``, exposed as :data:`ENTRY` under the
 :class:`PortalCategory` member ``PERSONAL_AREA``, consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+:data:`cadrumo.domain.portals.PORTAL_REGISTRY` via
+:mod:`cadrumo.domain.portals._registry`.
 """
 
 from __future__ import annotations

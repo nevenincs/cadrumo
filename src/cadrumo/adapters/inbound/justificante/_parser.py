@@ -48,7 +48,7 @@ def parse_justificante(
         pdf_path: Path to the justificante PDF on disk. Must exist and be
             readable.
         backend: Parser backend to use. Defaults to
-            :attr:`core.config.Settings.aeat_justificante_parser_backend`
+            :attr:`core.config.Settings.cadrumo_justificante_parser_backend`
             when omitted.
 
     Returns:
@@ -99,7 +99,7 @@ def parse_justificante_bytes(
     Args:
         pdf_bytes: Raw justificante PDF bytes.
         backend: Parser backend to use. Defaults to
-            :attr:`core.config.Settings.aeat_justificante_parser_backend`
+            :attr:`core.config.Settings.cadrumo_justificante_parser_backend`
             when omitted.
 
     Returns:
@@ -123,13 +123,13 @@ def _resolve_backend(backend: JustificanteParserBackend | None) -> JustificanteP
     """Resolve an explicit backend or the configured default backend."""
     if backend is not None:
         return backend
-    # Deferred import: ``aeat.core.config`` imports the public justificante
+    # Deferred import: ``cadrumo.core.config`` imports the public justificante
     # surface for the ``JustificanteParserBackend`` enum, so importing
     # it at module scope would form a cycle.
     from ....core.config import load_settings
 
     settings = load_settings()
-    return JustificanteParserBackend(settings.aeat_justificante_parser_backend.name)
+    return JustificanteParserBackend(settings.cadrumo_justificante_parser_backend.name)
 
 
 def _mentions_source_path(

@@ -522,7 +522,7 @@ def _validate_period_arguments(*, filing_year: int | None, period: object | None
         )
     if not isinstance(period, Period):
         raise ModeloBuilderError(
-            "runtime schema provider requires period as aeat.core.Period",
+            "runtime schema provider requires period as cadrumo.core.Period",
             translated_message="application.filing.runtime.errors.period_type",
             context={"period_type": type(period).__name__},
         )

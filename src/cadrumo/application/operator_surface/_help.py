@@ -109,9 +109,9 @@ def _root_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.root.paragraph_storage_isolation",
                 default=(
-                    "For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT, "
-                    "AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and "
-                    "AEAT_SECRET_PASSPHRASE; logs default under that storage root."
+                    "For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT, "
+                    "CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and "
+                    "CADRUMO_SECRET_PASSPHRASE; logs default under that storage root."
                 ),
             ),
         ),
@@ -259,9 +259,9 @@ def _config_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.config.paragraph_storage_isolation",
                 default=(
-                    "For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT, "
-                    "AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and "
-                    "AEAT_SECRET_PASSPHRASE; logs default under that storage root."
+                    "For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT, "
+                    "CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and "
+                    "CADRUMO_SECRET_PASSPHRASE; logs default under that storage root."
                 ),
             ),
         ),

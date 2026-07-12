@@ -7,7 +7,7 @@ against text fragments captured live from real AEAT responses on
 2026-05-07.
 
 Live navigation tests run under ``@pytest.mark.aeat_live`` and require
-``AEAT_LIVE_TESTS_ENABLED=1`` plus a working cl@ve-movil session; they
+``CADRUMO_LIVE_TESTS_ENABLED=1`` plus a working cl@ve-movil session; they
 live in a separate live test module to keep the unit suite fast.
 """
 

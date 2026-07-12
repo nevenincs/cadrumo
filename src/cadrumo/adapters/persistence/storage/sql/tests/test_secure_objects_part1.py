@@ -40,7 +40,7 @@ def _ephemeral_secure_repo(
 ) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
     with EphemeralMasterKeyProvider():
         db_path = tmp_path / database_name
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine)
         try:
             yield db_path, engine, SecureObjectRepository(engine=engine)
@@ -305,7 +305,7 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
     """
 
     db_path = tmp_path / "revision-schema.db"
-    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
         with sqlite3.connect(db_path) as con:
@@ -527,7 +527,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
 
     # Reopen under the NEW key and add a row that ought to be readable.
     with key_new:
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine)
         try:
             repo = SecureObjectRepository(engine=engine)
@@ -641,7 +641,7 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
     )
 
     with key_new:
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine)
         try:
             repo = SecureObjectRepository(engine=engine)
@@ -695,7 +695,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
         )
 
     with key_new:
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine)
         try:
             SecureObjectRepository(engine=engine).save(

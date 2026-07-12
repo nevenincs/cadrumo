@@ -81,7 +81,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
     isolated_root = tmp_path / "isolated-storage"
     isolated_database = isolated_root / "aeat.db"
 
-    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=_CONTROL_BUCKET_ID):
+    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
         dispose_engine()
         try:
             with activate_session(_control_session()):
@@ -142,13 +142,13 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
 def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: Path) -> None:
     expected = "unique-dev-test-database-password-for-profile-bootstrap"
     with (
-        override_settings(aeat_dev_test_database_password=expected),
+        override_settings(cadrumo_dev_test_database_password=expected),
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         settings = load_settings()
 
-    assert settings.aeat_secret_passphrase is not None
-    assert settings.aeat_secret_passphrase.get_secret_value() == expected
+    assert settings.cadrumo_secret_passphrase is not None
+    assert settings.cadrumo_secret_passphrase.get_secret_value() == expected
     assert dev_test_database_password(settings) == expected
 
 

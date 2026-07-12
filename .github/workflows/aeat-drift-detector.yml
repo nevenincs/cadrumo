@@ -61,7 +61,7 @@ jobs:
 
       - name: Run GROI live drift tests
         env:
-          AEAT_LIVE_TESTS_ENABLED: '1'
+          CADRUMO_LIVE_TESTS_ENABLED: '1'
           AEAT_AUTH_PROVIDER: clave-movil
           AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH: ${{ secrets.AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH }}
           AEAT_CLAVE_PREFER_NON_QR: ${{ secrets.AEAT_CLAVE_PREFER_NON_QR }}
@@ -96,7 +96,7 @@ jobs:
               '',
               'Remediation: re-capture the AEAT form HTML, update the',
               'driver selectors in `src/aeat/adapters/outbound/aeat/sede/_groi_check.py`,',
-              'and re-run the tests locally with `AEAT_LIVE_TESTS_ENABLED=1`.',
+              'and re-run the tests locally with `CADRUMO_LIVE_TESTS_ENABLED=1`.',
             ].join('\n');
             await github.rest.issues.create({
               owner: context.repo.owner,

@@ -1,6 +1,6 @@
 """Opt-in capture of Renta WEB Open replay payloads.
 
-When ``AEAT_LIVE_TESTS_ENABLED=1``, these tests drive the live
+When ``CADRUMO_LIVE_TESTS_ENABLED=1``, these tests drive the live
 :class:`RentaWebOpenSedeDriver` through the AEAT open-simulator for
 each chain-behaviour scenario and persist the captured observation as
 a replay payload at ``corpus/parity_replays/renta_web_open/``, where

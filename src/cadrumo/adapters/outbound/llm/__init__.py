@@ -38,7 +38,7 @@ Examples:
     Issue a completion via the high-level client:
 
     >>> import asyncio
-    >>> from aeat.adapters.outbound.llm import LLMClient, LLMRequest
+    >>> from cadrumo.adapters.outbound.llm import LLMClient, LLMRequest
     >>> async def main() -> None:
     ...     client = LLMClient()
     ...     response = await client.complete(

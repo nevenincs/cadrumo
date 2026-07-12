@@ -61,12 +61,12 @@ def _schema_version(modelo: str = "130") -> str:
 
 def _build_settings(tmp_path: Path) -> Settings:
     return Settings(
-        aeat_financial_txs_dir=tmp_path / "transactions",
-        aeat_invoices_dir=tmp_path / "invoices",
-        aeat_attachments_dir=tmp_path / "attachments",
-        aeat_inbox_dir=tmp_path / "inbox",
-        aeat_inbox_pdf_dir=tmp_path / "inbox-pdfs",
-        aeat_drafts_dir=tmp_path / "drafts",
+        cadrumo_financial_txs_dir=tmp_path / "transactions",
+        cadrumo_invoices_dir=tmp_path / "invoices",
+        cadrumo_attachments_dir=tmp_path / "attachments",
+        cadrumo_inbox_dir=tmp_path / "inbox",
+        cadrumo_inbox_pdf_dir=tmp_path / "inbox-pdfs",
+        cadrumo_drafts_dir=tmp_path / "drafts",
     )
 
 

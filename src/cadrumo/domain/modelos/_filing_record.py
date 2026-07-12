@@ -80,7 +80,7 @@ class ExternalEvidenceKind(StrEnum):
     A :class:`ModeloRecord` marked with one of these kinds
     carries imported official evidence (justificante, CSV register, or live
     capture) rather than a tool-computed calculation revision. This is the gate
-    :func:`~aeat.application.modelo.amend_modelo_revision` requires before it
+    :func:`~cadrumo.application.modelo.amend_modelo_revision` requires before it
     accepts an amendment baseline.
     """
 
@@ -99,9 +99,9 @@ class ExternalEvidence(BaseModel):
     """Imported-evidence metadata for an externally-filed return.
 
     Populated by
-    :func:`~aeat.application.modelo.import_external_filing_evidence` for a
+    :func:`~cadrumo.application.modelo.import_external_filing_evidence` for a
     current :class:`ModeloRecord`; consumed by
-    :func:`~aeat.application.modelo.amend_modelo_revision` as the gate that
+    :func:`~cadrumo.application.modelo.amend_modelo_revision` as the gate that
     proves the baseline is AEAT-attested and not a fabricated local draft.
     """
 
@@ -157,7 +157,7 @@ class ModeloRecord(BaseModel):
     through evidence channels; it does not imply that the application submitted
     anything. It must travel with
     :class:`ExternalEvidence`, while locally filed records
-    created by :func:`~aeat.application.modelo.file_modelo_revision` carry neither.
+    created by :func:`~cadrumo.application.modelo.file_modelo_revision` carry neither.
     """
 
     model_config = STRICT_FROZEN_CONFIG

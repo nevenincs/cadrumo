@@ -37,7 +37,7 @@ _MISSING_PROFILE_ID = "2b2b2b2b-2b2b-4b2b-8b2b-2b2b2b2b2b2b"
 
 
 # The application-level conftest already redirects
-# Settings.aeat_local_storage_root to tmp_path for every test, so the
+# Settings.cadrumo_local_storage_root to tmp_path for every test, so the
 # orchestration's pointer-file write stays inside the sandbox without
 # any per-file fixture wiring here.
 

@@ -185,7 +185,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 
     # 3. Seed work unit, calculation revision, and filing record via repositories.
     with (
-        override_settings(aeat_active_profile=bucket_id),
+        override_settings(cadrumo_active_profile=bucket_id),
         activate_master_key_provider(get_master_key_provider()),
     ):
         # Work unit via the canonical create_work_unit action.
@@ -337,7 +337,7 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
 
     # Load originals while still in source storage context.
     with (
-        override_settings(aeat_active_profile=source_bucket_id),
+        override_settings(cadrumo_active_profile=source_bucket_id),
         activate_master_key_provider(get_master_key_provider()),
     ):
         original_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=source_bucket_id).load())
@@ -364,7 +364,7 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
         assert imported_bucket_id == source_bucket_id
 
         with (
-            override_settings(aeat_active_profile=imported_bucket_id),
+            override_settings(cadrumo_active_profile=imported_bucket_id),
             activate_master_key_provider(get_master_key_provider()),
         ):
             imported_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=imported_bucket_id).load())
@@ -473,7 +473,7 @@ def test_v3_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)
 
     with (
-        override_settings(aeat_active_profile=source_bucket_id),
+        override_settings(cadrumo_active_profile=source_bucket_id),
         activate_master_key_provider(get_master_key_provider()),
     ):
         (original_revision,) = tuple(CalculationRevisionCatalogueRepository(bucket_id=source_bucket_id).load())

@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
@@ -90,7 +90,7 @@ def test_config_check_reports_capabilities_and_dependencies() -> None:
 def test_config_check_flags_opted_in_capability_with_missing_dependency() -> None:
     # llm_vision is on by default; point Ollama at a closed port so the dependency
     # is reliably unavailable. The doctor must surface the gap and exit non-zero.
-    with override_settings(aeat_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
         result = invoke_cached_cli(["--format", "json", "config", "check"])
     assert result.exit_code == 2, result.output
     payload = json.loads(result.output)["result"]

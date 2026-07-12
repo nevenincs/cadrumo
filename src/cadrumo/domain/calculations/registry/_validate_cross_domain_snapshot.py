@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class CrossDomainSnapshotCheck(Protocol):
     """Snapshot-time referential-integrity check owned by a peer domain.
 
-    A peer domain (for example :mod:`aeat.domain.renta`) may need to
+    A peer domain (for example :mod:`cadrumo.domain.renta`) may need to
     assert that the casilla ids it routes to are real casillas on a
     registry snapshot. The registry must not import the peer domain
     directly -- that reverses the hexagonal dependency direction. Instead
@@ -84,7 +84,7 @@ def check_cross_domain_snapshot_routing(
 
     Modelo 100 has a known-required cross-domain gate -- the renta
     first-slice routing referential-integrity check owned by
-    :mod:`aeat.domain.renta`. That check registers itself only as an
+    :mod:`cadrumo.domain.renta`. That check registers itself only as an
     import side effect of the ``renta`` package. A ``build_snapshot``
     caller that never imports ``renta`` would otherwise validate an
     M100 snapshot with the gate silently absent. Rather than skip a
@@ -99,7 +99,7 @@ def check_cross_domain_snapshot_routing(
         checker.failures.append(
             f"{checker.prefix}: modelo 100 requires the renta first-slice "
             "routing cross-domain snapshot check, but no cross-domain checks "
-            "are registered -- import aeat.domain.renta at the composition "
+            "are registered -- import cadrumo.domain.renta at the composition "
             "point that builds the snapshot so register_cross_domain_snapshot_check "
             "runs before validation",
         )

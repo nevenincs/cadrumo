@@ -4,7 +4,7 @@ Imports every ``_entries/portal_*.py`` module, collects its module-level
 ``ENTRY`` object, and freezes the result as the public
 :data:`PORTAL_REGISTRY` mapping. Structural invariants are enforced at
 import time via :func:`_finalise_registry`; any violation raises
-:class:`aeat.domain.portals._errors.PortalIntegrityError` and aborts package
+:class:`cadrumo.domain.portals._errors.PortalIntegrityError` and aborts package
 import.
 """
 
@@ -151,7 +151,7 @@ def _finalise_registry(
 
     Args:
         entries: The per-entry ``ENTRY`` objects loaded from
-            :mod:`aeat.domain.portals._entries`.
+            :mod:`cadrumo.domain.portals._entries`.
 
     Returns:
         A :class:`types.MappingProxyType` from :class:`Portal` to
@@ -275,7 +275,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
     with :func:`portals_by_category` when needed.
 
     Args:
-        code: A :class:`aeat.domain.modelos.ModeloCode` member or its string value.
+        code: A :class:`cadrumo.domain.modelos.ModeloCode` member or its string value.
 
     Returns:
         A tuple of matching :class:`PortalMetadata` entries declared by

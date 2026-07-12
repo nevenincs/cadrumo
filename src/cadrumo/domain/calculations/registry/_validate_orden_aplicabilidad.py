@@ -3,7 +3,7 @@
 D3 / Ruling 4 (period-revision-resolution ADR)
 -----------------------------------------------
 Every revision's ``orden_aplicabilidad`` field declares the legal-catalogue
-:class:`~aeat.domain.calculations.registry._schema.LegalReference` id(s) of
+:class:`~cadrumo.domain.calculations.registry._schema.LegalReference` id(s) of
 the ordenes ministeriales that approve or amend the modelo form for this
 revision's applicability window.  The gate is strict:
 
@@ -20,7 +20,7 @@ S24 / Ruling 5 boundary (R3):
     connective gate ensuring even the "y siguientes" claim is BOE-anchored.
     Per-year norm values *inside* the open-ended revision (rate brackets,
     thresholds) are the parameter-bracket layer's responsibility gated by
-    :func:`~aeat.domain.calculations.registry._validate_revision_rules.validate_bracket_table_temporal_coverage`;
+    :func:`~cadrumo.domain.calculations.registry._validate_revision_rules.validate_bracket_table_temporal_coverage`;
     a wrong-but-present bracket value is a legal-grounding defect, NOT a
     resolution defect.
 """
@@ -116,7 +116,7 @@ def orden_aplicabilidad_hard_failures(
         modelo_id: The modelo identifier.
         revision: The :class:`ModeloRevision` to validate.
         legal_catalogue: The loaded
-            :class:`~aeat.domain.calculations.registry.LegalReference`
+            :class:`~cadrumo.domain.calculations.registry.LegalReference`
             catalogue mapping.
 
     Returns:

@@ -33,7 +33,7 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 def open_bucket_session(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span(_PROFILE_ID),
     ):
@@ -97,7 +97,7 @@ def _add_eligible_mixed_expense() -> str:
             "--iva-amount",
             "10.50",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert result.exit_code == 0, result.output
     return json.loads(result.output)["result"]["transaction_id"]

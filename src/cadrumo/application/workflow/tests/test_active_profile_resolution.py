@@ -3,8 +3,8 @@
 The resolver lives at `cadrumo.core.resolve_active_bucket_id`. It consults
 two precedence rungs in order:
 
-1. `Settings.aeat_active_profile` (`AEAT_ACTIVE_PROFILE` env var, or
-   an `override_settings(aeat_active_profile=...)` context manager).
+1. `Settings.cadrumo_active_profile` (`CADRUMO_ACTIVE_PROFILE` env var, or
+   an `override_settings(cadrumo_active_profile=...)` context manager).
 2. The plaintext `<aeat-root>/active-profile` pointer file written
    by `register_active_profile` / `select_profile`.
 
@@ -58,7 +58,7 @@ def test_resolver_uses_active_profile_precedence_chain(tmp_path: Path) -> None:
         if pointer_bucket_id is not None:
             write_pointer(case_root, BucketPointer(bucket_id=pointer_bucket_id, schema_version=1))
 
-        with override_settings(aeat_active_profile=settings_profile, aeat_local_storage_root=case_root):
+        with override_settings(cadrumo_active_profile=settings_profile, cadrumo_local_storage_root=case_root):
             assert resolve_active_bucket_id() == expected_bucket_id
 
 
@@ -168,7 +168,7 @@ def test_resolve_profile_bucket_uuid_respects_lifecycle_filter(tmp_path: Path) -
 def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_path: Path) -> None:
     """A display-name identifier resolves to the UUID bucket via the label fallback.
 
-    This is the real operator path: ``AEAT_ACTIVE_PROFILE=operator`` (or any
+    This is the real operator path: ``CADRUMO_ACTIVE_PROFILE=operator`` (or any
     active-profile pointer carrying the operator label the user chose at
     ``profile create``, never the UUID they never see). The by-UUID-direct
     lookup misses on the label, so resolution falls back to the

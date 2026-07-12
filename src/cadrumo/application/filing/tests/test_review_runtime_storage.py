@@ -65,7 +65,7 @@ _MODELO_130_BINDING_INPUTS = {
 
 @pytest.fixture(autouse=True)
 def _isolated_storage(tmp_path: Path):
-    with override_settings(aeat_local_storage_root=tmp_path) as settings:
+    with override_settings(cadrumo_local_storage_root=tmp_path) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -78,7 +78,7 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
     draft = _ready_modelo_130_draft()
 
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
         pytest.raises(StorageValidationError, match=r"no active bucket session|route does not match"),
     ):
         compute_current_approval_basis(

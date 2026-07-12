@@ -12,15 +12,15 @@ manifest are eligible. Adding support for a new modelo requires only a
 TOML edit — no code change.
 
 See Also:
-    :func:`aeat.application.modelo._binding_resolution.resolve_borrador_source_tier`
+    :func:`cadrumo.application.modelo._binding_resolution.resolve_borrador_source_tier`
         Binding-resolution tier that inserts this resolver before backend mesh
         and caller-value overlay.
-    :class:`aeat.application.aggregation._source_mesh.CalculationSourceResolution`
+    :class:`cadrumo.application.aggregation._source_mesh.CalculationSourceResolution`
         Typed source-resolution envelope carrying the resolved borrador values.
-    :class:`aeat.application.aggregation._source_mesh.BorradorSourceProvenance`
+    :class:`cadrumo.application.aggregation._source_mesh.BorradorSourceProvenance`
         Snapshot id and sourced-binding trace persisted onto the calculation
         revision.
-    :class:`aeat.application.live._borrador_100.Borrador100SnapshotRepository`
+    :class:`cadrumo.application.live._borrador_100.Borrador100SnapshotRepository`
         Secure snapshot repository used to load the explicitly selected
         borrador capture.
 """

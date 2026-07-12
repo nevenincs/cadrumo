@@ -4,24 +4,24 @@ This module prepares binding, enum, and informational inputs for one
 :class:`RegistrySnapshot` before the registry
 engine evaluates its :class:`ModeloRevision`.
 Profile, backend mesh, borrador, and caller values are normalised as
-:class:`~aeat.application.aggregation.CalculationSourceResolution` tiers, then
+:class:`~cadrumo.application.aggregation.CalculationSourceResolution` tiers, then
 the calculation assembly layer overlays them by precedence: profile, backend
 mesh, borrador, and finally caller overrides.
 
 The module also owns the application-specific partial projection from available
-binding values to :class:`~aeat.domain.calculations.registry.CasillaId` inputs.
+binding values to :class:`~cadrumo.domain.calculations.registry.CasillaId` inputs.
 That differs from the domain registry's strict bound-input projection: live
 calculate paths may carry absent optional bindings while still projecting every
 value that did resolve.
 
 See Also:
-    :mod:`~aeat.application.modelo._calculation_resolution`:
+    :mod:`~cadrumo.application.modelo._calculation_resolution`:
         Merges these tiers and builds the canonical engine input maps.
-    :func:`~aeat.domain.calculations.registry.resolve_bound_inputs_by_casilla_id`:
+    :func:`~cadrumo.domain.calculations.registry.resolve_bound_inputs_by_casilla_id`:
         Strict registry projection that requires every bound fact to be present.
-    :mod:`~aeat.application.modelo._profile_binding`:
+    :mod:`~cadrumo.application.modelo._profile_binding`:
         Resolves profile-sourced bindings into decimal, enum, and date channels.
-    :mod:`~aeat.application.modelo._borrador_binding`:
+    :mod:`~cadrumo.application.modelo._borrador_binding`:
         Resolves Modelo 100 borrador snapshots as a precedence tier.
 """
 
@@ -69,19 +69,19 @@ def resolve_borrador_source_tier(
     The :class:`RegistrySnapshot` supplies
     the revision and modelo identity used to resolve the borrador source through
     the source mesh; the returned
-    :class:`~aeat.application.aggregation.CalculationSourceResolution` carries
+    :class:`~cadrumo.application.aggregation.CalculationSourceResolution` carries
     the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
     persistence boundary consumes.
 
-    Caller-supplied :class:`~aeat.domain.calculations.registry.BindingId` values
+    Caller-supplied :class:`~cadrumo.domain.calculations.registry.BindingId` values
     remain higher precedence than the snapshot, so the resolver receives both
     decimal and enum caller channels and omits any borrador value already owned
     by the caller.
 
     See Also:
-        :class:`~aeat.application.aggregation.CalculationSourceResolution`:
+        :class:`~cadrumo.application.aggregation.CalculationSourceResolution`:
             The shared carrier used by the precedence overlay.
-        :class:`~aeat.application.live.Borrador100SnapshotRepository`:
+        :class:`~cadrumo.application.live.Borrador100SnapshotRepository`:
             Loads the optional captured snapshot when a borrador id is supplied.
     """
     return _resolve_borrador_bindings_for_calculation(
@@ -116,17 +116,17 @@ def resolve_profile_source_tier(
 
     The ``borrador_resolution`` and backend values are passed only as ownership
     exclusions. They do not change profile facts; they prevent the profile tier
-    from claiming a :class:`~aeat.domain.calculations.registry.BindingId` that a
+    from claiming a :class:`~cadrumo.domain.calculations.registry.BindingId` that a
     higher-precedence source already supplied.
 
     See Also:
-        :class:`~aeat.application.aggregation.ProfileSourceResolver`:
+        :class:`~cadrumo.application.aggregation.ProfileSourceResolver`:
             Source resolver that reads the stored user profile facts.
-        :func:`~aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+        :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
             Places this profile tier below backend, borrador, and caller tiers.
 
     Returns:
-        A :class:`~aeat.application.aggregation.CalculationSourceResolution`
+        A :class:`~cadrumo.application.aggregation.CalculationSourceResolution`
         carrying the profile-owned bindings not already claimed by
         higher-precedence tiers.
     """
@@ -165,11 +165,11 @@ def reject_binding_channel_mismatch(
     arrive through
     ``enum_binding_values``; decimal operands must arrive through
     ``binding_values``. A mismatch raises
-    :class:`~aeat.domain.modelos.ModeloError` before the engine sees an
+    :class:`~cadrumo.domain.modelos.ModeloError` before the engine sees an
     apparently missing binding.
 
     See Also:
-        :func:`~aeat.domain.calculations.registry.enum_consumed_binding_ids`:
+        :func:`~cadrumo.domain.calculations.registry.enum_consumed_binding_ids`:
             Identifies bindings consumed by enum-dispatch formulas.
     """
     _reject_binding_channel_mismatch(revision, binding_values, enum_binding_values)
@@ -184,15 +184,15 @@ def lift_previous_filing_casilla_overrides_to_bindings(
 
     The :class:`ModeloRevision` supplies the
     bound casilla and binding metadata. A caller may supply a
-    :class:`~aeat.domain.calculations.registry.CasillaId` override for a bound
+    :class:`~cadrumo.domain.calculations.registry.CasillaId` override for a bound
     casilla whose binding source is ``previous_filing`` when no resolver-produced
     binding value exists. This helper mirrors that override onto the matching
-    :class:`~aeat.domain.calculations.registry.BindingId` so the registry
+    :class:`~cadrumo.domain.calculations.registry.BindingId` so the registry
     engine's bound-input consistency guards see the same source of truth in both
     channels. Existing resolved bindings are never overwritten.
 
     See Also:
-        :func:`~aeat.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+        :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
             Calls this after the precedence overlay settles.
     """
     return _lift_previous_filing_casilla_overrides_to_bindings(revision, casilla_inputs, resolved_bindings)
@@ -209,12 +209,12 @@ def resolve_declaration_period_inputs(
     The :class:`ModeloRevision` supplies the
     informational casillas eligible for metadata projection. Only casillas with
     unique ``filing_year`` or ``filing_period`` semantic roles are populated. The
-    :class:`~aeat.core.Period` registry token is mapped to the ordinal expected
+    :class:`~cadrumo.core.Period` registry token is mapped to the ordinal expected
     by the registry snapshot; unsupported tokens or non-informational role
-    targets raise :class:`~aeat.domain.modelos.ModeloError`.
+    targets raise :class:`~cadrumo.domain.modelos.ModeloError`.
 
     See Also:
-        :func:`~aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
+        :func:`~cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
             Enforces that each populated semantic role resolves to one casilla.
     """
     return _resolve_declaration_period_inputs(revision, filing_year=filing_year, period=period)
@@ -268,7 +268,7 @@ def _resolve_borrador_bindings_for_calculation(
     """Resolve the optional borrador snapshot, returning its resolution directly.
 
     The returned
-    :class:`~aeat.application.aggregation.CalculationSourceResolution` carries
+    :class:`~cadrumo.application.aggregation.CalculationSourceResolution` carries
     the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
     persistence boundary consumes.
     """
@@ -308,17 +308,17 @@ def resolve_available_bound_inputs_by_casilla_id(
         revision: The :class:`ModeloRevision`
             whose bound casillas are inspected.
         binding_values: Decimal values keyed by
-            :class:`~aeat.domain.calculations.registry.BindingId`.
+            :class:`~cadrumo.domain.calculations.registry.BindingId`.
 
     Returns:
         A ``dict`` keyed by
-        :class:`~aeat.domain.calculations.registry.CasillaId` for every bound
+        :class:`~cadrumo.domain.calculations.registry.CasillaId` for every bound
         casilla whose binding value is currently available.
 
     See Also:
-        :func:`~aeat.domain.calculations.registry.resolve_bound_inputs_by_casilla_id`:
+        :func:`~cadrumo.domain.calculations.registry.resolve_bound_inputs_by_casilla_id`:
             Strict domain helper that rejects unknown or missing binding facts.
-        :func:`~aeat.application.modelo._calculation_resolution.resolve_calculation_inputs`:
+        :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_inputs`:
             Uses this partial projection when assembling engine inputs.
     """
     resolved: dict[CasillaId, Decimal] = {}

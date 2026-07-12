@@ -108,7 +108,7 @@ def test_status_report_defaults_to_the_fully_inert_posture(profile: TestRuntimeP
 
 
 def test_status_report_reflects_a_fully_opted_in_posture(profile: TestRuntimeProfile) -> None:
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.FULL)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
     report = build_telemetry_status_report(settings=settings)
 
     assert report.opt_in is True
@@ -176,7 +176,7 @@ def test_flush_telemetry_never_sends_when_consent_gate_refuses(profile: TestRunt
     server, thread, events = _run_loopback_server()
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
-        settings = Settings(aeat_telemetry_endpoint=endpoint)  # opt_in stays False
+        settings = Settings(cadrumo_telemetry_endpoint=endpoint)  # opt_in stays False
         preview = flush_telemetry(settings=settings, acknowledged=True)
     finally:
         _stop_loopback_server(server, thread)
@@ -189,7 +189,7 @@ def test_flush_telemetry_never_sends_when_consent_gate_refuses(profile: TestRunt
 
 def test_flush_telemetry_never_sends_without_a_configured_endpoint(profile: TestRuntimeProfile) -> None:
     """Full opt-in/tier/acknowledgement still never sends when no endpoint is configured."""
-    settings = Settings(aeat_telemetry_opt_in=True, aeat_telemetry_tier=TelemetryTier.FULL)
+    settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
     preview = flush_telemetry(settings=settings, acknowledged=True)
 
     assert preview.gate_permits is True
@@ -217,9 +217,9 @@ def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         settings = Settings(
-            aeat_telemetry_opt_in=True,
-            aeat_telemetry_tier=TelemetryTier.FULL,
-            aeat_telemetry_endpoint=endpoint,
+            cadrumo_telemetry_opt_in=True,
+            cadrumo_telemetry_tier=TelemetryTier.FULL,
+            cadrumo_telemetry_endpoint=endpoint,
         )
         # A prior --dry-run-shaped preview (no send) and the real send share
         # the same construction path and therefore the same aggregate
@@ -250,9 +250,9 @@ def test_flush_telemetry_requires_per_invocation_acknowledgement(profile: TestRu
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         settings = Settings(
-            aeat_telemetry_opt_in=True,
-            aeat_telemetry_tier=TelemetryTier.FULL,
-            aeat_telemetry_endpoint=endpoint,
+            cadrumo_telemetry_opt_in=True,
+            cadrumo_telemetry_tier=TelemetryTier.FULL,
+            cadrumo_telemetry_endpoint=endpoint,
         )
         preview = flush_telemetry(settings=settings, acknowledged=False)
     finally:

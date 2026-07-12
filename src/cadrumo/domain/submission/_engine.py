@@ -2,23 +2,23 @@
 
 Exposes :class:`SubmissionEngine`, the only sanctioned surface for
 running preflight gates and reading historical
-:class:`aeat.domain.submission.ModeloPresentado` records persisted under
+:class:`cadrumo.domain.submission.ModeloPresentado` records persisted under
 the secure SQL object backend.
 
 AEAT remote writes and write-shaped portal walks are permanently
 forbidden; the engine intentionally exposes no transport method.
 
 See Also:
-    :class:`~aeat.domain.submission.Preflight`
+    :class:`~cadrumo.domain.submission.Preflight`
         Ordered draft, finding, deadline-window, and auth-provider gate runner
         delegated to by :meth:`SubmissionEngine.preflight`.
-    :class:`~aeat.domain.submission.DeadlineWindowChecker`
+    :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
         Injected protocol that answers the filing-window question without
         coupling this domain package to the deadline engine implementation.
-    :class:`~aeat.application.workflow.SubmissionEngineAdapter`
+    :class:`~cadrumo.application.workflow.SubmissionEngineAdapter`
         Application workflow wrapper that invokes this read-only preflight
         surface from the ``RUNNING_PREFLIGHT`` stage.
-    :mod:`aeat.application.modelo._workflow_gate`
+    :mod:`cadrumo.application.modelo._workflow_gate`
         Modelo work-unit bridge that configures the deadline-window checker for
         calculation revisions before verification or local mark-as-filed paths.
 """
@@ -51,7 +51,7 @@ class SubmissionEngine:
     Attributes:
         auth_provider: Narrow auth-provider probe used by preflight.
         deadline_checker: Narrow window checker used by preflight.
-        settings: Resolved :class:`aeat.core.config.Settings`.
+        settings: Resolved :class:`cadrumo.core.config.Settings`.
     """
 
     def __init__(
@@ -67,8 +67,8 @@ class SubmissionEngine:
         Args:
             auth_provider: Narrow probe over the active auth provider.
             deadline_checker: Narrow window checker over
-                :mod:`aeat.domain.deadlines`.
-            settings: Resolved :class:`aeat.core.config.Settings`.
+                :mod:`cadrumo.domain.deadlines`.
+            settings: Resolved :class:`cadrumo.core.config.Settings`.
             repository: Injected :class:`SubmissionRepositoryProtocol` over the
                 encrypted submission-records store; the application layer
                 constructs the concrete adapter repository and passes it in.

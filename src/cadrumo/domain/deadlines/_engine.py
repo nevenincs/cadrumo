@@ -101,8 +101,8 @@ class DeadlineEngine:
 
     Attributes:
         due_soon_days: Window before
-            :attr:`aeat.domain.deadlines.ModeloDeadline.closes_on` that
-            flags :attr:`aeat.domain.deadlines.ObligationStatus.DUE_SOON`
+            :attr:`cadrumo.domain.deadlines.ModeloDeadline.closes_on` that
+            flags :attr:`cadrumo.domain.deadlines.ObligationStatus.DUE_SOON`
             (default 14).
     """
 
@@ -450,7 +450,7 @@ def compute_obligation_schedule(
 
     This is the single producer of the pending-obligation datum. Both
     the operator state read-projection (``pending_obligations``) and the
-    :class:`~aeat.application.workflow.WorkflowEngine`
+    :class:`~cadrumo.application.workflow.WorkflowEngine`
     ``NO_PENDING_OBLIGATION`` gate route their schedule computation
     through here, so the gate and the projection cannot draw a divergent
     obligation set: identical ``(engine, profile, today)`` always yields

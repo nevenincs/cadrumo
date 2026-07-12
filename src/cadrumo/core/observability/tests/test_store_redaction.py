@@ -84,7 +84,7 @@ def test_save_trace_redacts_sensitive_arguments(tmp_path: Path) -> None:
         ),
     )
 
-    with override_settings(aeat_runs_dir=str(tmp_path)):
+    with override_settings(cadrumo_runs_dir=str(tmp_path)):
         for trace, forbidden_fragments, required_fragments in cases:
             save_trace(trace)
             on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
@@ -99,7 +99,7 @@ def test_save_events_append_redacts_url_path(
     tmp_path: Path,
 ) -> None:
     """A URL with sensitive path on a NavigationPayload event must be host-only on disk."""
-    with override_settings(aeat_runs_dir=str(tmp_path)):
+    with override_settings(cadrumo_runs_dir=str(tmp_path)):
         event = RunEvent(
             run_id="0123456789abcdef",
             step_id="step-0",

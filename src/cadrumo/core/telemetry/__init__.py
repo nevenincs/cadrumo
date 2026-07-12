@@ -24,7 +24,7 @@ transmission, per ``2026-07-04-remote-telemetry-adr``.
 :class:`~core.telemetry.HttpTelemetrySink` is the real network-transmitting
 implementation of the same :class:`~core.telemetry.TelemetrySink` protocol: it
 is structurally inert (a pure no-op) unless a caller both builds it with a
-configured ``settings.aeat_telemetry_endpoint`` AND the consent gate already
+configured ``settings.cadrumo_telemetry_endpoint`` AND the consent gate already
 permitted emission, and any transport failure is swallowed rather than raised.
 No caller wires it as a default sink in this slice; a producer or CLI surface
 must explicitly opt a call site into it.

@@ -144,7 +144,7 @@ async def test_live_bot_detection_probe(tmp_path) -> None:
     """Test the browser session against a live bot detection probe.
 
     Gated by the ``aeat_live`` module-level marker (excluded from the default
-    ``just test`` selection) and by ``AEAT_LIVE_TESTS_ENABLED`` when invoked
+    ``just test`` selection) and by ``CADRUMO_LIVE_TESTS_ENABLED`` when invoked
     via ``just test-live``.
     """
     requires_live_enabled()

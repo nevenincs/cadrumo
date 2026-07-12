@@ -2,7 +2,7 @@
 
 This package is the canonical application-layer import boundary for modelo
 CLI transports and cross-package application services. Callers import from
-``aeat.application.modelo`` instead of private ``_...`` modules so work
+``cadrumo.application.modelo`` instead of private ``_...`` modules so work
 selection, registry revision checks, calculation, verification, filing,
 export, reconciliation, and storage orchestration stay behind one facade.
 

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
     """Modelo definitions keyed by their typed id (``"100"``, ``"180"``, …).
 
-    Wraps :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`.
+    Wraps :class:`cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`.
     The authority is constructed lazily on first ``get`` so the
     bundled registry only loads when actually needed.
     """

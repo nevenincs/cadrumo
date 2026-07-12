@@ -35,12 +35,12 @@ def _isolated_secure_object_database(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
-            aeat_output_language="en",
-            aeat_token_dir=tmp_path / "tokens",
-            aeat_runs_dir=tmp_path / "runs",
-            aeat_financial_txs_dir=tmp_path / "txs",
-            aeat_invoices_dir=tmp_path / "invoices",
-            aeat_drafts_dir=tmp_path / "drafts",
+            cadrumo_output_language="en",
+            cadrumo_token_dir=tmp_path / "tokens",
+            cadrumo_runs_dir=tmp_path / "runs",
+            cadrumo_financial_txs_dir=tmp_path / "txs",
+            cadrumo_invoices_dir=tmp_path / "invoices",
+            cadrumo_drafts_dir=tmp_path / "drafts",
         ),
     ):
         try:

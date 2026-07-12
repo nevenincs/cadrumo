@@ -78,7 +78,7 @@ from ._calc_sheets_apply_values import (
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
-_VAULT_FOLDER_NAME: Final[str] = _Settings().aeat_google_drive_vault_folder_name
+_VAULT_FOLDER_NAME: Final[str] = _Settings().cadrumo_google_drive_vault_folder_name
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"

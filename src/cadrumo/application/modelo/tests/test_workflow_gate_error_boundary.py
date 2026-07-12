@@ -81,7 +81,7 @@ def test_gate_error_text_carries_no_raw_python_repr() -> None:
     at the operator.
     """
 
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         error = ModeloWorkflowGateError(_aborted_result())
         rendered = render_error_text(error)
 
@@ -129,7 +129,7 @@ def test_gate_error_context_exposes_stable_primitive_machine_codes() -> None:
 def test_no_pending_obligation_gate_message_uses_output_language(language: str, expected: str) -> None:
     """The operator refusal localises while machine codes stay raw."""
 
-    with override_settings(aeat_output_language=language):
+    with override_settings(cadrumo_output_language=language):
         rendered = render_error_text(ModeloWorkflowGateError(_aborted_result()))
 
     assert expected in rendered
@@ -142,7 +142,7 @@ def test_other_gate_abort_reasons_keep_their_workflow_summary() -> None:
     """Only the no-pending-obligation refusal switches to the locale catalogue."""
 
     summary = "The filing deadline passed for Modelo 130 2025 1T"
-    with override_settings(aeat_output_language="ca"):
+    with override_settings(cadrumo_output_language="ca"):
         rendered = render_error_text(
             ModeloWorkflowGateError(
                 _aborted_result(

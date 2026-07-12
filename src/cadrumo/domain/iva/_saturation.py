@@ -1,4 +1,4 @@
-"""Grounded saturation primitives for the :mod:`aeat.domain.iva` subpackage.
+"""Grounded saturation primitives for the :mod:`cadrumo.domain.iva` subpackage.
 
 Two reusable primitives that let a caller turn a selected
 :class:`IvaCategory` and a transaction gross into the regulated euro
@@ -7,7 +7,7 @@ number**:
 
 * :func:`resolve_category_rate` maps an :class:`IvaCategory` to its
   :class:`IvaRateKind` and looks the applicable rate up via
-  :func:`aeat.domain.iva.lookup_rate`, returning it as a decimal
+  :func:`cadrumo.domain.iva.lookup_rate`, returning it as a decimal
   *fraction* (``Decimal("0.21")``) wrapped in a typed
   :class:`IvaRateResolution`. Domestic general / reduced / super-reduced
   derive a positive rate; domestic zero and exempt derive ``0``; every
@@ -19,14 +19,14 @@ number**:
 
 * :func:`split_gross_at_rate` performs the inverse split of a gross at a
   rate fraction into ``(taxable_base, iva_amount)`` quantised with the
-  AEAT-mandated :func:`aeat.core.money.round_to_cents` (ROUND_HALF_UP).
+  AEAT-mandated :func:`cadrumo.core.money.round_to_cents` (ROUND_HALF_UP).
 
 The split formula is the canonical inverse of an IVA-inclusive gross:
 ``base = round_to_cents(gross / (1 + rate))`` and
 ``iva = round_to_cents(gross - base)``. Quantising the base first and
 deriving the IVA as the remainder guarantees ``base + iva == gross`` to
 the cent regardless of the rounding residual, which is exactly the
-invariant the :class:`aeat.domain.transactions.Transaction` model
+invariant the :class:`cadrumo.domain.transactions.Transaction` model
 enforces.
 
 Authority: ``2026-06-04-llm-ledger-classification-adr``. The rate values
@@ -174,7 +174,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
     """Resolve an :class:`IvaCategory` to its Spanish IVA rate fraction.
 
     Maps ``category`` to its :class:`IvaRateKind` and looks the applicable
-    rate up via :func:`aeat.domain.iva.lookup_rate` for
+    rate up via :func:`cadrumo.domain.iva.lookup_rate` for
     :attr:`EUMemberState.ES` on ``on_date``, returning the percentage as a
     decimal *fraction* (``IvaRateRecord.pct / 100``). Domestic
     general / reduced / super-reduced derive a positive fraction; domestic
@@ -230,7 +230,7 @@ def split_gross_at_rate(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal
     Computes the IVA-exclusive base and the IVA charged from an
     IVA-inclusive gross at ``rate`` (a decimal *fraction*, e.g.
     ``Decimal("0.21")``), quantising with the AEAT-mandated
-    :func:`aeat.core.money.round_to_cents` (ROUND_HALF_UP). The base is
+    :func:`cadrumo.core.money.round_to_cents` (ROUND_HALF_UP). The base is
     quantised first and the IVA is taken as the quantised remainder
     (``gross - base``), so ``taxable_base + iva_amount == gross`` holds to
     the cent regardless of the rounding residual.

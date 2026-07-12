@@ -198,7 +198,7 @@ async def fetch_iva_compensation_wallet(
                     ),
                 )
             html = await page.content()
-            final_dump_dir = settings.aeat_wallet_diagnostic_dump_dir
+            final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
             if final_dump_dir is not None:
                 await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
             try:
@@ -478,7 +478,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={"landing_url": _redacted_url(getattr(page, "url", None))},
         ) from exc
-    dump_dir = settings.aeat_wallet_diagnostic_dump_dir
+    dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
     if dump_dir is not None:
         await _dump_wallet_diagnostic(page, label="post-own-name", dump_dir=dump_dir)
     return True
@@ -570,7 +570,7 @@ async def _submit_wallet_execute_gate_if_present(
             target_year=target_period.filing_year,
             target_period_token=target_period.registry_token,
         )
-        _diag_dump_dir = settings.aeat_wallet_diagnostic_dump_dir
+        _diag_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
         if _diag_dump_dir is not None:
             await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=_diag_dump_dir)
         try:
@@ -675,7 +675,7 @@ async def _wait_for_wallet_execute_terminal_shape(
 async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:
     """Best-effort capture of redacted page-shape metadata for wallet DOM-drift diagnosis.
 
-    Enabled only when :attr:`Settings.aeat_wallet_diagnostic_dump_dir` is set;
+    Enabled only when :attr:`Settings.cadrumo_wallet_diagnostic_dump_dir` is set;
     callers pass that directory in as ``dump_dir``. The dump intentionally writes
     only redacted structural metadata: URL without query, table/form/input counts,
     form action paths, input identifiers, and hashes. It never writes raw HTML,

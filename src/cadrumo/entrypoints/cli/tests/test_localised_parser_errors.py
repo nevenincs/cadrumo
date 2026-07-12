@@ -34,7 +34,7 @@ _EXPECTED_FORMAT_HINT = "1234.56"
 
 
 def _render_decimal_refusal(locale: OutputLanguage, raw: str) -> str:
-    with override_settings(aeat_output_language=locale.value):
+    with override_settings(cadrumo_output_language=locale.value):
         clear_output_language_cache()
         with pytest.raises(typer.BadParameter) as excinfo:
             parse_decimal_amount(raw, label="taxable-base", signed=False)
@@ -42,7 +42,7 @@ def _render_decimal_refusal(locale: OutputLanguage, raw: str) -> str:
 
 
 def _render_date_refusal(locale: OutputLanguage, raw: str) -> str:
-    with override_settings(aeat_output_language=locale.value):
+    with override_settings(cadrumo_output_language=locale.value):
         clear_output_language_cache()
         with pytest.raises(typer.BadParameter) as excinfo:
             _parse_iso_date(raw, label="invoice-date")

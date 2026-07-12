@@ -14,7 +14,7 @@ from .._repository import ResourceCacheRepository
 class HolidayCalendarRepository(ResourceCacheRepository[object, int]):
     """Year-keyed repository for BOE holiday calendars.
 
-    Wraps :func:`aeat.domain.deadlines.load_holiday_calendar`
+    Wraps :func:`cadrumo.domain.deadlines.load_holiday_calendar`
     behind the shared :class:`ResourceCacheRepository` cache.
     """
 

@@ -1,22 +1,22 @@
 """Fail-fast validation for registry definitions.
 
-Validates :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+Validates :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
 instances and their constituent
-:class:`~aeat.domain.calculations.registry.ModeloRevision` records against the
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` records against the
 legal and source catalogues.
 
 The validator owns catalogue checks,
-:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`
+:class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`
 source-tier checks, per-revision dispatch through
-:func:`aeat.domain.calculations.registry._validate_revision_sections.validate_revision_definition`,
+:func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`,
 and cross-model scope validation.
 
 See Also:
-    :class:`aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`
         Production authority that loads registry material before validation.
-    :func:`aeat.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
+    :func:`cadrumo.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
         Cross-model relation and registry-scope validation invoked here.
-    :mod:`aeat.domain.calculations.registry._validate_cache`
+    :mod:`cadrumo.domain.calculations.registry._validate_cache`
         Identity-keyed failure caches used by this validator.
 """
 
@@ -56,9 +56,9 @@ class RegistryValidator:
     """Validate legal/source closure and calculability for registry modelos.
 
     The validator accepts
-    :class:`~aeat.domain.calculations.registry.RegistryCatalogues`, checks each
-    :class:`~aeat.domain.calculations.registry.ModeloDefinition`, and delegates
-    each :class:`~aeat.domain.calculations.registry.ModeloRevision` to the
+    :class:`~cadrumo.domain.calculations.registry.RegistryCatalogues`, checks each
+    :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`, and delegates
+    each :class:`~cadrumo.domain.calculations.registry.ModeloRevision` to the
     section-level dispatcher.
     """
 
@@ -108,7 +108,7 @@ class RegistryValidator:
 
         Args:
             modelo: The
-                :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+                :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
                 whose catalogue refs, revisions, user-profile contract, and
                 revision windows are validated.
         """
@@ -198,9 +198,9 @@ class RegistryValidator:
 
         Args:
             modelos: Iterable of
-                :class:`~aeat.domain.calculations.registry.ModeloDefinition`
+                :class:`~cadrumo.domain.calculations.registry.ModeloDefinition`
                 instances to validate together before
-                :func:`aeat.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
+                :func:`cadrumo.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
                 checks cross-model closure.
         """
         modelo_tuple = tuple(modelos)

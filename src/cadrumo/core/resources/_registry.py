@@ -4,7 +4,7 @@ The :class:`ResourceRegistry` aggregates every
 :class:`ResourceRepository` the project exposes. The
 :func:`resources` factory builds the registry once per process;
 subsequent calls return the cached instance. Tests that override
-:class:`aeat.core.config.Settings` to change the bundled-data
+:class:`cadrumo.core.config.Settings` to change the bundled-data
 location must call ``resources.cache_clear()`` to force a rebuild
 on the next access.
 """

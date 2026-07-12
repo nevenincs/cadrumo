@@ -3,8 +3,8 @@
 Review rows are filtered from a loaded :class:`TransactionCatalogue`;
 :class:`BucketEventHistoryRepository` supplies event-derived review context.
 The public projection returns
-:class:`~aeat.application.ledger.LedgerReviewQueryResult` for a
-:class:`~aeat.application.ledger.LedgerReviewQuery`.
+:class:`~cadrumo.application.ledger.LedgerReviewQueryResult` for a
+:class:`~cadrumo.application.ledger.LedgerReviewQuery`.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ def project_ledger_review_query(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     transaction_payload_builder: Callable[[Transaction], LedgerTransactionPayload],
 ) -> LedgerReviewQueryResult:
-    """Return a :class:`~aeat.application.ledger.LedgerReviewQueryResult`.
+    """Return a :class:`~cadrumo.application.ledger.LedgerReviewQueryResult`.
 
     The supplied :class:`TransactionCatalogue` provides the row set and lookup
     context for period, status, and classification filters.
@@ -63,7 +63,7 @@ def project_ledger_review_query(
 
 
 def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
-    """Return the :class:`~aeat.application.review.LedgerReviewStatus` for one bucket-local transaction fact."""
+    """Return the :class:`~cadrumo.application.review.LedgerReviewStatus` for one bucket-local transaction fact."""
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:

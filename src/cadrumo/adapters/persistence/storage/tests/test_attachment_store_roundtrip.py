@@ -187,7 +187,7 @@ def test_attachment_source_read_error_is_localized_without_path_leak(tmp_path: P
     with pytest.raises(AttachmentPersistenceError) as excinfo:
         store.put_file(missing)
     envelope = build_error_envelope(excinfo.value)
-    with override_settings(aeat_output_language="en"):
+    with override_settings(cadrumo_output_language="en"):
         message = resolve_error_message(excinfo.value)
 
     assert excinfo.value.translated_message == "errors.fail.fail_financial_attachments_attachment_persistence"

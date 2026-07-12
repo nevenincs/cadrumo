@@ -8,7 +8,7 @@ surfaces the error as a validation error in the enclosing
 
 The registry-grounded helpers
 :func:`is_eu_member_state_code` and :func:`assert_eu_member_state_code`
-anchor the EU axis to the substrate's :class:`aeat.domain.iva.EUMemberState`
+anchor the EU axis to the substrate's :class:`cadrumo.domain.iva.EUMemberState`
 enum. Modelo 369 binding selectors and the OSS / IOSS classifier
 boundary checks consume these helpers so the EU membership decision
 flows from the substrate, not from a hand-maintained list.
@@ -64,7 +64,7 @@ def is_eu_member_state_code(value: str) -> bool:
     """Return ``True`` when ``value`` matches one of the 27 EU Member State codes.
 
     The membership check is anchored to
-    :class:`aeat.domain.iva.EUMemberState`; if the substrate's enum
+    :class:`cadrumo.domain.iva.EUMemberState`; if the substrate's enum
     changes (Brexit-style additions or withdrawals) the helper picks
     up the new shape automatically.
 
@@ -107,7 +107,7 @@ def validate_iva_number(value: str, country: str) -> str:
 
     For an EU Member State (and Northern Ireland ``XI``) the number is matched
     against the country's published NIF-IVA structural pattern, sourced from the
-    central :data:`aeat.core.identity.NIF_IVA_FORMATS` authority: a malformed
+    central :data:`cadrumo.core.identity.NIF_IVA_FORMATS` authority: a malformed
     intra-community VAT number is bounced by AEAT's Modelo 349 validator, so the
     refusal names the country and the expected format. Live VIES existence is not
     checked — only the structure. For a non-EU counterparty (no published

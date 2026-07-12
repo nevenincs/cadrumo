@@ -55,12 +55,12 @@ def _default_lock_timeout() -> float:
     The setting is only a local wait budget. It is not a lease, TTL, or
     stale-lock age; the OS lock is released by descriptor teardown.
     """
-    return _load_settings().aeat_file_lock_timeout_s
+    return _load_settings().cadrumo_file_lock_timeout_s
 
 
 def _default_retry_backoff() -> float:
     """Return the currently effective non-blocking retry backoff in seconds."""
-    return _load_settings().aeat_file_lock_retry_backoff_s
+    return _load_settings().cadrumo_file_lock_retry_backoff_s
 
 
 class _DefaultLockTimeout:

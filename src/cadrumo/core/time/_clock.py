@@ -1,7 +1,7 @@
 """Canonical wall-clock helpers for the AEAT domain.
 
 A single, testable entry-point for obtaining the current UTC time.
-Call-sites must import :func:`now` from :mod:`aeat.core.time` rather
+Call-sites must import :func:`now` from :mod:`cadrumo.core.time` rather
 than inlining ``datetime.now(tz=UTC)`` directly, so the production
 clock can be traced and call-sites stay uniform.
 
@@ -17,7 +17,7 @@ tasks the way ``freezegun`` / ``time_machine`` global freezing does, the
 pattern banned in live-marked tests by
 :data:`aeat-tests.conftest.BANNED_LIVE_IMPORTS`. :func:`frozen_clock`
 additionally refuses to activate while the pytest live-read opt-in
-(:attr:`aeat.core.config.Settings.live_tests_enabled`) is set, keeping
+(:attr:`cadrumo.core.config.Settings.live_tests_enabled`) is set, keeping
 live-marked tests on real wall-clock plus explicit ``clock=`` injection
 exactly as today.
 """

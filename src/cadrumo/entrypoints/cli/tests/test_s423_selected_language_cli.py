@@ -20,10 +20,10 @@ from __future__ import annotations
 import os
 import sys
 
-os.environ["AEAT_LOCAL_STORAGE_ROOT"] = sys.argv[1]
-os.environ["AEAT_SECRET_STORE_DIR"] = sys.argv[2]
-os.environ["AEAT_SECRET_STORE_BACKEND"] = "file"
-os.environ["AEAT_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
+os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
+os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
+os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
+os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
 from cadrumo.entrypoints.cli import main
@@ -41,10 +41,10 @@ import json
 import os
 import sys
 
-os.environ["AEAT_LOCAL_STORAGE_ROOT"] = sys.argv[1]
-os.environ["AEAT_SECRET_STORE_DIR"] = sys.argv[2]
-os.environ["AEAT_SECRET_STORE_BACKEND"] = "file"
-os.environ["AEAT_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
+os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
+os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
+os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
+os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.application.user_profile import profile_storage_session

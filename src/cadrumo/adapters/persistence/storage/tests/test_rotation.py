@@ -568,8 +568,8 @@ class TestDefaultBlobStoreRoots:
         tmp_path: Path,
     ) -> None:
         # The substrate's SecretStore is wired at
-        # ``aeat_blob_store_dir`` (see ``get_secret_store``) — NOT at
-        # ``aeat_secret_store_dir``. A rotation that walks the wrong
+        # ``cadrumo_blob_store_dir`` (see ``get_secret_store``) — NOT at
+        # ``cadrumo_secret_store_dir``. A rotation that walks the wrong
         # directory silently skips every secret-store DEK and bricks
         # the secret store on old-key cutover.
         from .. import default_blob_store_roots
@@ -584,9 +584,9 @@ class TestDefaultBlobStoreRoots:
         from .....core.config import Settings
 
         settings = Settings(
-            aeat_secret_store_dir=secret_store_dir,
-            aeat_blob_store_dir=blob_store_dir,
-            aeat_attachments_dir=attachments_dir,
+            cadrumo_secret_store_dir=secret_store_dir,
+            cadrumo_blob_store_dir=blob_store_dir,
+            cadrumo_attachments_dir=attachments_dir,
         )
         roots = default_blob_store_roots(settings)
         assert blob_store_dir in roots, f"blob_store_dir must be in roots; got {roots!r}"
@@ -604,9 +604,9 @@ class TestDefaultBlobStoreRoots:
         from .....core.config import Settings
 
         settings = Settings(
-            aeat_secret_store_dir=tmp_path / "secrets",
-            aeat_blob_store_dir=shared,
-            aeat_attachments_dir=shared,
+            cadrumo_secret_store_dir=tmp_path / "secrets",
+            cadrumo_blob_store_dir=shared,
+            cadrumo_attachments_dir=shared,
         )
         roots = default_blob_store_roots(settings)
         assert len(roots) == 1, f"expected one deduped root; got {roots!r}"
@@ -619,9 +619,9 @@ class TestDefaultBlobStoreRoots:
         from .. import default_blob_store_roots
 
         settings = Settings(
-            aeat_secret_store_dir=tmp_path / "secrets",
-            aeat_blob_store_dir=tmp_path / "missing-blobs",
-            aeat_attachments_dir=tmp_path / "missing-attachments",
+            cadrumo_secret_store_dir=tmp_path / "secrets",
+            cadrumo_blob_store_dir=tmp_path / "missing-blobs",
+            cadrumo_attachments_dir=tmp_path / "missing-attachments",
         )
         roots = default_blob_store_roots(settings)
         assert roots == ()

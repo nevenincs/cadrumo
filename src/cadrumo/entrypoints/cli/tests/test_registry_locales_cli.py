@@ -11,7 +11,7 @@ from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NO_FORCED_LANGUAGE_ENV: dict[str, str | None] = {"AEAT_OUTPUT_LANGUAGE": None}
+_NO_FORCED_LANGUAGE_ENV: dict[str, str | None] = {"CADRUMO_OUTPUT_LANGUAGE": None}
 
 
 def test_casillas_command_default_language_is_spanish() -> None:

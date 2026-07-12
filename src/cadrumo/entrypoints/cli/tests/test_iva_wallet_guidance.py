@@ -59,7 +59,7 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
                 "--binding",
                 "modelo-303-compensacion-pendiente-anteriores=500",
             ],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
@@ -102,7 +102,7 @@ def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(
 
         result = invoke_cached_cli(
             ["app", "modelo", "work", "calculate", work_unit_id],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when in-scope prior IVA authority is missing"
@@ -149,7 +149,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
 
         result = invoke_cached_cli(
             ["app", "modelo", "work", "calculate", work_unit_id],
-            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert "iva_wallet_not_seeded" not in result.output, (

@@ -29,7 +29,7 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
 
     Args:
         settings: The :class:`~core.config.Settings` instance whose
-            ``aeat_database_url`` and ``aeat_local_storage_root`` define the
+            ``cadrumo_database_url`` and ``cadrumo_local_storage_root`` define the
             route.
 
     Returns:
@@ -39,15 +39,15 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
     """
     from .config import StorageRouteClassification, StorageRouteKind
 
-    database_url = settings.aeat_database_url
+    database_url = settings.cadrumo_database_url
     database_path = _sqlite_database_path(database_url)
-    if "aeat_database_url" in settings.model_fields_set:
+    if "cadrumo_database_url" in settings.model_fields_set:
         return StorageRouteClassification(
             kind=StorageRouteKind.EXPLICIT_DATABASE_URL,
             database_url=database_url,
             database_path=database_path,
         )
-    root_fallback = _normalized_path(settings.aeat_local_storage_root / "aeat.db")
+    root_fallback = _normalized_path(settings.cadrumo_local_storage_root / "aeat.db")
     if database_path is not None and _normalized_path(database_path) == root_fallback:
         return StorageRouteClassification(
             kind=StorageRouteKind.ROOT_FALLBACK_DATABASE,
@@ -56,7 +56,7 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
         )
     bucket_id = _bucket_id_for_route(
         database_path=database_path,
-        storage_root=settings.aeat_local_storage_root,
+        storage_root=settings.cadrumo_local_storage_root,
     )
     if bucket_id:
         return StorageRouteClassification(
@@ -83,7 +83,7 @@ def settings_for_bucket_route(bucket_id: str, source: Settings) -> Settings:
 
     Returns:
         A :class:`~core.config.Settings` instance equivalent to ``source``
-        but deriving ``aeat_database_url`` from ``bucket_id``.
+        but deriving ``cadrumo_database_url`` from ``bucket_id``.
 
     Raises:
         CoreValidationError: When ``bucket_id`` is blank or ``source`` already
@@ -94,13 +94,13 @@ def settings_for_bucket_route(bucket_id: str, source: Settings) -> Settings:
     trimmed = bucket_id.strip()
     if not trimmed:
         raise CoreValidationError("bucket_id must not be blank")
-    if "aeat_database_url" in source.model_fields_set:
+    if "cadrumo_database_url" in source.model_fields_set:
         raise CoreValidationError("cannot derive an active profile bucket route from an explicit database URL")
     values = source.model_dump()
-    values.pop("aeat_database_url", None)
-    values["aeat_active_profile"] = trimmed
+    values.pop("cadrumo_database_url", None)
+    values["cadrumo_active_profile"] = trimmed
     derived = Settings.model_validate(values)
-    explicit_fields = (source.model_fields_set - {"aeat_database_url"}) | {"aeat_active_profile"}
+    explicit_fields = (source.model_fields_set - {"cadrumo_database_url"}) | {"cadrumo_active_profile"}
     object.__setattr__(derived, "__pydantic_fields_set__", explicit_fields)
     return derived
 

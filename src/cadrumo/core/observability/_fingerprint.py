@@ -168,7 +168,7 @@ def compute_db_sha256(var_dir: Path) -> str:
     outputs so the hash is stable across observability writes and
     LLM/status lookups that would otherwise flap on every read.
     The curated list covers every ``var/`` subdirectory that
-    :class:`aeat.core.config.Settings` treats as a cache, log, or
+    :class:`cadrumo.core.config.Settings` treats as a cache, log, or
     replay-internal artefact, plus every ``var/`` subdirectory the
     release / packaging pipeline materialises as a transient virtualenv:
 

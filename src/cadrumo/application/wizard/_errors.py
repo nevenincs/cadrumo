@@ -43,12 +43,12 @@ class WizardCompileError(WizardError):
 class WizardAnswerTypeError(ProfileAnswerTypeError):
     """Raised when a :class:`SetupAnswers` field coercion receives an unexpected type.
 
-    Each ``@field_validator`` in :mod:`aeat.core.setup_answers`'s :class:`SetupAnswers`
-    raises :class:`~aeat.core.errors.ProfileAnswerTypeError` (the canonical core
+    Each ``@field_validator`` in :mod:`cadrumo.core.setup_answers`'s :class:`SetupAnswers`
+    raises :class:`~cadrumo.core.errors.ProfileAnswerTypeError` (the canonical core
     type); this subclass is retained so application-layer code and tests that
     catch :class:`WizardAnswerTypeError` by name continue to work.
 
-    Inherits from :class:`~aeat.core.errors.ProfileAnswerTypeError` (which inherits
+    Inherits from :class:`~cadrumo.core.errors.ProfileAnswerTypeError` (which inherits
     from :class:`CoreValidationError` and :class:`ValueError`) to remain compatible
     with pydantic's field-validator contract while exposing a typed exception in
     the error registry.

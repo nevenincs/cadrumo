@@ -171,7 +171,7 @@ adapters:
             profile. Run `aeat config google register --client-json <path>` first.
           google_token_missing: No Google OAuth token is persisted for the active
             profile. Run `aeat config google login` first.
-          kind_empty: AEAT_STORAGE_PROVIDER_KIND is empty.
+          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND is empty.
           kind_unhandled: Storage provider kind {kind} is not handled by the factory.
           kind_unknown: Storage provider kind {value} is not recognized; expected
             one of {expected}.
@@ -213,7 +213,7 @@ adapters:
             check failed.
           namespace_blank: Local storage namespace must not be blank.
           namespace_create_path_too_long: 'Local storage could not create namespace
-            {namespace}: the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            {namespace}: the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
             to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           namespace_create_permission: Local storage could not create namespace {namespace}.
           namespace_forbidden_characters: Local storage namespace {namespace} contains
@@ -228,7 +228,7 @@ adapters:
           payload_commit_failed: Local storage could not commit object payload atomically.
           payload_read_permission: Local storage could not read object payload.
           payload_write_path_too_long: 'Local storage could not write the object payload:
-            the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
             to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
           payload_write_permission: Local storage could not write object payload.
           sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
@@ -237,7 +237,7 @@ adapters:
           sidecar_not_object: Local storage sidecar {sidecar_path} is not a JSON object.
           sidecar_write_failed: Local storage could not write the object sidecar.
           sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
-            the path exceeds the Windows path-length limit. Move AEAT_LOCAL_STORAGE_ROOT
+            the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
             to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
   persistence:
     profile:
@@ -3417,7 +3417,7 @@ cli:
     telemetry:
       app_help: Inspect and control the default-off, opt-in remote telemetry tier.
       bad_tier: '--tier must be one of: %{accepted}; got %{value!r}.'
-      endpoint_help: Preview/send as if AEAT_TELEMETRY_ENDPOINT were this URL for
+      endpoint_help: Preview/send as if CADRUMO_TELEMETRY_ENDPOINT were this URL for
         this invocation only; omit to use the deployment's actual configured endpoint.
       flush:
         acknowledge_help: Acknowledge this specific remote-telemetry send. Required
@@ -3432,15 +3432,15 @@ cli:
         header: 'Telemetry payload (dry run, nothing sent):'
         help: Build the aggregate local telemetry payload and, unless --dry-run, send
           it.
-        no_endpoint_notice: 'Nothing was sent: no AEAT_TELEMETRY_ENDPOINT is configured.'
-      opt_in_help: Preview/send as if AEAT_TELEMETRY_OPT_IN were this value for this
+        no_endpoint_notice: 'Nothing was sent: no CADRUMO_TELEMETRY_ENDPOINT is configured.'
+      opt_in_help: Preview/send as if CADRUMO_TELEMETRY_OPT_IN were this value for this
         invocation only; omit to use the deployment's actual configured setting.
       status:
         header: 'Remote telemetry posture:'
         help: Report the current remote-telemetry consent posture. Never emits anything.
-        off_hint: Telemetry stays fully local by default. To opt in, set AEAT_TELEMETRY_OPT_IN=true
-          and AEAT_TELEMETRY_TIER to crash_only or full in env/.env.
-      tier_help: Preview/send as if AEAT_TELEMETRY_TIER were this value (off / crash_only
+        off_hint: Telemetry stays fully local by default. To opt in, set CADRUMO_TELEMETRY_OPT_IN=true
+          and CADRUMO_TELEMETRY_TIER to crash_only or full in env/.env.
+      tier_help: Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off / crash_only
         / full) for this invocation only; omit to use the deployment's actual configured
         tier.
     version:
@@ -4067,7 +4067,7 @@ cli:
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
-      invalid_env_value: 'AEAT_LOG_LEVEL must be one of: %{allowed}; got %{value}.'
+      invalid_env_value: 'CADRUMO_LOG_LEVEL must be one of: %{allowed}; got %{value}.'
   operator_surface:
     errors:
       accepted_roots_only: The CLI accepts only the config and app roots.
@@ -4130,8 +4130,8 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
-        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
-          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+        paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT,
+          CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE;
           logs default under that storage root.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
@@ -4171,8 +4171,8 @@ cli:
         modelo_bindings_list: List registry binding coverage.
         modelo_list: List supported modelos.
         modelo_work: Create and operate modelo work units.
-        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
-          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+        paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT,
+          CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE;
           logs default under that storage root.
         paragraph_two_roots: 'The CLI has exactly two roots: config and app.'
         paragraph_type_help: Use config for local state and app for tax work.
@@ -5003,7 +5003,7 @@ errors:
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
     error_storage_bucket_path_too_long: The bucket directory path exceeds the Windows
-      MAX_PATH limit. Move AEAT_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
+      MAX_PATH limit. Move CADRUMO_LOCAL_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
       (see `aeat config check`).
     error_submission_validation: A submission model failed validation.
     error_telemetry_schema: A telemetry metric key was not registered in the closed

@@ -18,9 +18,9 @@ classification run is otherwise invisible until an operator notices a stuck
 CLI invocation.
 
 :meth:`~LLMRunTelemetryRecorder.prune` bounds this store's growth with a
-retention window (:attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`)
+retention window (:attr:`~core.config.Settings.cadrumo_llm_run_telemetry_retention_days`)
 and a maximum record count
-(:attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`),
+(:attr:`~core.config.Settings.cadrumo_llm_run_telemetry_max_records`),
 mirroring :meth:`~adapters.outbound.llm.LLMCache.prune`'s
 list-then-delete-by-reconstructed-key shape. The object key each record was
 saved under embeds a random UUID4 suffix (so two runs starting in the same
@@ -118,9 +118,9 @@ class LLMRunTelemetryRecorder:
 
         Args:
             root_dir: Logical run-telemetry partition; defaults to the
-                centralized ``aeat_llm_run_telemetry_dir`` setting.
+                centralized ``cadrumo_llm_run_telemetry_dir`` setting.
         """
-        self.root_dir = root_dir or load_settings().aeat_llm_run_telemetry_dir
+        self.root_dir = root_dir or load_settings().cadrumo_llm_run_telemetry_dir
 
     def record(self, record: LLMRunRecord) -> Path:
         """Append ``record`` to encrypted secure-object storage.
@@ -253,8 +253,8 @@ class LLMRunTelemetryRecorder:
         older than ``retention_days`` (measured against the current time) is
         removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to
-        the centralized :attr:`~core.config.Settings.aeat_llm_run_telemetry_retention_days`
-        and :attr:`~core.config.Settings.aeat_llm_run_telemetry_max_records`
+        the centralized :attr:`~core.config.Settings.cadrumo_llm_run_telemetry_retention_days`
+        and :attr:`~core.config.Settings.cadrumo_llm_run_telemetry_max_records`
         settings.
 
         Args:
@@ -271,9 +271,11 @@ class LLMRunTelemetryRecorder:
         """
         settings = load_settings()
         effective_retention_days = (
-            retention_days if retention_days is not None else settings.aeat_llm_run_telemetry_retention_days
+            retention_days if retention_days is not None else settings.cadrumo_llm_run_telemetry_retention_days
         )
-        effective_max_records = max_records if max_records is not None else settings.aeat_llm_run_telemetry_max_records
+        effective_max_records = (
+            max_records if max_records is not None else settings.cadrumo_llm_run_telemetry_max_records
+        )
 
         cutoff = now() - timedelta(days=effective_retention_days)
         rows = self._load_records_with_object_keys()

@@ -40,11 +40,11 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
-            aeat_token_dir=tmp_path / "tokens",
-            aeat_runs_dir=tmp_path / "runs",
-            aeat_financial_txs_dir=tmp_path / "txs",
-            aeat_invoices_dir=tmp_path / "invoices",
-            aeat_drafts_dir=tmp_path / "drafts",
+            cadrumo_token_dir=tmp_path / "tokens",
+            cadrumo_runs_dir=tmp_path / "runs",
+            cadrumo_financial_txs_dir=tmp_path / "txs",
+            cadrumo_invoices_dir=tmp_path / "invoices",
+            cadrumo_drafts_dir=tmp_path / "drafts",
         ),
     ):
         yield
@@ -85,7 +85,7 @@ def _relabel_bucket(bucket_id: str, new_label: str) -> None:
     pair — both profiles remain ACTIVE with a real bucket directory, DB, and
     keystore; only the plaintext manifest label changes.
     """
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     assert root is not None
     paths = bucket_paths(root, bucket_id)
     manifest = read_manifest(paths)
@@ -102,7 +102,7 @@ def _provision_casefold_collision() -> None:
 
     from .....application.workflow import list_profile_buckets
 
-    root = load_settings().aeat_local_storage_root
+    root = load_settings().cadrumo_local_storage_root
     assert root is not None
     pointers = list(list_profile_buckets(root=root).values())
     by_label = {p.label: p.bucket_id for p in pointers}

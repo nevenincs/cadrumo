@@ -116,7 +116,7 @@ def test_result_summary_rows_render_requested_localized_label() -> None:
     assert row.label == "Rendimiento neto"
     assert row.localized_labels["ca"] == "Rendiment net"
 
-    with override_settings(aeat_output_language="ca"):
+    with override_settings(cadrumo_output_language="ca"):
         lines = result_summary_lines(revision)
         payload = result_summary_payload(revision)
 

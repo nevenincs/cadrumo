@@ -22,7 +22,7 @@ an older revision that predates the split. The registered check
 instead asserts that every casilla a REVISION'S OWN
 ``ledger_renta_expense_aggregation`` bindings target actually exists on
 that same revision -- see
-:func:`aeat.domain.calculations.registry.renta_first_slice_binding_target_casillas`.
+:func:`cadrumo.domain.calculations.registry.renta_first_slice_binding_target_casillas`.
 A regression in either the registry or a revision's own bindings
 surfaces as a typed ``RegistryValidationError`` at snapshot
 construction.

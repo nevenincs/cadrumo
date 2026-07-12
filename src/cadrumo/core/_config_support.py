@@ -30,7 +30,7 @@ class SecretStoreBackend(StrEnum):
     """Supported backends for the master-key secret store.
 
     :class:`~core.config.Settings` exposes this closed set through
-    ``aeat_secret_store_backend`` so storage custody and operator setup share
+    ``cadrumo_secret_store_backend`` so storage custody and operator setup share
     one spelling for automatic, keyring, file-backed, and explicitly unsecured
     secret storage.
     """

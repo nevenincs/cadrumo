@@ -82,7 +82,7 @@ class TestRunContextOutcome:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with run_context(entrypoint="aeat test ok", arguments=()) as info:
                 run_id = info.run_id
             trace = load_trace(run_id)
@@ -94,7 +94,7 @@ class TestRunContextOutcome:
             (KeyboardInterrupt(), "aeat test int"),
         )
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             for exception, entrypoint in cases:
                 captured: dict[str, str] = {}
                 expected_error = (
@@ -119,7 +119,7 @@ class TestRunContextOutcome:
     ) -> None:
         run_id = "1111111111111111"
         with (
-            override_settings(aeat_runs_dir=tmp_path),
+            override_settings(cadrumo_runs_dir=tmp_path),
             pytest.raises(RunTracePersistenceError) as excinfo,
             run_context(entrypoint="aeat test persist fail", arguments=(), run_id=run_id),
         ):
@@ -135,7 +135,7 @@ class TestRunContextOutcome:
     ) -> None:
         run_id = "2222222222222222"
         with (
-            override_settings(aeat_runs_dir=tmp_path),
+            override_settings(cadrumo_runs_dir=tmp_path),
             pytest.raises(RuntimeError, match="primary failure"),
             run_context(entrypoint="aeat test body fail", arguments=(), run_id=run_id),
         ):
@@ -159,7 +159,7 @@ class TestRunContextRunIdValidation:
 
         bad_run_ids = ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789")
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             for bad_run_id in bad_run_ids:
                 before = set(tmp_path.iterdir())
                 with (
@@ -174,7 +174,7 @@ class TestRunContextRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with run_context(
                 entrypoint="aeat test",
                 arguments=(),
@@ -190,7 +190,7 @@ class TestRunIdPropagation:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             chain: Callable[[str], None] = _SubmissionStep(_InboxStep(_StatusStep()))
             with run_context(entrypoint="aeat test chain", arguments=()) as info:
                 chain("alpha")
@@ -223,7 +223,7 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """A NIF-shaped value in a GenericPayload field must not appear in plain text."""
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with run_context(entrypoint="aeat test scrub nif", arguments=()) as info:
                 record_event(
                     RunEventKind.ASSERTION,
@@ -251,7 +251,7 @@ class TestRunSinkScrubbing:
         from ...logging import SecretScrubbingFilter, attach_run_sink
         from .._sink import JsonlRunSink
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)
             attach_run_sink(sink)
             try:
@@ -268,7 +268,7 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """Every JSONL line must deserialise cleanly after scrubbing is applied."""
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
             with run_context(entrypoint="aeat test scrub json", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,

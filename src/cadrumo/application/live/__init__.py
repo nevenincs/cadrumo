@@ -331,7 +331,7 @@ async def capture_notifications(*, bucket_id: str):
        authenticated DEHú surface and parses the HTML response.
     4. :class:`NotificationsService.capture` — persists the typed
        snapshot in the active bucket under the
-       ``aeat.application.live.notifications`` namespace.
+       ``cadrumo.application.live.notifications`` namespace.
     5. Bucket event ``live.notifications.snapshot_captured`` is
        emitted by the caller through the standard bucket-event
        repository so this function stays unit-testable against
@@ -492,7 +492,7 @@ def __getattr__(name: str):
 
     Promoted per the ``service-imports-via-top-level-reexports``
     rule so CLI handlers and other consumers consume these symbols
-    through ``aeat.application.live`` rather than dotting into
+    through ``cadrumo.application.live`` rather than dotting into
     ``_verify`` / ``_notifications`` / ``_expedientes``. Lazy
     semantics preserve the existing module-load-time profile (the
     services trigger their own heavy imports only on first

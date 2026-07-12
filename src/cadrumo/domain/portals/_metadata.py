@@ -39,7 +39,7 @@ class PortalMetadata(BaseModel):
     is strict, frozen, and rejects unknown keys. Structural
     cross-reference invariants that span the registry as a whole are
     enforced at registry-assembly time by
-    :func:`aeat.domain.portals._registry._finalise_registry` rather than
+    :func:`cadrumo.domain.portals._registry._finalise_registry` rather than
     here, so individual entries can be constructed in isolation.
 
     Attributes:

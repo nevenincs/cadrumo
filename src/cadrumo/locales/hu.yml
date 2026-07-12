@@ -178,7 +178,7 @@ adapters:
             <path>`.'
           google_token_missing: 'Nincs Google OAuth-token mentve az aktiv profilhoz.
             Futtassa eloszor: `aeat config google login`.'
-          kind_empty: Az AEAT_STORAGE_PROVIDER_KIND ures.
+          kind_empty: Az CADRUMO_STORAGE_PROVIDER_KIND ures.
           kind_unhandled: A(z) {kind} tarhelyszolgaltato-tipust a factory nem kezeli.
           kind_unknown: 'A(z) {value} tarhelyszolgaltato-tipus nem ismert; vart ertekek:
             {expected}.'
@@ -221,7 +221,7 @@ adapters:
           namespace_blank: A helyi tarhely nevtere nem lehet ures.
           namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
             {namespace} névteret: az elérési út meghaladja a Windows elérésiút-hossz
-            korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb
+            korlátját. Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb
             útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat
             config check`).'
           namespace_create_permission: 'A helyi tarhely nem tudta letrehozni a nevteret:
@@ -241,7 +241,7 @@ adapters:
           payload_read_permission: A helyi tarhely nem tudta olvasni az objektum payloadjat.
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             tartalmát: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
-            Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
             vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
           payload_write_permission: A helyi tarhely nem tudta irni az objektum payloadjat.
           sidecar_malformed: A helyi sidecar {sidecar_path} nem olvashato vagy hibas.
@@ -250,7 +250,7 @@ adapters:
           sidecar_write_failed: A helyi tarhely nem tudta irni az objektum sidecarjat.
           sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
-            Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
             vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
   persistence:
     profile:
@@ -3610,7 +3610,7 @@ cli:
         ellenőrzése és vezérlése.
       bad_tier: 'A --tier értékének a következők egyikének kell lennie: %{accepted};
         kapott érték: %{value!r}.'
-      endpoint_help: Előnézet/küldés úgy, mintha az AEAT_TELEMETRY_ENDPOINT ez az
+      endpoint_help: Előnézet/küldés úgy, mintha az CADRUMO_TELEMETRY_ENDPOINT ez az
         URL lenne csak ehhez a futtatáshoz; hagyd el, hogy a telepítés ténylegesen
         beállított végpontját használd.
       flush:
@@ -3629,8 +3629,8 @@ cli:
         header: 'Telemetria adatcsomag (próbafuttatás, nem küldtünk semmit):'
         help: Összeállítja az összesített helyi telemetria adatcsomagot, és --dry-run
           hiányában elküldi.
-        no_endpoint_notice: 'Semmit nem küldtünk el: nincs beállítva AEAT_TELEMETRY_ENDPOINT.'
-      opt_in_help: Előnézet/küldés úgy, mintha az AEAT_TELEMETRY_OPT_IN ezt az értéket
+        no_endpoint_notice: 'Semmit nem küldtünk el: nincs beállítva CADRUMO_TELEMETRY_ENDPOINT.'
+      opt_in_help: Előnézet/küldés úgy, mintha az CADRUMO_TELEMETRY_OPT_IN ezt az értéket
         venné fel csak ehhez a futtatáshoz; hagyd el, hogy a telepítés ténylegesen
         beállított értékét használd.
       status:
@@ -3638,9 +3638,9 @@ cli:
         help: A jelenlegi távoli telemetria hozzájárulási állapotának jelentése. Soha
           nem küld semmit.
         off_hint: A telemetria alapértelmezetten teljesen helyi marad. A bekapcsoláshoz
-          állítsd be az AEAT_TELEMETRY_OPT_IN=true értéket és az AEAT_TELEMETRY_TIER-t
+          állítsd be az CADRUMO_TELEMETRY_OPT_IN=true értéket és az CADRUMO_TELEMETRY_TIER-t
           crash_only vagy full értékre az env/.env fájlban.
-      tier_help: Előnézet/küldés úgy, mintha az AEAT_TELEMETRY_TIER ezt az értéket
+      tier_help: Előnézet/küldés úgy, mintha az CADRUMO_TELEMETRY_TIER ezt az értéket
         venné fel (off / crash_only / full) csak ehhez a futtatáshoz; hagyd el a ténylegesen
         beállított szinthez.
     version:
@@ -4310,7 +4310,7 @@ cli:
     errors:
       flags_mutually_exclusive: A --quiet, --verbose és --debug kapcsolók kölcsönösen
         kizárják egymást.
-      invalid_env_value: 'Az AEAT_LOG_LEVEL értéke csak a következők egyike lehet:
+      invalid_env_value: 'Az CADRUMO_LOG_LEVEL értéke csak a következők egyike lehet:
         %{allowed}; kapott: %{value}.'
   operator_surface:
     errors:
@@ -4375,8 +4375,8 @@ cli:
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
         paragraph_storage_isolation: Elszigetelt ures allapothoz allitsa be ezeket
-          az env valtozokat; AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file,
-          AEAT_SECRET_STORE_DIR es AEAT_SECRET_PASSPHRASE; a naplok alapertelmezes
+          az env valtozokat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
+          CADRUMO_SECRET_STORE_DIR es CADRUMO_SECRET_PASSPHRASE; a naplok alapertelmezes
           szerint ezen tarhelygyoker alatt vannak.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
@@ -4417,8 +4417,8 @@ cli:
         modelo_list: Támogatott nyomtatványok listázása.
         modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
         paragraph_storage_isolation: Elszigetelt ures allapothoz allitsa be ezeket
-          az env valtozokat; AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file,
-          AEAT_SECRET_STORE_DIR es AEAT_SECRET_PASSPHRASE; a naplok alapertelmezes
+          az env valtozokat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
+          CADRUMO_SECRET_STORE_DIR es CADRUMO_SECRET_PASSPHRASE; a naplok alapertelmezes
           szerint ezen tarhelygyoker alatt vannak.
         paragraph_two_roots: 'A CLI-nek pontosan két gyökere van: config és app.'
         paragraph_type_help: A config parancsot helyi állapothoz, az app parancsot
@@ -5262,7 +5262,7 @@ errors:
     error_sede_navigation: Az AEAT Sede navigációs lépése meghiúsult.
     error_storage_bucket: Hiba történt a tároló-bucket életciklusában.
     error_storage_bucket_path_too_long: A bucket könyvtár elérési útja meghaladja
-      a Windows MAX_PATH korlátját. Helyezze át az AEAT_LOCAL_STORAGE_ROOT beállítást
+      a Windows MAX_PATH korlátját. Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást
       egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd
       `aeat config check`).
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.

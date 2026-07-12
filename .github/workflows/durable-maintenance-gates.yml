@@ -36,7 +36,7 @@
 #     ||  and land in the SAME commit that removes this one.
 #     ===================================================================
 #
-# No secrets are required. AEAT_LIVE_TESTS_ENABLED is NEVER set here; only
+# No secrets are required. CADRUMO_LIVE_TESTS_ENABLED is NEVER set here; only
 # the `unit`-marked roundtrip tests run.
 
 name: Durable maintenance gates
@@ -103,7 +103,7 @@ jobs:
         # plus the roundtrip-coverage inventory meta-gate. Never narrow this
         # selector so the ledger / storage roundtrips stop running without an
         # explicit replacement gate landing in the same commit (see header).
-        # AEAT_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
+        # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
         run: |
           uv run --no-sync pytest \
             src/aeat/tests/test_roundtrip_coverage.py \

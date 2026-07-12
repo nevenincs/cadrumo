@@ -343,7 +343,7 @@ class OverviewExplainResult(OutputSchema):
 class OverviewPrepareStepPayload(OutputSchema):
     """One ordered row in the ``aeat app overview prepare`` checklist.
 
-    Mirrors :class:`~aeat.application.overview.DataPrepStep`: a closed step
+    Mirrors :class:`~cadrumo.application.overview.DataPrepStep`: a closed step
     identifier, its current readiness state, a human-readable progress
     summary, and the exact next ``aeat`` command to run.
     """
@@ -358,7 +358,7 @@ class OverviewPrepareStepPayload(OutputSchema):
 class OverviewPrepareResult(OutputSchema):
     """JSON envelope result for ``aeat app overview prepare``.
 
-    Wraps :class:`~aeat.application.overview.DataPrepWalkthrough`: the ordered
+    Wraps :class:`~cadrumo.application.overview.DataPrepWalkthrough`: the ordered
     data-prep checklist for one ``(modelo, filing_year, period)`` scope,
     read-only over the active profile bucket's ledger, invoice, evidence, and
     modelo work-unit state. Never contacts AEAT and persists nothing.
@@ -374,7 +374,7 @@ class OverviewPrepareResult(OutputSchema):
 class OverviewPipelineModeloPayload(OutputSchema):
     """One modelo readiness row nested in a pipeline health result.
 
-    Mirrors :class:`~aeat.application.overview.ModeloHealthRow`: the modelo's
+    Mirrors :class:`~cadrumo.application.overview.ModeloHealthRow`: the modelo's
     current readiness state against the requested period, its outstanding
     blocking/warning finding counts, and the exact next command to run.
     """
@@ -392,7 +392,7 @@ class OverviewPipelineModeloPayload(OutputSchema):
 class OverviewPipelineResult(OutputSchema):
     """JSON envelope result for ``aeat app overview pipeline``.
 
-    Wraps :class:`~aeat.application.overview.PipelineHealthReport`: the
+    Wraps :class:`~cadrumo.application.overview.PipelineHealthReport`: the
     cross-domain pipeline health dashboard for one ``(filing_year, period)``
     scope, composing the reused ledger status report, one modelo readiness
     row per work unit found for the period, and aggregate finding counts.

@@ -1,20 +1,20 @@
 """Construct closure and support-removal validation helpers.
 
 Validates that every construct and support-removal decision declared on
-a :class:`~aeat.domain.calculations.registry.ModeloRevision` has coherent member
+a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` has coherent member
 references and legal grounding.
 
 Construct member closure compares each member's
-:class:`~aeat.domain.calculations.registry.LegalReference` and
-:class:`~aeat.domain.calculations.registry.SourceReference` requirements with the
+:class:`~cadrumo.domain.calculations.registry.LegalReference` and
+:class:`~cadrumo.domain.calculations.registry.SourceReference` requirements with the
 refs declared by the owning construct. Support-removal decisions are separately
 gated through the
-:class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
+    :func:`cadrumo.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
         Revision-level runner that invokes both validators in this module.
-    :func:`aeat.domain.calculations.registry.resolve_revision_constructs`
+    :func:`cadrumo.domain.calculations.registry.resolve_revision_constructs`
         Runtime projection of validated construct declarations.
 """
 
@@ -59,11 +59,11 @@ def validate_construct_closure(
 ) -> list[str]:
     """Return construct member and grounding failures for one revision.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     construct declarations; ``member_objects`` is the prebuilt member index from
     the revision validation context. Each member's legal/source refs must be
     included by the construct that claims it, and
-    :class:`~aeat.domain.calculations.registry._validate_evidence.EvidenceValidator`
+    :class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`
     enforces official-source grounding for the construct itself.
     """
     failures: list[str] = []
@@ -117,9 +117,9 @@ def validate_support_removal_decisions(
     """Return support-removal decision failures for one revision.
 
     Each
-    :class:`~aeat.domain.calculations.registry.SupportRemovalDecisionDefinition`
+    :class:`~cadrumo.domain.calculations.registry.SupportRemovalDecisionDefinition`
     declared by the
-    :class:`~aeat.domain.calculations.registry.ModeloRevision` must cite known
+    :class:`~cadrumo.domain.calculations.registry.ModeloRevision` must cite known
     legal/source refs and one accepted source tier. A decision also fails when it
     claims to remove a subject id that remains active in the supplied subject-id
     indexes.

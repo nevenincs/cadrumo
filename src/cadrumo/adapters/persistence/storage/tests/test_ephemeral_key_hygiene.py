@@ -111,14 +111,14 @@ def test_database_operating_passphrases_use_core_test_setting() -> None:
             if _has_literal_passphrase_callback(node):
                 violations.append(f"{relative_path}:{node.lineno}: literal passphrase_callback")
             if _sets_literal_secret_passphrase_env(node):
-                violations.append(f"{relative_path}:{node.lineno}: literal AEAT_SECRET_PASSPHRASE")
+                violations.append(f"{relative_path}:{node.lineno}: literal CADRUMO_SECRET_PASSPHRASE")
             if _overrides_literal_secret_passphrase(node):
-                violations.append(f"{relative_path}:{node.lineno}: literal aeat_secret_passphrase override")
+                violations.append(f"{relative_path}:{node.lineno}: literal cadrumo_secret_passphrase override")
 
     assert not violations, "\n".join(
         (
             "Database-backed tests must read the shared dev/test password from "
-            "Settings.aeat_dev_test_database_password or aeat-tests.secure_sql.",
+            "Settings.cadrumo_dev_test_database_password or aeat-tests.secure_sql.",
             *violations,
         ),
     )
@@ -254,12 +254,12 @@ def _call_overrides_temp_database_or_storage_settings(
     for keyword in node.keywords:
         rendered = ast.unparse(keyword.value)
         if (
-            keyword.arg == "aeat_database_url"
+            keyword.arg == "cadrumo_database_url"
             and "sqlite:///" in rendered
             and any(name in rendered for name in temp_path_names)
         ):
             return True
-        if keyword.arg == "aeat_local_storage_root" and any(name in rendered for name in temp_path_names):
+        if keyword.arg == "cadrumo_local_storage_root" and any(name in rendered for name in temp_path_names):
             return True
     return False
 
@@ -275,7 +275,7 @@ def _call_sets_temp_storage_root_env(node: ast.AST) -> bool:
         return False
     if len(node.args) < 2:
         return False
-    if _literal_string(node.args[0]) != "AEAT_LOCAL_STORAGE_ROOT":
+    if _literal_string(node.args[0]) != "CADRUMO_LOCAL_STORAGE_ROOT":
         return False
     return "tmp_path" in ast.unparse(node.args[1])
 
@@ -291,7 +291,7 @@ def _call_sets_temp_database_url_env(node: ast.AST) -> bool:
         return False
     if len(node.args) < 2:
         return False
-    if _literal_string(node.args[0]) != "AEAT_DATABASE_URL":
+    if _literal_string(node.args[0]) != "CADRUMO_DATABASE_URL":
         return False
     rendered = ast.unparse(node.args[1])
     return "sqlite:///" in rendered and "tmp_path" in rendered
@@ -326,7 +326,7 @@ def _overrides_literal_secret_passphrase(node: ast.Call) -> bool:
     if leaf_name(node.func) != "override_settings":
         return False
     for keyword in node.keywords:
-        if keyword.arg != "aeat_secret_passphrase":
+        if keyword.arg != "cadrumo_secret_passphrase":
             continue
         if _literal_nonblank_string(keyword.value) is not None:
             return True
@@ -354,6 +354,6 @@ def _literal_nonblank_string(node: ast.AST) -> str | None:
 
 
 def _is_secret_passphrase_env_arg(node: ast.AST) -> bool:
-    if _literal_string(node) == "AEAT_SECRET_PASSPHRASE":
+    if _literal_string(node) == "CADRUMO_SECRET_PASSPHRASE":
         return True
     return isinstance(node, ast.Name) and node.id == "PASSPHRASE_ENV_VAR"

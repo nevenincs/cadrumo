@@ -192,7 +192,7 @@ def test_profile_bound_repository_without_active_session_fails_closed(
 
     assert _active_session.get() is None
     with (
-        override_settings(aeat_output_language="en"),
+        override_settings(cadrumo_output_language="en"),
         pytest.raises(StorageValidationError, match="no active bucket session") as raised,
     ):
         _inactive_repository._check_session_freshness()

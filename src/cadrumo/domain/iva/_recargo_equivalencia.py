@@ -9,7 +9,7 @@ citations and review metadata, and Python consumers import them
 from this module.
 
 The loader follows the same idiom as
-:mod:`aeat.domain.fincas._imputacion_parameters`: a frozen pydantic
+:mod:`cadrumo.domain.fincas._imputacion_parameters`: a frozen pydantic
 record loaded once at module import time, with an explicit
 :func:`recargo_rate_for` helper that maps from the substrate's
 :class:`IvaRateKind` tier to the corresponding recargo Decimal.
@@ -73,7 +73,7 @@ _TABACO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-tabaco"
 def _load_rates() -> LivaArt161RecargoRates:
     """Read the four LIVA art. 161 rate parameters from the registry catalogue.
 
-    Routes through ``aeat.domain.calculations.registry.load_registry_tree``
+    Routes through ``cadrumo.domain.calculations.registry.load_registry_tree``
     so parameters land in the validated :class:`RegistryCatalogues.parameters`
     surface (single config-resolution path). The retired direct
     ``tomllib.load`` of ``registry/aeat/legal/iva-recargo-equivalencia.toml``
@@ -89,7 +89,7 @@ def _load_rates() -> LivaArt161RecargoRates:
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports
-    # from aeat.domain.iva, triggering a circular import at this very
+    # from cadrumo.domain.iva, triggering a circular import at this very
     # module's import time.
     from ..calculations.registry import RegistryError, load_legal_parameters_only
 

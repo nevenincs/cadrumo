@@ -113,7 +113,7 @@ def _seed_small_index(source_stem: str) -> None:
 def test_build_payload_runs_real_retrieval_citation(tmp_path: Path) -> None:
     # End-to-end through the runtime service and a real (pre-seeded) index; the
     # citation query short-circuits to the bundled verbatim text.
-    with override_settings(aeat_local_storage_root=tmp_path):
+    with override_settings(cadrumo_local_storage_root=tmp_path):
         _seed_small_index("ley-58-2003-art-27")
         payload = build_corpus_search_payload("ley-58-2003:art-27.2", limit=5)
     assert payload.mode is RetrievalMode.CITATION
@@ -124,7 +124,7 @@ def test_build_payload_runs_real_retrieval_citation(tmp_path: Path) -> None:
 def test_build_payload_runs_real_lexical_retrieval(tmp_path: Path) -> None:
     # A free-text query over the pre-seeded index returns ranked hits with
     # corpus URIs, in the shipped lexical-only degraded mode (no vectors).
-    with override_settings(aeat_local_storage_root=tmp_path):
+    with override_settings(cadrumo_local_storage_root=tmp_path):
         _seed_small_index("ley-58-2003-art-27")
         payload = build_corpus_search_payload("recargo declaración extemporánea", limit=5)
     assert payload.mode is RetrievalMode.LEXICAL_ONLY

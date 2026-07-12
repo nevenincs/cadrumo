@@ -29,11 +29,11 @@ def test_live_anthropic_round_trip(tmp_path: Path) -> None:
 
     requires_live_enabled()
     settings = _LiveSettings(
-        aeat_llm_cache_dir=tmp_path / "cache",
-        aeat_llm_usage_dir=tmp_path / "usage",
+        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_usage_dir=tmp_path / "usage",
     )
-    if settings.aeat_llm_anthropic_api_key is None:
-        pytest.fail("AEAT_LLM_ANTHROPIC_API_KEY is not configured after live opt-in.")
+    if settings.cadrumo_llm_anthropic_api_key is None:
+        pytest.fail("CADRUMO_LLM_ANTHROPIC_API_KEY is not configured after live opt-in.")
     client = LLMClient(settings=settings)
     response = asyncio.run(
         client.complete(

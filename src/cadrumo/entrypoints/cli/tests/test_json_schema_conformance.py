@@ -475,7 +475,7 @@ def test_profile_bound_command_populates_active_profile_label(tmp_path: Path) ->
             uuid = pointer.bucket_id
             assert uuid != label, "the bucket id must be a minted UUID, not the label"
 
-            with override_settings(aeat_active_profile=uuid):
+            with override_settings(cadrumo_active_profile=uuid):
                 listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
             assert listed.exit_code == 0, listed.output

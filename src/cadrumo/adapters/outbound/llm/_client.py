@@ -79,10 +79,10 @@ class LLMClient:
         adapter_override: _ProviderAdapter | None = None,
     ) -> None:
         self.settings = settings or Settings()
-        self.cache = cache or LLMCache(root_dir=self.settings.aeat_llm_cache_dir)
-        self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.aeat_llm_usage_dir)
+        self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
+        self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.cadrumo_llm_usage_dir)
         self.run_telemetry_recorder = run_telemetry_recorder or LLMRunTelemetryRecorder(
-            root_dir=self.settings.aeat_llm_run_telemetry_dir,
+            root_dir=self.settings.cadrumo_llm_run_telemetry_dir,
         )
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.caller = caller
@@ -117,11 +117,13 @@ class LLMClient:
             model=model,
             prompt=request.prompt,
             system=request.system,
-            max_tokens=request.max_tokens or self.settings.aeat_llm_default_max_tokens,
+            max_tokens=request.max_tokens or self.settings.cadrumo_llm_default_max_tokens,
             temperature=(
-                request.temperature if request.temperature is not None else self.settings.aeat_llm_default_temperature
+                request.temperature
+                if request.temperature is not None
+                else self.settings.cadrumo_llm_default_temperature
             ),
-            timeout_s=self.settings.aeat_llm_default_timeout_s,
+            timeout_s=self.settings.cadrumo_llm_default_timeout_s,
             images=tuple(image.base64_data for image in request.images),
         )
         run_started_at = now()
@@ -215,16 +217,16 @@ class LLMClient:
             _LOGGER.debug("llm run-telemetry write failed; continuing without it", exc_info=True)
 
     def _default_provider(self) -> LLMProvider:
-        raw_provider = self.settings.aeat_llm_provider
+        raw_provider = self.settings.cadrumo_llm_provider
         try:
             return LLMProvider(raw_provider)
         except ValueError as exc:
-            msg = f"Unsupported AEAT_LLM_PROVIDER value: {raw_provider!r}"
+            msg = f"Unsupported CADRUMO_LLM_PROVIDER value: {raw_provider!r}"
             raise LLMConfigError(msg) from exc
 
     def _default_model(self, provider: LLMProvider) -> str:
         if provider is self._default_provider():
-            return self.settings.aeat_llm_model
+            return self.settings.cadrumo_llm_model
         defaults = {
             LLMProvider.ANTHROPIC: "claude-sonnet-4-6",
             LLMProvider.OPENAI: "gpt-4.1",
@@ -234,7 +236,7 @@ class LLMClient:
         return defaults[provider]
 
     def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
-        timeout_s = self.settings.aeat_llm_default_timeout_s
+        timeout_s = self.settings.cadrumo_llm_default_timeout_s
         if provider is LLMProvider.ANTHROPIC:
             # The Anthropic-API provider needs the optional `anthropic` extra. Guard
             # before the lazy import so a missing extra is an instructive
@@ -248,17 +250,17 @@ class LLMClient:
             from ._providers.anthropic import AnthropicAdapter
 
             return AnthropicAdapter(
-                api_key=self._unwrap_secret(self.settings.aeat_llm_anthropic_api_key),
+                api_key=self._unwrap_secret(self.settings.cadrumo_llm_anthropic_api_key),
                 timeout_s=timeout_s,
             )
         if provider is LLMProvider.OPENAI:
             return OpenAIAdapter(
-                api_key=self._unwrap_secret(self.settings.aeat_llm_openai_api_key),
+                api_key=self._unwrap_secret(self.settings.cadrumo_llm_openai_api_key),
                 timeout_s=timeout_s,
             )
         if provider is LLMProvider.GEMINI:
             return GeminiAdapter(
-                api_key=self._unwrap_secret(self.settings.aeat_llm_gemini_api_key),
+                api_key=self._unwrap_secret(self.settings.cadrumo_llm_gemini_api_key),
                 timeout_s=timeout_s,
             )
         return LocalAdapter(timeout_s=timeout_s)

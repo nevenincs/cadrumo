@@ -44,12 +44,12 @@ def active_profile(tmp_path: Path) -> Iterator[None]:
     in their body.
 
     The package-level `_isolated_aeat_root` conftest fixture handles
-    `aeat_local_storage_root` redirection separately.
+    `cadrumo_local_storage_root` redirection separately.
     """
 
     from ....core.config import override_settings
 
-    with override_settings(aeat_active_profile="operator"):
+    with override_settings(cadrumo_active_profile="operator"):
         yield
 
 
@@ -83,10 +83,10 @@ def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path)
 
     from ....core.config import override_settings
 
-    with override_settings(aeat_active_profile="operator"):
+    with override_settings(cadrumo_active_profile="operator"):
         result_a = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
-    with override_settings(aeat_active_profile="other-profile"):
+    with override_settings(cadrumo_active_profile="other-profile"):
         result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert result_a.storage_state == Path(".aeat/auth/sessions/operator-storage.json")
@@ -98,10 +98,10 @@ def test_storage_state_paths_is_independent_of_plaintext_token_dir(tmp_path: Pat
     """Encrypted session object keys must not depend on the plaintext token dir."""
     from ....core.config import Settings, override_settings
 
-    with override_settings(aeat_token_dir=tmp_path / "tokens-a"):
+    with override_settings(cadrumo_token_dir=tmp_path / "tokens-a"):
         Settings()
         result_a = storage_state_paths(AuthProviderKind.CERTIFICATE)
-    with override_settings(aeat_token_dir=tmp_path / "tokens-b"):
+    with override_settings(cadrumo_token_dir=tmp_path / "tokens-b"):
         Settings()
         result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 

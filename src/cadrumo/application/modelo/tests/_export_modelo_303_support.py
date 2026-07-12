@@ -225,7 +225,7 @@ def _seed_modelo_303_1t_clean_state(
 
 
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
-    settings = Settings(aeat_local_storage_root=sidecar_root, aeat_active_profile="operator")
+    settings = Settings(cadrumo_local_storage_root=sidecar_root, cadrumo_active_profile="operator")
     objects = inspect_bucket_storage_runtime("operator", settings).secure_object_repository()
     return IvaWalletDecisionRepository(objects=objects), settings
 

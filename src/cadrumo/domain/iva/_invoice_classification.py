@@ -16,7 +16,7 @@ carries one :class:`IvaInvoiceClassification`. The record captures:
   have to call :func:`settlement_sides_for_flow` repeatedly.
 
 Why a separate record instead of fields on
-:class:`aeat.domain.invoices.Invoice`?
+:class:`cadrumo.domain.invoices.Invoice`?
 
 Multiple ledger surfaces need the same triple — invoice lines,
 payment-record IVA splits, expense-report ledger lines, OSS / IOSS
@@ -87,7 +87,7 @@ def _iva_rate_to_domestic_category() -> dict[IvaRate, IvaCategory]:
     IvaRate alone.
 
     Built lazily for the same package-init reason as the public
-    ``aeat.domain.invoices.iva_rate_kind`` accessor.
+    ``cadrumo.domain.invoices.iva_rate_kind`` accessor.
     """
     from ..invoices import IvaRate
 
@@ -180,7 +180,7 @@ def classify_invoice_line_for_iva(
     equivalencia, and OSS / IOSS cases, callers construct
     :class:`IvaInvoiceClassification` directly with the appropriate
     :class:`IvaCategory` from the substrate classifier
-    (:func:`aeat.domain.iva.classify_iva`).
+    (:func:`cadrumo.domain.iva.classify_iva`).
 
     Args:
         iva_rate: One of the closed :class:`IvaRate` slots.
@@ -234,7 +234,7 @@ def invoice_line_to_iva_observation(
 
     The runtime resolver for the substrate's ``ledger_iva_aggregation``
     binding source kind consumes
-    :class:`aeat.domain.calculations.registry.IvaLedgerObservation`
+    :class:`cadrumo.domain.calculations.registry.IvaLedgerObservation`
     records. This helper turns invoice-line metadata into the
     observation shape the modelo registry expects, applying the
     standard-case classification (domestic IVA, REPERCUTIDO for issued

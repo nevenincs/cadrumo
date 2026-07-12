@@ -1,16 +1,16 @@
 """Relation helpers for cross-model registry dependencies.
 
 Resolves cross-modelo source requirements and materialises relation values
-for a :class:`~aeat.domain.calculations.registry.ModeloRevision` filing.
+for a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` filing.
 Relations declare which source filings and output casillas must be available
 before the target modelo can be calculated.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._bindings_previous_filing`
+    :mod:`cadrumo.domain.calculations.registry._bindings_previous_filing`
         Same requirement record reused by direct previous-filing carries.
-    :mod:`aeat.domain.calculations.registry._observation_fold`
+    :mod:`cadrumo.domain.calculations.registry._observation_fold`
         Observation fold helpers used to gather source casilla values.
-    :mod:`aeat.domain.calculations.registry._relation_aggregation`
+    :mod:`cadrumo.domain.calculations.registry._relation_aggregation`
         Canonical relation aggregation resolver used by this module.
 """
 
@@ -62,7 +62,7 @@ class RegistryFoldRequirement(BaseModel):
 
     Consumed by :func:`relation_source_requirements`,
     :func:`resolve_relation_values_from_observations`, and
-    :func:`aeat.domain.calculations.registry.previous_filing_observation_requirements`.
+    :func:`cadrumo.domain.calculations.registry.previous_filing_observation_requirements`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -104,7 +104,7 @@ def relation_source_requirements(
 
     Args:
         revision: The
-            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
             relation declarations to inspect.
         filing_year: Target filing year; combined with each relation's source
             offset to derive the expected source-modelo filing year.
@@ -112,7 +112,7 @@ def relation_source_requirements(
             and seeds the source-period derivation.
 
     Returns:
-        :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement`
+        :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement`
         rows keyed by source modelo/year/period and source casilla.
     """
     classifications_by_source = {
@@ -206,11 +206,11 @@ def resolve_relation_values(
 
     Args:
         revision: The
-            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
             relation definitions are resolved against the supplied external
             outputs.
         external_outputs: Caller-supplied per-relation values keyed by
-            :class:`~aeat.domain.calculations.registry.RelationId`; a
+            :class:`~cadrumo.domain.calculations.registry.RelationId`; a
             :class:`decimal.Decimal` under ``copy`` aggregation or a tuple of
             Decimals under ``sum``.
         period: Optional period token; restricts active relations to those
@@ -249,10 +249,10 @@ def resolve_relation_values_from_observations(
 
     Args:
         revision: The
-            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
             relation declarations to resolve.
         observations: Filed-declaration
-            :class:`~aeat.domain.calculations.registry.RegistryModeloObservation`
+            :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation`
             rows that supply the source values each relation consumes.
         filing_year: Target filing year; combined with each relation's source
             offset to match observation rows.
@@ -260,9 +260,9 @@ def resolve_relation_values_from_observations(
             observation matching.
 
     Returns:
-        Resolved :class:`~aeat.domain.calculations.registry.RelationId` values
+        Resolved :class:`~cadrumo.domain.calculations.registry.RelationId` values
         suitable for
-        :func:`aeat.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
+        :func:`cadrumo.domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
     """
     available = tuple(observations)
     external_outputs: dict[RelationId, Decimal | tuple[Decimal, ...]] = {}
@@ -297,14 +297,14 @@ def materialize_relation_binding_values(
 
     Args:
         revision: The
-            :class:`~aeat.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
             relation-to-binding mappings are used to populate the returned dict.
         relation_values: Already-resolved relation id to Decimal mapping.
         period: Optional period token; restricts active relations to those
             whose ``target_periods`` set contains it.
 
     Returns:
-        Target :class:`~aeat.domain.calculations.registry.BindingId` values for
+        Target :class:`~cadrumo.domain.calculations.registry.BindingId` values for
         relation-backed bound casillas.
     """
     values: dict[BindingId, Decimal] = {}

@@ -51,13 +51,13 @@ def _isolated_application_layer(tmp_path: Path) -> Iterator[None]:
 
     storage_root = tmp_path / "aeat-storage"
     secret_store_dir = tmp_path / "secrets"
-    passphrase = load_settings().aeat_dev_test_database_password
+    passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
-        aeat_local_storage_root=storage_root,
-        aeat_active_profile=_BUCKET_ID,
-        aeat_secret_store_backend=_STORAGE_BACKEND,
-        aeat_secret_store_dir=secret_store_dir,
-        aeat_secret_passphrase=passphrase,
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_active_profile=_BUCKET_ID,
+        cadrumo_secret_store_backend=_STORAGE_BACKEND,
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
         with profile_create_storage_span(_BUCKET_ID):
@@ -133,7 +133,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
     import asyncio
 
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
-    # ``AEAT_LIVE_TESTS_ENABLED`` is not set in the test environment,
+    # ``CADRUMO_LIVE_TESTS_ENABLED`` is not set in the test environment,
     # so the gate must refuse with a localised user-prose message.
     with pytest.raises(AuthLoginNotEnabledError) as exc_info:
         asyncio.run(login_operator_auth("certificate"))
@@ -147,7 +147,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
 
     assert exc_info.value.translated_message is not None
     message = tr(exc_info.value.translated_message, **(exc_info.value.context or {}))
-    assert "AEAT_LIVE_TESTS_ENABLED" not in message, f"refusal must not echo the env-var name — got {message!r}"
+    assert "CADRUMO_LIVE_TESTS_ENABLED" not in message, f"refusal must not echo the env-var name — got {message!r}"
     assert "CertificateBundle" not in message, f"refusal must not echo Python class names — got {message!r}"
     # The refusal is intended user prose, not just an absence of leaks —
     # assert positively against the safety-gate language so a regression
@@ -168,7 +168,7 @@ def test_login_refuses_when_certificate_path_unset(
     configure_operator_auth("certificate")  # no --file persisted
 
     # Enable the live-tests gate via the canonical Settings override.
-    with override_settings(aeat_live_tests_enabled="1"), pytest.raises(AuthLoginPreconditionError) as exc_info:
+    with override_settings(cadrumo_live_tests_enabled="1"), pytest.raises(AuthLoginPreconditionError) as exc_info:
         asyncio.run(login_operator_auth("certificate"))
 
     # The exception is operator-facing via ``translated_message`` only —
@@ -328,7 +328,7 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
     )
     with override_settings(
         aeat_clave_movil_dni_nie="00000001R",
-        aeat_output_language="ca",
+        cadrumo_output_language="ca",
     ):
         from .....core.i18n import clear_output_language_cache
 

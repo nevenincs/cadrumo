@@ -1,15 +1,15 @@
 """Application-link closure validation helpers.
 
 Validates that every application surface declared on a
-:class:`~aeat.domain.calculations.registry.ModeloRevision` is backed by a
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` is backed by a
 matching application link, and that link combination rules are satisfied before
 the revision is accepted by the registry validator.
 
 See Also:
-    :func:`aeat.domain.calculations.registry._validate_revision_closure.validate_revision_closure`
+    :func:`cadrumo.domain.calculations.registry._validate_revision_closure.validate_revision_closure`
         Revision-level closure runner that invokes these application-link
         checks.
-    :func:`aeat.domain.calculations.registry._validate_surfaces.validate_application_link_section`
+    :func:`cadrumo.domain.calculations.registry._validate_surfaces.validate_application_link_section`
         Reference and evidence-tier validation for individual application-link
         declarations.
 """
@@ -51,7 +51,7 @@ def validate_application_link_closure(
 ) -> list[str]:
     """Return application-link closure failures for one modelo revision.
 
-    The supplied :class:`~aeat.domain.calculations.registry.ModeloRevision`
+    The supplied :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
     owns the declared application-link bundle and dependent surfaces. ``modelo_id``
     contributes the Modelo 145 communication-link rule because that workflow can
     use communication/payer-delivery surfaces in place of filing surfaces.

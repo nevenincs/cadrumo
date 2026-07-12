@@ -128,8 +128,8 @@ def _settings_for(bundle_path: Path) -> Settings:
         aeat_certificate_password_secret=SecretStr(_SECRET),
         aeat_certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
         aeat_certificate_verify_url="https://127.0.0.1:1/",
-        aeat_token_dir=bundle_path.parent / ".tokens",
-        aeat_local_storage_root=bundle_path.parent / "storage",
+        cadrumo_token_dir=bundle_path.parent / ".tokens",
+        cadrumo_local_storage_root=bundle_path.parent / "storage",
     )
 
 

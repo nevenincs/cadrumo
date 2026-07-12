@@ -16,13 +16,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _profile_storage_env(tmp_path: Path) -> dict[str, str | None]:
     return {
-        "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "aeat-storage"),
-        "AEAT_SECRET_STORE_BACKEND": "file",
-        "AEAT_SECRET_STORE_DIR": str(tmp_path / "secrets"),
-        "AEAT_SECRET_PASSPHRASE": dev_test_database_password(),
-        "AEAT_ACTIVE_PROFILE": None,
-        "AEAT_DATABASE_URL": None,
-        "AEAT_OUTPUT_LANGUAGE": None,
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "aeat-storage"),
+        "CADRUMO_SECRET_STORE_BACKEND": "file",
+        "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
+        "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
+        "CADRUMO_ACTIVE_PROFILE": None,
+        "CADRUMO_DATABASE_URL": None,
+        "CADRUMO_OUTPUT_LANGUAGE": None,
     }
 
 
@@ -30,7 +30,7 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
     """A malformed active pointer has no trustworthy bucket from which to read Catalan."""
 
     env = _profile_storage_env(tmp_path)
-    storage_root = Path(env["AEAT_LOCAL_STORAGE_ROOT"] or "")
+    storage_root = Path(env["CADRUMO_LOCAL_STORAGE_ROOT"] or "")
 
     created = invoke_cached_cli(
         (

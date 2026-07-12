@@ -207,7 +207,7 @@ def _invoke_modelo(registry_root: Path, *args: str):
     return invoke_typer_app(
         app,
         ["modelo", *args, "--registry-root", str(registry_root)],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
 
 

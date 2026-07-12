@@ -22,9 +22,9 @@ orchestration layer reads instead of re-parsing strings at every
 edit-application call site.
 
 The orchestration that applies an ``EditSpec`` to a stored
-:class:`aeat.domain.transactions.Transaction` /
-:class:`aeat.domain.invoices.Invoice` /
-:class:`aeat.domain.filing.ModeloDraft` lives in the
+:class:`cadrumo.domain.transactions.Transaction` /
+:class:`cadrumo.domain.invoices.Invoice` /
+:class:`cadrumo.domain.filing.ModeloDraft` lives in the
 ``application/workflow`` state overlay.
 """
 

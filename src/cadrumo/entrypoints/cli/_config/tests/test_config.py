@@ -40,11 +40,11 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
-            aeat_token_dir=tmp_path / "tokens",
-            aeat_runs_dir=tmp_path / "runs",
-            aeat_financial_txs_dir=tmp_path / "txs",
-            aeat_invoices_dir=tmp_path / "invoices",
-            aeat_drafts_dir=tmp_path / "drafts",
+            cadrumo_token_dir=tmp_path / "tokens",
+            cadrumo_runs_dir=tmp_path / "runs",
+            cadrumo_financial_txs_dir=tmp_path / "txs",
+            cadrumo_invoices_dir=tmp_path / "invoices",
+            cadrumo_drafts_dir=tmp_path / "drafts",
         ),
     ):
         yield
@@ -267,14 +267,14 @@ def _switch_against_locked_store(name: str) -> Result:
     """Run ``config switch NAME`` against a healthy-but-locked store.
 
     The profile bucket is HEALTHY; only the master-key passphrase is
-    withheld (``aeat_secret_passphrase=None``) and stdin is non-interactive
+    withheld (``cadrumo_secret_passphrase=None``) and stdin is non-interactive
     (the ``CliRunner`` stdin is never a tty), reproducing the operator's
     locked-store condition. Cached SQL connections are flushed so the read
     re-resolves the master-key provider and hits the no-passphrase refusal
     rather than a still-warm engine.
     """
     dispose_engine()
-    with override_settings(aeat_secret_passphrase=None):
+    with override_settings(cadrumo_secret_passphrase=None):
         return invoke_cached_cli(["config", "switch", name])
 
 
@@ -284,7 +284,7 @@ def test_config_switch_against_locked_store_gives_passphrase_refusal_not_repair(
     The operator withheld the master-key passphrase (locked store); the
     profile record itself is healthy. ``config switch`` must surface the
     same instructive refusal every other verb gives — naming
-    ``AEAT_SECRET_PASSPHRASE`` and the interactive path — and must NOT
+    ``CADRUMO_SECRET_PASSPHRASE`` and the interactive path — and must NOT
     report ``profile_record_unreadable`` nor prescribe the destructive
     ``config repair profile`` verb (prescribing a data-damaging repair for a
     merely-locked store is the defect under test).
@@ -297,7 +297,7 @@ def test_config_switch_against_locked_store_gives_passphrase_refusal_not_repair(
     result = _switch_against_locked_store("locked-store-probe")
 
     combined = (result.output or "") + ((result.stderr if hasattr(result, "stderr") else "") or "")
-    assert "AEAT_SECRET_PASSPHRASE" in combined, combined
+    assert "CADRUMO_SECRET_PASSPHRASE" in combined, combined
     assert "profile_record_unreadable" not in combined, combined
     assert "repair profile" not in combined, combined
     # The no-passphrase condition exits with the FAIL category (5), the same
@@ -316,7 +316,7 @@ def test_config_switch_against_locked_store_json_envelope_is_passphrase_refusal(
     _create_profile("locked-json-probe")
 
     dispose_engine()
-    with override_settings(aeat_secret_passphrase=None):
+    with override_settings(cadrumo_secret_passphrase=None):
         result = invoke_cached_cli(["--format", "json", "config", "switch", "locked-json-probe"])
 
     assert result.exit_code == 5, result.output

@@ -1,6 +1,6 @@
 """Opt-in live form-shape drift detector for the GROI Spanish-ROI driver.
 
-Runs only when ``AEAT_LIVE_TESTS_ENABLED=1`` is set. The test navigates
+Runs only when ``CADRUMO_LIVE_TESTS_ENABLED=1`` is set. The test navigates
 to the live GROI form via the project's authenticated BrowserSession
 and asserts every selector the offline driver depends on is still
 present in the rendered DOM. AEAT silently changing the form input id,
@@ -9,7 +9,7 @@ driver can be repaired before its next live run.
 
 The GROI surface is reachable under cl@ve-movil; the live test loads
 the persisted cl@ve-movil storage state, so a reasonably-fresh session
-must be present at ``settings.aeat_token_dir`` before the test runs.
+must be present at ``settings.cadrumo_token_dir`` before the test runs.
 
 The drift detector ALSO runs an end-to-end verdict-parser sanity check
 against a known public NIF (Telefónica's A28015865, registered ROI
@@ -67,7 +67,7 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 
 async def _assert_form_shape() -> None:
     settings = Settings()
-    storage_state_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
+    storage_state_path = settings.cadrumo_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
     session = await default_browser_session_factory(settings)
     context = None
     try:
@@ -104,7 +104,7 @@ async def _assert_form_shape() -> None:
 
 async def _query_live_body_text(nif: str) -> str:
     settings = Settings()
-    storage_state_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
+    storage_state_path = settings.cadrumo_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
     session = await default_browser_session_factory(settings)
     context = None
     try:

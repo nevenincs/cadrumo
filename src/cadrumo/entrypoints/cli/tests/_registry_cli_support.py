@@ -17,7 +17,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 _BUCKET_ID = "registry-cli"
 _CLI_ENV: dict[str, str] = {}
-_ENGLISH_CLI_ENV: Mapping[str, str] = {"AEAT_OUTPUT_LANGUAGE": "en"}
+_ENGLISH_CLI_ENV: Mapping[str, str] = {"CADRUMO_OUTPUT_LANGUAGE": "en"}
 
 
 def _set_cli_env(env: Mapping[str, str]) -> None:

@@ -1,9 +1,9 @@
-"""Strict pydantic v2 substrate for the :mod:`aeat.domain.renta` subpackage.
+"""Strict pydantic v2 substrate for the :mod:`cadrumo.domain.renta` subpackage.
 
 Closed catalogues that classify Renta (IRPF) substrate axes — income
 type, autonomous community of residence, estimación directa modality —
 are :class:`enum.StrEnum` subclasses. The pattern mirrors the
-:mod:`aeat.domain.iva` substrate (:class:`IvaCategory`,
+:mod:`cadrumo.domain.iva` substrate (:class:`IvaCategory`,
 :class:`EUMemberState`, :class:`IvaRateKind`) so the two domains share a
 single closed-membership convention for substrate axes.
 

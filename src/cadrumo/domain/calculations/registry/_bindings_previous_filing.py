@@ -1,19 +1,19 @@
 """Previous-filing binding selectors, requirements, and resolvers.
 
-The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies
+The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
 ``previous_filing``
-:class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+:class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
 declarations; this module turns those selectors into
-:class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` source
+:class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement` source
 requirements and resolved
-:class:`~aeat.domain.calculations.registry.BindingId` values.
+:class:`~cadrumo.domain.calculations.registry.BindingId` values.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._bindings`
+    :mod:`cadrumo.domain.calculations.registry._bindings`
         Public import surface that re-exports these previous-filing helpers.
-    :mod:`aeat.domain.calculations.registry._relations`
+    :mod:`cadrumo.domain.calculations.registry._relations`
         Relation-fold sibling that materialises cross-modelo source values.
-    :mod:`aeat.domain.calculations.registry._observation_fold`
+    :mod:`cadrumo.domain.calculations.registry._observation_fold`
         Shared fold helpers for observed casilla values.
 """
 
@@ -56,8 +56,8 @@ class PreviousFilingSourceReference:
     """Canonical source reference extracted from a typed previous-filing selector.
 
     The reference names the source
-    :class:`~aeat.domain.calculations.registry.ModeloId`, required periods, and
-    source :class:`~aeat.domain.calculations.registry.CasillaId` values declared
+    :class:`~cadrumo.domain.calculations.registry.ModeloId`, required periods, and
+    source :class:`~cadrumo.domain.calculations.registry.CasillaId` values declared
     by one previous-filing binding selector.
     """
 
@@ -70,7 +70,7 @@ def previous_filing_source_reference(binding: DataBindingDefinition) -> Previous
     """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding.
 
     The supplied
-    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` is parsed
+    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` is parsed
     through the same selector model used by
     :func:`previous_filing_observation_requirements`.
     """
@@ -90,10 +90,10 @@ def previous_filing_observation_requirements(
 ) -> tuple[RegistryFoldRequirement, ...]:
     """Return source requirements needed by direct previous-filing bindings.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` is scanned
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` is scanned
     for direct ``previous_filing`` bindings, and each selector becomes a
-    :class:`~aeat.domain.calculations.registry.RegistryFoldRequirement` naming
-    source modelo/year/period, :class:`~aeat.domain.calculations.registry.BindingId`
+    :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement` naming
+    source modelo/year/period, :class:`~cadrumo.domain.calculations.registry.BindingId`
     consumers, and source casilla ids.
     """
     binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
@@ -266,10 +266,10 @@ def resolve_previous_filing_binding_values(
 ) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
-    The :class:`~aeat.domain.calculations.registry.ModeloRevision` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
     binding selectors and aggregation operators; ``observations`` supply the
     filed casilla values they fold. The returned mapping is keyed by
-    :class:`~aeat.domain.calculations.registry.BindingId` and carries resolved
+    :class:`~cadrumo.domain.calculations.registry.BindingId` and carries resolved
     :class:`decimal.Decimal` values for formula runtime consumption.
     """
     available = tuple(observations)
@@ -323,7 +323,7 @@ class _PreviousModeloSelector(BaseModel):
     """Typed selector model for a ``previous_filing`` binding declaration.
 
     Parsed from
-    :class:`~aeat.domain.calculations.registry.DataBindingDefinition.selector`
+    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition.selector`
     and shared by build-time validation, source-requirement generation, and
     resolve-time previous-filing folds.
     """
@@ -494,7 +494,7 @@ def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str
     Accumulating ``list[str]`` validator: validates the selector shape against
     :class:`_PreviousModeloSelector` and lifts the previous-filing op/source
     invariants for a
-    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` to build
+    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` to build
     time, preserving the underlying pydantic field error.
     """
     failures = selector_against_model(binding, _PreviousModeloSelector)

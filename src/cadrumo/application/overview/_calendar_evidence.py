@@ -1,6 +1,6 @@
 """Calendar event dedup and filing-evidence reconciliation for the overview read model.
 
-Extracted from :mod:`~aeat.application.overview._calendar` (size-budget
+Extracted from :mod:`~cadrumo.application.overview._calendar` (size-budget
 split) to keep the calendar module and its ``build_overview_calendar``
 entry point under their line-count overrides. This module owns two
 cohesive concerns:
@@ -22,10 +22,10 @@ justificante by fetching external state; it only reconciles evidence the
 caller has already loaded.
 
 See Also:
-    :mod:`aeat.application.overview._calendar`
+    :mod:`cadrumo.application.overview._calendar`
         Composes :func:`calendar_filing_evidence_from_sources` and the
-        other builders here into :func:`~aeat.application.overview._calendar.build_overview_calendar`.
-    :mod:`aeat.application.overview`
+        other builders here into :func:`~cadrumo.application.overview._calendar.build_overview_calendar`.
+    :mod:`cadrumo.application.overview`
         Public facade that re-exports :func:`calendar_filing_evidence_from_sources`.
 """
 
@@ -118,11 +118,11 @@ def calendar_filing_evidence_from_sources(
 
     The function is pure and intentionally accepts already-loaded
     records. CLI/storage code owns I/O; this projection only reconciles
-    the existing local :class:`~aeat.domain.modelos.ModeloRecord` catalogue,
+    the existing local :class:`~cadrumo.domain.modelos.ModeloRecord` catalogue,
     calendar-visible AEAT register events,
-    :class:`~aeat.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    :class:`~cadrumo.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     rows, persisted calculation observations from justificante capture,
-    :class:`~aeat.application.live.JustificanteCaptureSnapshot` rows, and
+    :class:`~cadrumo.application.live.JustificanteCaptureSnapshot` rows, and
     already-loaded justificante metadata. The
     ``filing_records`` are filed :class:`ModeloRecord` rows whose
     external justificante references are only promoted to
@@ -454,7 +454,7 @@ def _filing_evidence_from_calculation_observation(
     """Project official calculation observations into AEAT-submitted evidence.
 
     Only official AEAT source kinds with active register metadata are accepted.
-    A matching loaded :class:`~aeat.domain.justificante.Justificante` upgrades
+    A matching loaded :class:`~cadrumo.domain.justificante.Justificante` upgrades
     the row to :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`;
     otherwise the row remains submitted-observed evidence.
     """
@@ -561,8 +561,8 @@ def _filing_evidence_from_justificante_capture_snapshot(
     """Project one verified live justificante capture into AEAT-side evidence.
 
     The persisted snapshot is accepted only when it is active, carries a typed
-    :class:`~aeat.core.Period`, and resolves to loaded
-    :class:`~aeat.domain.justificante.Justificante` metadata for the same filing
+    :class:`~cadrumo.core.Period`, and resolves to loaded
+    :class:`~cadrumo.domain.justificante.Justificante` metadata for the same filing
     target.
     """
     if not _capture_snapshot_is_active(snapshot):

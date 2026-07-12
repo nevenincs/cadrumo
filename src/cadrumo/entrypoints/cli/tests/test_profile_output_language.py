@@ -107,7 +107,7 @@ def test_config_profile_create_writes_profile_output_language() -> None:
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with (
-        override_settings(aeat_active_profile=bucket_id),
+        override_settings(cadrumo_active_profile=bucket_id),
         activate_master_key_provider(get_master_key_provider()),
     ):
         state = workflow_state_repository().load()
@@ -300,15 +300,15 @@ def test_create_error_renders_in_command_line_output_language() -> None:
 
 
 def test_env_output_language_honored_when_creating_profile_with_accept_defaults() -> None:
-    """``AEAT_OUTPUT_LANGUAGE=en`` is written to the profile when no ``--output-language`` flag is given.
+    """``CADRUMO_OUTPUT_LANGUAGE=en`` is written to the profile when no ``--output-language`` flag is given.
 
     Before the fix: ``profile create --quiet --accept-defaults`` seeded the
     catalogue default (``"es"``) for every question that the operator did
     not supply on the command line, including ``output-language``.  The
-    ``AEAT_OUTPUT_LANGUAGE`` env var was completely ignored for the stored
+    ``CADRUMO_OUTPUT_LANGUAGE`` env var was completely ignored for the stored
     preference.
 
-    After the fix: the wizard reads ``load_settings().aeat_output_language``
+    After the fix: the wizard reads ``load_settings().cadrumo_output_language``
     (which honours the env var) and injects that value into the canonical
     dict before the catalogue-default seeding runs, so the env var wins.
     """
@@ -329,14 +329,14 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
         "actividad_economica",
         "--tax-id",
         "12345678Z",
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert result.exit_code == 0, result.output
 
     facts = _profile_facts("autonoma")
     assert facts.get("preferences.output_language") == "en", (
         f"Expected output_language 'en' but got {facts.get('preferences.output_language')!r}. "
-        "AEAT_OUTPUT_LANGUAGE=en env var was not honoured by profile create."
+        "CADRUMO_OUTPUT_LANGUAGE=en env var was not honoured by profile create."
     )
 
     # Verify via the repository as well (not just the CLI show surface).
@@ -346,14 +346,14 @@ def test_env_output_language_honored_when_creating_profile_with_accept_defaults(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with (
-        override_settings(aeat_active_profile=bucket_id),
+        override_settings(cadrumo_active_profile=bucket_id),
         activate_master_key_provider(get_master_key_provider()),
     ):
         record = workflow_state_repository().load().active_profile_record()
         assert record is not None
         assert fact_value(record, "preferences.output_language") == "en", (
             "Repository fact 'preferences.output_language' must be 'en' when "
-            "AEAT_OUTPUT_LANGUAGE=en is set at profile create time."
+            "CADRUMO_OUTPUT_LANGUAGE=en is set at profile create time."
         )
 
 
@@ -414,17 +414,17 @@ def test_malformed_bucket_dek_error_renders_in_profile_output_language() -> None
     assert pointer is not None
     assert (
         read_bucket_output_language_hint(
-            storage_root=load_settings().aeat_local_storage_root,
+            storage_root=load_settings().cadrumo_local_storage_root,
             bucket_id=pointer.bucket_id,
         )
         == "ca"
     )
 
     assert current_active_bucket_session() is None
-    target = bucket_dek_path(storage_root=load_settings().aeat_local_storage_root, bucket_id=pointer.bucket_id)
+    target = bucket_dek_path(storage_root=load_settings().cadrumo_local_storage_root, bucket_id=pointer.bucket_id)
     target.write_text("not-json\n", encoding="utf-8")
 
-    with override_settings(aeat_output_language=None):
+    with override_settings(cadrumo_output_language=None):
         clear_output_language_cache()
         result = _invoke(("config", "profile", "show"))
         clear_output_language_cache()
@@ -476,23 +476,23 @@ def test_config_switch_malformed_target_bucket_dek_uses_target_profile_output_la
     assert resolve_active_bucket_id() == alpha_pointer.bucket_id
     assert (
         read_bucket_output_language_hint(
-            storage_root=load_settings().aeat_local_storage_root,
+            storage_root=load_settings().cadrumo_local_storage_root,
             bucket_id=alpha_pointer.bucket_id,
         )
         == "en"
     )
     assert (
         read_bucket_output_language_hint(
-            storage_root=load_settings().aeat_local_storage_root,
+            storage_root=load_settings().cadrumo_local_storage_root,
             bucket_id=beta_pointer.bucket_id,
         )
         == "ca"
     )
 
-    target = bucket_dek_path(storage_root=load_settings().aeat_local_storage_root, bucket_id=beta_pointer.bucket_id)
+    target = bucket_dek_path(storage_root=load_settings().cadrumo_local_storage_root, bucket_id=beta_pointer.bucket_id)
     target.write_text("not-json\n", encoding="utf-8")
 
-    with override_settings(aeat_output_language=None):
+    with override_settings(cadrumo_output_language=None):
         clear_output_language_cache()
         result = _invoke(("config", "switch", "beta"))
         clear_output_language_cache()
