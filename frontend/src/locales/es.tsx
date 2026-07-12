@@ -27,6 +27,14 @@ export const es: Copy = {
     ),
     lead2:
       'Está diseñada para usarse como plugin de Claude Cowork, de modo que actúe como arnés para gestionar tus obligaciones fiscales de forma colaborativa.',
+    footnote: (
+      <>
+        * «Compatible con la AEAT» describe únicamente que Cadrumo calcula conforme a los
+        modelos y reglas publicados por la Agencia Estatal de Administración Tributaria.
+        Cadrumo es un proyecto independiente sin relación alguna con la AEAT — consulta el{' '}
+        <a href="#/legal">aviso legal</a>.
+      </>
+    ),
   },
   harness: {
     kicker: 'Un momento... ¿qué es un arnés de agentes?',
@@ -156,6 +164,153 @@ export const es: Copy = {
       },
     ],
   },
+  legal: {
+    linkLabel: 'Aviso legal, privacidad y cookies',
+    title: 'Aviso legal, privacidad y cookies',
+    updated: 'Última actualización: 12 de julio de 2026',
+    backToHome: 'Volver a la página de inicio',
+    identity: {
+      heading: 'Titular del sitio',
+      body: [
+        <>
+          Este sitio web, <strong>cadrumo.neve.md</strong>, y el dominio{' '}
+          <strong>neve.md</strong> son publicados por <strong>Gergely Wootsch</strong>, la
+          entidad legal detrás de neve.md y del proyecto Cadrumo. Esta identificación se
+          facilita a los efectos del artículo 10 de la Ley 34/2002 (LSSI-CE).
+        </>,
+        <>
+          Contacto: a través del repositorio canónico del proyecto,{' '}
+          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a> (allí se
+          indican los canales de incidencias y de seguridad).
+        </>,
+      ],
+    },
+    nonAffiliation: {
+      heading: 'Sin relación con la AEAT',
+      body: [
+        <>
+          Cadrumo es un <strong>proyecto independiente de código abierto</strong>. No es un
+          producto de la Agencia Estatal de Administración Tributaria (AEAT) ni está afiliado
+          a ella, ni respaldado, patrocinado o aprobado por ella ni por ninguna otra
+          administración pública. No es software oficial y no sustituye a las herramientas
+          propias de la AEAT.
+        </>,
+        <>
+          Las referencias en este sitio y en el software a «AEAT», a números de modelo (como
+          100, 130 o 303) y a casillas son puramente descriptivas: nombran los formularios y
+          reglas públicas oficiales con los que calcula el software. Todos los nombres y
+          signos oficiales pertenecen a sus titulares. Los impuestos se presentan únicamente a
+          través de los canales oficiales de la AEAT; Cadrumo nunca presenta nada en tu
+          nombre. El asterisco tras «compatible con la AEAT» en la portada remite a este
+          aviso.
+        </>,
+      ],
+    },
+    noAdvice: {
+      heading: 'No es asesoramiento fiscal',
+      body: [
+        <>
+          Cadrumo calcula y comprueba cifras a partir de reglas publicadas; no evalúa tu
+          situación personal y no constituye asesoramiento fiscal, legal ni financiero. En
+          caso de duda, consulta a un profesional cualificado. Sigues siendo responsable de
+          cada declaración que presentes.
+        </>,
+      ],
+    },
+    privacy: {
+      heading: 'Privacidad: no recogemos nada',
+      body: [
+        <>
+          Este sitio web <strong>no recoge ningún dato personal</strong>. No hay cuentas, ni
+          formularios, ni analítica, ni publicidad, ni píxeles de seguimiento, ni
+          fingerprinting, y no se comparte ni se solicita nada a terceros. Todos los recursos
+          de esta página, incluidas sus fuentes tipográficas, se sirven desde este mismo
+          dominio.
+        </>,
+        <>
+          El sitio es un conjunto de ficheros estáticos servidos desde infraestructura de
+          Amazon Web Services (S3 y CloudFront). Nuestra configuración no activa ningún
+          registro de accesos: los datos de conexión, como tu dirección IP, los procesa esa
+          infraestructura de forma transitoria solo en la medida técnicamente necesaria para
+          entregar la página, y nosotros ni activamos, ni recibimos, ni almacenamos registros
+          de acceso.
+        </>,
+        <>
+          El software Cadrumo sigue la misma política: tus registros financieros permanecen
+          cifrados en tu propia máquina y el software no nos envía telemetría alguna. Consulta
+          la{' '}
+          <a href="https://github.com/nevenincs/aeat/blob/main/PRIVACY.md">
+            política de privacidad
+          </a>{' '}
+          del proyecto.
+        </>,
+        <>
+          Como no disponemos de ningún dato personal tuyo, las solicitudes de derechos de los
+          artículos 15 a 22 del RGPD no tienen objeto sobre el que operar. Si crees lo
+          contrario, contáctanos a través del repositorio y responderemos.
+        </>,
+      ],
+    },
+    cookies: {
+      heading: 'Cookies',
+      body: [
+        <>
+          El sitio establece una única cookie funcional de origen, <code>cadrumo_lang</code>,
+          y solo si eliges explícitamente un idioma. Guarda esa elección durante un máximo de
+          un año, no es un rastreador y solo la lee este sitio. Cerrar la barra de aviso
+          guarda un indicador similar (<code>cadrumo_notice_ack</code>) en el localStorage de
+          tu navegador.
+        </>,
+        <>
+          Conforme al artículo 22.2 de la LSSI-CE y a la Guía sobre el uso de cookies de la
+          AEPD, las cookies de preferencias establecidas a petición expresa del usuario están
+          exentas de consentimiento previo; aun así, las declaramos aquí. Puedes eliminarlas
+          en cualquier momento desde la configuración de tu navegador y el sitio funciona
+          plenamente sin ellas.
+        </>,
+      ],
+    },
+    licences: {
+      heading: 'Licencias y qué distribuye este sitio',
+      body: [
+        <>
+          Cadrumo es código abierto bajo la <strong>Apache License 2.0</strong>. El código de
+          este sitio y del software vive en{' '}
+          <a href="https://github.com/nevenincs/aeat">github.com/nevenincs/aeat</a>.
+        </>,
+        <>
+          La página que estás leyendo distribuye React y ReactDOM (licencia MIT) y las
+          tipografías Hanken Grotesk, Instrument Serif y JetBrains Mono (SIL Open Font License
+          1.1), todas autoalojadas. La atribución completa está en los avisos de terceros del
+          repositorio.
+        </>,
+      ],
+    },
+    liability: {
+      heading: 'Garantías y responsabilidad',
+      body: [
+        <>
+          El software y este sitio se proporcionan «tal cual», sin garantías ni condiciones de
+          ningún tipo, según las secciones 7 y 8 de la Apache License 2.0. Cadrumo está en
+          beta: las funciones pueden cambiar y la cobertura fiscal no es completa. Verifica
+          cada cálculo antes de presentar. En la medida en que lo permita la ley aplicable,
+          los autores no asumen responsabilidad por errores de cálculo, errores de
+          presentación ni por ningún daño derivado del uso del software o de este sitio.
+        </>,
+      ],
+    },
+  },
+  cookieBanner: {
+    ariaLabel: 'Aviso de privacidad',
+    message: (
+      <>
+        Este sitio no instala rastreadores ni recoge datos. Una cookie funcional guarda tu
+        idioma — solo si eliges uno.
+      </>
+    ),
+    details: 'Aviso legal y privacidad',
+    dismiss: 'Entendido',
+  },
   footer: {
     brandName: 'cadrumo',
     brandSummary:
@@ -168,6 +323,7 @@ export const es: Copy = {
     disclaimerPill: 'cadrumo',
     disclaimerText:
       'es un proyecto independiente de código abierto (Apache-2.0). No está afiliado a la AEAT y nunca presenta declaraciones; tú presentas a través de los canales oficiales de la AEAT y sigues siendo responsable de cada declaración.',
-    copyright: '© 2026 los autores de cadrumo.',
+    legalLink: 'Aviso legal, privacidad y cookies',
+    copyright: '© 2026 Gergely Wootsch y los contribuidores de cadrumo.',
   },
 }

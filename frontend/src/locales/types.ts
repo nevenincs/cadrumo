@@ -22,6 +22,32 @@ export interface FooterColumnCopy {
   labels: readonly [string, string, string]
 }
 
+export interface LegalSectionCopy {
+  heading: string
+  body: readonly ReactNode[]
+}
+
+export interface LegalCopy {
+  linkLabel: string
+  title: string
+  updated: string
+  backToHome: string
+  identity: LegalSectionCopy
+  nonAffiliation: LegalSectionCopy
+  noAdvice: LegalSectionCopy
+  privacy: LegalSectionCopy
+  cookies: LegalSectionCopy
+  licences: LegalSectionCopy
+  liability: LegalSectionCopy
+}
+
+export interface CookieBannerCopy {
+  ariaLabel: string
+  message: ReactNode
+  details: string
+  dismiss: string
+}
+
 export interface Copy {
   languageLabel: string
   skipToContent: string
@@ -37,6 +63,7 @@ export interface Copy {
     heading: ReactNode
     lead1: ReactNode
     lead2: string
+    footnote: ReactNode
   }
   harness: {
     kicker: string
@@ -70,12 +97,15 @@ export interface Copy {
     listLabel: string
     links: readonly DocLinkCopy[]
   }
+  legal: LegalCopy
+  cookieBanner: CookieBannerCopy
   footer: {
     brandName: string
     brandSummary: string
     columns: readonly FooterColumnCopy[]
     disclaimerPill: string
     disclaimerText: string
+    legalLink: string
     copyright: string
   }
 }

@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400&display=swap');
+/* Fonts are self-hosted first-party (public/fonts/fonts.css, linked from
+   index.html). No visitor request ever reaches a third-party font CDN. */
 
 :root {
   --color-page: #faf8f4;
@@ -240,45 +241,33 @@ h2 {
 
 /* Language picker */
 
-.lang-picker {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
+.lang-select {
+  appearance: none;
   margin-left: 0.25rem;
+  padding: 0.5rem 1.75rem 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: var(--color-page);
-}
-
-.lang-option {
-  border: 0;
-  background: transparent;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  background:
+    url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B655C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 0.625rem center / 10px 6px;
+  background-color: var(--color-page);
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
-.lang-option[aria-pressed='true'] {
-  background: var(--color-surface);
-  color: var(--color-rust);
-}
-
-.lang-option:focus-visible {
+.lang-select:focus-visible {
   outline: 3px solid var(--color-rust);
   outline-offset: 2px;
 }
 
 @media (hover: hover) {
-  .lang-option:hover {
-    color: var(--color-text);
+  .lang-select:hover {
+    background-color: var(--color-surface);
   }
 }
 
@@ -935,5 +924,127 @@ h2 {
   .button:active,
   .docs-link:active {
     transform: none;
+  }
+}
+
+/* Hero footnote (AEAT non-affiliation qualifier) */
+
+.hero-footnote {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--color-text-secondary);
+}
+
+.hero-footnote a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Legal page */
+
+.legal-page {
+  max-width: 46rem;
+  padding: 3rem 1.25rem 4rem;
+}
+
+.legal-page h1 {
+  font-size: clamp(2rem, 1.4rem + 2.5vw, 2.75rem);
+  line-height: 1.15;
+  margin: 0.5rem 0 1rem;
+}
+
+.legal-section {
+  margin-top: 2.25rem;
+}
+
+.legal-section h2 {
+  font-size: 1.375rem;
+  margin-bottom: 0.75rem;
+}
+
+.legal-section p {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin: 0 0 0.75rem;
+}
+
+.legal-section strong {
+  color: var(--color-text);
+}
+
+.legal-section a {
+  color: var(--color-rust);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-section code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8125rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.0625rem 0.3125rem;
+}
+
+.legal-back {
+  margin-top: 2.5rem;
+}
+
+/* Footer legal links */
+
+.footer-legal-links {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.footer-legal-links a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Privacy / cookie notice banner */
+
+.notice-banner {
+  position: fixed;
+  inset-inline: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-elevated);
+  box-shadow: 0 12px 32px rgb(28 26 23 / 0.14);
+}
+
+.notice-banner-text {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  color: var(--color-text-secondary);
+}
+
+.notice-banner-text a {
+  color: var(--color-rust);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.notice-banner-dismiss {
+  flex-shrink: 0;
+}
+
+@media (max-width: 46rem) {
+  .notice-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
   }
 }

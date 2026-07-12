@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import bannerImage from './assets/cadrumo/banner.png'
 import harnessIllustration from './assets/cadrumo/harness-illustration.png'
@@ -13,6 +13,7 @@ import stepInput from './assets/cadrumo/step-input.svg'
 import stepReconcile from './assets/cadrumo/step-reconcile.svg'
 import stepSubmit from './assets/cadrumo/step-submit.svg'
 import { availableLocales, useLocale } from './i18n'
+import type { LocaleCode } from './i18n'
 
 const docsBaseUrl = 'https://cadrumo.neve.md/docs'
 const docsUrl = `${docsBaseUrl}/index.html`
@@ -48,7 +49,29 @@ const footerColumnHrefs: readonly (readonly [string, string, string])[] = [
   [repositoryUrl, downloadUrl, siteUrl],
 ]
 
-function useScrollReveal() {
+const legalSectionKeys = [
+  'identity',
+  'nonAffiliation',
+  'noAdvice',
+  'privacy',
+  'cookies',
+  'licences',
+  'liability',
+] as const
+
+const noticeAckStorageKey = 'cadrumo_notice_ack'
+
+function useHashRoute(): string {
+  const [hash, setHash] = useState(() => window.location.hash)
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+  return hash
+}
+
+function useScrollReveal(route: string) {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const elements = Array.from(document.querySelectorAll('[data-reveal]'))
@@ -66,10 +89,10 @@ function useScrollReveal() {
     )
     for (const element of elements) observer.observe(element)
     return () => observer.disconnect()
-  }, [])
+  }, [route])
 }
 
-function useScrollEffects() {
+function useScrollEffects(route: string) {
   useEffect(() => {
     const bar = document.querySelector<HTMLElement>('.scroll-progress')
     const header = document.querySelector<HTMLElement>('.site-header')
@@ -98,34 +121,90 @@ function useScrollEffects() {
       window.removeEventListener('resize', onScroll)
       if (frame) cancelAnimationFrame(frame)
     }
+  }, [route])
+}
+
+function NoticeBanner() {
+  const { copy } = useLocale()
+  const [visible, setVisible] = useState(() => {
+    try {
+      return window.localStorage.getItem(noticeAckStorageKey) !== '1'
+    } catch {
+      return true
+    }
+  })
+  if (!visible) return null
+  const dismiss = () => {
+    try {
+      window.localStorage.setItem(noticeAckStorageKey, '1')
+    } catch {
+      // Storage unavailable: the banner simply reappears next visit.
+    }
+    setVisible(false)
+  }
+  return (
+    <aside className="notice-banner" role="region" aria-label={copy.cookieBanner.ariaLabel}>
+      <p className="notice-banner-text">
+        {copy.cookieBanner.message} <a href="#/legal">{copy.cookieBanner.details}</a>
+      </p>
+      <button className="button button-primary notice-banner-dismiss" type="button" onClick={dismiss}>
+        {copy.cookieBanner.dismiss}
+      </button>
+    </aside>
+  )
+}
+
+function LegalPage() {
+  const { copy } = useLocale()
+  useEffect(() => {
+    window.scrollTo(0, 0)
   }, [])
+  return (
+    <article className="legal-page page-container" aria-labelledby="legal-heading">
+      <p className="kicker">{copy.legal.updated}</p>
+      <h1 id="legal-heading">{copy.legal.title}</h1>
+      {legalSectionKeys.map((key) => {
+        const section = copy.legal[key]
+        return (
+          <section className="legal-section" id={`legal-${key}`} key={key}>
+            <h2>{section.heading}</h2>
+            {section.body.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </section>
+        )
+      })}
+      <a className="button button-secondary legal-back" href="#top">
+        {copy.legal.backToHome}
+      </a>
+    </article>
+  )
 }
 
 function LanguagePicker() {
   const { copy, locale, setLocale } = useLocale()
   return (
-    <div className="lang-picker" role="group" aria-label={copy.languageLabel}>
+    <select
+      className="lang-select"
+      aria-label={copy.languageLabel}
+      value={locale}
+      onChange={(event) => setLocale(event.target.value as LocaleCode)}
+    >
       {availableLocales.map((option) => (
-        <button
-          className="lang-option"
-          key={option.code}
-          type="button"
-          lang={option.code}
-          aria-pressed={option.code === locale}
-          aria-label={option.name}
-          onClick={() => setLocale(option.code)}
-        >
+        <option key={option.code} value={option.code} lang={option.code} aria-label={option.name}>
           {option.label}
-        </button>
+        </option>
       ))}
-    </div>
+    </select>
   )
 }
 
 export function App() {
   const { copy } = useLocale()
-  useScrollReveal()
-  useScrollEffects()
+  const route = useHashRoute()
+  const isLegalRoute = route.startsWith('#/legal')
+  useScrollReveal(route)
+  useScrollEffects(route)
 
   return (
     <div className="site-shell">
@@ -155,6 +234,10 @@ export function App() {
       </header>
 
       <main id="top">
+        {isLegalRoute ? (
+          <LegalPage />
+        ) : (
+          <>
         <div className="banner">
           <img src={bannerImage} alt={copy.bannerAlt} />
         </div>
@@ -163,6 +246,7 @@ export function App() {
           <h1 id="hero-heading">{copy.hero.heading}</h1>
           <p className="hero-lead">{copy.hero.lead1}</p>
           <p className="hero-lead">{copy.hero.lead2}</p>
+          <p className="hero-footnote">{copy.hero.footnote}</p>
         </section>
 
         <section id="harness" className="harness" aria-labelledby="harness-heading">
@@ -273,6 +357,8 @@ export function App() {
             ))}
           </nav>
         </section>
+          </>
+        )}
       </main>
 
       <footer className="site-footer">
@@ -300,10 +386,14 @@ export function App() {
               <span className="aeat-pill">{copy.footer.disclaimerPill}</span>{' '}
               {copy.footer.disclaimerText}
             </p>
+            <p className="footer-legal-links">
+              <a href="#/legal">{copy.footer.legalLink}</a>
+            </p>
             <p className="footer-copyright">{copy.footer.copyright}</p>
           </div>
         </div>
       </footer>
+      <NoticeBanner />
     </div>
   )
 }
