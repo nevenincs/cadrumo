@@ -5,7 +5,8 @@ payment-on-account (Modelo 130) for an example taxpayer. You start from an empty
 store and finish with a local fichero-BOE file, a text file that follows the
 official Boletín Oficial del Estado (BOE) format.
 
-`aeat` prepares local files for Spanish tax forms. It does not submit them to
+Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. It
+does not submit them to
 the Agencia Estatal de Administración Tributaria (AEAT). You upload the exported
 file yourself through the AEAT portal.
 

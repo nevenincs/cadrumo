@@ -239,6 +239,13 @@ Read an attached invoice on-host to classify, with the consent and privacy rules
 Install and authenticate a provider CLI so LLM suggestions work.
 :::
 
+:::{grid-item-card} Connect an Agent
+:link: connect-an-agent
+:link-type: doc
+
+Expose the toolset to Claude or any MCP client, with the safety boundary intact.
+:::
+
 :::{grid-item-card} Protect Data Access
 :link: protect-data-access
 :link-type: doc
@@ -288,6 +295,7 @@ modelo-036
 classify-with-llm
 classify-with-llm-evidence
 setup-llm-classification
+connect-an-agent
 review-calculation-values
 review-with-google-sheets
 filing-spine
