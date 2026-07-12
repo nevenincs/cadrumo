@@ -65,9 +65,13 @@ _CORE_ABSENT_NAMES = {
 # workbook-parity oracle) and is independently listed in the ``search`` extra.
 # ``anyio`` is pulled into core by ``httpx`` (a base dependency) and is declared
 # in the ``agent`` extra because the stdio MCP server imports it directly.
+# ``pillow`` is pulled into core by the base ``pdfplumber`` and ``pikepdf`` PDF
+# dependencies and is pinned directly in the dev group for reproducible README
+# GIF generation.
 _CORE_PRESENT_TRANSITIVE_NAMES = {
     "numpy",
     "anyio",
+    "pillow",
 }
 _EXTRAS_PRESENT_NAMES = {
     "anthropic",
@@ -571,7 +575,7 @@ def _validate_frozen_exports(repo_root: Path, uv: str) -> None:
         "extras",
         extras_names,
         present=surfaces.project_active_names | surfaces.external_optional_active_names | _EXTRAS_PRESENT_NAMES,
-        absent=surfaces.dev_only_active_names,
+        absent=surfaces.dev_only_active_names - _CORE_PRESENT_TRANSITIVE_NAMES,
     )
     _assert_export_surface(
         "dev",
