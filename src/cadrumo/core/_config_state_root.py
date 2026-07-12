@@ -2,11 +2,11 @@
 
 The central settings facade (:class:`~core.config.Settings`) roots the
 encrypted profile store at ``cadrumo_local_storage_root``, from which the token,
-log, secret, blob and audit roots derive. Historically that root defaulted to
-``PROJECT_ROOT / "var" / "storage"``, which is correct for a source checkout
-but wrong for an installed distribution: under a wheel it resolves *inside* the
-virtualenv, and under ``uvx`` inside uv's ephemeral cache, where a cache prune
-could silently destroy the taxpayer's encrypted store.
+log, secret, blob and audit roots derive. A source checkout uses
+``PROJECT_ROOT / "var" / "storage"``. That location is wrong for an installed
+distribution. Under a wheel it can resolve inside the virtualenv; under ``uvx``
+it can resolve inside uv's ephemeral cache. A cache prune could silently destroy
+the taxpayer's encrypted store.
 
 This module owns the two decisions that fix that defect without disturbing the
 dev loop: whether the process runs from a source checkout or an installed
@@ -62,13 +62,13 @@ _MACOS_PLATFORM = "darwin"
 
 #: Vendor/application directory name appended to the platform user-data base.
 _APP_DIRNAME = PRODUCT_IDENTITY.python_package
-#: Retired product directory inspected only to refuse implicit state adoption.
+#: Retired ``aeat`` directory inspected only to refuse implicit state adoption.
 _FORMER_PRODUCT_APP_DIRNAME = "aeat"
 #: Storage substrate subdirectory under the resolved installed state root.
 _STORAGE_DIRNAME = "storage"
 #: Canonical SQLite filename for Cadrumo-owned application state.
 PRODUCT_DATABASE_FILENAME = f"{PRODUCT_IDENTITY.python_package}.db"
-#: Retired product database filename inspected only for refusal.
+#: Retired ``aeat`` database filename inspected only for refusal.
 FORMER_PRODUCT_DATABASE_FILENAME = "aeat.db"
 #: Checkout state-root layout: ``PROJECT_ROOT / "var" / "storage"``.
 _CHECKOUT_STATE_SUBDIRS = ("var", "storage")
@@ -87,17 +87,17 @@ class RunMode(StrEnum):
 
 
 class FormerProductStateError(RuntimeError):
-    """Raised when installed Cadrumo detects the retired product state root.
+    """Raised when installed Cadrumo detects a retired ``aeat`` state root.
 
     Detection is refusal-only. The resolver does not open, read, move, re-key,
-    delete, or adopt anything below the former application directory.
+    delete, or adopt anything below the retired ``aeat`` application directory.
     """
 
 
 def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None = None) -> None:
-    """Refuse a recognizable former-product database without opening it.
+    """Refuse a recognizable retired ``aeat`` database without opening it.
 
-    Only filesystem metadata is inspected. The former database is never
+    Only filesystem metadata is inspected. The retired database is never
     connected to, read, copied, moved, deleted, or adopted.
     """
     parent = storage_root
@@ -107,7 +107,7 @@ def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None 
     if not former_database.exists():
         return
     raise FormerProductStateError(
-        "Cadrumo detected an incompatible former-product database named "
+        "Cadrumo detected an incompatible retired `aeat` database named "
         f"{FORMER_PRODUCT_DATABASE_FILENAME!r}. Cadrumo will not read, move, "
         "copy, delete, migrate, or adopt that database.",
     )
@@ -215,12 +215,12 @@ def platform_user_data_root(inputs: StateRootInputs) -> Path:
 
 
 def _refuse_former_product_state(user_data_root: Path) -> None:
-    """Refuse a recognizable sibling root left by the retired product identity."""
+    """Refuse a recognizable sibling directory left by retired ``aeat`` state."""
     former_root = user_data_root.parent / _FORMER_PRODUCT_APP_DIRNAME
     if not former_root.exists():
         return
     raise FormerProductStateError(
-        "Cadrumo detected incompatible former-product state at "
+        "Cadrumo detected incompatible retired `aeat` state at "
         f"{former_root}. Cadrumo will not read, move, re-key, delete, or adopt that state.",
     )
 

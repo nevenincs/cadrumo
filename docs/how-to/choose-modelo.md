@@ -7,7 +7,7 @@ A modelo is a numbered official AEAT tax form, such as 303 for IVA or 130 for qu
 You need:
 
 - An active profile with your taxpayer type, activity, and regime facts filled in. See the [profile setup guide](profile-setup.md), or the [quickstart](quickstart.md) if you're starting from nothing.
-- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it, or set `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 Check the profile first:
 

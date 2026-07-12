@@ -11,7 +11,7 @@ Impuesto sobre el Valor Anadido. Autoliquidacion."
 upload through the official AEAT channel yourself.
 
 The tool needs a master-key passphrase. It prompts for it interactively, or
-read it from `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+read it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 ## The complete first-quarter chain
 

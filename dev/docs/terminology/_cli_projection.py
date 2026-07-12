@@ -41,7 +41,7 @@ from typing import TypedDict, cast
 
 from pydantic import Field
 
-from aeat.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING, OutputLanguage
 
 from ._search_record import SearchRecordBase, SearchRecordKind
 
@@ -180,7 +180,7 @@ _WALK_PROGRAM = textwrap.dedent(
     import json
     import click
     from typer.main import get_command as _get_command
-    from aeat.entrypoints.cli import app
+    from cadrumo.entrypoints.cli import app
     from dev.docs.cli_reference import _force_lazy_imports, _collect_commands
 
     _force_lazy_imports(app)

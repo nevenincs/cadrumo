@@ -1,4 +1,4 @@
-"""Import-light root package for the AEAT toolkit.
+"""Import-light root package for Cadrumo.
 
 The package root exposes only the distribution ``__version__``. Concrete
 capabilities live behind layer facades: :mod:`core` for shared primitives
@@ -7,7 +7,7 @@ and runtime context, :mod:`domain` for business authorities,
 inbound, outbound, and persistence infrastructure, and :mod:`entrypoints`
 for operator transports such as the Typer CLI.
 
-Importing ``aeat`` must not configure logging, load registries, open storage, or
+Importing ``cadrumo`` must not configure logging, load registries, open storage, or
 materialise browser/PDF integrations. The ``pikepdf._core`` bridge logger is
 silenced via the ``loggers`` block in
 :func:`core.logging.configure_logging` rather than by bootstrap-time side

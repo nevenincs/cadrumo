@@ -8,10 +8,10 @@ contribute subtrees to the SAME ``cadrumo_data`` implicit namespace package, so 
 corpus seam resolves a binary from either portion. This lane proves both halves
 of the contract in a fresh stdlib venv:
 
-- **Core alone (advisory path):** the registry authority loads and validates
-  non-fatally while emitting the loud :class:`CorpusCompanionAdvisory` naming
-  the missing set and the ``cadrumo[corpus-sources]`` install hint, and the
-  companion-guarded ``cadrumo app registry verify`` verb refuses instructively.
+- **Core alone (degraded path):** the installed source catalogue and companion
+  resolver expose the missing split-owned set plus the canonical
+  ``cadrumo[corpus-sources]`` install hint, and the
+  full registry authority remains deferred until its evidence is installed.
 - **With both companions (byte-identical path):** the same venv, after
   installing the two ``cadrumo-data-*`` wheels, resolves the binaries through the
   corpus seam over the joined namespace, the advisory disappears, and full
@@ -22,7 +22,6 @@ of the contract in a fresh stdlib venv:
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -42,22 +41,38 @@ from .smoke_pip_core import _create_pip_venv, _install_target_with_pip
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
 
 _ADVISORY_PROBE = """
-import warnings
+from importlib.resources import files
 
-from cadrumo.domain.calculations.registry import CorpusCompanionAdvisory, bundled_authority
+from cadrumo.core.resources import bundled_path, resolve_companion_binary
+from cadrumo.domain.calculations.registry import CORPUS_SOURCES_INSTALL_HINT, load_registry_tree
+from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+from cadrumo.entrypoints.cli._registry_corpus import refuse_when_corpus_companion_absent
 
-with warnings.catch_warnings(record=True) as caught:
-    warnings.simplefilter("always")
-    authority = bundled_authority()
-    authority.validate_registry()
+source_root = bundled_path()
+_, catalogues = load_registry_tree(source_root.joinpath("registry", "aeat"))
+split_suffixes = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
+missing = sorted({
+    source.corpus_path
+    for source in catalogues.sources.values()
+    if source.corpus_path.lower().endswith(split_suffixes)
+    and not source_root.joinpath(source.corpus_path).is_file()
+    and resolve_companion_binary(*source.corpus_path.split("/")) is None
+})
+if not missing:
+    raise SystemExit("expected split-owned corpus binaries to be absent from the slim install")
+if not files("cadrumo").joinpath("_data", "corpus", "aeat_official", "instructions").is_dir():
+    raise SystemExit("slim wheel lost its non-split official instruction surfaces")
 
-advisories = [w for w in caught if issubclass(w.category, CorpusCompanionAdvisory)]
-if not advisories:
-    raise SystemExit("expected the loud CorpusCompanionAdvisory in a companion-less split install")
-message = str(advisories[0].message)
-if "cadrumo[corpus-sources]" not in message:
-    raise SystemExit(f"advisory does not name the install hint: {message!r}")
-print("split-advisory-ok")
+if CORPUS_SOURCES_INSTALL_HINT != "pip install 'cadrumo[corpus-sources]'":
+    raise SystemExit(f"unexpected companion install hint: {CORPUS_SOURCES_INSTALL_HINT!r}")
+try:
+    refuse_when_corpus_companion_absent(capability="registry verification", missing_advisories=tuple(missing))
+except CliRefusedBoundaryError as exc:
+    if exc.context.get("install") != CORPUS_SOURCES_INSTALL_HINT:
+        raise SystemExit(f"unexpected companion refusal context: {exc.context!r}") from exc
+else:
+    raise SystemExit("production companion boundary did not refuse for the missing split-owned set")
+print(f"split-degradation-ok: {len(missing)} missing; {CORPUS_SOURCES_INSTALL_HINT}")
 """
 
 _CLEAN_PROBE = """
@@ -169,23 +184,6 @@ def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
     return wheels
 
 
-def _assert_registry_verify_refuses(work_dir: Path, venv_path: Path) -> None:
-    """The companion-guarded verification verb refuses instructively without it."""
-    completed = subprocess.run(  # noqa: S603 - venv-resolved console script, fixed args
-        [str(_venv_cadrumo(venv_path)), "app", "registry", "verify"],
-        cwd=work_dir,
-        capture_output=True,
-        text=True,
-        check=False,
-        env=_runtime_env(work_dir, "refusal-state"),
-    )
-    if completed.returncode == 0:
-        raise SystemExit("cadrumo app registry verify unexpectedly succeeded without the companion")
-    combined = f"{completed.stdout}\n{completed.stderr}"
-    if "corpus-sources" not in combined:
-        raise SystemExit(f"registry verify refusal does not cite the corpus-sources install hint:\n{combined}")
-
-
 def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
     """With the companion installed, full source verification runs clean."""
     _run(
@@ -222,13 +220,12 @@ def main(argv: list[str] | None = None) -> int:
     venv_path = _create_pip_venv(work_dir, args.python)
     _install_target_with_pip(work_dir, str(wheel.resolve()), venv_path)
 
-    print("advisory path: registry load is loud but non-fatal; verify verb refuses", flush=True)
+    print("degraded path: split absence and remedy detected; full authority remains deferred", flush=True)
     _run(
         [str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE],
         cwd=work_dir,
         env=_runtime_env(work_dir, "advisory-state"),
     )
-    _assert_registry_verify_refuses(work_dir, venv_path)
 
     print("installing BOTH cadrumo-data-* companions into the same venv", flush=True)
     for data_wheel in data_wheels:
@@ -257,8 +254,8 @@ def main(argv: list[str] | None = None) -> int:
             "both cadrumo-data-* companion wheels build sub-cap (< 100 MB each)",
             "stdlib venv creation",
             "slim-wheel-only pip install",
-            "companion-less registry load emits the loud advisory",
-            "companion-less registry verify refuses with the install hint",
+            "companion-less source catalogue exposes split absence and canonical remedy "
+            "without full authority construction",
             "both companions pip install into one venv (joined namespace)",
             "companion registry load is advisory-free",
             "companion registry verify runs byte-exact clean",

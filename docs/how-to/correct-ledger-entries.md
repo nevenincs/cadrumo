@@ -7,7 +7,7 @@ Fix wrong transactions in your ledger without losing track of what changed. Ever
 You need:
 
 - An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `AEAT_SECRET_PASSPHRASE`.
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
 - A ledger with transactions in it.
 
 To find the transaction you want to fix, list your transactions and view one in detail:

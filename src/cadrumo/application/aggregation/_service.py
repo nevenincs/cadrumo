@@ -83,7 +83,7 @@ class PerModeloAggregationContributorContract(BaseModel):
 
     provider: PerModeloAggregationContributor
     modelos: tuple[str, ...] = Field(min_length=1)
-    service_owner: str = Field(pattern=r"^aeat\.application\.aggregation$")
+    service_owner: str = Field(pattern=r"^cadrumo\.application\.aggregation$")
     accepted_source_kinds: tuple[BindingSourceKind, ...] = Field(min_length=1)
 
     @field_validator("modelos")

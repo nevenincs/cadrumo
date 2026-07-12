@@ -33,7 +33,7 @@ The core operator journey is the modelo lifecycle:
 Three documentation surfaces (see the `docs-architecture` ADR; audiences are
 deliberately separated):
 1. **Operator-facing CLI help** — localized, sourced from `tr()` locale keys in
-   `src/aeat/locales/{en,es,ca,hu}.yml`. Maintained via the `aeat.locales` CLI
+   `src/cadrumo/locales/{en,es,ca,hu}.yml`. Maintained via the `cadrumo.locales` CLI
    (`aeat-locales-cli` rule). **Userdocs must NOT reuse locale keys or
    re-author flag help** — different audience, single source.
 2. **Contributor English docstrings** — feed the autodoc API reference; gated by
@@ -89,12 +89,12 @@ examples, troubleshooting, conceptual coverage), and navigation (a real landing
 
 ## 4. Gates and tooling (how work is verified)
 
-- **Conformance gate** — `src/aeat/entrypoints/cli/test_educational_docs_conformance.py`
+- **Conformance gate** — `src/cadrumo/entrypoints/cli/test_educational_docs_conformance.py`
   (`pytest -m "docs and domain_application"`, seconds): every `aeat ...` verb
   cited in `docs/{tutorials,explanation,how-to}` must resolve in the live CLI,
   and every relative link must resolve to a real file. Fast; run it on every
   prose change.
-- **Nitpicky build** — `src/aeat/tests/test_docs_build.py` (the `-n -W` Sphinx
+- **Nitpicky build** — `src/cadrumo/tests/test_docs_build.py` (the `-n -W` Sphinx
   build; perf-fixed to `dummy` builder + `-j auto`, ~4–7 min cold; an
   incremental build into a fixed output dir is ~1–2 min for iteration).
   NOTE: this gate is **transiently down fleet-wide** on a peer ErrorCode gap

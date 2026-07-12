@@ -1,5 +1,5 @@
 {
-  "name": "aeat dev (Python 3.13 + uv + Playwright)",
+  "name": "cadrumo dev (Python 3.13 + uv + Playwright)",
   // `dockerfile` is resolved relative to this devcontainer.json file;
   // `context` is the build context passed to `docker build` (repo root, so
   // the Dockerfile's `COPY . .` sees the full workspace).
@@ -8,8 +8,8 @@
     "dockerfile": "../Dockerfile"
   },
   "workspaceFolder": "/workspace",
-  "remoteUser": "aeat",
-  "containerUser": "aeat",
+  "remoteUser": "cadrumo",
+  "containerUser": "cadrumo",
 
   // Persist the encrypted secure-storage root and any cached AEAT
   // certificate/session material across container rebuilds. Per
@@ -17,7 +17,7 @@
   // regulated personal data (DNI/NIE, cert password references, master-key
   // material) and must never be baked into the image itself.
   "mounts": [
-    "source=aeat-config,target=/home/aeat/.config/aeat,type=volume"
+    "source=cadrumo-state,target=/home/cadrumo/.local/share/cadrumo,type=volume"
   ],
 
   // uv sync + Playwright + vault tooling are already pre-baked at image
@@ -41,7 +41,7 @@
       "settings": {
         "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
         "python.testing.pytestEnabled": true,
-        "python.testing.pytestArgs": ["src/aeat"],
+        "python.testing.pytestArgs": ["src/cadrumo"],
         "editor.formatOnSave": true,
         "editor.rulers": [120],
         "[python]": {

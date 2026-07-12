@@ -139,7 +139,7 @@ class DiagnosticFinding(BaseModel):
     A bare counter (``31/40``) or a one-word verdict (``warn``) tells the
     operator *that* something is wrong but never *what*. Each finding
     names one specific cause in operator language and, where an
-    automated route exists, the exact ``aeat ...`` command that resolves
+    automated route exists, the exact ``cadrumo ...`` command that resolves
     it. The profile-keys check emits one finding per unset key; a
     failing check emits one finding per concrete cause. Findings are
     explanatory children, not a replacement for the parent row's required
@@ -158,7 +158,7 @@ class DiagnosticCheck(BaseModel):
     """One concrete config repair check.
 
     A failing or warning row MUST carry exactly one of ``next_action`` (an
-    exact ``aeat ...`` command string the operator can run) or ``dead_end``
+    exact ``cadrumo ...`` command string the operator can run) or ``dead_end``
     (a short explanation of why no automated route exists). A row that
     supplies neither, or both, is a :class:`pydantic.ValidationError` at
     construction time by raising
@@ -325,7 +325,7 @@ def build_cli_version_report(
     else:
         summary = RegistryVersionSummary(available=False, registry_root="")
     return CliVersionReport(
-        package_name="aeat",
+        package_name="cadrumo",
         package_version=__version__,
         registry=summary,
     )
@@ -459,7 +459,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
     return ConfigRepairReport(
         overall=_overall_status(tuple(checks)),
-        package_name="aeat",
+        package_name="cadrumo",
         package_version=__version__,
         python_version=sys.version.split()[0],
         log_file=str(default_log_file_path()),

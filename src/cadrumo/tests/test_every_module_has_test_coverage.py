@@ -2,7 +2,7 @@
 
 Walks the static import graph rooted at every `test_*.py` /
 `conftest.py` under `src/cadrumo/`, resolves relative imports to absolute
-`aeat.*` dotted paths, and computes the transitive closure of
+`cadrumo.*` dotted paths, and computes the transitive closure of
 production modules reachable from any test. A production module is
 considered covered if it sits inside that closure — either directly
 imported by a test or transitively through an aggregator `__init__.py`,
@@ -127,11 +127,11 @@ def _collect_production_modules() -> list[Path]:
 # ---------------------------------------------------------------------------
 
 
-_CADRUMO_PACKAGE = "aeat"
+_CADRUMO_PACKAGE = "cadrumo"
 
 
 def _module_path_for_dotted(dotted: str) -> Path | None:
-    """Return the on-disk file for an ``aeat.*`` dotted module name.
+    """Return the on-disk file for an ``cadrumo.*`` dotted module name.
 
     Resolves to either ``<rel>.py`` or ``<rel>/__init__.py`` if either
     exists; returns ``None`` for names that do not map to a real file
@@ -189,7 +189,7 @@ def _resolve_relative(current_dotted: str, level: int, module: str | None) -> st
 
 
 def _cadrumo_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[str]:
-    """Return absolute ``aeat.*`` dotted names imported by ``file_path``.
+    """Return absolute ``cadrumo.*`` dotted names imported by ``file_path``.
 
     For ``from X import Y, Z`` the returned set includes ``X``, ``X.Y``,
     and ``X.Z``; the caller resolves each candidate to a file via
@@ -231,7 +231,7 @@ def _transitively_reachable_from_tests(source_tree_ast: Mapping[Path, ast.AST] |
     """Return the set of production module paths reachable from any test.
 
     The closure starts at every test/conftest entrypoint, follows static
-    ``aeat.*`` imports, and stops when no new on-disk module is added.
+    ``cadrumo.*`` imports, and stops when no new on-disk module is added.
     Returned paths are absolute and may include both ``foo.py`` modules
     and ``foo/__init__.py`` package roots.
     """
@@ -286,8 +286,8 @@ def test_import_graph_helper_recognises_aggregator_pattern() -> None:
 
 def test_import_graph_helper_skips_orphan_modules() -> None:
     """Negative control: a synthetic dotted name with no file resolves to None."""
-    assert _module_path_for_dotted("aeat.does.not.exist.module") is None
-    # And a non-aeat dotted name is never resolved.
+    assert _module_path_for_dotted("cadrumo.does.not.exist.module") is None
+    # And a non-cadrumo dotted name is never resolved.
     assert _module_path_for_dotted("os.path") is None
 
 

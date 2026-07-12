@@ -5,7 +5,7 @@ two precedence rungs in order:
 
 1. `Settings.cadrumo_active_profile` (`CADRUMO_ACTIVE_PROFILE` env var, or
    an `override_settings(cadrumo_active_profile=...)` context manager).
-2. The plaintext `<aeat-root>/active-profile` pointer file written
+2. The plaintext `<cadrumo-root>/active-profile` pointer file written
    by `register_active_profile` / `select_profile`.
 
 A missing pointer + missing env override returns `None` so callers

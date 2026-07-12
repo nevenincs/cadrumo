@@ -29,4 +29,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m123_retenciones_capital.label",
     purpose="entries.portal_m123_retenciones_capital.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 123 procedure page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the Modelo 123 procedure page."""

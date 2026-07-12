@@ -28,4 +28,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_domiciliacion_bancaria.label",
     purpose="entries.portal_domiciliacion_bancaria.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the bank direct-debit page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the bank direct-debit page."""

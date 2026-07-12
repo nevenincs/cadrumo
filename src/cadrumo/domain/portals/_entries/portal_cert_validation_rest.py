@@ -24,4 +24,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_cert_validation_rest.label",
     purpose="entries.portal_cert_validation_rest.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-validation page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the certificate-validation page."""

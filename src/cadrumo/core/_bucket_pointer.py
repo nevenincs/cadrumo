@@ -1,6 +1,6 @@
 """Strict pydantic v2 record for the active-profile pointer file.
 
-The pointer file lives at ``<aeat-root>/active-profile`` and carries the
+The pointer file lives at ``<cadrumo-root>/active-profile`` and carries the
 canonical default for the active-profile precedence chain
 (flag > env > pointer). This record is the typed wrapper around the
 pointer file's plaintext content: :class:`BucketPointer`. The storage-layer

@@ -4,7 +4,7 @@ Maps the :class:`adapters.outbound.storage.StorageProvider` Protocol onto
 the Drive API:
 
 - Each namespace is a folder directly under the operator-configured
-  ``aeat-vault/`` root. The root folder ID is required when
+  ``cadrumo-vault/`` root. The root folder ID is required when
   ``cadrumo_storage_provider_kind=google_drive`` and the vault folder is created
   lazily under ``cadrumo_google_drive_root_folder_id``.
 - Each object is a ``files().create(...)`` upload with
@@ -37,7 +37,7 @@ import io
 from collections.abc import Iterator
 from typing import Any
 
-from ....core.config import load_settings
+from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -63,11 +63,11 @@ _PROBE_NAMESPACE = "_probe"
 # Drive `appProperties` ownership marker. The provider stamps this key
 # onto every folder + file it creates and refuses to touch any entry
 # that lacks the marker. This isolates the operator's pre-existing
-# Drive content from the app's mirror — a folder named `aeat-vault`
+# Drive content from the app's mirror — a folder named `cadrumo-vault`
 # the operator created manually for unrelated work will be rejected
 # rather than silently adopted.
-_OWNERSHIP_KEY = "aeat_vault_app"
-_OWNERSHIP_VALUE = "aeat"
+_OWNERSHIP_KEY = "cadrumo_vault_app"
+_OWNERSHIP_VALUE = "cadrumo"
 _LOG = get_logger(__name__)
 
 
@@ -204,6 +204,12 @@ class GoogleDriveProvider:
                 "vault_folder_name must not be blank for GoogleDriveProvider",
                 translated_message="adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
             )
+        if vault_folder_name_resolved.casefold() == FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME:
+            raise OutboundStorageValidationError(
+                "the former product Google Drive vault folder is not supported",
+                context={"vault_folder_name": vault_folder_name_resolved},
+                translated_message="adapters.outbound.storage.google_drive.errors.former_vault_folder",
+            )
         self._credentials = credentials
         self._root_folder_id = root_folder_id.strip()
         self._vault_folder_name = vault_folder_name_resolved
@@ -254,7 +260,7 @@ class GoogleDriveProvider:
         """Resolve or create the configured vault folder under ``root_folder_id``.
 
         Refuses to adopt a pre-existing folder of the same name unless
-        it carries the ``appProperties.aeat_vault_app=aeat`` ownership
+        it carries the ``appProperties.cadrumo_vault_app=cadrumo`` ownership
         marker — protects operator-created same-named work from
         silent merge. Cached for the lifetime of the provider instance.
         """
@@ -308,7 +314,7 @@ class GoogleDriveProvider:
     def _verify_ownership_or_adopt(self, entry: dict[str, Any], *, kind: str) -> None:
         """Refuse to adopt a foreign Drive folder; auto-stamp our own.
 
-        - If the entry carries ``appProperties.aeat_vault_app=aeat``, treat it as ours (no-op).
+        - If the entry carries ``appProperties.cadrumo_vault_app=cadrumo``, treat it as ours (no-op).
         - If predates ownership marking (no ``appProperties``), stamp the marker now.
         - If the marker is missing or different, refuse.
 
@@ -429,7 +435,7 @@ class GoogleDriveProvider:
                 # share the 8-hex prefix. Refuse to touch it.
                 continue
             if app_properties.get("object_key_hmac") != object_key_hmac:
-                # Different aeat object that shares the prefix (extremely
+                # Different Cadrumo object that shares the prefix (extremely
                 # rare HMAC collision). Refuse to touch it.
                 continue
             return entry
@@ -456,7 +462,7 @@ class GoogleDriveProvider:
 
         Args:
             namespace: Logical bucket name; becomes a Drive sub-folder of
-                ``aeat-vault/``.
+                ``cadrumo-vault/``.
             object_key_hmac: Full HMAC string that uniquely identifies the
                 object.  Only the first 8 characters are used in the Drive
                 filename; the full value is stored in ``appProperties``.
@@ -674,7 +680,7 @@ class GoogleDriveProvider:
         return True
 
     def iter_namespaces(self) -> Iterator[str]:
-        """Yield the name of every namespace folder directly under ``aeat-vault/``.
+        """Yield the name of every namespace folder directly under ``cadrumo-vault/``.
 
         Paginates through Drive's ``files().list`` using ``nextPageToken``.
         The namespace folder IDs are cached as a side effect so subsequent

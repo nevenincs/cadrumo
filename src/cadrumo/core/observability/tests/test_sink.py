@@ -222,7 +222,7 @@ class TestStorePersistenceErrors:
             run_id=run_id,
             started_at=datetime(2026, 4, 14, tzinfo=UTC),
             finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat test",
+            entrypoint="cadrumo test",
             arguments=(),
             corpus_sha256="a" * 64,
             db_sha256="b" * 64,

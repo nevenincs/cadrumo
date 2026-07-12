@@ -42,7 +42,7 @@ _UTF_8: Final[str] = "utf-8"
 _META_RELPATH = Path(".vault/data/search-data/code_index_meta.json")
 
 #: The corpus subtree whose coverage the docs-search pipeline depends on.
-_DATA_RELROOT = "src/aeat/_data"
+_DATA_RELROOT = "src/cadrumo/_data"
 
 
 class ReindexError(RuntimeError):
@@ -137,7 +137,7 @@ def expected_data_files(repo_root: Path) -> set[str]:
         repo_root: Repository root.
 
     Returns:
-        The set of POSIX-relative paths under ``src/aeat/_data`` the walker
+        The set of POSIX-relative paths under ``src/cadrumo/_data`` the walker
         would index.
     """
     from vaultspec_rag.indexer._codebase_indexer import CodebaseIndexer

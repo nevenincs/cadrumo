@@ -307,21 +307,21 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
     if strict:
         command.extend(["-n", "-W"])
-        env["AEAT_DOCS_OFFLINE"] = "1"
+        env["CADRUMO_DOCS_OFFLINE"] = "1"
         if (docs_root / "_build" / "html" / "objects.inv").is_file():
-            env["AEAT_DOCS_SELF_INVENTORY"] = "1"
+            env["CADRUMO_DOCS_SELF_INVENTORY"] = "1"
     if not plan.full_build_required:
-        env["AEAT_DOCS_OFFLINE"] = "1"
+        env["CADRUMO_DOCS_OFFLINE"] = "1"
         if single_page:
             relative_sources = _single_page_source_set(docs_root, targets)
             master_source = "index.md"
         else:
             relative_sources = [target.relative_to(docs_root).as_posix() for target in targets]
             master_source = relative_sources[0]
-        env["AEAT_DOCS_ONLY"] = os.pathsep.join(relative_sources)
-        env["AEAT_DOCS_MASTER_DOC"] = Path(master_source).with_suffix("").as_posix()
+        env["CADRUMO_DOCS_ONLY"] = os.pathsep.join(relative_sources)
+        env["CADRUMO_DOCS_MASTER_DOC"] = Path(master_source).with_suffix("").as_posix()
         if single_page:
-            env["AEAT_DOCS_SINGLE_PAGE"] = "1"
+            env["CADRUMO_DOCS_SINGLE_PAGE"] = "1"
 
     if plan.full_build_required:
         remove_noncanonical_build_entries(docs_root)
@@ -353,7 +353,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)
             if plan.api_scaffold_required:
-                ApiStubManager(src_aeat=repo_root / "src" / "aeat", docs_api=temp_docs_root / "api").scaffold()
+                ApiStubManager(src_cadrumo=repo_root / "src" / "cadrumo", docs_api=temp_docs_root / "api").scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
             temp_targets = _targets_for_docs_root(docs_root, temp_docs_root, targets)

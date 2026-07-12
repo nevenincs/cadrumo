@@ -12,13 +12,13 @@ from, or assemble into ledger / filing inputs.
 Two safety gates fire before any value is read:
 
 1. **Drive ownership marker** — the spreadsheet must carry the
-   ``appProperties.aeat_vault_app=aeat`` marker. Reading values from a
+   ``appProperties.cadrumo_vault_app=cadrumo`` marker. Reading values from a
    spreadsheet that lacks the marker would mix operator content with
-   foreign Drive files and break the ``aeat-vault/`` isolation contract.
+   foreign Drive files and break the ``cadrumo-vault/`` isolation contract.
 2. **Registry-SHA and layout-engine metadata match** — the spreadsheet's developer
-   metadata must declare ``aeat_registry_sha = <snapshot.registry_sha>``
-   and ``aeat_modelo_id`` / ``aeat_revision_id`` / ``aeat_filing_year`` /
-   ``aeat_period`` / ``aeat_engine_version`` matching the caller's snapshot
+   metadata must declare ``cadrumo_registry_sha = <snapshot.registry_sha>``
+   and ``cadrumo_modelo_id`` / ``cadrumo_revision_id`` / ``cadrumo_filing_year`` /
+   ``cadrumo_period`` / ``cadrumo_engine_version`` matching the caller's snapshot
    and live layout compiler. A mismatch means the workbook was compiled
    against a different registry slice or coordinate layout — casilla
    identity/layout, formula chains, and bracket tables may have shifted.
@@ -98,17 +98,17 @@ from ..storage import (
 )
 from ._api import execute_request
 
-_OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
-_OWNERSHIP_VALUE: Final[str] = "aeat"
-_RELATION_METADATA_PREFIX: Final[str] = "aeat_relation:"
+_OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
+_OWNERSHIP_VALUE: Final[str] = "cadrumo"
+_RELATION_METADATA_PREFIX: Final[str] = "cadrumo_relation:"
 _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
     {
-        "aeat_engine_version",
-        "aeat_registry_sha",
-        "aeat_modelo_id",
-        "aeat_revision_id",
-        "aeat_filing_year",
-        "aeat_period",
+        "cadrumo_engine_version",
+        "cadrumo_registry_sha",
+        "cadrumo_modelo_id",
+        "cadrumo_revision_id",
+        "cadrumo_filing_year",
+        "cadrumo_period",
     },
 )
 _LEGAL_REFS_ADAPTER = TypeAdapter(tuple[LegalRefId, ...])
@@ -182,7 +182,7 @@ class RelationEdit(BaseModel):
     The provenance / source_modelo / source_filing_year / source_periods /
     source_casilla_ids / legal_refs / source_refs / resolved_at fields are
     recovered from the workbook's developer metadata
-    (``aeat_relation:<relation>`` keys written by the apply adapter).
+    (``cadrumo_relation:<relation>`` keys written by the apply adapter).
     They are absent for relations that were edited manually in the
     workbook without an apply round-trip; in that case the relation
     is treated as ``provenance="operator_manual"`` by convention.
@@ -380,10 +380,10 @@ def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> d
     """Merge Sheets developer metadata entries, refusing conflicting identity duplicates.
 
     Google Sheets developer metadata keys are not unique. Repeated exports
-    can leave multiple `aeat_*` keys on the same workbook. Duplicate
+    can leave multiple `cadrumo_*` keys on the same workbook. Duplicate
     identity keys with different values would make pull classification
     depend on API return order, so they are treated as a conflict. The
-    informational `aeat_exported_at` stamp is intentionally excluded:
+    informational `cadrumo_exported_at` stamp is intentionally excluded:
     multiple exports of the same registry slice produce different
     timestamps without changing workbook identity.
     """
@@ -399,7 +399,7 @@ def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> d
             pairs[key] = value
     if conflicting_keys:
         raise OutboundStorageConflictError(
-            "spreadsheet carries conflicting duplicate AEAT developer metadata; refusing order-dependent pull",
+            "spreadsheet carries conflicting duplicate Cadrumo developer metadata; refusing order-dependent pull",
             context={"conflicting_metadata_keys": sorted(conflicting_keys)},
             suggestion=tr("adapters.google.calc_sheets.suggestions.reexport_workbook"),
             translated_message="adapters.google.calc_sheets.errors.conflicting_duplicate_metadata",
@@ -425,17 +425,17 @@ def _classify_metadata_match(
             registry_sha="missing",
         )
     try:
-        filing_year = int(pairs.get("aeat_filing_year", "0"))
+        filing_year = int(pairs.get("cadrumo_filing_year", "0"))
     except ValueError:
         filing_year = 0
     metadata = PullMetadata(
-        modelo_id=pairs.get("aeat_modelo_id", ""),
-        revision_id=pairs.get("aeat_revision_id", ""),
+        modelo_id=pairs.get("cadrumo_modelo_id", ""),
+        revision_id=pairs.get("cadrumo_revision_id", ""),
         filing_year=filing_year,
-        period=pairs.get("aeat_period", ""),
-        engine_version=pairs.get("aeat_engine_version", ""),
-        registry_sha=pairs.get("aeat_registry_sha", ""),
-        exported_at=pairs.get("aeat_exported_at"),
+        period=pairs.get("cadrumo_period", ""),
+        engine_version=pairs.get("cadrumo_engine_version", ""),
+        registry_sha=pairs.get("cadrumo_registry_sha", ""),
+        exported_at=pairs.get("cadrumo_exported_at"),
     )
     # The registry-SHA and layout-engine gates ensure a workbook compiled
     # against a different registry slice or compiler is never matched. Such
@@ -539,7 +539,7 @@ def pull_operator_edits(
             the workbook's developer-metadata stamps.
         spreadsheet_id: The Drive file id of the workbook to read.
             Must already exist and carry the
-            ``appProperties.aeat_vault_app=aeat`` ownership marker.
+            ``appProperties.cadrumo_vault_app=cadrumo`` ownership marker.
         credentials: A ``google.oauth2.credentials.Credentials``-shaped
             object carrying a refresh + access token with at least
             the ``drive.file`` + ``spreadsheets`` scopes.
@@ -746,7 +746,7 @@ def _decode_relation_edits(
     """Map the per-relation slice of the batchGet response into typed RelationEdits.
 
     Per-relation provenance metadata is recovered from the workbook's
-    developer metadata via the ``aeat_relation:<relation>`` key written
+    developer metadata via the ``cadrumo_relation:<relation>`` key written
     by the apply adapter. Recovering it on pull preserves the audit
     trail (provenance tier, source filing year, source periods,
     resolved-at instant) that would otherwise be silently dropped on
@@ -770,7 +770,7 @@ def _decode_relation_edits(
             source_refs,
             resolved_at,
         ) = _parse_relation_metadata(
-            metadata_pairs.get(f"aeat_relation:{relation_id}", ""),
+            metadata_pairs.get(f"cadrumo_relation:{relation_id}", ""),
         )
         edits.append(
             RelationEdit(

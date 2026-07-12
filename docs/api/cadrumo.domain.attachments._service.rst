@@ -1,0 +1,7 @@
+cadrumo.domain.attachments._service module
+==========================================
+
+.. automodule:: cadrumo.domain.attachments._service
+   :members:
+   :show-inheritance:
+   :ignore-module-all:

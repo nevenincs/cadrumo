@@ -111,15 +111,15 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
     )
     cadrumo_log_stderr_level: str = Field(
         default="ERROR",
-        description="Log level for the stderr handler installed by ``aeat.core.logging``",
+        description="Log level for the stderr handler installed by ``cadrumo.core.logging``",
     )
     cadrumo_log_file_level: str = Field(
         default="DEBUG",
-        description="Log level for the file handler installed by ``aeat.core.logging``",
+        description="Log level for the file handler installed by ``cadrumo.core.logging``",
     )
     cadrumo_log_root_level: str = Field(
         default="DEBUG",
-        description="Root logger level installed by ``aeat.core.logging``",
+        description="Root logger level installed by ``cadrumo.core.logging``",
     )
     aeat_manuals_http_timeout_s: float = Field(
         default=60.0,

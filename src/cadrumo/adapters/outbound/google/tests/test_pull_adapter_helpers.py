@@ -175,14 +175,14 @@ def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
 def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
     snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
-        "aeat_modelo_id": "130",
-        "aeat_revision_id": snapshot.revision.id,
-        "aeat_filing_year": "2025",
-        "aeat_period": "1T",
-        "aeat_engine_version": CALC_SHEETS_ENGINE_VERSION,
+        "cadrumo_modelo_id": "130",
+        "cadrumo_revision_id": snapshot.revision.id,
+        "cadrumo_filing_year": "2025",
+        "cadrumo_period": "1T",
+        "cadrumo_engine_version": CALC_SHEETS_ENGINE_VERSION,
         # The registry-SHA stamp must match the live snapshot's
         # calculation-surface hash, not just the modelo coordinates.
-        "aeat_registry_sha": registry_sha(snapshot),
+        "cadrumo_registry_sha": registry_sha(snapshot),
     }
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "matches"
@@ -193,10 +193,10 @@ def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
 def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
     snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
-        "aeat_modelo_id": "131",  # different modelo
-        "aeat_revision_id": snapshot.revision.id,
-        "aeat_filing_year": "2025",
-        "aeat_period": "1T",
+        "cadrumo_modelo_id": "131",  # different modelo
+        "cadrumo_revision_id": snapshot.revision.id,
+        "cadrumo_filing_year": "2025",
+        "cadrumo_period": "1T",
     }
     verdict, _ = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
@@ -205,10 +205,10 @@ def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
 def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
     snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
-        "aeat_modelo_id": "130",
-        "aeat_revision_id": snapshot.revision.id,
-        "aeat_filing_year": "2025",
-        "aeat_period": "2T",  # different period
+        "cadrumo_modelo_id": "130",
+        "cadrumo_revision_id": snapshot.revision.id,
+        "cadrumo_filing_year": "2025",
+        "cadrumo_period": "2T",  # different period
     }
     verdict, _ = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
@@ -217,10 +217,10 @@ def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
 def test_classify_metadata_returns_stale_for_mismatched_year() -> None:
     snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
-        "aeat_modelo_id": "130",
-        "aeat_revision_id": snapshot.revision.id,
-        "aeat_filing_year": "2024",  # different year
-        "aeat_period": "1T",
+        "cadrumo_modelo_id": "130",
+        "cadrumo_revision_id": snapshot.revision.id,
+        "cadrumo_filing_year": "2024",  # different year
+        "cadrumo_period": "1T",
     }
     verdict, _ = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
@@ -230,10 +230,10 @@ def test_classify_metadata_returns_stale_when_filing_year_is_garbage() -> None:
     """A malformed filing_year string defaults to 0 (which never matches)."""
     snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
-        "aeat_modelo_id": "130",
-        "aeat_revision_id": snapshot.revision.id,
-        "aeat_filing_year": "not-a-year",
-        "aeat_period": "1T",
+        "cadrumo_modelo_id": "130",
+        "cadrumo_revision_id": snapshot.revision.id,
+        "cadrumo_filing_year": "not-a-year",
+        "cadrumo_period": "1T",
     }
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
@@ -243,7 +243,7 @@ def test_classify_metadata_returns_stale_when_filing_year_is_garbage() -> None:
 def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     """A workbook compiled against a different registry slice is stale.
 
-    The pull module's docstring promises ``aeat_registry_sha`` is part
+    The pull module's docstring promises ``cadrumo_registry_sha`` is part
     of the metadata gate: a workbook whose modelo / revision / year /
     period all align but whose registry-SHA stamp diverges was compiled
     against a different calculation surface — casilla identity/layout, formula
@@ -259,14 +259,14 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
 
     snapshot = modelo_130_2025_1t_snapshot()
     pairs = {
-        "aeat_modelo_id": "130",
-        "aeat_revision_id": snapshot.revision.id,
-        "aeat_filing_year": "2025",
-        "aeat_period": "1T",
-        "aeat_engine_version": CALC_SHEETS_ENGINE_VERSION,
+        "cadrumo_modelo_id": "130",
+        "cadrumo_revision_id": snapshot.revision.id,
+        "cadrumo_filing_year": "2025",
+        "cadrumo_period": "1T",
+        "cadrumo_engine_version": CALC_SHEETS_ENGINE_VERSION,
         # Every modelo coordinate aligns; only the registry-SHA stamp
         # diverges from the live snapshot's calculation-surface hash.
-        "aeat_registry_sha": "deadbeefdeadbeef",
+        "cadrumo_registry_sha": "deadbeefdeadbeef",
     }
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
@@ -286,12 +286,12 @@ def test_prechange_exterior_workbook_layout_stamp_is_refused_before_pull_layout(
     snapshot = resources().modelos.authority.snapshot("369", filing_year=2026, period="EXT-1T", on=date(2026, 3, 31))
     exported_metadata = build_export_plan(snapshot).metadata
     prechange_pairs = {
-        "aeat_modelo_id": exported_metadata.modelo_id,
-        "aeat_revision_id": exported_metadata.revision_id,
-        "aeat_filing_year": str(exported_metadata.filing_year),
-        "aeat_period": exported_metadata.period.registry_token,
-        "aeat_engine_version": "calc-sheets/0.1.0",
-        "aeat_registry_sha": exported_metadata.registry_sha,
+        "cadrumo_modelo_id": exported_metadata.modelo_id,
+        "cadrumo_revision_id": exported_metadata.revision_id,
+        "cadrumo_filing_year": str(exported_metadata.filing_year),
+        "cadrumo_period": exported_metadata.period.registry_token,
+        "cadrumo_engine_version": "calc-sheets/0.1.0",
+        "cadrumo_registry_sha": exported_metadata.registry_sha,
     }
 
     verdict, metadata = _classify_metadata_match(prechange_pairs, snapshot)
@@ -317,12 +317,12 @@ def test_current_exterior_workbook_layout_stamp_is_accepted_before_pull_layout()
     snapshot = resources().modelos.authority.snapshot("369", filing_year=2026, period="EXT-1T", on=date(2026, 3, 31))
     exported_metadata = build_export_plan(snapshot).metadata
     current_pairs = {
-        "aeat_modelo_id": exported_metadata.modelo_id,
-        "aeat_revision_id": exported_metadata.revision_id,
-        "aeat_filing_year": str(exported_metadata.filing_year),
-        "aeat_period": exported_metadata.period.registry_token,
-        "aeat_engine_version": exported_metadata.engine_version,
-        "aeat_registry_sha": exported_metadata.registry_sha,
+        "cadrumo_modelo_id": exported_metadata.modelo_id,
+        "cadrumo_revision_id": exported_metadata.revision_id,
+        "cadrumo_filing_year": str(exported_metadata.filing_year),
+        "cadrumo_period": exported_metadata.period.registry_token,
+        "cadrumo_engine_version": exported_metadata.engine_version,
+        "cadrumo_registry_sha": exported_metadata.registry_sha,
     }
 
     verdict, metadata = _classify_metadata_match(current_pairs, snapshot)
@@ -361,14 +361,14 @@ def test_merge_developer_metadata_refuses_conflicting_registry_identity_duplicat
     """Duplicate identity stamps with different values must not collapse by API order."""
 
     entries = (
-        {"metadataKey": "aeat_registry_sha", "metadataValue": "old-registry-sha"},
-        {"metadataKey": "aeat_registry_sha", "metadataValue": "new-registry-sha"},
+        {"metadataKey": "cadrumo_registry_sha", "metadataValue": "old-registry-sha"},
+        {"metadataKey": "cadrumo_registry_sha", "metadataValue": "new-registry-sha"},
     )
 
     with pytest.raises(OutboundStorageConflictError) as raised:
         _merge_developer_metadata_entries(entries)
 
-    assert raised.value.context == {"conflicting_metadata_keys": ["aeat_registry_sha"]}
+    assert raised.value.context == {"conflicting_metadata_keys": ["cadrumo_registry_sha"]}
     assert raised.value.translated_message == "adapters.google.calc_sheets.errors.conflicting_duplicate_metadata"
     assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_workbook")
 
@@ -378,12 +378,12 @@ def test_merge_developer_metadata_allows_duplicate_exported_at_for_reapplied_sam
 
     pairs = _merge_developer_metadata_entries(
         (
-            {"metadataKey": "aeat_registry_sha", "metadataValue": "da9952e1610f7db6"},
-            {"metadataKey": "aeat_registry_sha", "metadataValue": "da9952e1610f7db6"},
-            {"metadataKey": "aeat_exported_at", "metadataValue": "2026-06-02T17:54:13+00:00"},
-            {"metadataKey": "aeat_exported_at", "metadataValue": "2026-06-02T17:55:32+00:00"},
+            {"metadataKey": "cadrumo_registry_sha", "metadataValue": "da9952e1610f7db6"},
+            {"metadataKey": "cadrumo_registry_sha", "metadataValue": "da9952e1610f7db6"},
+            {"metadataKey": "cadrumo_exported_at", "metadataValue": "2026-06-02T17:54:13+00:00"},
+            {"metadataKey": "cadrumo_exported_at", "metadataValue": "2026-06-02T17:55:32+00:00"},
         ),
     )
 
-    assert pairs["aeat_registry_sha"] == "da9952e1610f7db6"
-    assert pairs["aeat_exported_at"] == "2026-06-02T17:55:32+00:00"
+    assert pairs["cadrumo_registry_sha"] == "da9952e1610f7db6"
+    assert pairs["cadrumo_exported_at"] == "2026-06-02T17:55:32+00:00"

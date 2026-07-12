@@ -103,7 +103,7 @@ _SOURCE_LABELS: dict[str, str] = {
     "directive-2006-112-ec": "Directive 2006/112/EC",
     "other": "other",
 }
-"""Human-readable labels for each :class:`aeat.domain.iva.IvaCitationSource`."""
+"""Human-readable labels for each :class:`cadrumo.domain.iva.IvaCitationSource`."""
 
 
 __all__ = ["cite", "lookup_rate"]

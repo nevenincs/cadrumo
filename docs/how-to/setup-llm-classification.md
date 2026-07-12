@@ -1,9 +1,10 @@
 # Set up LLM classification providers
 
-Use this when `aeat app ledger classify --llm` cannot find or run your LLM
-provider. `aeat` does not store LLM credentials and does not have a separate
-LLM account configuration command. It runs a provider CLI that is already installed and authenticated in your
-system. `aeat` does not store or manage LLM credentials itself.
+Use this when `aeat app ledger classify --llm` cannot find or run your large
+language model (LLM) provider. Cadrumo runs a provider command-line interface
+(CLI) already installed and authenticated on your system. It does not store or
+manage LLM credentials, and it has no separate LLM account configuration
+command.
 
 ## Before you start
 
@@ -13,7 +14,7 @@ You need:
   smoke test also needs at least one unclassified transaction in its ledger -
   see [Work with Transactions](import-bank-statements.md).
 - Your master-key passphrase. Profile-scoped commands open the encrypted store,
-  so they prompt for the passphrase (or read `AEAT_SECRET_PASSPHRASE` when set).
+  so they prompt for the passphrase (or read `CADRUMO_SECRET_PASSPHRASE` when set).
 
 The runtime emits help, prompts, and messages in Spanish.
 
@@ -30,7 +31,7 @@ Use one of those names in the classification command:
 aeat app ledger classify <transaction-id> --llm claude
 ```
 
-## Check what aeat can see
+## Check what Cadrumo can see
 
 List provider CLIs visible on `PATH`:
 
@@ -55,12 +56,12 @@ It lists each external dependency - including every LLM provider as
 `llm-provider:claude`, `llm-provider:antigravity`, and `llm-provider:codex` -
 as `disponible` or `ausente`, and prints the fix for each problem.
 
-## Configure the provider outside aeat
+## Configure the provider outside Cadrumo
 
 Install the provider CLI you want to use, make sure its executable is on
 `PATH`, and authenticate with that provider's own CLI or account flow. The
 exact login command and data-retention settings belong to the provider, not to
-`aeat`.
+Cadrumo.
 
 After changing PATH or signing in, run:
 

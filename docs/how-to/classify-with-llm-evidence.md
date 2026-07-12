@@ -65,8 +65,8 @@ provider. This sends the document text off your machine, so `aeat` requires all
 of the following:
 
 - The deployment permits it. An administrator sets
-  `AEAT_EVIDENCE_CLOUD_UPLOAD_PERMITTED=1`. It is off by default.
-- The deployment is not in gestor mode. `AEAT_EVIDENCE_GESTOR_MODE=1`
+  `CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=1`. It is off by default.
+- The deployment is not in gestor mode. `CADRUMO_EVIDENCE_GESTOR_MODE=1`
   categorically bars cloud evidence reading, whatever else is set.
 - You acknowledge it on this run with `--evidence-acknowledged`. The
   acknowledgement is never remembered; pass it every time.
@@ -158,11 +158,11 @@ to the safest value:
 
 | Setting | Default | Effect |
 | --- | --- | --- |
-| `AEAT_EVIDENCE_CLOUD_UPLOAD_PERMITTED` | off | Must be on to allow any cloud evidence read |
-| `AEAT_EVIDENCE_GESTOR_MODE` | off | When on, bars cloud evidence reading entirely |
-| `AEAT_LLM_OLLAMA_VISION_MODEL` | `qwen2.5vl:3b` | The local vision model for image reads |
-| `AEAT_LLM_OLLAMA_NUM_CTX` | `8192` | The local model context window |
-| `AEAT_LLM_VISION_READ_TIMEOUT_S` | `300` | Seconds to wait for a local vision read |
+| `CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED` | off | Must be on to allow any cloud evidence read |
+| `CADRUMO_EVIDENCE_GESTOR_MODE` | off | When on, bars cloud evidence reading entirely |
+| `CADRUMO_LLM_OLLAMA_VISION_MODEL` | `qwen2.5vl:3b` | The local vision model for image reads |
+| `CADRUMO_LLM_OLLAMA_NUM_CTX` | `8192` | The local model context window |
+| `CADRUMO_LLM_VISION_READ_TIMEOUT_S` | `300` | Seconds to wait for a local vision read |
 
 ## Next steps
 

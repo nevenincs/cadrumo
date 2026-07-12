@@ -113,7 +113,7 @@ def _read_pyproject_version(repo_root: Path) -> str:
 
 
 def _read_init_version(repo_root: Path) -> str:
-    text = (repo_root / "src" / "aeat" / "__init__.py").read_text(encoding=_UTF_8)
+    text = (repo_root / "src" / "cadrumo" / "__init__.py").read_text(encoding=_UTF_8)
     match = _VERSION_RE.search(text)
     if not match:
         return ""
@@ -161,7 +161,7 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "nevenincs/aeat", gh_executable: str | None = None
+    *, repo_slug: str = "cadrumo/cadrumo", gh_executable: str | None = None
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 

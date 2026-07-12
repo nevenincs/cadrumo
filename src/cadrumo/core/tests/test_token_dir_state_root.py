@@ -9,7 +9,7 @@ override still wins.
 
 These tests construct real `Settings` instances and exercise the real
 validator chain - no mocks, no fakes. Inputs are injected via
-constructor kwargs (highest priority in pydantic-settings) so the
+constructor kwargs (highest priority in ``pydantic-settings``) so the
 tests do not depend on or mutate the ambient environment. A small
 `_without_token_dir_env` scope helper guards the derive-default branch
 against an ambient `CADRUMO_TOKEN_DIR` leaking in via env precedence.
@@ -35,7 +35,7 @@ def _without_token_dir_env():
     ``cadrumo_token_dir``. Constructor kwargs win against env, but the
     tests that want the *derived* path pass no kwarg, so env precedence
     would surface here. Delegates to the centralized
-    :func:`aeat-tests.env_scope.scoped_env_var` helper.
+    :func:`cadrumo.tests.env_scope.scoped_env_var` helper.
     """
     return scoped_env_var("CADRUMO_TOKEN_DIR", None)
 

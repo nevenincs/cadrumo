@@ -17,9 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core import Modelo
-from aeat.core.external_constants import OutputLanguage
-from aeat.domain.calculations.registry import CasillaId, validated_casilla_id
+from cadrumo.core import Modelo
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import CasillaId, validated_casilla_id
 
 from .. import (
     ConceptDomain,

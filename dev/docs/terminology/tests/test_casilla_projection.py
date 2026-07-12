@@ -23,9 +23,9 @@ import time
 
 import pytest
 
-from aeat.core import Modelo
-from aeat.core.external_constants import OutputLanguage
-from aeat.domain.calculations.registry import bundled_authority
+from cadrumo.core import Modelo
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import bundled_authority
 from dev.docs.terminology._casilla_projection import CasillaProjectionStats
 from dev.docs.terminology._search_record import CasillaSearchRecord
 

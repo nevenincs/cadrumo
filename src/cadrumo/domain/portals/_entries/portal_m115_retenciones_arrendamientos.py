@@ -29,4 +29,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m115_retenciones_arrendamientos.label",
     purpose="entries.portal_m115_retenciones_arrendamientos.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 115 procedure page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the Modelo 115 procedure page."""

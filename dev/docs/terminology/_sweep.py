@@ -37,7 +37,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
 from ..terminology_handbook._enums import ConceptLifecycle, TermStatus
@@ -536,6 +536,6 @@ def _seed_concept_card(
 
 
 def _default_repo_root() -> Path:
-    from aeat.core.config import PROJECT_ROOT
+    from cadrumo.core.config import PROJECT_ROOT
 
     return PROJECT_ROOT

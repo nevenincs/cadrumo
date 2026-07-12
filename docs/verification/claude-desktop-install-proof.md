@@ -29,7 +29,7 @@ installed (`%APPDATA%\Claude`, embedded claude-code runtime 2.1.187),
 ## What remains, and on what
 
 - **Server start via uvx** — identical residual to the Claude Code proof:
-  the plugin's `.mcp.json` launches `uvx --from aeat==0.1.0 aeat-mcp`,
+  the plugin's `.mcp.json` launches `uvx --from cadrumo==0.1.0 cadrumo-mcp`,
   unresolvable until the first PyPI publish (RELEASING.md name-claim
   sequencing; operator-gated). Re-verify after publish.
 - **In-app UI session confirmation** — a human opening the desktop app and

@@ -4,8 +4,8 @@ The KEK / DEK / passphrase / OS-keystore custody artefacts live under a
 keystore root that is structurally outside the buckets parent. The two
 invariants enforced here are:
 
-- The keystore root is sibling to ``buckets/`` under the AEAT root
-  (``<aeat-root>/keystore/<bucket-id>/``), never nested inside any bucket
+- The keystore root is sibling to ``buckets/`` under the Cadrumo root
+  (``<cadrumo-root>/keystore/<bucket-id>/``), never nested inside any bucket
   directory and never co-located under the relational database directory.
 - A configuration that resolves the keystore path under either parent is
   rejected by :func:`validate_keystore_separation` so a subsequent unlock
@@ -35,7 +35,7 @@ def keystore_path(root: Path, bucket_id: str) -> Path:
     """Return ``<root>/keystore/<bucket_id>/`` (no IO).
 
     Args:
-        root: The AEAT root directory.
+        root: The Cadrumo storage root.
         bucket_id: Bucket identifier to include in the path.
 
     Returns:
@@ -81,7 +81,7 @@ def validate_keystore_separation(
     """Fail closed if the keystore path resolves under the buckets parent or db dir.
 
     Args:
-        root: The AEAT root directory.
+        root: The Cadrumo storage root.
         bucket_id: The bucket identifier whose layout to validate against.
         configured_keystore: Optional override path; defaults to
             :func:`keystore_path`. A custom configuration that points at a

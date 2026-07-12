@@ -173,7 +173,7 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
 
 def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:
     report = config_repair_report
-    assert report.package_name == "aeat"
+    assert report.package_name == "cadrumo"
     assert report.registry.available is True
     assert report.registry.modelo_count > 0
     assert {check.name for check in report.checks} >= {
@@ -600,7 +600,7 @@ def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     from ..diagnostics import build_cli_version_report, render_cli_version_text
 
     report = build_cli_version_report(with_registry=False)
-    assert report.package_name == "aeat"
+    assert report.package_name == "cadrumo"
     assert report.package_version
     # Renders without raising — the model is fully defined.
     assert isinstance(render_cli_version_text(report), str)
@@ -635,7 +635,7 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
     )
     return ConfigRepairReport(
         overall="fail",
-        package_name="aeat",
+        package_name="cadrumo",
         package_version="0.1.0",
         python_version="3.13.11",
         log_file="aeat.log",
@@ -731,7 +731,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
-        package_name="aeat",
+        package_name="cadrumo",
         package_version="0.1.0",
         python_version="3.13.11",
         log_file="aeat.log",

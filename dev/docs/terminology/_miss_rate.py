@@ -15,7 +15,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.resources import bundled_path
+from cadrumo.core.resources import bundled_path
 
 from ._sweep import SweepResult
 

@@ -2,7 +2,7 @@
 
 Per the profile-bucket lifecycle contract, the on-disk layout
 puts every bucket's SQLite database under
-``<aeat-root>/buckets/<bucket-id>/db/cadrumo.db``. The Settings model
+``<cadrumo-root>/buckets/<bucket-id>/db/cadrumo.db``. The Settings model
 resolves ``cadrumo_database_url`` through the active-profile pointer
 so two distinct buckets address two distinct database files via
 the engine cache.

@@ -30,7 +30,7 @@ allowlist entry:
    definition, so a FIRST-PARTY import never satisfies this class; it is named
    in the taxonomy so an author who trips the gate sees the full sanctioned set.
 
-Everything else -- a function-local FIRST-PARTY (``aeat.*``) import that is not
+Everything else -- a function-local FIRST-PARTY (``cadrumo.*``) import that is not
 one of the five -- is UNSANCTIONED and MUST carry an allowlist entry recording
 its runtime-graph edge (consumer module -> imported module), its unsanctioned
 class, the reason, and the restructuring disposition. A new unsanctioned edge
@@ -151,10 +151,10 @@ _CLASS_METADATA: dict[UnsanctionedClass, tuple[str, Disposition]] = {
 
 
 class ImportEdge(NamedTuple):
-    """A runtime-graph edge: an aeat-relative consumer module importing another.
+    """A runtime-graph edge: an cadrumo-relative consumer module importing another.
 
-    Both names are aeat-relative dotted module paths (the leading ``aeat.`` is
-    stripped); the empty string denotes the ``aeat`` package root.
+    Both names are cadrumo-relative dotted module paths (the leading ``cadrumo.`` is
+    stripped); the empty string denotes the ``cadrumo`` package root.
     """
 
     consumer: str
@@ -796,19 +796,19 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 _ALLOWLIST_EDGE_CEILING: int = 466  # net -18 after structural lifts; 4 cycle-backed edges declared.
 
 
-def _aeat_relative(dotted: str) -> str:
-    """Strip the leading ``aeat.`` (or bare ``aeat``) from a dotted module name."""
+def _cadrumo_relative(dotted: str) -> str:
+    """Strip the leading ``cadrumo.`` (or bare ``cadrumo``) from a dotted module name."""
     if dotted == "cadrumo":
         return ""
-    if dotted.startswith("aeat."):
-        return dotted[len("aeat.") :]
+    if dotted.startswith("cadrumo."):
+        return dotted[len("cadrumo.") :]
     return dotted
 
 
 def _resolve_target(node: ast.Import | ast.ImportFrom, package_base: tuple[str, ...]) -> str | None:
-    """Return the aeat-relative imported module for a first-party import, else None.
+    """Return the cadrumo-relative imported module for a first-party import, else None.
 
-    ``package_base`` is the importing module's containing package, aeat-relative
+    ``package_base`` is the importing module's containing package, cadrumo-relative
     and split into components (for a package ``__init__`` this is the package
     itself; for a regular module it is its parent package). A ``from . import x``
     resolves against ``package_base``; each extra leading dot climbs one more
@@ -826,12 +826,12 @@ def _resolve_target(node: ast.Import | ast.ImportFrom, package_base: tuple[str, 
             target = package + ([node.module] if node.module else [])
             return ".".join(target)
         module = node.module or ""
-        if module == "cadrumo" or module.startswith("aeat."):
-            return _aeat_relative(module)
+        if module == "cadrumo" or module.startswith("cadrumo."):
+            return _cadrumo_relative(module)
         return None
     for alias in node.names:
-        if alias.name == "cadrumo" or alias.name.startswith("aeat."):
-            return _aeat_relative(alias.name)
+        if alias.name == "cadrumo" or alias.name.startswith("cadrumo."):
+            return _cadrumo_relative(alias.name)
     return None
 
 
@@ -1022,7 +1022,7 @@ def test_every_allowlisted_edge_is_classified_where_filed() -> None:
 def test_no_unclassified_unsanctioned_import_site() -> None:
     """No production function-local first-party import escapes the sanctioned set or the allowlist.
 
-    This is the policy gate: a function-local ``aeat.*`` import that is not one
+    This is the policy gate: a function-local ``cadrumo.*`` import that is not one
     of the five sanctioned classes and whose runtime-graph edge is not declared
     in ``_ALLOWLIST`` fails here, naming the site path and the five sanctioned
     classes so the author can either restructure the import away or add a

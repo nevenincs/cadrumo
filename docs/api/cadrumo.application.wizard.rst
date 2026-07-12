@@ -1,0 +1,27 @@
+cadrumo.application.wizard package
+==================================
+
+.. automodule:: cadrumo.application.wizard
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.application.wizard._catalogue
+   cadrumo.application.wizard._commands
+   cadrumo.application.wizard._compiler
+   cadrumo.application.wizard._errors
+   cadrumo.application.wizard._models
+   cadrumo.application.wizard._persistence
+   cadrumo.application.wizard._prompter
+   cadrumo.application.wizard._runner
+   cadrumo.application.wizard._status
+   cadrumo.application.wizard._translations
+   cadrumo.application.wizard._verifier
+   cadrumo.application.wizard._widgets

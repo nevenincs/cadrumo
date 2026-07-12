@@ -37,7 +37,7 @@ AEAT treats Windows-1252 and ISO-8859-1 as equivalent for fichero-BOE
 purposes; Python codec aliases (``latin-1`` ↔ ``iso-8859-1``,
 ``windows-1252`` ↔ ``cp1252``, ``latin-9`` ↔ ``iso-8859-15``) resolve
 to the same wire encoding.  The encoding-consistency validator in
-:class:`~aeat.domain.calculations.registry._schema.ExportLayoutDefinition`
+:class:`~cadrumo.domain.calculations.registry._schema.ExportLayoutDefinition`
 compares declared encodings through this map so a layout that mixes
 ``latin-1`` and ``iso-8859-1`` is treated as consistent rather than
 flagged as a layout error.

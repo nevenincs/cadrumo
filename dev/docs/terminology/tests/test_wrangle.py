@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core import Modelo
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core import Modelo
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.terminology._resolution import (
     ChunkHit,
     DroppedHit,
@@ -65,7 +65,7 @@ def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
     records = project_modelo_casillas(Modelo.M303)
     unified = to_search_record(records[index])
     path = (
-        f"src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/"
+        f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/"
         f"casillas/{index:04d}-casillas.part-001.toml"
     )
     return ResolvedTarget(surface=GroundingSurface.CASILLA, record=unified, source_hit=_hit(path, score))
@@ -81,7 +81,7 @@ def _real_concept_target(score: float) -> ResolvedTarget:
     return ResolvedTarget(
         surface=GroundingSurface.CASILLA,  # concept hits arrive via various sources
         record=unified,
-        source_hit=_hit("src/aeat/_data/terminology/concepts/prorrata.toml", score),
+        source_hit=_hit("src/cadrumo/_data/terminology/concepts/prorrata.toml", score),
     )
 
 

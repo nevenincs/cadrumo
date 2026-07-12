@@ -24,8 +24,8 @@ from hashlib import sha256
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.domain.calculations.registry import CasillaId, ModeloId
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import CasillaId, ModeloId
 
 from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord

@@ -1,11 +1,11 @@
-# Work with Transactions
+# Work with transactions
 
-Use this guide to bring your bank movements into aeat so they can feed your
+Use this guide to bring your bank movements into Cadrumo so they can feed your
 tax calculations. Import your bank statement, add any missing transactions by
 hand, review and correct them, then hand them to classification before running
 a calculation.
 
-Your bank records are not added automatically. aeat imports only when you run
+Your bank records are not added automatically. Cadrumo imports only when you run
 an import command. Tax calculations use the transactions you have saved under
 the active profile.
 
@@ -17,7 +17,7 @@ You need:
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
 - a master-key passphrase. The tool prompts for it the first time it opens your
   encrypted storage in a session; for a non-interactive shell, set
-  `AEAT_SECRET_PASSPHRASE`
+  `CADRUMO_SECRET_PASSPHRASE`
 - a bank statement file or directory, unless you are adding transactions by hand
 - for home-office ratios, reviewed census facts in the profile; see
   [Maintain Modelo 036 census facts in your profile](censo-update.md)
@@ -83,7 +83,7 @@ aeat app ledger import ./processed.csv --provider csv --verify --file ./statemen
 ```
 
 Use `--period` only when you intentionally want to label the import with a
-fiscal period. Leave it out — aeat assigns the period from each transaction's
+fiscal period. Leave it out. Cadrumo assigns the period from each transaction's
 date automatically.
 
 ## Add one transaction manually
@@ -281,7 +281,7 @@ movement into software and personal parts:
 aeat app ledger split <transaction-id> --child-amount 100.00 --child-description "Software business part" --child-amount 21.00 --child-description "Personal part" --reason "mixed receipt" --yes
 ```
 
-aeat replaces the original transaction with two separate entries — one for
+Cadrumo replaces the original transaction with two separate entries, one for
 each part. The split output prints one `Id de transacción hija` row per part,
 each carrying the short id and the full id; copy them. Classify each one
 separately:
@@ -298,7 +298,7 @@ split printed:
 aeat app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes
 ```
 
-You must include all the parts you split — aeat will not let you re-merge only
+You must include all the parts you split — Cadrumo will not let you re-merge only
 some of them.
 
 ## Remove, archive, stash, or reset ledger rows
@@ -445,4 +445,3 @@ ledger is not ready, use
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)
-

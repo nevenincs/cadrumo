@@ -17,6 +17,7 @@ from functools import lru_cache
 import i18n
 import yaml
 
+from .._config_state_root import FormerProductStateError
 from ..config import PROJECT_ROOT, _settings_override, load_settings
 from ..errors import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
@@ -166,7 +167,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
 def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
     try:
         settings = load_settings()
-    except (CoreError, KeyError, ValueError, AttributeError) as exc:
+    except (CoreError, FormerProductStateError, KeyError, ValueError, AttributeError) as exc:
         _log.debug(
             "i18n: unable to load settings for output language; falling back to default (%s)",
             type(exc).__name__,

@@ -1,6 +1,6 @@
 """Strict pydantic v2 record for the per-bucket plaintext manifest.
 
-The bucket manifest sits at ``<aeat-root>/buckets/<bucket-id>/manifest.toml``
+The bucket manifest sits at ``<cadrumo-root>/buckets/<bucket-id>/manifest.toml``
 and carries only non-sensitive metadata: the bucket identifier and label,
 creation and unlock timestamps, the Argon2id KDF parameters and salt
 (salt is public per Argon2 design), the recovery-enrollment flag, and a

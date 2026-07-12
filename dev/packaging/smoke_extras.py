@@ -62,7 +62,7 @@ def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
         "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
     }
-    executable = "cadrumo.exe" if sys.platform == "win32" else "cadrumo"
+    executable = "aeat.exe" if sys.platform == "win32" else "aeat"
     version = _run([str(_venv_bin(venv_path) / executable), "--version"], cwd=work_dir, env=env)
     if "cadrumo " not in version.stdout:
         raise SystemExit(f"unexpected cadrumo --version output in all-extras venv: {version.stdout!r}")

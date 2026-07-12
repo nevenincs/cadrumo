@@ -21,18 +21,18 @@ from dev.docs.apidocs import ApiStubManager
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_SRC_AEAT = _REPO_ROOT / "src" / "aeat"
+_SRC_CADRUMO = _REPO_ROOT / "src" / "cadrumo"
 _DOCS_API = _REPO_ROOT / "docs" / "api"
 
 
 def test_every_source_module_has_a_stub() -> None:
-    """Every in-scope ``src/aeat/`` module must have a ``docs/api/`` stub.
+    """Every in-scope ``src/cadrumo/`` module must have a ``docs/api/`` stub.
 
     The assertion fails with the symmetric difference so both missing stubs
     and orphaned stubs are reported in one shot.  Run
     ``python -m dev.docs.apidocs scaffold`` to regenerate the stub tree.
     """
-    manager = ApiStubManager(src_aeat=_SRC_AEAT, docs_api=_DOCS_API)
+    manager = ApiStubManager(src_cadrumo=_SRC_CADRUMO, docs_api=_DOCS_API)
     drift = manager.check()
 
     messages: list[str] = []

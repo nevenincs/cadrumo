@@ -55,8 +55,8 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from aeat.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from aeat.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enums import TermStatus
 from ._errors import TerminologyError, TerminologyValidationError
@@ -724,6 +724,6 @@ def _section(concept: ConceptRecord, language: OutputLanguage) -> LanguageSectio
 
 
 def _today() -> date:
-    from aeat.core.time import now
+    from cadrumo.core.time import now
 
     return now().date()

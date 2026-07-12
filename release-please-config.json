@@ -8,11 +8,11 @@
   "changelog-path": "CHANGELOG.md",
   "packages": {
     ".": {
-      "package-name": "aeat",
+      "package-name": "cadrumo",
       "release-type": "python",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        "src/aeat/__init__.py"
+        "src/cadrumo/__init__.py"
       ]
     }
   },

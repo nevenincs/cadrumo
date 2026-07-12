@@ -227,7 +227,7 @@ class MountedCommandFamily(BaseModel):
     root: RootSurfaceName
     child: str = Field(min_length=1)
     operator_question: str = Field(min_length=1)
-    service_owner: str = Field(pattern=r"^aeat\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
+    service_owner: str = Field(pattern=r"^cadrumo\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
     commands: tuple[str, ...] = Field(min_length=1)
     mutability: OperatorMutability
 
@@ -254,7 +254,7 @@ class ServiceOwner(BaseModel):
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
     capability: str = Field(min_length=1)
-    owner: str = Field(pattern=r"^aeat\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
+    owner: str = Field(pattern=r"^cadrumo\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
     notes: str = Field(min_length=1)
 
 

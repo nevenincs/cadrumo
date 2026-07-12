@@ -1,4 +1,4 @@
-# Releasing `aeat-cli`
+# Releasing Cadrumo
 
 Every release is HUMAN-GATED: no automation pushes, no tokens live in the
 repository. Two publish lanes exist, both human-triggered: the local
@@ -13,17 +13,19 @@ push.
 
 The project ships as three PyPI distributions built from the one source tree:
 
-- **`aeat-cli`** — the product (import package and CLI stay `aeat`): code, extracted legal text, normative html,
-  registry, terminology, and the agent harness. Slim (~40 MB), under PyPI's
+- **Cadrumo (`cadrumo`)** — the product distribution and import package; its
+  human command-line interface (CLI) is `aeat`. It ships code, extracted legal
+  text, normative HTML, registry, terminology, and the agent harness. Slim (~40 MB), under PyPI's
   100 MB default file cap; no size grant needed.
-- **`aeat-data-manuals`** and **`aeat-data-official`** — the corpus source
-  binaries (official AEAT PDF/XLS/XLSX), split along the corpus directory seam
+- **`cadrumo-data-manuals`** and **`cadrumo-data-official`** — the corpus source
+  binaries (official Agencia Estatal de Administración Tributaria (AEAT)
+  PDF/XLS/XLSX), split along the corpus directory seam
   into two sub-cap companions so each wheel stays under the 100 MB cap and NO
-  size grant is required: `aeat-data-manuals` ships `corpus/manuals` (~77 MB
-  wheel), `aeat-data-official` ships `corpus/aeat_official` + `corpus/normatives`
-  (~62 MB wheel). Both are built from `packaging/aeat_data_manuals/` and
-  `packaging/aeat_data_official/`, contribute subtrees to the same `aeat_data`
-  namespace package, and are consumed together via the `aeat-cli[corpus-sources]`
+  size grant is required: `cadrumo-data-manuals` ships `corpus/manuals` (~77 MB
+  wheel), `cadrumo-data-official` ships `corpus/aeat_official` + `corpus/normatives`
+  (~62 MB wheel). Both are built from `packaging/cadrumo_data_manuals/` and
+  `packaging/cadrumo_data_official/`, contribute subtrees to the same `cadrumo_data`
+  namespace package, and are consumed together via the `cadrumo[corpus-sources]`
   extra. Without both installed, the registry integrity gate surfaces a loud
   advisory and the `aeat app registry` verification verbs refuse with the
   install hint; every other surface is unaffected.
@@ -37,28 +39,28 @@ publish session only — never in a file, never in the repo.
 
 ## Name claim sequencing (first release)
 
-Each name is claimed by its first upload (the operator registered `aeat-cli` as
-the Trusted Publishing pending project). Because both data companions are sub-cap
+Each name is claimed by its first upload. The operator must register `cadrumo` as
+the Trusted Publishing pending project before publishing. Because both data companions are sub-cap
 there is no size grant on the critical path, so the order is simply:
 
-1. Publish the slim `aeat-cli` wheel first (`just publish yes-publish-to-pypi`).
+1. Publish the slim `cadrumo` wheel first (`just publish yes-publish-to-pypi`).
    It is under every default limit; this claims the name and creates the
    project.
 2. Publish both data companions (`just publish-data yes-publish-to-pypi`, which
-   builds and uploads `aeat-data-manuals` and `aeat-data-official` in one gated
+   builds and uploads `cadrumo-data-manuals` and `cadrumo-data-official` in one gated
    run). Each wheel is under the 100 MB cap, so the first upload of each claims
    its name and creates its project with no prior placeholder or grant needed.
 
 The plugin delivery is NOT blocked on the data companions: the plugin's server
-runs from the slim `aeat-cli` wheel; the companions only feed the registry
+runs from the slim `cadrumo` wheel; the companions only feed the registry
 verification verbs and byte-provenance surfaces.
 
 ## No file-size grant needed
 
 The earlier plan required a PyPI per-file size grant for a single ~139 MB
-`aeat-data` companion. That is retired: the corpus binaries are split along the
-directory seam into two sub-cap companions (`aeat-data-manuals` ≈ 77 MB,
-`aeat-data-official` ≈ 62 MB), each comfortably under PyPI's 100 MB default cap.
+`cadrumo-data` companion. That is retired: the corpus binaries are split along the
+directory seam into two sub-cap companions (`cadrumo-data-manuals` ≈ 77 MB,
+`cadrumo-data-official` ≈ 62 MB), each comfortably under PyPI's 100 MB default cap.
 No `github.com/pypi/support` limit-request issue is filed, and nothing in the
 release schedule waits on a grant. If a companion ever approaches the cap
 (corpus growth), rebalance the seam partition or carve a third companion rather
@@ -83,10 +85,10 @@ hotfix cycle times, rollback triggers) lives at
 2. **Version + changelog** — `just release` (dry-run preview), then
    `just release-apply` and follow its printed checklist: bump
    `.release-please-manifest.json`, `pyproject.toml`,
-   `src/aeat/__init__.py`, prepend `CHANGELOG.md`, commit
+   `src/cadrumo/__init__.py`, prepend `CHANGELOG.md`, commit
    `chore(release): vX.Y.Z`, tag `vX.Y.Z`. Also bump the synced version in
-   BOTH `packaging/aeat_data_manuals/pyproject.toml` and
-   `packaging/aeat_data_official/pyproject.toml` (the parity test fails the
+   BOTH `packaging/cadrumo_data_manuals/pyproject.toml` and
+   `packaging/cadrumo_data_official/pyproject.toml` (the parity test fails the
    suite if either drifts).
 3. **Gates** — `just packaging-smoke-dependencies`, `just check-dependencies`,
    `just packaging-smoke` (full lane on Linux/WSL; includes the split-install
@@ -101,17 +103,17 @@ hotfix cycle times, rollback triggers) lives at
    `docs/_release_checklist.yaml`).
 5. **Push the release commit + tag** — human decision only:
    `git push origin main --tags`.
-6. **Publish `aeat-cli`** — `UV_PUBLISH_TOKEN=... just publish
+6. **Publish Cadrumo** — `UV_PUBLISH_TOKEN=... just publish
    yes-publish-to-pypi`. Verify the version page renders on pypi.org and
-   `uvx --from aeat-cli==X.Y.Z aeat --version` resolves on a machine without the checkout.
+   `uvx --from cadrumo==X.Y.Z aeat --version` resolves on a machine without the checkout.
 7. **Publish the data companions** — `just publish-data yes-publish-to-pypi`
-   (builds and uploads both `aeat-data-manuals` and `aeat-data-official` in one
-   gated run; no grant needed). Verify `pip install "aeat-cli[corpus-sources]"`
+   (builds and uploads both `cadrumo-data-manuals` and `cadrumo-data-official` in one
+   gated run; no grant needed). Verify `pip install "cadrumo[corpus-sources]"`
    pulls both and `aeat app registry verify` runs clean.
 8. **Regenerate + push the plugin/marketplace** — materialise the plugin
    tree pinned to the just-published version
    (`uv run --no-sync aeat app agent --layout plugin -o <marketplace
-   checkout>/plugins/aeat`), run `claude plugin validate --strict` on it,
+   checkout>/plugins/cadrumo`), run `claude plugin validate --strict` on it,
    commit and push the marketplace repository. Installed plugins update on
    the version bump.
 9. **Announce** — update `docs/updates.md` per its critical-updates
@@ -121,18 +123,18 @@ hotfix cycle times, rollback triggers) lives at
 ## Release-candidate soak
 
 Every non-hotfix release soaks for 48-72 hours before the tag is pushed and
-published. `aeat-cli` is pre-1.0 and has not shipped its first PyPI release
-yet, so there is no separate `aeat-cli-beta` PyPI project to soak against
+published. Cadrumo is pre-1.0 and has not shipped its first PyPI release
+yet, so there is no separate `cadrumo-beta` PyPI project to soak against
 today; the soak vehicle is a local, tagged pre-release build reviewed before
 the real tag lands:
 
-1. Tag a local pre-release: `git tag -a vX.Y.Z-rc.1 -m "aeat vX.Y.Z-rc.1"`
+1. Tag a local pre-release: `git tag -a vX.Y.Z-rc.1 -m "Cadrumo vX.Y.Z-rc.1"`
    (not pushed).
 2. Run the full packaging-smoke matrix against it (`just packaging-smoke`
    on Linux/WSL; `just packaging-smoke-docker` for the clean-image lane).
 3. Install the built wheel into a scratch venv
-   (`uv venv /tmp/aeat-rc && uv pip install --python /tmp/aeat-rc/bin/python
-   dist/aeat_cli-*.whl`) and exercise the CLI manually against a scratch
+   (`uv venv /tmp/cadrumo-rc && uv pip install --python /tmp/cadrumo-rc/bin/python
+   dist/cadrumo-*.whl`) and exercise the `aeat` CLI manually against a scratch
    profile.
 4. Hold for 48-72 hours. Exit gates: the packaging-smoke matrix stays
    green, no `priority:P0-blocker` issue is opened against the RC build,
@@ -143,7 +145,7 @@ the real tag lands:
    `vX.Y.Z-rc.2`.
 
 Once the first stable PyPI release ships and there is a real user base to
-protect, promote this to a real `aeat-cli-beta` PyPI project (a genuine
+protect, promote this to a real `cadrumo-beta` PyPI project (a genuine
 pre-release channel Kent can opt into) rather than a purely local build.
 
 ## Rollback procedure

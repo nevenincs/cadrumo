@@ -1,0 +1,61 @@
+cadrumo.application package
+===========================
+
+.. automodule:: cadrumo.application
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.application.aggregation
+   cadrumo.application.auth
+   cadrumo.application.bienes_inversion
+   cadrumo.application.bucket_maintenance
+   cadrumo.application.calculations
+   cadrumo.application.command_search
+   cadrumo.application.corpus_search
+   cadrumo.application.evidence
+   cadrumo.application.export
+   cadrumo.application.filing
+   cadrumo.application.inventory
+   cadrumo.application.invoices
+   cadrumo.application.ledger
+   cadrumo.application.live
+   cadrumo.application.modelo
+   cadrumo.application.operator_surface
+   cadrumo.application.overview
+   cadrumo.application.portals
+   cadrumo.application.prorrata_register
+   cadrumo.application.registry
+   cadrumo.application.review
+   cadrumo.application.setup
+   cadrumo.application.storage
+   cadrumo.application.transactions
+   cadrumo.application.user_profile
+   cadrumo.application.verification
+   cadrumo.application.wizard
+   cadrumo.application.workflow
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.application._errors
+   cadrumo.application._workflow_review_models
+   cadrumo.application.config_reset
+   cadrumo.application.diagnostics
+   cadrumo.application.diagnostics_run_health
+   cadrumo.application.diagnostics_telemetry
+   cadrumo.application.preflight
+   cadrumo.application.provisioning
+   cadrumo.application.repair_integrity
+   cadrumo.application.state_projection
+   cadrumo.application.storage_write_policy

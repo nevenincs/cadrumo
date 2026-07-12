@@ -2,7 +2,7 @@
 
 Wrap ``sphinx-autobuild`` to serve the rendered handbook and rebuild
 incrementally whenever the narrative corpus (``docs/``) or the autodoc source
-tree (``src/aeat/``) changes. The Sphinx application stays warm between
+tree (``src/cadrumo/``) changes. The Sphinx application stays warm between
 rebuilds, so edit-to-refresh is a fraction of a cold ``just docs`` build.
 
 The server binds every interface (``0.0.0.0``) on a non-default port so a
@@ -25,7 +25,7 @@ refuses with an instructive message.
 Surfaces that the build itself rewrites are excluded from the watch set so a
 rebuild cannot trigger itself: ``docs/cli/`` is regenerated from the live
 command tree at ``builder-inited`` (see ``docs/conf.py``) and ``docs/_build``
-is the output tree. Editing a docstring under ``src/aeat/`` rebuilds the
+is the output tree. Editing a docstring under ``src/cadrumo/`` rebuilds the
 affected autodoc page; adding or removing a *module* still requires
 ``python -m dev.docs.apidocs scaffold`` to refresh the committed ``docs/api``
 stub set (per the aeat-docs-scaffolding-cli rule), which this server does not
@@ -130,7 +130,7 @@ def _ignore_patterns() -> list[str]:
     ``docs/cli`` exclusion is load-bearing: that tree is rewritten on every
     build, so watching it would loop the server on its own output. The pattern
     is anchored to ``docs/cli`` specifically so changes under the unrelated
-    ``src/aeat/entrypoints/cli`` source still rebuild the CLI reference.
+    ``src/cadrumo/entrypoints/cli`` source still rebuild the CLI reference.
 
     Returns:
         The ignore globs, in declaration order.
@@ -151,7 +151,7 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool) 
     """Build the ``sphinx-autobuild`` argument vector for the dev server.
 
     Args:
-        repo_root: Repository root containing ``docs/`` and ``src/aeat/``.
+        repo_root: Repository root containing ``docs/`` and ``src/cadrumo/``.
         host: Interface the server binds (``0.0.0.0`` serves every interface).
         port: TCP port the server listens on.
         open_browser: Whether to open a browser tab once the first build lands.
@@ -176,7 +176,7 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool) 
         # rebuild fires on the first detected change.
         "--no-initial",
         "--watch",
-        str(repo_root / "src" / "aeat"),
+        str(repo_root / "src" / "cadrumo"),
         "--host",
         host,
         "--port",
@@ -439,8 +439,8 @@ def _build_env(repo_root: Path) -> dict[str, str]:
     return {
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
-        "AEAT_DOCS_FORCE_DEFERRED_MODELS": "1",
-        "AEAT_DOCS_FORCE_CLI_REFERENCE": "1",
+        "CADRUMO_DOCS_FORCE_DEFERRED_MODELS": "1",
+        "CADRUMO_DOCS_FORCE_CLI_REFERENCE": "1",
     }
 
 
@@ -458,7 +458,7 @@ def _launch(
     print(f"Serving documentation on http://{probe_host}:{port}/ (Ctrl-C to stop).", flush=True)
     if host in _WILDCARD_PROBE_HOST:
         print(f"Bound to {host}:{port} — reachable from other hosts on the network.", flush=True)
-    print("Watching docs/ and src/aeat/; rebuilding on change.", flush=True)
+    print("Watching docs/ and src/cadrumo/; rebuilding on change.", flush=True)
     process = subprocess.Popen(command, cwd=repo_root, env=_build_env(repo_root))
     write_state(state_path, ServeState(pid=process.pid, host=host, port=port))
     try:

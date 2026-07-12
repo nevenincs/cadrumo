@@ -423,7 +423,7 @@ def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapsho
 def _registry_period(period: object) -> tuple[int, str]:
     if not isinstance(period, _Period):
         raise ModeloBuilderError(
-            "filing period must be an aeat.core.Period built from a filing year and bare registry token",
+            "filing period must be an cadrumo.core.Period built from a filing year and bare registry token",
         )
     return period.filing_year, period.registry_token
 

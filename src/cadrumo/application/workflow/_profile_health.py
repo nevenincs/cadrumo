@@ -218,7 +218,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         profile_total_keys=validation.total_keys,
         missing_required=validation.missing_required,
         next_action=(
-            "aeat app overview status" if validation.valid else f"aeat config profile edit {registered_pointer.label}"
+            "aeat app overview status"
+            if validation.valid
+            else f"aeat config profile edit {registered_pointer.label}"
         ),
     )
 

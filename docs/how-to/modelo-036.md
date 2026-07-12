@@ -14,7 +14,7 @@ You need:
 - An active profile - see [set up your taxpayer profile](profile-setup.md). The
   commands below refuse without one (`No hay un perfil activo`).
 - Your master-key passphrase. These commands open the encrypted store, so they
-  prompt for the passphrase (or read `AEAT_SECRET_PASSPHRASE` when set).
+  prompt for the passphrase (or read `CADRUMO_SECRET_PASSPHRASE` when set).
 - The date you filed the declaration at the sede.
 - Optional: the justificante - the receipt number the sede shows after you file.
 

@@ -112,11 +112,7 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
         ):
             return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
         return _FILING_BASELINE_PROFILE_PATHS
-    if (
-        modelo.strip() != Modelo.M100.value
-        or not income_categories
-        or declares_economic_activity
-    ):
+    if modelo.strip() != Modelo.M100.value or not income_categories or declares_economic_activity:
         return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
     return _FILING_BASELINE_PROFILE_PATHS
 

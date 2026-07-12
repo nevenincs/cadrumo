@@ -25,6 +25,18 @@ See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+from tempfile import gettempdir
+
+# Mirror src/cadrumo/conftest.py: point the Cadrumo storage root at a
+# process-private temp directory BEFORE any Cadrumo import resolves Settings.
+# The repo root also collects dev/** test trees that never traverse the
+# src/cadrumo conftest; without this, their module imports resolve the real
+# platform state root (which may hold retired former-product state and trip
+# the FormerProductStateError guard at collection time).
+os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(Path(gettempdir()) / f"cadrumo-pytest-{os.getpid()}"))
+
 import pytest
 
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract

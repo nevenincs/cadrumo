@@ -23,4 +23,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_clave_idp_root.label",
     purpose="entries.portal_clave_idp_root.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve IdP root page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the Cl@ve IdP root page."""

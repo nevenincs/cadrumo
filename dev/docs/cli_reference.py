@@ -46,6 +46,7 @@ import sys
 import textwrap
 from collections.abc import Mapping
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -82,14 +83,22 @@ _PATH_KEY_OVERRIDES: dict[str, str] = {
 }
 
 
-def _reference_subprocess_environment() -> dict[str, str]:
-    """Return a settings-free environment with English CLI output pinned."""
+def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
+    """Return a clean environment for an ``aeat`` CLI-reference subprocess.
+
+    Cadrumo language and local-storage settings are pinned after ambient
+    Cadrumo product and AEAT authority settings are removed.
+
+    Args:
+        storage_root: Isolated Cadrumo local-storage root for the subprocess.
+    """
     environment = {
         key: value
         for key, value in os.environ.items()
         if not key.upper().startswith(("AEAT_", "CADRUMO_"))
     }
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
     return environment
 
 
@@ -806,8 +815,6 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         RuntimeError: When the subprocess exits with a non-zero code, indicating
             a generation failure (e.g. a fallback surface was detected).
     """
-    env = _reference_subprocess_environment()
-
     code = textwrap.dedent(
         f"""
         from pathlib import Path
@@ -817,14 +824,15 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         """,
     )
 
-    result = subprocess.run(
-        [sys.executable, "-c", code],
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
-    )
+    with TemporaryDirectory(prefix="cadrumo-cli-reference-") as storage_root:
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            env=_reference_subprocess_environment(Path(storage_root)),
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
@@ -854,8 +862,6 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         RuntimeError: When the subprocess exits with a non-zero code,
             indicating that the CLI tree could not be materialised.
     """
-    env = _reference_subprocess_environment()
-
     code = textwrap.dedent(
         """
         import click
@@ -877,14 +883,15 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         """,
     )
 
-    result = subprocess.run(
-        [sys.executable, "-c", code],
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
-    )
+    with TemporaryDirectory(prefix="cadrumo-cli-reference-") as storage_root:
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            env=_reference_subprocess_environment(Path(storage_root)),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator

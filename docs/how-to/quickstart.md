@@ -21,7 +21,7 @@ reuses it for the rest of the session. To run without a prompt, set it in the
 environment first:
 
 ```bash
-export AEAT_SECRET_PASSPHRASE="your-passphrase"
+export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
 ```
 
 The CLI emits its help and messages in Spanish. The English text on this page

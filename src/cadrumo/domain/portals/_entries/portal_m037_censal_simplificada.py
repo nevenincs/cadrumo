@@ -35,4 +35,4 @@ ENTRY: PortalMetadata = build_entry(
         "entries.portal_m037_censal_simplificada.notes.1",
     ),
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the retired Modelo 037 procedure page."""
+"""Frozen :class:`cadrumo.domain.portals.PortalMetadata` for the retired Modelo 037 procedure page."""

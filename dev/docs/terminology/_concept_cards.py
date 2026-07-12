@@ -39,7 +39,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 
 from ..terminology_handbook import (
     ConceptDomain,
@@ -308,6 +308,6 @@ def _load_validated_handbook() -> TerminologyHandbook:
 
 
 def _bundled_legal_catalogue() -> object:
-    from aeat.domain.calculations.registry import bundled_authority
+    from cadrumo.domain.calculations.registry import bundled_authority
 
     return bundled_authority().catalogues.legal

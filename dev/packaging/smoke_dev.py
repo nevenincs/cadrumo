@@ -105,7 +105,7 @@ print("dev-imports-ok")
 def _assert_dev_cli(work_dir: Path, venv: Path) -> None:
     """Verify the non-editable project install exposes the AEAT console script."""
     version = _run([str(_venv_aeat(venv)), "--version"], cwd=work_dir)
-    if "aeat " not in version.stdout:
+    if "cadrumo " not in version.stdout:
         raise SystemExit(f"unexpected aeat --version output in dev venv: {version.stdout!r}")
 
 

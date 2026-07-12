@@ -1,6 +1,6 @@
 """Filesystem provisioning and path resolution for per-bucket directories.
 
-The per-bucket on-disk model lives at ``<aeat-root>/buckets/<bucket-id>/``
+The per-bucket on-disk model lives at ``<cadrumo-root>/buckets/<bucket-id>/``
 and carries exactly three subdirectories:
 
 - ``db/``    relational state (SQLite database files).
@@ -48,7 +48,7 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     """Resolve the typed paths for ``<root>/buckets/<bucket_id>/`` without IO.
 
     Args:
-        root: AEAT root directory (the parent of ``buckets/``).
+        root: Cadrumo storage root (the parent of ``buckets/``).
         bucket_id: The bucket identifier; must be non-empty.
 
     Returns:
@@ -81,7 +81,7 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
     ``<root>/buckets/`` directory is created lazily.
 
     Args:
-        root: AEAT root directory (the parent of ``buckets/``).
+        root: Cadrumo storage root (the parent of ``buckets/``).
         bucket_id: The bucket identifier; must be non-empty.
 
     Returns:

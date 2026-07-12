@@ -1,9 +1,10 @@
 # Read live AEAT data
 
-When you configure authentication, `aeat` can read your data from the Agencia
-Estatal de Administración Tributaria (AEAT). It never writes, files, or submits
-anything. Every live command is a read that saves a local copy for you to review.
-You remain the only one who files. To understand that boundary, see
+When you configure authentication, Cadrumo's `aeat` command can read your data
+from the Agencia Estatal de Administración Tributaria (AEAT). Cadrumo never
+writes, files, or submits anything. Every live command is a read that saves a
+local copy for you to review. You remain the only one who files. To understand
+that boundary, see
 [Recording a filing and the boundary](../explanation/recording-a-filing-and-the-boundary.md).
 
 ## Before you start
@@ -59,7 +60,7 @@ view, so you enter census facts by hand - see
 
 ## You don't set the live-tests variable
 
-`AEAT_LIVE_TESTS_ENABLED` is a developer setting. It gates the project's own live
+`CADRUMO_LIVE_TESTS_ENABLED` is a developer setting. It gates the project's own live
 integration test suite and has no role in normal use. Do not set it to use live
 reads. A live read in your shell needs only configured authentication and an
 active profile.
@@ -73,7 +74,7 @@ Cl@ve identity check, but the underlying cause is that authentication is not
 configured (the preflight reports `auth_configured=False`). Configure a provider
 first; see [Authenticate with AEAT](authenticate-with-aeat.md).
 
-The CLI prints its messages in Spanish. A typical refusal reads `Refused. La
+The `aeat` command prints its messages in Spanish. A typical refusal reads `Refused. La
 identidad de Cl@ve Móvil no coincide...` followed by a `-> Run` next step.
 
 If a read reports that the session expired, re-check authentication with

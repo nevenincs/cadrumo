@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_html_extractor.py -> parents[4] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_NORMATIVES = _REPO_ROOT / "src" / "aeat" / "_data" / "corpus" / "normatives"
+_NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives"
 
 # A real multi-article consolidated law (IVA) with a TOC link farm, bloque
 # anchors, and a sibling manifest carrying the BOE permalink.

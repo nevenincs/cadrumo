@@ -3,7 +3,7 @@
 The build-time RAG sweep trusts the index to reflect every extraction
 sidecar. The service watcher can miss bulk-written files (the documented
 staleness hole), so this gate asserts that no file the walker WOULD index
-under ``src/aeat/_data`` is absent from the index metadata. It is
+under ``src/cadrumo/_data`` is absent from the index metadata. It is
 deterministic and offline: it reads the on-disk ``code_index_meta.json`` and
 reuses the installed walker's own ``scan_files`` to compute the expected set,
 so the same gitignore / ``.vaultragignore`` / extension / size / binary

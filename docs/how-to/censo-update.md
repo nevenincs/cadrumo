@@ -24,7 +24,7 @@ You need:
   copy or from the AEAT sede.
 
 Every command on this page needs your master-key passphrase. The tool prompts
-for it, or set `AEAT_SECRET_PASSPHRASE` to run non-interactively. The tool's
+for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The tool's
 messages are in Spanish.
 
 If you have no profile yet, create one non-interactively with `--quiet` (a bare

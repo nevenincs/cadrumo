@@ -25,8 +25,8 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.core.resources import bundled_path
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.resources import bundled_path
 
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
 from ..terminology_handbook._enums import TermStatus

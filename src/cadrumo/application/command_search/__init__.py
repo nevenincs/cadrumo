@@ -1,4 +1,4 @@
-"""Semantic-ish discovery search over the aeat command surface.
+"""Semantic-ish discovery search over the cadrumo command surface.
 
 The MCP console advertises only an orientation core by default (ADR
 ``mcp-progressive-discovery`` P1); the long-tail verb universe is reached

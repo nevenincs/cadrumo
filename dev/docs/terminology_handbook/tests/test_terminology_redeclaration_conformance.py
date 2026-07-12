@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from cadrumo.core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.docs, pytest.mark.hex_entrypoint]
 

@@ -25,14 +25,14 @@ live run.
      disabled and named the enable command;
    - the persona `userConfig` option was detected — "1 userConfig option not
      yet set", configurable via `/plugin configure` or `--config KEY=VALUE`.
-5. **Server starts (dev-env proof).** The stdio `aeat-mcp` server passes the
+5. **Server starts (dev-env proof).** The stdio `cadrumo-mcp` server passes the
    real-client handshake conformance tests (initialize / tools-list / call
    round-trip): 2 passed.
 
 ## What remains blocked, and on what
 
 The installed plugin's `.mcp.json` launches the server as
-`uvx --from aeat==0.1.0 aeat-mcp`. Until the first `aeat` wheel is published
+`uvx --from cadrumo==0.1.0 cadrumo-mcp`. Until the first `cadrumo` wheel is published
 to PyPI (RELEASING.md, name-claim sequencing — an operator-gated step
 needing a PyPI account and scoped token), `uvx` cannot resolve that
 requirement on any machine, so the end-to-end

@@ -11,11 +11,11 @@ Manifests are plaintext JSON on disk (corpus material is plaintext;
 the manifest is the integrity gate, not the secrecy gate). Per-record
 fields are validated against path-traversal at construction.
 
-Operator workflow (via the ``aeat security verify-corpus`` CLI):
+Operator workflow (via the ``cadrumo security verify-corpus`` CLI):
 
-- ``aeat security verify-corpus --corpus manuals`` — re-walk the
+- ``cadrumo security verify-corpus --corpus manuals`` — re-walk the
   manuals root and exit non-zero with a per-file diff on drift.
-- ``aeat security verify-corpus --corpus manuals --regenerate``
+- ``cadrumo security verify-corpus --corpus manuals --regenerate``
   — re-walk and rewrite the manifest in place after intentional
   corpus updates.
 

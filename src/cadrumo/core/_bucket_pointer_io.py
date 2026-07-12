@@ -1,6 +1,6 @@
 """Atomic IO and selector resolution for the active-profile pointer file.
 
-The pointer file lives at ``<aeat-root>/active-profile`` and is the on-disk
+The pointer file lives at ``<cadrumo-root>/active-profile`` and is the on-disk
 default after the per-invocation / per-shell override path. The CLI ``--profile``
 flag is normalised into ``Settings.cadrumo_active_profile``, so this module's
 runtime branches are settings override first and pointer file second. The write
@@ -36,10 +36,10 @@ _POINTER_FILENAME = "active-profile"
 
 
 def pointer_path(root: Path) -> Path:
-    """Return the canonical ``active-profile`` pointer path under the AEAT root.
+    """Return the canonical ``active-profile`` pointer path under the Cadrumo root.
 
     Args:
-        root: AEAT local storage root.
+        root: Cadrumo local storage root.
 
     Returns:
         ``root / "active-profile"`` without touching the filesystem.
@@ -56,7 +56,7 @@ def read_pointer(root: Path) -> BucketPointer | None:
     reclassified as an absent pointer.
 
     Args:
-        root: AEAT local storage root directory that contains the
+        root: Cadrumo local storage root directory that contains the
             ``active-profile`` pointer file.
 
     Returns:
@@ -87,7 +87,7 @@ def resolve_active_bucket_id() -> str | None:
        :func:`~core.config.override_settings` block in tests).
        Per-shell override useful for CI, headless invocations, and the
        CLI ``--profile`` flag.
-    2. ``<aeat-root>/active-profile`` plaintext pointer file written by
+    2. ``<cadrumo-root>/active-profile`` plaintext pointer file written by
        ``profile create`` / ``config switch``. This is the canonical
        default for interactive sessions and resolves the chicken-and-egg
        defect where an encrypted state row could not be read without
@@ -160,11 +160,11 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     :func:`os.replace`; a crashed process therefore leaves either the
     previous good pointer or the new good pointer on disk, never a torn
     intermediate. The payload comes from
-    :meth:`~core._bucket_pointer.BucketPointer.to_toml`, and the AEAT root
+    :meth:`~core._bucket_pointer.BucketPointer.to_toml`, and the Cadrumo root
     is created lazily if absent.
 
     Args:
-        root: AEAT local storage root that will contain the pointer file.
+        root: Cadrumo local storage root that will contain the pointer file.
         pointer: Validated pointer record to serialise.
 
     Raises:

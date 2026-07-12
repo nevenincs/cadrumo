@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 
 from .. import (
     ConceptDomain,

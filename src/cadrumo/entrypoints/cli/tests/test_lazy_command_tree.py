@@ -1,9 +1,9 @@
-"""Lazy-subcommand-registration guards for the ``aeat`` CLI.
+"""Lazy-subcommand-registration guards for the ``cadrumo`` CLI.
 
-The AEAT command tree is wide: every leaf command module imports the
+The Cadrumo command tree is wide: every leaf command module imports the
 application layer and, transitively, the registry parse. Registering
-every subcommand eagerly made constructing the ``aeat`` app object
-import the whole tree — so ``aeat --version`` and ``aeat --help`` paid
+every subcommand eagerly made constructing the ``cadrumo`` app object
+import the whole tree — so ``cadrumo --version`` and ``cadrumo --help`` paid
 the full registry cost even though neither dispatches into a
 subcommand.
 
@@ -12,7 +12,7 @@ subcommand groups through :class:`LazySubcommand` loaders that import
 their module only when the subtree is first resolved. These tests are
 the structural guard for that contract:
 
-* a real subprocess cold start of ``aeat --version`` must complete well
+* a real subprocess cold start of ``cadrumo --version`` must complete well
   under the time a registry parse alone would cost; and
 * importing the CLI package, and invoking the ``--version`` / ``--help``
   surfaces, must not import the registry or any heavy command module.
@@ -33,7 +33,7 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# A cold ``aeat --version`` — fresh interpreter, no warm import cache —
+# A cold ``cadrumo --version`` — fresh interpreter, no warm import cache —
 # resolves in well under a second once the command tree is lazy. A
 # re-introduced eager registration pulls the ~0.6 s registry parse (and
 # its workflow / deadlines dependencies) into app construction, pushing
@@ -74,18 +74,18 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_version_cold_start_completes_under_budget() -> None:
-    """A fresh-interpreter ``aeat --version`` returns inside the budget.
+    """A fresh-interpreter ``cadrumo --version`` returns inside the budget.
 
     This spawns the real console entry point in a new process — paying
     interpreter startup and every import — so the assertion covers the
     operator-visible cold start, not a warm in-process invocation. The
-    ``main`` callable is the exact function the ``aeat`` console script
-    binds, invoked with ``argv`` set to ``["aeat", "--version"]``.
+    ``main`` callable is the exact function the ``cadrumo`` console script
+    binds, invoked with ``argv`` set to ``["cadrumo", "--version"]``.
     """
 
     code = """
         import sys
-        sys.argv = ["aeat", "--version"]
+        sys.argv = ["cadrumo", "--version"]
         from cadrumo.entrypoints.cli import main
         try:
             main()
@@ -97,9 +97,9 @@ def test_version_cold_start_completes_under_budget() -> None:
     elapsed = time.perf_counter() - start
 
     assert completed.returncode == 0, completed.stderr
-    assert "aeat" in completed.stdout
+    assert "cadrumo" in completed.stdout
     assert elapsed < _COLD_START_BUDGET_S, (
-        f"aeat --version cold start took {elapsed:.2f}s (budget {_COLD_START_BUDGET_S}s) — "
+        f"cadrumo --version cold start took {elapsed:.2f}s (budget {_COLD_START_BUDGET_S}s) — "
         "lazy subcommand registration likely regressed to an eager import"
     )
 
@@ -107,7 +107,7 @@ def test_version_cold_start_completes_under_budget() -> None:
 def test_importing_cli_package_does_not_import_registry() -> None:
     """Importing ``cadrumo.entrypoints.cli`` must not import the registry.
 
-    Constructing the ``aeat`` app object is import-only work. If it
+    Constructing the ``cadrumo`` app object is import-only work. If it
     pulls the registry or a heavy command module, every CLI surface —
     including ``--version`` — inherits that cost.
     """
@@ -134,7 +134,7 @@ def test_importing_cli_package_does_not_import_registry() -> None:
 
 @pytest.mark.parametrize("argv", [["--version"], ["--help"], []])
 def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
-    """``aeat`` (bare), ``aeat --version``, and ``aeat --help`` run without registry parse.
+    """``cadrumo`` (bare), ``cadrumo --version``, and ``cadrumo --help`` run without registry parse.
 
     State-free surfaces (version, help, and bare landing) short-circuit in the
     root callback before any subcommand is resolved, so no :class:`LazySubcommand`
@@ -158,7 +158,7 @@ def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
         stderr = StringIO()
         try:
             with redirect_stdout(stdout), redirect_stderr(stderr):
-                result = get_command(app).main(args={argv!r}, prog_name="aeat", standalone_mode=False)
+                result = get_command(app).main(args={argv!r}, prog_name="cadrumo", standalone_mode=False)
         except ClickExit as exit_:
             exit_code = exit_.exit_code
         else:
@@ -178,7 +178,7 @@ def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
 
     assert completed.returncode == 0, completed.stderr
     leaked = [line for line in completed.stdout.splitlines() if line.strip()]
-    assert leaked == [], f"`aeat {args_repr}` imported heavy modules it must avoid: {leaked}"
+    assert leaked == [], f"`cadrumo {args_repr}` imported heavy modules it must avoid: {leaked}"
 
 
 def test_dispatching_a_subcommand_loads_its_module() -> None:
@@ -207,7 +207,7 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
         stderr = StringIO()
         try:
             with redirect_stdout(stdout), redirect_stderr(stderr):
-                result = command.main(args=["app", "modelo", "--help"], prog_name="aeat", standalone_mode=False)
+                result = command.main(args=["app", "modelo", "--help"], prog_name="cadrumo", standalone_mode=False)
         except ClickExit as exit_:
             exit_code = exit_.exit_code
         else:

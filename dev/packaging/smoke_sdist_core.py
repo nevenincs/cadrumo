@@ -23,14 +23,14 @@ from .smoke_pip_core import _create_pip_venv, _install_artifact_with_pip
 
 
 def _build_sdist(repo_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the AEAT source distribution into the smoke work directory."""
+    """Build the Cadrumo source distribution into the smoke work directory."""
     sdist_dir = work_dir / "sdist"
     sdist_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=repo_root)
-    sdists = sorted(sdist_dir.glob("aeat_cli-*.tar.gz"))
+    sdists = sorted(sdist_dir.glob("cadrumo-*.tar.gz"))
     if len(sdists) != 1:
         names = [sdist.name for sdist in sdists]
-        raise SystemExit(f"expected exactly one aeat_cli sdist in {sdist_dir}; got {names!r}")
+        raise SystemExit(f"expected exactly one cadrumo sdist in {sdist_dir}; got {names!r}")
     return sdists[0]
 
 

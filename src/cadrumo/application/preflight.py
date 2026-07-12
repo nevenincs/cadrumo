@@ -243,8 +243,7 @@ def _probe_storage_root(settings: Settings) -> PreflightCheck:
             severity=HealthSeverity.ERROR,
             detail=f"no existing directory at or above the storage root {root}",
             remediation=(
-                f"create the storage root directory {root} or set "
-                "CADRUMO_LOCAL_STORAGE_ROOT to a writable path"
+                f"create the storage root directory {root} or set CADRUMO_LOCAL_STORAGE_ROOT to a writable path"
             ),
         )
     if not ancestor.is_dir():
@@ -282,7 +281,7 @@ def _probe_corpus(check_id: str, root: Path, label: str) -> PreflightCheck:
             healthy=False,
             severity=HealthSeverity.ERROR,
             detail=f"the bundled {label} corpus at {root} is unreadable: {type(exc).__name__}",
-            remediation="reinstall the aeat package so the bundled corpus data is present",
+            remediation="reinstall the cadrumo package so the bundled corpus data is present",
         )
     if not present:
         return PreflightCheck(
@@ -290,7 +289,7 @@ def _probe_corpus(check_id: str, root: Path, label: str) -> PreflightCheck:
             healthy=False,
             severity=HealthSeverity.ERROR,
             detail=f"the bundled {label} corpus is missing or empty at {root}",
-            remediation="reinstall the aeat package so the bundled corpus data is present",
+            remediation="reinstall the cadrumo package so the bundled corpus data is present",
         )
     return PreflightCheck(
         check=check_id,
@@ -317,8 +316,7 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
             severity=HealthSeverity.WARN,
             detail="configuration is valid but no master-key passphrase is configured (locked store)",
             remediation=(
-                "set CADRUMO_SECRET_PASSPHRASE for non-interactive access, "
-                "or unlock interactively when prompted"
+                "set CADRUMO_SECRET_PASSPHRASE for non-interactive access, or unlock interactively when prompted"
             ),
         )
     return PreflightCheck(

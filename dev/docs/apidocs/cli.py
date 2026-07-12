@@ -20,7 +20,7 @@ def _default_manager() -> ApiStubManager:
     # cli.py lives at dev/docs/apidocs/cli.py; parents[3] is the repo root.
     repo_root = Path(__file__).resolve().parents[3]
     return ApiStubManager(
-        src_aeat=repo_root / "src" / "aeat",
+        src_cadrumo=repo_root / "src" / "cadrumo",
         docs_api=repo_root / "docs" / "api",
     )
 
@@ -32,7 +32,7 @@ def scaffold(
         typer.Option("--check", help="Check for drift without writing; exit non-zero on any drift."),
     ] = False,
 ) -> None:
-    """Sync ``docs/api/*.rst`` stubs with the current ``src/aeat/`` module tree."""
+    """Sync ``docs/api/*.rst`` stubs with the current ``src/cadrumo/`` module tree."""
     manager = _default_manager()
     if check:
         drift = manager.check()
