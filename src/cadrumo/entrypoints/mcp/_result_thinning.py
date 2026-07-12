@@ -46,7 +46,7 @@ class ThinnedArray(BaseModel):
     """One declared bulk array a verb moves out of ``structuredContent``.
 
     ``result_key`` is the array's key under ``envelope["result"]``;
-    ``resource_kind`` is the ``aeat://`` authority the link addresses; ``uri_id_key``
+    ``resource_kind`` selects the canonical Cadrumo resource URI kind; ``uri_id_key``
     is the sibling ``result`` field whose value identifies the persisted record the
     read handler resolves (a calculation-revision id, a bucket id). Thinning pops
     ``result_key`` and replaces it with a ``{result_key}_resource`` URI plus a

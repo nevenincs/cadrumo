@@ -38,16 +38,14 @@ def _invoke(args: list[str]):
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
     base_settings = Settings.model_validate({})
-    env = {
-        key: value
-        for key, value in os.environ.items()
-        if not key.upper().startswith(("AEAT_", "CADRUMO_"))
-    }
+    env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("AEAT_", "CADRUMO_"))}
     setting_env = str.upper
     env.update(
         {
             setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.FILE.value,
-            setting_env("cadrumo_secret_passphrase"): (base_settings.cadrumo_dev_test_database_password.get_secret_value()),
+            setting_env("cadrumo_secret_passphrase"): (
+                base_settings.cadrumo_dev_test_database_password.get_secret_value()
+            ),
             setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "secrets"),
             setting_env("cadrumo_local_storage_root"): str(tmp_path / "storage"),
             setting_env("cadrumo_token_dir"): str(tmp_path / "tokens"),
@@ -63,11 +61,11 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
     return env
 
 
-def _installed_aeat_executable() -> Path:
+def _installed_cadrumo_executable() -> Path:
     """Return the CLI script installed beside the active test interpreter."""
     suffix = ".exe" if os.name == "nt" else ""
-    executable = Path(sys.executable).with_name(f"aeat{suffix}")
-    assert executable.is_file(), f"the aeat console script must be installed at {executable}"
+    executable = Path(sys.executable).with_name(f"cadrumo{suffix}")
+    assert executable.is_file(), f"the cadrumo console script must be installed at {executable}"
     return executable
 
 
@@ -75,7 +73,7 @@ def _command_path_for_help_probe(command: str) -> list[str] | None:
     if " -> " in command or "rejected" in command:
         return None
     tokens = command.split()
-    assert tokens[0] == "aeat"
+    assert tokens[0] == "cadrumo"
     return [token for token in tokens[1:] if token.upper() != token]
 
 
@@ -137,10 +135,10 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
 
 
 def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -> None:
-    aeat_exe = _installed_aeat_executable()
+    cadrumo_exe = _installed_cadrumo_executable()
 
     result = subprocess.run(
-        [aeat_exe],
+        [cadrumo_exe],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),
         capture_output=True,
@@ -168,7 +166,7 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
     assert uv_exe is not None
 
     result = subprocess.run(
-        [uv_exe, "run", "--no-sync", "aeat", "--help"],
+        [uv_exe, "run", "--no-sync", "cadrumo", "--help"],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),
         capture_output=True,
@@ -187,12 +185,18 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
     assert "program not found" not in combined_output
 
 
-@pytest.mark.parametrize("arguments", [("--help",), ("config", "--help")])
-def test_installed_console_help_does_not_adopt_former_product_state(
-    tmp_path: Path, arguments: tuple[str, ...]
-) -> None:
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ("--help",),
+        ("app", "--help"),
+        ("config", "--help"),
+        ("config", "profile", "--help"),
+    ],
+)
+def test_installed_console_help_does_not_adopt_former_product_state(tmp_path: Path, arguments: tuple[str, ...]) -> None:
     """Help remains available when Cadrumo correctly refuses legacy state."""
-    aeat_exe = _installed_aeat_executable()
+    cadrumo_exe = _installed_cadrumo_executable()
     former_root = tmp_path / "former-product-state"
     former_root.mkdir()
     with sqlite3.connect(former_root / "aeat.db"):
@@ -201,7 +205,7 @@ def test_installed_console_help_does_not_adopt_former_product_state(
     env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(former_root)
 
     result = subprocess.run(
-        [aeat_exe, *arguments],
+        [cadrumo_exe, *arguments],
         cwd=Path.cwd(),
         env=env,
         capture_output=True,
@@ -214,16 +218,45 @@ def test_installed_console_help_does_not_adopt_former_product_state(
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined_output
     assert "FormerProductStateError" not in combined_output
-    assert "Cadrumo" in result.stdout
+    assert "cadrumo" in result.stdout
+    if arguments == ("--help",):
+        assert "Cadrumo" in result.stdout
+
+
+def test_installed_console_refuses_former_product_state_without_a_traceback(tmp_path: Path) -> None:
+    """A normal command routes the hard state refusal through the CLI boundary."""
+    cadrumo_exe = _installed_cadrumo_executable()
+    former_root = tmp_path / "former-product-state"
+    former_root.mkdir()
+    with sqlite3.connect(former_root / "aeat.db"):
+        pass
+    env = _console_env(tmp_path)
+    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(former_root)
+
+    result = subprocess.run(
+        [cadrumo_exe, "config", "profile", "list"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    combined_output = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode != 0
+    assert "Traceback" not in combined_output
+    assert "Cadrumo detected an incompatible former-product database" in combined_output
 
 
 def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: Path) -> None:
-    aeat_exe = _installed_aeat_executable()
+    cadrumo_exe = _installed_cadrumo_executable()
     env = _console_env(tmp_path)
 
     create = subprocess.run(
         [
-            aeat_exe,
+            cadrumo_exe,
             "config",
             "profile",
             "create",
@@ -265,7 +298,7 @@ def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: 
     assert create.returncode == 0, combined_create
 
     logs = subprocess.run(
-        [aeat_exe, "config", "repair", "logs"],
+        [cadrumo_exe, "config", "repair", "logs"],
         cwd=Path.cwd(),
         env=env,
         capture_output=True,
@@ -279,7 +312,7 @@ def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: 
     assert str(tmp_path / "storage" / "logs") in combined_logs
 
     listed = subprocess.run(
-        [aeat_exe, "config", "profile", "list"],
+        [cadrumo_exe, "config", "profile", "list"],
         cwd=Path.cwd(),
         env=env,
         capture_output=True,
@@ -294,10 +327,10 @@ def test_installed_console_profile_create_honors_isolated_storage_env(tmp_path: 
 
 
 def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_path: Path) -> None:
-    aeat_exe = _installed_aeat_executable()
+    cadrumo_exe = _installed_cadrumo_executable()
 
     result = subprocess.run(
-        [aeat_exe, "config", "profile", "create", "operator"],
+        [cadrumo_exe, "config", "profile", "create", "operator"],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),
         capture_output=True,

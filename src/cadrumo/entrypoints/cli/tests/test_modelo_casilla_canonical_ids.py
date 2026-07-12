@@ -1,6 +1,6 @@
 """Regression tests for canonical ``--casilla`` id enforcement.
 
-Drives the real ``aeat`` CLI against an isolated real-session backend.
+Drives the real ``cadrumo`` CLI against an isolated real-session backend.
 No mocks. The tests exercise canonical casilla-id validation through the
 full ``work calculate`` command path.
 

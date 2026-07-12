@@ -1,6 +1,6 @@
 """Regression tests for the modelo / bindings discovery defect cluster.
 
-Drives the real ``aeat`` CLI against an isolated encrypted backend to
+Drives the real ``cadrumo`` CLI against an isolated encrypted backend to
 pin the modelo / bindings discovery findings reported by the persona
 fleet:
 

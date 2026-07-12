@@ -1,23 +1,25 @@
-"""Real-client handshake conformance floor: initialize, tools-list, one call.
+"""Real-client handshake conformance floor across every advertised MCP surface.
 
 The floor beneath the live subagent harness (decision record R7): a real MCP client can
-initialize a session with the real server, list its tools, and round-trip one
-read-only call. The primary test uses the SDK's in-process memory transport
-against ``build_server`` for CI determinism; a second test spawns a true
-``cadrumo-mcp`` server subprocess and drives it over stdio through the live harness,
-proving the same round-trip over the real transport.
+initialize a session with the real server, list its resources, prompts, and tools,
+and round-trip one read-only call. The primary test uses the SDK's in-process
+memory transport against ``build_server`` for focused diagnostics; a second test
+spawns the installed/current ``cadrumo-mcp`` executable and drives it through a
+real SDK client over stdio, including orderly client and server shutdown.
 """
 
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import Coroutine
 
 import mcp.types as mcp_types
 import pytest
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
-from ....agent.eval import LiveCallTool, ScriptedPersonaDriver, run_live_session
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._server import build_server
@@ -37,7 +39,7 @@ async def _initialize_list_and_call() -> tuple[list[str], mcp_types.CallToolResu
         # tools-list proves the session negotiated and is live.
         listed = await session.list_tools()
         names = [tool.name for tool in listed.tools]
-        result = await session.call_tool(tool_name_for_command("contract"), {})
+        result = await session.call_tool(HARNESS_LOAD_TOOL, {})
         return names, result
 
 
@@ -47,27 +49,59 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
     assert HARNESS_LOAD_TOOL in names
     assert {"search", "execute"} <= set(names)
     assert tool_name_for_command("contract") in names
-    # The read-only call round-trips a non-error envelope for the contract command.
+    # The shipped read-only floor tool avoids depending on a second executable.
     assert result.isError is False
-    assert result.structuredContent is not None
-    assert result.structuredContent.get("command") == "contract"
+    assert result.content
 
 
-def test_stdio_subprocess_client_round_trips_a_read_only_call() -> None:
-    descriptors = build_tool_descriptors()
-    command_key_by_tool = {tool_name_for_command(d.command_key): d.command_key for d in descriptors}
-    command_key_by_tool[HARNESS_LOAD_TOOL] = ""
-    driver = ScriptedPersonaDriver([LiveCallTool(tool_name=HARNESS_LOAD_TOOL, arguments_json="{}")])
-    trajectory = run_live_session(
-        ["cadrumo-mcp"],
-        persona="verifier",
-        session_id="handshake-conformance",
-        driver=driver,
-        command_key_by_tool=command_key_by_tool,
+async def _stdio_handshake() -> dict[str, object]:
+    params = StdioServerParameters(
+        command="cadrumo-mcp",
+        env={**os.environ, "CADRUMO_MCP_PERSONA": "verifier"},
     )
-    assert len(trajectory.tool_calls) == 1
-    call = trajectory.tool_calls[0]
-    assert call.tool_name == HARNESS_LOAD_TOOL
-    assert call.is_error is False
-    # The floor tool returns the operating layer as text over the real transport.
-    assert call.result_text
+    async with (
+        stdio_client(params) as (read_stream, write_stream),
+        ClientSession(read_stream, write_stream) as session,
+    ):
+        initialized = await session.initialize()
+        resources = await session.list_resources()
+        templates = await session.list_resource_templates()
+        prompts = await session.list_prompts()
+        tools = await session.list_tools()
+        call = await session.call_tool(HARNESS_LOAD_TOOL, {})
+        return {
+            "server_name": initialized.serverInfo.name,
+            "resource_uris": tuple(str(item.uri) for item in resources.resources),
+            "template_uris": tuple(item.uriTemplate for item in templates.resourceTemplates),
+            "prompt_names": tuple(item.name for item in prompts.prompts),
+            "tool_names": tuple(item.name for item in tools.tools),
+            "call": call,
+        }
+
+
+def test_stdio_subprocess_client_proves_cadrumo_identity_and_round_trip() -> None:
+    observed = _run(_stdio_handshake())
+    assert observed["server_name"] == "cadrumo"
+
+    resource_uris = observed["resource_uris"]
+    template_uris = observed["template_uris"]
+    prompt_names = observed["prompt_names"]
+    tool_names = observed["tool_names"]
+    assert isinstance(resource_uris, tuple)
+    assert isinstance(template_uris, tuple)
+    assert isinstance(prompt_names, tuple)
+    assert isinstance(tool_names, tuple)
+    assert resource_uris and all(uri.startswith("cadrumo://") for uri in resource_uris)
+    assert template_uris and all(uri.startswith("cadrumo://") for uri in template_uris)
+    assert "cadrumo-empezar" in prompt_names
+    assert HARNESS_LOAD_TOOL in tool_names
+    assert any(name.startswith("cadrumo_") for name in tool_names)
+
+    former_identity = "aeat"
+    identity_values = (str(observed["server_name"]), *resource_uris, *template_uris, *prompt_names, *tool_names)
+    assert not any(former_identity in value.casefold() for value in identity_values)
+
+    call = observed["call"]
+    assert isinstance(call, mcp_types.CallToolResult)
+    assert call.isError is False
+    assert call.content

@@ -250,7 +250,10 @@ def test_work_runs_localizes_one_persisted_builder_refusal_without_rewriting_it(
     ):
         text_result = invoke_cached_cli(["--language", language, "app", "modelo", "work", "runs"])
         assert text_result.exit_code == 0, text_result.output
-        assert "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\tnext_action" in text_result.output
+        assert (
+            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\tnext_action"
+            in text_result.output
+        )
         assert summary_prefix in text_result.output
         assert action_prefix in text_result.output
         assert "Draft build refused:" not in text_result.output

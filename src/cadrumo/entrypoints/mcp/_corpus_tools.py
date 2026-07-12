@@ -1,9 +1,9 @@
-"""The ``aeat_corpus_search`` grounding tool: hybrid search over the legal corpus.
+"""The ``cadrumo_corpus_search`` grounding tool: hybrid search over the legal corpus.
 
 ADR R3's grounding surface reaches the model as a read-only console tool that
 searches the bundled BOE/AEAT corpus and returns grounded hits — each carrying
 its ``corpus_ref``, title, a verbatim snippet, the fused relevance score, and
-an ``aeat://corpus/{ref}`` URI a resources-capable client can read to pull the
+a ``cadrumo://corpus/{ref}`` URI a resources-capable client can read to pull the
 full verbatim text. An exact citation id short-circuits straight to the
 resolved authoritative text.
 
@@ -31,10 +31,10 @@ if TYPE_CHECKING:
     from mcp.types import Tool
 
 #: The grounding tool's MCP name (the ``corpus.search`` verb, per the
-#: ``aeat_<key>`` convention).
-CORPUS_SEARCH_TOOL = "aeat_corpus_search"
+#: ``cadrumo_<key>`` convention).
+CORPUS_SEARCH_TOOL = "cadrumo_corpus_search"
 
-_CORPUS_URI_PREFIX = "aeat://corpus/"
+_CORPUS_URI_PREFIX = "cadrumo://corpus/"
 _SNIPPET_MAX = 280
 _DEFAULT_LIMIT = 8
 _MAX_LIMIT = 50
@@ -43,7 +43,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 
 
 def corpus_uri(corpus_ref: str) -> str:
-    """Render the ``aeat://corpus/<ref>`` URI for a corpus reference."""
+    """Render the ``cadrumo://corpus/<ref>`` URI for a corpus reference."""
     return f"{_CORPUS_URI_PREFIX}{corpus_ref}"
 
 
@@ -170,7 +170,7 @@ def build_corpus_search_tool() -> Tool:
     reads the bundled corpus and never mutates state.
 
     Returns:
-        The ``aeat_corpus_search`` :class:`~mcp.types.Tool` object.
+        The ``cadrumo_corpus_search`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 
@@ -178,7 +178,7 @@ def build_corpus_search_tool() -> Tool:
         name=CORPUS_SEARCH_TOOL,
         description=(
             "Search the bundled BOE/AEAT legal corpus and terminology for grounding. "
-            "Returns ranked hits with a verbatim snippet and an aeat://corpus/{ref} URI "
+            "Returns ranked hits with a verbatim snippet and a cadrumo://corpus/{ref} URI "
             "resolving the full authoritative text; an exact citation id resolves directly."
         ),
         inputSchema={

@@ -40,7 +40,7 @@ def test_plugin_layout_emits_envelope_and_schema_valid_tree(tmp_path: Path) -> N
     assert envelope["status"] == "success"
     payload = envelope["result"]
     assert payload["layout"] == "plugin"
-    assert payload["plugin_name"] == "aeat"
+    assert payload["plugin_name"] == "cadrumo"
     assert payload["version"]
     assert payload["skills_written"] >= 1
     assert payload["agents_written"] >= 1

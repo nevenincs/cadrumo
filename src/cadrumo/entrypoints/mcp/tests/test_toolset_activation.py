@@ -99,7 +99,7 @@ def test_activating_a_toolset_widens_the_advertised_surface() -> None:
     async def _drive() -> None:
         before = await _list_names()
         # The core surface does not advertise the long-tail ledger verbs.
-        assert "aeat_ledger_add" not in before
+        assert "cadrumo_ledger_add" not in before
         assert "toolsets" in before
 
         request = CallToolRequest(
@@ -111,8 +111,8 @@ def test_activating_a_toolset_widens_the_advertised_surface() -> None:
 
         after = await _list_names()
         # Activation widened the surface: ledger verbs now advertised, core kept.
-        assert "aeat_ledger_add" in after
-        assert "aeat_overview_status" in after
+        assert "cadrumo_ledger_add" in after
+        assert "cadrumo_overview_status" in after
         assert before < after
 
     anyio.run(_drive)

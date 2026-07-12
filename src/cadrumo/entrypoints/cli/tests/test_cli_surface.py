@@ -1,4 +1,4 @@
-"""Integration tests for the user-facing ``aeat`` CLI.
+"""Integration tests for the user-facing ``cadrumo`` CLI.
 
 These tests assert that every command namespace exists, that the thin
 transport handlers route into the application layer, and that the

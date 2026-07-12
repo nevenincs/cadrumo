@@ -38,7 +38,7 @@ _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 # subprocess - the identity refusal and that confirmation refusal are distinct
 # texts, so "gate cleared" is asserted by the identity refusal being absent.
 _MUTATING_KEY = "ledger.export"
-_MUTATING_TOOL = "aeat_ledger_export"
+_MUTATING_TOOL = "cadrumo_ledger_export"
 _IDENTITY_READ_KEY = "overview.status"
 
 

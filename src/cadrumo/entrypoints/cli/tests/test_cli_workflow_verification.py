@@ -15,7 +15,7 @@ from typer.core import TyperGroup
 from ....application.operator_surface import get_operator_surface_contract
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _assert_is_command_group(value: object) -> None:
     """isinstance check that recognises typer's vendored Click hierarchy.
 
-    ``aeat_click_command()`` and ``get_command`` return ``typer.core.TyperGroup``
+    ``cadrumo_click_command()`` and ``get_command`` return ``typer.core.TyperGroup``
     instances whose MRO is ``TyperGroup -> typer._click.core.Command -> ABC``
     and never descends from the upstream ``click.Group``, so a bare
     ``isinstance(value, click.Group)`` is False. Derive the vendored
@@ -43,7 +43,7 @@ def _assert_is_command_group(value: object) -> None:
 def _as_group(command: object) -> TyperGroup:
     """Narrow a resolved command to the vendored ``TyperGroup``.
 
-    The AEAT tree is the vendored Typer hierarchy
+    The Cadrumo tree is the vendored Typer hierarchy
     (``AeatTyperGroup -> typer.core.TyperGroup``), which does not descend from
     upstream ``click.Group``; ``TyperGroup`` is the correct narrow target and
     carries the typed ``get_command`` / ``list_commands`` surface.
@@ -99,7 +99,7 @@ def _mounted_child_names(root_name: str) -> set[str]:
     subcommands alike.
     """
 
-    root_group = _as_group(aeat_click_command())
+    root_group = _as_group(cadrumo_click_command())
     group = _as_group(root_group.get_command(typer.Context(root_group), root_name))
     return set(group.list_commands(typer.Context(group)))
 
@@ -125,7 +125,7 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
     """First-run configuration is the wizard flow, not a parallel interface."""
 
-    root_group = _as_group(aeat_click_command())
+    root_group = _as_group(cadrumo_click_command())
     config_group = _as_group(root_group.get_command(typer.Context(root_group), "config"))
     profile_group = _as_group(config_group.get_command(typer.Context(config_group), "profile"))
     create_command = profile_group.get_command(typer.Context(profile_group), "create")

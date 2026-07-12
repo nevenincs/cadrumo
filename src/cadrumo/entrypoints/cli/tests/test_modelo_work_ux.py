@@ -1,6 +1,6 @@
 """End-to-end CLI verification for the modelo-work UX cluster.
 
-Drives the real ``aeat`` CLI against an isolated encrypted backend to
+Drives the real ``cadrumo`` CLI against an isolated encrypted backend to
 pin the modelo-work findings reported by the persona fleet:
 
 * ``work history`` records the work-unit creation event, so the audit

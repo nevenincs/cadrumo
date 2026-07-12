@@ -1,4 +1,4 @@
-"""The ``aeat_terminology_search`` tool: look up taxpayer-facing tax vocabulary.
+"""The ``cadrumo_terminology_search`` tool: look up taxpayer-facing tax vocabulary.
 
 ADR R3's grounding surface has a second half: the bundled Terminology Handbook,
 the ratified taxpayer/operator vocabulary. This tool lets the model resolve a
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from mcp.types import Tool
 
 #: The terminology tool's MCP name (the ``terminology.search`` verb).
-TERMINOLOGY_SEARCH_TOOL = "aeat_terminology_search"
+TERMINOLOGY_SEARCH_TOOL = "cadrumo_terminology_search"
 
 _DEFAULT_LIMIT = 8
 _MAX_LIMIT = 25
@@ -111,7 +111,7 @@ def build_terminology_search_tool() -> Tool:
     ``cadrumo[agent]`` extra. Annotated ``readOnlyHint`` / ``idempotentHint``.
 
     Returns:
-        The ``aeat_terminology_search`` :class:`~mcp.types.Tool` object.
+        The ``cadrumo_terminology_search`` :class:`~mcp.types.Tool` object.
     """
     from mcp.types import Tool, ToolAnnotations
 

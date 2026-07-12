@@ -127,6 +127,13 @@ def test_refusal_messages_interpolate_the_command() -> None:
     assert blocked != no_channel
 
 
+def test_no_channel_refusal_names_the_canonical_product_cli() -> None:
+    no_channel = refusal_message(ConfirmRoute.REFUSE_NO_CHANNEL, command_key=_HANDOFF)
+
+    assert "Cadrumo CLI" in no_channel
+    assert "aeat CLI" not in no_channel
+
+
 # --- H8: no secret ever rides an MCP elicitation channel -------------------
 #
 # The policy records the decided stance: secrets

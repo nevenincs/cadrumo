@@ -165,8 +165,8 @@ def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> 
     )
 
     assert result.exit_code == 0, result.output
-    assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in result.output
-    assert f"{_NEXT_LABEL}\taeat app modelo work create" not in result.output
+    assert f"{_NEXT_LABEL}\tcadrumo app modelo describe 210" in result.output
+    assert f"{_NEXT_LABEL}\tcadrumo app modelo work create" not in result.output
 
 
 def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registration() -> None:

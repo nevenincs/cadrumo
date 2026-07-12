@@ -114,9 +114,7 @@ def test_refused_verification_report_next_action_line_uses_selected_language(
     )
 
     with override_settings(cadrumo_output_language=language):
-        next_action_line = next(
-            line for line in _verification_report_lines(report) if line.startswith("next_action\t")
-        )
+        next_action_line = next(line for line in _verification_report_lines(report) if line.startswith("next_action\t"))
 
     assert expected_phrase in next_action_line
     assert "Review the verification report" not in next_action_line

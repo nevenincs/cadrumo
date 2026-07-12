@@ -26,7 +26,7 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
 
 
 def test_root_does_not_register_bare_reconcile_alias() -> None:
-    """`aeat reconcile` is not a root verb; reconcile only lives
+    """`cadrumo reconcile` is not a root verb; reconcile only lives
     under `aeat app modelo`."""
 
     result = invoke_cached_cli(["reconcile", "--help"])
@@ -58,8 +58,8 @@ def test_modelo_audit_export_remains_distinct_from_modelo_export() -> None:
 
 
 def test_root_does_not_register_bare_audit_alias() -> None:
-    """`aeat audit` is not a root verb. The evidence-bundle contract
-    explicitly forbids root `aeat audit` or `aeat run` commands; the
+    """`cadrumo audit` is not a root verb. The evidence-bundle contract
+    explicitly forbids root `cadrumo audit` or `cadrumo run` commands; the
     audit surface only lives under `aeat app modelo audit`."""
 
     result = invoke_cached_cli(["audit", "--help"])
@@ -67,7 +67,7 @@ def test_root_does_not_register_bare_audit_alias() -> None:
 
 
 def test_root_does_not_register_bare_run_alias() -> None:
-    """`aeat run` is not a root verb per the evidence-bundle contract.
+    """`cadrumo run` is not a root verb per the evidence-bundle contract.
     Replay belongs under `aeat app modelo audit replay`, never at
     the root."""
 

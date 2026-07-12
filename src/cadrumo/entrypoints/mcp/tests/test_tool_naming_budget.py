@@ -1,7 +1,7 @@
 """Every prefixed MCP tool name fits the client budget.
 
 A Claude plugin prepends ``mcp__plugin_<plugin>_<server>__`` to every tool name;
-with the plugin and server both named ``aeat`` that prefix is 23 characters, so a
+with the plugin and server both named ``cadrumo`` that prefix is 29 characters, so a
 long command key can push the client-visible name past the practical 64-char
 ceiling. This gate asserts every exposed command's prefixed name is within budget
 (declared short forms shrink the few that would overflow), that the short forms

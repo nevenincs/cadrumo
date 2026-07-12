@@ -195,7 +195,8 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8") for path in sorted((PROJECT_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
+        path.read_text(encoding="utf-8")
+        for path in sorted((PROJECT_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
     )
     forbidden_cli_tokens = (
         "CsvProvider",
@@ -343,14 +344,14 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
 
 
 def test_aeat_workflow_root_command_is_unknown() -> None:
-    """`aeat workflow ...` is not a registered root: workflow orchestration is
+    """`cadrumo workflow ...` is not a registered root: workflow orchestration is
     folded under `aeat app modelo`."""
     result = invoke_cached_cli(["workflow", "--help"])
     assert result.exit_code != 0
 
 
 def test_aeat_run_root_command_is_unknown() -> None:
-    """`aeat run ...` is not a registered root: the redesigned CLI exposes
+    """`cadrumo run ...` is not a registered root: the redesigned CLI exposes
     exactly two roots — `aeat config` and `aeat app`."""
     result = invoke_cached_cli(["run", "--help"])
     assert result.exit_code != 0

@@ -6004,7 +6004,7 @@ mcp:
         tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
       no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
         támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
-        tud kérdezni, vagy futtasd a megfelelő aeat parancsot közvetlenül a terminálban.
+        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI parancsot közvetlenül a terminálban.
   faithfulness:
     advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
       hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított

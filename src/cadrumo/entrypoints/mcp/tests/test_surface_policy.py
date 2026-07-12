@@ -98,10 +98,10 @@ def test_built_server_advertises_core_by_default_and_full_on_opt_out() -> None:
         assert always_on <= core
         assert always_on <= full
         # CORE advertises the orientation verb but NOT the long-tail verb.
-        assert "aeat_overview_status" in core
-        assert "aeat_ledger_add" not in core
+        assert "cadrumo_overview_status" in core
+        assert "cadrumo_ledger_add" not in core
         # FULL advertises the long-tail verb; CORE is a strict subset.
-        assert "aeat_ledger_add" in full
+        assert "cadrumo_ledger_add" in full
         assert core < full
 
     anyio.run(_drive)
@@ -124,7 +124,7 @@ def test_long_tail_verb_stays_callable_by_name_under_the_core_surface() -> None:
     async def _drive() -> None:
         request = CallToolRequest(
             method="tools/call",
-            params=CallToolRequestParams(name="aeat_ledger_add", arguments={}),
+            params=CallToolRequestParams(name="cadrumo_ledger_add", arguments={}),
         )
         result = (await handlers[CallToolRequest](request)).root
         text = " ".join(block.text for block in result.content if block.type == "text")

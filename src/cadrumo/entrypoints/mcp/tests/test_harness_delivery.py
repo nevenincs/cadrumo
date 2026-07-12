@@ -2,7 +2,7 @@
 
 Proves that the ``harness.load`` floor tool returns the shipped operator
 rules and the active persona verbatim (decision record R4's tools-only floor), and the
-``aeat://`` resource surface enumerates exactly the shipped skills, rules, and
+``cadrumo://`` resource surface enumerates exactly the shipped skills, rules, and
 personas, resolves each to its verbatim ``text/markdown`` document, and refuses
 an unknown URI cleanly. The SDK-independent surface is asserted directly; the
 server wiring and capability negotiation are asserted through the real built
@@ -151,14 +151,14 @@ def test_a_skill_a_rule_and_a_persona_resolve_verbatim() -> None:
 
 def test_templates_declare_the_three_kinds() -> None:
     templates = {template.kind: template.uri_template for template in list_harness_resource_templates()}
-    assert templates[HarnessResourceKind.SKILL] == "aeat://skill/{name}"
-    assert templates[HarnessResourceKind.RULE] == "aeat://rule/{name}"
-    assert templates[HarnessResourceKind.PERSONA] == "aeat://persona/{name}"
+    assert templates[HarnessResourceKind.SKILL] == "cadrumo://skill/{name}"
+    assert templates[HarnessResourceKind.RULE] == "cadrumo://rule/{name}"
+    assert templates[HarnessResourceKind.PERSONA] == "cadrumo://persona/{name}"
 
 
 @pytest.mark.parametrize(
     "uri",
-    ["aeat://skill/does-not-exist", "aeat://bogus/x", "http://elsewhere/y", "aeat://persona/"],
+    ["cadrumo://skill/does-not-exist", "cadrumo://bogus/x", "http://elsewhere/y", "cadrumo://persona/"],
 )
 def test_unknown_or_malformed_uri_refuses_cleanly(uri: str) -> None:
     with pytest.raises(HarnessResourceNotFoundError):

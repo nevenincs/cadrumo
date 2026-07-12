@@ -257,6 +257,8 @@ create = run(
         "Packaging",
         "--surnames",
         "Smoke",
+        "--tax-residence-ccaa",
+        "madrid",
         "--irpf-income-categories",
         "actividad_economica",
         "--quiet",

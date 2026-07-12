@@ -6,7 +6,7 @@ for a modelo their taxpayer model positively excludes, and the engine
 would then be asked to run an Impuesto sobre Sociedades cuota for a
 natural person.
 
-These tests drive the real ``aeat`` CLI against an isolated encrypted
+These tests drive the real ``cadrumo`` CLI against an isolated encrypted
 backend and pin the guard behaviour:
 
 * a natural-person profile is refused a ``work create --modelo 202``

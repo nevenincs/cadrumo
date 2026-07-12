@@ -84,7 +84,7 @@ _CLI_HARNESS = dedent(
     try:
         route = classify_storage_route()
         assert route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE, route
-        sys.argv = ["aeat", *cli_args]
+        sys.argv = ["cadrumo", *cli_args]
         from cadrumo.entrypoints.cli import main
 
         main()
@@ -118,7 +118,7 @@ _EXPLICIT_DATABASE_HARNESS = dedent(
     try:
         route = classify_storage_route()
         assert route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL, route
-        sys.argv = ["aeat", *cli_args]
+        sys.argv = ["cadrumo", *cli_args]
         from cadrumo.entrypoints.cli import main
 
         main()

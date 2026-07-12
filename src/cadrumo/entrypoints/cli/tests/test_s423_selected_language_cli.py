@@ -24,7 +24,7 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
-sys.argv = ["aeat", *sys.argv[3:]]
+sys.argv = ["cadrumo", *sys.argv[3:]]
 
 from cadrumo.entrypoints.cli import main
 
@@ -342,7 +342,10 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     assert calculated.returncode == 0, calculation_output
     assert f"state\t{draft_state}" in calculation_output
     assert all(label in calculation_output for label in formula_labels)
-    assert all(raw_operation not in calculation_output for raw_operation in ("subtract(", "max(", "percent(", "if_then_else(", "min("))
+    assert all(
+        raw_operation not in calculation_output
+        for raw_operation in ("subtract(", "max(", "percent(", "if_then_else(", "min(")
+    )
     assert "borrador" not in calculation_output
 
     revision_match = re.search(r"calculation_revision_id\t([0-9a-f]{64})", calculation_output)

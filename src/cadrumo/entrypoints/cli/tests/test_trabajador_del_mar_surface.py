@@ -132,7 +132,7 @@ class TestRetmarMandatoryFilingWarningSurface:
     def test_retmar_translated_message_carries_retmar_and_boe_anchor(self) -> None:
         # The CLI error boundary calls ``tr(code.message_key)`` to render
         # the operator-facing line. Asserting against the Spanish
-        # translation verifies the surface that ``aeat`` emits in its
+        # translation verifies the surface that ``cadrumo`` emits in its
         # default output language.
         message = tr(
             "errors.error.error_renta_profile_completeness_warning",

@@ -1,6 +1,6 @@
 """Real-behavior CLI tests for ``aeat app overview prepare``.
 
-Drives the real ``aeat`` CLI against an isolated encrypted backend to pin the
+Drives the real ``cadrumo`` CLI against an isolated encrypted backend to pin the
 data-prep walkthrough's operator contract from #260:
 
 * a fresh profile with no ledger data shows step 1 (import) pending, naming

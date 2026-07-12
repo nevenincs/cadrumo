@@ -1,4 +1,4 @@
-"""Strict roundtrip across the ``aeat review`` CLI JSON envelope.
+"""Strict roundtrip across the ``cadrumo review`` CLI JSON envelope.
 
 ``review queue`` and ``review view`` used to emit
 ``model_dump(mode="json")`` on application-side records that were not

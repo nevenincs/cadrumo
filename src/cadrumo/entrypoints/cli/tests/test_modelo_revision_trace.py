@@ -10,7 +10,7 @@ compute command path. ``--verbose`` additionally exposes the full per-casilla
 operand refs and operand values). Input / bound casillas without a formula keep
 rendering their value only.
 
-The test drives the real ``aeat`` CLI against an isolated encrypted backend
+The test drives the real ``cadrumo`` CLI against an isolated encrypted backend
 through the documented Modelo 130 estimación directa path; the casilla 07
 resultado-parcial trace is the issue's worked example.
 """

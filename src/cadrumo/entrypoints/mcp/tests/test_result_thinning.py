@@ -56,10 +56,10 @@ def test_thin_envelope_moves_the_bulk_array_to_a_link_and_leaves_a_summary_marke
     result = thinned["result"]
     assert isinstance(result, dict)
     assert "observations" not in result  # bulk array moved out
-    assert result["observations_resource"] == "aeat://observations/rev-abc123"
+    assert result["observations_resource"] == "cadrumo://observations/rev-abc123"
     assert result["observations_count"] == 2
     assert result["calculation_revision_id"] == "rev-abc123"  # summary preserved
-    assert [(ref.uri, ref.count) for ref in links] == [("aeat://observations/rev-abc123", 2)]
+    assert [(ref.uri, ref.count) for ref in links] == [("cadrumo://observations/rev-abc123", 2)]
 
 
 def test_thin_envelope_does_not_mutate_the_source_envelope() -> None:

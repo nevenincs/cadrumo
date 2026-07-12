@@ -1,4 +1,4 @@
-"""Map MCP tool calls to ``aeat`` CLI invocations.
+"""Map MCP tool calls to Cadrumo CLI invocations.
 
 Pure name and argv mapping: an MCP tool name round-trips to its registry command
 key, and a command key plus operator-supplied arguments project onto the CLI argv
@@ -16,18 +16,16 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-_TOOL_PREFIX = "aeat_"
+_TOOL_PREFIX = "cadrumo_"
 # Command keys that are group-callback / help emit surfaces, not operator-callable
 # tools. They are excluded from the exposed tool set.
 _NON_TOOL_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
 
 # The client-side namespace prefix a Claude plugin prepends to every tool name
 # (``mcp__plugin_<plugin>_<server>__``). The plugin and the server are both named
-# ``aeat``, so the prefix triples the namespace; rather than rename the server (it
-# would invalidate every installed plugin's tool allowlist and slash-command
-# names), the budget accounts for this prefix and the over-length verbs carry
-# declared short forms (ADR mcp-progressive-discovery P4).
-CLIENT_NAME_PREFIX = "mcp__plugin_aeat_aeat__"
+# ``cadrumo``, so the budget accounts for both canonical product segments and
+# the over-length verbs carry declared short forms (ADR mcp-progressive-discovery P4).
+CLIENT_NAME_PREFIX = "mcp__plugin_cadrumo_cadrumo__"
 # The practical prefixed-name ceiling clients enforce.
 TOOL_NAME_BUDGET = 64
 
@@ -35,8 +33,43 @@ TOOL_NAME_BUDGET = 64
 # the budget. Applied to the underscored key; each is unambiguous (no two keys
 # collapse to one name) and reversible through the forward-match resolver below.
 _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
+    ("bienes_inversion", "binv"),
+    ("encrypt_for_recipient", "enc_rcpt"),
+    ("encrypt_feedback", "enc_feedback"),
+    ("verify_signature", "verify_sig"),
+    ("credential_source", "credsrc"),
+    ("verification_report", "vreport"),
+    ("invoice_catalogue", "invcat"),
+    ("mark_delivered_to_payer", "payer_delivered"),
+    ("mark_locally_completed", "local_done"),
+    ("preview_maritime_exemption", "maritime"),
+    ("certificate", "cert"),
+    ("diagnostics", "diag"),
+    ("capabilities", "caps"),
+    ("descendiente", "desc"),
+    ("participation", "part"),
+    ("prorrata", "pror"),
+    ("filing_record", "filerec"),
+    ("compare_taxation", "tax_compare"),
+    ("notifications", "notif"),
+    ("iva_wallet", "ivaw"),
+    ("apoderado", "apod"),
+    ("recipient", "rcpt"),
+    ("telemetry", "telem"),
+    ("borrador", "draft"),
+    ("sync_calc", "synccalc"),
+    ("google", "g"),
+    ("archive", "arc"),
+    ("reset_progress", "resetprog"),
+    ("observe_local", "observe"),
+    ("scopes", "scope"),
+    ("secret", "sec"),
+    ("inventory", "inv"),
+    ("valuation", "val"),
+    ("movement", "mov"),
+    ("sandbox", "sbx"),
+    ("integrity", "intg"),
     ("review_package", "rpkg"),
-    ("preview_maritime_exemption", "preview_maritime"),
     ("subject_access_request", "sar"),
     ("certificate_secret", "cert_secret"),
 )
@@ -50,10 +83,10 @@ def is_exposable_command(command_key: str) -> bool:
 def tool_name_for_command(command_key: str) -> str:
     """Render a registry command key as a namespaced MCP tool name.
 
-    ``modelo.work.calculate`` becomes ``aeat_modelo_work_calculate``. Declared
+    ``modelo.work.calculate`` becomes ``cadrumo_modelo_work_calculate``. Declared
     short forms shrink the few command keys that would otherwise overflow the
     client-prefixed name budget (P4), e.g. ``modelo.review_package.verify.signature``
-    becomes ``aeat_modelo_rpkg_verify_signature``.
+    becomes ``cadrumo_modelo_rpkg_verify_signature``.
     """
     underscored = command_key.replace(".", "_")
     for long_form, short_form in _SEGMENT_ABBREVIATIONS:

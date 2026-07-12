@@ -63,7 +63,7 @@ def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
 
 
 def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedProcess[str]:
-    """Invoke the ``aeat`` CLI in a fresh interpreter against ``storage_root``.
+    """Invoke the ``cadrumo`` CLI in a fresh interpreter against ``storage_root``.
 
     A new process guarantees an empty ``sys.modules``: the only path that can
     register the wizard catalogue is the root callback exercised by ``argv``.
@@ -72,7 +72,7 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
     code = f"""
         import sys
 
-        sys.argv = ["aeat", *{argv!r}]
+        sys.argv = ["cadrumo", *{argv!r}]
         from cadrumo.entrypoints.cli import main
 
         try:
@@ -87,7 +87,9 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
         {
             setting_env("cadrumo_local_storage_root"): str(storage_root),
             setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.FILE.value,
-            setting_env("cadrumo_secret_passphrase"): base_settings.cadrumo_dev_test_database_password.get_secret_value(),
+            setting_env(
+                "cadrumo_secret_passphrase"
+            ): base_settings.cadrumo_dev_test_database_password.get_secret_value(),
         },
     )
     return subprocess.run(

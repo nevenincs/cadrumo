@@ -44,7 +44,7 @@ def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: p
 def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.CaptureFixture[str]) -> None:
     """The Cl@ve auth-wait banner (carrying the verification code) is the
     operator channel the CLI arms; it must land on stderr so the stdout JSON
-    envelope stays pure. Exercises the exact sink the ``aeat`` entry point
+    envelope stays pure. Exercises the exact sink the ``cadrumo`` entry point
     installs via ``operator_progress_sink``."""
 
     from .. import _emit_operator_progress

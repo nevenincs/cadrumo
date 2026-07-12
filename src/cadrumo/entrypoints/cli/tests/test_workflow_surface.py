@@ -1,4 +1,4 @@
-"""Regression tests for the user-facing ``aeat`` CLI surface."""
+"""Regression tests for the user-facing ``cadrumo`` CLI surface."""
 
 from __future__ import annotations
 
@@ -377,7 +377,7 @@ def test_version_flag_renders_backend_registry_summary() -> None:
         result = _invoke(command)
 
         assert result.exit_code == 0, result.output
-        assert f"aeat {report.package_version}" in result.output
+        assert f"cadrumo {report.package_version}" in result.output
         assert f"{report.registry.modelo_count} modelos" in result.output
         assert f"{report.registry.casilla_count} casillas" in result.output
         assert f"{report.registry.formula_count} formulas" in result.output

@@ -46,7 +46,7 @@ def test_every_exposable_command_has_a_descriptor() -> None:
 
 def test_descriptors_are_well_formed() -> None:
     for descriptor in build_tool_descriptors():
-        assert descriptor.name.startswith("aeat_")
+        assert descriptor.name.startswith("cadrumo_")
         assert descriptor.description
         assert descriptor.input_schema["type"] == "object"
         assert descriptor.output_schema  # the registered result model schema
@@ -75,9 +75,9 @@ def test_tool_name_round_trips_including_segment_underscores() -> None:
     keys = [d.command_key for d in build_tool_descriptors()]
     # iva_wallet has a segment-internal underscore; the round-trip must be exact.
     name = tool_name_for_command("modelo.iva_wallet.balance")
-    assert name == "aeat_modelo_iva_wallet_balance"
+    assert name == "cadrumo_modelo_ivaw_balance"
     assert command_key_for_tool(name, command_keys=keys) == "modelo.iva_wallet.balance"
-    assert command_key_for_tool("aeat_not_a_real_tool", command_keys=keys) is None
+    assert command_key_for_tool("cadrumo_not_a_real_tool", command_keys=keys) is None
 
 
 def test_descriptor_argv_places_format_json_at_root_and_maps_named_arguments() -> None:

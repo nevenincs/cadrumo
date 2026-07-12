@@ -103,8 +103,8 @@ _FORBIDDEN_HELP_WORDS = frozenset(
     },
 )
 _FORBIDDEN_HELP_PHRASES = (
-    "aeat electronic",
-    "aeat submission",
+    "cadrumo electronic",
+    "cadrumo submission",
     "compatibility alias",
     "deprecated spelling",
     "electronic tramite",
