@@ -357,6 +357,17 @@ remain useful process guidance, not open high blockers.
 The closure checks found no data loss, authority-evidence corruption, restored
 former import root, or other critical defect.
 
+### s19-public-facade-import-regression | high | Resolved missing database-sentinel re-export
+
+`core.config` omitted the public re-export of
+`FORMER_PRODUCT_DATABASE_FILENAME`, causing the SQL engine's valid facade
+import to fail before engine construction. The facade now re-exports the
+constant defined in `core/_config_state_root.py`, without duplicating its
+literal, adding fallback behavior, or introducing a private cross-package
+import. Direct facade and engine imports plus the focused former-database
+refusal tests pass. The four concurrently owned S20 authentication/session
+files remain unchanged by this remediation.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
