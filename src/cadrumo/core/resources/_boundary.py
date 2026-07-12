@@ -1,7 +1,7 @@
 """Single boundary for reading bundled corpus and registry data.
 
-Bundled trees live at ``aeat/_data/corpus/...`` and
-``aeat/_data/registry/...`` inside the installed wheel via the
+Bundled trees live at ``cadrumo/_data/corpus/...`` and
+``cadrumo/_data/registry/...`` inside the installed wheel via the
 hatchling ``force-include`` configuration in ``pyproject.toml``. The
 same prefix resolves to the in-tree top-level ``corpus/`` and
 ``registry/`` directories under an editable install because hatchling
@@ -11,7 +11,7 @@ Callers MUST go through :func:`packaged_data` rather than computing the location
 from ``__file__`` or a ``PROJECT_ROOT`` walk. Use :func:`bundled_path` when a
 process-lifetime :class:`~pathlib.Path` is required, and :func:`as_path` for a
 scoped materialised path. The ``PROJECT_ROOT`` walk is reserved for ``var/``
-operator outputs in :mod:`aeat.core.config` and is not a valid resolution path
+operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution path
 for read-only bundled data.
 
 The corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded
@@ -33,7 +33,9 @@ from importlib.resources import as_file, files  # nosemgrep
 from importlib.resources.abc import Traversable  # nosemgrep
 from pathlib import Path
 
-_PACKAGE_DATA: Traversable = files("aeat").joinpath("_data")
+from ..product_identity import PRODUCT_IDENTITY
+
+_PACKAGE_DATA: Traversable = files(PRODUCT_IDENTITY.python_package).joinpath("_data")
 _RESOURCE_STACK: ExitStack = ExitStack()
 atexit.register(_RESOURCE_STACK.close)
 
@@ -41,7 +43,7 @@ _COMPANION_PACKAGE = "aeat_data"
 
 
 def packaged_data(*parts: str) -> Traversable:
-    """Return a Traversable rooted at ``aeat/_data/<parts...>``.
+    """Return a Traversable rooted at ``cadrumo/_data/<parts...>``.
 
     Args:
         *parts: One or more path segments joined under the bundled
@@ -67,7 +69,7 @@ def bundled_path(*parts: str) -> Path:
     entered into a module-level :class:`contextlib.ExitStack` that is
     closed at interpreter exit. Under the supported install modes
     (editable hatchling, built wheel) the materialisation is a no-op:
-    ``importlib.resources.files("aeat")`` resolves to a real on-disk
+    ``importlib.resources.files("cadrumo")`` resolves to a real on-disk
     directory and ``as_file`` returns the path unchanged.
 
     Args:
@@ -135,7 +137,7 @@ def resolve_companion_binary(*parts: str) -> Path | None:
     Returns:
         A read-only :class:`pathlib.Path` valid for the process lifetime when
         the companion is installed and carries the binary, else ``None``. The
-        companion mirrors ``aeat/_data``, so the segments are identical to the
+        companion mirrors ``cadrumo/_data``, so the segments are identical to the
         ones :func:`packaged_data` takes.
     """
     root = _companion_root()
@@ -150,11 +152,11 @@ def resolve_companion_binary(*parts: str) -> Path | None:
 
 
 def resolve_corpus_binary(*parts: str) -> Path | None:
-    """Resolve a bundled corpus binary, the ``aeat`` tree first then the ``aeat_data`` companion.
+    """Resolve a bundled corpus binary, the ``cadrumo`` tree first then the ``aeat_data`` companion.
 
     ``parts`` are the segments under ``_data`` (e.g. ``"corpus",
     "aeat_official", "disenos_registro", "modelo_100", "files", "dr.xlsx"``).
-    The slim ``aeat`` wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
+    The slim Cadrumo wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
     optional ``aeat_data`` companion carries exactly those binaries under
     mirrored paths. This is the single ``importlib.resources`` seam that unifies
     the full-checkout read (binary in the ``aeat`` tree) and the split-install
