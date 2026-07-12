@@ -588,6 +588,11 @@ def _json_payload(output: str) -> dict[str, Any]:
     return payload
 
 
+def _clean_product_env() -> dict[str, str]:
+    """Return the process environment without host Cadrumo configuration."""
+    return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+
+
 def _assert_installed_data(work_dir: Path, venv: Path) -> None:
     """Verify representative bundled data leaves through the installed package."""
     leaves_literal = repr(list(_REPRESENTATIVE_DATA_LEAVES))
@@ -691,7 +696,7 @@ else:
 print("attachment-and-llm-surfaces-ok")
 """
     env = {
-        **os.environ,
+        **_clean_product_env(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root / "import-state"),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'import-state.db').as_posix()}",
     }
@@ -707,7 +712,7 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
 
     default_root = work_dir / "default-check-state"
     default_env = {
-        **os.environ,
+        **_clean_product_env(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(default_root),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(default_root / 'cadrumo.db').as_posix()}",
     }
@@ -726,8 +731,9 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     storage_root = work_dir / "profile-root"
     storage_root.mkdir(parents=True, exist_ok=True)
     env = {
-        **os.environ,
+        **_clean_product_env(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
     }
