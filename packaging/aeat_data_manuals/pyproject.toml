@@ -15,6 +15,11 @@ description = "AEAT/BOE práctico manuals (corpus source binaries) for the aeat 
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
+# Explicit so the wheel/sdist always carry the Apache 4(d) attribution chain
+# (dist-info/licenses/{LICENSE,NOTICE}); the NOTICE also scopes the licence
+# to packaging/derived works, never the official AEAT/BOE documents
+# (license-posture ADR).
+license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
 ]

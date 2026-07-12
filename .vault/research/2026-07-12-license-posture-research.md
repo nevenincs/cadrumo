@@ -144,10 +144,10 @@ chain) rather than a licence change.
    entry, lazy guarded import, instructive refusal for OFX-looking sources,
    probe-miss degradation for auto-detection, dev-group pin for the test
    environment, and real-import-blocker degradation tests.
-2. Ship the root `NOTICE` file inside the wheel/sdist (Apache-2.0 §4(d)
-   applies to redistributors of the work; carrying NOTICE in the artifact is
-   the clean discharge). Needs a hatch build-config change validated against
-   the packaging parity gates.
+2. DONE (next day): explicit `license-files = ["LICENSE", "NOTICE"]` on all
+   three distributions; the companions gained their own LICENSE + scoped
+   NOTICE files; all six artifacts verified and the
+   `test_license_attribution_chain` gate pins the declaration.
 3. Consider registering "Cadrumo" as a trademark if the brand matters
    commercially; Apache-2.0 §6 withholds trademark rights but registration is
    what makes enforcement practical.
