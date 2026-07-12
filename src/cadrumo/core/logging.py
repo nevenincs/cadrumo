@@ -70,8 +70,8 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
 )
 
 
-def _is_aeat_metadata_invocation() -> bool:
-    """Return whether the current ``aeat`` process renders metadata only.
+def _is_cadrumo_metadata_invocation() -> bool:
+    """Return whether the current ``cadrumo`` process renders metadata only.
 
     Help and version rendering must not initialise settings-derived diagnostic
     logging: an operator may need those state-free surfaces precisely because
@@ -80,10 +80,12 @@ def _is_aeat_metadata_invocation() -> bool:
     """
     program = Path(sys.argv[0])
     executable_names = {program.name.lower(), program.parent.name.lower()}
-    if not executable_names.intersection({"aeat", "aeat.exe"}):
+    if not executable_names.intersection({"cadrumo", "cadrumo.exe"}):
         return False
     arguments = sys.argv[1:]
     return any(argument in {"--help", "-h", "--version", "-V"} for argument in arguments)
+
+
 _SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
 _SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
@@ -379,7 +381,7 @@ def configure_logging() -> None:
     :func:`get_logger` without duplicating handlers.
     """
     global _CONFIGURED
-    if _CONFIGURED or _is_aeat_metadata_invocation():
+    if _CONFIGURED or _is_cadrumo_metadata_invocation():
         return
 
     from ._config_state_root import FormerProductStateError

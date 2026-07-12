@@ -594,7 +594,7 @@ def _venv_python(venv: Path) -> Path:
     return _venv_bin(venv) / executable
 
 
-def _venv_aeat(venv: Path) -> Path:
+def _venv_cadrumo(venv: Path) -> Path:
     """Return the virtualenv Cadrumo console-script path."""
     executable = "cadrumo.exe" if os.name == "nt" else "cadrumo"
     return _venv_bin(venv) / executable
@@ -776,7 +776,7 @@ print("attachment-and-llm-surfaces-ok")
 
 def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     """Run installed CLI smoke checks against the clean wheel venv."""
-    cadrumo = str(_venv_aeat(venv))
+    cadrumo = str(_venv_cadrumo(venv))
     version = _run(
         [cadrumo, "--version"],
         cwd=work_dir,
