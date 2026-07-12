@@ -1,15 +1,16 @@
 # Architecture overview
 
-`aeat` is a local-first command-line application that prepares Spanish tax
-filings. It models the tax authority's regulatory registry, ingests and
-classifies your financial records, and computes the numbered boxes of each tax
-form. Then it checks the draft and exports a file you submit yourself. AEAT is the Agencia
-Estatal de Administración Tributaria, Spain's tax agency.
+Cadrumo is a local-first application that prepares Spanish tax filings through
+the `aeat` command-line interface. It models the tax authority's regulatory
+registry, ingests and classifies your financial records, and computes the
+numbered boxes of each tax form. Then it checks the draft and exports a file
+you submit yourself. AEAT is the Agencia Estatal de Administración Tributaria,
+Spain's tax agency.
 
-This page is the entry point for a developer reading the codebase for the first
-time. It's a map, not a directory: it names the layers, the load-bearing
-concepts, and the canonical types you'll navigate to, and it stops there. For
-exact signatures and commands, follow the links in
+Use this page as your entry point when reading the codebase for the first time.
+It's a map, not a directory: it names the layers, the load-bearing concepts,
+and the canonical types you'll navigate to, and it stops there. For exact
+signatures and commands, follow the links in
 [Crossing into the code](#crossing-into-the-code).
 
 ## Why the system is shaped this way
@@ -21,7 +22,7 @@ ones that fed it. Three design choices answer that problem, and they shape
 everything else:
 
 - **Local-first.** Your financial records never leave your machine. The tool
-  runs offline and stores everything in an encrypted database on disk.
+  runs offline and stores encrypted payloads in a local database on disk.
 - **The registry is the authority.** Tax rules - rates, brackets, deadlines, and
   the legal basis of each box - aren't hard-coded. They're authored as data,
   compiled, validated, and read through a single authority. A figure can always
@@ -32,8 +33,9 @@ everything else:
 
 The structure that follows is hexagonal: business rules sit at the center, and
 the parsers, browsers, and storage that touch the outside world sit at the edge.
-Dependencies point inward. That keeps tax logic testable on its own and lets an
-adapter change without touching a rule.
+Most dependencies point inward. Application composition has an explicit,
+controlled exception that reaches adapters. This keeps tax logic testable on
+its own and lets an adapter change without touching a rule.
 
 ## How to read this page
 
@@ -50,8 +52,9 @@ short explanation:
 
 ## The layers
 
-`aeat` separates responsibilities into five layers under `src/aeat/`. Each layer
-depends only on the layers inside it.
+Cadrumo separates responsibilities into five layers under `src/cadrumo/`.
+Layers normally depend only on layers inside them; application composition has
+the documented adapter exception.
 
 ```mermaid
 flowchart TD
@@ -59,7 +62,7 @@ flowchart TD
     AD["adapters — inbound · outbound · persistence"]
     APP["application — use-case services"]
     DOM["domain — tax rules and entities"]
-    CORE["core — enums · JSON contract · config · primitives"]
+    CORE["core — enums · JavaScript Object Notation (JSON) contract · config · primitives"]
     EP --> APP
     EP --> CORE
     APP --> DOM
@@ -71,10 +74,16 @@ flowchart TD
     DOM -.->|"secure-repo seam"| AD
 ```
 
+**Text alternative.** Entrypoints call the application and core layers. The
+application calls the domain, adapters, and core layers; adapters call domain
+and core; and domain calls core. The domain reaches adapters only through the
+annotated secure-repository seam.
+
 - **`core`** is the innermost layer. It owns the cross-cutting primitives every
-  other layer shares: the typed enums for closed value sets (period codes, tax
-  domains, modelo identifiers, and binding source kinds), the JSON envelope
-  contract, configuration, the money and time types, and the error taxonomy.
+  other layer shares. Its typed enums define closed value sets such as period
+  codes, tax domains, modelo identifiers, and binding source kinds. Core also
+  owns the JSON envelope contract, configuration, money and time types, and the
+  error taxonomy.
 - **`domain`** holds pure tax rules and records: the modelo registry, casilla
   definitions (a casilla is one numbered box on a form), filing observations,
   and the calculations over them. It depends only on `core`.
@@ -82,10 +91,11 @@ flowchart TD
   to build filing drafts, aggregate the ledger, run diagnostics, and project
   state. It performs no input or output of its own.
 - **`adapters`** connects the application to the outside world in three parts.
-  `inbound` parses incoming files (PDF, CSV, Open Financial Exchange (OFX), and
-  XLSX statements). `outbound` reaches external services (AEAT browser sessions,
-  calculation oracles, and authentication providers). `persistence` stores
-  records in the local encrypted database.
+  `inbound` parses incoming Portable Document Format (PDF), comma-separated
+  values (CSV), Open Financial Exchange (OFX), and Microsoft Excel Open XML
+  (XLSX) statements. `outbound` reaches external services (AEAT browser
+  sessions, calculation oracles, and authentication providers). `persistence`
+  stores encrypted payloads in the local database.
 - **`entrypoints`** exposes the application to operators. The command line lives
   here, and its root surface is limited to two command families, `config` and
   `app`.
@@ -133,13 +143,19 @@ flowchart LR
     FP -.->|"invalidates"| D
 ```
 
+**Text alternative.** Authoring fragments flow through deterministic loading,
+compilation, and schema validation before the validated registry authority
+creates frozen snapshots for runtime projections. A whole-tree fingerprint
+invalidates both the compiler and authority caches whenever registry files
+change.
+
 Each modelo and revision is authored as fragments of TOML under
-`src/aeat/_data/registry/`. The loader and compiler (`_loader.py`) merge those
+`src/cadrumo/_data/registry/`. The loader and compiler (`_loader.py`) merge those
 fragments in a deterministic order, reject ambiguous conflicts, and compile them
 into strict, frozen `ModeloDefinition` and `ModeloRevision` objects. The loader
 keys its cache on a fingerprint of the whole tree - every file's path, size, and
-modification time. Any edit invalidates the cache, so the loader never serves
-stale data.
+modification time. After a short fingerprint-cache time to live, an edit causes
+the loader to revalidate the fingerprint before it serves the next result.
 
 `ValidatedRegistryAuthority` is the production boundary. It validates a modelo
 once, caches the result, and builds a `RegistrySnapshot` for a given modelo,
@@ -148,9 +164,10 @@ references are indexed, and its referential integrity is checked at build time.
 Runtime consumers - filing schema providers, formula execution, export parsing,
 and verification - read from snapshots, never from the raw loader.
 
-The split matters. Everything left of the authority is an implementation detail.
-Production code requests validated modelos, deadline windows, and snapshots
-through the authority, so the loader stays behind that line.
+The split matters. The authoring and compilation stages before the authority are
+implementation details. Production code requests validated modelos, deadline
+windows, and snapshots through the authority, so the loader stays behind that
+line.
 
 ## The modelo lifecycle
 
@@ -180,6 +197,11 @@ flowchart LR
     HUM -.->|"manual submission"| AEAT
 ```
 
+**Text alternative.** Financial records are ingested and classified into the
+encrypted ledger. An operator creates work, calculates it, verifies it, marks
+it locally filed, and exports a file. A human then uploads that file to AEAT
+outside Cadrumo.
+
 The tool ingests and classifies financial records - bank statements, invoices,
 and their evidence - into the encrypted ledger. From there the journey follows a
 fixed sequence of command-line verbs:
@@ -194,8 +216,9 @@ fixed sequence of command-line verbs:
 The boundary is structural. `file` is a local marker, not a submission, and
 `export` writes a file to your disk. No command transmits anything to the
 agency: the upload is a human action at the AEAT portal, modeled as a step
-beyond the tool's boundary. Read-only live checks against the agency are gated
-behind an explicit opt-in (`AEAT_LIVE_TESTS_ENABLED`) and never write.
+beyond the tool's boundary. Operator live reads require their normal
+authentication and active-profile guards; they remain read-only. The separate
+`CADRUMO_LIVE_TESTS_ENABLED` opt-in gates developer live-read tests.
 
 ### How a figure is grounded
 
@@ -227,6 +250,11 @@ flowchart LR
     ENG --> OBS --> REV --> PAY --> OPS
 ```
 
+**Text alternative.** A registry casilla definition and resolved ledger,
+invoice, previous-filing, and relation inputs feed the formula engine. It emits
+a provenance-carrying observation that becomes a calculation revision, CLI
+payload, and operator-facing output.
+
 Each binding on a casilla declares a typed source. A mesh of resolvers - ledger
 aggregation, invoice catalogue, previous-filing carry, and cross-modelo relation
 prefill - turns those sources into binding values, merged through
@@ -249,9 +277,9 @@ flowchart TD
         PROF["Active profile — resolve_active_bucket_id"]
         SESS["BucketSession — KEK/DEK · idle-timed · one taxpayer at a time"]
         FAC["Runtime factories — secure_object_repository_for_active_bucket"]
-        REPO["SecureObjectRepository — AEAD payloads · HMAC keys"]
+        REPO["SecureObjectRepository — AEAD payloads · HMAC-SHA256 lookup digests"]
         MK["MasterKeyProvider — Keyring / FileFallback · AES-256"]
-        DB[("Encrypted SQLite")]
+        DB[("SQLite with encrypted payload columns")]
         ATT["AttachmentStore — put_bytes / read_bytes · content-addressed"]
         EV["Evidence bytes — invoices · statements (FINANCIAL)"]
         PROF --> SESS --> FAC --> REPO
@@ -264,54 +292,65 @@ flowchart TD
     AEAT["AEAT"]
     HUM{{"Human filing — outside the app"}}
     OP --> PROF
-    SEDE -.->|"read-only, gated by AEAT_LIVE_TESTS_ENABLED"| AEAT
+    SEDE -.->|"read-only operator live checks"| AEAT
     OP --> HUM
     HUM -.->|"manual submission"| AEAT
 ```
+
+**Text alternative.** An operator selects one active profile. The resulting
+bucket session opens runtime factories and a secure repository, which encrypts
+payloads in the local database and attachment evidence. Operator AEAT checks
+stay read-only; only the human filing action can submit to AEAT.
+
+Key-encryption keys (KEKs) protect data-encryption keys (DEKs). The repository
+uses authenticated encryption with associated data (AEAD) payloads and
+HMAC-SHA256 lookup digests keyed from master-derived material. HMAC means
+hash-based message authentication code. The cipher is the Advanced Encryption
+Standard with 256-bit keys (AES-256).
 
 You work one taxpayer at a time. Selecting a profile opens a bucket session,
 which scopes a `SecureObjectRepository` to that taxpayer's encrypted store. The
 repository encrypts every payload at the column boundary with a key from the
 `MasterKeyProvider` - the operating system keychain, or a passphrase-derived
-fallback. It persists the ciphertext to a local encrypted SQLite database.
+fallback. It persists the ciphertext to a local SQLite database with encrypted
+payload columns.
 Evidence bytes - invoices, statements, and decrypted documents - go through the
 content-addressed `AttachmentStore`, which stores the bytes themselves, never a
 link.
 
 Nothing in this store crosses outward to the agency as a write. The read-only
-live checks reach the agency only to read, gated by the same opt-in. The single
-path that reaches the agency as a write is the human upload, which sits beyond
-the tool's boundary. A structural test enforces the absence of any write verb in
-the AEAT sede adapter, so the safety posture can't erode by accident.
+live checks reach the agency only to read. The single path that reaches the
+agency as a write is the human upload, which sits beyond the tool's boundary. A
+structural test enforces the absence of any write verb in the AEAT sede adapter,
+so the safety posture can't erode by accident.
 
 ## How the documentation stays true to the code
 
-The discipline that governs the layers governs the documentation too: nothing a
-reader relies on is maintained by hand where the code can supply it. `aeat` keeps
-three English documentation surfaces, and each is generated or verified from the
-codebase.
+The discipline that governs the layers governs the documentation too. Cadrumo
+keeps three English documentation surfaces close to the code that supplies
+their facts.
 
-The repository markdown - this guide and the others under `docs/` - is
-hand-written for people orienting to the project. Every technical claim in it is
-checked against the code before it lands. In-source docstrings are the single
-source for the API reference, so a signature is never copied into prose. The
-generated reference, both the source-code interface and the command-line tree, is
-scaffolded from the code itself.
+Documentation authors write the repository markdown - this guide and the others
+under `docs/` - for people orienting to the project. Technical reviewers check
+each claim against the code before it lands. In-source docstrings supply the API
+reference, so authors never copy a signature into prose. Generators scaffold the
+source-code and command-line references from the code itself.
 
-Because these surfaces are generated, they can't silently drift. A strict build,
-with warnings treated as errors, fails on a broken cross-reference, a missing
-stub, or a command reference that no longer matches the commands.
+Because generators derive the API and command-line references from source, those
+surfaces cannot silently drift. A strict build treats warnings as errors and
+fails on a broken cross-reference, a missing stub, or a command reference that
+no longer matches the commands.
 
 ## Crossing into the code
 
 Use this overview to orient, then drop into the detail:
 
-- **The layer tree** - browse `src/aeat/core`, `src/aeat/domain`,
-  `src/aeat/application`, `src/aeat/adapters`, and `src/aeat/entrypoints` to see
-  the subpackages each cluster names.
+- **The layer tree** - browse `src/cadrumo/core`, `src/cadrumo/domain`,
+  `src/cadrumo/application`, `src/cadrumo/adapters`, and
+  `src/cadrumo/entrypoints` to see the subpackages each cluster names.
 - **The command-line reference** - {doc}`/cli/index` for exact verbs, options,
   and output.
-- **The API reference** - {doc}`/api/aeat` for module signatures and the full
+- **The API reference** - {doc}`/api/cadrumo` for module signatures and the full
   subpackage list.
 - **The registry authoring guide** - {doc}`/authoring-guide` for how to author
   the TOML that the pipeline compiles.
@@ -322,4 +361,4 @@ Use this overview to orient, then drop into the detail:
 - **Getting it running** - {doc}`/how-to/quickstart` to install and prepare a
   first filing.
 - **Contributing** - the project source and issue tracker live on
-  [GitHub](https://github.com/wgergely/aeat).
+  [GitHub](https://github.com/cadrumo/cadrumo).

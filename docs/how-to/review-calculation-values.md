@@ -1,16 +1,15 @@
 # Review and supply calculation inputs
 
-Use this guide when aeat tells you a field is missing after you run a
-calculation, or when your form requires a value you must enter by hand — for
-example, a prior-year income figure or a compensation amount from an earlier
-period.
+Use this guide when `aeat` says a field is missing after a calculation. Also
+use it when your form needs a value you enter by hand, such as a prior-year
+income figure or a compensation amount from an earlier period.
 
 ## Before you start
 
 You need:
 
 - A master-key passphrase. `aeat` prompts for it, or you set
-  `AEAT_SECRET_PASSPHRASE` for a non-interactive run.
+  `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
 - An active profile. Create one (the `--quiet` form skips the wizard):
 
   ```bash
@@ -116,7 +115,7 @@ you know which field you are filling.
 
 ## Supply a missing field value
 
-When aeat cannot fill a field automatically, the missing field appears in the
+When Cadrumo cannot fill a field automatically, the missing field appears in the
 bindings list. Use the list to see which fields need your input, then supply
 the value during calculation.
 

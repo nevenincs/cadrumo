@@ -1,6 +1,6 @@
 # Authoring and reviewing documentation
 
-AEAT is a Spanish tax-filing application. This guide shows you how to make a documentation change and take it through review. Four documentation surfaces exist: repository markdown, in-source docstrings, and two generated references — one for the application programming interface (API) and one for the command-line interface (CLI).
+Cadrumo is a Spanish tax-filing application. AEAT is the external Spanish tax authority. This guide shows you how to make a documentation change and take it through review. Four documentation surfaces exist: repository markdown, in-source docstrings, and two generated references — one for the application programming interface (API) and one for the command-line interface (CLI).
 
 ## Choose the right surface
 
@@ -27,7 +27,7 @@ just docs-serve                  # serves the site with live reload (auto-picks 
 just docs-check                  # validates cross-references, stubs, and CLI output
 ```
 
-`just docs-serve` opens a preview that rebuilds and refreshes the browser whenever a page under `docs/` or a docstring under `src/aeat/` changes. It binds every interface on a non-default port (so a container, VM, or LAN peer can reach it) and auto-picks a free port; pass `just docs-serve 9000` to pin one. Running it a second time attaches to the already-running preview instead of colliding with it. Adding or removing a module still needs `python -m dev.docs.apidocs scaffold` to refresh the stub set.
+`just docs-serve` opens a preview that rebuilds and refreshes the browser whenever a page under `docs/` or a docstring under `src/cadrumo/` changes. It binds every interface on a non-default port (so a container, VM, or LAN peer can reach it) and auto-picks a free port; pass `just docs-serve 9000` to pin one. Running it a second time attaches to the already-running preview instead of colliding with it. Adding or removing a module still needs `python -m dev.docs.apidocs scaffold` to refresh the stub set.
 
 `just docs-check` fails on a broken cross-reference, a missing stub, or a command reference that no longer matches the commands.
 

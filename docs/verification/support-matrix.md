@@ -16,22 +16,22 @@ sibling install-proof documents.
 | Marketplace add + plugin install | PASS (live) | PASS (shared user-scope registry) | PASS (shared user-scope registry) |
 | Plugin resolved by the client's runtime | PASS | PASS (app's own embedded binary, live) | PASS (same embedded runtime) |
 | Disabled-by-default + persona configure surface | PASS (observed at install) | PASS (same plugin system) | PASS (same plugin system) |
-| Local stdio `aeat-mcp` server spawns | PASS | PASS | PASS — measured local `uvx` spawn during a live session; NOT cloud |
+| Local stdio `cadrumo-mcp` server spawns | PASS | PASS | PASS — measured local `uvx` spawn during a live session; NOT cloud |
 | Full MCP tool round-trip (harness floor) | PASS (R9 privacy disclosure returned first) | PASS (same runtime measurement) | PASS (same runtime measurement) |
 | Permission gate on unapproved tool calls | PASS (observed live) | PASS (same runtime) | PASS (same runtime) |
 
 ## Launch-variant note — RESOLVED (2026-07-04, v0.1.1 full release)
 
 The complete distribution is live on PyPI with no size grant:
-`aeat-cli 0.1.1` (41.3 MB slim wheel), `aeat-data-manuals 0.1.1` (76.7 MB)
-and `aeat-data-official 0.1.1` (62.4 MB) — the corpus companions split
+`cadrumo 0.1.1` (41.3 MB slim wheel), `cadrumo-data-manuals 0.1.1` (76.7 MB)
+and `cadrumo-data-official 0.1.1` (62.4 MB) — the corpus companions split
 along the directory seam so each clears the 100 MB cap. End-to-end proof
 on a fresh venv from the index only: `pip install
-"aeat-cli[corpus-sources,agent]"` resolves all three, and
+"cadrumo[corpus-sources,agent]"` resolves all three, and
 `aeat app registry verify` runs byte-exact clean (exit 0; 46 modelos,
 518 application links) with the binaries resolved through the `aeat_data`
 namespace seam. The installed plugin pins
-`uvx --from "aeat-cli[agent]==0.1.1" aeat-mcp`; the harness floor
+`uvx --from "cadrumo[agent]==0.1.1" cadrumo-mcp`; the harness floor
 round-trip through the published chain was verified live on 0.1.0 and the
 transport is unchanged. Note: 0.1.0's `corpus-sources` extra is
 unresolvable on the index (it pinned the never-published single

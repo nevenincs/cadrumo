@@ -5,14 +5,14 @@ payment-on-account (Modelo 130) for an example taxpayer. You start from an empty
 store and finish with a local fichero-BOE file, a text file that follows the
 official Boletín Oficial del Estado (BOE) format.
 
-`aeat` prepares local files for Spanish tax forms. It does not submit them to
-the Agencia Estatal de Administración Tributaria (AEAT). You upload the exported
-file yourself through the AEAT portal.
+Cadrumo prepares local files for Spanish tax forms through its `aeat` command.
+It does not submit them to the Agencia Estatal de Administración Tributaria
+(AEAT). You upload the exported file yourself through the AEAT portal.
 
 The ledger is the local record of your business income and expenses. The filing
 target is the modelo, year, and period you prepare.
 
-The CLI prints help, labels, and messages in Spanish. This page keeps the
+The `aeat` command prints help, labels, and messages in Spanish. This page keeps the
 explanations in English and quotes the real Spanish output you will see.
 
 ## Prerequisites
@@ -21,9 +21,9 @@ You need:
 
 * A working `aeat` command. If you need to install it, start with
   [Quickstart: produce a modelo file](../how-to/quickstart.md).
-* A master-key passphrase. `aeat` encrypts your data with a passphrase. The tool
+* A master-key passphrase. Cadrumo encrypts your data with a passphrase. The tool
   prompts for it the first time each command runs. To run the commands without a
-  prompt, set the `AEAT_SECRET_PASSPHRASE` environment variable first.
+  prompt, set the `CADRUMO_SECRET_PASSPHRASE` environment variable first.
 
 This tutorial creates the taxpayer profile and the transactions for you, so you
 do not need any earlier setup.

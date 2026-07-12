@@ -1,13 +1,13 @@
-# aeat-cli
+# Cadrumo
 
-`aeat` is a helper for preparing your Spanish tax forms.
+`Cadrumo` is a helper for preparing your Spanish tax forms.
 
-This is the landing page for the `aeat` command-line application. It shows how to
+This is the landing page for Cadrumo and its `aeat` command-line application. It shows how to
 turn local records into checked modelo figures and export files. You upload those
 files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
-project source is on [GitHub](https://github.com/wgergely/aeat).
+project source is on [GitHub](https://github.com/cadrumo/cadrumo).
 
-`aeat` is for autónomos, small businesses, and the people who help them prepare
+`Cadrumo` is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The
 project is pre-alpha, so expect breaking changes between versions.
 
@@ -17,11 +17,11 @@ the taxpayer, through preparing records and deciding what is due, to producing a
 export and following the full filing loop.
 
 ```{important}
-`aeat` is not tax advice, is not affiliated with AEAT, and does not replace
+`Cadrumo` is not tax advice, is not affiliated with AEAT, and does not replace
 AEAT's official tools or professional advice. It builds, checks, and exports
 files locally. You file through official AEAT channels yourself and remain
 responsible for every declaration you submit. Read the [full disclaimer](disclaimer.md)
-before you rely on `aeat`.
+before you rely on Cadrumo.
 ```
 
 ## Where to start
@@ -35,7 +35,7 @@ before you rely on `aeat`.
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when you are new to `aeat` and want the shortest path through profile,
+Use this when you are new to Cadrumo and want the shortest path through profile,
 transactions, calculation, verification, and local export.
 :::
 
@@ -44,7 +44,7 @@ transactions, calculation, verification, and local export.
 :link-type: doc
 :class-card: aeat-route-card
 
-Use this when `aeat` does not yet know which taxpayer, activity, or local
+Use this when Cadrumo does not yet know which taxpayer, activity, or local
 profile to use.
 :::
 
@@ -134,6 +134,6 @@ _generated/glossary
 disclaimer
 architecture/index
 authoring-guide
-api/aeat
+api/cadrumo
 workstation-setup
 ```

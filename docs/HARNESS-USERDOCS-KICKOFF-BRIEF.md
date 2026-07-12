@@ -22,13 +22,13 @@ here verbatim; this brief adds the harness-specific corpus, reader, and scope.
 The `aeat` CLI is a deterministic black box that computes Spanish tax forms and
 exports filing artifacts (it **never files live** — a human submits to AEAT). The
 **harness** is a separate product surface: a **Model Context Protocol (MCP)
-server** (`aeat-mcp`) that lets *any* LLM client (Claude Desktop, an IDE agent, a
+server** (`cadrumo-mcp`) that lets *any* LLM client (Claude Desktop, an IDE agent, a
 custom client) operate that CLI as an AI tax-advisor — grounding requests in the
 bundled legal corpus, understanding the CLI, running the on-host search, and
 driving the commands on the user's behalf under safety gates.
 
 Today the harness has **zero user-facing documentation**. It is unusable by a
-real person without it: they cannot discover that `aeat-mcp` exists, how to
+real person without it: they cannot discover that `cadrumo-mcp` exists, how to
 connect a client, what a "persona" is, what the assistant will and will not do,
 or why they still have to file themselves. The agent-facing operating corpus
 (§3) is written *for the LLM*, not the human — it must be **distilled** into a
@@ -56,25 +56,25 @@ is not user documentation and must not be surfaced as such); and the engineer
 Everything the docs describe is real and shipped. Read these to understand the
 surface; **distil, never transcribe** — they are agent instructions, not prose.
 
-**The operating layer (agent-facing product data, `src/aeat/_data/agent/`):**
-- `src/aeat/_data/agent/README.md` — the corpus's own overview: rules /
+**The operating layer (agent-facing product data, `src/cadrumo/_data/agent/`):**
+- `src/cadrumo/_data/agent/README.md` — the corpus's own overview: rules /
   personas / skills, and "the CLI is the backbone, the harness is the operating
   layer; the agent never computes a tax value itself."
-- `src/aeat/_data/agent/rules/` — the **operator operating contract** (7 rules
+- `src/cadrumo/_data/agent/rules/` — the **operator operating contract** (7 rules
   the assistant always obeys): `operator-operating-rules`, `operator-grounding`,
   `operator-envelope-reading`, `operator-honest-declaration`,
   `operator-lifecycle-ordering`, `operator-orientation-routing`,
   `operator-safety-handoff`. These are the *behaviours* a user should be able to
   expect and trust — the raw material for an "what the assistant will and won't
   do" explanation.
-- `src/aeat/_data/agent/personas/` — the **7 roles** the assistant can take,
+- `src/cadrumo/_data/agent/personas/` — the **7 roles** the assistant can take,
   each with a scoped tool ceiling: `coordinator`, `onboarding`, `ledger-groomer`,
   `classifier`, `modelo-preparer`, `verifier`, `reconciler`. Selected at runtime
-  via the `AEAT_MCP_PERSONA` environment variable; unset = the full unscoped
+  via the `CADRUMO_MCP_PERSONA` environment variable; unset = the full unscoped
   surface. The persona split is a *safety* feature (e.g. only `verifier` can
   produce the irreversible export/filing artifact) — a user-facing concept worth
   one clear page.
-- `src/aeat/_data/agent/skills/` — **30+ workflow playbooks**. Two families:
+- `src/cadrumo/_data/agent/skills/` — **30+ workflow playbooks**. Two families:
   - *Situation itineraries* keyed off the user's life-situation:
     `regularizar-atrasos` (behind on filings), `cierre-trimestre` (quarter
     close), `resumen-anual` (annual summary), `inicio-actividad` /
@@ -88,15 +88,15 @@ surface; **distil, never transcribe** — they are agent instructions, not prose
     supporting skills (`llevar-libro`, `clasificar`, `reconciliar`,
     `exportar-declaracion`).
 
-**The runtime the user connects to (`src/aeat/entrypoints/mcp/`):**
-- `aeat-mcp` — the console script (`pyproject.toml [project.scripts]`,
-  `aeat-mcp = "aeat.entrypoints.mcp:main"`). This is what a client spawns.
+**The runtime the user connects to (`src/cadrumo/entrypoints/mcp/`):**
+- `cadrumo-mcp` — the console script (`pyproject.toml [project.scripts]`,
+  `cadrumo-mcp = "cadrumo.entrypoints.mcp:main"`). This is what a client spawns.
 - `_harness_tools.py` — the `harness.load` **floor tool**: the first thing a
   client loads; returns the operating rules + active persona **and the R9
   off-host privacy disclosure surfaced first** (see §6). Read
   `off_host_consent_text()` — it is the exact, already-written privacy language;
   the docs should paraphrase it, not contradict it.
-- `_persona_scope.py` — how `AEAT_MCP_PERSONA` selects a persona and scopes the
+- `_persona_scope.py` — how `CADRUMO_MCP_PERSONA` selects a persona and scopes the
   tool set; the handoff-deny boundary (only `verifier` files).
 - `_hitl.py` / `_elicitation.py` — the **CONFIRM** gate: irreversible verbs
   (export, file) pause and ask the user's client to confirm; a decline refuses.
@@ -112,9 +112,9 @@ consumer path is the **Claude plugin** — generated from the harness source by
 `aeat app agent --output=<dir> --layout=plugin`, served from the marketplace tree under
 `packaging/marketplace/`, installable one-click across Claude Cowork / Claude
 Code / Claude Desktop. Its `.mcp.json` launches the server via
-`uvx --from "aeat-cli[agent]==<version>" aeat-mcp` from the published PyPI package (slim
-~39 MB wheel; corpus source binaries ride the two optional `aeat-data-*`
-companions via `aeat-cli[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
+`uvx --from "cadrumo[agent]==<version>" cadrumo-mcp` from the published PyPI package (slim
+~39 MB wheel; corpus source binaries ride the two optional `cadrumo-data-*`
+companions via `cadrumo[corpus-sources]`). The old `.mcpb` bundle under `packaging/mcpb/` is
 a DEMOTED secondary — do not document it as the install path. See RELEASING.md
 for the publish sequencing and `docs/verification/claude-code-install-proof.md`
 for the live install proof and verified support matrix.
@@ -163,21 +163,21 @@ The rules in `docs/USERDOCS-KICKOFF-BRIEF.md §3–§5` are **binding here too**
   only.
 - **Single-source / relocation-resilient.** Reference stable CLI *verbs* and MCP
   *tool/persona/env-var names*, never internal module paths. **Do not reuse the
-  runtime locale keys** (`src/aeat/locales/*.yml`) and **do not transcribe the
+  runtime locale keys** (`src/cadrumo/locales/*.yml`) and **do not transcribe the
   agent-facing corpus** — both are different audiences with their own single
   source. Distil into fresh human prose.
 - **Ground against the live surface.** Verify every `aeat` verb via its live
-  `--help`; verify MCP behaviour by actually running `aeat-mcp` against a client
-  (or the serving-path tests under `src/aeat/entrypoints/mcp/tests/`). Never
+  `--help`; verify MCP behaviour by actually running `cadrumo-mcp` against a client
+  (or the serving-path tests under `src/cadrumo/entrypoints/mcp/tests/`). Never
   invent a tool name, persona, env var, or flow.
 
 **Gates:** the docs conformance gate
-(`src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` / the
+(`src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py` / the
 `docs`-marked educational-docs conformance test) checks every cited `aeat` verb
 resolves and every relative link is real — run it on every prose change. The
-`-n -W` Sphinx build (`src/aeat/tests/test_docs_build.py`) is the full gate.
+`-n -W` Sphinx build (`src/cadrumo/tests/test_docs_build.py`) is the full gate.
 There is also an operator-harness rule-surface gate
-(`src/aeat/agent/tests/test_rule_surface_conformance.py`) that keeps the
+(`src/cadrumo/agent/tests/test_rule_surface_conformance.py`) that keeps the
 *agent-facing* corpus citing live verbs — a useful cross-check that the flows you
 document are real, though it governs the corpus, not your prose.
 
@@ -200,7 +200,7 @@ document are real, though it governs the corpus, not your prose.
   the CLI; a preparer/reconciler persona cannot file (only `verifier` can); it
   cannot be argued into filing live.
 - **Distinguish the two documentation audiences sharply.** The agent-facing
-  corpus (`src/aeat/_data/agent/`) is product data the LLM reads; your output is
+  corpus (`src/cadrumo/_data/agent/`) is product data the LLM reads; your output is
   human prose the taxpayer reads. Do not cross-link users into the raw corpus.
 
 ## 7. Candidate scope (for the operator to prioritise — do NOT start yet)
@@ -214,7 +214,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
 - **How-to: connect a client** — install the aeat plugin from the marketplace
   (Cowork/Desktop plugin browser or `claude plugin install`), choose a persona
   in the plugin's configure step (the `persona` option feeds
-  `AEAT_MCP_PERSONA`); power users wire `uvx --from "aeat-cli[agent]==<version>" aeat-mcp`
+  `CADRUMO_MCP_PERSONA`); power users wire `uvx --from "cadrumo[agent]==<version>" cadrumo-mcp`
   into any MCP client's config; confirm the first-run privacy notice. State the
   verified support matrix honestly (see
   `docs/verification/claude-code-install-proof.md`).
@@ -229,7 +229,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
   environment variables; link to the generated CLI/API reference, do not
   re-author it.
 - **Troubleshooting** — the assistant refused / paused / degraded (schedule-only
-  calendar, lexical-only search without the `aeat-cli[search]` extra); how to read a
+  calendar, lexical-only search without the `cadrumo[search]` extra); how to read a
   `notice`.
 
 ## 8. Known state and constraints
@@ -242,7 +242,7 @@ tree in `docs/index.md`. Illustrative, not authorised:
   `2026-07-03-…-audit` has concrete, quotable real assistant output.
 - **Unsigned `.mcpb`** — document install honestly (unverified-publisher warning);
   the signing mechanism is wired but awaits a release identity.
-- **Semantic search is opt-in** behind the `aeat-cli[search]` extra (a ~0.5 GB model
+- **Semantic search is opt-in** behind the `cadrumo[search]` extra (a ~0.5 GB model
   download on first use); the default is lexical-only. Set expectations.
 - **Shared multi-agent worktree.** NEVER use destructive git; commit
   explicit-path only; `git diff -- <file>` before editing and abort on

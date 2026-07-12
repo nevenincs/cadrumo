@@ -88,8 +88,8 @@ they mirror the AEAT forms; the values you choose are stable command tokens that
 don't change with `--language`.
 
 The wizard prompts for your master-key passphrase before it stores anything. In
-a non-interactive shell, set `AEAT_SECRET_PASSPHRASE` first, or the command
-refuses with `AEAT_SECRET_PASSPHRASE is not set`.
+a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE` first, or the command
+refuses with `CADRUMO_SECRET_PASSPHRASE is not set`.
 
 `aeat` prints its prompts, refusals, and error messages in Spanish. The output
 blocks quoted below are English translations of those messages.
