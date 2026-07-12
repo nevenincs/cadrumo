@@ -808,7 +808,6 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
     env = {
         **_clean_product_env(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
     }
