@@ -1,19 +1,19 @@
 """Profile-scoped encrypted repository for ledger classification rules.
 
 :class:`LedgerClassificationRule` records are stored through
-:class:`~aeat.adapters.persistence.storage.SecureBoundRepository` at the
-:class:`~aeat.adapters.persistence.storage.SensitivityClass` declared by
-:data:`aeat.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
+:class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` at the
+:class:`~cadrumo.adapters.persistence.storage.SensitivityClass` declared by
+:data:`cadrumo.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
 The bound repository serialises each rule through an
-:class:`~aeat.adapters.persistence.storage.Envelope`, so the stored rule
+:class:`~cadrumo.adapters.persistence.storage.Envelope`, so the stored rule
 pattern, actor, category, and classification stay encrypted at rest.
 
 See Also:
     :class:`LedgerClassificationRule`
         Content-addressed payload model persisted by this repository.
-    :func:`aeat.application.ledger.add_classification_rule`
+    :func:`cadrumo.application.ledger.add_classification_rule`
         Application entry point that creates and saves a rule.
-    :func:`aeat.application.ledger.apply_classification_rules`
+    :func:`cadrumo.application.ledger.apply_classification_rules`
         Application entry point that evaluates persisted rules over active
         ledger transactions.
 """
@@ -37,7 +37,7 @@ class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificat
 
     The namespace, sensitivity, schema version, and object-key contract come
     from
-    :data:`aeat.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
     Rules are sorted by ``(priority, created_at)`` ascending so that
     lower-priority-number rules (higher precedence) are evaluated first.
     Among same-priority rules the earliest-created rule wins.

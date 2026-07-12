@@ -3,7 +3,7 @@
 The collector is intentionally revision-driven: it scans the
 :class:`ModeloRevision` for ADVISORY ``implies_any_nonzero`` verification
 predicates and mirrors the same predicate shape as a non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` on the
+:class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` on the
 calculate path. The verification predicate remains the single source of truth
 for any total-to-official-box mapping, so calculate diagnostics and verify
 findings cannot drift.
@@ -15,10 +15,10 @@ from their semantic sources and retired the Stage-1 ADVISORY predicates, so this
 collector normally emits no M303 official-box diagnostics for that revision.
 
 See Also:
-    :mod:`~aeat.application.modelo._calculation_diagnostics`
+    :mod:`~cadrumo.application.modelo._calculation_diagnostics`
         Post-calculation coordinator that calls this collector with the engine
         casilla values.
-    :mod:`~aeat.application.modelo._verification_actions`
+    :mod:`~cadrumo.application.modelo._verification_actions`
         Verification predicate parser/evaluator whose ``implies_any_nonzero``
         shape this collector mirrors.
 """
@@ -43,7 +43,7 @@ def collect_official_box_unpopulated_diagnostics(
     A predicate fires when its antecedent (a computed total) is strictly
     positive while every listed consequent (the official numbered boxes) is
     zero. Each fired predicate yields one
-    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` with
+    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` with
     ``reason = "official_box_unpopulated"``, naming the positive antecedent
     casilla and the unpopulated official boxes so the operator-facing surface
     can instruct the transcription.
@@ -58,7 +58,7 @@ def collect_official_box_unpopulated_diagnostics(
             (e.g. ``09``) resolve.
 
     See Also:
-        :func:`~aeat.application.modelo._verification_actions._evaluate_predicate_expression`:
+        :func:`~cadrumo.application.modelo._verification_actions._evaluate_predicate_expression`:
             Verification-side evaluator for the same predicate DSL.
     """
     # Lazy import to avoid a module-load cycle: _verification_actions imports from

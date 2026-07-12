@@ -5,7 +5,7 @@ coverage, and reconciliation-total closure for a :class:`ModeloRevision` within
 its :class:`ModeloDefinition`.
 
 The D3 ``orden_aplicabilidad`` gate lives in its sibling module
-:mod:`aeat.domain.calculations.registry._validate_orden_aplicabilidad`.
+:mod:`cadrumo.domain.calculations.registry._validate_orden_aplicabilidad`.
 """
 
 from __future__ import annotations
@@ -77,8 +77,8 @@ def validate_m210_tipo_renta_code_projection_parity(
     The official Modelo 210 tipo-de-renta code axis is declared in two places
     that MUST agree: the registry parameter ``m210-tipo-renta-code-<year>``
     (which codes the revision accepts, carrying the registry legal-grounding)
-    and the core :data:`~aeat.core.M210_TIPO_RENTA_CODE_PROJECTION` (each code's
-    :class:`~aeat.core.TipoRentaIrnr` rate concept). This gate fails the
+    and the core :data:`~cadrumo.core.M210_TIPO_RENTA_CODE_PROJECTION` (each code's
+    :class:`~cadrumo.core.TipoRentaIrnr` rate concept). This gate fails the
     registry build in BOTH directions: a code declared in the registry with no
     core projection, and a code the core projects that the registry does not
     declare. It keeps the two axes from drifting so no declared code resolves to

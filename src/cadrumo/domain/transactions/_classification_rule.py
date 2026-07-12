@@ -1,7 +1,7 @@
 """Domain model for a ledger classification rule.
 
 A rule binds a regex description-pattern to a target
-:class:`~aeat.domain.transactions._enums.BusinessClassification`.
+:class:`~cadrumo.domain.transactions._enums.BusinessClassification`.
 Rule IDs are content-addressed (SHA-256 of the rule's key fields) so
 creation is idempotent: adding the same pattern + classification pair
 twice produces the same rule_id and the repository overwrites the prior

@@ -3,39 +3,39 @@
 This module owns the adapter objects that let immutable calculation revisions
 participate in the filing workflow engine. The public application facade
 continues to export the operator-facing services from
-:mod:`~aeat.application.modelo`.
+:mod:`~cadrumo.application.modelo`.
 
 The gate adapts one persisted
 :class:`CalculationRevision` and its
 :class:`WorkUnit` into
-:class:`~aeat.application.workflow.WorkflowEngine` inputs. It scopes deadline
+:class:`~cadrumo.application.workflow.WorkflowEngine` inputs. It scopes deadline
 and filing-window checks with :class:`TaxpayerProfile`,
 and locally approves filing drafts through the transient
 :class:`TransactionCatalogue` used by the filing
 surface.
 
 The gate is a precondition runner, not the owner of verification reports or
-filing records. :mod:`~aeat.application.modelo._verification_actions` invokes it
-with :class:`~aeat.application.workflow.WorkflowPurpose.VERIFY` after local
+filing records. :mod:`~cadrumo.application.modelo._verification_actions` invokes it
+with :class:`~cadrumo.application.workflow.WorkflowPurpose.VERIFY` after local
 verification findings have granted, while
-:mod:`~aeat.application.modelo._filing_actions` invokes it with
-:class:`~aeat.application.workflow.WorkflowPurpose.FILE` before local
+:mod:`~cadrumo.application.modelo._filing_actions` invokes it with
+:class:`~cadrumo.application.workflow.WorkflowPurpose.FILE` before local
 mark-as-filed persistence. Aborted workflow runs are persisted for audit and then
-surfaced as :class:`~aeat.application.modelo.ModeloWorkflowGateError`.
+surfaced as :class:`~cadrumo.application.modelo.ModeloWorkflowGateError`.
 
 See Also:
-    :mod:`~aeat.application.workflow._engine`:
+    :mod:`~cadrumo.application.workflow._engine`:
         Owns deadline-independence for VERIFY and late-local FILE behavior.
-    :mod:`~aeat.application.workflow._deadline_stage`:
+    :mod:`~cadrumo.application.workflow._deadline_stage`:
         Selects the workflow obligation before submission preflight is reached.
-    :class:`~aeat.domain.submission.SubmissionEngine`:
+    :class:`~cadrumo.domain.submission.SubmissionEngine`:
         Runs the read-only preflight gates using the deadline-window checker
         configured here.
-    :class:`~aeat.domain.submission.DeadlineWindowChecker`:
+    :class:`~cadrumo.domain.submission.DeadlineWindowChecker`:
         Protocol satisfied by the revision deadline-window adapter below.
-    :mod:`~aeat.application.modelo._verification_actions`:
+    :mod:`~cadrumo.application.modelo._verification_actions`:
         Owns verification finding/report persistence around this gate.
-    :mod:`~aeat.application.modelo._filing_actions`:
+    :mod:`~cadrumo.application.modelo._filing_actions`:
         Owns local filing-record persistence after this gate succeeds.
 """
 
@@ -83,11 +83,11 @@ def _deadline_window_period_for_registry_period(
     filing_year: int,
     registry_period: str,
 ) -> Period | None:
-    """Return the typed :class:`~aeat.core.Period` declared by the registry deadline window.
+    """Return the typed :class:`~cadrumo.core.Period` declared by the registry deadline window.
 
-    A :class:`~aeat.domain.calculations.registry.RegistrySnapshotError` means
+    A :class:`~cadrumo.domain.calculations.registry.RegistrySnapshotError` means
     the registry cannot supply a deadline window for that filing tuple, so the
-    helper returns ``None`` instead of a :class:`~aeat.core.Period`.
+    helper returns ``None`` instead of a :class:`~cadrumo.core.Period`.
     """
     from ...core.resources import resources
 
@@ -108,7 +108,7 @@ def _deadline_window_period_for_registry_period(
 
 
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
-    """Return the canonical :class:`~aeat.core.Period` consumed by the workflow engine.
+    """Return the canonical :class:`~cadrumo.core.Period` consumed by the workflow engine.
 
     Quarterly work units use their registry token (for example ``"1T"``) but the
     deadline engine may declare a typed window period with a richer canonical
@@ -148,7 +148,7 @@ class _RevisionInputsProvider:
         The :class:`TaxpayerProfile` parameter comes from the workflow Protocol and
         is passed to :func:`revision_filing_replay_inputs` so applicability-driven
         relation zeroes can be derived after ``modelo`` and
-        :class:`~aeat.core.Period` have matched the stored revision.
+        :class:`~cadrumo.core.Period` have matched the stored revision.
         """
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(
@@ -219,10 +219,10 @@ class _RevisionDraftBuilder:
 class _RevisionDeadlineWindowChecker:
     """Checks the same deadline schedule the workflow gate already computed.
 
-    This adapter satisfies :class:`~aeat.domain.submission.DeadlineWindowChecker`
-    and is passed to :class:`~aeat.domain.submission.SubmissionEngine` for
+    This adapter satisfies :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
+    and is passed to :class:`~cadrumo.domain.submission.SubmissionEngine` for
     submission-preflight window checks. The workflow engine decides by
-    :class:`~aeat.application.workflow.WorkflowPurpose` whether that preflight
+    :class:`~cadrumo.application.workflow.WorkflowPurpose` whether that preflight
     window check is relevant; this adapter only answers the raw "is the window
     open today?" question.
     """
@@ -255,7 +255,7 @@ def build_revision_workflow_engine(
 
     The engine is wired with:
 
-    * a deadline adapter over :class:`~aeat.domain.deadlines.DeadlineEngine`;
+    * a deadline adapter over :class:`~cadrumo.domain.deadlines.DeadlineEngine`;
     * a revision-backed inputs provider that replays persisted calculation values;
     * a draft builder that validates and locally approves a registry draft;
     * a submission engine using the configured auth provider.
@@ -273,8 +273,8 @@ def build_revision_workflow_engine(
             scoping inside the workflow engine.
         actor: Operator label used when locally approving the transient draft.
         clock: Timestamp used for local draft approval metadata.
-        settings: Optional runtime :class:`~aeat.core.config.Settings`; defaults
-            to :func:`~aeat.core.config.load_settings`.
+        settings: Optional runtime :class:`~cadrumo.core.config.Settings`; defaults
+            to :func:`~cadrumo.core.config.load_settings`.
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()

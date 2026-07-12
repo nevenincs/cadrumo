@@ -1,11 +1,11 @@
-"""Pydantic v2 strict models for the :mod:`aeat.domain.deadlines` subpackage.
+"""Pydantic v2 strict models for the :mod:`cadrumo.domain.deadlines` subpackage.
 
 Every type that crosses a public boundary lives here as a strict, frozen
 :class:`pydantic.BaseModel` (or :class:`enum.StrEnum` for closed
 enumerations). No dataclasses; no bare ``dict[str, Any]``.
 
-Consumed by :class:`aeat.domain.deadlines.DeadlineEngine` and re-exported
-from :mod:`aeat.domain.deadlines`.
+Consumed by :class:`cadrumo.domain.deadlines.DeadlineEngine` and re-exported
+from :mod:`cadrumo.domain.deadlines`.
 """
 
 from __future__ import annotations
@@ -795,7 +795,7 @@ def resolve_multiple_pagadores_reduced_limit(filing_year: int | None) -> Decimal
 
     The reduced limit is dated (14.000 € up to 2022, 15.000 € for 2023,
     15.876 € for 2024 onward); the authoritative per-year schedule lives in
-    :data:`~aeat.core.external_constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR`.
+    :data:`~cadrumo.core.external_constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR`.
     A year before the earliest tabulated entry resolves to the earliest known
     amount; a year after the latest entry resolves to the latest known amount
     (forward-compatible until a new law revalues it); ``None`` resolves to the
@@ -935,9 +935,9 @@ class Recovery(BaseModel):
 
 
 def _parse_modelo_deadline_period(value: object) -> Period:
-    """Coerce runtime or persisted periods into :class:`~aeat.core.Period`.
+    """Coerce runtime or persisted periods into :class:`~cadrumo.core.Period`.
 
-    Runtime producers pass :class:`~aeat.core.Period`; JSON persistence
+    Runtime producers pass :class:`~cadrumo.core.Period`; JSON persistence
     restores it from ``{"filing_year": ..., "code": ...}``.
     """
     if isinstance(value, Period):
@@ -954,7 +954,7 @@ class ModeloDeadline(BaseModel):
         modelo: The modelo string identifier; carried as a plain
             ``str`` on this record so JSON round-tripping is loss-free
             for downstream consumers.
-        period: The period covered as a typed :class:`~aeat.core.Period`
+        period: The period covered as a typed :class:`~cadrumo.core.Period`
             (e.g. ``Period.from_year_and_code(2026, "1T")``).
         opens_on: The first day the AEAT filing window accepts the
             modelo for this period.

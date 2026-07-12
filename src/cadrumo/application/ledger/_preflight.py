@@ -1,21 +1,21 @@
 """Backend readiness preflight for bucket-scoped ledger transactions.
 
 :func:`preflight_ledger_tax_readiness` loads a
-:class:`~aeat.domain.transactions.TransactionCatalogue` via
-:class:`~aeat.domain.transactions.TransactionCatalogueRepository` from the
+:class:`~cadrumo.domain.transactions.TransactionCatalogue` via
+:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository` from the
 active bucket and delegates to :func:`preflight_transaction_catalogue` for pure
 in-memory analysis. The report is consumed by modelo readiness projection and
 ledger read surfaces; it is not a calculation engine and never mutates the
 catalogue it inspects.
 
 See Also:
-    :func:`~aeat.application.state_projection.build_operator_state_projection`
+    :func:`~cadrumo.application.state_projection.build_operator_state_projection`
         Modelo readiness consumer that embeds blocking ledger issues in the
         operator state projection.
-    :mod:`aeat.entrypoints.cli._ledger_read_cli`
+    :mod:`cadrumo.entrypoints.cli._ledger_read_cli`
         CLI read surface that reports these preflight issues without mutating
         ledger state.
-    :mod:`aeat.application.aggregation`
+    :mod:`cadrumo.application.aggregation`
         Calculation source mesh that consumes ledger facts only after this
         readiness layer has reported operator-facing gaps.
 """
@@ -131,7 +131,7 @@ def preflight_ledger_tax_readiness(
         period: Filing period used to decide whether each transaction belongs in
             the readiness window.
         transaction_repository: Optional
-            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`
+            :class:`~cadrumo.domain.transactions.TransactionCatalogueRepository`
             used to load the bucket-local catalogue; a default repository is
             constructed when ``None``.
         raw_afectacion_ratio: Optional home-office usage ratio from censo data,

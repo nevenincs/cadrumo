@@ -1,18 +1,18 @@
 """Projection helpers shared by modelo CLI command groups.
 
 This module turns modelo application/domain records such as
-:class:`~aeat.domain.modelos.WorkUnit`,
-:class:`~aeat.domain.modelos.CalculationRevision`,
-:class:`~aeat.domain.modelos.ModeloRecord`,
-:class:`~aeat.domain.modelos.VerificationReport`, and
-:class:`~aeat.application.modelo.ModeloWorkDeadlinePosture` into CLI text lines
+:class:`~cadrumo.domain.modelos.WorkUnit`,
+:class:`~cadrumo.domain.modelos.CalculationRevision`,
+:class:`~cadrumo.domain.modelos.ModeloRecord`,
+:class:`~cadrumo.domain.modelos.VerificationReport`, and
+:class:`~cadrumo.application.modelo.ModeloWorkDeadlinePosture` into CLI text lines
 and registered JSON payload fragments. The payload side feeds
-:class:`~aeat.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
-:class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
-:class:`~aeat.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
-:class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
-and uniform :class:`~aeat.core.json_contract.Notice` rows into
-:func:`~aeat.entrypoints.cli._common._emit_envelope`.
+:class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
+:class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
+:class:`~cadrumo.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
+:class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
+and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
+:func:`~cadrumo.entrypoints.cli._common._emit_envelope`.
 """
 
 from __future__ import annotations
@@ -178,7 +178,7 @@ def advisory_notice(
     The single projection point that turns an incidental, non-blocking
     modelo diagnostic (source-resolution advisory, unauthorized-backend
     advisory, filing-obligation advisory) into a warning-severity
-    :class:`~aeat.core.json_contract.Notice`. Command groups call this instead
+    :class:`~cadrumo.core.json_contract.Notice`. Command groups call this instead
     of re-modelling the advisory as a bespoke ``*_advisory`` payload field, so
     every advisory flows through the one uniform notices surface. ``context``
     carries any structured provenance the former bespoke payload exposed (e.g.
@@ -205,7 +205,7 @@ def next_action_notice(
     The :attr:`NoticeSeverity.INFO` sibling of :func:`advisory_notice`: it turns
     the "what should the operator run next" guidance emitted after a work-unit
     read or a verification into an info-severity
-    :class:`~aeat.core.json_contract.Notice` whose ``suggestion`` is the
+    :class:`~cadrumo.core.json_contract.Notice` whose ``suggestion`` is the
     follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
     ``work status`` / ``work history``) and ``work verify`` call this instead of
     a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
@@ -428,10 +428,10 @@ def _work_unit_deadline_output_from_posture(
     """Project deadline posture onto a payload and unassessed-preview notice.
 
     Returns the typed
-    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
+    :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
     (structured result data: the voluntary-filing close date and overdue
     posture) and a warning-severity
-    :class:`~aeat.core.json_contract.Notice` list. An overdue deadline raises
+    :class:`~cadrumo.core.json_contract.Notice` list. An overdue deadline raises
     one notice that says no Article 27 surcharge or interest liability is
     determined. If available, its context carries a rate-only unassessed
     preview. An in-time (or unknown) deadline raises no notice.
@@ -499,8 +499,8 @@ def work_unit_deadline_output(unit) -> tuple[WorkDeadlinePosturePayload | None, 
     """Project a work unit's filing deadline onto payload and notice rows.
 
     The JSON branch emits
-    :class:`~aeat.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
-    plus warning-severity :class:`~aeat.core.json_contract.Notice` rows.
+    :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkDeadlinePosturePayload`
+    plus warning-severity :class:`~cadrumo.core.json_contract.Notice` rows.
     """
     return _work_unit_deadline_output_from_posture(modelo_work_deadline_posture(unit))
 
@@ -524,11 +524,11 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
     """Project a calculation revision into the shared JSON payload.
 
     The returned
-    :class:`~aeat.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
+    :class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
     carries visible casilla values, nested
-    :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
+    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
     rows, and
-    :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`
+    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`
     headline rows for envelope-aware commands.
     """
     observations = tuple(
@@ -594,7 +594,7 @@ def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
     """Return headline-result summary rows for the JSON payload.
 
     Each row is a
-    :class:`~aeat.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`.
+    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`.
     """
     summary = calculation_result_summary(rev)
     if summary is None:
@@ -616,7 +616,7 @@ def casilla_inline_trace(obs) -> str | None:
     """Render the inline formula trace for one computed casilla observation.
 
     Returns the ``op(refs) = op(values) = value`` trace string for a formula
-    observation (a :class:`~aeat.domain.calculations.registry.CasillaObservation`
+    observation (a :class:`~cadrumo.domain.calculations.registry.CasillaObservation`
     whose ``formula_id`` and ``op`` are set), sourced entirely from the
     already-computed operand lineage on the typed observation. Returns ``None``
     for an input / bound casilla that carries no formula, so those rows render
@@ -675,7 +675,7 @@ def casilla_trace_verbose_line(obs) -> str:
     """Render the full LedgerEntry detail for one computed casilla observation.
 
     Exposes the complete typed
-    :class:`~aeat.domain.calculations.registry.CasillaObservation` trace -
+    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` trace -
     ``op``, ``formula_id``, ``operand_refs``, ``operand_casilla_refs`` and
     ``operand_values`` - on a single tab-delimited line beneath its casilla row
     when the operator passes ``--verbose``.
@@ -758,9 +758,9 @@ def calculation_observation_lines(rev) -> list[str]:
 
 
 def filing_record_payload(record) -> ModeloRecordPayload:
-    """Project a :class:`~aeat.domain.modelos.ModeloRecord` into :class:`ModeloRecordPayload` JSON form.
+    """Project a :class:`~cadrumo.domain.modelos.ModeloRecord` into :class:`ModeloRecordPayload` JSON form.
 
-    When the record carries :class:`~aeat.domain.modelos.ExternalEvidence`, the
+    When the record carries :class:`~cadrumo.domain.modelos.ExternalEvidence`, the
     evidence fields are nested in :class:`ExternalEvidencePayload`; local filing
     records still render with ``live_submission=False``.
     """
@@ -794,7 +794,7 @@ def filing_record_payload(record) -> ModeloRecordPayload:
 
 
 def filing_record_lines(record) -> list[str]:
-    """Render a :class:`~aeat.domain.modelos.ModeloRecord` as stable text lines.
+    """Render a :class:`~cadrumo.domain.modelos.ModeloRecord` as stable text lines.
 
     External evidence, when present, is printed as explicit
     ``external_evidence.*`` fields rather than being folded into local filing
@@ -838,11 +838,11 @@ def verification_report_notices(report) -> list[Notice]:
     envelope reported ``status: "success"`` with an empty ``notices`` list
     while the exit code was 1 and ``result.findings`` held blocking findings
     — a contract break against
-    :func:`aeat.core.json_contract.derive_status`, which derives the
+    :func:`cadrumo.core.json_contract.derive_status`, which derives the
     envelope ``status`` from notice severity in lock-step with the
     ``ExitCode`` table. Each
-    :class:`~aeat.domain.modelos.ModeloVerificationFinding` becomes one
-    :class:`~aeat.core.json_contract.Notice`.
+    :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` becomes one
+    :class:`~cadrumo.core.json_contract.Notice`.
 
     Severity mapping: both ``BLOCKING`` and ``WARNING`` finding severities
     map to :attr:`NoticeSeverity.WARNING`. ``NoticeSeverity`` carries no
@@ -891,11 +891,11 @@ def verification_report_payload(report) -> VerificationReportPayload:
     """Project a domain report into the shared verification JSON payload.
 
     Both ``aeat app modelo work verify`` and ``verification-report view/list``
-    use this function so persisted :class:`aeat.domain.modelos.VerificationReport`
+    use this function so persisted :class:`cadrumo.domain.modelos.VerificationReport`
     rows expose identical
-    :class:`~aeat.entrypoints.cli._modelo_payloads.VerificationReportPayload`
+    :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`
     fields, including nested
-    :class:`~aeat.entrypoints.cli._modelo_payloads.FindingPayload` legal and
+    :class:`~cadrumo.entrypoints.cli._modelo_payloads.FindingPayload` legal and
     source references.
     """
     findings: list[FindingPayload] = []
@@ -930,10 +930,10 @@ def verification_report_lines(report) -> list[str]:
     """Render the text transport for a verification report.
 
     The line shape complements
-    :func:`~aeat.entrypoints.cli._modelo_rendering.verification_report_payload`:
+    :func:`~cadrumo.entrypoints.cli._modelo_rendering.verification_report_payload`:
     text output keeps the report ids, completeness verdict, missing casillas,
     and each finding's legal/source references visible without inventing fields
-    outside the persisted :class:`aeat.domain.modelos.VerificationReport`.
+    outside the persisted :class:`cadrumo.domain.modelos.VerificationReport`.
     """
     lines = [
         f"verification_report_id\t{report.verification_report_id}",

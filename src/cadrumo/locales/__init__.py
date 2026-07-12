@@ -2,7 +2,7 @@
 
 The package keeps the four runtime catalogues (``en``, ``es``, ``ca``, ``hu``)
 in sync with codebase translation keys and enforces inter-locale parity. The
-developer CLI (``python -m aeat.locales``) owns edits through ``set``,
+developer CLI (``python -m cadrumo.locales``) owns edits through ``set``,
 ``remove``, ``scaffold``, ``scaffold --check``, and ``audit`` commands; the
 catalogue YAML is CLI-maintained, not hand-edited.
 

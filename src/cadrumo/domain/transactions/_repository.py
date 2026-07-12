@@ -7,9 +7,9 @@ ledger import, the :func:`transaction_object_key` /
 the :data:`TX_BUCKET_NAMESPACE` / schema-version constants that name the
 persisted envelope contract. The concrete encrypted SQL repository lives in the
 persistence adapter
-:class:`~aeat.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
 behind the read-side
-:class:`~aeat.domain.transactions.TransactionCatalogueRepositoryProtocol`; the
+:class:`~cadrumo.domain.transactions.TransactionCatalogueRepositoryProtocol`; the
 domain package depends only on the structural port.
 
 The namespace authority is

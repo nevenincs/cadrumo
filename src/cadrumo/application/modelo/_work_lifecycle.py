@@ -1,25 +1,25 @@
 """Lifecycle mutations for modelo work units.
 
 This module creates, lists, renames, and discards
-:class:`aeat.domain.modelos.WorkUnit` records in the
-:class:`aeat.domain.modelos.WorkUnitCatalogueRepository`.
+:class:`cadrumo.domain.modelos.WorkUnit` records in the
+:class:`cadrumo.domain.modelos.WorkUnitCatalogueRepository`.
 Each mutating action emits a typed event through
 :class:`BucketEventHistoryRepository`, giving
-:func:`aeat.application.modelo.assemble_work_unit_history` a complete
+:func:`cadrumo.application.modelo.assemble_work_unit_history` a complete
 timeline from creation through discard.
 
 The lifecycle layer mutates the work-unit catalogue only. It does not choose
-visible filing targets (see :mod:`aeat.application.modelo._work_addressing`),
+visible filing targets (see :mod:`cadrumo.application.modelo._work_addressing`),
 does not decide unsupported-modelo or applicability policy (see
-:mod:`aeat.application.modelo._work_create_policy`), and does not persist
+:mod:`cadrumo.application.modelo._work_create_policy`), and does not persist
 calculation revisions or filing records. Creation still performs the profile
 readiness and registry revision/period gates before inserting the work unit, so
 programmatic callers observe the same safety boundary as the CLI.
 
 See Also:
-    :mod:`aeat.application.modelo._work_addressing`:
+    :mod:`cadrumo.application.modelo._work_addressing`:
         Resolves natural or exact operator targets before lifecycle mutation.
-    :func:`aeat.application.modelo.assemble_work_unit_history`:
+    :func:`cadrumo.application.modelo.assemble_work_unit_history`:
         Reads the emitted bucket events into a chronological work-unit timeline.
     :class:`CalculationRevision`:
         Defines calculation attempts and current/filed pointers under a work unit.

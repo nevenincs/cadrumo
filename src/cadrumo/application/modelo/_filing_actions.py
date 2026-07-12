@@ -1,6 +1,6 @@
 """Filing-record actions for modelo calculation revisions.
 
-:func:`~aeat.application.modelo.file_modelo_revision` promotes a verified
+:func:`~cadrumo.application.modelo.file_modelo_revision` promotes a verified
 :class:`CalculationRevision` into a current
 :class:`ModeloRecord` after the
 :class:`WorkflowEngine` preflight gate passes. Filing
@@ -14,23 +14,23 @@ external evidence. A successful transition sets the target revision to
 ``PRESENTADO``, creates a ``VIGENTE``
 :class:`ModeloRecord` with ``aeat_accepted=False``, and
 delegates cross-period carry projection to
-:func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`,
+:func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`,
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
 
 See Also:
-    :func:`~aeat.application.modelo.import_external_filing_evidence`:
+    :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
         Separate AEAT-attested import path that creates
         :class:`ExternalEvidence` baselines; this local
         filing action deliberately does not.
-    :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
+    :func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`:
         Persists the filing catalogue, revision state, work-unit pointers,
         bucket events, participation index rows, and optional carry observation.
-    :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~cadrumo.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casillas into non-official cross-period observations.
-    :func:`~aeat.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
+    :func:`~cadrumo.application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`:
         Resolves the shared Modelo 303 refund/carry disposition before the file
         transition persists.
-    :func:`~aeat.application.modelo._verification_actions._require_cross_period_clean_state`:
+    :func:`~cadrumo.application.modelo._verification_actions._require_cross_period_clean_state`:
         Rechecks cross-period dependencies before local filing state is written.
 """
 
@@ -219,16 +219,16 @@ def file_modelo_revision(
             unit cannot be loaded.
 
     See Also:
-        :func:`~aeat.application.modelo._revision_persistence.persist_filed_revision`:
+        :func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`:
             Performs the repository writes once all gates pass.
-        :func:`~aeat.application.modelo.import_external_filing_evidence`:
+        :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
             Creates official-evidence baselines for imported filings; use that
             path when a :class:`ExternalEvidence` reference
             must be carried.
-        :func:`~aeat.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+        :func:`~cadrumo.application.modelo._filed_revision_observation.persist_filed_revision_observation`:
             Saves the non-official ``app_filing`` observation used by later
             ``previous_filing`` calculations.
-        :func:`~aeat.application.modelo.export_modelo_revision`:
+        :func:`~cadrumo.application.modelo.export_modelo_revision`:
             Sibling local finish line that writes the fichero-BOE artefact
             without requiring this internal file marker.
     """

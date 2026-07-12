@@ -3,11 +3,11 @@
 The registry formula runtime computes the filing values and emits typed
 unresolved outcomes when a Modelo 210 rate cannot be applied directly. This
 application helper replays the same single tipo-de-gravamen resolution path over a
-:class:`~aeat.domain.calculations.registry.RegistrySnapshot`: it reads the
+:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`: it reads the
 ``m210-tipo-gravamen-2025`` baseline table, consults the cross-cutting
-:class:`~aeat.domain.calculations.registry.ConvenioAuthority` treaty projection for
+:class:`~cadrumo.domain.calculations.registry.ConvenioAuthority` treaty projection for
 the profile's ``country_of_fiscal_residence``, and returns either a scalar IRNR
-rate or blocking :class:`~aeat.domain.modelos.ModeloVerificationFinding` records for
+rate or blocking :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` records for
 deferred baseline coverage or missing treaty rows.
 
 Base-dependent branches — the ``allocation_domestic_tariff`` pension delegation and
@@ -16,12 +16,12 @@ path in the registry runtime remains the calculation authority; the sweep keeps 
 runtime-computed effective rate for those.
 
 See Also:
-    :mod:`aeat.domain.calculations.registry._formula_runtime`
+    :mod:`cadrumo.domain.calculations.registry._formula_runtime`
         Formula-runtime implementation of ``irnr_resolve_tipo_gravamen`` and the
         typed M210 unresolved outcomes this application layer converts into findings.
-    :func:`aeat.application.modelo._verification_actions.verify_modelo_revision`
+    :func:`cadrumo.application.modelo._verification_actions.verify_modelo_revision`
         Verification path that replays this resolver for Modelo 210 observations.
-    :mod:`aeat.application.calculations.tests.test_modelo_210_irnr_continuity`
+    :mod:`cadrumo.application.calculations.tests.test_modelo_210_irnr_continuity`
         Cross-renta enrollment coverage for the registry-backed M210 engine.
 """
 
@@ -55,7 +55,7 @@ def _m210_blocking_finding(
 ) -> ModeloVerificationFinding:
     """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind.
 
-    The returned :class:`~aeat.domain.modelos.ModeloVerificationFinding` is the
+    The returned :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` is the
     application-facing companion to the formula-runtime unresolved outcome:
     callers surface it to the operator instead of letting an unavailable M210
     rate silently produce filing output.
@@ -106,9 +106,9 @@ def _resolve_convenio_override(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the treaty override rate for a treaty-country profile.
 
-    Reads the cross-cutting :class:`~aeat.domain.calculations.registry.ConvenioAuthority`
+    Reads the cross-cutting :class:`~cadrumo.domain.calculations.registry.ConvenioAuthority`
     projected onto the snapshot and branches on the typed
-    :class:`~aeat.core.ConvenioOverrideKind`. Emits the
+    :class:`~cadrumo.core.ConvenioOverrideKind`. Emits the
     ``m210-convenio-rate-missing`` BLOCKING finding when the treaty carries no
     row for the filed income type. Base-dependent kinds
     (``allocation_domestic_tariff``, pension ``ceiling``) return ``(None, [])`` so
@@ -175,13 +175,13 @@ def resolve_m210_rate(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
-    The :class:`~aeat.domain.calculations.registry.RegistrySnapshot` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` supplies the
     ``m210-tipo-gravamen-2025`` baseline table and the cross-cutting
-    :class:`~aeat.domain.calculations.registry.ConvenioAuthority`; the
-    :class:`~aeat.domain.deadlines.TaxpayerProfile` supplies
+    :class:`~cadrumo.domain.calculations.registry.ConvenioAuthority`; the
+    :class:`~cadrumo.domain.deadlines.TaxpayerProfile` supplies
     ``country_of_fiscal_residence`` for treaty lookup. Returns ``(rate,
     findings)`` where ``findings`` contains blocking
-    :class:`~aeat.domain.modelos.ModeloVerificationFinding` records when a
+    :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` records when a
     required rate is deferred or unavailable.
 
     A profile with no treaty country uses the baseline table. A profile with a
@@ -191,9 +191,9 @@ def resolve_m210_rate(
     the actual base amount and are computed by the formula runtime.
 
     See Also:
-        :func:`aeat.domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
-        :class:`aeat.domain.calculations.registry.ConvenioAuthority`
-        :class:`aeat.domain.deadlines.TaxpayerProfile`
+        :func:`cadrumo.domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
+        :class:`cadrumo.domain.calculations.registry.ConvenioAuthority`
+        :class:`cadrumo.domain.deadlines.TaxpayerProfile`
     """
     baseline_param = None
     for parameter in snapshot.revision.parameters:

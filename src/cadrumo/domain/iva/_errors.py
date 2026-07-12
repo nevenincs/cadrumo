@@ -1,8 +1,8 @@
-"""Domain errors for the :mod:`aeat.domain.iva` subpackage.
+"""Domain errors for the :mod:`cadrumo.domain.iva` subpackage.
 
 Every failure mode raised by the IVA substrate inherits from
 :class:`IvaError`, which in turn inherits from
-:class:`aeat.core.errors.AeatError`. Downstream callers catch the base class
+:class:`cadrumo.core.errors.AeatError`. Downstream callers catch the base class
 when they want to treat the substrate as an opaque unit, or the specific
 subclass when they need to distinguish missing-rate from missing-category or
 corpus load failures.
@@ -14,15 +14,15 @@ from ...core.errors import AeatError
 
 
 class IvaError(AeatError):
-    """Base error for every :mod:`aeat.domain.iva` failure mode."""
+    """Base error for every :mod:`cadrumo.domain.iva` failure mode."""
 
 
 class IvaRateNotFoundError(IvaError):
-    """Raised when :func:`aeat.domain.iva.lookup_rate` cannot resolve a rate.
+    """Raised when :func:`cadrumo.domain.iva.lookup_rate` cannot resolve a rate.
 
     The lookup fails either because the requested member state is absent from
-    :data:`aeat.domain.iva.IVA_RATE_TABLE`, because no rate of the requested
-    :class:`aeat.domain.iva.IvaRateKind` is registered for that member state,
+    :data:`cadrumo.domain.iva.IVA_RATE_TABLE`, because no rate of the requested
+    :class:`cadrumo.domain.iva.IvaRateKind` is registered for that member state,
     or because every registered rate's effective window excludes the
     requested date.
     """
@@ -37,19 +37,19 @@ class IvaCatalogueError(IvaError):
 
 
 class IvaRateOverlapError(IvaError):
-    """Raised when two :class:`aeat.domain.iva.IvaRateRecord` records share a window.
+    """Raised when two :class:`cadrumo.domain.iva.IvaRateRecord` records share a window.
 
     The substrate enforces that for every ``(member_state, kind)`` partition
-    of :data:`aeat.domain.iva.IVA_RATE_TABLE` no two records have overlapping
+    of :data:`cadrumo.domain.iva.IVA_RATE_TABLE` no two records have overlapping
     ``effective_from`` / ``effective_until`` ranges. Adding a new record that
     violates this invariant raises this error at module import time so the
     regression surfaces in CI rather than silently affecting
-    :func:`aeat.domain.iva.lookup_rate` results.
+    :func:`cadrumo.domain.iva.lookup_rate` results.
     """
 
 
 class IvaClassificationError(IvaError):
-    """Raised when :func:`aeat.domain.iva.classify_iva` cannot return a deterministic match.
+    """Raised when :func:`cadrumo.domain.iva.classify_iva` cannot return a deterministic match.
 
     The classifier exposes a closed first-match-wins table; the only
     structural failure is when the input criteria cannot be represented under

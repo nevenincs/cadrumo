@@ -1,9 +1,9 @@
-"""File-backed loader and query API for :mod:`aeat.domain.manuals`.
+"""File-backed loader and query API for :mod:`cadrumo.domain.manuals`.
 
 The loader walks the ``corpus/manuals/`` directory hierarchy and
-produces strictly-validated :class:`~aeat.domain.manuals.Manual`,
-:class:`~aeat.domain.manuals.Chapter`, and
-:class:`~aeat.domain.manuals.Section` records. Tests exercise it
+produces strictly-validated :class:`~cadrumo.domain.manuals.Manual`,
+:class:`~cadrumo.domain.manuals.Chapter`, and
+:class:`~cadrumo.domain.manuals.Section` records. Tests exercise it
 against hand-crafted temporary-directory fixtures so the contract is
 locked for downstream extraction work that lands real chapter trees.
 
@@ -106,7 +106,7 @@ def _read_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
 
 
 def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
-    """Parse ``chapters.json`` into a tuple of :class:`~aeat.domain.manuals.Chapter`.
+    """Parse ``chapters.json`` into a tuple of :class:`~cadrumo.domain.manuals.Chapter`.
 
     Uses :meth:`pydantic.TypeAdapter.validate_json` so strict-mode
     pydantic models accept JSON arrays as tuples (the list-to-tuple
@@ -121,7 +121,7 @@ def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
 
 
 def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> Manual:
-    """Parse ``manual.json`` plus chapters into a :class:`~aeat.domain.manuals.Manual`.
+    """Parse ``manual.json`` plus chapters into a :class:`~cadrumo.domain.manuals.Manual`.
 
     The ``manual.json`` file is loaded via JSON mode. Chapter records are
     loaded and validated separately, then attached directly so translatable

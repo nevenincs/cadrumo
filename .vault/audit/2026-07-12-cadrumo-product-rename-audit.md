@@ -228,6 +228,34 @@ and pytest sessions without mocks, patches, skips, or compatibility aliases.
 Authority-owned AEAT registry taxonomy, cache filenames, environment controls,
 and associated historical explanations remain unchanged.
 
+### stale-import-guidance-resolution | resolution-in-progress | Clean production guidance now names Cadrumo
+
+Retargeted 1,670 leading product-root references across 322 previously clean
+production Python files. The rewrite was token-aware and limited to docstrings,
+comments, and four actionable diagnostic strings: it changes only qualified
+product modules from `aeat.` to `cadrumo.`. Nested authority paths therefore
+remain explicit, for example `aeat.adapters.outbound.aeat` becomes
+`cadrumo.adapters.outbound.aeat`, while AEAT URLs and prose, registry taxonomy,
+environment/configuration keys, translation keys, and persisted
+namespace/schema/actor strings remain unchanged.
+
+Post-change classification found zero stale product-root documentation tokens
+in the owned surface. Representative public imports and the corrected
+cross-domain snapshot action execute against Cadrumo directly. Compilation
+completed, focused Ruff E/F checks passed, and the repository-wide formatting
+check reported only pre-existing formatter drift.
+
+The original finding cannot yet be marked fully resolved because seven
+production files were already under concurrent modification and were excluded
+from this commit rather than overwritten. Those paths retain nine stale
+documentation tokens: `application/workflow/_events.py`,
+`domain/modelos/_participation_index.py`, `domain/modelos/_repository.py`,
+`domain/modelos/_verification_repository.py`, and
+`domain/portals/_registry.py` contain the remaining occurrences; the other two
+excluded paths contain none. Their current owners must retarget those nine
+tokens or release the paths for a separate follow-up before this rolling
+finding is closed.
+
 ### shared-wip-commit-provenance-resolution | resolved | User authorised overlap preservation and cross-commit
 
 The user explicitly directed the campaign to remain in this worktree, work

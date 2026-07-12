@@ -7,9 +7,9 @@ application reports. Removal and reset paths can also update an
 purchase-invoice evidence must be detached.
 
 The public services return
-:class:`~aeat.application.ledger.ManualLedgerTransactionResult`,
-:class:`~aeat.application.ledger.LedgerTransactionRemovalReport`, or
-:class:`~aeat.application.ledger.LedgerCatalogueResetReport`.
+:class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`,
+:class:`~cadrumo.application.ledger.LedgerTransactionRemovalReport`, or
+:class:`~cadrumo.application.ledger.LedgerCatalogueResetReport`.
 """
 
 from __future__ import annotations
@@ -85,7 +85,7 @@ def archive_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Mark one bucket-scoped ledger transaction as archived.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     reflecting the archived transaction state.
     """
     return _transition_manual_transaction_lifecycle(
@@ -119,7 +119,7 @@ def stash_manual_transaction(
 ) -> ManualLedgerTransactionResult:
     """Mark one active bucket-scoped ledger transaction as stashed.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     reflecting the stashed transaction state.
     """
     return _transition_manual_transaction_lifecycle(
@@ -154,8 +154,8 @@ def restore_manual_transaction(
     """Restore one stashed or archived ledger transaction to active.
 
     The clean inverse of
-    :func:`~aeat.application.ledger.archive_manual_transaction` and
-    :func:`~aeat.application.ledger.stash_manual_transaction`. Moves ``STASHED -> ACTIVE`` and
+    :func:`~cadrumo.application.ledger.archive_manual_transaction` and
+    :func:`~cadrumo.application.ledger.stash_manual_transaction`. Moves ``STASHED -> ACTIVE`` and
     ``ARCHIVED -> ACTIVE`` through the single-writer
     :func:`_transition_manual_transaction_lifecycle` primitive, so it
     inherits that primitive's atomic catalogue-plus-event persistence, its
@@ -164,10 +164,10 @@ def restore_manual_transaction(
     ``PRESENTADO_SUPERSEDIDO``) calculation revision is refused so a restore
     cannot silently change the input basis of an already-filed period. Split
     and merged lineage stays out of scope - only
-    :func:`~aeat.application.ledger.split_transaction` /
-    :func:`~aeat.application.ledger.merge_transactions` move those rows.
+    :func:`~cadrumo.application.ledger.split_transaction` /
+    :func:`~cadrumo.application.ledger.merge_transactions` move those rows.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     reflecting the restored, now-active transaction state.
 
     Raises:
@@ -228,7 +228,7 @@ def mark_transaction_reviewed_excluded(
     """Mark one active ledger transaction as reviewed and excluded from filing.
 
     Sets the transaction's ``business_classification`` to
-    :attr:`~aeat.domain.transactions.BusinessClassification.REVIEWED_EXCLUDED` —
+    :attr:`~cadrumo.domain.transactions.BusinessClassification.REVIEWED_EXCLUDED` —
     the operator's assertion "I reviewed this, it is not filing-relevant, stop
     surfacing it." The row stays ``ACTIVE`` and visible in the ledger with review
     status ``excluded``, drops out of the review queue, and is omitted from every
@@ -240,7 +240,7 @@ def mark_transaction_reviewed_excluded(
     calculation revision, so an exclusion cannot silently change the input basis
     of an already-filed period.
 
-    Returns a :class:`~aeat.application.ledger.ManualLedgerTransactionResult`
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     carrying the uniform mutation quintet.
 
     Raises:
@@ -333,7 +333,7 @@ def remove_manual_transaction(
 ) -> LedgerTransactionRemovalReport:
     """Remove one bucket-scoped ledger transaction after finalized-modelo checks.
 
-    Returns a :class:`~aeat.application.ledger.LedgerTransactionRemovalReport`
+    Returns a :class:`~cadrumo.application.ledger.LedgerTransactionRemovalReport`
     indicating whether the transaction was removed or blocked by a
     finalized-modelo reference.
     """
@@ -454,7 +454,7 @@ def reset_ledger_catalogue(
 ) -> LedgerCatalogueResetReport:
     """Reset one bucket's ledger catalogue after finalized-modelo checks.
 
-    Returns a :class:`~aeat.application.ledger.LedgerCatalogueResetReport`.
+    Returns a :class:`~cadrumo.application.ledger.LedgerCatalogueResetReport`.
     """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger reset")

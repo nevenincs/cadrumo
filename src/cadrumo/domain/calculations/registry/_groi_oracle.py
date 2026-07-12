@@ -4,7 +4,7 @@ The GROI servlet at www2.agenciatributaria.gob.es certifies whether
 a given Spanish NIF is registered in the AEAT Registro de Operadores
 Intracomunitarios. Live probing on 2026-05-07 confirmed the surface
 is reachable under cl@ve-movil authentication; the live driver lives
-at ``aeat.adapters.outbound.aeat.sede._groi_check`` and this module
+at ``cadrumo.adapters.outbound.aeat.sede._groi_check`` and this module
 wraps it as a ``LiveParityOracle``.
 
 The oracle is the SPANISH-counterparty sibling of

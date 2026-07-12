@@ -3,7 +3,7 @@
 Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
 by the :class:`Portal` code ``PORTAL_CLAVE_GESTIONES`` under the
 :class:`PortalCategory` member
-:attr:`aeat.domain.portals.PortalCategory.AUTH`, covering password
+:attr:`cadrumo.domain.portals.PortalCategory.AUTH`, covering password
 registration, recovery, and renewal via Cl@ve permanente.
 """
 

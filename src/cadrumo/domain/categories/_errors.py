@@ -1,4 +1,4 @@
-"""Domain errors for the :mod:`aeat.domain.categories` subpackage."""
+"""Domain errors for the :mod:`cadrumo.domain.categories` subpackage."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from ...core.errors import AeatError
 
 
 class CategoryError(AeatError):
-    """Base class for every error raised by :mod:`aeat.domain.categories`."""
+    """Base class for every error raised by :mod:`cadrumo.domain.categories`."""
 
 
 class CategoryValidationError(CategoryError, ValueError):

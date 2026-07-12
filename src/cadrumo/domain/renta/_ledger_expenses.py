@@ -6,7 +6,7 @@
 :class:`RentaDeductibilityResult` values become
 :class:`RentaDeductibleExpenseObservation` records routed through
 :data:`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` to registry
-:data:`CasillaId` bindings for :class:`~aeat.core.Modelo.M100`.
+:data:`CasillaId` bindings for :class:`~cadrumo.core.Modelo.M100`.
 """
 
 from __future__ import annotations

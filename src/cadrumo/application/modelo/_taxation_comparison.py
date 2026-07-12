@@ -34,12 +34,12 @@ work unit, deliberately excludes the stored declaration-type value, and delegate
 to :func:`compare_taxation_modes`.
 
 See Also:
-    :mod:`~aeat.application.modelo._semantic_role_resolution`:
+    :mod:`~cadrumo.application.modelo._semantic_role_resolution`:
         Provides the canonical semantic-role-to-casilla resolver and ambiguity
         refusal used for the cuota resultante and cuota diferencial roles.
-    :mod:`~aeat.application.modelo._binding_resolution`:
+    :mod:`~cadrumo.application.modelo._binding_resolution`:
         Supplies the profile-bound values used by the work-unit entry point.
-    :mod:`~aeat.application.modelo._work_addressing`:
+    :mod:`~cadrumo.application.modelo._work_addressing`:
         Resolves natural or exact work addresses before CLI comparison.
 """
 
@@ -345,7 +345,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 
     Raises :class:`TaxationComparisonError` when the work unit's modelo
     does not support the comparison (e.g. not Modelo 100).
-    Raises :class:`~aeat.application.modelo._action_errors.WorkUnitNotFoundError`
+    Raises :class:`~cadrumo.application.modelo._action_errors.WorkUnitNotFoundError`
     when ``work_unit_id`` does not exist in the active bucket.
 
     See Also:
@@ -430,7 +430,7 @@ def compare_taxation_for_work_address(address: object) -> TaxationComparisonResu
     """Run conjunta-vs-individual comparison for a natural or exact work address.
 
     Args:
-        address: The :class:`~aeat.application.modelo._work_addressing.ModeloWorkAddress`
+        address: The :class:`~cadrumo.application.modelo._work_addressing.ModeloWorkAddress`
             selected by CLI work-address parsing.
 
     Returns:

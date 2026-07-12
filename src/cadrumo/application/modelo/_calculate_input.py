@@ -2,28 +2,28 @@
 
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
-:class:`~aeat.domain.calculations.registry.ModeloRevision`, and validates
-canonical :class:`~aeat.domain.calculations.registry.CasillaId` values,
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision`, and validates
+canonical :class:`~cadrumo.domain.calculations.registry.CasillaId` values,
 binding channels, relation ids, and shortcut-derived semantic-role casillas
 before the calculate service persists a
-:class:`~aeat.domain.modelos.CalculationRevision`.
+:class:`~cadrumo.domain.modelos.CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
-:class:`~aeat.domain.modelos.WorkUnit` and any non-blocking
-:class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows
+:class:`~cadrumo.domain.modelos.WorkUnit` and any non-blocking
+:class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` rows
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
 See Also:
-    :func:`aeat.entrypoints.cli._modelo_work_calculate_cli.register_work_calculate_commands`:
+    :func:`cadrumo.entrypoints.cli._modelo_work_calculate_cli.register_work_calculate_commands`:
         Parses the operator-facing ``modelo work calculate`` command and calls
         this module to build the input bundle.
-    :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Consumes the validated bundle and persists the draft calculation
         revision.
-    :mod:`aeat.application.modelo._calculation_resolution`:
+    :mod:`cadrumo.application.modelo._calculation_resolution`:
         Merges caller, backend, profile, relation, and borrador channels before
         registry-engine execution.
-    :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+    :func:`cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
         Resolves shortcut inputs onto the unique casilla declared by a revision.
 """
 
@@ -141,7 +141,7 @@ class WorkCalculateInputBundle:
     a channel parallel to ``casilla_inputs``: the registry engine's
     ``calculate_registry_snapshot(text_inputs=...)`` reads it for categorical
     formula dispatch, and it rides into the persisted
-    :class:`~aeat.domain.modelos.CalculationRevision`
+    :class:`~cadrumo.domain.modelos.CalculationRevision`
     ``input_values_by_casilla_id`` field so the verification layer's
     required-casilla and
     ``casilla_equals_implies_nonzero`` predicate checks can see it. It is never
@@ -249,14 +249,14 @@ class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
 
     ``revision`` is the persisted
-    :class:`~aeat.domain.modelos.CalculationRevision`; ``work_unit`` is the
-    parent :class:`~aeat.domain.modelos.WorkUnit` loaded after persistence so
+    :class:`~cadrumo.domain.modelos.CalculationRevision`; ``work_unit`` is the
+    parent :class:`~cadrumo.domain.modelos.WorkUnit` loaded after persistence so
     renderers do not have to repeat the lookup. The optional advisory summaries
     are presentation data derived from registry applicability and authorization
     metadata.
 
     ``source_diagnostics`` carries the NON-blocking
-    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic` rows the
+    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` rows the
     source mesh and post-calculation advisory collectors raised. They include
     unresolved or deferred binding sources, unrouted ledger observations, and
     calculate-grade official-box / prior-payment / settlement advisories. The
@@ -283,14 +283,14 @@ def calculate_modelo_work_revision(
 
     The function forwards the already validated :class:`WorkCalculateInputBundle`
     into the bucket-aggregation calculation path, reloads the parent
-    :class:`~aeat.domain.modelos.WorkUnit`, and attaches any Modelo 202
+    :class:`~cadrumo.domain.modelos.WorkUnit`, and attaches any Modelo 202
     modality, authorization, or non-blocking source diagnostics needed by the
     CLI payload.
 
     See Also:
-        :func:`aeat.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Runs source aggregation and persists the calculation revision.
-        :func:`aeat.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
+        :func:`cadrumo.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
             Calls this service and serialises the result for the operator.
     """
     from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
@@ -345,10 +345,10 @@ def build_work_calculate_input_bundle(
     """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
 
     The active work unit determines the
-    :class:`~aeat.domain.calculations.registry.ModeloRevision` used for every
+    :class:`~cadrumo.domain.calculations.registry.ModeloRevision` used for every
     validation step. ``--casilla`` values must be canonical casilla ids; printed
     numbers and ambiguous noncanonical references are refused. A ``--casilla``
-    key whose registry :class:`~aeat.domain.calculations.registry.CasillaDefinition`
+    key whose registry :class:`~cadrumo.domain.calculations.registry.CasillaDefinition`
     declares ``data_type = "text"`` (e.g. Modelo 210's ``tipo_renta``) is routed
     onto the parallel text-casilla channel as a raw, non-empty string instead of
     being forced through the decimal parser; every other ``--casilla`` key keeps
@@ -360,7 +360,7 @@ def build_work_calculate_input_bundle(
 
     Detail rows are checked before engine dispatch, and shortcut flags are
     translated into semantic-role casilla values or backend-owned bindings by
-    :func:`aeat.application.modelo.apply_calculation_shortcut_inputs`.
+    :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
     _validate_detail_rows(detail_rows)
     revision = _revision_for_work_unit(work_unit_id)
@@ -523,7 +523,7 @@ def _text_value(raw_value: str, *, key: str) -> str:
     """Validate a ``--casilla`` value routed to a ``data_type = "text"`` casilla.
 
     Mirrors the registry engine's own
-    :func:`aeat.domain.calculations.registry.validated_text_input_casilla_ids`
+    :func:`cadrumo.domain.calculations.registry.validated_text_input_casilla_ids`
     non-empty-string contract at the CLI boundary, so an empty text value
     refuses loudly here instead of surfacing a generic registry error deeper in
     the calculation pipeline.
@@ -546,15 +546,15 @@ def _validated_m210_tipo_renta_code(raw_value: str, *, key: str) -> str:
     architecture-boundaries fallback: a registry-driven refusal that LISTS the
     accepted declared codes and names a fetch-gated code as fetch-gated rather
     than "invalid". The fetch-gated codes
-    (:data:`~aeat.core.FETCH_GATED_M210_TIPO_RENTA_CODES`) are real AEAT
+    (:data:`~cadrumo.core.FETCH_GATED_M210_TIPO_RENTA_CODES`) are real AEAT
     HOJA-INFORMATIVA-210 codes whose rate is not yet grounded, so an operator
     entering code ``08`` is told it is not yet fileable, never that it is
     invalid. The accepted set is the declared code axis
-    (:data:`~aeat.core.M210_TIPO_RENTA_CODE_PROJECTION`), kept in parity with the
+    (:data:`~cadrumo.core.M210_TIPO_RENTA_CODE_PROJECTION`), kept in parity with the
     registry ``m210-tipo-renta-code-2025`` parameter by the registry-build gate.
 
     On acceptance the operator-entered official code is PROJECTED to its
-    :class:`~aeat.core.TipoRentaIrnr` rate-concept token — the value the engine
+    :class:`~cadrumo.core.TipoRentaIrnr` rate-concept token — the value the engine
     already keys the baseline rate table and treaty overrides on — so the
     operator declares the code the form asks for while the rate machinery keeps
     its conceptual key. (Codes that share a concept, e.g. arrendamiento ``01``
@@ -825,14 +825,14 @@ def apply_calculation_shortcut_inputs(
     The DT 12ª pension-rescate shortcut is fact-gated by the apartado-4 time
     window (LIRPF DT 12ª.4, added by Ley 26/2014). When the operator declares the
     contingencia year and the window predicate
-    (:func:`~aeat.domain.modelos.dt12_regime_window_eligibility`) proves the
+    (:func:`~cadrumo.domain.modelos.dt12_regime_window_eligibility`) proves the
     window CLOSED, the 40% reducción injection is WITHHELD — the legally correct
     no-régimen result, since applying an out-of-window reducción would be a silent
     over-reduction (under-declaration of tax per ``no-silent-under-declaration``).
     When the window is open the reducción injects as usual; when the contingencia
     year is absent the reducción injects with an unverified-window advisory. Every
     branch surfaces a non-blocking
-    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`; calculate
+    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`; calculate
     never aborts on the window verdict.
 
     Returns:
@@ -841,7 +841,7 @@ def apply_calculation_shortcut_inputs(
         pension rescate was supplied).
 
     See Also:
-        :func:`aeat.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
+        :func:`cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_semantic_role`:
             Selects the unique semantic-role casilla for shortcut values.
     """
     resolved_casilla_values = dict(casilla_inputs)

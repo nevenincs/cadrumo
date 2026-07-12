@@ -56,7 +56,7 @@ def _validate_nif_string(value: object) -> object:
     """Validate a Spanish NIF / NIE / CIF identifier and return its canonical form.
 
     Delegates to the shared `validate_spanish_tax_id` algorithm exposed by
-    the single `aeat.core.identity` facade and re-raises domain
+    the single `cadrumo.core.identity` facade and re-raises domain
     `IdentityError` as `RegistryValidationError` so the schema boundary
     surfaces identifier-format problems through its established error type.
     """

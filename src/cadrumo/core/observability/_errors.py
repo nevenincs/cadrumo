@@ -1,7 +1,7 @@
 """Concrete observability errors layered over :class:`AeatObservabilityError`.
 
-The base class :class:`aeat.core.errors.AeatObservabilityError` lives in
-:mod:`aeat.core.errors` so other subpackages can catch it without
+The base class :class:`cadrumo.core.errors.AeatObservabilityError` lives in
+:mod:`cadrumo.core.errors` so other subpackages can catch it without
 importing observability internals. This module re-exports the base and
 declares the leaf error types raised by :func:`record_event`,
 :func:`run_context`, :func:`load_trace`, and :func:`replay_run`.
@@ -18,7 +18,7 @@ class RunContextMissingError(AeatObservabilityError):
     """Raised when :func:`record_event` runs outside an active :func:`run_context`.
 
     Caused by calling the recorder from a thread that did not propagate
-    the contextvar bound by :func:`aeat.core.observability.run_context`,
+    the contextvar bound by :func:`cadrumo.core.observability.run_context`,
     or by calling it from CLI bootstrap code that runs before the run
     context enters.
     """
@@ -56,7 +56,7 @@ class AeatCorpusDriftError(AeatObservabilityError):
 
     Carries both the recorded and observed hashes plus the entrypoint
     so the caller can render an actionable diff.
-    :func:`aeat.core.observability.replay_run` is the only call site
+    :func:`cadrumo.core.observability.replay_run` is the only call site
     that raises this.
 
     Attributes:
@@ -109,7 +109,7 @@ class GoldenReplayMismatchError(AeatObservabilityError):
 
     Carries the differing JSON paths (after the declared narrow mask is
     applied) so the caller can render an actionable diff. The
-    :func:`aeat.core.observability.replay_run` envelope-assertion tier and
+    :func:`cadrumo.core.observability.replay_run` envelope-assertion tier and
     the operator golden gate both raise this through the shared compare
     primitive.
 

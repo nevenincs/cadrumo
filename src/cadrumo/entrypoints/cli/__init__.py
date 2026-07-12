@@ -8,7 +8,7 @@ The command tree exposes two top-level namespaces:
 
 Every command in this package is a thin transport over the backend API.
 The handler bodies parse argv, call into
-``aeat.application`` / ``aeat.domain``, and render the typed result.
+``cadrumo.application`` / ``cadrumo.domain``, and render the typed result.
 No business logic lives in the CLI layer: validation, mutation,
 schema-decision, and persistence all live behind the imported
 application functions and pydantic records.

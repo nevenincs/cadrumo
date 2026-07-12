@@ -549,7 +549,7 @@ def probe_portal_registry_health(
             healthy=False,
             severity=HealthSeverity.ERROR,
             detail=f"the portal registry failed to assemble: {type(exc).__name__}: {exc}",
-            remediation="inspect the portal registry entries under `aeat.domain.portals._entries`",
+            remediation="inspect the portal registry entries under `cadrumo.domain.portals._entries`",
         )
 
     if not drift_events:

@@ -3,7 +3,7 @@
 Enforces that every casilla whose label matches a registered pattern
 in :data:`_REQUIRED_ROLE_LABEL_PATTERNS` declares the expected
 ``semantic_role``. A miss-declared or absent declaration is a hard
-:class:`~aeat.domain.calculations.registry._schema.ModeloDefinition`
+:class:`~cadrumo.domain.calculations.registry._schema.ModeloDefinition`
 validation failure surfaced by
 :func:`_validate_required_role_declarations`.
 
@@ -104,7 +104,7 @@ def collect_casillas_by_semantic_role(
     sharing a semantic role across the corpus. The returned mapping
     is immutable and document-order stable per role; the validator
     consumes the same accessor through
-    :func:`~aeat.domain.calculations.registry._validate_semantic_roles._collect_role_observations`
+    :func:`~cadrumo.domain.calculations.registry._validate_semantic_roles._collect_role_observations`
     internally.
 
     Args:

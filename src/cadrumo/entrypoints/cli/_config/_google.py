@@ -1,7 +1,7 @@
 """Operator-facing `aeat config google ...` Typer commands.
 
 Four commands wire the Google OAuth Desktop backend
-(`aeat.adapters.outbound.google`) into the CLI:
+(`cadrumo.adapters.outbound.google`) into the CLI:
 
 - `register --client-json <path>` — read + validate a Cloud Console
   Desktop client JSON and persist it as the operator's per-profile

@@ -5,7 +5,7 @@ Defines :class:`IvaRate` and :class:`PaymentStatus` together with the
 percentage backing each :class:`IvaRate` member.
 
 The percentage helper queries the centralized IVA substrate at
-:mod:`aeat.domain.iva` rather than carrying its own rate literals.
+:mod:`cadrumo.domain.iva` rather than carrying its own rate literals.
 :class:`IvaRate` keeps its closed-taxonomy role for invoice records;
 the legal-grade percentage value lives in
 ``registry/aeat/iva/rates.toml`` and is dated.
@@ -23,9 +23,9 @@ from ..iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, lookup_rate
 class IvaRate(StrEnum):
     """Closed taxonomy of Spanish IVA rate slots used on invoice lines.
 
-    The slot names map to substrate :class:`aeat.domain.iva.IvaRateKind`
+    The slot names map to substrate :class:`cadrumo.domain.iva.IvaRateKind`
     tiers and the percentage backing each slot is resolved against
-    :func:`aeat.domain.iva.lookup_rate` for Spain at a given date. This
+    :func:`cadrumo.domain.iva.lookup_rate` for Spain at a given date. This
     module no longer stores rate percentages as Python literals; if the
     legal rate changes, the substrate's TOML registry is the single
     source of truth.
@@ -85,7 +85,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
 
     Slot membership in :class:`IvaRate` is structural; the actual
     percentage is resolved against
-    :func:`aeat.domain.iva.lookup_rate` for Spain at ``on_date``. When
+    :func:`cadrumo.domain.iva.lookup_rate` for Spain at ``on_date``. When
     ``on_date`` is omitted the lookup uses today's date.
 
     Args:

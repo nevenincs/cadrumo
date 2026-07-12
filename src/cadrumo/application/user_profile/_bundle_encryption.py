@@ -83,7 +83,7 @@ def decrypt_profile_bundle_with_passphrase(
     """Decrypt ``envelope`` and validate the wrapped ``UserProfilePortableExport``.
 
     Payload validation routes through
-    :func:`~aeat.application.user_profile.validate_bundle_payload`, so an
+    :func:`~cadrumo.application.user_profile.validate_bundle_payload`, so an
     out-of-range or non-upgradeable ``bundle_schema_version`` propagates as
     :class:`UnsupportedBundleSchemaVersionError` (naming the version) rather
     than being flattened into the generic envelope error.

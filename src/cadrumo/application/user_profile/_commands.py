@@ -1,10 +1,10 @@
 """Pydantic command and result contracts for the user-profile boundary.
 
 These classes were previously declared at the body of
-:mod:`aeat.application.user_profile`'s ``__init__.py``. Pydantic v2
+:mod:`cadrumo.application.user_profile`'s ``__init__.py``. Pydantic v2
 resolves field types at class-creation time, so declaring them at the
 package boundary forced an eager import of
-:mod:`aeat.domain.user_profile` (which pulls the full registry via its
+:mod:`cadrumo.domain.user_profile` (which pulls the full registry via its
 ``_registry_contract`` companion) for every consumer that touched the
 boundary — including the state-free CLI surfaces that must never pay
 the registry cost.
@@ -13,7 +13,7 @@ Relocating the classes here lets the boundary re-export them through
 its PEP 562 ``__getattr__`` block, deferring the domain-record import
 to first reference rather than boundary-import time. The public
 surface is unchanged: every name remains reachable via
-``aeat.application.user_profile.<name>`` because the boundary's
+``cadrumo.application.user_profile.<name>`` because the boundary's
 ``__getattr__`` resolves to this module on demand.
 """
 

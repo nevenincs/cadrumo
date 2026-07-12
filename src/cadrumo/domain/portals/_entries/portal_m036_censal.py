@@ -3,7 +3,7 @@
 Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
 by the :class:`Portal` code ``PORTAL_M036_CENSAL`` under the
 :class:`PortalCategory` member
-:attr:`aeat.domain.portals.PortalCategory.CENSO`. Covers registration,
+:attr:`cadrumo.domain.portals.PortalCategory.CENSO`. Covers registration,
 modification, and deregistration on the censo of entrepreneurs,
 professionals, and withholders.
 """

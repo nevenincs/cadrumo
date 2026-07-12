@@ -2,7 +2,7 @@
 
 :func:`lookup_rate` resolves :class:`EUMemberState` and :class:`IvaRateKind`
 queries into :class:`IvaRateRecord` records loaded by
-:func:`aeat.domain.iva.load_iva_rate_table`; :func:`cite` renders
+:func:`cadrumo.domain.iva.load_iva_rate_table`; :func:`cite` renders
 :class:`IvaCategory` catalogue citations from an :class:`IvaCatalogue`.
 """
 
@@ -21,11 +21,11 @@ def lookup_rate(
     kind: IvaRateKind,
     on_date: date,
 ) -> IvaRateRecord:
-    """Return the :class:`aeat.domain.iva.IvaRateRecord` matching the supplied query.
+    """Return the :class:`cadrumo.domain.iva.IvaRateRecord` matching the supplied query.
 
     Iterates the rates registered for ``member_state`` in
-    :data:`aeat.domain.iva.IVA_RATE_TABLE` and returns the first record whose
-    :attr:`aeat.domain.iva.IvaRateRecord.kind` matches ``kind`` and whose
+    :data:`cadrumo.domain.iva.IVA_RATE_TABLE` and returns the first record whose
+    :attr:`cadrumo.domain.iva.IvaRateRecord.kind` matches ``kind`` and whose
     effective window covers ``on_date``.
 
     Args:
@@ -34,7 +34,7 @@ def lookup_rate(
         on_date: The effective date for the lookup.
 
     Returns:
-        The matching :class:`aeat.domain.iva.IvaRateRecord`.
+        The matching :class:`cadrumo.domain.iva.IvaRateRecord`.
 
     Raises:
         IvaRateNotFoundError: If no registered rate satisfies the query.
@@ -63,7 +63,7 @@ def cite(
 ) -> str:
     """Return the canonical citation string for ``category``.
 
-    Uses the first :class:`aeat.domain.iva.IvaCitation` on the matching
+    Uses the first :class:`cadrumo.domain.iva.IvaCitation` on the matching
     regulation as the canonical reference. The result includes a
     human-readable source label and the article reference so it is
     self-identifying when written to a log line.

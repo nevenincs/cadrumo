@@ -11,10 +11,10 @@ filing-record id field). Keeping them as separate aliases preserves
 that distinction for downstream call sites; collapsing them to a
 single hex-64 alias would lose the role separation.
 
-The cross-cutting bucket identity lives in :mod:`aeat.core.identity`
+The cross-cutting bucket identity lives in :mod:`cadrumo.core.identity`
 because it is a per-profile storage-container identity owned by the
 persistence boundary, not by any record domain. The ledger-transaction
-identity lives in :mod:`aeat.domain.transactions._ids` under
+identity lives in :mod:`cadrumo.domain.transactions._ids` under
 owner-domain placement; the modelo records never reference the
 transaction identity directly so no sibling-domain import is required.
 """

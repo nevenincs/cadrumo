@@ -36,7 +36,7 @@ See Also:
         protocol consumed here.
 
 Examples:
-    >>> from aeat.adapters.inbound.borrador import parse_borrador
+    >>> from cadrumo.adapters.inbound.borrador import parse_borrador
     >>> filing = parse_borrador(pdf_path)  # doctest: +SKIP
 """
 

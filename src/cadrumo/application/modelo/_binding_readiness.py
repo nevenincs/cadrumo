@@ -15,10 +15,10 @@ fetched through a :class:`ValidatedRegistryAuthority` given the
 requested modelo, year, and period.
 
 See Also:
-    :func:`aeat.application.modelo._profile_binding.resolve_profile_sourced_bindings`
+    :func:`cadrumo.application.modelo._profile_binding.resolve_profile_sourced_bindings`
         Profile binding resolver whose typed binding channels become the
         profile-resolved id set returned here.
-    :mod:`aeat.application.state_projection`
+    :mod:`cadrumo.application.state_projection`
         Broader modelo readiness projection that reports formula-consumed
         profile/manual bindings for the readiness command.
 """

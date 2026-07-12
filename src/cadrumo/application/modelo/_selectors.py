@@ -3,7 +3,7 @@
 Visible modelo/year/period input is normalized into a
 :class:`ModeloWorkSelectorRequest` and resolved to a
 :class:`ModeloWorkResolution` over active
-:class:`aeat.domain.modelos.WorkUnit` records. Revision selectors
+:class:`cadrumo.domain.modelos.WorkUnit` records. Revision selectors
 then load persisted :class:`CalculationRevision` rows and return a
 :class:`ModeloCalculationRevisionSelection` for current, latest draft, latest
 verified, filed, or explicit-id picks.
@@ -309,7 +309,7 @@ def visible_target_work_units(
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return active :class:`aeat.domain.modelos.WorkUnit` records matching the visible target.
+    """Return active :class:`cadrumo.domain.modelos.WorkUnit` records matching the visible target.
 
     The visible target is bucket/modelo/filing-year/period only. Registry
     revision is intentionally not part of this lookup so a conflicting
@@ -435,7 +435,7 @@ def select_modelo_calculation_revision(
     """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
 
     ``EXPLICIT`` requires ``calculation_revision_id`` and verifies the revision
-    belongs to the supplied :class:`aeat.domain.modelos.WorkUnit`. Non-explicit
+    belongs to the supplied :class:`cadrumo.domain.modelos.WorkUnit`. Non-explicit
     selectors resolve through the work unit's current/filed pointers or by
     latest state, and refuse missing or mismatched state instead of falling back
     to another revision.

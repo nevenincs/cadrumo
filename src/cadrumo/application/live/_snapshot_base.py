@@ -57,7 +57,7 @@ from ._errors import LiveApplicationInputError
 class SnapshotNotFoundError(AeatError, KeyError):
     """Shared base for per-service snapshot-lookup-miss errors.
 
-    Inherits from both :class:`aeat.core.errors.AeatError` and
+    Inherits from both :class:`cadrumo.core.errors.AeatError` and
     :class:`KeyError` so the class is enrolled in the ``ERROR_REGISTRY``
     via the ``AeatError.__init_subclass__`` hook while preserving the
     mapping-style lookup-miss type. ``AeatError`` is listed first so MRO
@@ -69,7 +69,7 @@ class SnapshotNotFoundError(AeatError, KeyError):
     Per-service subclasses (BorradorSnapshotNotFoundError,
     ExpedientesSnapshotNotFoundError, NotificationsSnapshotNotFoundError,
     and future siblings) inherit from this base alongside
-    :class:`aeat.core.errors.AeatError` so callers can either catch the
+    :class:`cadrumo.core.errors.AeatError` so callers can either catch the
     domain-specific class name or the shared parent.
     """
 

@@ -2,22 +2,22 @@
 
 Two registry-owned storage contracts govern this module:
 
-- :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE` —
+- :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE` —
   live profile aggregate keyed by the immutable ``profile_id`` (a UUIDv4).
   There is exactly one live profile-value record per profile bucket.
-- :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE` —
+- :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE` —
   immutable filing-time snapshots keyed by ``(profile_id, snapshot_id)``:
   a profile owns many filing snapshots.
 
 Both namespace definitions provide the ``IDENTITY``
-:class:`~aeat.adapters.persistence.storage.SensitivityClass`, schema version,
+:class:`~cadrumo.adapters.persistence.storage.SensitivityClass`, schema version,
 bucket-local scope, and object-key grammar. They ride the active-bucket
 plumbing: every read and write resolves through a profile bucket so two
 operators never share profile storage. ``snapshot_id`` is deterministic in
 shape but globally unique within a bucket per ``new_profile_snapshot_id``.
-Records are stored as :class:`~aeat.adapters.persistence.storage.Envelope`
+Records are stored as :class:`~cadrumo.adapters.persistence.storage.Envelope`
 objects encrypted at rest by
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`.
 """
 
 from __future__ import annotations
@@ -142,7 +142,7 @@ def user_profile_value_object_key(profile_id: str) -> str:
     """Return the secure-object key for a profile's live aggregate.
 
     The key shape is the object-key grammar declared by
-    :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`.
     A profile bucket holds exactly one live profile-value record, so the
     key is single-segment: the immutable ``profile_id`` (UUIDv4).
     """
@@ -156,7 +156,7 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one of a profile's filing snapshots.
 
     The key shape is the object-key grammar declared by
-    :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`.
     A profile owns many immutable filing snapshots, so the key retains the
     ``snapshot_id`` discriminator; the first segment is the immutable
     ``profile_id`` (UUIDv4).
@@ -177,7 +177,7 @@ class _BucketBoundRepository:
     :class:`UserProfileSnapshotRepository` bind to one bucket's own
     database (no cross-bucket reads/writes by default) and either accept
     an injected
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     or build one for the
     named bucket. The constructor is identical across both classes so it
     lives here as a single source of truth.
@@ -198,10 +198,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
     """Read and write live user-profile aggregates in the secure DB.
 
     Rows use
-    :data:`aeat.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
+    :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_VALUE_NAMESPACE`,
     wrap each :class:`UserProfileRecord` in an
-    :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`~cadrumo.adapters.persistence.storage.Envelope`, and persist through
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     @property
@@ -260,10 +260,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                 in this bucket.
             StoredProfileDriftError: The stored payload no longer validates
                 against the current ``UserProfileRecord`` schema.
-            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+            :class:`~cadrumo.adapters.persistence.storage.ClassificationError`:
                 The envelope's classification differs from the level expected
                 for profile data.
-            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+            :class:`~cadrumo.adapters.persistence.storage.EnvelopeVersionError`:
                 The stored schema version is newer than this code can read.
         """
         record = self._objects.load(
@@ -388,10 +388,10 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
     """Read and write immutable filing-time profile snapshots in the secure DB.
 
     Rows use
-    :data:`aeat.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`,
+    :data:`cadrumo.adapters.persistence.storage.USER_PROFILE_SNAPSHOT_NAMESPACE`,
     wrap each :class:`UserProfileSnapshot` in an
-    :class:`~aeat.adapters.persistence.storage.Envelope`, and persist through
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`.
+    :class:`~cadrumo.adapters.persistence.storage.Envelope`, and persist through
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`.
     """
 
     @property
@@ -452,10 +452,10 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Raises:
             ProfileSnapshotNotFoundError: No snapshot is stored under
                 ``snapshot_id`` in this bucket.
-            :class:`~aeat.adapters.persistence.storage.ClassificationError`:
+            :class:`~cadrumo.adapters.persistence.storage.ClassificationError`:
                 The envelope's classification differs from the level expected
                 for snapshot data.
-            :class:`~aeat.adapters.persistence.storage.EnvelopeVersionError`:
+            :class:`~cadrumo.adapters.persistence.storage.EnvelopeVersionError`:
                 The stored schema version is newer than this code can read.
         """
         record = self._objects.load(

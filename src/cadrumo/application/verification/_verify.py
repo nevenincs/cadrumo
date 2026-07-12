@@ -91,7 +91,7 @@ def verify_declaracion(
 
     Args:
         declaracion: The parsed filing returned by
-            :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
+            :func:`cadrumo.adapters.inbound.declaracion.parse_declaracion`.
         binding_values: External :class:`BindingId` facts required for
             calculations that depend on facts not printed in the declaration.
         registry_root: Optional registry root override. Defaults to

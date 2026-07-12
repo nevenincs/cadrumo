@@ -1,4 +1,4 @@
-"""Hand-curated handbook and volume identifiers for :mod:`aeat.domain.manuals`.
+"""Hand-curated handbook and volume identifiers for :mod:`cadrumo.domain.manuals`.
 
 Identifiers are closed enums so extraction pipelines cannot create
 rogue volumes.

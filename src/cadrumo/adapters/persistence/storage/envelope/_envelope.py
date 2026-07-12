@@ -393,7 +393,7 @@ def save_encrypted_envelope[T: BaseModel](
             supplying the master key used to derive the per-consumer encryption
             key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes (e.g.
-            ``b"aeat.domain.transactions.v1"``). Different
+            ``b"cadrumo.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
             ciphertext substitution fails.
 

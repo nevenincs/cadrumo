@@ -1,8 +1,8 @@
 """Typed exception hierarchy for the calc-sheets application layer.
 
-Every subclass inherits from :class:`aeat.core.errors.AeatError`; the
+Every subclass inherits from :class:`cadrumo.core.errors.AeatError`; the
 project error registry's ``__init_subclass__`` hook binds each subclass
-to its declared :class:`aeat.core.errors.ErrorCode` row at import time.
+to its declared :class:`cadrumo.core.errors.ErrorCode` row at import time.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ class CalcSheetsRecordError(CoreValidationError):
 
     Covers column-index utility failures (out-of-range or malformed
     A1 column letters) that prevent SheetCellAddress construction.
-    Inherits from :class:`~aeat.core.errors.CoreValidationError` so
+    Inherits from :class:`~cadrumo.core.errors.CoreValidationError` so
     pydantic validators can surface it as structured validation failure
     without losing the project-wide :class:`AeatError` contract.
     """

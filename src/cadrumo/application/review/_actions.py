@@ -1,8 +1,8 @@
 """Application services for manual review annotations.
 
 :func:`update_ledger_review` and :func:`update_invoice_review` return updated
-:class:`~aeat.application.workflow.WorkflowState` instances by appending
-:class:`~aeat.application.workflow.WorkflowEvent` history to the relevant
+:class:`~cadrumo.application.workflow.WorkflowState` instances by appending
+:class:`~cadrumo.application.workflow.WorkflowEvent` history to the relevant
 :class:`LedgerReviewRecord` or :class:`InvoiceReviewRecord`.
 """
 

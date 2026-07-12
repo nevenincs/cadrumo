@@ -28,7 +28,7 @@ class InitializeWorkspaceCommand(BaseModel):
     """Command to initialize a new active workspace profile and bucket.
 
     The profile facts are consumed by
-    :func:`aeat.application.setup.initialize_workspace`; enum fields preserve
+    :func:`cadrumo.application.setup.initialize_workspace`; enum fields preserve
     the domain vocabulary of :class:`IVARegime` and :class:`OutputLanguage`.
     ``profile_name`` is an operator-facing display label; the service mints
     the immutable :class:`ProfileId` / :class:`BucketId` storage identity.

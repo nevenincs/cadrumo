@@ -13,7 +13,7 @@ calculation registry definitions, filing drafts, invoices, transactions,
 deadlines, profile schema records, bucket events, and legal/manual reference
 records. Application services compose these authorities with storage, CLI, and
 adapter concerns; the domain root should stay import-light so importing
-``aeat.domain`` never pulls registry, storage, browser, or workflow subtrees.
+``cadrumo.domain`` never pulls registry, storage, browser, or workflow subtrees.
 
 The domain root is also not the shared error hierarchy. Package-specific
 ``_errors`` modules own domain failure taxonomies, while the root validation

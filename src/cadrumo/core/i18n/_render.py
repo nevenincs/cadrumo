@@ -61,7 +61,7 @@ class UnmatchedPlaceholderError(CoreError):
         self.rendered = rendered
 
 
-# Application-layer hook: set by aeat.application at startup to allow the i18n
+# Application-layer hook: set by cadrumo.application at startup to allow the i18n
 # layer to read the active-profile output language without importing application
 # modules directly. Remains None until explicitly registered.
 _profile_language_resolver: Callable[[], str | None] | None = None

@@ -19,7 +19,7 @@ exclusively from this module — the private modules
 are implementation details.
 
 Examples:
-    >>> from aeat.adapters.inbound.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
+    >>> from cadrumo.adapters.inbound.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
     >>> mapping = TokenMap(  # doctest: +SKIP
     ...     nif=(NifReplacement(real="Y1234567X", synthetic="Y0000001S", surface_label="taxpayer NIE"),),
     ... )

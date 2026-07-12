@@ -140,7 +140,7 @@ def require_active_bucket_id() -> str:
         The selected active bucket id.
 
     Raises:
-        aeat.core.errors.NoActiveProfileError: If neither settings nor the
+        cadrumo.core.errors.NoActiveProfileError: If neither settings nor the
             pointer file selects a bucket id.
     """
     from .errors import NoActiveProfileError

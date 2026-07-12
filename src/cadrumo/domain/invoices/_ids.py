@@ -4,7 +4,7 @@
 :func:`derive_invoice_id` mints for every persisted :class:`Invoice`.
 The alias lives in the invoice domain package because the invoice domain
 owns both the minting algorithm and the persisted-record shape; consumers
-in :mod:`aeat.application.ledger` and the CLI payload surface import the
+in :mod:`cadrumo.application.ledger` and the CLI payload surface import the
 alias under its public name per ADR Rule 4.
 """
 

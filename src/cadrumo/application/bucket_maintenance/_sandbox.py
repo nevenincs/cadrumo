@@ -118,7 +118,7 @@ from ._service import BucketMaintenanceService
 #: escalation. :func:`create_sandbox` is the only path this module exposes for
 #: minting one, and :func:`discard_sandbox` (via :func:`is_sandbox_label`)
 #: decides whether a bucket may be discarded without the extra confirmation.
-#: The token itself is declared in the light :mod:`aeat.core.external_constants`
+#: The token itself is declared in the light :mod:`cadrumo.core.external_constants`
 #: layer so the state-free CLI surface can read it without importing this heavy
 #: module; it is re-exported here as the canonical application-facing name.
 SANDBOX_LABEL_PREFIX = _SANDBOX_LABEL_PREFIX

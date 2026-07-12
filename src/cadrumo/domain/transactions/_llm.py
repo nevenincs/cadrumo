@@ -5,19 +5,19 @@ reference implementations for the three local LLM CLIs
 (:func:`build_claude_classifier`, :func:`build_antigravity_classifier`,
 :func:`build_codex_classifier`). The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt
-stays in sync with :class:`aeat.domain.transactions.BusinessClassification`:
+stays in sync with :class:`cadrumo.domain.transactions.BusinessClassification`:
 adding a new value automatically requires a developer to decide
 whether it belongs in the default LLM choice set.
 
 The prompt spec is parametrized:
 
-- ``classifications``: which :class:`aeat.domain.transactions.BusinessClassification`
+- ``classifications``: which :class:`cadrumo.domain.transactions.BusinessClassification`
   values the LLM may pick. Defaults to the four *decision* states
   (``BUSINESS`` / ``PERSONAL`` / ``MIXED`` / ``PROCESSED_UNCLASSIFIED``).
   Pipeline-state values (``NOT_YET_PROCESSED``, ``SKIPPED_BY_RULE``,
   ``FAILED_VALIDATION``) are excluded because they are not LLM
   decisions -- they are internal pipeline bookkeeping.
-- ``categories``: optional :class:`aeat.domain.categories.SpendingCategory`
+- ``categories``: optional :class:`cadrumo.domain.categories.SpendingCategory`
   values the LLM may additionally attach. Empty by default
   (classification-only). When populated, the response includes a
   ``category`` field.
@@ -251,7 +251,7 @@ class CategoryChoice:
 
 @dataclass(frozen=True)
 class IvaCategoryChoice:
-    """One allowed :class:`aeat.domain.iva.IvaCategory` paired with an LLM-facing hint."""
+    """One allowed :class:`cadrumo.domain.iva.IvaCategory` paired with an LLM-facing hint."""
 
     value: IvaCategory
     hint: str
@@ -317,10 +317,10 @@ class PromptSpec:
         return frozenset(choice.value for choice in self.categories)
 
     def allowed_iva_categories(self) -> frozenset[IvaCategory]:
-        """Return the set of :class:`aeat.domain.iva.IvaCategory` values the LLM may emit (empty = none).
+        """Return the set of :class:`cadrumo.domain.iva.IvaCategory` values the LLM may emit (empty = none).
 
         Returns:
-            Frozenset of :class:`aeat.domain.iva.IvaCategory` values the LLM may
+            Frozenset of :class:`cadrumo.domain.iva.IvaCategory` values the LLM may
             select from; empty when the spec does not ask for an IVA category.
         """
         return frozenset(choice.value for choice in self.iva_categories)
@@ -365,12 +365,12 @@ def prompt_spec_with_every_spending_category(
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
     Pulls authoritative Spanish display labels from
-    :data:`aeat.domain.categories.resolve_category_profiles(2025)` rather than
+    :data:`cadrumo.domain.categories.resolve_category_profiles(2025)` rather than
     inventing ad-hoc hints from the enum value -- the LLM picks
     categories far more accurately against the real AEAT terminology
     than against mangled snake_case. Categories with no registered
     profile (none today; every
-    :class:`aeat.domain.categories.SpendingCategory` member is covered)
+    :class:`cadrumo.domain.categories.SpendingCategory` member is covered)
     fall back to the humanised enum value.
 
     Args:
@@ -379,7 +379,7 @@ def prompt_spec_with_every_spending_category(
 
     Returns:
         A :class:`PromptSpec` whose ``categories`` tuple covers every
-        registered :class:`aeat.domain.categories.SpendingCategory`.
+        registered :class:`cadrumo.domain.categories.SpendingCategory`.
     """
     category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
     return PromptSpec(
@@ -419,8 +419,8 @@ _IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
 def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
     """Return the grounded IVA-category choices for the saturation prompt.
 
-    The allow-list is the closed :class:`aeat.domain.iva.IvaCategory` enum (the
-    registry :class:`aeat.domain.iva.IvaCatalogue` is validated to carry a
+    The allow-list is the closed :class:`cadrumo.domain.iva.IvaCategory` enum (the
+    registry :class:`cadrumo.domain.iva.IvaCatalogue` is validated to carry a
     regulation for every member, so the enum and the catalogue set are
     identical). Each choice is hinted with a concise description from
     :data:`_IVA_CATEGORY_HINTS`. The model SELECTS a category only; every
@@ -428,7 +428,7 @@ def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
     emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
 
     Returns:
-        One :class:`IvaCategoryChoice` per :class:`aeat.domain.iva.IvaCategory`,
+        One :class:`IvaCategoryChoice` per :class:`cadrumo.domain.iva.IvaCategory`,
         ordered by enum declaration.
     """
     return tuple(
@@ -471,7 +471,7 @@ def _category_hint(value: SpendingCategory) -> str:
 
     Pulls the Spanish display label plus the proportionality kind and
     (first 80 chars of) ``notes`` from
-    :data:`aeat.domain.categories.resolve_category_profiles(2025)` -- gives the
+    :data:`cadrumo.domain.categories.resolve_category_profiles(2025)` -- gives the
     LLM the authoritative AEAT terminology AND the deductibility
     context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
     disambiguates home-office from premises rent or drives MIXED vs
@@ -975,7 +975,7 @@ def build_claude_classifier(
     Args:
         alias: Capability-tier alias (``claude-sonnet`` / ``claude-opus``
             / ``claude-haiku``). Resolves to the current model ID via
-            :func:`aeat.domain.transactions._model_tier.resolve_profile`
+            :func:`cadrumo.domain.transactions._model_tier.resolve_profile`
             and enforces ``minimum_tier``.
         model: Explicit provider-specific model override. When set,
             takes precedence over ``alias`` AND skips the tier check;
@@ -1129,7 +1129,7 @@ def resolve_classifier(
         provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``, or a
             name registered via :func:`register_classifier`.
         alias: Optional capability-tier alias (see
-            :class:`aeat.domain.transactions._model_tier.ModelProfile`).
+            :class:`cadrumo.domain.transactions._model_tier.ModelProfile`).
             Resolves to a current model ID via the tier catalogue.
         model: Optional raw model-ID override. Takes precedence over
             alias and skips the tier check. Reserved for advanced

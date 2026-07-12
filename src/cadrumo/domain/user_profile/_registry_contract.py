@@ -260,7 +260,7 @@ def _export_issues(
     revision: ModeloRevision,
     index: UserProfileSelectorIndex,
 ) -> tuple[UserProfileRegistryContractIssue, ...]:
-    # Function-local import keeps ``aeat.domain.user_profile`` free of an
+    # Function-local import keeps ``cadrumo.domain.user_profile`` free of an
     # eager calculation-registry load at package import (the lazy-boundary
     # contract); this validator is the only runtime consumer of the enum.
     from ..calculations.registry import CasillaFieldKind

@@ -100,7 +100,7 @@ def project_review_queue(
     transactions whose ``classification_confidence`` is non-None and
     strictly below the threshold, so the operator can triage the
     lowest-confidence classifications first (see
-    :meth:`~aeat.application.review.ReviewQueue.collect`). Invoice and
+    :meth:`~cadrumo.application.review.ReviewQueue.collect`). Invoice and
     finding rows carry no decision-confidence and are excluded while the
     filter is active.
     """

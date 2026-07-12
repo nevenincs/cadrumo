@@ -62,7 +62,7 @@ _LOOKBACK_PARAM_ID: Final[str] = "lirpf-art-85:catastral-revision-lookback-years
 def _load_parameters() -> LirpfArt85ImputacionParameters:
     """Read the three LIRPF art. 85 parameters from the registry catalogue.
 
-    Routes through ``aeat.domain.calculations.registry.load_registry_tree``
+    Routes through ``cadrumo.domain.calculations.registry.load_registry_tree``
     so parameters land in the validated :class:`RegistryCatalogues.parameters`
     surface (single config-resolution path). The retired direct
     ``tomllib.load`` of ``registry/aeat/legal/irpf.toml`` is replaced —
@@ -75,7 +75,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports
-    # from aeat.domain.iva (which itself imports rental upstream), so a
+    # from cadrumo.domain.iva (which itself imports rental upstream), so a
     # parameter-only loader is needed here to avoid import-time cycles.
     from ..calculations.registry import load_legal_parameters_only
 

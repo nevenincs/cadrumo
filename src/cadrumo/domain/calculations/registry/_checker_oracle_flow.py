@@ -2,7 +2,7 @@
 
 Provides the :class:`_CheckerBaseModel` base, shared flow helpers, and
 the :func:`decode_replay_observation` convenience used by every
-:class:`~aeat.domain.calculations.registry._live_parity.BaseCheckerOracle`
+:class:`~cadrumo.domain.calculations.registry._live_parity.BaseCheckerOracle`
 subclass (GROI, NIF-IVA, and future sibling checkers).
 """
 
@@ -21,7 +21,7 @@ from ._remote_state_guard import RemoteOperation
 class _CheckerBaseModel(BaseModel):
     """Strict frozen base for checker-oracle parity records.
 
-    Every :class:`~aeat.domain.calculations.registry._live_parity.BaseCheckerOracle`
+    Every :class:`~cadrumo.domain.calculations.registry._live_parity.BaseCheckerOracle`
     observation and aggregate result type inherits this base to guarantee a
     consistent strict-frozen-forbid Pydantic config across all checker surfaces.
     """

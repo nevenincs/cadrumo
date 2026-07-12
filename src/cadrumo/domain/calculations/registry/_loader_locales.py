@@ -7,7 +7,7 @@ merge, referential-integrity check, and casilla-injection pipeline that
 :func:`~domain.calculations.registry._loader.load_modelo_directory`
 applies after merging a modelo's revision fragments. Per
 `aeat-locales-cli`, the modelo schema-local translation TOML this module
-reads is authored only through the ``aeat.locales modelo`` CLI; this module
+reads is authored only through the ``cadrumo.locales modelo`` CLI; this module
 is the read-side compiler for that authored data, not an authoring surface.
 
 See Also:

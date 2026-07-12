@@ -1,8 +1,8 @@
 """Cross-source review-queue aggregator.
 
 Provides :class:`ReviewQueue`, which combines the per-source adapters
-in :mod:`aeat.application.review._adapters` into one deterministically
-sorted tuple of :class:`aeat.application.review.ReviewItem` values.
+in :mod:`cadrumo.application.review._adapters` into one deterministically
+sorted tuple of :class:`cadrumo.application.review.ReviewItem` values.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ class ReviewQueue:
         """Return every pending review item that matches the filters.
 
         Args:
-            settings: Loaded :class:`aeat.core.config.Settings`.
+            settings: Loaded :class:`cadrumo.core.config.Settings`.
             bucket_id: Active bucket identifier used to scope the query
                 to the correct operator profile.
             kinds: Optional set of :class:`ReviewItemKind` to include.

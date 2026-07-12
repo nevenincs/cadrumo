@@ -123,7 +123,7 @@ def _resolve_backend(backend: JustificanteParserBackend | None) -> JustificanteP
     """Resolve an explicit backend or the configured default backend."""
     if backend is not None:
         return backend
-    # Deferred import: ``aeat.core.config`` imports the public justificante
+    # Deferred import: ``cadrumo.core.config`` imports the public justificante
     # surface for the ``JustificanteParserBackend`` enum, so importing
     # it at module scope would form a cycle.
     from ....core.config import load_settings

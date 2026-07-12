@@ -1,7 +1,7 @@
 """Strict pydantic v2 records for declaración verification verdicts.
 
 Defines the closed schema returned by
-:func:`aeat.application.verification.verify_declaracion`:
+:func:`cadrumo.application.verification.verify_declaracion`:
 :class:`DiscrepancyCause`, :class:`VerificationStatus`,
 :class:`ClassifiedDiscrepancy`, and the top-level
 :class:`VerificationVerdict`. Every model is frozen, strict, and rejects
@@ -9,7 +9,7 @@ extra keys so that the operator's UI and any persisted verdict survive an
 end-to-end JSON round trip without drift.
 
 The :attr:`VerificationVerdict.period` field is typed as the canonical
-:class:`~aeat.core.Period` value object (``filing_year`` + ``code``),
+:class:`~cadrumo.core.Period` value object (``filing_year`` + ``code``),
 serialising to ``{"filing_year": YYYY, "code": "1T"}`` in JSON.
 
 See Also:
@@ -36,7 +36,7 @@ class DiscrepancyCause(StrEnum):
     """Cause classification for a printed-vs-computed value mismatch.
 
     The categories mirror the local verification classifier in
-    :func:`aeat.application.verification.verify_declaracion`; they are not
+    :func:`cadrumo.application.verification.verify_declaracion`; they are not
     remote AEAT status values.
 
     Attributes:
@@ -103,9 +103,9 @@ class VerificationVerdict(BaseModel):
 
     Attributes:
         modelo: AEAT modelo identifier.
-        period: The filing :class:`~aeat.core.Period` (year + registry code).
+        period: The filing :class:`~cadrumo.core.Period` (year + registry code).
         registry_snapshot_id: Identifier of the
-            :class:`~aeat.domain.calculations.registry.RegistrySnapshot`
+            :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`
             used for the audit.
         verification_expectation_ids: Registry expectation ids that
             governed the verdict.
@@ -119,7 +119,7 @@ class VerificationVerdict(BaseModel):
             whose reconciliation is backed by an AEAT-authoritative
             independent oracle expected value, rather than only the app's
             own engine. Registry-declared data; see
-            :attr:`~aeat.domain.calculations.registry.RegistryVerificationPolicy.externally_grounded_casilla_ids`.
+            :attr:`~cadrumo.domain.calculations.registry.RegistryVerificationPolicy.externally_grounded_casilla_ids`.
         independently_grounded_fraction: Fraction of the reconciled casilla
             set that is externally grounded, in the inclusive ``0.0..1.0``
             range. A grounding-depth signal, not a correctness score: a low

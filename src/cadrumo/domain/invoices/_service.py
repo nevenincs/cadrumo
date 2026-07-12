@@ -1,14 +1,14 @@
 """Service helpers for invoice catalogues.
 
 Exposes pure-function service operations over an
-:class:`~aeat.domain.invoices.InvoiceCatalogue`: lookup
+:class:`~cadrumo.domain.invoices.InvoiceCatalogue`: lookup
 (:func:`find_invoice`, :func:`find_unmatched`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
 (:func:`verify_link_consistency`). Operations that span both the invoice
 catalogue and the :class:`TransactionCatalogue` accept each as an
 independent argument. Persisted cross-catalogue workflows belong in
-:mod:`aeat.application.invoices`.
+:mod:`cadrumo.application.invoices`.
 """
 
 from __future__ import annotations
@@ -85,11 +85,11 @@ def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None
     """Return one invoice from a catalogue if present.
 
     Args:
-        catalogue: Source :class:`~aeat.domain.invoices.InvoiceCatalogue`.
+        catalogue: Source :class:`~cadrumo.domain.invoices.InvoiceCatalogue`.
         invoice_id: Stable invoice identifier to look up.
 
     Returns:
-        The matching :class:`~aeat.domain.invoices.Invoice`, or ``None``
+        The matching :class:`~cadrumo.domain.invoices.Invoice`, or ``None``
         when absent.
     """
     return catalogue.get(invoice_id)

@@ -1,7 +1,7 @@
 """Closed taxonomies used by the portal registry.
 
 These enums are the keying dimensions the registry exposes on
-:class:`aeat.domain.portals.PortalMetadata`: the functional category a portal
+:class:`cadrumo.domain.portals.PortalMetadata`: the functional category a portal
 belongs to, the authentication method(s) it accepts, the URL-stability
 tier it sits in, and the AEAT-family subdomain it is hosted on. Every
 enum is a :class:`enum.StrEnum` so members compare equal to their
@@ -73,7 +73,7 @@ class PortalHost(StrEnum):
     """AEAT-family hosts the scraper must navigate.
 
     Values are stable registry keys, not hostnames. The hostname
-    authority lives in :mod:`aeat.core.external_constants`, and portal
+    authority lives in :mod:`cadrumo.core.external_constants`, and portal
     validation resolves these keys through that central registry.
     ``CLAVE_GOB`` is the whole-of-government identity provider; it sits
     adjacent to AEAT but is in scope because the scraper hands off to it

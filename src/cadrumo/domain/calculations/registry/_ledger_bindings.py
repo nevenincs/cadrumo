@@ -32,8 +32,8 @@ from ._ids import BindingId, CasillaId, validated_casilla_id
 from ._schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
-# :data:`aeat.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
-# set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
+# :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
+# set from :class:`~cadrumo.core.BindingSourceKind` (the single source-kind
 # taxonomy). Every binding whose ``source`` is a member reads its values from
 # the bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
 # first-slice income/expense aggregation, the M130 gasto cumulative aggregation,
@@ -83,7 +83,7 @@ def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
 #
 # These bindings aggregate ledger lines whose IVA classification matches a
 # regime + destination Member State + rate tier + invoice direction selector.
-# The classification axes come from :mod:`aeat.domain.iva`; the binding source
+# The classification axes come from :mod:`cadrumo.domain.iva`; the binding source
 # is the registry's ledger-driven aggregation kind for Modelo 369.
 #
 # The selector keys are validated against the substrate's closed enums at
@@ -111,7 +111,7 @@ class OssIossLedgerObservation(BaseModel):
         rate_kind: Substrate rate tier (general / reduced / etc.).
         invoice_direction: Whether the autónomo issued or received
             the invoice.
-        transaction_kind: Substrate :class:`aeat.domain.iva.TransactionKind`
+        transaction_kind: Substrate :class:`cadrumo.domain.iva.TransactionKind`
             the line resolves to.
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR (already applied at the
@@ -575,7 +575,7 @@ def unsupported_ledger_iva_observations(
     be silently inferred into an annual or periodic form.
 
     Categories that bear no Modelo 303 cuota *by law*
-    (:data:`~aeat.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
+    (:data:`~cadrumo.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
     zero-rated, not-subject, exempt intra-community supplies/exports,
     triangulation, and régimen simplificado) are excluded: they
     correctly match no cuota binding, so flagging them would be a false
@@ -622,7 +622,7 @@ def unsupported_ledger_iva_observations(
 
 # Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
 # These must stay in sync with the binding selectors in the TOML and with
-# aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS (the
+# cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS (the
 # domain-owned SpendingCategory -> casilla routing table this registry-layer
 # module cannot import directly without reversing the hexagonal dependency
 # direction); they are validated at registry load time so mismatches surface
@@ -651,7 +651,7 @@ class RentaExpenseObservationProtocol(Protocol):
 
     The registry only needs these four attributes to resolve
     ``ledger_renta_expense_aggregation`` bindings; the full
-    :class:`~aeat.domain.renta.RentaDeductibleExpenseObservation` satisfies
+    :class:`~cadrumo.domain.renta.RentaDeductibleExpenseObservation` satisfies
     this protocol without any explicit declaration.
 
     Properties are declared read-only so that Literal-typed concrete attributes
@@ -792,7 +792,7 @@ def unsupported_ledger_renta_expense_observations(
 def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return the ``target_casilla_id`` set this revision's own bindings route to.
 
-    Unlike :data:`aeat.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
+    Unlike :data:`cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
     (the universal BOE-prescribed routing table spanning every filing year the
     application supports), this returns only the casillas a
     ``ledger_renta_expense_aggregation`` binding on THIS revision actually
@@ -801,7 +801,7 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
     for them -- so their required set is legitimately empty even though the
     universal routing table's codomain is wider. The snapshot-time
     referential-integrity gate
-    (:mod:`aeat.domain.renta._first_slice_routing_integrity`) uses this
+    (:mod:`cadrumo.domain.renta._first_slice_routing_integrity`) uses this
     per-revision set rather than the universal table so it only fails when a
     binding THIS revision actually declares points at a casilla absent from
     that same revision -- the real defect class the gate exists to catch,
@@ -913,7 +913,7 @@ class RentaIncomeObservationProtocol(Protocol):
 
     The registry only needs these attributes to resolve
     ``ledger_renta_income_aggregation`` bindings; the full
-    :class:`~aeat.application.aggregation._renta_income_ledger.RentaIncomeObservation`
+    :class:`~cadrumo.application.aggregation._renta_income_ledger.RentaIncomeObservation`
     satisfies this protocol without any explicit declaration.
     """
 
@@ -1030,7 +1030,7 @@ def unsupported_ledger_renta_income_observations(
 # (``source_jurisdiction == "ES"``) income into
 # ``impatriado.base-liquidable-general``; a foreign-source or
 # jurisdiction-unresolved row is segregated by the application-layer classifier
-# (:mod:`aeat.application.aggregation._impatriado_income_ledger`) as a typed
+# (:mod:`cadrumo.application.aggregation._impatriado_income_ledger`) as a typed
 # BECKHAM_FOREIGN_SOURCE_SEGREGATED issue, never silently admitted. This
 # registry family only needs the ES-scoped observation totals; the source-scope
 # gate is owned by the classifier, so the resolver here simply sums the matched
@@ -1125,7 +1125,7 @@ class ImpatriadoIncomeObservationProtocol(Protocol):
 
     The registry only needs these attributes to resolve
     ``ledger_impatriado_income_aggregation`` bindings; the full
-    :class:`~aeat.application.aggregation._impatriado_income_ledger.ImpatriadoIncomeObservation`
+    :class:`~cadrumo.application.aggregation._impatriado_income_ledger.ImpatriadoIncomeObservation`
     satisfies this protocol without any explicit declaration.
     """
 
@@ -1241,7 +1241,7 @@ class RentaGastoObservationProtocol(Protocol):
 
     The registry only needs these two attributes to resolve
     ``ledger_renta_gasto_aggregation`` bindings; the full
-    :class:`~aeat.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
+    :class:`~cadrumo.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
     satisfies this protocol without any explicit declaration. Mirrors
     :class:`RentaIncomeObservationProtocol` for the expense dimension.
     """

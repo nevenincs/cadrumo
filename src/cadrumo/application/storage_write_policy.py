@@ -3,8 +3,8 @@
 The CLI root asks :func:`inspect_storage_write_policy` before opening
 profile-bound storage. The returned :class:`StorageWritePolicyDecision`
 combines the matched :class:`StorageWritePolicyCode` with the
-:class:`~aeat.core.config.StorageRouteKind` derived from
-:class:`~aeat.core.config.Settings`.
+:class:`~cadrumo.core.config.StorageRouteKind` derived from
+:class:`~cadrumo.core.config.Settings`.
 
 This module is the application-side policy query, not the session opener.
 It classifies the dispatched verb path, honours bootstrap-exempt CLI
@@ -12,21 +12,21 @@ surfaces, delegates stub-only Modelo work-create refusals to the leaf
 handler, and refuses profile-bound mutations when storage is routed to the
 root fallback database or to an explicit ``AEAT_DATABASE_URL``. A stale
 settings object with a valid active-profile pointer is reclassified through
-:func:`~aeat.core.config.settings_for_active_profile_bucket` so the root
+:func:`~cadrumo.core.config.settings_for_active_profile_bucket` so the root
 callback sees the same active-bucket route the storage runtime would use.
 
 See Also:
-    :mod:`aeat.entrypoints.cli`
+    :mod:`cadrumo.entrypoints.cli`
         Root command callback that reconstructs verb paths, consults this
         policy, and opens active bucket sessions only after the policy allows
         dispatch.
-    :func:`aeat.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
+    :func:`cadrumo.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
         Supplies the sessionless bootstrap flag passed into
         :func:`inspect_storage_write_policy`.
-    :func:`aeat.core.config.classify_storage_route`
-        Produces the :class:`~aeat.core.config.StorageRouteClassification`
+    :func:`cadrumo.core.config.classify_storage_route`
+        Produces the :class:`~cadrumo.core.config.StorageRouteClassification`
         inspected for guarded mutation paths.
-    :data:`aeat.core.storage_route_guidance.EXPLICIT_DATABASE_URL_PROFILE_RECOVERY`
+    :data:`cadrumo.core.storage_route_guidance.EXPLICIT_DATABASE_URL_PROFILE_RECOVERY`
         Operator recovery text attached to explicit database URL refusals.
 """
 
@@ -74,7 +74,7 @@ class StorageWritePolicyDecision(BaseModel):
     """Decision returned by the backend storage write-policy query.
 
     The CLI root converts refusing decisions into
-    :class:`~aeat.entrypoints.cli._errors.CliRefusedBoundaryError` instances;
+    :class:`~cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError` instances;
     allowed decisions let dispatch continue toward the active-bucket session
     opener.
 
@@ -85,7 +85,7 @@ class StorageWritePolicyDecision(BaseModel):
             profile-bound mutation catalogue.
         bootstrap_exempt: Whether the CLI root classified the invocation as
             bootstrap-exempt before policy inspection.
-        route_kind: Effective :class:`~aeat.core.config.StorageRouteKind` for
+        route_kind: Effective :class:`~cadrumo.core.config.StorageRouteKind` for
             guarded writes, or ``None`` when no route was inspected.
         message_key: Locale key for a refusal message rendered at the CLI
             boundary.
@@ -105,7 +105,7 @@ class StorageWritePolicyDecision(BaseModel):
     recovery_hint: str = ""
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
-        """Render the translated user-facing refusal message through :func:`~aeat.core.i18n.tr`."""
+        """Render the translated user-facing refusal message through :func:`~cadrumo.core.i18n.tr`."""
         if self.allowed or not self.message_key:
             return ""
         if self.detail_message_key:
@@ -113,7 +113,7 @@ class StorageWritePolicyDecision(BaseModel):
         return tr(self.message_key, locale=locale)
 
     def refusal_context(self) -> dict[str, str] | None:
-        """Return structured context for :class:`~aeat.entrypoints.cli._errors.CliRefusedBoundaryError`."""
+        """Return structured context for :class:`~cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError`."""
         if not self.recovery_hint:
             return None
         return {"recovery": self.recovery_hint}
@@ -211,13 +211,13 @@ def inspect_storage_write_policy(
     storage route is an active bucket; root fallback and explicit database
     routes return refusing :class:`StorageWritePolicyDecision` values before
     the CLI opens a bucket session. The effective route comes from
-    :class:`~aeat.core.config.StorageRouteClassification` so root dispatch does
+    :class:`~cadrumo.core.config.StorageRouteClassification` so root dispatch does
     not duplicate storage-routing logic.
 
     See Also:
         :data:`PROFILE_BOUND_WRITE_VERB_PATHS`
             Guarded mutation catalog consulted by this policy query.
-        :func:`~aeat.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
+        :func:`~cadrumo.entrypoints.cli._bootstrap_exempt.is_bootstrap_exempt`
             Source of the ``bootstrap_exempt`` input from the CLI root.
         :func:`is_profile_bound_write_verb_path`
             Prefix matcher used before route classification.
@@ -300,7 +300,7 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
     A non-explicit root fallback route can still represent stale settings
     captured before the active-profile pointer was read. When a pointer exists,
     reclassify with
-    :func:`~aeat.core.config.settings_for_active_profile_bucket` so guarded
+    :func:`~cadrumo.core.config.settings_for_active_profile_bucket` so guarded
     writes follow the active bucket route instead of being refused as cold-root
     writes.
     """

@@ -1,6 +1,6 @@
 """Domain error hierarchy for currency normalization and exchange-rate lookup.
 
-All exceptions extend :class:`~aeat.core.errors.AeatError` so callers can
+All exceptions extend :class:`~cadrumo.core.errors.AeatError` so callers can
 catch either the domain-specific type or the project-wide base class.
 """
 

@@ -2,7 +2,7 @@
 
 This module normalizes concrete :class:`TransactionCatalogueRepository`,
 :class:`InvoiceCatalogueRepository`, and :class:`BucketEventHistoryRepository`
-instances; builds :class:`~aeat.domain.buckets.BucketEvent` audit entries;
+instances; builds :class:`~cadrumo.domain.buckets.BucketEvent` audit entries;
 mutates :class:`TransactionCatalogue` and :class:`InvoiceCatalogue` snapshots
 atomically; and verifies evidence, attachment, usage-ratio, and
 finalized-modelo blockers for the public ledger action services.

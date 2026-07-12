@@ -1,28 +1,28 @@
 """WorkflowState-aware orchestration for profile lifecycle services.
 
 The lifecycle service handles secure-DB persistence via a
-:class:`~aeat.application.user_profile.ProfileLifecycleService`, which wraps a
-:class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+:class:`~cadrumo.application.user_profile.ProfileLifecycleService`, which wraps a
+:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
 and emits bucket events to
-:class:`~aeat.domain.buckets.BucketEventHistoryRepository` per profile.
+:class:`~cadrumo.domain.buckets.BucketEventHistoryRepository` per profile.
 This module threads active-profile selection through
-:class:`~aeat.application.workflow.WorkflowState`, the plaintext
-:class:`~aeat.core.BucketPointer`, and the workflow-level
-:class:`~aeat.application.workflow.WorkflowEvent` audit stream around
+:class:`~cadrumo.application.workflow.WorkflowState`, the plaintext
+:class:`~cadrumo.core.BucketPointer`, and the workflow-level
+:class:`~cadrumo.application.workflow.WorkflowEvent` audit stream around
 those calls so CLI surfaces do not duplicate that wiring.
 
 Profile identity is an immutable UUIDv4 minted at creation. The bucket
 directory, keystore directory, secure-object key, and active-profile
 pointer all key on that UUID; the operator-chosen display name is a
 fully decoupled mutable label carried in the
-:class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`.
+:class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`.
 
 See Also:
-    :class:`~aeat.application.user_profile.ProfileRepository`
+    :class:`~cadrumo.application.user_profile.ProfileRepository`
         Sole writer for the cross-store profile aggregate.
-    :func:`~aeat.application.user_profile.profile_create_storage_span`
+    :func:`~cadrumo.application.user_profile.profile_create_storage_span`
         Create-time bucket session used before the encrypted record exists.
-    :func:`~aeat.application.user_profile.profile_storage_session`
+    :func:`~cadrumo.application.user_profile.profile_storage_session`
         Existing-profile bucket session used for application-owned writes.
 """
 
@@ -84,19 +84,19 @@ def build_lifecycle_service(
     """Construct a lifecycle service for one bucket.
 
     Returns a
-    :class:`~aeat.application.user_profile.ProfileLifecycleService`.
+    :class:`~cadrumo.application.user_profile.ProfileLifecycleService`.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     override; a per-bucket store is resolved when ``None``.
 
     The profile aggregate AND the bucket-event-history catalogue both
     belong to the named bucket's own database. When no repository is
     injected, a single per-bucket secure-object store is resolved and
     handed to both the
-    :class:`~aeat.application.user_profile.UserProfileLifecycleRepository`
+    :class:`~cadrumo.application.user_profile.UserProfileLifecycleRepository`
     and the
-    :class:`~aeat.domain.buckets.BucketEventHistoryRepository`, so the
+    :class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`, so the
     audit trail can never split from the records it describes. The
     prior wiring left the event-history repository on the process-global
     engine, which had no URL until an active profile existed - every
@@ -124,7 +124,7 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
 def _write_active_profile_pointer(bucket_id: str) -> None:
     """Atomically materialise the active-profile pointer file on disk.
 
-    The :class:`~aeat.core.BucketPointer` file is the canonical default
+    The :class:`~cadrumo.core.BucketPointer` file is the canonical default
     for the active-profile precedence chain. Writing happens here so a
     successful register / select call leaves the on-disk state
     self-consistent: the next process invocation resolves the active
@@ -144,11 +144,11 @@ def _write_active_profile_pointer(bucket_id: str) -> None:
 def profile_create_storage_span(profile_id: str):
     """Open the first-profile storage span for a bucket being created.
 
-    The span writes the provisional :class:`~aeat.core.BucketPointer`
+    The span writes the provisional :class:`~cadrumo.core.BucketPointer`
     needed to resolve the create-time bucket route, then enters
-    :func:`~aeat.adapters.persistence.storage.activate_master_key_provider`
+    :func:`~cadrumo.adapters.persistence.storage.activate_master_key_provider`
     with DEK enrollment enabled. If bucket setup fails before or outside
-    :meth:`~aeat.application.user_profile.ProfileRepository.create`
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.create`
     owns rollback, the prior pointer bytes are restored and provisional
     bucket/DEK artifacts minted by this span are removed.
     """
@@ -236,7 +236,7 @@ def profile_storage_session(profile_id: str):
     """Open a storage session scoped to ``profile_id`` for application-owned writes.
 
     Existing-profile operations use this span to bind the active
-    :class:`~aeat.core.BucketPointer` route and master-key session before
+    :class:`~cadrumo.core.BucketPointer` route and master-key session before
     repositories open encrypted bucket-local storage.
     """
     from ...adapters.persistence.storage.master_key import (
@@ -292,16 +292,16 @@ def register_active_profile(
     """Atomically register a new profile and make it the active one.
 
     Args:
-        state: The current :class:`~aeat.application.workflow.WorkflowState`;
+        state: The current :class:`~cadrumo.application.workflow.WorkflowState`;
             the returned state carries the registration event appended to the
             audit stream.
         profile_id: Immutable UUIDv4 profile identity, minted by the caller
-            (see :func:`~aeat.domain.user_profile.new_profile_id`).
+            (see :func:`~cadrumo.domain.user_profile.new_profile_id`).
         display_name: Operator-chosen label carried in the bucket manifest and
             the encrypted record; plays no role in any key or path.
         facts: Initial profile facts to persist alongside the registration.
         secure_objects: Optional
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
         enforce_unique_tax_id: When ``True``, refuses if another live profile
@@ -310,15 +310,15 @@ def register_active_profile(
             the new profile can inherit data from an existing bucket.
 
     This function is a thin
-    :class:`~aeat.application.workflow.WorkflowState` coordinator: the
+    :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the
     entire cross-store write — bucket directory, manifest, encrypted
     record, AND the active-profile pointer — plus the duplicate-label
     refusal and the all-or-nothing rollback are a single unit of work
     owned by
-    :meth:`~aeat.application.user_profile.ProfileRepository.create`.
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.create`.
     This function delegates that create and threads the workflow-level
     event audit stream onto the supplied
-    :class:`~aeat.application.workflow.WorkflowState`.
+    :class:`~cadrumo.application.workflow.WorkflowState`.
 
     The repository owns every store write, the pointer included. A
     caller that performs the cold-start pointer write early (so the
@@ -418,8 +418,8 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
 def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     """Tombstone ``profile_id`` inside an application-owned bucket session.
 
-    Returns the deleted :class:`~aeat.domain.user_profile.UserProfileRecord`
-    from :meth:`~aeat.application.user_profile.ProfileRepository.delete`.
+    Returns the deleted :class:`~cadrumo.domain.user_profile.UserProfileRecord`
+    from :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
     """
     with profile_storage_session(profile_id):
         aggregate = ProfileRepository().delete(profile_id)
@@ -430,8 +430,8 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
     """Restore a tombstoned ``profile_id`` inside an application-owned bucket session.
 
     Symmetric inverse of :func:`delete_profile_with_lifecycle_span`.
-    Returns the reactivated :class:`~aeat.domain.user_profile.UserProfileRecord`
-    from :meth:`~aeat.application.user_profile.ProfileRepository.reactivate`.
+    Returns the reactivated :class:`~cadrumo.domain.user_profile.UserProfileRecord`
+    from :meth:`~cadrumo.application.user_profile.ProfileRepository.reactivate`.
     """
     with profile_storage_session(profile_id):
         aggregate = ProfileRepository().reactivate(profile_id)
@@ -457,7 +457,7 @@ def capture_active_profile_pointer() -> str | None:
     ``try``/``except`` if the create span fails. This closes the window
     the repository's own rollback cannot reach: a failure between the
     early pointer write and
-    :meth:`~aeat.application.user_profile.ProfileRepository.create`
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.create`
     (engine open, master-key activation) would otherwise strand the
     pointer at a profile whose record was never persisted.
     """
@@ -499,7 +499,7 @@ def refuse_duplicate_label(
     is an existence claim; recreating in place would silently mix new
     profile data into the existing bucket, so the create is refused and
     the operator is routed to ``switch`` or ``delete``. The live-label
-    lookup is :func:`~aeat.application.workflow.read_profile_bucket`.
+    lookup is :func:`~cadrumo.application.workflow.read_profile_bucket`.
     """
     from ..workflow import read_profile_bucket
 
@@ -518,7 +518,7 @@ def require_registered_label(display_name: str) -> None:
     re-runs the wizard against an *existing* profile, so an unknown
     label is an operator error, not an implicit create. The registered
     label authority is
-    :func:`~aeat.application.workflow.read_profile_bucket`.
+    :func:`~cadrumo.application.workflow.read_profile_bucket`.
     """
     from ..workflow import read_profile_bucket
 
@@ -533,7 +533,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     """Trash-rename and remove a profile's on-disk bucket directory.
 
     Used both by atomic-create rollback and by
-    :func:`~aeat.application.config_reset.reset_config`. The
+    :func:`~cadrumo.application.config_reset.reset_config`. The
     directory is first renamed to a trash-prefix sibling so a crashed
     removal leaves a recoverable on-disk trace, then recursively
     deleted. When the rename is refused - Windows denies renaming a
@@ -604,7 +604,7 @@ def select_profile(
     """Select an existing profile as active.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     override.
 
     Raises :class:`ProfileNotFoundError` if the profile does not
@@ -612,10 +612,10 @@ def select_profile(
     (:func:`register_active_profile`).
 
     This function is a thin
-    :class:`~aeat.application.workflow.WorkflowState` coordinator: the
+    :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the
     profile load + integrity check + active-profile pointer write live
     solely in
-    :meth:`~aeat.application.user_profile.ProfileRepository.select`.
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.select`.
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.select(profile_id)  # raises ProfileNotFoundError if missing
@@ -638,12 +638,12 @@ def set_active_field(
         state: The current workflow state.
         fact: The profile fact to upsert.
         secure_objects: Optional
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
 
     Returns:
-        The updated :class:`~aeat.application.workflow.WorkflowState`.
+        The updated :class:`~cadrumo.application.workflow.WorkflowState`.
     """
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
@@ -671,10 +671,10 @@ def set_active_fields(
     """Upsert several facts on the active profile in sequence.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     override.
 
-    Returns a :class:`~aeat.application.workflow.WorkflowState`.
+    Returns a :class:`~cadrumo.application.workflow.WorkflowState`.
     """
     updated = state
     for fact in facts:
@@ -691,21 +691,21 @@ def remove_active_profile(
     """Tombstone the active profile and clear the active pointer.
 
     ``secure_objects`` is an optional
-    :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     override.
 
     The bucket directory and
-    :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
+    :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`
     stay on disk so audit and history reads can still resolve the
     tombstoned bucket; selecting the tombstoned profile via
     :func:`select_profile` will raise because the record is no longer
     live.
 
     This function is a thin
-    :class:`~aeat.application.workflow.WorkflowState` coordinator: the
+    :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the
     cross-store tombstone (encrypted-record tombstone + active-profile
     pointer clear) lives solely in
-    :meth:`~aeat.application.user_profile.ProfileRepository.delete`.
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
     """
     profile_id = _require_active(state)
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
@@ -720,7 +720,7 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
     """Return the live string-rendered value of one fact path on ``record``.
 
     Args:
-        record: The :class:`~aeat.domain.user_profile.UserProfileRecord`
+        record: The :class:`~cadrumo.domain.user_profile.UserProfileRecord`
             to inspect, or ``None``.
         path: Schema fact path (e.g. ``"identity.tax_id"``).
 
@@ -741,9 +741,9 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
 def _require_active(state: WorkflowState) -> str:
     """Return the active bucket id or raise.
 
-    Reads through :func:`~aeat.core.resolve_active_bucket_id`, whose
+    Reads through :func:`~cadrumo.core.resolve_active_bucket_id`, whose
     current precedence chain is settings override, then plaintext
-    :class:`~aeat.core.BucketPointer`. The ``state`` argument keeps the
+    :class:`~cadrumo.core.BucketPointer`. The ``state`` argument keeps the
     workflow-coordinator call shape; it is not a fallback source.
     """
     from ...core import resolve_active_bucket_id
@@ -769,7 +769,7 @@ def rename_profile(
         profile_id: The immutable UUIDv4 identity of the profile to rename.
         new_label: The new display label.
         secure_objects: Optional
-            :class:`~aeat.adapters.persistence.storage.SecureObjectRepository`
+            :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
 
@@ -777,18 +777,18 @@ def rename_profile(
     directory, and secure-object key are immutable and never move. A
     rename is a pure label edit across the two stores that hold a copy
     of the label - the encrypted
-    :class:`~aeat.domain.user_profile.UserProfileRecord`
+    :class:`~cadrumo.domain.user_profile.UserProfileRecord`
     ``display_name`` and the plaintext
-    :class:`~aeat.adapters.persistence.storage.bucket.BucketManifest`
+    :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`
     ``label``.
 
     This function is a thin coordinator: the cross-store label write -
     record AND manifest - lives solely in
-    :meth:`~aeat.application.user_profile.ProfileRepository.rename`.
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
 
     Returns the updated
-    :class:`~aeat.domain.user_profile.UserProfileRecord` after the label
+    :class:`~cadrumo.domain.user_profile.UserProfileRecord` after the label
     change is persisted.
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)

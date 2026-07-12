@@ -3,27 +3,27 @@
 The address facade converts visible modelo/year/period filing targets and exact
 work-unit ids into :class:`ModeloWorkAddress` values, resolves them through the
 central selector contract, and returns the matching
-:class:`~aeat.domain.modelos.WorkUnit` or :class:`CalculationRevision`.
+:class:`~cadrumo.domain.modelos.WorkUnit` or :class:`CalculationRevision`.
 
 This module is the application facade over the accepted addressing policy:
 operators address the active bucket/profile plus modelo, filing year, and period;
 raw ids remain advanced exact-addressing escape hatches. Ambiguous visible
 targets, contradictory exact-id plus natural-key flags, and discarded default
-matches are handled by :mod:`~aeat.application.modelo._selectors` rather than by
+matches are handled by :mod:`~cadrumo.application.modelo._selectors` rather than by
 CLI-local string logic.
 
 Creation flows validate the law-determined registry revision before delegating
-to :func:`~aeat.application.modelo.create_work_unit`; an explicit
+to :func:`~cadrumo.application.modelo.create_work_unit`; an explicit
 ``--revision`` is an assertion of the selected legal revision, not a free
 override. Revision flows apply
-:class:`~aeat.application.modelo.ModeloCalculationRevisionSelector`
+:class:`~cadrumo.application.modelo.ModeloCalculationRevisionSelector`
 defaults so verify, file, and export commands consume only the lifecycle states
 they are allowed to handle.
 
 See Also:
-    :mod:`~aeat.application.modelo._selectors`:
+    :mod:`~cadrumo.application.modelo._selectors`:
         The authoritative visible-target and revision-selector resolver.
-    :mod:`~aeat.entrypoints.cli._modelo`:
+    :mod:`~cadrumo.entrypoints.cli._modelo`:
         CLI commands that project operator flags into this facade.
 """
 
@@ -112,7 +112,7 @@ class ModeloRevisionPick:
     """Command-specific calculation-revision pick under a resolved work target.
 
     ``default_for`` applies the command policy owned by
-    :mod:`~aeat.application.modelo._selectors`: verify selects a draft, file
+    :mod:`~cadrumo.application.modelo._selectors`: verify selects a draft, file
     selects a verified-complete revision, and export prefers the current filed
     revision before falling back to an unambiguous verified revision.
     """
@@ -168,7 +168,11 @@ class ModeloResolvedWorkProjection:
 
     @classmethod
     def from_work_unit(cls, work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
-        """Project an internal :class:`~aeat.domain.modelos.WorkUnit` into a :class:`ModeloResolvedWorkProjection`."""
+        """Project a Cadrumo work unit into a resolved-work projection.
+
+        Converts :class:`~cadrumo.domain.modelos.WorkUnit` into
+        :class:`ModeloResolvedWorkProjection`.
+        """
         return cls(
             work_unit_id=work_unit.work_unit_id,
             short_work_unit_id=work_unit.work_unit_id[-12:],
@@ -372,7 +376,7 @@ def resolve_modelo_work_unit_for_operator_target(
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
-    """Resolve exact or visible operator input to one active :class:`~aeat.domain.modelos.WorkUnit`.
+    """Resolve exact or visible operator input to one active :class:`~cadrumo.domain.modelos.WorkUnit`.
 
     The result comes from the shared selector boundary, so ambiguity and
     exact-id/natural-key contradictions surface as typed selector errors.
@@ -455,7 +459,7 @@ def resolve_modelo_work_target(target: ModeloWorkTarget) -> ModeloWorkResolution
     """Resolve any supported modelo target through the shared selector boundary.
 
     Returns a :class:`ModeloWorkResolution` containing the resolved work unit or
-    typed absence/ambiguity metadata from :mod:`~aeat.application.modelo._selectors`.
+    typed absence/ambiguity metadata from :mod:`~cadrumo.application.modelo._selectors`.
     """
     return resolve_modelo_work_address(work_address_for_modelo_target(target))
 
@@ -492,7 +496,7 @@ def resolve_registry_revision_for_work_target(
     ``(modelo, filing_year, period)`` is returned unconditionally.
 
     When ``registry_revision_id`` is supplied it is treated as an
-    *assertion parameter* (per :func:`~aeat.domain.calculations.registry._temporal.select_revision`):
+    *assertion parameter* (per :func:`~cadrumo.domain.calculations.registry._temporal.select_revision`):
     an explicit ``--revision`` is accepted only when it names exactly the revision
     that ``select_revision`` would pick from ``(filing_year, period)`` alone.  If
     the supplied id diverges from the law-determined revision the call refuses with
@@ -506,7 +510,7 @@ def resolve_registry_revision_for_work_target(
 
     Returns:
         The revision id selected by
-        :func:`~aeat.domain.calculations.registry._temporal.select_revision`.
+        :func:`~cadrumo.domain.calculations.registry._temporal.select_revision`.
 
     Raises:
         ModeloWorkRegistryYearMismatchError: The supplied revision id is not the
@@ -629,7 +633,7 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
 
 
 def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
-    """Resolve an operator-facing modelo work address to one :class:`~aeat.domain.modelos.WorkUnit`."""
+    """Resolve an operator-facing modelo work address to one :class:`~cadrumo.domain.modelos.WorkUnit`."""
     resolution = resolve_modelo_work_address(address)
     assert resolution.work_unit is not None
     return resolution.work_unit

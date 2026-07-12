@@ -77,7 +77,7 @@ class ManualVerificationReport(BaseModel):
 
 
 def _section_multilingual_warnings(section: Section) -> list[ManualVerificationIssue]:
-    """Warn when a :class:`~aeat.domain.manuals.Section` is missing translation keys."""
+    """Warn when a :class:`~cadrumo.domain.manuals.Section` is missing translation keys."""
     issues: list[ManualVerificationIssue] = []
     for field_name, translatable in (("title", section.title), ("summary", section.summary)):
         if not translatable:

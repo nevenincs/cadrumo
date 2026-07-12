@@ -1,7 +1,7 @@
 """Referential-integrity validation for registry snapshots.
 
 Walks all 21 typed-ID reference fields across a :class:`RegistrySnapshot`
-and raises :class:`~aeat.domain.calculations.registry._errors.RegistryValidationError`
+and raises :class:`~cadrumo.domain.calculations.registry._errors.RegistryValidationError`
 for every dangling reference found in the :class:`ModeloRevision`.
 """
 

@@ -1,7 +1,7 @@
 """Closed enumerations for the unified review queue.
 
 Defines the kind, severity, and state taxonomy used by every
-:class:`aeat.application.review.ReviewItem`. Reserved ``--kind`` tokens
+:class:`cadrumo.application.review.ReviewItem`. Reserved ``--kind`` tokens
 are tracked in :data:`_RESERVED_KINDS` and surfaced to callers via
 :func:`reserved_kind_reason`.
 """

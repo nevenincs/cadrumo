@@ -1,8 +1,8 @@
 """Error hierarchy for the portal catalogue.
 
-Every error raised from :mod:`aeat.domain.portals` derives from
+Every error raised from :mod:`cadrumo.domain.portals` derives from
 :class:`PortalRegistryError`, which in turn derives from the project
-root :class:`aeat.core.errors.AeatError`. Two concrete subclasses cover the
+root :class:`cadrumo.core.errors.AeatError`. Two concrete subclasses cover the
 failure modes surfaced to external callers:
 
 - :class:`UnknownPortalError` — raised by registry lookups on an
@@ -17,11 +17,11 @@ from ...core.errors import AeatError
 
 
 class PortalRegistryError(AeatError):
-    """Base class for every error raised from :mod:`aeat.domain.portals`."""
+    """Base class for every error raised from :mod:`cadrumo.domain.portals`."""
 
 
 class UnknownPortalError(PortalRegistryError):
-    """Raised by :func:`aeat.domain.portals.get_portal` on unknown names.
+    """Raised by :func:`cadrumo.domain.portals.get_portal` on unknown names.
 
     Attributes:
         portal: The offending portal name or value as supplied by the

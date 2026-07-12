@@ -6,7 +6,7 @@ in :mod:`~domain.modelos` — and the storage adapter that persists it. It is a
 pure value object depending only on :mod:`~core`
 (:data:`~core.STRICT_FROZEN_CONFIG`,
 :class:`~core.classification.SensitivityClass`), so a domain port can name it
-in a method signature without importing the ``aeat.adapters`` layer. The storage
+in a method signature without importing the ``cadrumo.adapters`` layer. The storage
 adapter (:mod:`~adapters.persistence.storage`) re-exports it unchanged.
 
 See Also:
