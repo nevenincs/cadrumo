@@ -300,6 +300,69 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
     )
 
 
+def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
+    """A real focused HTML build and shipped SVGs expose the canonical identity."""
+    from bs4 import BeautifulSoup
+    from defusedxml import ElementTree
+
+    docs_source = tmp_path / "docs-source"
+    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "api", "cli"))
+    output = tmp_path / "html"
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_DOCS_ONLY": "index.md",
+        "CADRUMO_DOCS_MASTER_DOC": "index",
+        "CADRUMO_DOCS_SINGLE_PAGE": "1",
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "html",
+            "-j",
+            "1",
+            str(docs_source),
+            str(output),
+            str(docs_source / "index.md"),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    rendered = BeautifulSoup((output / "index.html").read_text(encoding="utf-8"), "html.parser")
+    assert rendered.title is not None
+    assert rendered.title.get_text(strip=True) == "Cadrumo documentation - local Spanish tax preparation"
+    site_name = rendered.find("meta", property="og:site_name")
+    assert site_name is not None
+    assert site_name.get("content") == "Cadrumo documentation"
+    heading = rendered.find("h1")
+    assert heading is not None
+    assert heading.get_text(" ", strip=True).startswith("Cadrumo documentation")
+    assert "Copyright © 2026, the Cadrumo authors" in rendered.get_text(" ", strip=True)
+    assert "advice from a qualified professional" in rendered.get_text(" ", strip=True)
+
+    namespace = "{http://www.w3.org/2000/svg}"
+    for filename in ("cadrumo-mark-light.svg", "cadrumo-mark-dark.svg"):
+        mark = ElementTree.parse(_DOCS / "_static" / filename).getroot()
+        assert mark is not None
+        assert mark.findtext(f"{namespace}title") == "Cadrumo documentation"
+        assert mark.findtext(f"{namespace}desc", "").startswith("The Cadrumo mark")
+        assert [element.text for element in mark.iter(f"{namespace}text")] == ["CADRUMO"]
+
+    favicon = ElementTree.parse(_DOCS / "_static" / "cadrumo-favicon.svg").getroot()
+    assert favicon is not None
+    assert favicon.attrib["aria-label"] == "Cadrumo mark"
+
+
 # ---------------------------------------------------------------------------
 # W04.P09.S32 — progressive-enhancement sequence widget verification
 #
