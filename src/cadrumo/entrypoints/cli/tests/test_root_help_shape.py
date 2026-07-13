@@ -198,7 +198,7 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
     ],
 )
 def test_installed_console_help_does_not_adopt_former_product_state(tmp_path: Path, arguments: tuple[str, ...]) -> None:
-    """Help remains available when CADRUMO correctly refuses legacy state."""
+    """Help remains available when Cadrumo correctly refuses legacy state."""
     cli_executable = _installed_cli_executable()
     former_root = tmp_path / "former-product-state"
     former_root.mkdir()

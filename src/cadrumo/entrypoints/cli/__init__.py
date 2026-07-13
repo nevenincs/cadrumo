@@ -1,4 +1,4 @@
-"""CADRUMO's command-line interface (CLI), provided by the ``aeat`` executable.
+"""Cadrumo's command-line interface (CLI), provided by the ``aeat`` executable.
 
 The command tree exposes two top-level namespaces:
 
@@ -67,7 +67,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
-# Importing every module just to build the CADRUMO app object made
+# Importing every module just to build the Cadrumo app object made
 # ``aeat --version`` and ``aeat --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
@@ -157,8 +157,8 @@ def _root(
             typer.echo(render_cli_version_text(report))
         else:
             # The short `aeat --version` line is machine-format semver
-            # (e.g. "CADRUMO 1.2.3") consumed by CI tooling and package
-            # managers. CADRUMO policy treats semver output as machine-format,
+            # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
+            # managers. Cadrumo policy treats semver output as machine-format,
             # not operator text, so tr() wrapping is intentionally omitted.
             typer.echo(f"{PRODUCT_IDENTITY.display_name} {report.package_version}")
         raise typer.Exit()
@@ -779,7 +779,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 
 # ---------------------------------------------------------------------
 # Wiring — every heavy subcommand module is registered lazily so the
-# CADRUMO app object can be constructed without importing the command
+# Cadrumo app object can be constructed without importing the command
 # tree (and therefore without the registry parse).
 # ---------------------------------------------------------------------
 
@@ -804,7 +804,7 @@ def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
     ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
-    kept off the eager import path precisely so constructing the CADRUMO CLI
+    kept off the eager import path precisely so constructing the Cadrumo CLI
     app object never pulls the registry-dependent command tree; a
     top-level ``from ._app_contract import command_schema_refs`` (and
     siblings) would defeat that and reintroduce the startup cost
@@ -989,7 +989,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
     """Keep help and version imports off an operator's retired ``aeat`` state root.
 
     Lazy subgroup construction can import modules that instantiate Settings.
-    Metadata invocations therefore run against a temporary CADRUMO root and
+    Metadata invocations therefore run against a temporary Cadrumo root and
     database before those imports occur. Normal commands never enter this
     scope and continue to refuse a retired ``aeat`` state root in normal operation.
     """
