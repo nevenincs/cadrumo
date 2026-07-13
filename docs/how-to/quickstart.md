@@ -1,10 +1,10 @@
 # Quickstart: produce a modelo file
 
-Use this when you are new to `aeat` and want the shortest path from local
+Use this when you are new to Cadrumo and want the shortest path from local
 records to a file you can upload yourself through the Agencia Estatal de
-Administracion Tributaria (AEAT) portal.
+Administración Tributaria (AEAT) portal.
 
-`aeat` prepares, checks, and exports local files for Spanish tax forms. It does
+Cadrumo prepares, checks, and exports local files for Spanish tax forms. It does
 not submit filings to AEAT. You remain responsible for reviewing and filing
 through official AEAT channels.
 
@@ -15,7 +15,7 @@ has tax-specific setup or review choices.
 
 ## Before you start: the master-key passphrase
 
-`aeat` encrypts your local data with a master key derived from a passphrase.
+Cadrumo encrypts your local data with a master key derived from a passphrase.
 The first command that touches the store asks for the passphrase and the tool
 reuses it for the rest of the session. To run without a prompt, set it in the
 environment first:
@@ -24,7 +24,7 @@ environment first:
 export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
 ```
 
-The CLI emits its help and messages in Spanish. The English text on this page
+The `cadrumo` command-line interface (CLI) emits its help and messages in Spanish. The English text on this page
 describes what each step does.
 
 ## 1. Create your taxpayer profile
@@ -35,10 +35,10 @@ without them — and the activity start date scopes out prior periods so a first
 filing has no earlier quarter to depend on:
 
 ```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" \
   --surnames "Garcia Lopez" --activity "consultoria" \
   --activity-start-date 2026-01-01
-aeat config profile status
+cadrumo config profile status
 ```
 
 `--quiet` runs without the interactive setup wizard. The create command
@@ -48,7 +48,7 @@ confirms the active profile and points you to the next step:
 profile	me
 estado	creado
 active_profile	me
-next	aeat app modelo work create
+next	cadrumo app modelo work create
 ```
 
 Profile setup can ask many more tax questions. Use
@@ -66,23 +66,23 @@ gross total (taxable base plus IVA); an expense row also needs a `--category-id`
 from the recognised expense families:
 
 ```bash
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+cadrumo app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
   --description "venta" --classification BUSINESS \
   --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
+cadrumo app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
   --description "compra" --classification BUSINESS \
   --category-id material_oficina --taxable-base 500 --iva-rate 0.21 \
   --iva-amount 105
-aeat app ledger list
+cadrumo app ledger list
 ```
 
 List the recognised expense categories any time:
 
 ```bash
-aeat app ledger categories
+cadrumo app ledger categories
 ```
 
-If you instead have a bank export, import it. `aeat` reads a semicolon-delimited
+If you instead have a bank export, import it. Cadrumo reads a semicolon-delimited
 CSV with comma decimals and a negative `Importe` for money leaving the account:
 
 ```text
@@ -94,8 +94,8 @@ Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
 Preview the import, then run it for real:
 
 ```bash
-aeat app ledger import ./statement.csv --provider auto --dry-run
-aeat app ledger import ./statement.csv --provider auto
+cadrumo app ledger import ./statement.csv --provider auto --dry-run
+cadrumo app ledger import ./statement.csv --provider auto
 ```
 
 Imported rows arrive without a tax category and must be classified before they
@@ -109,13 +109,13 @@ and run readiness checks.
 ## 3. Classify imported transactions
 
 Each imported transaction has no tax category until you classify it.
-Classification tells `aeat` whether a row is a business expense, personal
+Classification tells Cadrumo whether a row is a business expense, personal
 spending, or a mix of both. Take the transaction id from `ledger list`:
 
 ```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS \
+cadrumo app ledger classify <transaction-id> --classification BUSINESS \
   --category-id material_oficina
-aeat app ledger preflight --year 2026 --period 1T
+cadrumo app ledger preflight --year 2026 --period 1T
 ```
 
 `preflight` reports whether the quarter's rows are ready to calculate.
@@ -131,7 +131,7 @@ Spanish tax form, and the year plus period identify the filing you are
 preparing.
 
 ```bash
-aeat app modelo work create --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work create --modelo 130 --year 2026 --period 1T
 ```
 
 The command creates your filing workspace for that form if one does not exist
@@ -150,7 +150,7 @@ prior-period figures; for a first filing they are all zero. Pass them as
 bindings so the calculation has no missing inputs:
 
 ```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T \
+cadrumo app modelo work calculate --modelo 130 --year 2026 --period 1T \
   --binding modelo-130-resultados-negativos-anteriores=0 \
   --binding modelo-130-pagos-fraccionados-anteriores=0 \
   --binding irpf.previous_year_economic_activity_net_income=0
@@ -169,7 +169,7 @@ key_figure	19	0.00	Resultado final
 Review every saved box with:
 
 ```bash
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work revision --modelo 130 --year 2026 --period 1T
 ```
 
 If a value is missing or a modelo needs a value you must enter by hand, see
@@ -184,11 +184,11 @@ local check — it does not send anything to AEAT or ask whether the filing will
 be accepted.
 
 ```bash
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work verify --modelo 130 --year 2026 --period 1T
 ```
 
 When the draft is complete, the report shows `completeness_status complete` and
-`granted_verificado_completo true`, and `aeat` marks the draft as verified. A
+`granted_verificado_completo true`, and Cadrumo marks the draft as verified. A
 first filing also shows one advisory noting that the period falls before your
 activity start date; this is informational and does not block the export. If
 verification reports a blocking issue, fix it and calculate again before
@@ -199,7 +199,7 @@ exporting.
 Export creates the `.boe` file — the format AEAT's upload portal accepts.
 
 ```bash
-aeat app modelo export --modelo 130 --year 2026 --period 1T \
+cadrumo app modelo export --modelo 130 --year 2026 --period 1T \
   --output ./modelo-130-2026-1T.boe
 ```
 
@@ -214,8 +214,8 @@ profile, pass `--allow-incomplete` so the agenda runs before every profile fact
 is filled in:
 
 ```bash
-aeat app overview agenda --allow-incomplete
-aeat app overview explain 130 --year 2026
+cadrumo app overview agenda --allow-incomplete
+cadrumo app overview explain 130 --year 2026
 ```
 
 The calendar uses profile facts and local filing context. It does not replace
@@ -224,7 +224,7 @@ AEAT's official portal. For the full calendar flow, see
 
 ## 9. File manually through AEAT
 
-The final filing step is outside `aeat`:
+The final filing step is outside Cadrumo:
 
 1. Log in to the official AEAT electronic filing portal.
 2. Choose the Modelo 130 file-upload path for the relevant year and period.
@@ -237,7 +237,7 @@ is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
 After a real filing, you can record the local filing marker:
 
 ```bash
-aeat app modelo work file --modelo 130 --year 2026 --period 1T
+cadrumo app modelo work file --modelo 130 --year 2026 --period 1T
 ```
 
 This only records the action on your own computer. It does not contact AEAT.

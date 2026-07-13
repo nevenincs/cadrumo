@@ -75,7 +75,7 @@ def _build_subset_site(out: Path) -> None:
     src.mkdir(parents=True)
     generate_glossary_reference(src)
     (src / "conf.py").write_text(
-        'project = "aeat-smoke"\n'
+        'project = "cadrumo-smoke"\n'
         'extensions = ["myst_parser"]\n'
         'source_suffix = {".md": "markdown", ".rst": "restructuredtext"}\n'
         'html_theme = "basic"\n',
@@ -136,7 +136,7 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
     # Copy the real palette JS/CSS into the built site so Ctrl-K is wired.
     static = build / "_static"
     static.mkdir(parents=True, exist_ok=True)
-    for name in ("aeat-docs.js", "aeat-docs.css"):
+    for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
     (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
 

@@ -26,7 +26,7 @@ If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):
 
 ```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
 ```
 
 ## Pull a receipt
@@ -34,7 +34,7 @@ aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames
 Fetch the justificante for one filed period and store it in your profile:
 
 ```bash
-aeat app live justificante pull --modelo 130 --year 2026 --period 1T
+cadrumo app live justificante pull --modelo 130 --year 2026 --period 1T
 ```
 
 `pull` is live-only: it reads from AEAT and needs the configured authentication
@@ -43,7 +43,7 @@ not set up, the pull refuses before contacting AEAT with a Cl@ve identity
 message (`La identidad de Cl@ve Móvil no coincide...`); on a first run the real
 cause is usually that no AEAT session is configured yet - set one up with
 [Authenticate with AEAT](authenticate-with-aeat.md). To work from a receipt PDF
-you already downloaded by hand, parse it locally instead with `aeat app modelo
+you already downloaded by hand, parse it locally instead with `cadrumo app modelo
 reconcile file --file PATH` (see
 [Reconcile a filed modelo against its justificante](reconcile.md)).
 
@@ -63,7 +63,7 @@ active one.
 See every capture stored in the active profile:
 
 ```bash
-aeat app live justificante list
+cadrumo app live justificante list
 ```
 
 Each row shows the snapshot id, modelo, year, period, and capture time. Note
@@ -74,7 +74,7 @@ the snapshot id of the capture you want to inspect.
 Show the full provenance of one capture:
 
 ```bash
-aeat app live justificante view <snapshot-id>
+cadrumo app live justificante view <snapshot-id>
 ```
 
 An unambiguous prefix of the snapshot id is enough. The view reports the
@@ -85,7 +85,7 @@ capture is still active or superseded, and when it was captured.
 
 The stored receipt is the evidence the reconciliation workflow reads. To
 compare a receipt against your local filing record in one step, run
-`aeat app modelo reconcile pull` — it fetches and reconciles together. See
+`cadrumo app modelo reconcile pull` — it fetches and reconciles together. See
 [Reconcile a filed modelo against its justificante](reconcile.md).
 
 ## Next steps

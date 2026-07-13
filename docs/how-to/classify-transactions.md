@@ -22,13 +22,13 @@ The CLI help and error text render in Spanish, even though this guide is in Engl
 Find the transaction id:
 
 ```bash
-aeat app ledger list --filter classification=NOT_YET_PROCESSED
+cadrumo app ledger list --filter classification=NOT_YET_PROCESSED
 ```
 
 Inspect the row:
 
 ```bash
-aeat app ledger view <transaction-id>
+cadrumo app ledger view <transaction-id>
 ```
 
 Use the description, amount, counterparty, source document, and business context
@@ -49,14 +49,14 @@ Use only these three values. Cadrumo sets the others automatically.
 List accepted category ids:
 
 ```bash
-aeat app ledger categories
+cadrumo app ledger categories
 ```
 
 Expense rows normally need a category id before a modelo can calculate from
 them:
 
 ```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+cadrumo app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
 For money you received (income), Cadrumo does not usually need a category. It
@@ -65,7 +65,7 @@ calculates income totals automatically.
 Use `OUTGOING` plus an expense category for supplier purchases and other
 deductible expenses. Use `INCOMING` for issued invoices, client payments, or
 services rendered to customers. If you also track invoice records separately,
-use `aeat app ledger invoice` with `--kind received` for supplier invoices and
+use `cadrumo app ledger invoice` with `--kind received` for supplier invoices and
 `--kind issued` for customer invoices.
 
 ## Add tax fields when needed
@@ -73,12 +73,12 @@ use `aeat app ledger invoice` with `--kind received` for supplier invoices and
 If a row needs regulated tax fields, add only the fields that apply:
 
 ```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+cadrumo app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
 ```
 
 Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
 category, and counterparty EU member state for intracommunity IVA cases. Use
-`aeat app ledger classify --help` for the exact current option list.
+`cadrumo app ledger classify --help` for the exact current option list.
 
 For ordinary domestic IVA, use the taxable base, rate, and amount shown by the
 invoice. For example, a EUR 121.00 purchase with 21 percent IVA usually has
@@ -87,7 +87,7 @@ invoice. For example, a EUR 121.00 purchase with 21 percent IVA usually has
 Most purchases at the standard 21% rate need no `--iva-category`. Add it only
 for special cases: reduced rate (food, books), exempt supplies, purchases from
 EU suppliers, or recargo de equivalencia. Run
-`aeat app ledger classify --help` to see the accepted values.
+`cadrumo app ledger classify --help` to see the accepted values.
 
 ## Classify mixed-use transactions
 
@@ -109,20 +109,20 @@ steps.
 Check which categories accept a ratio:
 
 ```bash
-aeat app ledger ratios eligible
+cadrumo app ledger ratios eligible
 ```
 
 Save the ratio for the category, as a percentage from `0` to `1`:
 
 ```bash
-aeat app ledger ratios set <category-id> 0.5
+cadrumo app ledger ratios set <category-id> 0.5
 ```
 
 Allocate the share on the row, naming the same category id for both
 `--usage-ratio-id` and `--category-id`:
 
 ```bash
-aeat app ledger allocate <transaction-id> --business-pct 0.5 --usage-ratio-id <category-id> --category-id <category-id>
+cadrumo app ledger allocate <transaction-id> --business-pct 0.5 --usage-ratio-id <category-id> --category-id <category-id>
 ```
 
 The `--business-pct` value must match the saved ratio for that category. The
@@ -133,12 +133,12 @@ classification follows the share automatically: a `0.5` allocation becomes
 List or check the saved ratios at any time:
 
 ```bash
-aeat app ledger ratios list
-aeat app ledger ratios validate
+cadrumo app ledger ratios list
+cadrumo app ledger ratios validate
 ```
 
 Remove a category ratio you no longer want with
-`aeat app ledger ratios unset <category-id>`.
+`cadrumo app ledger ratios unset <category-id>`.
 
 For home-office expenses, save a ratio for the relevant home-office category
 and allocate as above. Home-office ratios follow the manual or saved ratio
@@ -153,7 +153,7 @@ For bulk review, `classify --from-csv` reads a CSV with columns
 `iva_category`, and `irpf_category`:
 
 ```bash
-aeat app ledger classify --from-csv ./classifications.csv
+cadrumo app ledger classify --from-csv ./classifications.csv
 ```
 
 The CSV path is the implemented batch-editing workflow for classifications.
@@ -165,13 +165,13 @@ Recommended workflow:
 1. Select rows with `ledger list`:
 
    ```bash
-   aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
+   cadrumo app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
    ```
 
 2. Export the period as a review snapshot:
 
    ```bash
-   aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
+   cadrumo app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
    ```
 
 3. Prepare a narrow CSV containing only the rows you mean to change:
@@ -186,9 +186,9 @@ Recommended workflow:
 4. Apply and review:
 
    ```bash
-   aeat app ledger classify --from-csv ./classifications.csv
-   aeat app ledger list --filter period=1T --filter year=2026
-   aeat app ledger preflight --year 2026 --period 1T
+   cadrumo app ledger classify --from-csv ./classifications.csv
+   cadrumo app ledger list --filter period=1T --filter year=2026
+   cadrumo app ledger preflight --year 2026 --period 1T
    ```
 
 Keep a copy of the file — it gives you a record of how you classified that
@@ -202,10 +202,10 @@ Rules automatically classify transactions whose description contains a word or
 phrase you specify. Matching ignores uppercase and lowercase differences:
 
 ```bash
-aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
-aeat app ledger rule list
-aeat app ledger rule apply --dry-run
-aeat app ledger rule apply
+cadrumo app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
+cadrumo app ledger rule list
+cadrumo app ledger rule apply --dry-run
+cadrumo app ledger rule apply
 ```
 
 Run `--dry-run` first. Add `--reaffirm` only if you want the rule to overwrite
@@ -225,8 +225,8 @@ provider, preview, apply, and override flow.
 Run preflight after classification:
 
 ```bash
-aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status --year 2026 --period 1T
+cadrumo app ledger preflight --year 2026 --period 1T
+cadrumo app ledger status --year 2026 --period 1T
 ```
 
 Preflight names rows that still need category, taxable base, IVA amount, IVA
@@ -237,7 +237,7 @@ rate, currency, or proportionality reference.
 Re-run `classify` on the same transaction id:
 
 ```bash
-aeat app ledger classify <transaction-id> --classification PERSONAL
+cadrumo app ledger classify <transaction-id> --classification PERSONAL
 ```
 
 A manual decision replaces the previous classification. Inspect the row again

@@ -1,6 +1,6 @@
 # Set up LLM classification providers
 
-Use this when `aeat app ledger classify --llm` cannot find or run your large
+Use this when `cadrumo app ledger classify --llm` cannot find or run your large
 language model (LLM) provider. Cadrumo runs a provider command-line interface
 (CLI) already installed and authenticated on your system. It does not store or
 manage LLM credentials, and it has no separate LLM account configuration
@@ -23,12 +23,12 @@ The runtime emits help, prompts, and messages in Spanish.
 The classification command accepts provider names such as `claude`,
 `antigravity`, and `codex`. The `antigravity` provider uses Google's `agy`
 CLI, the supported successor to the retired standalone `gemini` CLI. For the
-current list, run `aeat app ledger providers`.
+current list, run `cadrumo app ledger providers`.
 
 Use one of those names in the classification command:
 
 ```bash
-aeat app ledger classify <transaction-id> --llm claude
+cadrumo app ledger classify <transaction-id> --llm claude
 ```
 
 ## Check what Cadrumo can see
@@ -36,7 +36,7 @@ aeat app ledger classify <transaction-id> --llm claude
 List provider CLIs visible on `PATH`:
 
 ```bash
-aeat app ledger providers
+cadrumo app ledger providers
 ```
 
 This command only checks whether each provider executable is discoverable. It
@@ -49,7 +49,7 @@ running.
 For a wider check that also reports profile service capabilities, run:
 
 ```bash
-aeat config check
+cadrumo config check
 ```
 
 It lists each external dependency - including every LLM provider as
@@ -66,7 +66,7 @@ Cadrumo.
 After changing PATH or signing in, run:
 
 ```bash
-aeat app ledger providers
+cadrumo app ledger providers
 ```
 
 If the provider still is not listed as available, fix the CLI installation or
@@ -78,9 +78,9 @@ Use an existing low-risk transaction in a local test profile or a redacted
 ledger:
 
 ```bash
-aeat config profile status
-aeat app ledger list --filter classification=NOT_YET_PROCESSED
-aeat app ledger classify <transaction-id> --llm claude
+cadrumo config profile status
+cadrumo app ledger list --filter classification=NOT_YET_PROCESSED
+cadrumo app ledger classify <transaction-id> --llm claude
 ```
 
 A successful smoke test previews a suggestion and leaves the ledger unchanged.
@@ -94,7 +94,7 @@ Only use `--apply` after you have verified that preview works and you have
 reviewed the suggestion:
 
 ```bash
-aeat app ledger classify <transaction-id> --llm claude --apply
+cadrumo app ledger classify <transaction-id> --llm claude --apply
 ```
 
 ## Privacy boundary

@@ -1,14 +1,27 @@
-# Understanding the AEAT pipeline
+# How Cadrumo turns records into a filing-ready tax file
 
-This cluster explains how the tool moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday self-employed taxpayer in Spain - the *autónomo* who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
+This collection explains how Cadrumo turns local records into a filing-ready
+Spanish tax file and why each stage exists. Cadrumo is the product. AEAT is the
+*Agencia Estatal de Administración Tributaria*, the external Spanish tax
+authority. Authority names remain visible where they identify official forms,
+rules, evidence, credentials, or portals; they never name the application.
 
-Read this to understand how the pieces fit together. To actually perform a task, follow the [how-to guides](../how-to/index.md) or the step-by-step [Quickstart](../how-to/quickstart.md) and [Tutorial](../tutorials/index.md).
+Read this to understand how the pieces fit together. To install from source,
+use [source setup](../workstation-setup.md). To perform a task, follow the
+[how-to guides](../how-to/index.md), [Quickstart](../how-to/quickstart.md), or
+[Tutorial](../tutorials/index.md). Use the [Cadrumo
+reference](../reference/index.md) for exact names and lookup facts.
 
 ---
 
-## The one promise
+## The permanent boundary
 
-The tool runs entirely on your own computer. It prepares your filing for you, but it never sends anything to the agency. When the file is ready, you upload it yourself through the agency's portal. [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
+Cadrumo calculates, verifies, exports, and records filing history locally. It
+never submits a return, makes a payment, acknowledges a notification, or acts
+as AEAT. Optional live AEAT retrieval is separately invoked, authenticated, and
+read-only. When an export is ready, a human uploads it through an official AEAT
+channel. [Recording a filing, and why Cadrumo never files for
+you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
 
 ---
 
@@ -21,12 +34,19 @@ graph TD
     A["Bank movements"] --> B["Sorted and made tax-ready"]
     B --> C["Readiness check"]
     C --> D["The numbered boxes of a form"]
-    D --> E["Edited and double-checked"]
-    E --> F["The file you upload"]
-    F --> G["Recorded after you file"]
+    D --> E["Reviewed and corrected"]
+    E --> F["Verified locally"]
+    F --> G["AEAT-compatible export"]
+    G --> H["Uploaded by a human"]
+    H --> I["Recorded and reconciled locally"]
 ```
 
-Each stop on this journey is owned in depth by one member of this cluster. The five sections that follow introduce them in order.
+The stages are related but not interchangeable. Calculation derives a saved
+revision; review inspects its values and provenance; verification applies
+completeness and consistency gates; export produces a local artifact; a human
+uploads it; local recording and reconciliation preserve what happened. Exact
+command definitions belong to the [generated CLI
+reference](../cli/index.rst), not this explanation.
 
 ---
 
@@ -50,24 +70,40 @@ Some forms depend on figures you already filed - an annual summary that draws on
 
 ## Reviewing your numbers and producing the upload file
 
-Before you commit to a form, you can review every figure and trace it back to the input that produced it. Once you're satisfied, the tool produces the official upload file - the exact layout the agency's portal accepts. See [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).
+After calculation, you review every figure and trace it back to its inputs.
+Corrections create a new revision, which you verify before export. Export still
+depends on its evidence gates and produces an AEAT-compatible file; it cannot
+guarantee portal acceptance. See [Reviewing your numbers and producing the
+upload file](reviewing-and-exporting.md).
 
 ---
 
 ## Recording a filing, after you upload it yourself
 
-The tool stops at the file. You upload it through the agency's portal, and the agency hands you a {term}`justificante`. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
+Cadrumo stops at the file. You upload it through an official AEAT channel, and
+AEAT hands you a {term}`justificante`. Back in Cadrumo, you record and reconcile
+the filing so local history stays accurate. See [Recording a filing, and why
+Cadrumo never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
-## What "verify" and "file" mean here
+## What the workflow stages mean
 
-Two everyday words have narrow, local meanings in this tool:
+The workflow verbs have narrow meanings inside Cadrumo:
 
-- **Verify** is a completeness and consistency check that runs on your own computer. It confirms the form holds together and nothing required is missing. It does not test the form against the agency's portal, and it's not a promise the agency will accept it.
-- **File** is a local "final" note in your own records. It marks a form as done so you don't change it by accident. It is not a submission - the tool never sends anything to the agency.
+- **Calculate** creates a saved revision from the currently grounded inputs.
+- **Review** inspects values, sources, and unresolved items without claiming
+  official acceptance.
+- **Verify** applies local completeness and consistency rules and saves the
+  report.
+- **Export** writes a local artifact from an eligible revision.
+- **Record as filed** adds a local history marker after the human filing. It is
+  not submission.
+- **Reconcile** compares local filing identity with retained or read-only AEAT
+  evidence; it does not recompute the return.
 
-These two ideas are covered in depth in [Editing and verifying a calculation](editing-and-verifying.md) and [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
+For exact command paths and options, use the [command and stage
+lookup](../reference/commands-and-configuration.md).
 
 ---
 
@@ -75,7 +111,14 @@ These two ideas are covered in depth in [Editing and verifying a calculation](ed
 
 Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the {doc}`glossary </_generated/glossary>` for any word you're unsure of.
 
-When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step walkthrough of a full filing, follow the [Quickstart](../how-to/quickstart.md) or the [Tutorial](../tutorials/index.md).
+When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md).
+Use the {doc}`glossary </_generated/glossary>` for terms, the [generated CLI
+reference](../cli/index.rst) for commands, the [generated Python
+API](../api/cadrumo.rst) for public facades, and the [Cadrumo
+reference](../reference/index.md) for identity and scope. Ordinary problems go
+to the [public issue tracker](https://github.com/cadrumo/cadrumo/issues) with
+redacted output. Vulnerabilities and credentials must follow the
+[security policy](../../SECURITY.md), never a public issue.
 
 ```{toctree}
 :hidden:
@@ -85,4 +128,5 @@ editing-and-verifying
 building-on-earlier-filings
 reviewing-and-exporting
 recording-a-filing-and-the-boundary
+../reference/index
 ```

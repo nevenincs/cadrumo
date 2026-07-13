@@ -1,6 +1,6 @@
 # Read live AEAT data
 
-When you configure authentication, Cadrumo's `aeat` command can read your data
+When you configure authentication, Cadrumo's `cadrumo` command can read your data
 from the Agencia Estatal de Administración Tributaria (AEAT). Cadrumo never
 writes, files, or submits anything. Every live command is a read that saves a
 local copy for you to review. You remain the only one who files. To understand
@@ -15,7 +15,7 @@ You need:
 - configured AEAT authentication for read access; see
   [Authenticate with AEAT](authenticate-with-aeat.md)
 
-Authentication grants read access only. It does not let `aeat` submit filings;
+Authentication grants read access only. It does not let Cadrumo submit filings;
 you upload your filings yourself at the AEAT portal. See
 [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
 
@@ -35,17 +35,17 @@ Every live read works the same way. It uses your configured authentication,
 reads from the AEAT sede read-only, and saves an encrypted local copy in your
 profile. It applies nothing automatically.
 
-The `aeat app live` command group collects the read-only commands. Each one
+The `cadrumo app live` command group collects the read-only commands. Each one
 takes the arguments that scope the read. For example:
 
-- `aeat app live justificante pull --modelo 303 --year 2026 --period 1T` — all
+- `cadrumo app live justificante pull --modelo 303 --year 2026 --period 1T` — all
   three of `--modelo`, `--year`, and `--period` are required.
-- `aeat app live filed pull --modelo 303 --year 2026` — `--year` is required;
+- `cadrumo app live filed pull --modelo 303 --year 2026` — `--year` is required;
   add `--period` to narrow to one period, or use `--from-year`/`--to-year` for a
   range.
-- `aeat app live notifications pull` — needs no scope arguments.
+- `cadrumo app live notifications pull` — needs no scope arguments.
 
-Run `aeat app live --help` to see the full set, or follow the per-surface guides
+Run `cadrumo app live --help` to see the full set, or follow the per-surface guides
 for each one.
 
 ## Downloaded facts change only your local records
@@ -74,7 +74,7 @@ Cl@ve identity check, but the underlying cause is that authentication is not
 configured (the preflight reports `auth_configured=False`). Configure a provider
 first; see [Authenticate with AEAT](authenticate-with-aeat.md).
 
-The `aeat` command prints its messages in Spanish. A typical refusal reads `Refused. La
+The `cadrumo` command prints its messages in Spanish. A typical refusal reads `Refused. La
 identidad de Cl@ve Móvil no coincide...` followed by a `-> Run` next step.
 
 If a read reports that the session expired, re-check authentication with

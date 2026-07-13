@@ -1,13 +1,13 @@
 # Cadrumo
 
-`Cadrumo` is a helper for preparing your Spanish tax forms.
+Cadrumo is a helper for preparing your Spanish tax forms.
 
-This is the landing page for Cadrumo and its `aeat` command-line application. It shows how to
+This is the landing page for Cadrumo and its `aeat` command-line interface (CLI). It shows how to
 turn local records into checked modelo figures and export files. You upload those
 files yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
 project source is on [GitHub](https://github.com/cadrumo/cadrumo).
 
-`Cadrumo` is for autónomos, small businesses, and the people who help them prepare
+Cadrumo is for autónomos, small businesses, and the people who help them prepare
 Spanish filing records. You prepare one taxpayer's records at a time. The
 project is pre-alpha, so expect breaking changes between versions.
 
@@ -17,7 +17,7 @@ the taxpayer, through preparing records and deciding what is due, to producing a
 export and following the full filing loop.
 
 ```{important}
-`Cadrumo` is not tax advice, is not affiliated with AEAT, and does not replace
+Cadrumo is not tax advice, is not affiliated with AEAT, and does not replace
 AEAT's official tools or professional advice. It builds, checks, and exports
 files locally. You file through official AEAT channels yourself and remain
 responsible for every declaration you submit. Read the [full disclaimer](disclaimer.md)
@@ -28,65 +28,65 @@ before you rely on Cadrumo.
 
 ::::{grid} 1 2 2 4
 :gutter: 3
-:class-container: aeat-route-grid
+:class-container: cadrumo-route-grid
 
-:::{grid-item-card} Start From Scratch
+:::{grid-item-card} Start from scratch
 :link: how-to/quickstart
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use this when you are new to Cadrumo and want the shortest path through profile,
 transactions, calculation, verification, and local export.
 :::
 
-:::{grid-item-card} Set Up Your Taxpayer Profile
+:::{grid-item-card} Set up your taxpayer profile
 :link: how-to/profile-setup
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use this when Cadrumo does not yet know which taxpayer, activity, or local
 profile to use.
 :::
 
-:::{grid-item-card} Work with Transactions
+:::{grid-item-card} Work with transactions
 :link: how-to/import-bank-statements
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use this when records are not yet in the ledger, or when they still need review,
 classification, export, split, merge, or evidence links.
 :::
 
-:::{grid-item-card} Classify Transactions
+:::{grid-item-card} Classify transactions
 :link: how-to/classify-transactions
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use this when imported rows need business, personal, mixed-use, category, or
 tax-field decisions.
 :::
 
-:::{grid-item-card} Plan Your Filing Calendar
+:::{grid-item-card} Plan your filing calendar
 :link: how-to/filing-calendar
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use this when you need to see which modelos are due and which period to prepare.
 :::
 
-:::{grid-item-card} Follow the Filing Workflow
+:::{grid-item-card} Follow the filing workflow
 :link: how-to/filing-spine
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 Use this when you want the full repeatable loop: prepare, verify, export, file
 through AEAT, and keep local history.
 :::
 
-:::{grid-item-card} Build Your First Modelo 130 Filing
+:::{grid-item-card} Build your first Modelo 130 filing
 :link: tutorials/index
 :link-type: doc
-:class-card: aeat-route-card
+:class-card: cadrumo-route-card
 
 A guided walkthrough from setup through the final local export.
 :::

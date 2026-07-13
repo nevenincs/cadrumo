@@ -1,4 +1,4 @@
-/* aeat docs interaction layer: broadcast dismiss, header active-link
+/* Cadrumo docs interaction layer: broadcast dismiss, header active-link
  * highlighting, and a Ctrl/Cmd-K command palette over the navigation tree
  * with a full-text search fallback. No framework, no dependencies. */
 (function () {
@@ -17,9 +17,9 @@
   /* ── Broadcast dismiss ─────────────────────────────────────────────── */
 
   function broadcastKey() {
-    var strip = document.querySelector(".aeat-broadcast");
+    var strip = document.querySelector(".cadrumo-broadcast");
     if (!strip) return null;
-    return "aeat:broadcast:" + strip.textContent.replace(/\s+/g, " ").trim().slice(0, 120);
+    return "cadrumo:broadcast:" + strip.textContent.replace(/\s+/g, " ").trim().slice(0, 120);
   }
 
   function initBroadcast() {
@@ -32,12 +32,12 @@
       /* storage unavailable (private mode); strip stays visible */
     }
     if (stored) {
-      document.documentElement.classList.add("aeat-broadcast-dismissed");
+      document.documentElement.classList.add("cadrumo-broadcast-dismissed");
     }
-    var button = document.querySelector("[data-aeat-broadcast-dismiss]");
+    var button = document.querySelector("[data-cadrumo-broadcast-dismiss]");
     if (!button) return;
     button.addEventListener("click", function () {
-      document.documentElement.classList.add("aeat-broadcast-dismissed");
+      document.documentElement.classList.add("cadrumo-broadcast-dismissed");
       try {
         window.localStorage.setItem(key, "1");
       } catch (e) {
@@ -49,7 +49,7 @@
   /* ── Header active-link highlighting ───────────────────────────────── */
 
   function initNavActive() {
-    var links = document.querySelectorAll(".aeat-header-nav-link");
+    var links = document.querySelectorAll(".cadrumo-header-nav-link");
     var here = window.location.pathname;
     var best = null;
     var bestLength = 0;
@@ -90,12 +90,12 @@
     COMMAND_HEAD.lastIndex = 0;
     while ((match = COMMAND_HEAD.exec(text)) !== null) {
       var commandStart = match.index + match[1].length + match[2].length;
-      ranges.push([commandStart, commandStart + match[3].length, "aeat-tok-cmd"]);
+      ranges.push([commandStart, commandStart + match[3].length, "cadrumo-tok-cmd"]);
     }
     FLAG.lastIndex = 0;
     while ((match = FLAG.exec(text)) !== null) {
       var flagStart = match.index + match[1].length;
-      ranges.push([flagStart, flagStart + match[2].length, "aeat-tok-flag"]);
+      ranges.push([flagStart, flagStart + match[2].length, "cadrumo-tok-flag"]);
     }
     if (!ranges.length) return;
     ranges.sort(function (a, b) {
@@ -212,29 +212,29 @@
   }
 
   function initPalette() {
-    var triggers = document.querySelectorAll("[data-aeat-search]");
+    var triggers = document.querySelectorAll("[data-cadrumo-search]");
     if (!triggers.length || typeof HTMLDialogElement === "undefined") return;
-    var searchUrl = triggers[0].getAttribute("data-aeat-search-url") || "search.html";
+    var searchUrl = triggers[0].getAttribute("data-cadrumo-search-url") || "search.html";
 
-    document.querySelectorAll("[data-aeat-search-kbd]").forEach(function (kbd) {
+    document.querySelectorAll("[data-cadrumo-search-kbd]").forEach(function (kbd) {
       kbd.textContent = IS_MAC ? "⌘ K" : "Ctrl K";
     });
 
     var dialog = document.createElement("dialog");
-    dialog.className = "aeat-palette";
+    dialog.className = "cadrumo-palette";
     dialog.setAttribute("aria-label", "Search documentation");
     dialog.innerHTML =
-      '<div class="aeat-palette-head">' +
+      '<div class="cadrumo-palette-head">' +
       '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>' +
-      '<input class="aeat-palette-input" type="text" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
-      '<kbd class="aeat-palette-esc">esc</kbd>' +
+      '<input class="cadrumo-palette-input" type="text" placeholder="Search docs…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search query">' +
+      '<kbd class="cadrumo-palette-esc">esc</kbd>' +
       "</div>" +
-      '<ul class="aeat-palette-list" role="listbox"></ul>' +
-      '<div class="aeat-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>';
+      '<ul class="cadrumo-palette-list" role="listbox"></ul>' +
+      '<div class="cadrumo-palette-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>';
     document.body.appendChild(dialog);
 
-    var input = dialog.querySelector(".aeat-palette-input");
-    var list = dialog.querySelector(".aeat-palette-list");
+    var input = dialog.querySelector(".cadrumo-palette-input");
+    var list = dialog.querySelector(".cadrumo-palette-list");
     var entries = null;
     var rows = [];
     var selected = 0;
@@ -468,24 +468,24 @@
       list.textContent = "";
       rows = items.map(function (entry, index) {
         var item = document.createElement("li");
-        item.className = "aeat-palette-item";
-        if (entry.kind) item.classList.add("aeat-palette-item--" + entry.kind);
+        item.className = "cadrumo-palette-item";
+        if (entry.kind) item.classList.add("cadrumo-palette-item--" + entry.kind);
         item.setAttribute("role", "option");
         var link = document.createElement("a");
         link.href = entry.href;
         var title = document.createElement("span");
-        title.className = "aeat-palette-item-title";
+        title.className = "cadrumo-palette-item-title";
         title.textContent = entry.title;
         link.appendChild(title);
         if (entry.crumb) {
           var crumb = document.createElement("span");
-          crumb.className = "aeat-palette-item-crumb";
+          crumb.className = "cadrumo-palette-item-crumb";
           crumb.textContent = entry.crumb;
           link.appendChild(crumb);
         }
         if (entry.excerpt) {
           var ex = document.createElement("span");
-          ex.className = "aeat-palette-item-excerpt";
+          ex.className = "cadrumo-palette-item-excerpt";
           ex.textContent = entry.excerpt;
           link.appendChild(ex);
         }

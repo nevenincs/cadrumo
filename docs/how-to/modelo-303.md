@@ -7,8 +7,9 @@ or large-company taxpayers use monthly Modelo 303 periods. Voluntary SII
 enrolment alone remains quarterly. The registry's official title is "Modelo 303.
 Impuesto sobre el Valor Anadido. Autoliquidacion."
 
-`aeat` does not submit Modelo 303 to AEAT. Export creates a local file that you
-upload through the official AEAT channel yourself.
+Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
+Tributaria (AEAT). Export creates a local file that you upload through the official
+AEAT channel yourself.
 
 The tool needs a master-key passphrase. It prompts for it interactively, or
 read it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
@@ -20,18 +21,18 @@ first-period filer. Run these commands in order. Each load-bearing detail is
 explained below.
 
 ```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" \
   --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+cadrumo app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
   --description "venta" --classification BUSINESS \
   --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
+cadrumo app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
   --description "compra" --classification BUSINESS --category-id material_oficina \
   --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+cadrumo app modelo work create --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
+cadrumo app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 Load-bearing details:
@@ -46,7 +47,7 @@ Load-bearing details:
   Here `1000 + 210 = 1210` and `500 + 105 = 605`. The tool enforces that the
   taxable base plus IVA equals the gross to the cent.
 - A deductible-expense row needs `--category-id`. List the valid ids with
-  `aeat app ledger categories`. The example uses `material_oficina`.
+  `cadrumo app ledger categories`. The example uses `material_oficina`.
 - `verify` reports `completeness complete` and `granted true`. `export` writes
   the `.boe` and reports its path, byte size, and SHA-256 checksum.
 - Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
@@ -116,14 +117,14 @@ When you add a row by hand, pass the GROSS amount on `--amount` and the IVA
 detail explicitly:
 
 ```bash
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+cadrumo app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
   --description "venta" --classification BUSINESS \
   --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
 ```
 
 `--amount` is `--taxable-base` plus `--iva-amount`, and the tool refuses the row
 if they do not match to the cent. A deductible-expense row also needs a
-`--category-id`; list the valid ids with `aeat app ledger categories`.
+`--category-id`; list the valid ids with `cadrumo app ledger categories`.
 
 ## Create the work unit
 
@@ -132,19 +133,19 @@ period, and registry revision. This needs an active profile; create one first if
 you have none:
 
 ```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+cadrumo config profile create me --quiet --tax-id 12345678Z --name "Ana" \
   --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work create --modelo 303 --year 2026 --period 1T
 ```
 
 The command is idempotent for the same visible target. If a work unit already
 exists for the active profile, Modelo 303, year, period, and resolved registry
-revision, `aeat` returns it instead of creating a duplicate.
+revision, Cadrumo returns it instead of creating a duplicate.
 
 Use the same visible target on the later commands:
 
 ```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work status --modelo 303 --year 2026 --period 1T
 ```
 
 For routine work, the visible target (`--modelo`, `--year`, `--period`) is all
@@ -163,8 +164,8 @@ with `--year 2026` is January.
 Check that period before calculating:
 
 ```bash
-aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status --year 2026 --period 1T
+cadrumo app ledger preflight --year 2026 --period 1T
+cadrumo app ledger status --year 2026 --period 1T
 ```
 
 The row window uses the transaction operation date: `raw.value_date` when
@@ -180,7 +181,7 @@ and similar issues before a draft is trusted. Regimen simplificado is treated
 differently: those profiles provide the simplificado casillas manually instead
 of satisfying the ordinary IVA ledger aggregation preflight.
 
-`aeat` does not silently choose a quarter from today's date. The work unit's
+Cadrumo does not silently choose a quarter from today's date. The work unit's
 `--year` and `--period` are the target.
 
 ## Calculate the draft
@@ -188,7 +189,7 @@ of satisfying the ordinary IVA ledger aggregation preflight.
 Run calculation for the same target:
 
 ```bash
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
 Calculation resolves the registry revision for that work unit, reads the active
@@ -206,8 +207,8 @@ If the command reports missing bindings or missing casillas, inspect them
 before adding values:
 
 ```bash
-aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
-aeat app modelo casillas 303 --period 1T --required
+cadrumo app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+cadrumo app modelo casillas 303 --period 1T --required
 ```
 
 Only provide `--binding`, `--casilla`, `--relation`, or Modelo 303-specific
@@ -216,8 +217,8 @@ example, use the IVA compensation wallet commands before relying on a prior
 compensation amount:
 
 ```bash
-aeat app modelo iva-wallet balance --as-of-year 2026
-aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+cadrumo app modelo iva-wallet balance --as-of-year 2026
+cadrumo app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 ```
 
 Use `--amount 0` only for a true first Modelo 303 period with no previous
@@ -228,13 +229,13 @@ pending IVA compensation.
 List saved revisions:
 
 ```bash
-aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work revisions --modelo 303 --year 2026 --period 1T
 ```
 
 Show the current revision's persisted values:
 
 ```bash
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work revision --modelo 303 --year 2026 --period 1T
 ```
 
 The revision view exposes the revision id and state, persisted casilla values,
@@ -252,7 +253,7 @@ manual inputs, bindings, offsets, and revision selection, see
 Verify the selected calculation:
 
 ```bash
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work verify --modelo 303 --year 2026 --period 1T
 ```
 
 Verification checks the selected draft against the verified-complete contract.
@@ -260,7 +261,7 @@ The report exposes the calculation revision id, completeness status, whether
 verification was granted or blocked, resolved and missing casillas, findings
 with legal/source references where available, and the next action.
 
-On successful verification, `aeat` captures ledger filing snapshot and evidence
+On successful verification, Cadrumo captures ledger filing snapshot and evidence
 over the draft's `source_transaction_ids` and stores it on the verified
 revision. That evidence lets later staleness checks detect whether a
 contributing ledger row changed or disappeared. It is not a general lock on the
@@ -269,7 +270,7 @@ whole ledger, and it does not freeze unrelated rows.
 Export the verified or filed revision:
 
 ```bash
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+cadrumo app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
 
 Export writes a local AEAT-compatible fichero-BOE file and reports the output
@@ -281,7 +282,7 @@ If you need to mark the verified revision as filed in local history after you
 submit through AEAT, use the filing workflow guide:
 
 ```bash
-aeat app modelo work file --modelo 303 --year 2026 --period 1T
+cadrumo app modelo work file --modelo 303 --year 2026 --period 1T
 ```
 
 `work file` is an internal local marker, not an AEAT submission.

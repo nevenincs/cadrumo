@@ -9,14 +9,14 @@ You need:
 - An active taxpayer profile. Evidence is stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
 - Transactions in your ledger. If your ledger is empty, see [Work with transactions](import-bank-statements.md) first.
-- The invoice or receipt as a PDF or image file. aeat copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
+- The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
 
 ## Add an evidence record
 
 Record the invoice file and its details:
 
 ```bash
-aeat app ledger evidence add ./invoices/supplier-march.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --notes "Office supplies, March"
+cadrumo app ledger evidence add ./invoices/supplier-march.pdf --supplier "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --notes "Office supplies, March"
 ```
 
 The file path is the only required part; every metadata flag is optional. `--iva-rate 21` means 21 %. Add what you know now; update the rest later.
@@ -28,7 +28,7 @@ The command prints the evidence ID. Note the full ID down - later commands need 
 Attach the evidence record to the transaction it supports:
 
 ```bash
-aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
+cadrumo app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
 ```
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
@@ -42,22 +42,22 @@ The `attach` command also has an `--attachment-id` option (repeatable) for a gen
 When the document lives in Google Drive, pull it straight into encrypted evidence storage:
 
 ```bash
-aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+cadrumo app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
-The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
+The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `cadrumo app ledger evidence add` or `cadrumo app ledger attach --attachment-id`.
 
 ## Bulk-fetch every invoice in a Drive folder
 
 Fetch every PDF and image invoice in one Drive folder at once, instead of one document at a time:
 
 ```bash
-aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
+cadrumo app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
 ```
 
-The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `aeat app ledger attach --attachment-id <attachment-id>` or `aeat app ledger link`.
+The command lists the folder's contents, downloads each PDF or image, and stores every file as encrypted evidence. Fetched files are not linked to a transaction yet; bind each one afterward with `cadrumo app ledger attach --attachment-id <attachment-id>` or `cadrumo app ledger link`.
 
-Re-run the same command any time — a file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and attach it with `aeat app ledger attach --attachment-id`.
+Re-run the same command any time — a file already fetched is recognized by its content and is not stored twice. A file outside the granted Drive scope is refused individually and does not stop the rest of the sweep; download it yourself and attach it with `cadrumo app ledger attach --attachment-id`.
 
 Gmail bulk-fetch is not available yet.
 
@@ -71,7 +71,7 @@ invoice facts queryable on their own.
 Register an invoice:
 
 ```bash
-aeat app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --total-amount 121.00
+cadrumo app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21 --iva-amount 21.00 --total-amount 121.00
 ```
 
 `--kind` is required on every invoice command: `issued` means a customer owes
@@ -83,16 +83,16 @@ For an intra-community EU operation, add the counterparty's country and EU
 IVA identifier, and the operation type used by Modelo 349:
 
 ```bash
-aeat app ledger invoice add --kind issued --counterparty-nif X1234567X --invoice-number "2026-0007" --invoice-date 2026-03-12 --country-code DE --eu-iva-id DE345678901 --operation-type S
+cadrumo app ledger invoice add --kind issued --counterparty-nif X1234567X --invoice-number "2026-0007" --invoice-date 2026-03-12 --country-code DE --eu-iva-id DE345678901 --operation-type S
 ```
 
 Work with stored invoice records:
 
 ```bash
-aeat app ledger invoice list
-aeat app ledger invoice view <invoice-id> --kind received
-aeat app ledger invoice update <invoice-id> --kind received --total-amount 121.00
-aeat app ledger invoice remove <invoice-id> --kind received --yes
+cadrumo app ledger invoice list
+cadrumo app ledger invoice view <invoice-id> --kind received
+cadrumo app ledger invoice update <invoice-id> --kind received --total-amount 121.00
+cadrumo app ledger invoice remove <invoice-id> --kind received --yes
 ```
 
 `list` shows both kinds unless you filter with `--kind`. `view`, `update`,
@@ -110,7 +110,7 @@ To bind an invoice to the transaction that settles it, create the invoice in
 the reconciliation catalogue, then link it. Create the catalogue invoice:
 
 ```bash
-aeat app ledger invoice catalogue create --kind received --counterparty-nif A58818501 --counterparty-name "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21
+cadrumo app ledger invoice catalogue create --kind received --counterparty-nif A58818501 --counterparty-name "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21
 ```
 
 `--kind`, `--counterparty-nif`, `--counterparty-name`, `--invoice-number`,
@@ -122,7 +122,7 @@ prints the catalogue invoice id - a long id distinct from the short
 Bind it to the transaction it settles:
 
 ```bash
-aeat app ledger link <transaction-id> --invoice-id <catalogue-invoice-id>
+cadrumo app ledger link <transaction-id> --invoice-id <catalogue-invoice-id>
 ```
 
 The link is bidirectional: the invoice records the transaction and the
@@ -131,7 +131,7 @@ an invoice from a different profile is refused. List the catalogue invoices any
 time:
 
 ```bash
-aeat app ledger invoice catalogue list
+cadrumo app ledger invoice catalogue list
 ```
 
 To bind a document (a PDF or image) to a transaction, store it as evidence and
@@ -142,25 +142,25 @@ link that instead - see below.
 List every stored evidence record:
 
 ```bash
-aeat app ledger evidence list
+cadrumo app ledger evidence list
 ```
 
 View one evidence record in full:
 
 ```bash
-aeat app ledger evidence view <evidence-id>
+cadrumo app ledger evidence view <evidence-id>
 ```
 
 Update details on an existing evidence record - the same optional flags as `add`:
 
 ```bash
-aeat app ledger evidence update <evidence-id> --supplier "Papelería Sol SL"
+cadrumo app ledger evidence update <evidence-id> --supplier "Papelería Sol SL"
 ```
 
 Remove an evidence record you no longer need:
 
 ```bash
-aeat app ledger evidence remove <evidence-id> --yes
+cadrumo app ledger evidence remove <evidence-id> --yes
 ```
 
 Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).

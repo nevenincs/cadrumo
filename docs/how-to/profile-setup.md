@@ -1,20 +1,20 @@
 # Set up your taxpayer profile
 
-A profile holds the facts about one taxpayer that every `aeat app` command reads
+A profile holds the facts about one taxpayer that every `cadrumo app` command reads
 and updates. Set one up before you import transactions, calculate a {term}`modelo`,
 or export a filing.
 
 A profile is local. Creating, editing, showing, exporting, or importing a
-profile never submits anything to the Agencia Estatal de Administracion
-Tributaria (AEAT). The tool builds and verifies your filing on your machine; you
+profile never submits anything to the Agencia Estatal de Administración
+Tributaria (AEAT). Cadrumo builds and verifies your filing on your machine; you
 upload it yourself.
 
-If you haven't installed and run `aeat` yet, start with the
+If you haven't installed and run `cadrumo` yet, start with the
 [quickstart](quickstart.md), then come back here.
 
 ## What the active profile means
 
-The active profile is the taxpayer context for `aeat app` commands. While a
+The active profile is the taxpayer context for `cadrumo app` commands. While a
 profile is active, commands such as ledger import, transaction classification,
 modelo calculation, export, and local filing history read and update that
 profile's data.
@@ -27,18 +27,18 @@ human-gated, see the [explanation guides](../explanation/index.md).
 List your profiles and see which one is active:
 
 ```bash
-aeat config profile list
-aeat config profile status
+cadrumo config profile list
+cadrumo config profile status
 ```
 
 Switch to another taxpayer before working on it:
 
 ```bash
-aeat config switch my-other-profile
+cadrumo config switch my-other-profile
 ```
 
-Switching changes which local ledger, modelo drafts, and filing markers `aeat
-app` commands use. The switch verb is `aeat config switch`, not `aeat config
+Switching changes which local ledger, modelo drafts, and filing markers `cadrumo
+app` commands use. The switch verb is `cadrumo config switch`, not `cadrumo config
 profile switch`.
 
 ## Decide your facts before you start
@@ -61,15 +61,15 @@ rest of setup follows:
   through Modelo 303.
 - **Where the taxpayer is resident.** The autonomous community for a Spanish
   resident, or the country of residence for a non-resident.
-- **Which output language you want.** The language `aeat` uses for its output.
+- **Which output language you want.** The language `cadrumo` uses for its output.
 
 You don't need to memorize flag names. The guided wizard walks you through these
 decisions. For the complete, current list of flags and their accepted values,
 run:
 
 ```bash
-aeat config profile create --help
-aeat config profile edit --help
+cadrumo config profile create --help
+cadrumo config profile edit --help
 ```
 
 ## Create your profile
@@ -79,7 +79,7 @@ Create a profile interactively, or non-interactively with flags.
 Run the guided wizard when you're setting up a profile for the first time:
 
 ```bash
-aeat config profile create my-profile
+cadrumo config profile create my-profile
 ```
 
 The wizard asks the questions described in this guide. Its prompt labels are
@@ -91,13 +91,13 @@ The wizard prompts for your master-key passphrase before it stores anything. In
 a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE` first, or the command
 refuses with `CADRUMO_SECRET_PASSPHRASE is not set`.
 
-`aeat` prints its prompts, refusals, and error messages in Spanish. The output
+`cadrumo` prints its prompts, refusals, and error messages in Spanish. The output
 blocks quoted below are English translations of those messages.
 
 Use flags with `--quiet` when you want a repeatable, scriptable setup:
 
 ```bash
-aeat config profile create my-profile --quiet --tax-id 12345678Z
+cadrumo config profile create my-profile --quiet --tax-id 12345678Z
 ```
 
 `--quiet` runs without prompts and uses only the flags you provide. A `--quiet`
@@ -109,7 +109,7 @@ Refused. This --quiet run is missing required details. Add these flags and run
 the command again: --tax-id.
 ```
 
-Add `--accept-defaults` when you intentionally want `aeat` to fill the questions
+Add `--accept-defaults` when you intentionally want Cadrumo to fill the questions
 you omit from its built-in defaults.
 
 ### Worked example: a natural person with an activity
@@ -118,7 +118,7 @@ This example creates a minimal natural-person profile for an individual with an
 economic activity:
 
 ```bash
-aeat config profile create ana-2026 --quiet --accept-defaults \
+cadrumo config profile create ana-2026 --quiet --accept-defaults \
   --entity-type natural_person \
   --tax-id 12345678Z \
   --name "Ana" --surnames "Garcia Lopez" \
@@ -132,15 +132,15 @@ aeat config profile create ana-2026 --quiet --accept-defaults \
 Inspect and validate it before you rely on it:
 
 ```bash
-aeat config profile show ana-2026
-aeat config profile validate ana-2026
+cadrumo config profile show ana-2026
+cadrumo config profile validate ana-2026
 ```
 
 ## The facts setup asks for
 
 Setup groups its questions by decision area. These values are stable command
 tokens: they're case-sensitive and don't translate. Run
-`aeat config profile create --help` for the exhaustive flag list. It includes the
+`cadrumo config profile create --help` for the exhaustive flag list. It includes the
 conditional spouse, family-unit, non-resident, and enrollment questions this
 guide summarizes rather than repeats.
 
@@ -243,27 +243,27 @@ calculate a modelo.
 Show the active profile's readiness summary:
 
 ```bash
-aeat config profile status
+cadrumo config profile status
 ```
 
 Show the stored facts in full:
 
 ```bash
-aeat config profile show
+cadrumo config profile show
 ```
 
 Validate the facts against the schema, which catches malformed or contradictory
 values:
 
 ```bash
-aeat config profile validate
+cadrumo config profile validate
 ```
 
 Check whether the profile holds the facts a specific form needs, for a specific
 filing context:
 
 ```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+cadrumo config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
 `preflight` names the missing fields for that `(modelo, filing-year, period)`
@@ -299,7 +299,7 @@ profile and the registry rules. To see what applies to your profile, use
 Edit a profile with the flags you want to change:
 
 ```bash
-aeat config profile edit ana-2026 --quiet --address-postcode 28013
+cadrumo config profile edit ana-2026 --quiet --address-postcode 28013
 ```
 
 Run `show`, `status`, or `validate` again after editing.
@@ -308,7 +308,7 @@ Rename a profile when only the visible label should change. The active-profile
 pointer follows the rename:
 
 ```bash
-aeat config profile rename ana-2026 ana-real
+cadrumo config profile rename ana-2026 ana-real
 ```
 
 Duplicate a profile to start a second one from the same facts. The second name
@@ -316,27 +316,27 @@ you pass is the new profile's name - the name you address it by in every later
 command. The new profile becomes the active one:
 
 ```bash
-aeat config profile duplicate ana-real ana-copy
+cadrumo config profile duplicate ana-real ana-copy
 ```
 
 Delete a profile only when you mean to remove it. Deletion is local and
-irreversible. If the deleted profile was active, `aeat` clears the active-profile
+irreversible. If the deleted profile was active, Cadrumo clears the active-profile
 pointer:
 
 ```bash
-aeat config profile delete ana-copy --yes
+cadrumo config profile delete ana-copy --yes
 ```
 
 Clear the active profile without deleting it:
 
 ```bash
-aeat config profile logout
+cadrumo config profile logout
 ```
 
 Export a profile to a portable JSON file:
 
 ```bash
-aeat config profile export ana-real --to ./ana-real-profile.json
+cadrumo config profile export ana-real --to ./ana-real-profile.json
 ```
 
 Import a profile into another session or storage root. Import under a fresh label
@@ -344,7 +344,7 @@ when one with the same name already exists. The imported profile becomes the
 active one:
 
 ```bash
-aeat config profile import ./ana-real-profile.json --label ana-restored
+cadrumo config profile import ./ana-real-profile.json --label ana-restored
 ```
 
 A portable profile file contains taxpayer data, including the tax identifier,
@@ -360,15 +360,15 @@ active profile, so switch to it first if you ran `logout`. Browse it to see what
 changed, when, and by which command:
 
 ```bash
-aeat config profile history ana-real
+cadrumo config profile history ana-real
 ```
 
 Narrow a long history with filters, which combine:
 
 ```bash
-aeat config profile history ana-real --event-type profile.renamed
-aeat config profile history ana-real --since 2026-01-01 --until 2026-03-31
-aeat config profile history ana-real --actor operator
+cadrumo config profile history ana-real --event-type profile.renamed
+cadrumo config profile history ana-real --since 2026-01-01 --until 2026-03-31
+cadrumo config profile history ana-real --actor operator
 ```
 
 Repeat `--event-type` to include several types. An unknown type is refused with

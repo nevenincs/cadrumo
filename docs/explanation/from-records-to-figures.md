@@ -4,7 +4,9 @@ This page explains where the numbers on your tax form come from. It walks throug
 
 This is background reading. When you're ready to actually do each step, follow the links to the how-to guides.
 
-The forms in question are modelos that you send to the {term}`AEAT`. Each modelo is made of {term}`casillas <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
+The forms are AEAT modelos made of numbered {term}`casillas <casilla>`.
+Cadrumo prepares the figures locally; AEAT remains the authority that owns the
+official form and receives the human-uploaded export.
 
 ## A bank movement means nothing on its own
 
@@ -30,7 +32,11 @@ The first is a percentage on a single record. You say this one phone bill is 60 
 
 The second is a default for a whole category. You set a business share once for, say, all utility costs, and every record in that category inherits it unless you override it.
 
-The third is a ratio worked out from your official registration details. If you've recorded the facts behind your activity - for example, the size of a registered home office against the size of your home - the tool can work out the business share from those facts instead of asking you to guess a number.
+The third is a ratio worked out from activity facts you declare to Cadrumo. For
+example, you can record the size of a home office and the size of the home so
+Cadrumo derives the business share. These are operator-declared local facts,
+not an official AEAT observation or confirmation, even when they describe facts
+also used in an AEAT registration.
 
 All three describe the same idea: keep only the part of a cost that genuinely belongs to the business.
 
@@ -64,13 +70,20 @@ You don't wire any of this by hand. You make your records tax-ready and keep you
 
 ## Tracing a number back to the law
 
-Every figure the tool produces keeps three things attached: the rule that produced it, the law article behind that rule, and the section of the official manual that explains it. Input figures you entered yourself carry the same trail back to their source.
+Grounded figures retain the mechanism and provenance available for that value:
+the binding or formula that produced it, legal and official-source references
+declared by the resolved registry rule, and the local record, observation, or
+manual input that supplied it. A revision also identifies the registry revision
+used for the calculation.
 
-This is the point of the whole design. Spanish tax filing expects you to justify every number. If an inspector asks why a box holds a certain figure, you can show the records behind it and the rule and law that turned those records into that figure. Nothing is a black box.
+This is the point of the design. A reviewer can follow a casilla back through
+its source records and declared grounding instead of treating the result as an
+unexplained total. The [registry and legal-source
+reference](../reference/registry-legal-api.md) defines those lookup fields.
 
 ## Where this sits in the journey
 
-This page is part of understanding the AEAT pipeline - how your data flows from bank statement to filed form.
+This page is part of Cadrumo's tax-preparation workflow - how your data flows from bank statement to filed form.
 
-- Start at the overview: [Understanding the AEAT pipeline](index.md).
+- Start at the overview: [Understanding Cadrumo's tax-preparation workflow](index.md).
 - Continue to the next stage: [Editing and verifying a calculation](editing-and-verifying.md).

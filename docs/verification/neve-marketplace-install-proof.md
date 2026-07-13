@@ -2,15 +2,23 @@
 orphan: true
 ---
 
-# Public marketplace install proof — aeat@neve
+# Historical marketplace install record — pre-Cadrumo plugin identifier
 
-Live verification for the claude-ecosystem-packaging campaign, 2026-07-04.
-Proves the FULLY PUBLIC delivery chain end to end — no local paths, no
-pre-staged wheels.
+Historical verification for the claude-ecosystem-packaging campaign,
+2026-07-04. It measured a public delivery chain end to end, with no local paths
+or pre-staged wheels. It does not establish current public availability.
 
-## The chain, all public
+**Historical naming note.** This record preserves evidence from before the
+Cadrumo product rename. It is not current installation guidance. Current
+release material names the plugin `cadrumo` and its Model Context Protocol
+(MCP) server `cadrumo-mcp`. The human-facing `aeat` command-line interface
+(CLI) is unchanged. This record does not establish current public marketplace or
+package availability. Legacy plugin and marketplace identifiers below are quoted
+evidence only.
 
-1. **Public GitHub marketplace** — `nevenincs/neve-marketplace` (the `neve`
+## The chain at measurement time
+
+1. **Public GitHub marketplace at measurement time** — `nevenincs/neve-marketplace` (the `neve`
    namespace; 59 tracked files: `.claude-plugin/marketplace.json` + the
    generated `plugins/aeat/` tree, 34 skills + 7 agents).
 2. **One-command add + install** (Claude Code CLI):
@@ -19,22 +27,23 @@ pre-staged wheels.
    - `claude plugin install aeat@neve` → "Successfully installed plugin:
      aeat@neve (scope: user)"; disabled-by-default surfaced as designed.
    - `claude plugin enable aeat@neve` → enabled.
-3. **PyPI-launched local server** — the installed plugin's `.mcp.json` runs
-   `uvx --from "cadrumo[agent]==0.1.1" cadrumo-mcp`, resolving the published
-   package from the index.
+3. **PyPI-launched local server at measurement time** — the installed plugin's
+   `.mcp.json` ran `uvx --from "cadrumo[agent]==0.1.1" cadrumo-mcp`, resolving
+   the package from the index.
 4. **Live tool round-trip** — a session of the Claude desktop app's embedded
    runtime, restricted to `mcp__plugin_aeat_aeat__*`, called the harness floor
    tool and received the payload leading with the R9 off-host privacy
    disclosure ("Aviso de privacidad — léalo antes de continuar…").
 
-Every hop is a public artifact any user with `uv` can reproduce:
-`add nevenincs/neve-marketplace` → `install aeat@neve` → the server boots from
-PyPI. This is the first proof that a third party (not this dev machine) could
-install and run the assistant.
+At measurement time, every hop was a public artifact that a user with `uv`
+could reproduce: `add nevenincs/neve-marketplace` → `install aeat@neve` → the
+server boots from PyPI. This was evidence that a third party could install and
+run the assistant at that time.
 
 ## Addressing
 
-Plugins under this marketplace are `<plugin>@neve`. Today: `aeat@neve`. The
+At measurement time, plugins under this marketplace used `<plugin>@neve`;
+the measured address was `aeat@neve`. The
 marketplace name (`neve`) is independent of its serving repo
 (`nevenincs/neve-marketplace`) and is the stable ecosystem namespace future
 plugins join as additional `plugins[]` entries.
