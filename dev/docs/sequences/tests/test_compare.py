@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the golden store and comparison tier (W02.P04).
+"""Real-behaviour tests for the golden store and comparison tier.
 
 Every golden in these tests is produced by executing a REAL sequence against the
 real CLI in a fresh hermetic sandbox and projecting the typed transcript through
@@ -371,7 +371,7 @@ class TestExpectEvaluation:
 
 
 class TestMaskAuthorityIsCentral:
-    """ADR D3: the executor never declares its own mask set.
+    """The executor never declares its own mask set; mask authority stays central.
 
     Three enforcement tiers, none sufficient alone: the public surface exposes
     no mask-shaped parameter (this class), the compare module's own source
@@ -413,3 +413,33 @@ class TestMaskAuthorityIsCentral:
             assert len(call.args) == 1 and not call.keywords, (
                 f"mask_document call at line {call.lineno} overrides the central mask default"
             )
+
+
+class TestStepDescriptionGoldenImmunity:
+    def test_adding_step_lines_never_invalidates_a_committed_golden(
+        self,
+        json_run: SequenceTranscript,
+        tmp_path: Path,
+    ) -> None:
+        """@step is narration metadata, never executed truth: a golden written
+        from the description-free body compares clean against a REAL fresh run
+        of the same body with @step lines added — authoring or editing
+        narration can never force a golden refresh."""
+        write_golden(json_run, page=_PAGE, goldens_root=tmp_path)
+        golden = read_golden(_PAGE, json_run.sequence_id, goldens_root=tmp_path)
+
+        annotated = parse_sequence(
+            sequence_id="compare-json-case",
+            options={"verify": "Verify the profile listing succeeds."},
+            body=(
+                "@step List the registered profiles.\n"
+                + _JSON_BODY.replace(
+                    "@result aeat",
+                    "@step Verify the listing reads success.\n@result aeat",
+                )
+            ),
+        )
+        assert all(frame.step_description is not None for frame in annotated.frames)
+
+        rerun = execute_sequence(annotated, sandbox_root=tmp_path / "annotated-run")
+        assert check_transcript(annotated, rerun, golden, page=_PAGE) == ()

@@ -378,3 +378,88 @@ def test_parser_regexes_are_derived_from_the_schema_constraints() -> None:
     assert _SEQUENCE_ID_RE.pattern == _pattern(SequenceId)
     assert _IDENTIFIER_RE.pattern == _pattern(Identifier)
     assert _JSON_PATH_RE.pattern == _pattern(JsonPath)
+
+
+# --- @step frame descriptions ------------------------------------------------
+
+
+def test_step_descriptions_attach_to_the_next_frame_of_any_kind() -> None:
+    body = (
+        "@step Prepare the quarter's ledger.\n"
+        "@setup aeat app ledger import --file fixtures/q1.csv\n"
+        "@step Create the Modelo 303 work unit.\n"
+        "aeat app modelo create 303 --year 2026 --period 1T\n"
+        "@capture work_unit_id result.work_unit_id\n"
+        "aeat app modelo calculate {work_unit_id}\n"
+        "@step Verify the calculation.\n"
+        "@result aeat app modelo verify {work_unit_id}\n"
+        '@expect result.status == "verified_complete"\n'
+    )
+    sequence = _parse(body)
+    setup, create, calculate, result = sequence.frames
+    assert setup.step_description == "Prepare the quarter's ledger."
+    assert create.step_description == "Create the Modelo 303 work unit."
+    assert calculate.step_description is None  # frames without @step stay bare
+    assert result.step_description == "Verify the calculation."
+    # The annotations beneath a described frame still attach normally.
+    assert create.captures == (CaptureBinding(name="work_unit_id", json_path="result.work_unit_id"),)
+
+
+def test_step_prose_is_not_placeholder_scanned() -> None:
+    # Narration is free prose, never a command: braces in the sentence are
+    # kept verbatim and raise no placeholder problem.
+    body = (
+        "@step Reuse the {work_unit_id} value from the create step.\n"
+        "aeat app modelo create 303 --year 2026 --period 1T\n"
+        "@result aeat app modelo verify\n"
+        "@expect exit_code == 0\n"
+    )
+    sequence = _parse(body)
+    assert sequence.frames[0].step_description == "Reuse the {work_unit_id} value from the create step."
+    assert sequence.frames[0].placeholder_names == ()
+
+
+def test_trailing_step_with_no_following_frame_is_refused() -> None:
+    body = (
+        "aeat app modelo create 303 --year 2026 --period 1T\n"
+        "@result aeat app modelo verify\n"
+        "@expect exit_code == 0\n"
+        "@step This attaches to nothing.\n"
+    )
+    problems = _problems(body)
+    assert any("line 4" in problem and "trailing @step" in problem for problem in problems)
+
+
+def test_two_step_lines_for_one_frame_are_refused() -> None:
+    body = (
+        "@step First description.\n"
+        "@step Second description for the same frame.\n"
+        "aeat app modelo create 303 --year 2026 --period 1T\n"
+        "@result aeat app modelo verify\n"
+        "@expect exit_code == 0\n"
+    )
+    problems = _problems(body)
+    assert any("line 2" in problem and "one @step description" in problem for problem in problems)
+    assert any("line 1" in problem for problem in problems)  # the unattached earlier line is named
+
+
+def test_empty_step_sentence_is_refused() -> None:
+    body = (
+        "@step\n"
+        "aeat app modelo create 303 --year 2026 --period 1T\n"
+        "@result aeat app modelo verify\n"
+        "@expect exit_code == 0\n"
+    )
+    problems = _problems(body)
+    assert any("line 1" in problem and "@step requires one imperative sentence" in problem for problem in problems)
+
+
+def test_over_long_step_sentence_is_refused() -> None:
+    body = (
+        f"@step {'x' * 300}\n"
+        "aeat app modelo create 303 --year 2026 --period 1T\n"
+        "@result aeat app modelo verify\n"
+        "@expect exit_code == 0\n"
+    )
+    problems = _problems(body)
+    assert any("line 1" in problem and "at most 240 characters" in problem for problem in problems)
