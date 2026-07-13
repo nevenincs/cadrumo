@@ -21,7 +21,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
-from ....core.atomic_write import atomic_write_hardened_bytes
+from ....core.atomic_write import atomic_write_hardened_bytes, atomic_write_text
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -191,8 +191,12 @@ class LocalFileSystemProvider:
         ``content_hash``/``byte_length`` metadata as a size-channel
         inference aid against the encrypted blob set, so the object file is
         hardened defence-in-depth even though its own content is opaque.
-        The sidecar is written afterwards; on sidecar-write failure the
-        payload is removed so no orphaned object lingers without metadata.
+        The sidecar is written afterwards through
+        :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard
+        tier), closing the crash window where a torn sidecar write could
+        leave a committed object with missing or corrupted metadata; on
+        sidecar-write failure the payload is removed so no orphaned object
+        lingers without metadata.
         """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
@@ -249,7 +253,7 @@ class LocalFileSystemProvider:
             "written_at": written_at.isoformat(),
         }
         try:
-            sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
+            atomic_write_text(sidecar_path, json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
         except OSError as exc:
             target_path.unlink(missing_ok=True)
             if is_windows_long_path_error(exc):

@@ -232,11 +232,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "target.write_text",
     ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) when a cold-start create span fails",
     (
-        "src/cadrumo/adapters/outbound/storage/_local.py",
-        "put",
-        "sidecar_path.write_text",
-    ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
-    (
         "src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",
         "write_text",
