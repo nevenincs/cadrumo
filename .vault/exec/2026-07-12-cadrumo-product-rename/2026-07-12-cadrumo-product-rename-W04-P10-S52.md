@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-13'
 step_id: 'S52'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
@@ -61,6 +61,9 @@ and executable contract, with no former command, tool alias, or fallback.
 
 ## Notes
 
-- The real project manifest checker reported `manifest.json valid: cadrumo 0.1.0`.
-- Two manifest-focused MCPB build tests passed; five later build/signing tests were outside S52 scope.
-- Formal review against the committed product rename ADR found no issues.
+- Re-execution followed the binding ADR's ratified convention: `Cadrumo` in
+  sentence prose, machine identity `cadrumo`, product environment prefix
+  `CADRUMO_`, human CLI `aeat`, and authority referent `AEAT`.
+- The real project manifest checker reported `manifest.json valid: cadrumo 0.2.0`.
+- Two manifest-focused MCPB build tests passed; later bundle-build and signing
+  behavior remains assigned to S54.
