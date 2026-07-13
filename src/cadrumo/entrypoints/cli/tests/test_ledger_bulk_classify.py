@@ -184,7 +184,7 @@ def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> Non
     assert payload["applied"] == 1, payload
     failure_ids = {f["transaction_id"] for f in payload["failures"]}
     assert tx2 in failure_ids, payload
-    assert any("set automatically by aeat" in f["reason"] for f in payload["failures"]), payload
+    assert any("set automatically by Cadrumo" in f["reason"] for f in payload["failures"]), payload
 
 
 def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
@@ -734,8 +734,8 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
 
     stored = _stored_transaction(tx1)
     assert stored.usage_ratio_id == "telefonia_movil"
-    assert stored.classification_reason == "aeat app ledger classify --from-csv"
-    assert stored.edit_lineage[-1].source_command == "aeat app ledger classify --from-csv"
+    assert stored.classification_reason == "cadrumo app ledger classify --from-csv"
+    assert stored.edit_lineage[-1].source_command == "cadrumo app ledger classify --from-csv"
 
 
 def test_classify_from_csv_rejects_unknown_usage_ratio_id(tmp_path: Path) -> None:

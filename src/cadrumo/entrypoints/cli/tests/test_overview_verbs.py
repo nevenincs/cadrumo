@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat app overview`` + retired-noun negatives.
+"""CLI surface tests for ``cadrumo app overview`` + retired-noun negatives.
 
 Closes two overview verb coverage gaps in one file:
 
@@ -10,7 +10,7 @@ Closes two overview verb coverage gaps in one file:
 - Add negative tests asserting `cadrumo deadlines` and
   related retired noun-groups are unknown commands. The verb tree
   retired the standalone `deadlines` noun-group in favour of mounting
-  deadline-shaped surfaces under `aeat app overview`. Operators
+  deadline-shaped surfaces under `cadrumo app overview`. Operators
   reaching for `cadrumo deadlines ...` must see Click's "No such command"
   refusal, not a silent fallthrough.
 """
@@ -91,7 +91,7 @@ _RETIRED_DEADLINES_VERBS = (
 
 
 def test_overview_verb_help_renders() -> None:
-    """Every `aeat app overview <verb> --help` renders cleanly; each
+    """Every `cadrumo app overview <verb> --help` renders cleanly; each
     verb is mounted and its help-text translation key resolves to a
     non-empty default."""
     violations: list[str] = []
@@ -107,7 +107,7 @@ def test_overview_verb_help_renders() -> None:
 
 
 def test_overview_status_returns_envelope_on_empty_bucket() -> None:
-    """`aeat app overview status` against an isolated profile with no
+    """`cadrumo app overview status` against an isolated profile with no
     work units emits a typed envelope (no exception, no missing-data
     error). The verb is read-only and works without a populated bucket."""
 
@@ -197,10 +197,10 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json() 
 
 
 def test_retired_deadlines_noun_group_is_unknown() -> None:
-    """Reaching for `cadrumo deadlines ...` (or `aeat app deadlines ...`)
+    """Reaching for `cadrumo deadlines ...` (or `cadrumo app deadlines ...`)
     must surface Click's "No such command" refusal. The verb tree
     retired the standalone deadlines noun-group; its surfaces live
-    under `aeat app overview` (calendar, agenda, backlog)."""
+    under `cadrumo app overview` (calendar, agenda, backlog)."""
     violations: list[str] = []
     for retired_verb in _RETIRED_DEADLINES_VERBS:
         result = invoke_cached_cli(retired_verb)

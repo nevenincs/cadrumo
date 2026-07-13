@@ -144,7 +144,7 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
     ``<storage_root>/buckets/<bucket_id>/db/cadrumo.db``.
     """
     dispose_engine()  # flush cached connections so the rewrite is observed
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     db_paths = list(storage_root.glob("buckets/*/db/cadrumo.db"))
     assert db_paths, f"no per-bucket DB found under {storage_root}"
     for db_path in db_paths:

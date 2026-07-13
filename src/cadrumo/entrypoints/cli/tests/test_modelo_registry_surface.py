@@ -1,6 +1,6 @@
 """Modelo registry/discovery CLI surface integration tests.
 
-The suite pins the ``aeat app modelo`` discovery and work-calculation ingress
+The suite pins the ``cadrumo app modelo`` discovery and work-calculation ingress
 surface: help discoverability, canonical period tokens, describe/casillas/formulas
 queries, binding and relation guidance, typed override-key validation, and JSON
 payload redaction. It exercises the live Typer tree against the real registry
@@ -556,7 +556,7 @@ def test_bindings_discovery_command_renders_runnable_period_token() -> None:
     # The combined display form must never appear inside the --period value.
     assert "--period 2026" not in command
     assert str(typed_period) not in command
-    assert command == "aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing"
+    assert command == "cadrumo app modelo bindings list --modelo 130 --year 2026 --period 1T --missing"
 
 
 def test_missing_binding_guidance_passes_non_input_errors_through() -> None:

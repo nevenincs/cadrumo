@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat app ledger inventory {list, create, movement add, valuation preview}`."""
+"""CLI surface tests for `cadrumo app ledger inventory {list, create, movement add, valuation preview}`."""
 
 from __future__ import annotations
 

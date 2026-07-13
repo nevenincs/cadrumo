@@ -87,7 +87,13 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
 
     profile_edit = _invoke(
         [
-            "config", "profile", "edit", "sa-drift", "--quiet", "--activity-start-date", "2026-01-01",
+            "config",
+            "profile",
+            "edit",
+            "sa-drift",
+            "--quiet",
+            "--activity-start-date",
+            "2026-01-01",
         ],
     )
     assert profile_edit.exit_code == 0, profile_edit.output

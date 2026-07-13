@@ -403,7 +403,7 @@ def test_modelo_readiness_refuses_revision_mismatch() -> None:
     assert "registry_ready\tFalse" in result.output
     assert "registry_refusal\tregistry snapshot unresolved" in result.output
     assert "2023-y-siguientes" in flat
-    assert "aeat app modelo describe 130" in flat
+    assert "cadrumo app modelo describe 130" in flat
 
 
 def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
@@ -431,7 +431,7 @@ def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
     assert "registry_ready\tFalse" in result.output
     assert "registry_refusal\tregistry snapshot unresolved" in result.output
     assert "AD-HOC" in flat
-    assert "aeat app modelo describe 210" in flat
+    assert "cadrumo app modelo describe 210" in flat
 
 
 def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:

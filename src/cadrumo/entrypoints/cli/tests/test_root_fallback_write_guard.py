@@ -140,7 +140,7 @@ def _root_fallback_env(storage_root: Path) -> dict[str, str]:
     return env
 
 
-def _run_aeat(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+def _run_cadrumo(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-c", _CLI_HARNESS, str(storage_root), *args],
         cwd=Path(__file__).parents[3],
@@ -154,7 +154,7 @@ def _run_aeat(storage_root: Path, args: tuple[str, ...]) -> subprocess.Completed
     )
 
 
-def _run_aeat_explicit_database(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+def _run_cadrumo_explicit_database(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-c", _EXPLICIT_DATABASE_HARNESS, str(storage_root), *args],
         cwd=Path(__file__).parents[3],
@@ -187,7 +187,7 @@ def test_guarded_write_verbs_refuse_root_fallback_database(tmp_path: Path) -> No
     """Profile-bound write verbs refuse before writing to the root fallback database."""
 
     for verb in _GUARDED_WRITE_VERBS:
-        result = _run_aeat(tmp_path, verb)
+        result = _run_cadrumo(tmp_path, verb)
 
         output = _case_output(verb, result)
         _assert_no_internal_import_leak(output)
@@ -201,7 +201,7 @@ def test_guarded_write_verbs_refuse_explicit_database_url(tmp_path: Path) -> Non
     """Profile-bound write verbs refuse operator-supplied database URL routes."""
 
     for verb in _GUARDED_WRITE_VERBS:
-        result = _run_aeat_explicit_database(tmp_path, verb)
+        result = _run_cadrumo_explicit_database(tmp_path, verb)
 
         output = _case_output(verb, result)
         _assert_no_internal_import_leak(output)
@@ -217,7 +217,7 @@ def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Pat
     """Help, repair object-integrity, and registry read probes remain available on a fresh root."""
 
     for verb in _BOOTSTRAP_SAFE_PROBES:
-        result = _run_aeat(tmp_path, verb)
+        result = _run_cadrumo(tmp_path, verb)
 
         output = _case_output(verb, result)
         assert result.returncode == 0, output
@@ -227,7 +227,7 @@ def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Pat
 def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
     """`config switch` reaches profile resolution instead of the root-fallback guard."""
 
-    result = _run_aeat(tmp_path, ("config", "switch", "does-not-exist"))
+    result = _run_cadrumo(tmp_path, ("config", "switch", "does-not-exist"))
 
     assert result.returncode == 2, _combined_output(result)
     output = _combined_output(result)
@@ -238,7 +238,7 @@ def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path:
 def test_minimal_registry_modelo_work_create_reaches_leaf_refusal_on_root_fallback_database(tmp_path: Path) -> None:
     """Minimal-registry modelos refuse with their legal route before the root profile guard."""
 
-    result = _run_aeat(
+    result = _run_cadrumo(
         tmp_path,
         (
             "--format",

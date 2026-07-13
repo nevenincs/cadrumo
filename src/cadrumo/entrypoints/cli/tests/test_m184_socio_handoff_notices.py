@@ -79,11 +79,11 @@ def test_handoff_emits_one_info_notice_per_socio() -> None:
     assert "58100.00" in first.message
     assert "Ana Socia" in first.message
     assert "attribution_received" in first.message
-    assert first.suggestion == "aeat app modelo work calculate --binding 1577=58100.00"
+    assert first.suggestion == "cadrumo app modelo work calculate --binding 1577=58100.00"
     assert first.context["target_casilla"] == "1577"
     assert second.context["nif"] == "87654321B"
     assert second.context["base_imponible_attributed"] == "38700.00"
-    assert second.suggestion == "aeat app modelo work calculate --binding 1577=38700.00"
+    assert second.suggestion == "cadrumo app modelo work calculate --binding 1577=38700.00"
 
 
 def test_handoff_silent_without_member_rows() -> None:

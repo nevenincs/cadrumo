@@ -5,7 +5,7 @@ imported the wrong file twice and stashed half my rows by mistake" -- a FAIL:
 the only documented escape from an accidental bulk stash was ``ledger reset``
 (clear and re-import the whole ledger). This suite is the acceptance evidence
 that the D2 ``restore`` verb makes that journey PASS: it drives the real
-``aeat app ledger`` CLI end-to-end -- add several rows, stash them all, then
+``cadrumo app ledger`` CLI end-to-end -- add several rows, stash them all, then
 ``restore`` each one back to active -- and asserts the ledger is whole again
 WITHOUT a reset, with the restore recorded in each row's event history.
 

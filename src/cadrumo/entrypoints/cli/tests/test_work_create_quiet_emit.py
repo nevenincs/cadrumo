@@ -1,7 +1,7 @@
 """Real-behavior tests for ``modelo work create --quiet`` output trimming.
 
 Issue #578 (ux:cli-output) added a verb-level ``--quiet`` to
-``aeat app modelo work create`` that suppresses the human-readable
+``cadrumo app modelo work create`` that suppresses the human-readable
 confirmation prose while leaving the machine surface (the
 ``--format json`` :class:`SchemaEnvelope` and its notices) untouched.
 

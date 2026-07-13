@@ -3,7 +3,8 @@
 Provides the root landing text helper
 :func:`render_cli_root_landing_lines`, which converts the
 :class:`RootLandingReport` built by :func:`build_root_landing_report` into an
-ordered tuple of i18n-translated strings ready for :func:`_emit_envelope`. The
+ordered tuple of internationalized (i18n) strings ready for
+:func:`_emit_envelope`. The
 matching JSON payload is :class:`RootStatusResult`; this module owns only the
 text-mode lines for the same ``root.status`` surface.
 

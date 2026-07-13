@@ -6,7 +6,7 @@ re-activates each in turn and asserts its ledger surfaces only its own rows --
 the operator-facing cross-profile runtime-pegged ledger guarantee.
 
 The active session is opened with ``profile_create_storage_span`` -- the same
-session primitive the ``aeat config switch`` verb drives; re-entering a
+session primitive the ``cadrumo config switch`` verb drives; re-entering a
 span is the in-process equivalent of unlocking the active profile between
 commands.
 """

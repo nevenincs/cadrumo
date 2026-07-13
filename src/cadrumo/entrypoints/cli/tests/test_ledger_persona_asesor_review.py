@@ -1,6 +1,6 @@
 """Asesor-fiscal review-and-sign-off journey over the ledger-corpus fixture.
 
-These tests drive the real ``aeat app ledger`` CLI from the seat of a tax
+These tests drive the real ``cadrumo app ledger`` CLI from the seat of a tax
 advisor (*asesor fiscal*) doing a pre-filing review pass on a client's freshly
 imported ledger. The asesor's job is *not* to do data entry: it is to find what
 needs attention before sign-off — unclassified rows, rows missing the facts a

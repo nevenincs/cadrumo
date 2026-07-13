@@ -123,7 +123,7 @@ def _force_load_lazy_subcommands(app: typer.Typer) -> None:
     """Materialise every lazily-registered subcommand on ``app`` and its descendants.
 
     The CLI registers heavy subtrees via :func:`register_lazy_subcommand`
-    to keep ``aeat --version`` / ``aeat --help`` off the registry-parse
+    to keep ``cadrumo --version`` / ``cadrumo --help`` off the registry-parse
     path. The lazy entries live in a process-global table keyed by group
     name and are only imported when an operator dispatches into them.
     The conformance gate needs the full tree available at collection
@@ -168,7 +168,7 @@ def _click_leaf_paths(command: click.Command, prefix: tuple[str, ...]) -> set[tu
     name = command.name or ""
     path = (*prefix, name) if name else prefix
     if _is_command_group(command):
-        # Materialise the synthetic root context so AeatTyperGroup's
+        # Materialise the synthetic root context so CadrumoTyperGroup's
         # lazy ``get_command`` resolves every registered subcommand,
         # including those that live behind a LazySubcommand loader.
         with click.Context(command, info_name=name or None) as ctx:
@@ -195,12 +195,12 @@ def _click_leaf_paths(command: click.Command, prefix: tuple[str, ...]) -> set[tu
 #
 #  * ``cadrumo`` (root callback) emits ``root.status`` for the landing /
 #    help surface.
-#  * ``aeat app`` (group callback) emits ``root.app`` for the
-#    ``aeat app`` landing / help surface.
+#  * ``cadrumo app`` (group callback) emits ``root.app`` for the
+#    ``cadrumo app`` landing / help surface.
 #
 # When a future group callback adds an envelope emit, register its key
 # here so the gate continues to model the actual reach of the CLI tree.
-#  * ``aeat app ledger participation`` (group callback) emits
+#  * ``cadrumo app ledger participation`` (group callback) emits
 #    ``ledger.participation`` for the inverse audit lookup invoked as
 #    ``participation <transaction-id>`` (the group is ``invoke_without_command``);
 #    the ``rebuild`` subcommand is a reachable leaf with its own key.
@@ -209,15 +209,15 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
         "root.status",
         "root.app",
         "ledger.participation",
-        # ``aeat app contract`` is an ``invoke_without_command`` group whose
+        # ``cadrumo app contract`` is an ``invoke_without_command`` group whose
         # callback emits the operator capability manifest under ``contract``.
         # It registers no leaf subcommand, so the leaf walker cannot reach it.
         "contract",
-        # ``aeat app agent --output DIR`` is the same shape: an
+        # ``cadrumo app agent --output DIR`` is the same shape: an
         # ``invoke_without_command`` group-callback that materialises the operator
         # workspace under ``agent``, with no leaf subcommand.
         "agent",
-        # ``aeat app quickfile`` is the same shape: an ``invoke_without_command``
+        # ``cadrumo app quickfile`` is the same shape: an ``invoke_without_command``
         # group-callback that runs the full readiness -> calculate -> verify ->
         # export chain and emits under ``quickfile``, with no leaf subcommand.
         "quickfile",
@@ -536,7 +536,7 @@ def test_zero_bare_emit_sites_outside_exemption_set() -> None:
 # ``stale_draft_revision_references``), validates the payload mirror against
 # its JSON dump, and asserts the mirror carries the stale-draft advisory.
 # It reds when a report grows a field its paired payload lacks and greens
-# once the mirror catches up — the regression that broke ``aeat app ledger
+# once the mirror catches up — the regression that broke ``cadrumo app ledger
 # remove`` when ``stale_draft_revision_references`` landed on the report
 # alone.
 
@@ -625,7 +625,7 @@ def test_report_payload_mirror_accepts_full_dump(
     ``stale_draft_revision_references``) and validates the ``OutputSchema``
     mirror against ``report.model_dump(mode="json")``. Under ``extra="forbid"``
     this raises if the report carries a field the payload does not mirror —
-    exactly the regression that broke ``aeat app ledger remove`` when the
+    exactly the regression that broke ``cadrumo app ledger remove`` when the
     stale-draft advisory landed on the report but not its payload. Asserts the
     round-tripped payload carries the stale-draft advisory so a silent drop is
     also caught.

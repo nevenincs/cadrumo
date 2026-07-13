@@ -183,7 +183,7 @@ Converge developer automation, CI, release tooling, and external publication gat
 
 Update product copy through locale authorities while preserving AEAT counterparty language.
 
-- [ ] `W05.P12.S62` - Change command-help authorities to Cadrumo while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
+- [x] `W05.P12.S62` - Change command-help authorities to Cadrumo while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
 - [ ] `W05.P12.S63` - Update English product locale messages through the locales CLI; `English locale catalogue`.
 - [ ] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
 - [ ] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.

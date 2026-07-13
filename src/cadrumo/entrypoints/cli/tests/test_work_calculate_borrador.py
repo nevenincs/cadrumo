@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat app modelo work calculate --borrador-snapshot-id`."""
+"""CLI surface tests for `cadrumo app modelo work calculate --borrador-snapshot-id`."""
 
 from __future__ import annotations
 

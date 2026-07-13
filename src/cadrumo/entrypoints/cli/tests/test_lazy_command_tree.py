@@ -2,7 +2,7 @@
 
 The Cadrumo command tree is wide: every leaf command module imports the
 application layer and, transitively, the registry parse. Registering
-every subcommand eagerly made constructing the ``cadrumo`` app object
+every subcommand eagerly made constructing the Cadrumo app object
 import the whole tree — so ``cadrumo --version`` and ``cadrumo --help`` paid
 the full registry cost even though neither dispatches into a
 subcommand.
@@ -107,7 +107,7 @@ def test_version_cold_start_completes_under_budget() -> None:
 def test_importing_cli_package_does_not_import_registry() -> None:
     """Importing ``cadrumo.entrypoints.cli`` must not import the registry.
 
-    Constructing the ``cadrumo`` app object is import-only work. If it
+    Constructing the Cadrumo app object is import-only work. If it
     pulls the registry or a heavy command module, every CLI surface —
     including ``--version`` — inherits that cost.
     """

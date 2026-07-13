@@ -1,4 +1,4 @@
-"""CLI surface tests for the `aeat app modelo reconcile` group.
+"""CLI surface tests for the `cadrumo app modelo reconcile` group.
 
 `reconcile file --file PATH` reconciles a local justificante (the default
 `--kind`) or a filed declaración (`--kind declaration`, casilla-level compare,

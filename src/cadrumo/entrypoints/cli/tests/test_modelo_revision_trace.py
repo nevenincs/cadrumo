@@ -1,7 +1,7 @@
 """End-to-end CLI verification for the inline formula trace on draft review.
 
 Issue #220 (acceptance journey wall 18): when an operator reviews a stored draft
-revision with ``aeat app modelo work revision``, every computed casilla must
+revision with ``cadrumo app modelo work revision``, every computed casilla must
 render its formula trace inline as ``op(refs) = op(values) = value`` - the
 review moment is the highest-value place for the trace, and it must be sourced
 from the already-computed engine entries on the revision rather than a second

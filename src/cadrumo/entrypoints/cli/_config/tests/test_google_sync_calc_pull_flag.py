@@ -1,5 +1,5 @@
 """Smoke check for the ``--assemble-observations`` flag on
-``aeat config google sync calc pull``.
+``cadrumo config google sync calc pull``.
 
 Guards three regressions:
 - The flag stays registered on the typer command (rename or
