@@ -995,7 +995,7 @@ def _transaction_from_command(
         counterparty=command.counterparty,
         description=command.description,
         provenance=RawProvenance(
-            source_path=Path.cwd() / ".aeat-manual-ledger",
+            source_path=Path.cwd() / ".cadrumo-manual-ledger",
             source_sha256=_source_sha256(command, occurred_at=occurred_at),
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
