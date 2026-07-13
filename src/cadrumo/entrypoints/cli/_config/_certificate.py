@@ -122,7 +122,7 @@ def certificate_register(
         lines=(
             f"name\t{result.name}",
             f"certificate_path\t{result.certificate_path}",
-            f"next_action\tcadrumo config auth certificate select --name {result.name}",
+            f"next_action\taeat config auth certificate select --name {result.name}",
         ),
     )
 
@@ -160,7 +160,7 @@ def certificate_list(
         active_source=report.active_source,
     )
     if not report.sources:
-        lines = ["sources\t<none>", "next_action\tcadrumo config auth certificate register --name NAME --file PATH"]
+        lines = ["sources\t<none>", "next_action\taeat config auth certificate register --name NAME --file PATH"]
     else:
         lines = [f"active_source\t{report.active_source or '<none>'}"]
         for source in report.sources:
@@ -343,7 +343,7 @@ def certificate_check(
     ]
 
     if not report.entries:
-        lines = ["sources\t<none>", "next_action\tcadrumo config auth certificate register --name NAME --file PATH"]
+        lines = ["sources\t<none>", "next_action\taeat config auth certificate register --name NAME --file PATH"]
     else:
         lines = []
         for entry in report.entries:
