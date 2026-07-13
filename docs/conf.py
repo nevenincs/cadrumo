@@ -1030,8 +1030,8 @@ def setup(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
 
         The projection is a build-time asset the ``cli-sequence`` frontend widget
-        fetches for hover help (ADR ``2026-07-13-docs-cli-sequences-adr`` D5); it
-        is gitignored and regenerated, never committed. Guarded like the sibling
+        fetches for hover help. It is gitignored and regenerated, never
+        committed. Guarded like the sibling
         CLI-reference hook: an incremental changed-page build whose artifact
         already exists skips the projection's subprocess cost (the CLI tree
         cannot change on a docs-only page build).
@@ -1044,7 +1044,7 @@ def setup(app):
         emit_cli_tree(app, specific_sources=_specific_build_sources())
 
     def _check_cli_sequences(app):
-        """Fail the build on any cli-sequence golden divergence (ADR D6).
+        """Fail the build on any cli-sequence golden divergence.
 
         The docs-build half of the two-surfaces-one-engine gate: runs the engine
         check mode so a divergence or a failed ``@expect`` reds the build. Scoped
@@ -1086,7 +1086,7 @@ def setup(app):
     app.add_directive("legacy", _LegacyDirective)
 
     # Register the cli-sequence directive: server-rendered executed-CLI frames
-    # plus one inline JSON payload per sequence (docs-cli-sequences ADR D5).
+    # plus one inline JSON payload per sequence.
     from dev.docs.sequence_directive import register as _register_cli_sequence
 
     _register_cli_sequence(app)
