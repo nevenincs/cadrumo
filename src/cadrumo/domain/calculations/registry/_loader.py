@@ -1184,7 +1184,7 @@ def _load_registry_tree_cached(
             hasher.update(str(item[2]).encode("utf-8"))
         key_hash = hasher.hexdigest()
 
-        cache_path = registry_disk_cache_dir() / f"aeat_registry_{key_hash}.pkl"
+        cache_path = registry_disk_cache_dir() / f"cadrumo_registry_{key_hash}.pkl"
         if cache_path.is_file():
             cached = _read_registry_disk_cache_pickle(cache_path, logger=logger)
             if cached is not None:
@@ -1197,6 +1197,12 @@ def _load_registry_tree_cached(
     if cache_path is not None:
         temp_name = None
         try:
+            # The production cache dir (<storage-root>/cache/registry) may not
+            # exist yet on a cold first run; the pytest/host-shared temp dir
+            # always does. Create it best-effort so the sibling write below has
+            # a parent; any failure falls through to the recompute-and-skip
+            # branch rather than crashing the load.
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
                 # Serialises first-party registry objects to the same-user temp cache read
                 # back above; the data never crosses a trust boundary. See the load note.

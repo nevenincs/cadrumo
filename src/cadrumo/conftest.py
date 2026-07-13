@@ -88,7 +88,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
 def _isolate_registry_caches() -> Iterator[None]:
     """Clear the registry loader's in-process caches per pytest session (the #44 fix).
 
-    The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is
+    The loader's cross-process ``/tmp`` ``cadrumo_registry_*.pkl`` disk pickle is
     keyed by file mtime and was historically shared across pytest-xdist worker
     processes, so a parallel ``-n`` run could serve a stale/transient compiled
     registry from one worker to another (the #44 isolation gap). The loader
