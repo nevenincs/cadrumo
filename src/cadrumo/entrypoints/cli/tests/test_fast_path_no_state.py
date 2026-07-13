@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....core import PRODUCT_IDENTITY
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
@@ -79,7 +80,7 @@ def test_version_completes_under_budget_on_clean_root(_clean_storage_root: Path)
     _warm()
     elapsed_ms, result = _fastest_ms(["--version"])
     assert result.exit_code == 0, result.output
-    assert "cadrumo" in result.output
+    assert result.output.startswith(f"{PRODUCT_IDENTITY.display_name} ")
     assert elapsed_ms < _FAST_PATH_BUDGET_MS, f"--version took {elapsed_ms:.1f}ms (budget {_FAST_PATH_BUDGET_MS}ms)"
 
 

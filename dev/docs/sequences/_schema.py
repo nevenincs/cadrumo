@@ -1,0 +1,164 @@
+"""Strict Pydantic records for a parsed ``cli-sequence`` directive.
+
+A :class:`ParsedSequence` is the typed contract the rest of the engine builds
+on: the sandbox runner (``_runner.py``) executes each :class:`SequenceFrame`'s
+``argv`` in order, threads :class:`CaptureBinding` values into later frames'
+``{name}`` placeholders, evaluates each :class:`ExpectAssertion` against the
+live output, and the golden store / comparison layers persist and diff the
+result. The parser (``_parser.py``) is the sole producer of these records; every
+model is strict, frozen, and forbids extra fields
+(:data:`~cadrumo.core.STRICT_FROZEN_CONFIG`).
+
+The grammar these records model is ADR ruling D1: a body of plain frame lines
+where a bare ``aeat ...`` line is a visible command frame, ``@setup aeat ...`` an
+executed-but-collapsed setup frame, ``@result aeat ...`` the single terminal
+verification frame, ``@capture <name> <json-path>`` binds a value from the
+preceding frame's parsed envelope, and ``@expect <json-path> == <literal>``
+attaches a semantic assertion to the preceding frame.
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import Annotated
+
+from pydantic import BaseModel, Field, StringConstraints
+
+from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
+__all__ = [
+    "CaptureBinding",
+    "ExpectAssertion",
+    "FrameKind",
+    "ParsedSequence",
+    "SequenceFrame",
+]
+
+#: A ``cli-sequence`` id (the directive argument) and a ``:seed:`` recipe name:
+#: kebab-case, the shape a filesystem-safe reusable identifier takes.
+SequenceId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=2, max_length=96, pattern=r"^[a-z0-9][a-z0-9-]*[a-z0-9]$"),
+]
+#: A capture / placeholder name and a JSON-path leaf segment: a Python-style
+#: identifier so ``{name}`` interpolation and env-var-free threading are trivial.
+Identifier = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$"),
+]
+#: A dotted JSON path into a frame's parsed envelope, e.g. ``result.work_unit_id``
+#: or ``result.items[0].id``. The pseudo-path ``exit_code`` (a bare identifier)
+#: is accepted so ``@expect exit_code == <n>`` declares a non-zero expectation.
+JsonPath = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=256,
+        pattern=r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$",
+    ),
+]
+#: One singular imperative verification sentence carried by the ``:verify:``
+#: directive option, rendered as the result frame's caption (ADR D4).
+VerifySentence = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=240),
+]
+
+#: A JSON literal on the right-hand side of an ``@expect`` assertion — a quoted
+#: string, a number, a boolean, or null, parsed from the authored literal.
+ExpectLiteral = str | int | float | bool | None
+
+
+class FrameKind(StrEnum):
+    """Closed set of frame kinds in a ``cli-sequence`` body (ADR D1)."""
+
+    #: A visible ``aeat ...`` command frame, rendered in document order.
+    COMMAND = "command"
+    #: An executed ``@setup aeat ...`` frame, rendered collapsed under a
+    #: "Preparation" disclosure — executed truth, never invisible magic.
+    SETUP = "setup"
+    #: The mandatory terminal ``@result aeat ...`` verification frame; exactly
+    #: one per sequence, and it must be last (ADR D4).
+    RESULT = "result"
+
+
+class CaptureBinding(BaseModel):
+    """A ``@capture <name> <json-path>`` binding attached to a frame.
+
+    After the owning frame executes, ``json_path`` is read from its parsed JSON
+    envelope and bound to ``name``; later frames interpolate it as ``{name}``.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    name: Identifier
+    json_path: JsonPath
+
+
+class ExpectAssertion(BaseModel):
+    """An ``@expect <json-path> == <literal>`` assertion attached to a frame.
+
+    ``expected`` is the JSON literal parsed from the authored right-hand side.
+    The parser records it verbatim; the runner evaluates ``json_path == expected``
+    against the frame's live output (ADR D4). The pseudo-path ``exit_code``
+    asserts the frame's process exit code (ADR D3).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    json_path: JsonPath
+    expected: ExpectLiteral
+
+
+class SequenceFrame(BaseModel):
+    """One executed frame of a ``cli-sequence``.
+
+    ``argv`` is the shell-decomposed command (always leading with ``aeat``),
+    preserving any ``{name}`` placeholder tokens for the runner to interpolate.
+    ``captures`` and ``expects`` are the annotations authored directly beneath
+    the frame. ``placeholder_names`` lists every ``{name}`` referenced in
+    ``argv``, which the parser has already proven resolves to a prior capture.
+    ``source`` and ``line_number`` locate the frame for diagnostics
+    (``"body"`` or ``"seed:<name>"``).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: FrameKind
+    command_line: Annotated[str, StringConstraints(min_length=1)]
+    argv: tuple[Annotated[str, StringConstraints(min_length=1)], ...] = Field(min_length=1)
+    captures: tuple[CaptureBinding, ...] = Field(default=())
+    expects: tuple[ExpectAssertion, ...] = Field(default=())
+    placeholder_names: tuple[Identifier, ...] = Field(default=())
+    source: Annotated[str, StringConstraints(min_length=1)]
+    line_number: int = Field(ge=1)
+
+
+class ParsedSequence(BaseModel):
+    """A fully parsed, structurally valid ``cli-sequence``.
+
+    ``frames`` are in execution order: any inlined ``:seed:`` setup frames first,
+    then the directive body's own frames, ending in exactly one terminal
+    :attr:`FrameKind.RESULT` frame carrying at least one
+    :class:`ExpectAssertion`. ``verify`` is the singular imperative sentence from
+    the required ``:verify:`` option; ``seed`` names the inlined recipe when one
+    was requested.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    sequence_id: SequenceId
+    verify: VerifySentence
+    seed: SequenceId | None = None
+    frames: tuple[SequenceFrame, ...] = Field(min_length=1)
+
+    @property
+    def result_frame(self) -> SequenceFrame:
+        """The terminal :attr:`FrameKind.RESULT` frame (always the last frame)."""
+        return self.frames[-1]
+
+    @property
+    def capture_names(self) -> tuple[str, ...]:
+        """Every capture name bound across the sequence, in frame order."""
+        return tuple(binding.name for frame in self.frames for binding in frame.captures)

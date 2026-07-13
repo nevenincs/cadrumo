@@ -142,7 +142,7 @@ _PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 
 def _venv_cadrumo(venv: Path) -> Path:
     """Return the installed canonical Cadrumo console script."""
-    executable = "cadrumo.exe" if sys.platform == "win32" else "cadrumo"
+    executable = "aeat.exe" if sys.platform == "win32" else "aeat"
     return _venv_bin(venv) / executable
 
 

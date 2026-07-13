@@ -7,7 +7,7 @@ or acts as AEAT. Read [how records become filing-ready
 figures](../explanation/from-records-to-figures.md) for that boundary, then pick
 the outcome closest to what you are trying to do.
 
-Start with the [source setup](../workstation-setup.md) if the `cadrumo` command
+Start with the [source setup](../workstation-setup.md) if the `aeat` command
 does not run, or use the [quickstart](quickstart.md) for the shortest complete
 local workflow. For terminology, use the {doc}`glossary </_generated/glossary>`;
 for exact options and refusals, use the [command-line reference](../cli/index.rst).

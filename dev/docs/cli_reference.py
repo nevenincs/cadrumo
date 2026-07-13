@@ -1,4 +1,4 @@
-"""CLI reference generator for the ``cadrumo`` command tree.
+"""CLI reference generator for the ``aeat`` command tree.
 
 Materialises the full Click command tree from ``typer.main.get_command(app)``,
 walks every group and leaf command (forcing lazy-module imports), and renders
@@ -24,7 +24,7 @@ the lazy-tree subprocess tests) or set the variable before importing
 
 Fallback-surface guard
 ----------------------
-The ``cadrumo`` CLI's :func:`_import_failure_surface` replaces a subtree with a
+The Cadrumo CLI's :func:`_import_failure_surface` replaces a subtree with a
 stub that emits ``cli.root.unavailable_app_help`` when an optional dependency
 is missing.  :func:`generate_cli_reference` walks the entire tree and asserts
 that no subtree carries that fallback help text, so a missing dependency causes
@@ -84,10 +84,10 @@ _PATH_KEY_OVERRIDES: dict[str, str] = {
 
 
 def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
-    """Return a clean environment for an ``cadrumo`` CLI-reference subprocess.
+    """Return a clean environment for an ``aeat`` CLI-reference subprocess.
 
     Cadrumo language and local-storage settings are pinned after ambient
-    Cadrumo product and cadrumo authority settings are removed.
+    Cadrumo product and AEAT authority settings are removed.
 
     Args:
         storage_root: Isolated Cadrumo local-storage root for the subprocess.
@@ -95,7 +95,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     environment = {
         key: value
         for key, value in os.environ.items()
-        if not key.upper().startswith(("cadrumo_", "CADRUMO_"))
+        if not key.upper().startswith(("CADRUMO_", "AEAT_"))
     }
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
@@ -155,7 +155,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
         paths = ", ".join(degraded)
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing cadrumoError contract.
+        # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(
             f"Import-failure fallback detected in CLI subtree(s): {paths}. "
             "Ensure all optional dependencies are installed before generating the reference.",
@@ -175,13 +175,13 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
 
     Args:
         path: Tuple of command name tokens from the root, e.g.
-            ``("cadrumo", "app", "modelo", "work", "calculate")``.
+            ``("aeat", "app", "modelo", "work", "calculate")``.
 
     Returns:
         The dot-joined registry key, e.g. ``"modelo.work.calculate"``.
     """
     tokens = [token.replace("-", "_") for token in path]
-    if tokens and tokens[0] == "cadrumo":
+    if tokens and tokens[0] == "aeat":
         tokens = tokens[1:]
     if len(tokens) >= 2 and tokens[0] == "app":
         head = tokens[1]
@@ -228,7 +228,7 @@ def _collect_commands(
                     if child is not None:
                         _walk(child, (*path, child_name))
 
-    root_name = root.name or "cadrumo"
+    root_name = root.name or "aeat"
     _walk(root, (root_name,))
     return result
 
@@ -341,7 +341,7 @@ def _render_command_section(
     """Render the RST section for a single leaf command.
 
     Args:
-        path: The full command path tuple, e.g. ``("cadrumo", "app", "modelo", "work", "calculate")``.
+        path: The full command path tuple, e.g. ``("aeat", "app", "modelo", "work", "calculate")``.
         cmd: The materialised Click command.
         schema_registry: The process-global schema registry for resolving
             the output schema, if any.
@@ -410,12 +410,12 @@ def _render_family_page(
     Returns:
         The complete RST page content.
     """
-    title = f"``cadrumo {family_name}`` — command reference"
+    title = f"``aeat {family_name}`` — command reference"
     parts: list[str] = []
     parts.append(_rst_heading(title, "="))
     parts.append("\n")
     parts.append(
-        f"This page documents every leaf command under ``cadrumo {family_name}``."
+        f"This page documents every leaf command under ``aeat {family_name}``."
         f" Help strings are rendered in English; the CLI respects the active"
         f" output-language setting at runtime.\n\n",
     )
@@ -452,7 +452,7 @@ def _render_index_page(
     parts.append("\n")
     parts.append(".. _cli-reference-start:\n\n")
     parts.append(
-        "The ``cadrumo`` CLI exposes two top-level command families: ``config`` (local"
+        "The ``aeat`` CLI exposes two top-level command families: ``config`` (local"
         " configuration, profile lifecycle, diagnostics) and ``app`` (operational tax"
         f" workflow). This reference documents all {total_leaf_count} leaf commands.\n\n",
     )
@@ -494,7 +494,7 @@ def _render_index_page(
     parts.append(".. _cli-reference-global-flags:\n\n")
     parts.append(_rst_heading("Global flags", "-"))
     parts.append("\n")
-    parts.append("These flags are accepted by the ``cadrumo`` root command and apply to every invocation.\n\n")
+    parts.append("These flags are accepted by the ``aeat`` root command and apply to every invocation.\n\n")
     global_flags = [
         ("``--language`` / ``--lang``", "Override the output language (``es``, ``en``, ``ca``, ``hu``)."),
         ("``--profile``", "Activate a named profile for this invocation."),
@@ -546,7 +546,7 @@ def _render_automation_page() -> str:
     parts.append(_rst_heading("Exit codes and output contract", "="))
     parts.append("\n")
     parts.append(
-        "Use this page when scripting ``cadrumo`` invocations: it documents the"
+        "Use this page when scripting ``aeat`` invocations: it documents the"
         " process exit codes and the TTY/JSON output behavior shared by every"
         " command.\n\n",
     )
@@ -735,7 +735,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     _force_lazy_imports(app)
 
     root_cmd = _typer_get_command(app)
-    root_cmd.name = app.info.name or "cadrumo"
+    root_cmd.name = app.info.name or "aeat"
 
     _assert_no_fallback_surfaces(root_cmd)
 
@@ -751,7 +751,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     for path, cmd in sorted(all_nodes.items()):
         if isinstance(cmd, click.Group) or hasattr(cmd, "list_commands"):
             continue
-        # path = ("cadrumo", family, ...)
+        # path = ("aeat", family, ...)
         if len(path) < 2:
             continue
         family = path[1]
@@ -836,7 +836,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing cadrumoError contract.
+        # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(f"CLI reference generation subprocess failed (exit {result.returncode}):\n{result.stderr}")
 
     # Read back what the subprocess wrote.
@@ -895,7 +895,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for operator
-        # diagnostics; not on the operator-facing cadrumoError contract.
+        # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(f"CLI leaf-path collection subprocess failed (exit {result.returncode}):\n{result.stderr}")
     return [line for line in result.stdout.splitlines() if line.strip()]
 

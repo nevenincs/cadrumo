@@ -1,6 +1,6 @@
 # Read live AEAT data
 
-When you configure authentication, Cadrumo's `cadrumo` command can read your data
+When you configure authentication, Cadrumo's `aeat` command can read your data
 from the Agencia Estatal de Administración Tributaria (AEAT). Cadrumo never
 writes, files, or submits anything. Every live command is a read that saves a
 local copy for you to review. You remain the only one who files. To understand
@@ -74,7 +74,7 @@ Cl@ve identity check, but the underlying cause is that authentication is not
 configured (the preflight reports `auth_configured=False`). Configure a provider
 first; see [Authenticate with AEAT](authenticate-with-aeat.md).
 
-The `cadrumo` command prints its messages in Spanish. A typical refusal reads `Refused. La
+The `aeat` command prints its messages in Spanish. A typical refusal reads `Refused. La
 identidad de Cl@ve Móvil no coincide...` followed by a `-> Run` next step.
 
 If a read reports that the session expired, re-check authentication with

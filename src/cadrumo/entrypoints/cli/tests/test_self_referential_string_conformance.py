@@ -65,7 +65,7 @@ from ....core.i18n._render import _locale_map
 from ....domain.attachments import AttachmentSource
 from ....tests.cli_runner import cadrumo_click_command
 from .test_documented_command_conformance import (
-    _CADRUMO_TOKEN_RE,
+    _AEAT_TOKEN_RE,
     _CitedCommand,
     _parse_command_line,
     _validate_command,
@@ -123,7 +123,7 @@ def _registry_suggestion_strings() -> Iterator[tuple[str, str]]:
         suggestion = row.default_suggestion
         if suggestion is None:
             continue
-        if _CADRUMO_TOKEN_RE.search(suggestion) is None:
+        if _AEAT_TOKEN_RE.search(suggestion) is None:
             continue
         if suggestion in seen:
             continue
@@ -140,7 +140,7 @@ def _locale_command_strings() -> Iterator[tuple[str, str]]:
             continue
         if not isinstance(value, str):
             continue
-        if _CADRUMO_TOKEN_RE.search(value) is None:
+        if _AEAT_TOKEN_RE.search(value) is None:
             continue
         token = (key, value)
         if token in seen:
@@ -166,7 +166,7 @@ _SENTENCE_END_RE = re.compile(r"[.;:]$")
 _TERMINAL_GLOBAL_FLAGS = frozenset({"--help", "-h", "--version"})
 
 
-def _command_span(after_cadrumo: str) -> str:
+def _command_span(after_aeat: str) -> str:
     """Trim trailing natural-prose from an ``aeat ...`` span.
 
     A hint string commonly embeds a command inside a sentence ("Run aeat config
@@ -178,7 +178,7 @@ def _command_span(after_cadrumo: str) -> str:
     following token, so anything after it is prose.
     """
     kept: list[str] = []
-    for token in after_cadrumo.split():
+    for token in after_aeat.split():
         trimmed = _SENTENCE_END_RE.sub("", token)
         if not trimmed:
             break
@@ -200,13 +200,13 @@ def _cited_from_text(text: str) -> list[_CitedCommand]:
     """
     out: list[_CitedCommand] = []
     for raw_line in text.replace("`", " ").splitlines():
-        match = _CADRUMO_TOKEN_RE.search(raw_line)
+        match = _AEAT_TOKEN_RE.search(raw_line)
         if match is None:
             continue
         span = _command_span(raw_line[match.end() :].strip())
         if not span:
             continue
-        parsed = _parse_command_line(f"cadrumo {span}")
+        parsed = _parse_command_line(f"aeat {span}")
         if parsed is not None:
             out.append(parsed)
     return out

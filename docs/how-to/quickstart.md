@@ -24,7 +24,7 @@ environment first:
 export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
 ```
 
-The `cadrumo` command-line interface (CLI) emits its help and messages in Spanish. The English text on this page
+The `aeat` command-line interface (CLI) emits its help and messages in Spanish. The English text on this page
 describes what each step does.
 
 ## 1. Create your taxpayer profile

@@ -1,4 +1,15 @@
-"""Argument-level conformance gate for documented ``cadrumo`` commands.
+"""Argument-level conformance gate for documented ``aeat`` commands.
+
+``aeat`` is the sole human CLI executable (the ``cadrumo`` package ships it as
+its one console entry point per ``cadrumo-product-authority-names``); every
+documented CLI invocation therefore begins with the ``aeat`` token, and this
+gate anchors on it. The package name ``cadrumo``, the ``cadrumo-mcp`` server
+executable, ``cadrumo-vault/`` storage, and ``src/cadrumo/`` paths are product
+and package references, never ``aeat``-CLI invocations, so they are outside
+this gate's scope — treating them as CLI lines would only manufacture false
+positives from prose. (This anchor was previously swept to the bare
+``cadrumo`` token by the package rename, which made the gate near-vacuous: the
+docs cite ``aeat`` and almost nothing matched.)
 
 The sibling :mod:`test_educational_docs_conformance` gate binds only the
 *leading verb path* of a cited ``aeat ...`` invocation: it checks that the
@@ -90,9 +101,10 @@ _TREE_DOC_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to", "docs/run
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 
-# A line is an ``cadrumo`` invocation when ``cadrumo`` appears as a bare token
-# (start of line or after shell punctuation), not as a substring (``cadrumo.exe``).
-_CADRUMO_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])cadrumo(?=\s|$)")
+# A line is an ``aeat`` invocation when the ``aeat`` executable token appears as
+# a bare token (start of line or after shell punctuation), not as a substring
+# (``aeat-config``) — ``aeat`` is the one human CLI executable the docs cite.
+_AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
 
 # Global options declared on the root callback. Accepted at any position before
 # the subcommand path and validated against the root command's own params, so
@@ -153,7 +165,7 @@ def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
     subcommand of the current group (that token and the rest are arguments).
     """
     cmd: click.Command = _root_command()
-    ctx = click.Context(cmd, info_name="cadrumo")
+    ctx = click.Context(cmd, info_name="aeat")
     resolved: list[str] = []
     for tok in tokens:
         if not hasattr(cmd, "list_commands"):
@@ -181,6 +193,48 @@ def _command_option_names(cmd: click.Command) -> frozenset[str]:
     return frozenset(names)
 
 
+def _value_consuming_option_names(cmd: click.Command) -> frozenset[str]:
+    """Option strings on ``cmd`` that consume a following value token.
+
+    A boolean flag (``--force`` / ``--no-force``) or a counting option
+    (``-v -v``) takes no value; every other option consumes the next token as
+    its value. Knowing this set for the *resolved* command lets the
+    dead-subcommand check tell an option value (``--layout plugin``) apart from
+    a subcommand name — the root-global heuristic in the string parser cannot,
+    because it runs before the command is known.
+    """
+    names: set[str] = set()
+    for param in cmd.params:
+        if getattr(param, "param_type_name", None) != "option":
+            continue
+        if getattr(param, "is_flag", False) or getattr(param, "count", False):
+            continue
+        names.update(param.opts)
+        names.update(param.secondary_opts)
+    return frozenset(names)
+
+
+def _option_value_tokens(tokens: tuple[str, ...], value_consuming: frozenset[str]) -> set[str]:
+    """Tokens in ``tokens`` consumed as the value of a value-consuming option.
+
+    Walks the ordered stream and, for each cited value-consuming option written
+    without an inline ``=value``, marks the next token as its value. Used to
+    exclude an option value from the dead-subcommand check.
+    """
+    consumed: set[str] = set()
+    expect_value = False
+    for tok in tokens:
+        if expect_value:
+            consumed.add(tok)
+            expect_value = False
+            continue
+        if tok.startswith("-") and tok != "-":
+            name = tok.split("=", 1)[0]
+            if "=" not in tok and name in value_consuming:
+                expect_value = True
+    return consumed
+
+
 def _required_positional_count(cmd: click.Command) -> int:
     """Number of required, non-variadic positional arguments on ``cmd``."""
     count = 0
@@ -202,7 +256,7 @@ _PLACEHOLDER_RE = re.compile(r"^(<[^>]+>|[A-Z][A-Z0-9_-]*)$")
 
 @dataclass(frozen=True)
 class _CitedCommand:
-    """A single cited ``cadrumo`` invocation, decomposed for validation."""
+    """A single cited ``aeat`` invocation, decomposed for validation."""
 
     raw: str
     verb_tokens: tuple[str, ...]
@@ -210,6 +264,13 @@ class _CitedCommand:
     # True when at least one non-flag token follows the verb path (a value or
     # a placeholder) — used to evaluate the missing-required-positional check.
     has_positional_token: bool
+    # The full ordered token stream after the executable token (verb tokens,
+    # options, option values, positionals), preserved so the dead-subcommand
+    # check can consult the resolved command's value-consuming options and tell
+    # an option *value* apart from a subcommand. Defaults to empty for the
+    # directly-constructed fixtures in the tests, which exercise the option-name
+    # and verb-resolution paths that do not need the ordered stream.
+    tokens: tuple[str, ...] = ()
 
 
 def _strip_inline_comment(line: str) -> str:
@@ -239,19 +300,19 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     """Decompose one ``aeat ...`` line into verb path + cited options.
 
     Returns ``None`` for lines that are not concretely-resolvable invocations:
-    the bare ``cadrumo`` token, an ``aeat ...`` ellipsis reference, the machine-format
-    ``cadrumo 1.2.3`` version echo, or a line whose only verb is a top-level flag
+    the bare ``aeat`` token, an ``aeat ...`` ellipsis reference, the machine-format
+    ``aeat 1.2.3`` version echo, or a line whose only verb is a top-level flag
     (``aeat --version``).
     """
     cleaned = _strip_inline_comment(line).strip()
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
     # Some doc lines prefix the command with a shell sigil or a tab-led label.
-    m = _CADRUMO_TOKEN_RE.search(cleaned)
+    m = _AEAT_TOKEN_RE.search(cleaned)
     if m is None:
         return None
     after = cleaned[m.end() :].strip()
     if not after:
-        return None  # bare ``cadrumo``
+        return None  # bare ``aeat``
     try:
         tokens = _shlex_split(after)
     except ValueError:
@@ -262,7 +323,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     # concrete invocation; the trailing ``...`` is the tell.
     if any(t == "..." for t in tokens):
         return None
-    # The machine-format version echo ``cadrumo 1.2.3`` / ``cadrumo 0.1.0`` is output,
+    # The machine-format version echo ``aeat 1.2.3`` / ``aeat 0.1.0`` is output,
     # not an invocation: a single token that is a dotted version literal.
     if len(tokens) == 1 and re.fullmatch(r"\d+\.\d+\.\d+", tokens[0]):
         return None
@@ -307,6 +368,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
         verb_tokens=tuple(verb_tokens),
         cited_options=tuple(cited_options),
         has_positional_token=has_positional,
+        tokens=tuple(tokens),
     )
 
 
@@ -348,7 +410,7 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
         # Join shell line continuations within a fenced block before splitting.
         joined = span.replace("\\\n", " ")
         for line in joined.splitlines():
-            if _CADRUMO_TOKEN_RE.search(line) is None:
+            if _AEAT_TOKEN_RE.search(line) is None:
                 continue
             parsed = _parse_command_line(line)
             if parsed is None:
@@ -389,7 +451,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
         if opt not in valid_options:
             violations.append(
                 f"`{cited.raw}` cites option `{opt}`, which is not a parameter of "
-                f"`cadrumo {' '.join(resolved.resolved_path)}` (nor a global option)",
+                f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)",
             )
 
     # (c) Dead subcommand of a live group: longest-prefix resolution stops at
@@ -397,13 +459,21 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
     # GROUP takes no positional arguments — a leftover verb token under a
     # group can only be a subcommand name that does not exist (the shape that
     # let `aeat app ledger payable-invoice` pass while uninvokable after the
-    # invoice unification rename).
+    # invoice unification rename). A leftover token that is really the *value*
+    # of a value-consuming option on the resolved group (`aeat app agent
+    # --layout plugin`) is NOT a dead subcommand: the string parser cannot know
+    # the group's options, so it over-collects the value into the verb path;
+    # exclude those values by consulting the resolved command's real params.
     if hasattr(cmd, "list_commands") and leftover:
-        violations.append(
-            f"`{cited.raw}` cites `{leftover[0]}`, which is not a subcommand of "
-            f"the group `cadrumo {' '.join(resolved.resolved_path)}`",
-        )
-        return violations
+        value_consuming = _value_consuming_option_names(cmd) | _value_consuming_option_names(_root_command())
+        option_values = _option_value_tokens(cited.tokens, value_consuming)
+        dead = [tok for tok in leftover if tok not in option_values]
+        if dead:
+            violations.append(
+                f"`{cited.raw}` cites `{dead[0]}`, which is not a subcommand of "
+                f"the group `aeat {' '.join(resolved.resolved_path)}`",
+            )
+            return violations
 
     # Missing-required-positional (the ``profile create`` shape) is
     # deliberately NOT enforced here: see the module docstring's limitation
@@ -425,6 +495,34 @@ def test_doc_surface_present() -> None:
     names = {d.name for d in docs}
     assert "README.md" in names, "root README.md must be in the gate's scope"
     assert "index.md" in names, "docs/index.md must be in the gate's scope"
+
+
+# The floor below which the gate is presumed vacuous. The live doc surface
+# cites ``aeat`` roughly 591 times (post per-doc dedup); a count that collapses
+# toward zero means the invocation-token anchor was swept off the real
+# executable again (the rename-vacuity defect this phase repaired), so the gate
+# would be silently scanning nothing. The floor is set well below the observed
+# count and well above zero: it is a vacuity tripwire, not a brittle exact
+# assertion, so ordinary doc churn never trips it while a re-broken anchor does.
+_VACUITY_FLOOR = 200
+
+
+def test_gate_scans_a_realistic_invocation_count() -> None:
+    """The repaired gate parses hundreds of real ``aeat`` invocations, not ~zero.
+
+    Anti-vacuity tripwire: the token anchor was once swept by the package rename
+    onto the ``cadrumo`` token while every documented invocation uses ``aeat``,
+    which left the gate parsing almost nothing and passing vacuously. This test
+    fails loudly if the parsed-invocation count ever collapses back toward zero,
+    so the vacuity regression cannot recur silently behind a green suite.
+    """
+    total = sum(len(_cited_commands(doc.read_text(encoding="utf-8"))) for doc in _flat_docs())
+    assert total >= _VACUITY_FLOOR, (
+        f"documented-command gate parsed only {total} aeat invocations across the "
+        f"doc surface (floor {_VACUITY_FLOOR}); the invocation-token anchor "
+        f"(`_AEAT_TOKEN_RE`) has likely been swept off the `aeat` executable, "
+        f"making the gate vacuous — re-anchor it on the real CLI executable token"
+    )
 
 
 def test_live_introspection_matches_reality() -> None:
@@ -474,14 +572,50 @@ def test_live_introspection_matches_reality() -> None:
     assert not _validate_command(live_with_positional)
 
 
+def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
+    """A value-consuming option's value under a group is not a dead subcommand.
+
+    ``aeat app agent --layout plugin`` cites the real ``--layout`` option of the
+    ``app agent`` group with the value ``plugin``. The string parser cannot know
+    the group's options, so it over-collects ``plugin`` into the verb path and
+    longest-prefix resolution leaves it as a leftover under a live group. Without
+    consulting the resolved command's params, the gate wrongly flagged ``plugin``
+    as a dead subcommand. The validator must treat it as the option value it is,
+    while still refusing a genuinely non-existent subcommand under the same
+    group.
+    """
+    # Precondition: `app agent` is a live group and `--layout` is a real,
+    # value-consuming option of it (guards the fixture against CLI drift).
+    agent = _resolve_path(("app", "agent"))
+    assert agent.resolved_path == ("app", "agent")
+    assert agent.command is not None
+    assert hasattr(agent.command, "list_commands")
+    assert "--layout" in _value_consuming_option_names(agent.command)
+
+    layout_value = _parse_command_line("aeat app agent --layout plugin")
+    assert layout_value is not None
+    assert layout_value.tokens == ("app", "agent", "--layout", "plugin")
+    assert not _validate_command(layout_value), (
+        "the value of a value-consuming option must not be flagged as a dead subcommand"
+    )
+
+    # A fabricated, genuinely non-existent subcommand under the same live group
+    # (with no option consuming it) must still be refused.
+    dead = _parse_command_line("aeat app agent totally-fake-subcommand")
+    assert dead is not None
+    flagged = _validate_command(dead)
+    assert flagged, "a genuinely dead subcommand under a live group must be refused"
+    assert "totally-fake-subcommand" in flagged[0]
+
+
 @pytest.mark.parametrize("doc", _flat_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
 def test_documented_commands_conform(doc) -> None:
-    """Every cited ``cadrumo`` command resolves with valid options and arguments."""
+    """Every cited ``aeat`` command resolves with valid options and arguments."""
     text = doc.read_text(encoding="utf-8")
     violations: list[str] = []
     for cited in _cited_commands(text):
         violations.extend(_validate_command(cited))
     assert not violations, (
-        f"{doc.relative_to(PROJECT_ROOT)} cites cadrumo commands that do not conform "
+        f"{doc.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
     )

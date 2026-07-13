@@ -38,8 +38,8 @@ class BucketValidationError(BucketError):
 class NoActiveBucketError(BucketError):
     """Raised when no active bucket can be resolved.
 
-    The precedence chain is exhausted (no ``--bucket`` flag, no
-    ``AEAT_ACTIVE_BUCKET`` env, no pointer file), and the process
+    The precedence chain is exhausted (no ``--profile`` flag, no
+    ``CADRUMO_ACTIVE_PROFILE`` env, no pointer file), and the process
     refuses to proceed.
     """
 

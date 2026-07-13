@@ -21,7 +21,7 @@ You need:
   encrypted storage in a session; for a non-interactive shell, set
   `CADRUMO_SECRET_PASSPHRASE`.
 
-The `cadrumo` command-line interface (CLI) emits its help and messages in Spanish; the English text on this page
+The `aeat` command-line interface (CLI) emits its help and messages in Spanish; the English text on this page
 describes what each step does.
 
 ## Two ways to hold an invoice

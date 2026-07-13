@@ -209,7 +209,7 @@ wheel = Path(sys.argv[1])
 run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", str(wheel)])
 run([sys.executable, "-m", "pip", "check"])
 
-version = run(["cadrumo", "--version"], env=clean_product_env())
+version = run(["aeat", "--version"], env=clean_product_env())
 if "cadrumo " not in version.stdout:
     raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
@@ -227,7 +227,7 @@ default_env = {
     "CADRUMO_LOCAL_STORAGE_ROOT": str(default_root),
     "CADRUMO_DATABASE_URL": f"sqlite:///{(default_root / 'cadrumo.db').as_posix()}",
 }
-default_check = run(["cadrumo", "--format", "json", "config", "check"], expected=(1, 2), env=default_env)
+default_check = run(["aeat", "--format", "json", "config", "check"], expected=(1, 2), env=default_env)
 default_payload = json_payload(default_check.stdout)
 if default_payload.get("status") != "success" or default_payload.get("result", {}).get("ok") is not False:
     raise SystemExit(f"default config check did not report typed dependency diagnostics: {default_payload!r}")
@@ -242,7 +242,7 @@ env = {
 }
 create = run(
     [
-        "cadrumo",
+        "aeat",
         "--format",
         "json",
         "config",
@@ -272,7 +272,7 @@ create_payload = json_payload(create.stdout)
 if create_payload.get("status") != "success":
     raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-ready = run(["cadrumo", "--format", "json", "config", "check"], env=env)
+ready = run(["aeat", "--format", "json", "config", "check"], env=env)
 ready_payload = json_payload(ready.stdout)
 result = ready_payload.get("result", {})
 if ready_payload.get("status") != "success" or result.get("ok") is not True or result.get("issues") != []:

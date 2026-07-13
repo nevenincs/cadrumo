@@ -77,14 +77,14 @@ jobs:
         run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
 
       - name: Registry verify
-        run: uv run --no-sync cadrumo app registry verify --json
+        run: uv run --no-sync aeat app registry verify --json
 
       - name: Audit oracle bindings
         # Fails the workflow if any cross-reference declares an
         # oracle_id that doesn't match the registered oracle's
         # surface_kind. To fix locally, run:
-        #   uv run --no-sync cadrumo app registry audit-oracles
-        run: uv run --no-sync cadrumo app registry audit-oracles --json
+        #   uv run --no-sync aeat app registry audit-oracles
+        run: uv run --no-sync aeat app registry audit-oracles --json
 
       - name: Test (unit)
         run: uv run pytest --junitxml=junit.xml

@@ -9,7 +9,7 @@ profile never submits anything to the Agencia Estatal de Administración
 Tributaria (AEAT). Cadrumo builds and verifies your filing on your machine; you
 upload it yourself.
 
-If you haven't installed and run `cadrumo` yet, start with the
+If you haven't installed Cadrumo and run the `aeat` command yet, start with the
 [quickstart](quickstart.md), then come back here.
 
 ## What the active profile means
@@ -37,7 +37,7 @@ Switch to another taxpayer before working on it:
 aeat config switch my-other-profile
 ```
 
-Switching changes which local ledger, modelo drafts, and filing markers `cadrumo
+Switching changes which local ledger, modelo drafts, and filing markers `aeat
 app` commands use. The switch verb is `aeat config switch`, not `aeat config
 profile switch`.
 

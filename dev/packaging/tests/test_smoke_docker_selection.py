@@ -29,8 +29,8 @@ def test_generated_probes_compile_with_canonical_product_and_authority_names() -
     compile(core, "<docker-core-probe>", "exec")
     compile(browser, "<docker-browser-probe>", "exec")
 
-    assert 'run(["cadrumo", "--version"]' in core
-    assert 'run(["aeat", "--version"]' not in core
+    assert 'run(["aeat", "--version"]' in core
+    assert 'run(["cadrumo", "--version"]' not in core
     assert "unexpected aeat --version output" in core
     assert "registry/aeat/modelos/036/manifest.toml" in core
     assert "corpus/aeat_official/" in core

@@ -21,7 +21,7 @@ spans both installed portions.
 At runtime `cadrumo` resolves a corpus binary from its own package tree first and
 then from these companions, so a full source checkout and a split install read
 the corpus identically. The binaries feed the always-on registry integrity hash
-chain and the opt-in `cadrumo app registry` verification verbs; without both
+chain and the opt-in `aeat app registry` verification verbs; without both
 companions those surfaces degrade with a loud advisory naming the
 `cadrumo[corpus-sources]` install hint, never silently.
 

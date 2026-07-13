@@ -10,13 +10,15 @@ import os
 import re
 import tempfile
 from collections.abc import Hashable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, override
 
 import yaml
 
 from ..core.errors import AeatError
-from ..core.external_constants import UTF_8_ENCODING
+from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
+from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
 from ..core.product_identity import PRODUCT_IDENTITY
 
@@ -29,6 +31,60 @@ _YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
 class LocaleError(AeatError):
     """Raised on locale management and parsing errors."""
+
+
+@dataclass(frozen=True)
+class LocaleScalarViolation:
+    """One locale key whose YAML leaf is not a string."""
+
+    locale_file: str
+    key: str
+    value_type: str
+
+
+@dataclass(frozen=True)
+class LocalePlaceholderVariant:
+    """The placeholder set used by one locale for a shared key."""
+
+    locale_file: str
+    placeholders: frozenset[str]
+
+
+@dataclass(frozen=True)
+class LocalePlaceholderMismatch:
+    """All differing placeholder variants for one shared locale key."""
+
+    key: str
+    variants: tuple[LocalePlaceholderVariant, ...]
+
+
+@dataclass(frozen=True)
+class LocaleFileAudit:
+    """Structured audit findings owned by one locale catalogue."""
+
+    locale_file: str
+    codebase_missing: tuple[str, ...]
+    codebase_extra: tuple[str, ...]
+    inter_locale_missing: tuple[str, ...]
+    scalar_violations: tuple[LocaleScalarViolation, ...]
+
+    @property
+    def ok(self) -> bool:
+        """Return whether this catalogue has no file-local findings."""
+        return not (self.codebase_missing or self.codebase_extra or self.inter_locale_missing or self.scalar_violations)
+
+
+@dataclass(frozen=True)
+class LocaleAuditResult:
+    """Complete production locale audit across every configured catalogue."""
+
+    files: tuple[LocaleFileAudit, ...]
+    placeholder_mismatches: tuple[LocalePlaceholderMismatch, ...]
+
+    @property
+    def ok(self) -> bool:
+        """Return whether every scalar, key, and placeholder contract passes."""
+        return all(file.ok for file in self.files) and not self.placeholder_mismatches
 
 
 class StrictUniqueKeyLoader(yaml.SafeLoader):
@@ -120,6 +176,65 @@ class LocaleManager:
 
         return scan_namespace_markers(self.src_dir)
 
+    def audit(self) -> LocaleAuditResult:
+        """Audit scalar, key-set, placeholder, and codebase parity.
+
+        Inter-locale key parity is computed from the union of every catalogue,
+        so no language is privileged as a canonical reference. Placeholder
+        parity is evaluated only for keys shared by all catalogues.
+
+        Returns:
+            Immutable structured findings for CLI rendering and quality gates.
+        """
+        locale_paths = tuple(sorted(self.locales_dir.glob("*.yml")))
+        locale_leaves = {path.name: _flatten_raw_locale_leaves(self.load_locale(path)) for path in locale_paths}
+        key_sets = {name: set(leaves) for name, leaves in locale_leaves.items()}
+        all_locale_keys = set().union(*key_sets.values()) if key_sets else set()
+        shared_keys = set.intersection(*key_sets.values()) if key_sets else set()
+        codebase_keys = self.get_codebase_keys()
+        namespace_prefixes = tuple(
+            marker.rstrip("*").rstrip(".")
+            for marker in self.get_codebase_namespaces()
+            if marker.rstrip("*").rstrip(".")
+        )
+
+        file_results: list[LocaleFileAudit] = []
+        for locale_file, leaves in locale_leaves.items():
+            keys = key_sets[locale_file]
+            violations = tuple(
+                LocaleScalarViolation(locale_file, key, type(value).__name__)
+                for key, value in sorted(leaves.items())
+                if not isinstance(value, str)
+            )
+            file_results.append(
+                LocaleFileAudit(
+                    locale_file=locale_file,
+                    codebase_missing=tuple(sorted(codebase_keys - keys)),
+                    codebase_extra=tuple(
+                        sorted(
+                            key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes)
+                        )
+                    ),
+                    inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
+                    scalar_violations=violations,
+                )
+            )
+
+        placeholder_mismatches: list[LocalePlaceholderMismatch] = []
+        for key in sorted(shared_keys):
+            values = {name: leaves[key] for name, leaves in locale_leaves.items()}
+            if not all(isinstance(value, str) for value in values.values()):
+                continue
+            variants = tuple(
+                LocalePlaceholderVariant(name, extract_placeholders(value))
+                for name, value in sorted(values.items())
+                if isinstance(value, str)
+            )
+            if len({variant.placeholders for variant in variants}) > 1:
+                placeholder_mismatches.append(LocalePlaceholderMismatch(key, variants))
+
+        return LocaleAuditResult(tuple(file_results), tuple(placeholder_mismatches))
+
     def get_yaml_keys(self, d: dict[str, LocaleNode], current_path: str = "") -> set[str]:
         """Recursively extract all dot-notated keys from a nested dictionary."""
         keys = set()
@@ -190,16 +305,27 @@ class LocaleManager:
             with open(f, "w", encoding=UTF_8_ENCODING) as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
-    def canonicalize_cli_executable_references(self) -> tuple[Path, ...]:
-        """Replace stale product-name command prefixes in every locale catalogue.
+    def canonicalize_product_identity_references(
+        self,
+        *,
+        locale: OutputLanguage | None = None,
+    ) -> tuple[Path, ...]:
+        """Normalize product identity in one selected or every catalogue.
 
-        Cadrumo remains ordinary product prose. Only unambiguous command
-        prefixes are normalized to the canonical human CLI executable.
+        Args:
+            locale: One supported output language to update. When omitted, update
+                every catalogue as the pre-selector command did.
+
+        Returns:
+            Paths whose parsed locale content changed.
         """
+        locale_paths = (
+            (self._locale_path(locale.value),) if locale is not None else tuple(sorted(self.locales_dir.glob("*.yml")))
+        )
         updated_paths: list[Path] = []
-        for locale_path in sorted(self.locales_dir.glob("*.yml")):
+        for locale_path in locale_paths:
             data = self.load_locale(locale_path)
-            normalized = _normalise_locale_node(data)
+            normalized = _normalise_product_identity_mapping(data)
             if normalized == data:
                 continue
             _rewrite_locale_mapping(locale_path, normalized)
@@ -227,7 +353,7 @@ class LocaleManager:
     def set_locale_value(self, locale: str, dotted_key: str, value: str) -> Path:
         """Set one locale leaf while preserving the YAML layout."""
         locale_path = self._locale_path(locale)
-        value = _normalise_cli_executable_references(value)
+        value = _normalise_product_identity_references(value)
         parts = dotted_key.split(".")
         if not dotted_key or any(not part for part in parts):
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
@@ -340,21 +466,28 @@ def _yaml_quoted_scalar(value: str) -> str:
     return "'" + escaped + "'"
 
 
-_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?= (?:app|config|--|<))")
+_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
+_STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
 
 
-def _normalise_cli_executable_references(value: str) -> str:
-    """Keep locale command examples aligned with the canonical CLI executable."""
-    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
+def _normalise_product_identity_references(value: str) -> str:
+    """Align product prose and command examples with the canonical identity."""
+    value = _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
+    return _STALE_PRODUCT_DISPLAY_RE.sub(PRODUCT_IDENTITY.display_name, value)
 
 
-def _normalise_locale_node(value: LocaleNode) -> LocaleNode:
-    """Recursively normalize command references without changing product prose."""
+def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
+    """Recursively normalize product display and command references."""
     if isinstance(value, dict):
-        return {key: _normalise_locale_node(child) for key, child in value.items()}
+        return _normalise_product_identity_mapping(value)
     if isinstance(value, str):
-        return _normalise_cli_executable_references(value)
+        return _normalise_product_identity_references(value)
     return value
+
+
+def _normalise_product_identity_mapping(value: dict[str, LocaleNode]) -> dict[str, LocaleNode]:
+    """Normalize a locale mapping while preserving its mapping type."""
+    return {key: _normalise_product_identity_node(child) for key, child in value.items()}
 
 
 def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
@@ -509,6 +642,17 @@ def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> di
         else:
             flattened[path] = value
     return flattened
+
+
+def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, object]:
+    """Flatten parsed YAML without coercing invalid scalar types to strings."""
+    if isinstance(value, dict):
+        flattened: dict[str, object] = {}
+        for key, child in value.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            flattened.update(_flatten_raw_locale_leaves(child, path))
+        return flattened
+    return {prefix or "<root>": value}
 
 
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:

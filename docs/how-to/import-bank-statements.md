@@ -13,7 +13,7 @@ the active profile.
 
 You need:
 
-- a working `cadrumo` command
+- a working `aeat` command
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
 - a master-key passphrase. The tool prompts for it the first time it opens your
   encrypted storage in a session; for a non-interactive shell, set
