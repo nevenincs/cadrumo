@@ -78,7 +78,7 @@ adapters:
         conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
           i contradictòries.
         foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
-          d'aquest perfil Cadrumo.
+          d'aquest perfil CADRUMO.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
         spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
@@ -112,7 +112,7 @@ adapters:
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
-          Cadrumo seleccionat.
+          CADRUMO seleccionat.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
@@ -131,7 +131,7 @@ adapters:
           canvia el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:
       errors:
-        no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google
+        no_active_profile: No hi ha cap perfil CADRUMO actiu enllaçat per a Google
           OAuth.
       suggestions:
         create_profile: Executeu `aeat config profile create NAME --tax-id <NIF>`
@@ -204,7 +204,7 @@ adapters:
             de l operador.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
-            de Cadrumo.
+            de CADRUMO.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             es pot importar; executa `uv sync` i torna-ho a provar.
           media_non_bytes: La descarrega de mitjans de Google Drive ha retornat {payload_type}
@@ -513,10 +513,9 @@ application:
           o aeat config profile create NAME.
         no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
           create NAME` abans de configurar l'autenticació.
-        unreadable_active_profile: El perfil actiu '%{active_profile}' té un manifest
-          de bucket però no té cap registre de perfil llegible (status=%{status}).
-          Executa `aeat config repair profile --clear-active --yes` i després canvia
-          a un perfil vàlid o crea'l abans de configurar l'autenticació.
+        unreadable_active_profile: 'El perfil actiu ''%{active_profile}'' té un manifest
+          de bucket però cap registre de perfil llegible (status=%{status}). Següent
+          acció: %{next_action}.'
       login:
         refused_certificate_file_missing: 'No es pot iniciar la sessió: el fitxer
           de certificat configurat (%{path}) no existeix. Recupera el fitxer o torna
@@ -943,8 +942,10 @@ application:
         com a mínim un valor de casella; el mapatge aportat és buit.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
-      external_import_justificante_mismatch: application.modelo.errors.external_import_justificante_mismatch
-      external_import_justificante_missing: application.modelo.errors.external_import_justificante_missing
+      external_import_justificante_mismatch: L'evidència d'importació externa %{evidence_reference_id}
+        no coincideix amb el modelo %{modelo}, exercici %{filing_year}, període %{period}.
+      external_import_justificante_missing: L'evidència d'importació externa %{evidence_reference_id}
+        (%{evidence_kind}) no està registrada com a artefacte de justificant persistent.
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -2143,8 +2144,8 @@ cli:
         seed_confirm_help: Confirmeu l'operació d'import inicial.
         seed_confirm_required: Proporcioneu el modificador --confirm per confirmar
           l'operació d'import inicial.
-        seed_conflict: 'Error intern: conflicte amb un registre d''import inicial
-          de compensació d''IVA existent.'
+        seed_conflict: Ja existeix un estat de compensació d'IVA per a %{filing_year}/%{period};
+          no se'n pot crear un altre.
         seed_filing_year_help: Any fiscal de l'import inicial.
         seed_help: "Declara un saldo inicial d'arrossegament del Model 303 per a un\
           \ període anterior a l'historial local. Es rebutja si ja existeix un registre\
@@ -2159,7 +2160,7 @@ cli:
           \ d'inici d'activitat i del registre que és el primer període IVA; aleshores\
           \ la casella AEAT 110 és zero segons LIVA art. 99.5 (Llei 37/1992) i no\
           \ bloqueja."
-        seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
+        seed_invalid_amount: 'L''import inicial d''IVA no és vàlid: %{amount}.'
         seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T
           (p. ex. 4T).'
       list:
@@ -2956,7 +2957,6 @@ cli:
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
-    bucket: null
     check:
       available: disponible
       help: Comprova la disponibilitat de les dependències externes i les capacitats
@@ -2985,7 +2985,7 @@ cli:
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        Cadrumo: '
+        CADRUMO: '
       data_loss_warning: Anota ara aquesta clau de recuperacio. AEAT no desa la clau
         de recuperacio en clar i no la pot tornar a mostrar.
       errors:
@@ -2993,7 +2993,7 @@ cli:
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
+      new_passphrase_prompt: 'Nova contrasenya del magatzem secret CADRUMO: '
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
@@ -3094,7 +3094,7 @@ cli:
         existent)
       logout_help: Esborrar el token de refresc i les metadades; conservar el client
         registrat
-      profile_help: Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de
+      profile_help: Perfil CADRUMO a usar (per defecte = perfil actiu de l'estat de
         flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
       register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
@@ -3561,7 +3561,6 @@ cli:
       help: Canvia a un perfil i fes-lo l’actiu.
       name_help: Nom del perfil al qual canviar. Si s'omet, s'utilitza el punter del
         perfil actiu.
-    unlock: null
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -3827,7 +3826,7 @@ cli:
         de l'IRPF (art. 93.5 segregació).
       source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
         perfils de no resident IRNR.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna CADRUMO
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
@@ -4009,7 +4008,7 @@ cli:
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria. Torna a executar amb --auto-split per separar-les en
         fills de base i IVA declarables de manera independent.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna CADRUMO
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
@@ -4490,7 +4489,7 @@ cli:
         diagnostics_review_queue: Mostrar la cua de revisio pendent.
         footer: Executeu 'aeat <ordre> --help' per obtenir mes informacio sobre cada
           ordre.
-        heading: Cadrumo, eina de declaracions fiscals amb l'AEAT.
+        heading: CADRUMO, eina de declaracions fiscals amb l'AEAT.
         ledger_allocate: Assignar transaccions a un periode fiscal.
         ledger_archive: Arxivar entrades del llibre de transaccions.
         ledger_attach: Adjuntar un fitxer d'origen a una entrada del llibre.
@@ -4857,7 +4856,7 @@ cli:
     format_help: 'Format de sortida: text, json, table, csv.'
     help_help: Mostra l'ajuda.
     landing:
-      headline: Assistent fiscal Cadrumo
+      headline: Assistent fiscal CADRUMO
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
         app --help`. Els modificadors globals (`--format json`, `--language ca`, `--profile
         NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS del subcomandament,
@@ -6159,7 +6158,7 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre Cadrumo equivalent
+      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre CADRUMO equivalent
       en un terminal.'
   elicitation:
     confirm:
@@ -6177,7 +6176,7 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
         la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre Cadrumo CLI equivalent directament en
+        fer-te preguntes, o executa l''ordre CADRUMO CLI equivalent directament en
         un terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
@@ -7069,7 +7068,7 @@ wizard:
       choices:
         'yes':
           description: Selecciona-ho per confirmar
-          label: true
+          label: Sí
       help: Text d'ajuda d'exemple per a proves
       prompt: Pregunta de prova d'exemple
     main:

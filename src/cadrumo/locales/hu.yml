@@ -193,7 +193,7 @@ adapters:
           folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent
             jelolve; az operatori adatok vedelmeben az iras megtagadva.
           former_vault_folder: A Google Drive vault mappa {vault_folder_name} az elozo
-            termekhez tartozik es nem hasznalhato; hasznalja a Cadrumo vault mappat.
+            termekhez tartozik es nem hasznalhato; hasznalja a CADRUMO vault mappat.
           googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem
             importalhato; futtassa: `uv sync`, majd probalja ujra.'
           media_non_bytes: A Google Drive medialetoltes {payload_type} tipust adott
@@ -493,7 +493,7 @@ application:
           még nincs konfigurálva DNI/NIE. A folytatás előtt konfiguráljon egyet.'
         refused_live_tests_disabled: 'Az élő bejelentkezést a biztonsági kapu letiltja:
           az eszköz csak helyi bevallásokat épít és ellenőriz. Engedélyezze az élő
-          teszteket, ha valóban szükséges.'
+          teszteket, ha valóban szükséges. Kért szolgáltató: %{provider}.'
       probe:
         certificate_corrupt: A tanúsítványfájl nem érvényes PKCS#12 boríték, vagy
           a jelszó hiányzik; nem elemezhető.
@@ -843,7 +843,7 @@ application:
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
         bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
-        céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
+        céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed}.'
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
         maradt.
@@ -880,8 +880,11 @@ application:
         egy mező értéke szükséges; a megadott leképezés üres.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
-      external_import_justificante_mismatch: application.modelo.errors.external_import_justificante_mismatch
-      external_import_justificante_missing: application.modelo.errors.external_import_justificante_missing
+      external_import_justificante_mismatch: A(z) %{evidence_reference_id} külső bevallásimport-bizonyíték
+        nem egyezik a(z) %{modelo} modelóval, a(z) %{filing_year} bevallási évvel
+        és a(z) %{period} időszakkal.
+      external_import_justificante_missing: A(z) %{evidence_reference_id} (%{evidence_kind})
+        külső bevallásimport-bizonyíték nincs tartós igazolási artefaktumként regisztrálva.
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -1262,9 +1265,10 @@ application:
         kell lennie: {allowed_values}; kapott ertek: {value}.'
       invalid_topic_locale: 'A nyilvantartasi tema nyelvenek ezek egyikenek kell lennie:
         {allowed_locales}; kapott ertek: {locale}.'
-      manual_section_not_found: A(z) {section} kezikonyvszakasz nem talalhato.
-      manual_section_requires_structure: 'A(z) {section} kezikonyvszakasz kivont strukturat
-        igenyel ehhez: {manual_key}.'
+      manual_section_not_found: 'A(z) {section} kézikönyvszakasz nem található itt:
+        {manual_id} {year} {part}.'
+      manual_section_requires_structure: 'A kézikönyvszakasz kinyert struktúrát igényel
+        ehhez: {manual_key}.'
       no_revision_for_diff_year: 'A(z) {modelo} nyilvántartás egyetlen revíziója sem
         fedi le a(z) {filing_year} adóévet. Deklarált revíziók: {available_revisions}.'
   repair_integrity:
@@ -2084,7 +2088,8 @@ cli:
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
         seed_confirm_required: Adja meg a --confirm kapcsolót a vetőösszeg-művelet
           megerősítéséhez.
-        seed_conflict: 'Belső hiba: ütközés a meglévő IVA-kompenzációs vetőösszeg-rekorddal.'
+        seed_conflict: Már létezik IVA-kompenzációs állapot a(z) %{filing_year}/%{period}
+          időszakhoz; újabb kezdőérték nem hozható létre.
         seed_filing_year_help: A vetőösszeg benyújtási éve.
         seed_help: "Modelo 303 áthozott kompenzációs nyitóegyenleg deklarálása egy\
           \ olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja, ha az\
@@ -2099,8 +2104,7 @@ cli:
           \ és az egyeztetés során a tevékenységkezdési és nyilvántartási feltételek\
           \ bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es casilla\
           \ nulla a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
-        seed_invalid_amount: A vetőösszegnek érvényes, nem negatív decimálisnak kell
-          lennie.
+        seed_invalid_amount: 'Az IVA kezdőösszege érvénytelen: %{amount}.'
         seed_period_help: 'A 303-as nyomtatvány benyújtásának időszaka: 1T-4T negyedévek
           (pl. 4T).'
       list:
@@ -2899,7 +2903,6 @@ cli:
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
-    bucket: null
     check:
       available: elérhető
       help: Ellenőrzi a külső függőségek elérhetőségét és az aktív profil szolgáltatás-képességeit,
@@ -3517,7 +3520,6 @@ cli:
       help: Váltson át egy profilra, és tegye aktívvá.
       name_help: A profil neve, amelyre valtani szeretne. Ha nincs megadva, az aktivprofil-mutato
         az alapertelmezett.
-    unlock: null
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -3771,7 +3773,7 @@ cli:
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
       source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
         nem rezidens IRNR profiloknal.
-      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a CADRUMO automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
@@ -3959,7 +3961,7 @@ cli:
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
         sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
         bevallható alap- és áfa-gyermekekre váljon szét.
-      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást a CADRUMO automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
@@ -4368,10 +4370,11 @@ cli:
     errors:
       accepted_roots_only: A CLI csak a config és az app gyökérparancsokat fogadja
         el.
-      contract_not_accepted: A kért parancs kívül esik az elfogadott üzemeltetői felületen.
-      source_kind_options: 'A forrástípus csak a következők egyike lehet: ledger_transaction,
-        purchase_invoice_evidence, payable_invoice vagy collectible_invoice.'
-      unknown_source_kind: 'Ismeretlen forrástípus: %{value}.'
+      contract_not_accepted: 'A(z) %{surface} üzemeltetői felület elutasította a szerződést:
+        %{reason}.'
+      source_kind_options: 'Elérhető forrástípusok: %{options}.'
+      unknown_source_kind: 'Ismeretlen forrástípus: %{kind}. Az elérhető lehetőségekhez
+        használja a --help kapcsolót.'
     help:
       app:
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
@@ -4450,7 +4453,7 @@ cli:
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
         diagnostics_review_queue: Függőben lévő felülvizsgálati munka listázása.
         footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app --help.'
-        heading: Cadrumo - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
+        heading: CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
         ledger_allocate: Üzleti célú vagy adóelosztási metaadatok hozzárendelése.
         ledger_archive: Főkönyvi tranzakció archiválása az előzmények törlése nélkül.
         ledger_attach: Bizonyíték csatolása egy főkönyvi tranzakcióhoz.
@@ -4812,7 +4815,7 @@ cli:
     format_help: 'Kimeneti formátum: text, json, table, csv.'
     help_help: Súgó megjelenítése.
     landing:
-      headline: Cadrumo Adóasszisztens
+      headline: CADRUMO Adóasszisztens
       help_line: 'További súgó: `aeat --help`, `aeat config --help` vagy `aeat app
         --help`. A globális kapcsolókat (`--format json`, `--language hu`, `--profile
         NÉV`, `--quiet`, `--verbose`, `--debug`) az alparancs ELÉ kell helyezni, pl.
@@ -5090,7 +5093,7 @@ errors:
     date_binding_value_missing: Hianyzik a datumkotes erteke.
     dispatch_key_unknown: 'A(z) {dispatch_key!r} diszpécserkulcs nem szerepel a(z)
       {op} műveletre és {binding_id} kötésre vonatkozó diszpécser-táblázatban (deklarált
-      kulcsok: {available}).'
+      kulcsok: {available_keys}).'
     dispatch_parameter_kind: A(z) {parameter_id} paraméter típusa nem egyezik a(z)
       {op} műveletnél; skaláris paramétert várt (decimális / pénz / egész szám / arány).
     divide_by_zero: A(z) {op} képletoperátor nullával oszt.
@@ -5134,11 +5137,12 @@ errors:
       bevallasi ev szukseges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
-    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
+    text_input_non_text_casillas: 'Szöveges bemenet érkezett nem szöveges mezőkhöz:
+      %{casilla_ids}.'
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
-    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
-    unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
-    unsupported_op: Nem tamogatott muvelet.
+    unknown_text_input_casillas: 'Ismeretlen szövegbeviteli mezőazonosítók: %{casilla_ids}.'
+    unsupported_comparison_op: 'Nem támogatott összehasonlító operátor: %{op}.'
+    unsupported_op: 'Nem támogatott képletoperátor: %{op}.'
   censo:
     bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
   error:
@@ -6057,7 +6061,7 @@ mcp:
         tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
       no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
         támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
-        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI parancsot közvetlenül a
+        tud kérdezni, vagy futtasd a megfelelő CADRUMO CLI parancsot közvetlenül a
         terminálban.
   faithfulness:
     advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
@@ -6979,7 +6983,7 @@ wizard:
       choices:
         'yes':
           description: Válassza ezt a megerősítéshez
-          label: Igaz
+          label: Igen
       help: Példa súgószöveg teszteléshez
       prompt: Példa tesztkérdés
     main:
