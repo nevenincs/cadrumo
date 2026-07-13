@@ -16,7 +16,9 @@ campaign close (per the campaign-close honesty-review rule), performed by an
 independent opus reviewer over the ADR (including Update 1), the plan, all
 ten exec records, and the full commit range. Initial verdict: HOLD, three
 SHARP findings; all three were actioned the same session, and the remediated
-gate CHANGED THE CAMPAIGN'S HEADLINE DECISION.
+gate CHANGED THE CAMPAIGN'S HEADLINE DECISION. The reviewer re-verified the
+remediation commit and LIFTED THE HOLD: PASS on all three SHARP findings,
+with the service-pending NIT-1 checks disclosed follow-up, not a blocker.
 
 ### SHARP-1 (actioned): the rung-2 miss-rate gate was tautological
 
