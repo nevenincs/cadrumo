@@ -27,7 +27,7 @@ def _write_json(path: Path, payload: object) -> None:
 def _settings(root: Path, *, review_required: bool = True) -> Settings:
     return EnvFileFreeSettings(
         aeat_manuals_root=root,
-        aeat_manuals_review_required=review_required,
+        cadrumo_manuals_review_required=review_required,
     )
 
 

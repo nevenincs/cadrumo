@@ -46,9 +46,9 @@ class TestLoadEnvFile:
         env = tmp_path / ".env"
         cert_path = tmp_path / "cert.p12"
         env.write_text(
-            f"# header\nCADRUMO_LIVE_TESTS_ENABLED=1\nAEAT_CERTIFICATE_PATH={cert_path}\n",
+            f"# header\nCADRUMO_LIVE_TESTS_ENABLED=1\nCADRUMO_CERTIFICATE_PATH={cert_path}\n",
             encoding="utf-8",
         )
         loaded = load_env_file(env)
         assert loaded["CADRUMO_LIVE_TESTS_ENABLED"] == "1"
-        assert loaded["AEAT_CERTIFICATE_PATH"] == str(cert_path)
+        assert loaded["CADRUMO_CERTIFICATE_PATH"] == str(cert_path)

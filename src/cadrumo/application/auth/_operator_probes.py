@@ -42,7 +42,7 @@ def _live_auth_identity_state(
     except (OSError, AeatError, AttributeError, LookupError):
         _log.debug("profile tax-id probe failed; treating as empty", exc_info=True)
         profile_tax_id = ""
-    provider_identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip().upper()
+    provider_identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip().upper()
     if not profile_tax_id and not provider_identity:
         alignment = "profile_tax_id_missing_and_clave_identity_missing"
     elif not profile_tax_id:
@@ -61,7 +61,7 @@ def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings
         return ""
     from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
-    identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip()
+    identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip()
     try:
         return classify_identity(identity)
     except ClaveMovilConfigurationError:
@@ -70,7 +70,7 @@ def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings
 
 def _live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
     if provider_kind is AuthProviderKind.CLAVE_MOVIL:
-        return "non_qr" if settings.aeat_clave_prefer_non_qr else "qr"
+        return "non_qr" if settings.cadrumo_clave_prefer_non_qr else "qr"
     if provider_kind is AuthProviderKind.CERTIFICATE:
         return "certificate"
     return ""
@@ -267,8 +267,9 @@ def _probe_certificate_bundle(
     )
 
     resolved_settings = settings or load_settings()
+    configured_certificate_path = resolved_settings.cadrumo_certificate_path
     raw = (certificate_path or "").strip() or (
-        str(resolved_settings.aeat_certificate_path) if resolved_settings.aeat_certificate_path is not None else ""
+        str(configured_certificate_path) if configured_certificate_path is not None else ""
     )
     if not raw:
         return _ProviderProbeOutcome(
@@ -294,7 +295,7 @@ def _probe_certificate_bundle(
                 error=type(exc).__name__,
             ),
         )
-    password = resolved_settings.aeat_certificate_password_secret
+    password = resolved_settings.cadrumo_certificate_password_secret
     if password is None:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
@@ -306,8 +307,8 @@ def _probe_certificate_bundle(
             password=password,
             warn_days=resolved_settings.cadrumo_cert_warn_days,
             critical_days=resolved_settings.cadrumo_cert_critical_days,
-            friendly_name=resolved_settings.aeat_certificate_friendly_name,
-            backend=resolved_settings.aeat_certificate_backend,
+            friendly_name=resolved_settings.cadrumo_certificate_friendly_name,
+            backend=resolved_settings.cadrumo_certificate_backend,
         )
     except CertificateError as exc:
         _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
@@ -357,7 +358,7 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
     from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
     resolved_settings = settings or load_settings()
-    raw = unwrap_optional_secret(resolved_settings.aeat_clave_movil_dni_nie).strip()
+    raw = unwrap_optional_secret(resolved_settings.cadrumo_clave_movil_dni_nie).strip()
     if not raw:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.IDENTITY_UNSET,

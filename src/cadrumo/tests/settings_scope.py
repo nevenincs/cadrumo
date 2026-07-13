@@ -63,7 +63,7 @@ def settings_factory() -> Iterator[SettingsFactory]:
 
         # Test body:
         def test_x(_settings) -> None:
-            settings = _settings(aeat_certificate_path=tmp_path / "cert.p12")
+            settings = _settings(cadrumo_certificate_path=tmp_path / "cert.p12")
             ...
 
     Inside the with-block, calls to the yielded factory merge the

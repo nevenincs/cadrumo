@@ -328,9 +328,9 @@ class TestReadOnlyStructuralInvariants:
 class TestIvaRemoteStateCliSurface:
     def test_evidence_pull_command_watchdog_budget_scales_with_year_span(self) -> None:
         with override_settings(
-            aeat_clave_movil_timeout_ms=120_000,
-            aeat_live_iva_surface_timeout_ms=180_000,
-            aeat_live_iva_cli_watchdog_timeout_ms=240_000,
+            cadrumo_clave_movil_timeout_ms=120_000,
+            cadrumo_live_iva_surface_timeout_ms=180_000,
+            cadrumo_live_iva_cli_watchdog_timeout_ms=240_000,
         ):
             one_year = _live_iva_evidence_pull_command_timeout_ms(year_from=2026, year_to=2026)
             five_years = _live_iva_evidence_pull_command_timeout_ms(year_from=2022, year_to=2026)

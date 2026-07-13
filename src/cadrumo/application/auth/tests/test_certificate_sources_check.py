@@ -108,7 +108,7 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(tmp_path: Path) -> N
     )
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
 
-    with override_settings(aeat_certificate_password_secret=_SECRET):
+    with override_settings(cadrumo_certificate_password_secret=_SECRET):
         report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
@@ -139,7 +139,7 @@ def test_check_reports_expiring_within_the_warning_window(tmp_path: Path) -> Non
     )
     register_operator_certificate_source(name="apoderado-acme", certificate_path=cert_path)
 
-    with override_settings(aeat_certificate_password_secret=_SECRET):
+    with override_settings(cadrumo_certificate_password_secret=_SECRET):
         report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
@@ -163,7 +163,7 @@ def test_check_reports_expired_for_a_lapsed_certificate(tmp_path: Path) -> None:
     )
     register_operator_certificate_source(name="expired-cert", certificate_path=cert_path)
 
-    with override_settings(aeat_certificate_password_secret=_SECRET):
+    with override_settings(cadrumo_certificate_password_secret=_SECRET):
         report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
@@ -200,7 +200,7 @@ def test_check_covers_every_registered_source_independently(tmp_path: Path) -> N
     register_operator_certificate_source(name="personal", certificate_path=valid_cert)
     register_operator_certificate_source(name="apoderado-acme", certificate_path=expiring_cert, friendly_name="ACME SL")
 
-    with override_settings(aeat_certificate_password_secret=_SECRET):
+    with override_settings(cadrumo_certificate_password_secret=_SECRET):
         report = check_operator_certificate_sources()
 
     by_name = {entry.name: entry for entry in report.entries}
@@ -219,7 +219,7 @@ def test_check_classifies_a_missing_certificate_file_distinctly(tmp_path: Path) 
     register_operator_certificate_source(name="deleted", certificate_path=ghost_path)
     ghost_path.unlink()
 
-    with override_settings(aeat_certificate_password_secret=_SECRET):
+    with override_settings(cadrumo_certificate_password_secret=_SECRET):
         report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1

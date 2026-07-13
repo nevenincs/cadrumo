@@ -272,7 +272,7 @@ def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) ->
                     str(expiring_cert),
                 ],
             )
-            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
+            with override_settings(cadrumo_certificate_password_secret=_CERT_SECRET):
                 checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
         assert checked.exit_code == 0, f"check failed: {checked.output}"
@@ -300,7 +300,7 @@ def test_certificate_check_reports_expired_certificate(tmp_path: Path) -> None:
                 root_app,
                 ["config", "auth", "certificate", "register", "--name", "expired-cert", "--file", str(expired_cert)],
             )
-            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
+            with override_settings(cadrumo_certificate_password_secret=_CERT_SECRET):
                 checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
         assert checked.exit_code == 0, f"check failed: {checked.output}"

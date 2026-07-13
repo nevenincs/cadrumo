@@ -91,11 +91,11 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
+_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().cadrumo_browser_navigation_timeout_ms
 # Environment variable names referenced in operator-facing error messages.
 # Named constants so grepping for the env-var name surfaces every usage site.
-_CLAVE_PERMANENTE_DNI_NIE_ENV: Final[str] = "AEAT_CLAVE_PERMANENTE_DNI_NIE"
-_CLAVE_PERMANENTE_PASSWORD_ENV: Final[str] = "AEAT_CLAVE_PERMANENTE_PASSWORD"
+_CLAVE_PERMANENTE_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_PERMANENTE_DNI_NIE"
+_CLAVE_PERMANENTE_PASSWORD_ENV: Final[str] = "CADRUMO_CLAVE_PERMANENTE_PASSWORD"
 
 
 class ClavePermanenteAuthProvider:
@@ -272,8 +272,8 @@ class ClavePermanenteAuthProvider:
         headless-ready summary — Cl@ve Permanente never requires an
         operator-mediated completion step for read paths.
         """
-        dni_nie = unwrap_optional_secret(self._settings.aeat_clave_permanente_dni_nie).strip()
-        password_configured = self._settings.aeat_clave_permanente_password is not None
+        dni_nie = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_dni_nie).strip()
+        password_configured = self._settings.cadrumo_clave_permanente_password is not None
         if not dni_nie or not password_configured:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -316,7 +316,7 @@ class ClavePermanenteAuthProvider:
     # ── Identity + target helpers ───────────────────────────────────────────
 
     def _require_identity(self) -> str:
-        raw = unwrap_optional_secret(self._settings.aeat_clave_permanente_dni_nie)
+        raw = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_dni_nie)
         if not raw:
             raise _configuration_error(
                 f"{_CLAVE_PERMANENTE_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
@@ -327,7 +327,7 @@ class ClavePermanenteAuthProvider:
         return raw.strip().upper()
 
     def _require_password(self) -> str:
-        raw = unwrap_optional_secret(self._settings.aeat_clave_permanente_password)
+        raw = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_password)
         if not raw:
             raise _configuration_error(
                 f"{_CLAVE_PERMANENTE_PASSWORD_ENV} is not set; set it to your Cl@ve "
@@ -429,13 +429,13 @@ class ClavePermanenteAuthProvider:
         try:
             await asyncio.wait_for(
                 context.close(),
-                timeout=self._settings.aeat_browser_close_timeout_ms / 1000,
+                timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
             )
         except TimeoutError:
             log.warning(
                 "ClavePermanenteAuthProvider: context.close in %s exceeded %d ms",
                 reason,
-                self._settings.aeat_browser_close_timeout_ms,
+                self._settings.cadrumo_browser_close_timeout_ms,
             )
         except Exception as _exc:
             log.debug(
@@ -456,12 +456,12 @@ class ClavePermanenteAuthProvider:
             if asyncio.iscoroutine(result):
                 await asyncio.wait_for(
                     result,
-                    timeout=self._settings.aeat_browser_close_timeout_ms / 1000,
+                    timeout=self._settings.cadrumo_browser_close_timeout_ms / 1000,
                 )
         except TimeoutError:
             log.warning(
                 "ClavePermanenteAuthProvider: browser session close exceeded %d ms",
-                self._settings.aeat_browser_close_timeout_ms,
+                self._settings.cadrumo_browser_close_timeout_ms,
             )
         except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
             log.warning("ClavePermanenteAuthProvider: browser session close failed", exc_info=True)
@@ -624,14 +624,14 @@ class ClavePermanenteAuthProvider:
                     context={"timeout_ms": self._navigation_timeout_ms, "target_path": target_path},
                     suggestion=(
                         "Retry the live read after confirming the AEAT Sede is reachable, "
-                        "or increase AEAT_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
+                        "or increase CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
                     ),
                 ) from exc
 
             log.info("ClavePermanenteAuthProvider: starting fresh login")
             await self._drive_login_form(page, dni_nie=dni_nie, password=password)
 
-            timeout_ms = int(self._settings.aeat_clave_permanente_timeout_ms)
+            timeout_ms = int(self._settings.cadrumo_clave_permanente_timeout_ms)
             try:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:

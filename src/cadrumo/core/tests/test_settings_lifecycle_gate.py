@@ -93,8 +93,8 @@ _EXEMPT_INPUT = frozenset(
     {
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "aeat_iva_catalogue_root",
-        "aeat_certificate_path",
+        "cadrumo_iva_catalogue_root",
+        "cadrumo_certificate_path",
         "cadrumo_local_storage_root",
     }
 )

@@ -258,7 +258,7 @@ async def _open_authenticated_surface(
                 lambda url: (
                     target_path in url or is_aeat_wallet_auth_gate_redirect(url) or _is_representation_gate_url(url)
                 ),
-                timeout=settings.aeat_browser_navigation_timeout_ms,
+                timeout=settings.cadrumo_browser_navigation_timeout_ms,
             )
         except PlaywrightError:
             log.debug(
@@ -279,7 +279,7 @@ async def _open_authenticated_surface(
             surface=surface,
         )
     try:
-        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
     except PlaywrightError:
         log.debug(
             "IVA wallet surface did not reach networkidle surface=%s current_url=%s",
@@ -331,7 +331,7 @@ async def _open_discovered_wallet_entrypoint(
             surface="iva_compensation_wallet",
         )
     try:
-        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
     except PlaywrightError:
         log.debug(
             "Discovered IVA wallet entrypoint did not reach networkidle current_url=%s",
@@ -366,7 +366,7 @@ async def _continue_own_name_representation(
         await page.click(_PRE303.representation_submit_selector)
         await page.wait_for_url(
             lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
-            timeout=settings.aeat_browser_navigation_timeout_ms,
+            timeout=settings.cadrumo_browser_navigation_timeout_ms,
         )
         await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     except PlaywrightError as exc:
@@ -391,7 +391,7 @@ async def _wait_for_own_name_representation_selector(page: Page, *, settings: Se
         _PRE303.representation_own_name_selector,
     ):
         try:
-            await page.wait_for_selector(selector, timeout=settings.aeat_browser_selector_probe_timeout_ms)
+            await page.wait_for_selector(selector, timeout=settings.cadrumo_browser_selector_probe_timeout_ms)
             return selector
         except PlaywrightError as exc:
             last_error = exc
@@ -464,9 +464,9 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
         await link.click()
-        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.cadrumo_browser_navigation_timeout_ms)
         try:
-            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
         except PlaywrightError:
             log.debug(
                 "cartera own-name continuation did not reach networkidle current_url=%s",
@@ -528,7 +528,7 @@ async def _submit_wallet_execute_gate_if_present(
     try:
         await page.wait_for_selector(
             _PRE303.wallet_execute_submit_selector,
-            timeout=settings.aeat_browser_selector_probe_timeout_ms,
+            timeout=settings.cadrumo_browser_selector_probe_timeout_ms,
         )
     except PlaywrightError:
         log.debug(
@@ -546,7 +546,7 @@ async def _submit_wallet_execute_gate_if_present(
         html, result = await _wait_for_wallet_execute_initial_shape(
             content=content,
             expected_path=expected_path,
-            timeout_ms=settings.aeat_browser_navigation_timeout_ms,
+            timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -576,9 +576,10 @@ async def _submit_wallet_execute_gate_if_present(
             await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=_diag_dump_dir)
         try:
             await page.click(_PRE303.wallet_execute_submit_selector)
-            await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
+            nav_timeout_ms = settings.cadrumo_browser_navigation_timeout_ms
+            await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
             try:
-                await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+                await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=nav_timeout_ms)
             except PlaywrightError:
                 log.debug(
                     "IVA wallet execute read query did not reach networkidle current_url=%s",
@@ -589,7 +590,7 @@ async def _submit_wallet_execute_gate_if_present(
                 page,
                 content=content,
                 expected_path=expected_path,
-                timeout_ms=settings.aeat_browser_navigation_timeout_ms,
+                timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
             )
             if _diag_dump_dir is not None:
                 await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=_diag_dump_dir)

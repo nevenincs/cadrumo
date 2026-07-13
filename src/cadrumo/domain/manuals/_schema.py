@@ -162,7 +162,7 @@ class Rule(_ManualStrictFrozen):
 
     Every persisted rule carries reviewer metadata populated by a real
     human; the verify CLI rejects rules missing those fields when
-    ``AEAT_MANUALS_REVIEW_REQUIRED`` is true.
+    ``CADRUMO_MANUALS_REVIEW_REQUIRED`` is true.
 
     Attributes:
         rule_id: Stable kebab-case identifier produced by

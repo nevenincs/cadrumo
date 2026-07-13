@@ -79,24 +79,24 @@ class TestEnvExampleAlignment:
 
 
 class TestAuthProviderEnum:
-    """#285 — ``AEAT_AUTH_PROVIDER`` coerces to the settings enum strictly."""
+    """#285 — ``CADRUMO_AUTH_PROVIDER`` coerces to the settings enum strictly."""
 
     def test_env_value_coerces_to_enum(self) -> None:
         from ..core.config import AuthProviderKindSetting
 
-        with _isolated_aeat_env(AEAT_AUTH_PROVIDER="clave_movil"):
+        with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
             settings = settings_without_env_file()
-        assert settings.aeat_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
+        assert settings.cadrumo_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
 
     def test_blank_env_value_treated_as_unset(self) -> None:
-        with _isolated_aeat_env(AEAT_AUTH_PROVIDER=""):
+        with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER=""):
             settings = settings_without_env_file()
-        assert settings.aeat_auth_provider is None
+        assert settings.cadrumo_auth_provider is None
 
     def test_invalid_value_rejected(self) -> None:
         import pydantic
 
-        with _isolated_aeat_env(AEAT_AUTH_PROVIDER="not_a_provider_kind"):
+        with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER="not_a_provider_kind"):
             with pytest.raises(pydantic.ValidationError):
                 settings_without_env_file()
 
@@ -105,14 +105,14 @@ class TestCertificateBackendEnum:
     """Certificate backend settings accept canonical values only."""
 
     def test_lowercase_setting_value_is_accepted(self) -> None:
-        with _isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="playwright_context"):
+        with _isolated_aeat_env(CADRUMO_CERTIFICATE_BACKEND="playwright_context"):
             settings = settings_without_env_file()
-        assert settings.aeat_certificate_backend is CertificateBackend.PLAYWRIGHT_CONTEXT
+        assert settings.cadrumo_certificate_backend is CertificateBackend.PLAYWRIGHT_CONTEXT
 
     def test_uppercase_enum_name_is_rejected(self) -> None:
         import pydantic
 
-        with _isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="PLAYWRIGHT_CONTEXT"):
+        with _isolated_aeat_env(CADRUMO_CERTIFICATE_BACKEND="PLAYWRIGHT_CONTEXT"):
             with pytest.raises(pydantic.ValidationError):
                 settings_without_env_file()
 
@@ -144,8 +144,8 @@ class TestStatusDetailUrlTemplate:
         env_path.write_text(
             "\n".join(
                 (
-                    "AEAT_CERTIFICATE_PATH=",
-                    "AEAT_CERTIFICATE_PASSWORD_SECRET=",
+                    "CADRUMO_CERTIFICATE_PATH=",
+                    "CADRUMO_CERTIFICATE_PASSWORD_SECRET=",
                 ),
             )
             + "\n",
@@ -163,8 +163,8 @@ class TestStatusDetailUrlTemplate:
 
         with _isolated_aeat_env():
             settings = BlankEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.aeat_certificate_path is None
-        assert settings.aeat_certificate_password_secret is None
+        assert settings.cadrumo_certificate_path is None
+        assert settings.cadrumo_certificate_password_secret is None
 
     def test_legacy_product_dotenv_keys_are_excluded_without_weakening_unknown_key_validation(
         self, tmp_path: Path
@@ -176,7 +176,7 @@ class TestStatusDetailUrlTemplate:
                 (
                     "AEAT_LOCAL_STORAGE_ROOT=legacy-state-root",
                     "AEAT_SECRET_PASSPHRASE=legacy-secret-value",
-                    "AEAT_AUTH_PROVIDER=certificate",
+                    "CADRUMO_AUTH_PROVIDER=certificate",
                 )
             )
             + "\n",
@@ -195,7 +195,7 @@ class TestStatusDetailUrlTemplate:
         with _isolated_aeat_env():
             settings = LegacyProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_local_storage_root != Path("legacy-state-root")
-        assert settings.aeat_auth_provider is AuthProviderKindSetting.CERTIFICATE
+        assert settings.cadrumo_auth_provider is AuthProviderKindSetting.CERTIFICATE
 
         env_path.write_text("UNRELATED_CADRUMO_TYPO=1\n", encoding="utf-8")
         with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
@@ -224,15 +224,15 @@ class TestStatusDetailUrlTemplate:
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
-        with _isolated_aeat_env(AEAT_CERTIFICATE_PATH=""):
+        with _isolated_aeat_env(CADRUMO_CERTIFICATE_PATH=""):
             settings = settings_without_env_file()
-        assert settings.aeat_certificate_path is None
+        assert settings.cadrumo_certificate_path is None
 
     def test_blank_optional_secret_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional secret env vars must normalize to ``None``."""
-        with _isolated_aeat_env(AEAT_CERTIFICATE_PASSWORD_SECRET="", CADRUMO_LLM_OPENAI_API_KEY=""):
+        with _isolated_aeat_env(CADRUMO_CERTIFICATE_PASSWORD_SECRET="", CADRUMO_LLM_OPENAI_API_KEY=""):
             settings = settings_without_env_file()
-        assert settings.aeat_certificate_password_secret is None
+        assert settings.cadrumo_certificate_password_secret is None
         assert settings.cadrumo_llm_openai_api_key is None
 
 

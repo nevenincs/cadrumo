@@ -128,7 +128,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         if wait_for is not None and text_content is not None:
             selector = self._clave_surface().verification_code_selector
             try:
-                await wait_for(selector, timeout=int(self._settings.aeat_browser_selector_probe_timeout_ms))
+                await wait_for(selector, timeout=int(self._settings.cadrumo_browser_selector_probe_timeout_ms))
                 raw = await text_content(selector)
             except (PlaywrightTimeoutError, PlaywrightError):
                 raw = None
@@ -147,8 +147,8 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
     async def _drive_non_qr_fallback(self, page: BrowserPageLike, dni_nie: str) -> None:
         """Submit the configured non-QR DNI/NIE contrast form.
 
-        DNI identities require ``AEAT_CLAVE_MOVIL_DNI_FECHA``; NIE identities
-        require ``AEAT_CLAVE_MOVIL_NIE_SOPORTE``. The selectors come from
+        DNI identities require ``CADRUMO_CLAVE_MOVIL_DNI_FECHA``; NIE identities
+        require ``CADRUMO_CLAVE_MOVIL_NIE_SOPORTE``. The selectors come from
         :class:`AeatClaveMovilSurface`, and AEAT pending-request refusals are
         checked before control returns to :class:`ClaveMovilAuthProvider`.
         """
@@ -174,18 +174,18 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         kind = _classify_identity(dni_nie)
         if kind == "DNI":
             await wait_for(surface.dni_fecha_visible_selector, timeout=self._navigation_timeout_ms)
-            fecha = (self._settings.aeat_clave_movil_dni_fecha or "").strip()
+            fecha = (self._settings.cadrumo_clave_movil_dni_fecha or "").strip()
             if not fecha:
                 raise ClaveMovilConfigurationError(
-                    "AEAT_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD).",
+                    "CADRUMO_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD).",
                 )
             await type_text(surface.dni_fecha_input_selector, fecha)
         else:
             await wait_for(surface.nie_soporte_visible_selector, timeout=self._navigation_timeout_ms)
-            soporte = unwrap_optional_secret(self._settings.aeat_clave_movil_nie_soporte).strip()
+            soporte = unwrap_optional_secret(self._settings.cadrumo_clave_movil_nie_soporte).strip()
             if not soporte:
                 raise ClaveMovilConfigurationError(
-                    "AEAT_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback.",
+                    "CADRUMO_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback.",
                 )
             await type_text(surface.nie_soporte_input_selector, soporte)
         await wait_for(surface.continue_button_visible_selector, timeout=self._navigation_timeout_ms)
@@ -254,7 +254,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             },
             suggestion=(
                 "Inspect the encrypted Cl@ve diagnostic artefact, then retry with QR mode "
-                "(AEAT_CLAVE_PREFER_NON_QR=false) if the non-QR form no longer reaches the wait page."
+                "(CADRUMO_CLAVE_PREFER_NON_QR=false) if the non-QR form no longer reaches the wait page."
             ),
         )
 
@@ -581,7 +581,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             pre303.representation_own_name_selector,
         ):
             try:
-                await wait_for(selector, timeout=self._settings.aeat_browser_selector_probe_timeout_ms)
+                await wait_for(selector, timeout=self._settings.cadrumo_browser_selector_probe_timeout_ms)
                 return selector
             except PlaywrightError as exc:
                 last_error = exc

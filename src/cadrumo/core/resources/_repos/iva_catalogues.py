@@ -18,7 +18,7 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
     """Year-keyed repository for the bundled IVA regulation catalogue.
 
     Wraps :func:`cadrumo.domain.iva._catalogue.load_iva_catalogues`. The
-    Settings env-override seam for ``AEAT_IVA_CATALOGUE_ROOT`` is
+    Settings env-override seam for ``CADRUMO_IVA_CATALOGUE_ROOT`` is
     threaded through the constructor's ``root`` parameter; the
     :func:`cadrumo.core.resources.resources` factory reads Settings and
     passes the resolved root once at construction. Missing years raise

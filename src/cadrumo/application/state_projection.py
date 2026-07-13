@@ -421,10 +421,10 @@ def _build_auth_readiness(
                 if (
                     provider == AuthProviderKind.CERTIFICATE.value
                     and auth.certificate_path
-                    and backend_settings.aeat_certificate_path is None
+                    and backend_settings.cadrumo_certificate_path is None
                 ):
                     backend_settings = backend_settings.model_copy(
-                        update={"aeat_certificate_path": Path(auth.certificate_path)},
+                        update={"cadrumo_certificate_path": Path(auth.certificate_path)},
                     )
                 backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
                 description = backend.describe()

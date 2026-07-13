@@ -226,7 +226,7 @@ async def list_filed_data(
         )
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     rows: list[FiledDataListingRow] = []
     async with (
         shared_playwright(session) as playwright,
@@ -296,7 +296,7 @@ async def list_filed_data_bulk(
         )
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     async with (
         shared_playwright(session) as playwright,
         open_declarations_register(
@@ -346,7 +346,7 @@ async def capture_filed_data(
     observation keys produced from the captured AEAT rows.
     """
     session, settings = await active_verified_session()
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
@@ -494,7 +494,7 @@ async def capture_filed_data_bulk(
         )
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     bucket_id = require_active_bucket_id()
 
     async with (

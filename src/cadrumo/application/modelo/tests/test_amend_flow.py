@@ -327,8 +327,8 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
         settings=Settings(
-            aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-            aeat_clave_movil_dni_nie=SecretStr("X1234567L"),
+            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
         ),
         clock=_T2,
     )

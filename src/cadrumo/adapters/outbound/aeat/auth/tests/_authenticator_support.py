@@ -398,9 +398,9 @@ def _settings_factory():
             **extra_overrides: object,
         ) -> Settings:
             overrides: dict[str, object] = {
-                "aeat_certificate_path": path,
-                "aeat_certificate_password_secret": SECRET_PASSPHRASE,
-                "aeat_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
+                "cadrumo_certificate_path": path,
+                "cadrumo_certificate_password_secret": SECRET_PASSPHRASE,
+                "cadrumo_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
                 "aeat_certificate_verify_url": verify_url,
                 "cadrumo_token_dir": path.parent / ".tokens",
             }

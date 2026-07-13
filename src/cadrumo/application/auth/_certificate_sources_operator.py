@@ -82,7 +82,7 @@ def _active_bucket_id_for_secret_resolution() -> str | None:
     (:func:`~application.auth.check_operator_certificate_sources`), not a mutation gated on
     a healthy active profile. An absent or dangling profile simply
     yields no per-source secret, falling back to the shared
-    :attr:`~core.config.Settings.aeat_certificate_password_secret`.
+    :attr:`~core.config.Settings.cadrumo_certificate_password_secret`.
     """
     from ...core import resolve_active_bucket_id
 
@@ -344,7 +344,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     :func:`~application.auth.resolve_certificate_source_secret` first (the
     per-source :class:`~application.auth.CertificateSecretBackend`); when no per-source secret is
     registered, the probe falls back to the shared, env-only
-    :attr:`~core.config.Settings.aeat_certificate_password_secret` —
+    :attr:`~core.config.Settings.cadrumo_certificate_password_secret` —
     preserving the pre-registry single-certificate contract for sources
     that never adopted a per-source secret.
 
@@ -374,7 +374,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         if active_bucket_id is not None:
             per_source_secret = resolve_certificate_source_secret(name=record.name, bucket_id=active_bucket_id)
         if per_source_secret is not None:
-            with override_settings(aeat_certificate_password_secret=per_source_secret) as scoped_settings:
+            with override_settings(cadrumo_certificate_password_secret=per_source_secret) as scoped_settings:
                 outcome = _probe_certificate_bundle(record.certificate_path, settings=scoped_settings)
         else:
             outcome = _probe_certificate_bundle(record.certificate_path, settings=resolved_settings)
@@ -405,7 +405,7 @@ def resolve_certificate_source_secret(
     Reads through :func:`~application.auth.certificate_secret_backend`
     scoped to ``bucket_id``; never falls back to a global setting itself
     — callers that also want the legacy
-    :attr:`~core.config.Settings.aeat_certificate_password_secret`
+    :attr:`~core.config.Settings.cadrumo_certificate_password_secret`
     fallback (single-certificate, pre-registry contract) compose that
     fallback explicitly, keeping the precedence visible at the call
     site rather than hidden inside this resolver.

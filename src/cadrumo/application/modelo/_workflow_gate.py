@@ -279,8 +279,8 @@ def build_revision_workflow_engine(
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
     provider_kind = (
-        AuthProviderKind(cfg.aeat_auth_provider.value)
-        if cfg.aeat_auth_provider is not None
+        AuthProviderKind(cfg.cadrumo_auth_provider.value)
+        if cfg.cadrumo_auth_provider is not None
         else AuthProviderKind.CERTIFICATE
     )
     submission_engine = SubmissionEngine(

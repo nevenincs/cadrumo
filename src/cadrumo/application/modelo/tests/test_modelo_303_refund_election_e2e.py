@@ -268,8 +268,8 @@ def _calculate_negative_period(
             activity_start_date=_activity_start_date_for_period(period_token),
         ),
         settings=Settings(
-            aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-            aeat_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         ),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
@@ -315,8 +315,8 @@ def _file_period(
         filing_repository=filing_repo,
         bucket_event_repository=event_repo,
         settings=Settings(
-            aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-            aeat_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            cadrumo_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
+            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         ),
         clock=_file_clock(work_unit.period),
     )
