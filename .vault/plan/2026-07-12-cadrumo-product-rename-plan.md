@@ -60,12 +60,13 @@ Establish path ownership and explicit product-versus-authority classification be
 
 Create and test the single CADRUMO identity authority.
 
-- [x] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
+- [ ] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
 - [x] `W01.P02.S06` - Expose the public product identity through the package facade; `src/cadrumo/core/__init__.py`.
 - [x] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S08` - Codify that CADRUMO names the product and AEAT names the authority; `.vaultspec/rules/cadrumo-product-authority-names.md`.
-- [x] `W01.P02.S86` - Reconcile the binding CADRUMO product, aeat human CLI, and AEAT authority naming contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vaultspec/rules/cadrumo-product-authority-names.md; generated provider naming rules; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
+- [ ] `W01.P02.S86` - Reconcile the binding CADRUMO product, aeat human CLI, and AEAT authority naming contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vaultspec/rules/cadrumo-product-authority-names.md; generated provider naming rules; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S87` - Remediate the authority-lock review and reopen contradicted downstream acceptance contracts; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vault/audit/2026-07-13-cadrumo-product-rename-authority-lock-audit.md; .vault/exec/2026-07-12-cadrumo-product-rename/2026-07-12-cadrumo-product-rename-W01-P02-S87.md`.
+- [x] `W01.P02.S90` - Repair mixed-commit drift and restore the binding CADRUMO display contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py; src/cadrumo/tests/test_parity.py; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S90 execution record`.
 
 ## Wave `W02` - move runtime and persistence at one breaking boundary
 
@@ -186,13 +187,14 @@ Converge developer automation, CI, release tooling, and external publication gat
 
 Update product copy through locale authorities while preserving AEAT counterparty language.
 
-- [x] `W05.P12.S62` - Bind command-help invocations to `aeat` and product copy to CADRUMO while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
-- [x] `W05.P12.S63` - Update English product locale messages through the locales CLI; `English locale catalogue`.
-- [x] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
-- [x] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.
-- [x] `W05.P12.S66` - Update Hungarian product locale messages through the locales CLI; `Hungarian locale catalogue`.
+- [ ] `W05.P12.S62` - Bind command-help invocations to `aeat` and product copy to CADRUMO while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
+- [ ] `W05.P12.S63` - Update English product locale messages through the locales CLI; `English locale catalogue`.
+- [ ] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
+- [ ] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.
+- [ ] `W05.P12.S66` - Update Hungarian product locale messages through the locales CLI; `Hungarian locale catalogue`.
 - [ ] `W05.P12.S67` - Regenerate locale scaffold output and pass locale parity checks; `generated locale scaffold`.
 - [x] `W05.P12.S88` - Add safe per-locale selection to product-identity canonicalization; `src/cadrumo locale manager, CLI, and cohesive tests`.
+- [ ] `W05.P12.S89` - Correct locale scalar and placeholder parity through the locale CLI; `English, Spanish, Catalan, and Hungarian locale catalogues`.
 
 ### Phase `W05.P13` - rewrite active documentation through the mandated workflow
 
