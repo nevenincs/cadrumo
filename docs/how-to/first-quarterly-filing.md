@@ -22,7 +22,9 @@ client, and one office-supplies purchase.
 
 ```{cli-sequence} import-quarter-transactions
 :verify: Confirm both movements are now in the ledger.
+@step Bring the quarter's bank movements into the ledger.
 aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Check that the quarter's ledger now holds both movements.
 @result aeat --format json app ledger list --year 2026 --period 1T
 @expect result.total == 2
 @expect exit_code == 0
@@ -57,10 +59,13 @@ account for self-employed activity under estimación directa.
 ```{cli-sequence} modelo-130-first-quarter
 :seed: autonomo-irpf-2026
 :verify: Confirm the draft passed verification before you export it.
+@step Open a Modelo 130 draft for the first quarter.
 aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
+@step Calculate the quarter's instalment from the classified ledger.
 aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @capture calculation_revision_id result.calculation_revision_id
+@step Verify the draft before you export it.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
 @expect exit_code == 0
