@@ -163,7 +163,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="CLI period grammar refusal docs and tests prove calendar/hybrid spellings are rejected",
     ),
     AllowlistRule(
-        path=_path(r"^docs/how-to/(filing-periods|troubleshooting)\.md$"),
+        path=_path(r"^docs/how-to/(filing-calendar|filing-periods|troubleshooting)\.md$"),
         reason="operator docs explicitly say the killed calendar forms are not accepted",
     ),
     AllowlistRule(
@@ -324,8 +324,14 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text("2024" + "Q1"),
     ),
     AllowlistRule(
-        path=_path(r"^docs/how-to/(?:quickstart|modelo-390)\.md$"),
+        path=_path(r"^docs/how-to/(?:quickstart|modelo-390|irpf-lifecycle|iva-lifecycle)\.md$"),
         reason="docs preserve justificante/export filename examples, not period input grammar",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter\.json$"),
+        reason="captured CLI sequence preserves the WorkUnit.name display-name field "
+        "(<modelo>-<year>-<period>, no modelo- stem), not export filename or period input grammar",
         pattern_names=frozenset({"year-qualified quarterly token"}),
     ),
     AllowlistRule(
@@ -333,6 +339,13 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="quickfile invoice tests use an opaque operator-facing invoice_number display label, not a period input",
         pattern_names=frozenset({"year-qualified quarterly token"}),
         text=_text(r"invoice_number="),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_app_quickfile\.py$"),
+        reason="quickfile export test names its --output path with the canonical "
+        "modelo-<id>-<year>-<period> export filename schema, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"tmp_path / "),
     ),
     AllowlistRule(
         path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_modelo_(?:kv_format_localization|state_text_labels)\.py$"),

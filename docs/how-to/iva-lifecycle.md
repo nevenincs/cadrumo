@@ -74,7 +74,7 @@ detail. Create, calculate, verify, and export Modelo 303 for the quarter:
 aeat app modelo work create --modelo 303 --year 2026 --period 1T
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./m303-2026-1T.boe
+aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303-2026-1T.boe
 ```
 
 Calculation routes the classified rows into the IVA boxes: the sale's 210 of
@@ -160,7 +160,7 @@ disagrees with the sum of the quarters is a blocking finding, not a warning.
 
 ```bash
 aeat app modelo work verify --modelo 390 --year 2026 --period 0A
-aeat app modelo export --modelo 390 --year 2026 --period 0A --output ./m390-2026.boe
+aeat app modelo export --modelo 390 --year 2026 --period 0A --output ./modelo-390-2026-0A.boe
 aeat app modelo work file --modelo 390 --year 2026 --period 0A
 aeat app modelo reconcile pull --modelo 390 --year 2026 --period 0A
 ```
