@@ -1,7 +1,7 @@
 """Packaging gate for the Apache §4(d) attribution chain.
 
-Every distribution this repository publishes — the root ``aeat-cli`` runtime
-wheel and the two ``aeat-data-*`` corpus companions — must ship the Apache
+Every distribution this repository publishes — the root ``cadrumo`` runtime
+wheel and the two ``cadrumo-data-*`` corpus companions — must ship the Apache
 LICENSE text and the project ``NOTICE`` attribution file inside its artifacts
 (``.dist-info/licenses/`` in wheels, the root of the sdist). The mechanism is
 the explicit PEP 639 ``license-files`` declaration in each ``pyproject.toml``;
@@ -26,9 +26,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _PROJECT_DIRS = {
-    "aeat-cli": _REPO_ROOT,
-    "aeat-data-manuals": _REPO_ROOT / "packaging" / "aeat_data_manuals",
-    "aeat-data-official": _REPO_ROOT / "packaging" / "aeat_data_official",
+    "cadrumo": _REPO_ROOT,
+    "cadrumo-data-manuals": _REPO_ROOT / "packaging" / "aeat_data_manuals",
+    "cadrumo-data-official": _REPO_ROOT / "packaging" / "aeat_data_official",
 }
 
 

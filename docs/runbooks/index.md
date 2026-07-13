@@ -49,6 +49,13 @@ A modelo does not apply to your profile, or a calculation refuses because the
 profile is incomplete.
 :::
 
+:::{grid-item-card} RB-006 Publish Cadrumo documentation
+:link: RB-006-cadrumo-docs-delivery
+:link-type: doc
+
+Publish, route, verify, or roll back Cadrumo documentation.
+:::
+
 ::::
 
 ```{toctree}
@@ -59,4 +66,5 @@ RB-002-live-read-refused
 RB-003-verification-blocks-export
 RB-004-unreadable-records
 RB-005-modelo-not-ready
+RB-006-cadrumo-docs-delivery
 ```

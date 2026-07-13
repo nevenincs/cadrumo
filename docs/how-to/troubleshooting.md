@@ -243,7 +243,7 @@ When the steps on this page don't resolve the problem, gather this before asking
 
 Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), names, addresses, and file paths that embed your user name. Log lines can contain personal data - read them before pasting.
 
-Take the request to the [project issue tracker](https://github.com/wgergely/aeat/issues).
+Take the request to the [project issue tracker](https://github.com/nevenincs/cadrumo/issues).
 
 If a term in an error message is unfamiliar, look it up in the {doc}`glossary </_generated/glossary>`.
 

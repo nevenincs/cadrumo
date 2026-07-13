@@ -6,7 +6,7 @@ The optional integration stacks (``google`` / ``browser`` / ``anthropic``) live 
 ``sys.meta_path`` finder that makes the package genuinely unimportable, the same
 condition a fresh ``pip install aeat`` (no extras) produces — rather than a mock.
 With the extra blocked the core CLI must still build, and reaching the feature
-must raise the feature's own typed error naming ``pip install aeat-cli[<extra>]``.
+must raise the feature's own typed error naming ``pip install cadrumo[<extra>]``.
 """
 
 from __future__ import annotations
@@ -90,7 +90,7 @@ def test_ofx_source_refuses_instructively_without_the_extra(tmp_path: Path) -> N
             provider.validate_source(source)
         with pytest.raises(MissingOptionalExtraError):
             list(provider.ingest(source))
-    assert raised.value.install_hint == "pip install aeat-cli[ofx]"
+    assert raised.value.install_hint == "pip install cadrumo[ofx]"
 
 
 def test_non_ofx_probe_degrades_to_a_miss_without_the_extra(tmp_path: Path) -> None:
@@ -103,7 +103,7 @@ def test_non_ofx_probe_degrades_to_a_miss_without_the_extra(tmp_path: Path) -> N
     with _block_imports("ofxtools"):
         validation = provider.validate_source(source)
     assert validation.is_valid is False
-    assert any("pip install aeat-cli[ofx]" in warning for warning in validation.warnings)
+    assert any("pip install cadrumo[ofx]" in warning for warning in validation.warnings)
 
 
 def test_playwright_error_aliases_import_as_plain_fallbacks_without_the_extra() -> None:
@@ -134,7 +134,7 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     client = LLMClient(settings=load_settings())
     with _block_imports("anthropic"), pytest.raises(LLMConfigError) as raised:
         client._build_adapter(LLMProvider.ANTHROPIC)
-    assert raised.value.suggestion == "pip install aeat-cli[anthropic]"
+    assert raised.value.suggestion == "pip install cadrumo[anthropic]"
 
 
 @pytest.mark.asyncio
@@ -147,7 +147,7 @@ async def test_browser_boundary_refuses_instructively_without_the_extra() -> Non
 
         with pytest.raises(BrowserError) as raised:
             await _factory._start_playwright()
-    assert raised.value.suggestion == "pip install aeat-cli[browser]"
+    assert raised.value.suggestion == "pip install cadrumo[browser]"
 
 
 def test_google_extra_unavailable_is_observed_by_the_probe_without_the_extra() -> None:

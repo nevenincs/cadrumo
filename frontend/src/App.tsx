@@ -17,8 +17,8 @@ import type { LocaleCode } from './i18n'
 
 const docsBaseUrl = 'https://cadrumo.neve.md/docs'
 const docsUrl = `${docsBaseUrl}/index.html`
-const repositoryUrl = 'https://github.com/nevenincs/aeat'
-const downloadUrl = 'https://pypi.org/project/aeat-cli/'
+const repositoryUrl = 'https://github.com/nevenincs/cadrumo'
+const downloadUrl = 'https://pypi.org/project/cadrumo/'
 const siteUrl = 'https://cadrumo.neve.md'
 
 // Structural (non-localizable) data, zipped by index with the locale copy.

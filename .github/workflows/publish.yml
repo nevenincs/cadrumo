@@ -11,8 +11,8 @@
 # guards below refuse a fat artifact outright, so dispatching from a branch
 # without the wheel-split build config fails loudly instead of uploading.
 #
-# The corpus source binaries ship in TWO sub-cap companions — `aeat-data-manuals`
-# and `aeat-data-official` — each built from its own in-repo project and each
+# The corpus source binaries ship in TWO sub-cap companions — `cadrumo-data-manuals`
+# and `cadrumo-data-official` — each built from its own in-repo project and each
 # under the 100 MB cap, so no PyPI size grant is required.
 name: publish
 
@@ -24,8 +24,8 @@ on:
         type: choice
         options:
           - aeat
-          - aeat-data-manuals
-          - aeat-data-official
+          - cadrumo-data-manuals
+          - cadrumo-data-official
         default: aeat
 
 permissions:
@@ -47,12 +47,12 @@ jobs:
         if: ${{ inputs.distribution == 'aeat' }}
         run: uv build --wheel --out-dir dist
 
-      - name: Build aeat-data-manuals companion
-        if: ${{ inputs.distribution == 'aeat-data-manuals' }}
+      - name: Build cadrumo-data-manuals companion
+        if: ${{ inputs.distribution == 'cadrumo-data-manuals' }}
         run: uv build --wheel --project packaging/aeat_data_manuals --out-dir dist
 
-      - name: Build aeat-data-official companion
-        if: ${{ inputs.distribution == 'aeat-data-official' }}
+      - name: Build cadrumo-data-official companion
+        if: ${{ inputs.distribution == 'cadrumo-data-official' }}
         run: uv build --wheel --project packaging/aeat_data_official --out-dir dist
 
       - name: Guard the artifact (size cap, slim-wheel split)
@@ -74,7 +74,7 @@ jobs:
           if size_mb > 100:
               sys.exit(f"{wheel.name} exceeds the 100 MB PyPI cap ({size_mb:.1f} MB) - was this dispatched "
                        "from a branch without the wheel-split build config, or has a companion grown over cap?")
-          if wheel.name.startswith("aeat_cli-"):
+          if wheel.name.startswith("cadrumo-"):
               leaked = [n for n in zipfile.ZipFile(wheel).namelist()
                         if n.startswith("aeat/_data/corpus/")
                         and n.lower().endswith((".pdf", ".xls", ".xlsx"))]
