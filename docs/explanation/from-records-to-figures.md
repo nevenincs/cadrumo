@@ -52,7 +52,7 @@ A calculation is always for one form, one year, and one period. The period decid
 
 A period is a quarter, a single month, or a whole year. The tool turns it into a start and end date, then keeps only the records whose date falls inside that window. A first-quarter filing sees January through March; a March filing sees only March.
 
-Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see [Filing periods](../how-to/filing-periods.md).
+Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see [Period tokens and dates](../how-to/filing-calendar.md#period-tokens-and-dates).
 
 ## From records to numbered boxes
 

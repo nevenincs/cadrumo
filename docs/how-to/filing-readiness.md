@@ -125,7 +125,7 @@ projected box carries its formula and legal references in the JSON output,
 the same grounding as a real calculation.
 
 For when the year-end filing actually happens, see
-[Filing periods](filing-periods.md).
+[Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
 
 ## Trace a value to its legal basis
 

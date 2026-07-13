@@ -77,7 +77,7 @@ Replace the modelo, year, and period with your own. The full workflow for supply
 
 ## The period token is rejected
 
-Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. [Filing periods](filing-periods.md) explains which form uses which period.
+Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. [Period tokens and dates](filing-calendar.md#period-tokens-and-dates) explains which form uses which period.
 
 Modelo and ledger commands share the same shape - the AEAT token with `--year`:
 
