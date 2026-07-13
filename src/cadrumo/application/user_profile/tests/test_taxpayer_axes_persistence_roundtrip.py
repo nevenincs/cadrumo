@@ -271,13 +271,13 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
 ) -> None:
     """The optional censo alta date survives the real encrypted-SQL cycle.
 
-    Round-4 testimonial finding D1 added an optional
-    ``censo.activity_start_date`` profile fact. A profile carrying it
-    at a NON-DEFAULT value (a real 2026 date, not the ``None`` default)
-    must round-trip through the encrypted store and reconstruct the
-    typed ``date`` on :class:`TaxpayerProfile.activity_start_date`, so
-    the deadline engine's pre-registration-obligation gate receives the
-    persisted alta date.
+    The optional ``censo.activity_start_date`` profile fact, when a
+    profile carries it at a NON-DEFAULT value (a real 2026 date, not the
+    ``None`` default), must round-trip through the encrypted store and
+    reconstruct the typed ``date`` on
+    :class:`TaxpayerProfile.activity_start_date`, so the deadline
+    engine's pre-registration-obligation gate receives the persisted
+    alta date.
     """
 
     alta = date(2026, 3, 1)

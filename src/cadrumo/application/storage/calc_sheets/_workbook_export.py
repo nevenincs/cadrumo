@@ -121,9 +121,9 @@ def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[t
 
     The single source of truth both transports render: the offline openpyxl
     workbook and the online Google-Sheets apply adapter consume this so the
-    Evidencia surface is byte-identical across offline and online exports
-    (modelo-export-evidence-parity ADR). Every cell is a string — contributor
-    facts are pre-formatted by the same helpers ``_write_evidence`` uses.
+    Evidencia surface is byte-identical across offline and online exports.
+    Every cell is a string — contributor facts are pre-formatted by the same
+    helpers ``_write_evidence`` uses.
     """
     body = tuple(
         tuple(str(value) for value in _contributor_values(row)) for row in plan.evidence.contributor_rows

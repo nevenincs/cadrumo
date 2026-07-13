@@ -84,9 +84,9 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
         assert loaded == original
         # Per-field witnesses: enum identity (final_stage,
         # aborted_reason), tuple-of-steps surface with per-step
-        # details (which were retyped from dict[str, str] to the
-        # WorkflowStepDetails envelope earlier this campaign), and
-        # the optional resumed_from chain pointer.
+        # details (retyped from dict[str, str] to the
+        # WorkflowStepDetails envelope), and the optional
+        # resumed_from chain pointer.
         assert loaded.final_stage is WorkflowStage.ABORTED
         assert loaded.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
         assert loaded.resumed_from == "p" * 16

@@ -1,15 +1,15 @@
 """Persistence-boundary roundtrip for the IRPF special-regime axis.
 
-Task #162: Profile schema axis irpf_special_regime + special_regime_start_date
-(Beckham foundation). Grounds LIRPF Art. 93 (Ley Beckham) in the profile
-schema so downstream task #163 (M720 NOT_APPLICABLE) and the M151 stub
-refusal guard can interrogate the axis without string-matching.
+The profile schema axis ``irpf_special_regime`` + ``special_regime_start_date``
+(Beckham foundation) grounds LIRPF Art. 93 (Ley Beckham) in the profile
+schema so the M720 NOT_APPLICABLE and the M151 stub refusal guard can
+interrogate the axis without string-matching.
 
 Three contract claims exercised here:
 
 1. An ``impatriado`` special-regime fact + a ``special_regime_start_date``
    fact both survive the real encrypted-SQL roundtrip and project onto the
-   typed ``TaxpayerProfile`` fields introduced in task #162.
+   typed ``TaxpayerProfile`` fields.
 
 2. A record carrying no special-regime facts (the common case — the vast
    majority of taxpayers are on the general regime) loads cleanly and
@@ -187,8 +187,8 @@ def test_anti_tautology_mutating_regime_changes_projection(
     def _build_record(regime_value: str) -> UserProfileRecord:
         extra: list[UserProfileFact] = [UserProfileFact(path="irpf.special_regime", value=regime_value)]
         if regime_value == "impatriado":
-            # special_regime_start_date is now required when irpf_special_regime
-            # is IMPATRIADO (TaxpayerProfile SCHEMA-001 validator, task #191).
+            # special_regime_start_date is required when irpf_special_regime
+            # is IMPATRIADO (TaxpayerProfile SCHEMA-001 validator).
             extra.append(UserProfileFact(path="irpf.special_regime_start_date", value="2023-01-01"))
         facts = (
             *(

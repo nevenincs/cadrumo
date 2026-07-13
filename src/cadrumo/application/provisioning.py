@@ -4,8 +4,7 @@ This module is the read-only application doctor surface: each probe asks whether
 one external service or optional package extra is usable on this workstation and
 returns a typed :class:`DependencyStatus` with the exact remediation command when
 it is not. Probes do not provision, unlock, write profile state, or raise on
-absence; a missing dependency is report data under the ``dependency-provisioning``
-ADR, not an exception path.
+absence; a missing dependency is report data, not an exception path.
 
 The vision read consults :func:`probe_ollama_vision` before expensive inference,
 so a down server or an unpulled model becomes an instructive refusal instead of

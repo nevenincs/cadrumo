@@ -242,9 +242,8 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
 def test_transactions_pending_skips_reviewed_excluded(tmp_path: Path) -> None:
     """``REVIEWED_EXCLUDED`` rows are a final disposition and must not resurface.
 
-    The operator reviewed the row and deliberately excluded it from filing
-    (issue #224 — "I saw this, it is not relevant, stop asking me"), so the
-    review queue must drop it.
+    The operator reviewed the row and deliberately excluded it from filing, so
+    the review queue must drop it.
     """
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions(
