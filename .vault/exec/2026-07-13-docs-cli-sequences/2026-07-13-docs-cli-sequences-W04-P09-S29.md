@@ -33,3 +33,13 @@ The server-rendered sequence transcript is progressively enhanced into a stepped
 ## Notes
 
 The widget injects no frame content; it only toggles `hidden` and an `is-active` class, keeping the single server-rendered content source authoritative per ADR D5. A single-frame sequence is left untouched (nothing to step). CSS for the controls, active highlight, and reduced-motion lands in S30.
+
+## Addendum — playhead redesign (operator review, presentation-only)
+
+After a live viewing of the shipped page the operator directed a presentation revision. This is a change within ADR D5's frontend contract — the D5 payload/DOM fields are untouched, so no ADR revision is needed — recorded here per the review instruction. It revises the JS (S29), the CSS (S30), and the verification pins (S32) together.
+
+- The stepping model changed from show/hide-frames to a PLAYHEAD over a rundown: every command line is always visible. Exactly one command is active (highlighted, output shown beneath); commands after the playhead are dimmed with highlighting dropped and output suppressed; past commands stay highlighted with output collapsed for minimal density. The dim/no-highlight state is JS-applied classes (`is-active`/`is-past`/`is-future`) the CSS keys on over the same highlighted DOM — never a server-side rewrite — so the no-JS transcript stays complete and fully highlighted.
+- Removed the play button and all autonomous/timed advance, and the now-dead reduced-motion autoplay branch; prev/next plus arrow keys only. `frame.hidden` toggling is gone.
+- Typography aligned to the docs code styling (JetBrains Mono via `--font-stack--monospace`, 0.85rem / 1.7 line height); command lines are bold with a `$` prompt affordance, output is a lighter, left-ruled, indented block so command-vs-output is instant.
+- Removed the terminal-chrome title bar (`.cadrumo-sequence::before`) that rendered the top red bar; stripped decoration to minimal density.
+- Enhancement-only, XSS (`textContent`), hover-help, a11y (focus/aria/Escape), and zero-external-requests invariants are all preserved. Verified: three S32 gates green (external-request audit, wiring/implementation incl. autoplay-removal locks, real nitpicky -n -W fixture build); `node --check` clean; CSS braces balanced.

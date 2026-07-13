@@ -437,7 +437,7 @@ def test_sequence_widget_assets_make_no_external_requests() -> None:
 
 
 def test_sequence_widget_is_wired_and_implemented() -> None:
-    """conf.py ships both assets and the sources carry the player and hover-help surfaces."""
+    """conf.py ships both assets and the sources carry the playhead and hover-help surfaces."""
     conf = (_DOCS / "conf.py").read_text(encoding="utf-8")
     assert '"cadrumo-docs.css"' in conf
     assert '"cadrumo-docs.js"' in conf
@@ -445,10 +445,28 @@ def test_sequence_widget_is_wired_and_implemented() -> None:
     js = _WIDGET_JS.read_text(encoding="utf-8")
     for surface in ("initSequences", "setupSequence", "initHoverHelp", "cadrumo-sequence-payload", "cli-tree.json"):
         assert surface in js, f"widget JS is missing {surface!r}"
+    # The playhead model: JS-applied state classes, not frame hiding.
+    for surface in ('"is-active"', '"is-past"', '"is-future"'):
+        assert surface in js, f"widget JS is missing the playhead state {surface}"
+    # The operator redesign removed autonomous/timed advance entirely; no play
+    # button, no timer, no reduced-motion autoplay branch may return.
+    for banned in ("setInterval", "startPlay", "PLAY_INTERVAL_MS", "prefersReducedMotion", "frame.hidden"):
+        assert banned not in js, f"widget JS must not carry the retired autoplay surface {banned!r}"
 
     css = _WIDGET_CSS.read_text(encoding="utf-8")
-    for surface in (".cadrumo-sequence", ".cli-tok-placeholder", ".cadrumo-sequence-controls", ".cadrumo-cli-popover"):
+    for surface in (
+        ".cadrumo-sequence",
+        ".cli-tok-placeholder",
+        ".cadrumo-sequence-controls",
+        ".cadrumo-cli-popover",
+        ".cadrumo-frame.is-future",
+        "--font-stack--monospace",
+    ):
         assert surface in css, f"widget CSS is missing {surface!r}"
+    # No terminal-chrome title bar (the removed top decorative rectangle).
+    assert "cadrumo-sequence::before" not in css
+    # No play-button styling remains.
+    assert "cadrumo-sequence-btn--play" not in css
     assert "prefers-reduced-motion" in css
 
 
