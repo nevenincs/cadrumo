@@ -110,7 +110,7 @@ One shared two-tier atomic-write helper; migrate all four dialects onto it.
 
 One canonical public isolation fixture with coverage gate; sweep the copy-pasted fixture families and unify collection-time roots.
 
-- [ ] `W05.P09.S26` - Promote one canonical public isolation fixture covering every settings dir field, with a structural coverage gate; `src/cadrumo/tests/secure_sql.py`.
+- [x] `W05.P09.S26` - Promote one canonical public isolation fixture covering every settings dir field, with a structural coverage gate; `src/cadrumo/tests/secure_sql.py`.
 - [ ] `W05.P09.S27` - Sweep the copy-pasted isolated-cli-backend fixture copies onto the canonical fixture; `cli test isolation fixtures`.
 - [ ] `W05.P09.S28` - Sweep the isolated-storage fixture family and unify the two collection-time pytest storage roots into one cleanup-registered helper; `conftest storage roots`.
 
