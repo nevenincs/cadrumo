@@ -52,9 +52,19 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Author repo-root `.vaultragpreprocess.toml`: four rules routing normatives
+  HTML, corpus PDFs, `.xls`, and `.xlsx` through the hook command with
+  `on_error = "skip"` and per-kind timeouts.
+- Validate with `vaultspec-rag preprocess check --json` (v0.2.28): 4 rules.
+- Add the CI-safe structural gate in `dev/docs/preprocess/tests/test_hook.py`
+  (validates the TOML shape without importing the upstream package).
 
 ## Outcome
+
+Committed in `485ac85614`. Two live catches: the original `*.xls*`
+pattern also matched `.xls.extracted.md` sidecars (split into explicit
+`.xls`/`.xlsx` rules), and upstream requires the
+`VAULTSPEC_RAG_PREPROCESS_ENABLED=1` opt-in before rules take effect.
 
 ## Notes
 
