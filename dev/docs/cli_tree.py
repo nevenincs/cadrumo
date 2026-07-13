@@ -1,13 +1,12 @@
 """``cli-tree.json`` help-projection generator for the ``aeat`` command tree.
 
 This is the build-time projection consumed by the ``cli-sequence`` frontend
-widget (ADR ``2026-07-13-docs-cli-sequences-adr`` ruling D5): a gitignored
+widget: a gitignored
 ``cli-tree.json`` help catalogue keyed by command path, fetched once per page
 so hovering or focusing a tokenised verb opens a popover carrying that path's
 live ``--help``. The projection is regenerated on every build and never
-committed — the Pagefind commit-boundary discipline the docs-cli-buildtime ADR
-established for the RST reference (``dev/docs/cli_reference.py``) extended to a
-JSON help asset.
+committed — the same Pagefind commit-boundary discipline that governs the
+RST reference (``dev/docs/cli_reference.py``) extended to a JSON help asset.
 
 The generator reuses the reference machinery verbatim: the English-pinned
 subprocess environment, the lazy-subtree materialisation, the fallback-surface
@@ -87,7 +86,7 @@ __all__ = [
 #: Relative path, from the documentation root, of the emitted projection. It
 #: lands under ``_static`` so Sphinx copies it into the built site's
 #: ``_static/`` directory, making it a same-origin fetch for the widget (no
-#: external request — ADR D5). The file itself is gitignored.
+#: external request). The file itself is gitignored.
 CLI_TREE_STATIC_RELPATH = Path("_static") / "cli-tree.json"
 
 
@@ -401,7 +400,7 @@ def write_cli_tree(output_path: Path, *, in_subprocess: bool = True) -> CliTree:
 
 
 # ---------------------------------------------------------------------------
-# Consumer lookup surface (P07 tokeniser / W04 widget gate)
+# Consumer lookup surface (tokeniser / widget gate)
 # ---------------------------------------------------------------------------
 
 

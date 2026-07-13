@@ -1,8 +1,9 @@
-"""Corpus coverage report for the committed terminology relevance mapping (ADR D2).
+"""Corpus coverage report for the committed terminology relevance mapping.
 
-ADR D2 ("measure, then widen, the query vocabulary") asks a single question of
-the shipped relevance mapping: of every target a build-time sweep *could*
-resolve to, which ones have NO inbound entry in the committed mapping? Those
+This report answers a single question -- "measure, then widen, the query
+vocabulary" -- of the shipped relevance mapping: of every target a build-time
+sweep *could* resolve to, which ones have NO inbound entry in the committed
+mapping? Those
 uncovered targets are the widening backlog -- the casilla labels, legal
 provisions, concept cards, and CLI surfaces a reader can reach in the product
 but which no swept query term yet points at.
@@ -110,7 +111,7 @@ class KindCoverage(BaseModel):
 
 
 class CoverageReport(BaseModel):
-    """Corpus coverage of the committed relevance mapping (ADR D2).
+    """Corpus coverage of the committed relevance mapping.
 
     ``kinds`` carries one :class:`KindCoverage` per surface in the canonical
     :class:`CoverageKind` order. ``orphan_mapping_target_ids`` are the record
@@ -177,7 +178,7 @@ def compute_coverage_report(
     legal_ids: tuple[str, ...] | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> CoverageReport:
-    """Compute the corpus coverage report (ADR D2).
+    """Compute the corpus coverage report.
 
     Materialises the four derivable target surfaces (approved concept cards,
     casilla projections, CLI command + option records, legal provisions),
@@ -212,9 +213,13 @@ def compute_coverage_report(
     resolved_authority = authority if authority is not None else bundled_authority()
     resolved_relevance = relevance if relevance is not None else load_committed_relevance()
     resolved_cards = concept_cards if concept_cards is not None else project_concept_cards()[0]
-    resolved_casillas = casilla_records if casilla_records is not None else project_casilla_search_records(
-        resolved_authority,
-    )[0]
+    resolved_casillas = (
+        casilla_records
+        if casilla_records is not None
+        else project_casilla_search_records(
+            resolved_authority,
+        )[0]
+    )
     resolved_legal = legal_ids if legal_ids is not None else legal_provision_ids(resolved_authority)
     if cli_command_records is None or cli_option_records is None:
         commands, options, _ = project_cli_search_records()

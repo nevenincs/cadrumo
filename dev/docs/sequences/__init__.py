@@ -3,18 +3,18 @@
 This package is the one hermetic engine behind the ``cli-sequence`` MyST
 directive: it parses a directive body into typed frames, executes each frame in a
 per-sequence sandbox, compares the result against a committed golden, and drives
-the refresh / check CLI. It lives under ``dev/docs`` (docs tooling per the
-tooling-separation ADR) and imports the production ``cadrumo`` package from
-outside.
+the refresh / check CLI. It lives under ``dev/docs`` (dev-only docs tooling,
+kept separate from the shipped product) and imports the production ``cadrumo``
+package from outside.
 
-This module exposes the frame-grammar parser (ADR rulings D1 / D4), the
-``:seed:`` recipe loader (ADR D6), the per-sequence hermetic sandbox runner
-with ``@capture`` threading (ADR D6 / D3), the committed golden store (ADR D2),
-the golden comparison plus ``@expect`` evaluation tier (ADR D3 / D4), the
-discovery/refresh/check engine functions behind ``python -m dev.docs.sequences``
-— the one execution path the Sphinx build hook and the pytest gate both wire —
-the build-time command-line tokeniser (ADR D5), and the static live-AEAT
-enrollment refusal (``refuse_live_frames`` / ``live_aeat_tokens``, ADR D6/D7).
+This module exposes the frame-grammar parser, the ``:seed:`` recipe loader,
+the per-sequence hermetic sandbox runner with ``@capture`` threading, the
+committed golden store, the golden comparison plus ``@expect`` evaluation
+tier, the discovery/refresh/check engine functions behind
+``python -m dev.docs.sequences`` — the one execution path the Sphinx build
+hook and the pytest gate both wire — the build-time command-line tokeniser,
+and the static live-AEAT enrollment refusal (``refuse_live_frames`` /
+``live_aeat_tokens``).
 """
 
 from __future__ import annotations

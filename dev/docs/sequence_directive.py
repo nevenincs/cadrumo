@@ -1,4 +1,4 @@
-"""The ``cli-sequence`` MyST directive: server-rendered frames plus one inline payload (ADR D5).
+"""The ``cli-sequence`` MyST directive: server-rendered frames plus one inline payload.
 
 An author writes a backtick-fenced ``{cli-sequence}`` directive; at build time
 this directive parses the body into typed frames, reads the sequence's committed
@@ -12,8 +12,8 @@ emits, in document order:
   carrying the same frames and per-token command-path keys.
 
 Both surfaces are rendered from ONE computed payload, so the JSON a widget reads
-cannot drift from the visible frames (ADR D5). The frontend widget (a later wave)
-only toggles visibility and adds controls; it never injects content. A missing or
+cannot drift from the visible frames. The frontend widget (not yet built) only
+toggles visibility and adds controls; it never injects content. A missing or
 stale golden is an instructive build error naming the exact ``refresh`` command.
 
 This module lives outside the ``dev/docs/sequences`` engine package and imports
@@ -58,7 +58,7 @@ def _literal_text(value: object) -> str:
 
 
 def _expect_narration(json_path: str, expected: object) -> str:
-    """Render one ``@expect`` as a singular imperative verification check (ADR D4)."""
+    """Render one ``@expect`` as a singular imperative verification check."""
     if json_path == _EXIT_CODE_PATH:
         return f"Confirm the command exits with status {_literal_text(expected)}."
     return f"Confirm {json_path} reads {_literal_text(expected)}."
@@ -204,7 +204,7 @@ def _render_frame_html(frame: dict[str, Any], verify: str) -> str:
 
 
 def render_sequence_html(payload: dict[str, Any]) -> str:
-    """Render the full server-side sequence HTML from its payload (ADR D5).
+    """Render the full server-side sequence HTML from its payload.
 
     The static frames and the inline ``application/json`` payload are both
     produced from ``payload``, so the two content sources cannot drift; a widget
@@ -225,7 +225,7 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
 
 
 class CliSequenceDirective(Directive):
-    """The backtick-fenced ``{cli-sequence}`` MyST directive (ADR D1 / D5).
+    """The backtick-fenced ``{cli-sequence}`` MyST directive.
 
     Argument: the unique sequence id. Options: the required ``:verify:`` singular
     imperative sentence and the optional ``:seed:`` recipe name. Body: the frame
@@ -272,8 +272,8 @@ class CliSequenceDirective(Directive):
             sequence = parse_sequence(sequence_id=sequence_id, options=options, body=body, seeds_root=seeds_root)
             # Statically refuse an enrolled sequence that reads live AEAT (a pull
             # verb or the app-live group): it is unenrollable at build time, not
-            # only at execution (ADR D6/D7), so the author gets a clear error
-            # here rather than an opaque missing-golden failure.
+            # only at execution, so the author gets a clear error here rather
+            # than an opaque missing-golden failure.
             refuse_live_frames(sequence)
             golden = read_golden(page, sequence_id, goldens_root=goldens_root)
             payload = build_sequence_payload(sequence, golden)

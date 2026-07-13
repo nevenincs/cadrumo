@@ -1,4 +1,4 @@
-"""Golden comparison and semantic expectation evaluation (ADR D3).
+"""Golden comparison and semantic expectation evaluation.
 
 One comparison policy per frame kind, applied to an executed
 :class:`~dev.docs.sequences._runner.SequenceTranscript` against its committed
@@ -10,8 +10,8 @@ One comparison policy per frame kind, applied to an executed
   reporting the post-mask ``differing_paths`` on failure. This module exposes
   NO mask parameter and never overrides ``mask_document``'s central default:
   the executor never declares its own mask set and a sequence cannot carry a
-  per-sequence mask extension (the one dishonesty lever the substrate ADR
-  names). Both properties are pinned — a signature gate and an AST gate over
+  per-sequence mask extension (the one dishonesty lever the substrate would
+  otherwise allow). Both properties are pinned — a signature gate and an AST gate over
   this module's ``mask_document`` calls in ``tests/test_compare.py``, plus the
   executor-level double-run proof in ``dev/docs/tests/test_sequence_goldens.py``
   — so a newly nondeterministic field is enrolled in the one central set with
@@ -26,7 +26,7 @@ One comparison policy per frame kind, applied to an executed
 ``@expect`` assertions are evaluated against the LIVE output
 (:func:`evaluate_expectations`), never against the golden: golden equality
 proves the output is reproducible; the ``@expect`` proves it *means* success,
-so a sequence cannot "verify" by merely reproducing a failure (ADR D4).
+so a sequence cannot "verify" by merely reproducing a failure.
 
 Every problem string names the page, the sequence id, the frame index, and the
 frame's argv; :func:`assert_transcript_matches_golden` closes with the exact
@@ -57,7 +57,7 @@ __all__ = [
     "evaluate_expectations",
 ]
 
-#: The ``@expect`` pseudo-path asserting a frame's process exit code (ADR D3).
+#: The ``@expect`` pseudo-path asserting a frame's process exit code.
 _EXIT_CODE_PATH: str = "exit_code"
 
 
@@ -84,7 +84,7 @@ def compare_transcript_to_golden(
     *,
     page: str,
 ) -> tuple[str, ...]:
-    """Compare an executed transcript against its committed golden (ADR D3).
+    """Compare an executed transcript against its committed golden.
 
     Accumulating: every frame divergence is collected in one pass so a check
     run reports the whole worklist. An empty tuple is a clean pass.
