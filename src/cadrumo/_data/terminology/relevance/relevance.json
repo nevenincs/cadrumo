@@ -379,7 +379,7 @@
           "target": "api/cadrumo.domain.modelos._work_unit.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.460133
+          "ranking_weight": 0.460132
         },
         {
           "record_id": "legal:orden-hac-265-2024:art-3",
@@ -459,7 +459,7 @@
           "target": "api/cadrumo.application.review._adapters.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.415621
+          "ranking_weight": 0.415622
         },
         {
           "record_id": "code:cadrumo.domain.submission._engine",
@@ -497,7 +497,7 @@
           "target": "_generated/glossary.html#term-presentado",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.876716
+          "ranking_weight": 0.876717
         },
         {
           "record_id": "legal:ley-58-2003:art-27.2",
@@ -518,7 +518,7 @@
           "target": "api/cadrumo.domain.submission._protocols.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.384322
+          "ranking_weight": 0.384321
         }
       ],
       "dropped_count": 15,
@@ -552,7 +552,7 @@
           "target": "_generated/glossary.html#term-casilla",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.811289
+          "ranking_weight": 0.811288
         },
         {
           "record_id": "code:cadrumo.entrypoints.cli._modelo_discovery_cli",
@@ -809,7 +809,7 @@
           "target": "api/cadrumo.application.user_profile._censo_errors.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.375644
+          "ranking_weight": 0.375643
         }
       ],
       "dropped_count": 4,
@@ -864,14 +864,14 @@
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.482119
+          "ranking_weight": 0.482118
         },
         {
           "record_id": "legal:orden-hac-56-2024:art-1",
           "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.482119
+          "ranking_weight": 0.482118
         },
         {
           "record_id": "legal:rdl-2-2004:art-90",
@@ -954,13 +954,6 @@
           "ranking_weight": 0.42196
         },
         {
-          "record_id": "legal:rd-1624-1992:art-80",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a80",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.414122
-        },
-        {
           "record_id": "code:cadrumo.adapters.outbound.aeat.sede._declarations",
           "target": "api/cadrumo.adapters.outbound.aeat.sede._declarations.html",
           "kind": "page",
@@ -986,7 +979,7 @@
           "target": "api/cadrumo.application.verification._verify.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.391449
+          "ranking_weight": 0.391448
         },
         {
           "record_id": "legal:ley-37-1992:art-9",
@@ -1003,7 +996,7 @@
           "ranking_weight": 0.375712
         }
       ],
-      "dropped_count": 2,
+      "dropped_count": 3,
       "collapsed_count": 4,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1146,7 +1139,7 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.8731
+          "ranking_weight": 0.873099
         },
         {
           "record_id": "legal:orden-hac-265-2024:art-3",
@@ -1167,7 +1160,7 @@
           "target": "api/cadrumo.adapters.outbound.aeat.sede._declarations.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.413577
+          "ranking_weight": 0.413576
         },
         {
           "record_id": "code:cadrumo.application.live._filed_observation_persistence",
@@ -1281,7 +1274,7 @@
           "target": "api/cadrumo.adapters.outbound.aeat.sede._parse.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.433899
+          "ranking_weight": 0.4339
         },
         {
           "record_id": "code:cadrumo.adapters.outbound.aeat.sede._schema",
@@ -1309,7 +1302,7 @@
           "target": "api/cadrumo.application.live._justificante.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.378412
+          "ranking_weight": 0.378413
         }
       ],
       "dropped_count": 12,
@@ -1683,7 +1676,7 @@
           "target": "_generated/glossary.html#term-IVA",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.971843
+          "ranking_weight": 0.971844
         },
         {
           "record_id": "legal:ley-37-1992:art-1",
@@ -1897,6 +1890,13 @@
           "ranking_weight": 0.969356
         },
         {
+          "record_id": "concept:modelo-131",
+          "target": "_generated/glossary.html#term-modelo-131",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.838489
+        },
+        {
           "record_id": "casilla-record:a4ae8b87e8e2ed0721c248d0",
           "target": "search.html?q=131+01",
           "kind": "casilla",
@@ -1923,13 +1923,6 @@
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.387087
-        },
-        {
-          "record_id": "legal:orden-hac-1347-2024:art-4",
-          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.380377
         }
       ],
       "dropped_count": 10,
@@ -2242,7 +2235,7 @@
           "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739#a1",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.474992
+          "ranking_weight": 0.474993
         }
       ],
       "dropped_count": 1,
@@ -2287,7 +2280,7 @@
           "target": "api/cadrumo.entrypoints.cli._ledger.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.406281
+          "ranking_weight": 0.40628
         },
         {
           "record_id": "code:cadrumo.adapters.persistence.profile.inventory",
@@ -2308,7 +2301,7 @@
           "target": "api/cadrumo.entrypoints.cli._ledger_lifecycle_cli.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.383343
+          "ranking_weight": 0.383344
         }
       ],
       "dropped_count": 9,
@@ -2402,7 +2395,7 @@
           "target": "api/cadrumo.domain.modelos.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.40989
+          "ranking_weight": 0.409889
         },
         {
           "record_id": "code:cadrumo.application.modelo._calculate_input",
@@ -2432,6 +2425,89 @@
       "dropped_count": 19,
       "collapsed_count": 0,
       "dominant_cluster": "concept:domain:concepto"
+    },
+    {
+      "query": "declaracion censal",
+      "concept_id": "modelo-036",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-036",
+          "target": "_generated/glossary.html#term-modelo-036",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987849
+        },
+        {
+          "record_id": "concept:modelo",
+          "target": "_generated/glossary.html#term-modelo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.978856
+        },
+        {
+          "record_id": "legal:orden-eha-1274-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495385
+        },
+        {
+          "record_id": "legal:orden-eha-1274-2007:art-2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491563
+        },
+        {
+          "record_id": "legal:orden-hfp-1397-2023:art-quinto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632#a5",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.480058
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 036",
+      "concept_id": "modelo-036",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-036",
+          "target": "_generated/glossary.html#term-modelo-036",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.98795
+        },
+        {
+          "record_id": "legal:orden-eha-1274-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499141
+        },
+        {
+          "record_id": "legal:orden-eha-672-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498876
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.490806
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "declaracion de la renta",
@@ -2478,7 +2554,7 @@
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
           "kind": "page",
           "surface": "legal",
-          "ranking_weight": 0.450586
+          "ranking_weight": 0.450587
         },
         {
           "record_id": "legal:orden-hac-242-2025:art-3",
@@ -2544,7 +2620,7 @@
           "target": "_generated/glossary.html#term-modelo-100",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.976501
+          "ranking_weight": 0.9765
         },
         {
           "record_id": "legal:ley-35-2006:art-85",
@@ -2578,6 +2654,339 @@
       "dropped_count": 14,
       "collapsed_count": 0,
       "dominant_cluster": "codebase:src/cadrumo"
+    },
+    {
+      "query": "modelo 111",
+      "concept_id": "modelo-111",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-111",
+          "target": "_generated/glossary.html#term-modelo-111",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-eha-586-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-4948#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499311
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.498368
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.492834
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._retenciones",
+          "target": "api/cadrumo.application.aggregation._retenciones.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.479196
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "retenciones del trabajo",
+      "concept_id": "modelo-111",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-111",
+          "target": "_generated/glossary.html#term-modelo-111",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.988993
+        },
+        {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.924377
+        },
+        {
+          "record_id": "legal:rd-439-2007:art-80",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a80",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493949
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.489192
+        },
+        {
+          "record_id": "legal:resolucion-dgt-2011-01-03-modelo-145:aprobacion",
+          "target": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.473877
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-101",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a101",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.472693
+        },
+        {
+          "record_id": "legal:resolucion-dgt-2013-12-17-modelo-145:amendment",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.470196
+        },
+        {
+          "record_id": "legal:resolucion-dgt-2014-12-18-modelo-145:amendment",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.470196
+        },
+        {
+          "record_id": "legal:rd-439-2007:art-75",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a75",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.466192
+        },
+        {
+          "record_id": "legal:rd-439-2007:art-86",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a86",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.464881
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.462719
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 5,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 115",
+      "concept_id": "modelo-115",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.950785
+        },
+        {
+          "record_id": "concept:modelo-115",
+          "target": "_generated/glossary.html#term-modelo-115",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.917277
+        },
+        {
+          "record_id": "legal:orden-2000-11-20:apartado-primero",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2000-21430",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491359
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.490111
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._modelo_bindings",
+          "target": "api/cadrumo.application.aggregation._modelo_bindings.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.477759
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "retenciones de alquiler",
+      "concept_id": "modelo-115",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-115",
+          "target": "_generated/glossary.html#term-modelo-115",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.981832
+        },
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.95087
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.487279
+        },
+        {
+          "record_id": "legal:rd-439-2007:art-100",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486661
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.445852
+        },
+        {
+          "record_id": "code:cadrumo.domain.deadlines._models",
+          "target": "api/cadrumo.domain.deadlines._models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.403766
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 4,
+      "dominant_cluster": "concept:domain:modelo"
+    },
+    {
+      "query": "modelo 123",
+      "concept_id": "modelo-123",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-123",
+          "target": "_generated/glossary.html#term-modelo-123",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "concept:modelo-193",
+          "target": "_generated/glossary.html#term-modelo-193",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.934625
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495536
+        },
+        {
+          "record_id": "legal:orden-eha-3435-2007:anexo-i",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.472828
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.460869
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "retenciones sobre intereses y dividendos",
+      "concept_id": "modelo-123",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-123",
+          "target": "_generated/glossary.html#term-modelo-123",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.988176
+        },
+        {
+          "record_id": "legal:orden-hac-56-2024:art-1",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493505
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._retenciones",
+          "target": "api/cadrumo.application.aggregation._retenciones.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.458592
+        },
+        {
+          "record_id": "legal:orden-eha-3316-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.45668
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.436151
+        },
+        {
+          "record_id": "legal:orden-hfp-1284-2023:art-7",
+          "target": "https://www.boe.es/eli/es/o/2023/11/28/hfp1284",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.436151
+        },
+        {
+          "record_id": "legal:orden-hfp-1308-2017:art-sexto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-15845#a6",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.436151
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "modelo 130",
@@ -2686,8 +3095,951 @@
           "ranking_weight": 0.498068
         }
       ],
-      "dropped_count": 4,
+      "dropped_count": 3,
+      "collapsed_count": 9,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 131",
+      "concept_id": "modelo-131",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-131",
+          "target": "_generated/glossary.html#term-modelo-131",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.969457
+        },
+        {
+          "record_id": "legal:orden-eha-672-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498939
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486653
+        }
+      ],
+      "dropped_count": 17,
+      "collapsed_count": 0,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "pago fraccionado por modulos",
+      "concept_id": "modelo-131",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-131",
+          "target": "_generated/glossary.html#term-modelo-131",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.975648
+        },
+        {
+          "record_id": "casilla-record:aedb2c69ba29b91d942a66f0",
+          "target": "search.html?q=200+00001",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.668354
+        },
+        {
+          "record_id": "casilla-record:1995d8a986c98402acafcf9a",
+          "target": "search.html?q=202+01",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.655572
+        },
+        {
+          "record_id": "casilla-record:a4ae8b87e8e2ed0721c248d0",
+          "target": "search.html?q=131+01",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.654789
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.488923
+        },
+        {
+          "record_id": "code:cadrumo.domain.deadlines._models",
+          "target": "api/cadrumo.domain.deadlines._models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.478
+        },
+        {
+          "record_id": "code:cadrumo.application.calculations._cross_period_clean_state",
+          "target": "api/cadrumo.application.calculations._cross_period_clean_state.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.470847
+        }
+      ],
+      "dropped_count": 5,
       "collapsed_count": 8,
+      "dominant_cluster": "codebase:src/cadrumo"
+    },
+    {
+      "query": "modelo 180",
+      "concept_id": "modelo-180",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.919812
+        },
+        {
+          "record_id": "legal:orden-eha-3514-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.470865
+        },
+        {
+          "record_id": "legal:orden-eha-3481-2008:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.461253
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "resumen anual de alquileres",
+      "concept_id": "modelo-180",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.984693
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.470537
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.443827
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 2,
+      "dominant_cluster": "concept:domain:modelo"
+    },
+    {
+      "query": "atribucion de rentas",
+      "concept_id": "modelo-184",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-184",
+          "target": "_generated/glossary.html#term-modelo-184",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.973835
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498347
+        },
+        {
+          "record_id": "legal:orden-hap-2250-2015:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.484813
+        },
+        {
+          "record_id": "legal:rd-1007-2023",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.484506
+        },
+        {
+          "record_id": "code:cadrumo.domain.renta._substrate",
+          "target": "api/cadrumo.domain.renta._substrate.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.479086
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.472014
+        },
+        {
+          "record_id": "legal:orden-hac-1155-2020:art-4",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-15599",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.466219
+        },
+        {
+          "record_id": "legal:orden-hac-1347-2024:art-4",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.461524
+        }
+      ],
+      "dropped_count": 3,
+      "collapsed_count": 9,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 184",
+      "concept_id": "modelo-184",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-184",
+          "target": "_generated/glossary.html#term-modelo-184",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-hap-2250-2015:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499355
+        },
+        {
+          "record_id": "legal:orden-hap-2250-2015:art-5",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a5",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49761
+        },
+        {
+          "record_id": "legal:orden-hap-2250-2015:art-2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11596#a2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497599
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.497243
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 190",
+      "concept_id": "modelo-190",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49625
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.492564
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "resumen anual de retenciones",
+      "concept_id": "modelo-190",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.995715
+        },
+        {
+          "record_id": "concept:modelo-193",
+          "target": "_generated/glossary.html#term-modelo-193",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.99322
+        },
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987874
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497663
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49725
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.495821
+        },
+        {
+          "record_id": "legal:orden-eha-672-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49506
+        },
+        {
+          "record_id": "legal:orden-hac-1431-2025:art-2",
+          "target": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.489538
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488798
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 7,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 193",
+      "concept_id": "modelo-193",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-193",
+          "target": "_generated/glossary.html#term-modelo-193",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498859
+        },
+        {
+          "record_id": "legal:orden-eha-3127-2009:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495427
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491214
+        },
+        {
+          "record_id": "legal:orden-hac-1276-2019:art-quinto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a5",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.484165
+        }
+      ],
+      "dropped_count": 12,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "resumen anual del capital mobiliario",
+      "concept_id": "modelo-193",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-193",
+          "target": "_generated/glossary.html#term-modelo-193",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.99612
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.492844
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488507
+        },
+        {
+          "record_id": "legal:orden-hfp-1822-2016:art-sexto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11251#a6",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486042
+        },
+        {
+          "record_id": "legal:orden-hfp-1284-2023:art-7",
+          "target": "https://www.boe.es/eli/es/o/2023/11/28/hfp1284",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.48411
+        },
+        {
+          "record_id": "legal:orden-hac-1276-2019:art-quinto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a5",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.481794
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-85",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.478386
+        },
+        {
+          "record_id": "legal:orden-hfp-1308-2017:art-sexto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-15845#a6",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.477976
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "impuesto sobre sociedades",
+      "concept_id": "modelo-200",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-200",
+          "target": "_generated/glossary.html#term-modelo-200",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-hac-1276-2020:art-sexto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-17271#a6",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499124
+        },
+        {
+          "record_id": "legal:orden-hfp-1978-2016:art-1",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-12484",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498074
+        },
+        {
+          "record_id": "legal:ley-31-2022:art-39",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a39",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495752
+        },
+        {
+          "record_id": "legal:orden-hfp-823-2022:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495746
+        },
+        {
+          "record_id": "legal:ley-44-2015:art-13",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a13",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495311
+        },
+        {
+          "record_id": "legal:orden-hac-941-2018:art-primero-5-anexo-i",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493727
+        },
+        {
+          "record_id": "legal:orden-hfp-227-2017:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493727
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.492971
+        },
+        {
+          "record_id": "legal:orden-hfp-816-2017:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491865
+        },
+        {
+          "record_id": "legal:orden-eha-3435-2007:anexo-i",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.490684
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.487982
+        }
+      ],
+      "dropped_count": 3,
+      "collapsed_count": 6,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 200",
+      "concept_id": "modelo-200",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-200",
+          "target": "_generated/glossary.html#term-modelo-200",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modelo 202",
+      "concept_id": "modelo-202",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-202",
+          "target": "_generated/glossary.html#term-modelo-202",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.982457
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.498078
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability_modelo202",
+          "target": "api/cadrumo.domain.calculations.registry._applicability_modelo202.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.48971
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._calculate_input",
+          "target": "api/cadrumo.application.modelo._calculate_input.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.482969
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 2,
+      "dominant_cluster": "codebase:src/cadrumo"
+    },
+    {
+      "query": "pago fraccionado de sociedades",
+      "concept_id": "modelo-202",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-202",
+          "target": "_generated/glossary.html#term-modelo-202",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.9968
+        },
+        {
+          "record_id": "legal:orden-hfp-227-2017:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497886
+        },
+        {
+          "record_id": "legal:orden-hfp-312-2023:art-unico-1-anexo-i",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497055
+        },
+        {
+          "record_id": "legal:orden-hac-262-2025:art-unico-1-anexo-i",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496769
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496267
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.495901
+        },
+        {
+          "record_id": "legal:orden-hac-941-2018:art-primero-5-anexo-i",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495649
+        }
+      ],
+      "dropped_count": 5,
+      "collapsed_count": 8,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "impuesto de no residentes",
+      "concept_id": "modelo-210",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-210",
+          "target": "_generated/glossary.html#term-modelo-210",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:rd-439-2007:art-113",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a113",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496376
+        },
+        {
+          "record_id": "legal:orden-eha-3316-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49494
+        },
+        {
+          "record_id": "legal:orden-eha-3377-2011:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49481
+        },
+        {
+          "record_id": "legal:ley-35-2006:art-93",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a93",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493603
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493152
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49275
+        },
+        {
+          "record_id": "legal:orden-hac-1417-2018:art-sexto",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-17997#a6",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491813
+        },
+        {
+          "record_id": "legal:orden-hap-70-2013:art-5",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a5",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491808
+        },
+        {
+          "record_id": "legal:orden-hap-1695-2016:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491602
+        },
+        {
+          "record_id": "legal:orden-hfp-227-2017:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491266
+        },
+        {
+          "record_id": "legal:orden-hac-56-2024:art-1",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491117
+        },
+        {
+          "record_id": "legal:orden-hfp-1284-2023:art-7",
+          "target": "https://www.boe.es/eli/es/o/2023/11/28/hfp1284",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.489302
+        }
+      ],
+      "dropped_count": 5,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 210",
+      "concept_id": "modelo-210",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-210",
+          "target": "_generated/glossary.html#term-modelo-210",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.922013
+        },
+        {
+          "record_id": "casilla-record:7dfe7c5ec04764d7ba80ae48",
+          "target": "search.html?q=210+base_imponible",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.662066
+        },
+        {
+          "record_id": "legal:trlirnr-rdleg-5-2004:art-2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493661
+        },
+        {
+          "record_id": "legal:orden-eha-3316-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.487746
+        },
+        {
+          "record_id": "legal:orden-hac-56-2024:art-1",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.482142
+        }
+      ],
+      "dropped_count": 10,
+      "collapsed_count": 5,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 232",
+      "concept_id": "modelo-232",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-232",
+          "target": "_generated/glossary.html#term-modelo-232",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.97901
+        },
+        {
+          "record_id": "legal:orden-hfp-816-2017:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.491886
+        }
+      ],
+      "dropped_count": 18,
+      "collapsed_count": 0,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "operaciones vinculadas",
+      "concept_id": "modelo-232",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-232",
+          "target": "_generated/glossary.html#term-modelo-232",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.946239
+        },
+        {
+          "record_id": "casilla-record:63fdcae30303994c56a8c5aa",
+          "target": "search.html?q=232+decl.cnae",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.684252
+        },
+        {
+          "record_id": "casilla-record:aedb2c69ba29b91d942a66f0",
+          "target": "search.html?q=200+00001",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.665202
+        },
+        {
+          "record_id": "legal:ley-27-2014:art-18",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a18",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498525
+        },
+        {
+          "record_id": "legal:ley-35-2006:dt-32",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497415
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.494727
+        },
+        {
+          "record_id": "legal:orden-hfp-816-2017:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488446
+        },
+        {
+          "record_id": "legal:orden-hfp-816-2017:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.487511
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.484095
+        },
+        {
+          "record_id": "legal:orden-hfp-816-2017:art-2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.475911
+        },
+        {
+          "record_id": "code:cadrumo.domain.modelos._row_models",
+          "target": "api/cadrumo.domain.modelos._row_models.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.475608
+        }
+      ],
+      "dropped_count": 3,
+      "collapsed_count": 6,
       "dominant_cluster": "legal:src/cadrumo"
     },
     {
@@ -2701,6 +4053,27 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.992267
+        },
+        {
+          "record_id": "concept:modelo-369",
+          "target": "_generated/glossary.html#term-modelo-369",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.985799
+        },
+        {
+          "record_id": "concept:modelo-322",
+          "target": "_generated/glossary.html#term-modelo-322",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.979856
+        },
+        {
+          "record_id": "concept:modelo-353",
+          "target": "_generated/glossary.html#term-modelo-353",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.978479
         },
         {
           "record_id": "legal:ley-37-1992:art-9",
@@ -2722,18 +4095,11 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.486172
-        },
-        {
-          "record_id": "legal:orden-eha-789-2010:art-1",
-          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
-          "kind": "page",
-          "surface": "legal",
-          "ranking_weight": 0.486149
         }
       ],
-      "dropped_count": 14,
-      "collapsed_count": 1,
-      "dominant_cluster": "legal:src/cadrumo"
+      "dropped_count": 13,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 303",
@@ -2771,6 +4137,602 @@
       ],
       "dropped_count": 16,
       "collapsed_count": 0,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "IVA no periodico",
+      "concept_id": "modelo-309",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-309",
+          "target": "_generated/glossary.html#term-modelo-309",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987691
+        },
+        {
+          "record_id": "casilla-record:a6efe73caa1143d25aee76ac",
+          "target": "search.html?q=309+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.607944
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.426731
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.421663
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.403299
+        }
+      ],
+      "dropped_count": 14,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 309",
+      "concept_id": "modelo-309",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-309",
+          "target": "_generated/glossary.html#term-modelo-309",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-hac-3625-2003:apartado-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498911
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495883
+        },
+        {
+          "record_id": "legal:orden-hfp-312-2023:art-unico-1-anexo-i",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495541
+        },
+        {
+          "record_id": "legal:orden-hac-174-2020:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.487323
+        },
+        {
+          "record_id": "legal:orden-hac-3625-2003:apartado-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.484347
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 2,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "IVA de grupo individual",
+      "concept_id": "modelo-322",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-322",
+          "target": "_generated/glossary.html#term-modelo-322",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987132
+        },
+        {
+          "record_id": "concept:modelo-353",
+          "target": "_generated/glossary.html#term-modelo-353",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.780527
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.486146
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.479368
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 3,
+      "dominant_cluster": "concept:domain:modelo"
+    },
+    {
+      "query": "modelo 322",
+      "concept_id": "modelo-322",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-322",
+          "target": "_generated/glossary.html#term-modelo-322",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-eha-3434-2007:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496643
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.494824
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49369
+        },
+        {
+          "record_id": "legal:orden-eha-3434-2007:art-8",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a8",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.489972
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 347",
+      "concept_id": "modelo-347",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-347",
+          "target": "_generated/glossary.html#term-modelo-347",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
+          "target": "search.html?q=347+contraparte.clave-operacion",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.688366
+        },
+        {
+          "record_id": "legal:orden-eha-3012-2008:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16973#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499372
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496783
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-31",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a31",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.48829
+        }
+      ],
+      "dropped_count": 12,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "operaciones con terceros",
+      "concept_id": "modelo-347",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-347",
+          "target": "_generated/glossary.html#term-modelo-347",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.974519
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-31",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a31",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.494611
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.492008
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.472772
+        },
+        {
+          "record_id": "legal:rd-596-2016",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11575",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.466627
+        },
+        {
+          "record_id": "legal:orden-hap-1732-2014:art-2",
+          "target": "https://www.boe.es/eli/es/o/2014/09/24/hap1732",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.462149
+        },
+        {
+          "record_id": "code:cadrumo.domain.portals._entries.portal_m347_operaciones_terceros",
+          "target": "api/cadrumo.domain.portals._entries.portal_m347_operaciones_terceros.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.461249
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._counterpart",
+          "target": "api/cadrumo.application.aggregation._counterpart.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.447606
+        },
+        {
+          "record_id": "legal:ley-58-2003:art-93",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a93",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.446504
+        }
+      ],
+      "dropped_count": 7,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 349",
+      "concept_id": "modelo-349",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-349",
+          "target": "_generated/glossary.html#term-modelo-349",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "legal:orden-hac-174-2020:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499531
+        },
+        {
+          "record_id": "legal:orden-eha-769-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499327
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.493164
+        },
+        {
+          "record_id": "code:cadrumo.application.modelo._m303_m349_reconcile",
+          "target": "api/cadrumo.application.modelo._m303_m349_reconcile.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.480702
+        }
+      ],
+      "dropped_count": 13,
+      "collapsed_count": 3,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "operaciones intracomunitarias",
+      "concept_id": "modelo-349",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-349",
+          "target": "_generated/glossary.html#term-modelo-349",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987161
+        },
+        {
+          "record_id": "legal:orden-eha-769-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496927
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496126
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-13",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a13",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.492707
+        },
+        {
+          "record_id": "legal:orden-hac-174-2020:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.487066
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486914
+        }
+      ],
+      "dropped_count": 4,
+      "collapsed_count": 10,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "IVA de grupo agregado",
+      "concept_id": "modelo-353",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-353",
+          "target": "_generated/glossary.html#term-modelo-353",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.996354
+        },
+        {
+          "record_id": "casilla-record:4b687453ab294521439c3ac5",
+          "target": "search.html?q=353+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.632524
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.489925
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.478858
+        }
+      ],
+      "dropped_count": 12,
+      "collapsed_count": 4,
+      "dominant_cluster": "concept:domain:modelo"
+    },
+    {
+      "query": "modelo 353",
+      "concept_id": "modelo-353",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-353",
+          "target": "_generated/glossary.html#term-modelo-353",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 1.0
+        },
+        {
+          "record_id": "casilla-record:4b687453ab294521439c3ac5",
+          "target": "search.html?q=353+decl.ejercicio",
+          "kind": "casilla",
+          "surface": "casilla",
+          "ranking_weight": 0.692046
+        },
+        {
+          "record_id": "legal:orden-eha-3434-2007:art-2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498917
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.495515
+        },
+        {
+          "record_id": "legal:orden-eha-3434-2007:art-8",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a8",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488082
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.486859
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 0,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 369",
+      "concept_id": "modelo-369",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-369",
+          "target": "_generated/glossary.html#term-modelo-369",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.964123
+        },
+        {
+          "record_id": "legal:orden-hac-610-2021:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496612
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.496071
+        },
+        {
+          "record_id": "legal:orden-hac-610-2021:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.495925
+        }
+      ],
+      "dropped_count": 15,
+      "collapsed_count": 1,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "ventanilla unica",
+      "concept_id": "modelo-369",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-369",
+          "target": "_generated/glossary.html#term-modelo-369",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.930064
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.484665
+        },
+        {
+          "record_id": "legal:orden-hfp-207-2022:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.482091
+        },
+        {
+          "record_id": "legal:orden-hac-248-2021:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.482004
+        },
+        {
+          "record_id": "legal:orden-hac-242-2025:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.480425
+        },
+        {
+          "record_id": "legal:orden-hac-277-2026:art-3",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.480425
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.477508
+        },
+        {
+          "record_id": "legal:orden-hfp-310-2023:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.460489
+        },
+        {
+          "record_id": "legal:orden-hac-265-2024:art-3",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721#a3",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.453435
+        }
+      ],
+      "dropped_count": 3,
+      "collapsed_count": 8,
       "dominant_cluster": "legal:src/cadrumo"
     },
     {
@@ -2855,6 +4817,124 @@
       "dropped_count": 10,
       "collapsed_count": 3,
       "dominant_cluster": "codebase:src/cadrumo"
+    },
+    {
+      "query": "bienes en el extranjero",
+      "concept_id": "modelo-720",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-720",
+          "target": "_generated/glossary.html#term-modelo-720",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.971243
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.489588
+        },
+        {
+          "record_id": "legal:ley-58-2003:da-18",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#dadecimoctava",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.483718
+        },
+        {
+          "record_id": "legal:ley-7-2012:da-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2012-13416#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.48351
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-54-bis",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a54bis",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.483035
+        },
+        {
+          "record_id": "legal:orden-hfp-1180-2023:art-primero",
+          "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-22221#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.482798
+        },
+        {
+          "record_id": "legal:rd-1065-2007:art-42-ter",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a42ter",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.481032
+        }
+      ],
+      "dropped_count": 6,
+      "collapsed_count": 7,
+      "dominant_cluster": "legal:src/cadrumo"
+    },
+    {
+      "query": "modelo 720",
+      "concept_id": "modelo-720",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-720",
+          "target": "_generated/glossary.html#term-modelo-720",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.978586
+        },
+        {
+          "record_id": "legal:orden-hap-72-2013:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.499229
+        },
+        {
+          "record_id": "legal:orden-hap-72-2013:art-7",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954#a7",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497985
+        },
+        {
+          "record_id": "code:cadrumo.domain.calculations.registry._applicability",
+          "target": "api/cadrumo.domain.calculations.registry._applicability.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.497947
+        },
+        {
+          "record_id": "legal:orden-hap-72-2013:art-2",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954#a2",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.49772
+        },
+        {
+          "record_id": "code:cadrumo.application.aggregation._foreign_assets",
+          "target": "api/cadrumo.application.aggregation._foreign_assets.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.495677
+        },
+        {
+          "record_id": "legal:ley-7-2012:da-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2012-13416#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.488681
+        }
+      ],
+      "dropped_count": 9,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "CIF",
@@ -3231,7 +5311,7 @@
           "target": "api/cadrumo.application.aggregation._iva_ledger.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.385006
+          "ranking_weight": 0.385005
         }
       ],
       "dropped_count": 8,
@@ -3248,7 +5328,7 @@
           "target": "_generated/glossary.html#term-prorrata-especial",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.91587
+          "ranking_weight": 0.915871
         },
         {
           "record_id": "concept:prorrata",
@@ -3876,7 +5956,7 @@
           "target": "api/cadrumo.application.modelo._calculation_source_staging.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.375594
+          "ranking_weight": 0.375593
         }
       ],
       "dropped_count": 3,
@@ -3987,7 +6067,7 @@
           "target": "api/cadrumo.adapters.outbound.aeat.sede._schema.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.382032
+          "ranking_weight": 0.382031
         }
       ],
       "dropped_count": 13,
@@ -4073,7 +6153,7 @@
           "target": "_generated/glossary.html#term-VIES",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.976362
+          "ranking_weight": 0.976361
         },
         {
           "record_id": "code:cadrumo.domain.calculations.registry._groi_oracle",
@@ -4108,7 +6188,7 @@
           "target": "api/cadrumo.adapters.outbound.aeat.sede._nif_iva_check.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.382733
+          "ranking_weight": 0.382731
         },
         {
           "record_id": "code:cadrumo.domain.deadlines._models",
@@ -4123,9 +6203,9 @@
       "dominant_cluster": "codebase:src/cadrumo"
     }
   ],
-  "query_count": 72,
-  "concept_count": 29,
+  "query_count": 112,
+  "concept_count": 49,
   "failed_query_count": 0,
-  "reindex_note": "reindex queued/accepted: Codebase re-index job queued on service: f65c18d7a0064f709f9cfb445bf57f40\nCheck progress with: vaultspec-rag server jobs",
+  "reindex_note": "index refreshed before the sweep",
   "score_floor": 0.5
 }

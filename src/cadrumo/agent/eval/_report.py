@@ -1,6 +1,6 @@
 """The measurement report: what the live persona runs proved, in one artefact.
 
-ADR R7's deliverable to the operator: after a live measurement run, one typed
+The deliverable to the operator: after a live measurement run, one typed
 report (and its markdown rendering) states the harness's measured capability
 — scenarios run, passed, and failed per persona; the two hard invariants'
 observed counts (both MUST be zero); tool-error and narration-faithfulness
@@ -49,7 +49,7 @@ class MeasurementReport(BaseModel):
 
     @property
     def invariants_hold(self) -> bool:
-        """True when both ADR-R7 hard invariants were observed at zero."""
+        """True when both hard invariants were observed at zero."""
         return self.live_submit_attempts_total == 0 and self.handoff_faithfulness_blocks_total == 0
 
     @property

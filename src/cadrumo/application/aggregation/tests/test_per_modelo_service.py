@@ -757,7 +757,7 @@ def test_retenciones_collapse_dispatch_is_not_cross_wired() -> None:
 
 
 def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() -> None:
-    # The landed RET-1 perceptor-count result (distinct-NIF count on the annual summary
+    # The distinct-NIF perceptor-count result (on the annual summary
     # modelos 180/193) must be unchanged by the collapse. Two urban observations with
     # distinct NIFs must still count as two perceptors through the one shared path.
     observations = (

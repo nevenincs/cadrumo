@@ -265,7 +265,7 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
 ) -> None:
     """A catalogue transaction outside the requested ejercicio must surface as a summary.
 
-    Regression test (issue #408): the repository-backed entry point must NOT
+    Regression test: the repository-backed entry point must NOT
     silently drop out-of-window rows. The compact summary keeps the operator
     visibility signal without allocating one issue per plaintext index entry.
     """
