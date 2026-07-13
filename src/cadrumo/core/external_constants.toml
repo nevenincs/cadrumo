@@ -5,7 +5,7 @@
 ## here are externally-defined identifiers that may change with AEAT portal
 ## redesigns, OAuth-scope reorganisations, or LLM-vendor URL renames.
 ##
-## Loaded by `aeat.core.external_constants.load_external_constants`. Bound
+## Loaded by `cadrumo.core.external_constants.load_external_constants`. Bound
 ## to `Settings.external` via `Settings.external_constants()`.
 
 [aeat.domains]
