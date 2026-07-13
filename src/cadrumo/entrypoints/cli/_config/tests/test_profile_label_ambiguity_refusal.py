@@ -17,9 +17,6 @@ unhandled-traceback signature the fix eliminates).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 from click.testing import Result
 
@@ -28,26 +25,11 @@ from .....adapters.persistence.storage.bucket import (
     read_manifest,
     write_manifest,
 )
-from .....core.config import load_settings, override_settings
+from .....core.config import load_settings
 from .....tests.cli_runner import invoke_cached_cli
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            cadrumo_token_dir=tmp_path / "tokens",
-            cadrumo_runs_dir=tmp_path / "runs",
-            cadrumo_financial_txs_dir=tmp_path / "txs",
-            cadrumo_invoices_dir=tmp_path / "invoices",
-            cadrumo_drafts_dir=tmp_path / "drafts",
-        ),
-    ):
-        yield
 
 
 def _create_profile(name: str, tax_id: str) -> None:

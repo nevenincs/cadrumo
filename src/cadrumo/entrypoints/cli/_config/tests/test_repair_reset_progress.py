@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
@@ -15,27 +13,11 @@ from .....adapters.persistence.storage import (
 )
 from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....application.workflow import WorkflowState, workflow_state_repository
-from .....core.config import override_settings
 from .....domain.buckets import BucketEventType
 from .....tests.cli_runner import invoke_cached_cli
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            cadrumo_token_dir=tmp_path / "tokens",
-            cadrumo_runs_dir=tmp_path / "runs",
-            cadrumo_financial_txs_dir=tmp_path / "txs",
-            cadrumo_invoices_dir=tmp_path / "invoices",
-            cadrumo_drafts_dir=tmp_path / "drafts",
-        ),
-    ):
-        yield
 
 
 def _seed_workflow_state() -> None:
