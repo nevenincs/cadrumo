@@ -85,8 +85,8 @@ class RegistryValidator:
         # caller may supply it directly; when not supplied, derive from
         # source_root by navigating to the co-located tests/fixtures/justificantes
         # directory.  Production callers pass source_root=bundled_path() which
-        # resolves to src/aeat/_data, so parents[0] = src/aeat, and the corpus
-        # lives at src/aeat/tests/fixtures/justificantes.
+        # resolves to src/cadrumo/_data, so parents[0] = src/cadrumo, and the corpus
+        # lives at src/cadrumo/tests/fixtures/justificantes.
         if justificante_corpus_root is not None:
             self._justificante_corpus_root: Path | None = justificante_corpus_root
         elif source_root is not None:

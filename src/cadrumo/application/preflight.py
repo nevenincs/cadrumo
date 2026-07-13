@@ -1,4 +1,4 @@
-"""Workstation preflight health probes for ``aeat config check``.
+"""Workstation preflight health probes for ``cadrumo config check``.
 
 This module is the read-only doctor surface for the health dimensions that sit
 *beside* the external-dependency probes in :mod:`application.provisioning`:
@@ -18,7 +18,7 @@ classifies the configured DNI/NIE). The registry row reuses the same
 referential-integrity gate the registry runs at snapshot build
 (``check_all_id_references``) by driving
 :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
-over every bundled revision. ``aeat config check`` renders these rows through
+over every bundled revision. ``cadrumo config check`` renders these rows through
 :class:`~entrypoints.cli._config._check_payloads.CheckPreflightPayload`
 beside the capability posture and dependency probes.
 """
@@ -103,7 +103,7 @@ class HealthSeverity(StrEnum):
 class PreflightCheck(BaseModel):
     """One typed workstation-preflight health row.
 
-    ``check`` is the stable row id shown by ``aeat config check`` (e.g.
+    ``check`` is the stable row id shown by ``cadrumo config check`` (e.g.
     ``auth-provider:certificate``, ``storage:local-root``,
     ``corpus:normatives``, ``registry:referential-integrity``).
     ``healthy`` is the boolean verdict; ``severity`` grades it;
@@ -157,7 +157,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
                     healthy=False,
                     severity=HealthSeverity.ERROR,
                     detail=f"provider probe failed: {type(exc).__name__}: {exc}",
-                    remediation="review the provider configuration under `aeat config auth`",
+                    remediation="review the provider configuration under `cadrumo config auth`",
                 ),
             )
             continue
@@ -191,13 +191,13 @@ def _auth_error_remediation(provider: str, result: str) -> str:
     """Return the concrete operator action for a red auth-provider probe."""
     if provider == "certificate":
         if result == "file_missing":
-            return "point `aeat config auth certificate --file` at an existing .p12 bundle"
+            return "point `cadrumo config auth certificate --file` at an existing .p12 bundle"
         if result == "expired":
-            return "obtain a fresh FNMT certificate and reconfigure `aeat config auth certificate`"
+            return "obtain a fresh FNMT certificate and reconfigure `cadrumo config auth certificate`"
         if result == "unreadable":
             return "set the correct PKCS#12 passphrase (AEAT_CERTIFICATE_PASSWORD)"
-        return "re-export a valid .p12 bundle and reconfigure `aeat config auth certificate`"
-    return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth configure --provider clave_movil`"
+        return "re-export a valid .p12 bundle and reconfigure `cadrumo config auth certificate`"
+    return "set a valid DNI/NIE for Cl@ve Móvil via `cadrumo config auth configure --provider clave_movil`"
 
 
 # ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────

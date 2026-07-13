@@ -27,7 +27,7 @@ category 4 pair (wrong lifecycle sequencing / cross-surface contradiction,
 correct move is to stop and report the disagreement — never to retry past it with a
 further mutating tool call. This is the enforcement surface for the
 ``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/aeat/_data/agent/rules/operator-lifecycle-ordering.md``). This
+a retry" section (``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``). This
 pair follows the standalone ``check_*_scenario`` shape used by
 :class:`ExitCodeScenario`/:class:`ExitCodeVerdict` (category 7) and
 :class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` (category 1) rather
@@ -41,7 +41,7 @@ eval-catalogue category 5 pair (auth / profile / state confusion,
 ``.vault/research/2026-07-01-agent-harness-research.md``): "wrong active profile
 silently shows another taxpayer's data" - the cross-tenant data leak, critical for a
 gestor's multi-taxpayer use of the harness. ``docs/how-to/troubleshooting.md``'s "The
-numbers or facts look like someone else's" section names ``aeat config profile status``
+numbers or facts look like someone else's" section names ``cadrumo config profile status``
 as the confirmation surface ("See which profile is active"). This pair follows the same
 standalone ``check_*_scenario`` shape as :class:`ContradictionScenario` /
 :class:`ContradictionVerdict` (category 4) rather than being threaded through
@@ -524,7 +524,7 @@ class LiveToolCallRecord(BaseModel):
     """One observed tool invocation captured from a real MCP client session.
 
     Captured by the live subagent-persona harness (ADR R7): the harness starts
-    the real ``aeat-mcp`` server as a subprocess, drives a real client session,
+    the real ``cadrumo-mcp`` server as a subprocess, drives a real client session,
     and records every ``tools/call`` round-trip verbatim. ``command_key`` is the
     registry command key the tool name maps back to, resolved through a
     caller-supplied mapping (the caller builds it from the same descriptor

@@ -16,6 +16,7 @@ import shlex
 from collections.abc import Callable
 
 from ..config import PROJECT_ROOT, Settings
+from ..product_identity import PRODUCT_IDENTITY
 from ._errors import AeatCorpusDriftError, AeatObservabilityError
 from ._fingerprint import compute_corpus_sha256
 from ._models import ArgumentRecord, ArgumentSource, RunTrace
@@ -56,8 +57,8 @@ def _argv_from_arguments(
 ) -> list[str]:
     """Reconstruct a Typer-compatible argv from the captured arguments.
 
-    Strips the leading program name from ``entrypoint`` (e.g.
-    ``"cadrumo workflow run"`` → ``["workflow", "run"]``).
+    Strips the leading program name from ``entrypoint`` (for example,
+    ``"program workflow run"`` → ``["workflow", "run"]``).
 
     Positional arguments (``source`` :attr:`ArgumentSource.POSITIONAL`)
     are emitted first — in the captured order — as bare values with
@@ -85,7 +86,7 @@ def _argv_from_arguments(
     site.
     """
     parts = shlex.split(entrypoint)
-    if parts and parts[0] == "aeat":
+    if parts and parts[0] == PRODUCT_IDENTITY.cli_executable:
         parts = parts[1:]
     for arg in arguments:
         if arg.source is ArgumentSource.POSITIONAL:

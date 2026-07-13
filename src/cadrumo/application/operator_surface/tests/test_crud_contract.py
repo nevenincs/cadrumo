@@ -40,7 +40,7 @@ class TestStrictCrudContract:
     def test_strict_crud_default_registers_all_five_verbs(self) -> None:
         contract = MutatingNounGroupContract(
             noun="purchase_invoice_evidence",
-            cli_path="aeat app ledger evidence",
+            cli_path="cadrumo app ledger evidence",
         )
         assert contract.exception is NounGroupExceptionKind.STRICT_CRUD
         assert contract.crud_verbs == CANONICAL_CRUD_VERBS
@@ -51,7 +51,7 @@ class TestStrictCrudContract:
         with pytest.raises(ValidationError, match="exactly the canonical five verbs"):
             MutatingNounGroupContract(
                 noun="purchase_invoice_evidence",
-                cli_path="aeat app ledger evidence",
+                cli_path="cadrumo app ledger evidence",
                 crud_verbs=frozenset({CrudVerb.ADD, CrudVerb.LIST}),
             )
 
@@ -59,14 +59,14 @@ class TestStrictCrudContract:
         with pytest.raises(ValidationError, match="must not register key-value verbs"):
             MutatingNounGroupContract(
                 noun="purchase_invoice_evidence",
-                cli_path="aeat app ledger evidence",
+                cli_path="cadrumo app ledger evidence",
                 key_value_verbs=frozenset({KeyValueVerb.SET}),
             )
 
     def test_strict_crud_allows_orthogonal_axes(self) -> None:
         contract = MutatingNounGroupContract(
             noun="ledger_transaction",
-            cli_path="aeat app ledger",
+            cli_path="cadrumo app ledger",
             orthogonal_axes=frozenset(
                 {
                     OrthogonalAxis.CLASSIFY,
@@ -95,7 +95,7 @@ class TestKeyValueException:
     def test_key_value_exception_accepts_set_get_unset(self) -> None:
         contract = MutatingNounGroupContract(
             noun="usage_ratio",
-            cli_path="aeat app ledger ratios",
+            cli_path="cadrumo app ledger ratios",
             exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
             crud_verbs=frozenset(),
             key_value_verbs=frozenset({KeyValueVerb.SET, KeyValueVerb.GET, KeyValueVerb.UNSET, KeyValueVerb.LIST}),
@@ -108,7 +108,7 @@ class TestKeyValueException:
         with pytest.raises(ValidationError, match="must register at least one"):
             MutatingNounGroupContract(
                 noun="usage_ratio",
-                cli_path="aeat app ledger ratios",
+                cli_path="cadrumo app ledger ratios",
                 exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
                 crud_verbs=frozenset(),
             )
@@ -117,7 +117,7 @@ class TestKeyValueException:
         with pytest.raises(ValidationError, match="partial CRUD registration is rejected"):
             MutatingNounGroupContract(
                 noun="profile",
-                cli_path="aeat config profile",
+                cli_path="cadrumo config profile",
                 exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
                 crud_verbs=frozenset({CrudVerb.ADD, CrudVerb.LIST}),
                 key_value_verbs=frozenset({KeyValueVerb.SET}),
@@ -129,7 +129,7 @@ class TestLifecycleOnlyException:
         with pytest.raises(ValidationError, match="must not register CRUD verbs"):
             MutatingNounGroupContract(
                 noun="bucket_lifecycle",
-                cli_path="aeat config bucket",
+                cli_path="cadrumo config bucket",
                 exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
                 lifecycle_state_verbs=frozenset({LifecycleStateVerb.ARCHIVE}),
             )
@@ -138,7 +138,7 @@ class TestLifecycleOnlyException:
         with pytest.raises(ValidationError, match="must register at least one lifecycle-state"):
             MutatingNounGroupContract(
                 noun="bucket_lifecycle",
-                cli_path="aeat config bucket",
+                cli_path="cadrumo config bucket",
                 exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
                 crud_verbs=frozenset(),
             )
@@ -147,41 +147,41 @@ class TestLifecycleOnlyException:
 class TestNounValidation:
     def test_noun_must_be_lowercase(self) -> None:
         with pytest.raises(ValidationError, match="lowercase canonical form"):
-            MutatingNounGroupContract(noun="PayableInvoice", cli_path="aeat app ledger payable-invoice")
+            MutatingNounGroupContract(noun="PayableInvoice", cli_path="cadrumo app ledger payable-invoice")
 
     def test_noun_must_be_stripped(self) -> None:
         with pytest.raises(ValidationError, match="whitespace"):
-            MutatingNounGroupContract(noun=" payable_invoice ", cli_path="aeat app ledger payable-invoice")
+            MutatingNounGroupContract(noun=" payable_invoice ", cli_path="cadrumo app ledger payable-invoice")
 
 
 class TestCatalogue:
     def test_empty_catalogue_is_valid(self) -> None:
         catalogue = CrudContractCatalogue()
         assert catalogue.entries == ()
-        assert catalogue.find("aeat app ledger") is None
+        assert catalogue.find("cadrumo app ledger") is None
 
     def test_catalogue_lookups_by_cli_path(self) -> None:
         evidence = MutatingNounGroupContract(
             noun="purchase_invoice_evidence",
-            cli_path="aeat app ledger evidence",
+            cli_path="cadrumo app ledger evidence",
         )
         payable = MutatingNounGroupContract(
             noun="payable_invoice",
-            cli_path="aeat app ledger payable-invoice",
+            cli_path="cadrumo app ledger payable-invoice",
         )
         catalogue = CrudContractCatalogue(entries=(evidence, payable))
-        assert catalogue.find("aeat app ledger evidence") is evidence
-        assert catalogue.find("aeat app ledger payable-invoice") is payable
-        assert catalogue.find("aeat config profile") is None
+        assert catalogue.find("cadrumo app ledger evidence") is evidence
+        assert catalogue.find("cadrumo app ledger payable-invoice") is payable
+        assert catalogue.find("cadrumo config profile") is None
 
     def test_catalogue_rejects_duplicate_cli_paths(self) -> None:
         a = MutatingNounGroupContract(
             noun="purchase_invoice_evidence",
-            cli_path="aeat app ledger evidence",
+            cli_path="cadrumo app ledger evidence",
         )
         b = MutatingNounGroupContract(
             noun="purchase_invoice_evidence",
-            cli_path="aeat app ledger evidence",
+            cli_path="cadrumo app ledger evidence",
         )
         with pytest.raises(ValidationError, match="duplicate noun-group contract"):
             CrudContractCatalogue(entries=(a, b))
@@ -191,7 +191,7 @@ class TestImmutability:
     def test_contract_is_frozen(self) -> None:
         contract = MutatingNounGroupContract(
             noun="payable_invoice",
-            cli_path="aeat app ledger payable-invoice",
+            cli_path="cadrumo app ledger payable-invoice",
         )
         with pytest.raises(ValidationError):
             contract.noun = "other"

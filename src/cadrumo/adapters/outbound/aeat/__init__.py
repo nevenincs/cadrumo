@@ -31,3 +31,9 @@ See Also:
     :mod:`adapters.outbound`
         Parent outbound adapter layer for all external counterparts.
 """
+
+from __future__ import annotations
+
+from ._operator_progress import operator_progress_sink
+
+__all__ = ["operator_progress_sink"]

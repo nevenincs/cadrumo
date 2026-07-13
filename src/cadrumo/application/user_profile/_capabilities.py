@@ -162,7 +162,7 @@ def _active_profile_record() -> UserProfileRecord | None:
 
     Returns ``None`` — never raises — when there is no active session OR the secret
     store cannot be opened (e.g. a locked store with no passphrase, as on a fresh
-    workstation running ``aeat config check``). A diagnostic/gate resolves to the
+    workstation running ``cadrumo config check``). A diagnostic/gate resolves to the
     conservative global default rather than crashing when the profile is locked.
     """
     from ...adapters.persistence.storage import PersistenceError, has_active_bucket_session

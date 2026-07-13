@@ -246,7 +246,7 @@ def _ensure_known_keys(
 
 
 class LedgerEditKey(StrEnum):
-    """Closed catalogue of ``aeat app ledger update --set`` keys.
+    """Closed catalogue of ``cadrumo app ledger update --set`` keys.
 
     Attributes:
         CATEGORY: Spending / income category foreign-key id.
@@ -303,7 +303,7 @@ class InvoiceEditKey(StrEnum):
 
 
 class LedgerEditSpec(BaseModel):
-    """Typed ``aeat app ledger update --set`` spec.
+    """Typed ``cadrumo app ledger update --set`` spec.
 
     Attributes:
         clauses: Raw clauses in input order.

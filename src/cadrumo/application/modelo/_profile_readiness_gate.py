@@ -301,7 +301,7 @@ def _require_not_pre_activity_period(
     raise ModeloProfileReadinessError(
         message,
         context=context,
-        suggestion=f"aeat config profile edit {bucket_id}",
+        suggestion=f"cadrumo config profile edit {bucket_id}",
     )
 
 
@@ -318,7 +318,7 @@ def _require_modelo_applicable_for_local_work(
     raise ModeloProfileReadinessError(
         message,
         context=context,
-        suggestion=f"aeat app modelo describe {modelo.strip()}",
+        suggestion=f"cadrumo app modelo describe {modelo.strip()}",
     )
 
 
@@ -422,7 +422,7 @@ def _require_profile_filing_ready(
             "period": period.registry_token,
             "missing": ", ".join(missing),
         },
-        suggestion=f"aeat config profile edit {bucket_id}",
+        suggestion=f"cadrumo config profile edit {bucket_id}",
     )
 
 
@@ -449,7 +449,7 @@ def require_profile_ready_for_modelo_work(
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
-            suggestion="aeat config profile create NAME",
+            suggestion="cadrumo config profile create NAME",
         ) from exc
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:
@@ -488,7 +488,7 @@ def require_profile_ready_for_modelo_work(
                 "period": period.registry_token,
                 "missing": ", ".join(missing),
             },
-            suggestion=f"aeat config profile edit {bucket_id}",
+            suggestion=f"cadrumo config profile edit {bucket_id}",
         )
     _require_not_pre_activity_period(
         record=record,

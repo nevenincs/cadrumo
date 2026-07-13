@@ -256,7 +256,10 @@ class ActiveProfilePointerError(CoreError):
             f"invalid active-profile pointer at {path}; refusing root storage fallback",
             translated_message="errors.integrity.integrity_active_profile_pointer",
             context={"path": str(path)},
-            suggestion="aeat config repair profile # language fallback=es until the active-profile pointer is readable",
+            suggestion=(
+                "cadrumo config repair profile "
+                "# language fallback=es until the active-profile pointer is readable"
+            ),
         )
 
 

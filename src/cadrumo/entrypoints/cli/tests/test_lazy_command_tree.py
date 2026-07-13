@@ -80,12 +80,12 @@ def test_version_cold_start_completes_under_budget() -> None:
     interpreter startup and every import — so the assertion covers the
     operator-visible cold start, not a warm in-process invocation. The
     ``main`` callable is the exact function the ``cadrumo`` console script
-    binds, invoked with ``argv`` set to ``["cadrumo", "--version"]``.
+    binds, invoked with ``argv`` set to ``["aeat", "--version"]``.
     """
 
     code = """
         import sys
-        sys.argv = ["cadrumo", "--version"]
+        sys.argv = ["aeat", "--version"]
         from cadrumo.entrypoints.cli import main
         try:
             main()
@@ -134,7 +134,7 @@ def test_importing_cli_package_does_not_import_registry() -> None:
 
 @pytest.mark.parametrize("argv", [["--version"], ["--help"], []])
 def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
-    """``cadrumo`` (bare), ``cadrumo --version``, and ``cadrumo --help`` run without registry parse.
+    """``aeat`` (bare), ``cadrumo --version``, and ``cadrumo --help`` run without registry parse.
 
     State-free surfaces (version, help, and bare landing) short-circuit in the
     root callback before any subcommand is resolved, so no :class:`LazySubcommand`
@@ -158,7 +158,7 @@ def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
         stderr = StringIO()
         try:
             with redirect_stdout(stdout), redirect_stderr(stderr):
-                result = get_command(app).main(args={argv!r}, prog_name="cadrumo", standalone_mode=False)
+                result = get_command(app).main(args={argv!r}, prog_name="aeat", standalone_mode=False)
         except ClickExit as exit_:
             exit_code = exit_.exit_code
         else:
@@ -207,7 +207,7 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
         stderr = StringIO()
         try:
             with redirect_stdout(stdout), redirect_stderr(stderr):
-                result = command.main(args=["app", "modelo", "--help"], prog_name="cadrumo", standalone_mode=False)
+                result = command.main(args=["app", "modelo", "--help"], prog_name="aeat", standalone_mode=False)
         except ClickExit as exit_:
             exit_code = exit_.exit_code
         else:

@@ -1,7 +1,7 @@
 """Typed diagnostic records for the ledger-import use case.
 
 The CLI uses a closed catalogue of import
-diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --verify``:
+diagnostic kinds emitted by ``cadrumo app ledger import PATH --provider PROVIDER --verify``:
 
 - ``original-file`` — records the caller-supplied original source file
   path when it is available, so import reports can distinguish the

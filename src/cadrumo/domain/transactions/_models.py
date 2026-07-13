@@ -1182,7 +1182,7 @@ class Transaction(BaseModel):
             detail = (
                 " If this is an income receipt paid net of IRPF withholding, "
                 f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
-                "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
+                "so the invoice base and IVA can be kept. Run `cadrumo app ledger categories` "
                 "to list public IRPF category ids."
             )
         if (
@@ -1193,7 +1193,7 @@ class Transaction(BaseModel):
             detail = (
                 " If this is a professional service invoice paid net of withholding, "
                 f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} so the invoice "
-                "base and IVA can be kept. Run `aeat app ledger categories` to list "
+                "base and IVA can be kept. Run `cadrumo app ledger categories` to list "
                 "public IRPF category ids."
             )
         if (
@@ -1205,7 +1205,7 @@ class Transaction(BaseModel):
             detail = (
                 " If this is rent paid net of withholding, set irpf_category "
                 f"to the matching rental withholding category ({rent_irpf_ids}) so the invoice "
-                "base and IVA can be kept. Run `aeat app ledger categories` to list public "
+                "base and IVA can be kept. Run `cadrumo app ledger categories` to list public "
                 "IRPF category ids."
             )
         if reconstituted != expected:

@@ -1,7 +1,7 @@
 """Unit tests for typed CLI row models (M184 / M232).
 
 These tests verify the pydantic row model contracts that back the
-``--row`` CLI flag on ``aeat app modelo work calculate``. They are
+``--row`` CLI flag on ``cadrumo app modelo work calculate``. They are
 oracle-grounded against the AEAT form field constraints documented in:
   - Orden HAP/2250/2015 (M184 atribución de rentas)
   - Orden HFP/816/2017 (M232 operaciones vinculadas)

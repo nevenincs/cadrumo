@@ -654,7 +654,7 @@ def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
 def test_no_parallel_prorrata_cli_surface_exists() -> None:
     """No ``aeat ... prorrata`` CLI verb survives.
 
-    The canonical operator path for prorrata is `aeat app modelo bindings
+    The canonical operator path for prorrata is `cadrumo app modelo bindings
     list --modelo 303` (or 390) which surfaces a "prorrata percentage
     missing" readiness category. A standalone `app prorrata`,
     `app ledger prorrata`, or `app modelo prorrata` verb would create a

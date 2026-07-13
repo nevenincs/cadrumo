@@ -56,7 +56,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
             iva_amount=Decimal("13.02"),
         ),
         actor="operator-C",
-        source_command="aeat app ledger classify",
+        source_command="cadrumo app ledger classify",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
@@ -66,7 +66,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     assert updated.transaction.business_classification is BusinessClassification.BUSINESS
     assert updated.transaction.category_id == "office-supplies"
     assert updated.transaction.taxable_base == Decimal("61.98")
-    assert updated.transaction.edit_lineage[-1].source_command == "aeat app ledger classify"
+    assert updated.transaction.edit_lineage[-1].source_command == "cadrumo app ledger classify"
     events = event_repository.load().for_bucket(_BUCKET_ID)
     assert [event.event_type for event in events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
@@ -88,7 +88,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
             description="EU supplier statement row",
             source_jurisdiction="FR",
             idempotency_key="source-jurisdiction-classify",
-            source_command="aeat app ledger import",
+            source_command="cadrumo app ledger import",
         ),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -106,7 +106,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
             iva_amount=Decimal("0"),
         ),
         actor="operator-C",
-        source_command="aeat app ledger classify",
+        source_command="cadrumo app ledger classify",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 7, 16, 10, 0, tzinfo=UTC),
@@ -147,7 +147,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         transaction_id=created.ref.transaction_id,
         patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
         actor="operator-C",
-        source_command="aeat app ledger classify",
+        source_command="cadrumo app ledger classify",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),

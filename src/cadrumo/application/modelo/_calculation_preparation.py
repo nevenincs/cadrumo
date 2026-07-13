@@ -308,7 +308,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
             "period": str(report.period),
         },
         suggestion=(
-            f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.filing_year}"
+            f"cadrumo app ledger preflight --period {report.period.registry_token} --year {report.period.filing_year}"
         ),
     )
 
@@ -368,7 +368,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
             "required_casilla_id": _M200_ACCOUNTING_RESULT_CASILLA,
         },
         suggestion=(
-            f"aeat app modelo work calculate {work_unit.work_unit_id} "
+            f"cadrumo app modelo work calculate {work_unit.work_unit_id} "
             f"--casilla {_M200_ACCOUNTING_RESULT_CASILLA}=<resultado-contable>"
         ),
     )

@@ -1092,15 +1092,15 @@ class RetencionesAggregationSourceResolver:
         if not observations:
             suggestion = (
                 "Supply the per-perceptor retención observations "
-                "(`aeat app modelo aggregate --retencion-observation`) before calculating."
+                "(`cadrumo app modelo aggregate --retencion-observation`) before calculating."
             )
             if str(context.modelo) == Modelo.M111.value:
                 suggestion = (
                     "Supply the per-perceptor retención observations "
-                    "(`aeat app modelo aggregate --retencion-observation`) if any renta subject to "
+                    "(`cadrumo app modelo aggregate --retencion-observation`) if any renta subject to "
                     "retención or ingreso a cuenta was paid. If none was paid, do not file an all-blank "
                     "Modelo 111; record the no-obligation period with "
-                    f"`aeat config profile edit PROFILE --quiet --modelo-111-no-retenciones-periods "
+                    f"`cadrumo config profile edit PROFILE --quiet --modelo-111-no-retenciones-periods "
                     f"{context.filing_year}:{context.period.registry_token}` before verifying M190."
                 )
             raise AggregationValidationError(

@@ -209,14 +209,14 @@ def test_fresh_bucket_shows_import_step_pending_with_next_command(
     import_step = steps_by_id[DataPrepStepId.IMPORT_TRANSACTIONS]
     assert import_step.state is DataPrepStepState.PENDING
     assert "0 transaction" in import_step.summary
-    assert "aeat app ledger import" in import_step.next_command
+    assert "cadrumo app ledger import" in import_step.next_command
     assert walkthrough.ready_for_calculation is False
 
     # The final step correctly reflects "no work unit yet" and names the
     # exact create command for THIS modelo/period.
     work_step = steps_by_id[DataPrepStepId.START_MODELO_WORK]
     assert work_step.state is DataPrepStepState.PENDING
-    assert work_step.next_command == "aeat app modelo work create --modelo 130 --year 2026 --period 1T"
+    assert work_step.next_command == "cadrumo app modelo work create --modelo 130 --year 2026 --period 1T"
 
 
 def test_import_step_advances_once_a_transaction_is_recorded(
@@ -238,7 +238,7 @@ def test_import_step_advances_once_a_transaction_is_recorded(
     # Classification has not happened yet, so the next step is not done.
     classify_step = steps_by_id[DataPrepStepId.CLASSIFY_TRANSACTIONS]
     assert classify_step.state is DataPrepStepState.PENDING
-    assert "aeat app ledger classify" in classify_step.next_command
+    assert "cadrumo app ledger classify" in classify_step.next_command
 
 
 def test_out_of_period_transaction_does_not_satisfy_import_step(
@@ -296,7 +296,7 @@ def test_evidence_step_flags_business_expense_with_no_attached_evidence(
     evidence_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.ATTACH_EVIDENCE)
     assert evidence_step.state is DataPrepStepState.PENDING
     assert "1 of 1" in evidence_step.summary
-    assert "aeat app ledger evidence add" in evidence_step.next_command
+    assert "cadrumo app ledger evidence add" in evidence_step.next_command
 
 
 def test_invoices_step_reflects_period_scoped_invoice_catalogue(
@@ -319,7 +319,7 @@ def test_work_unit_step_resolves_matching_unit_and_names_calculate_command(
 
     assert work_step.state is DataPrepStepState.DONE
     assert unit.work_unit_id in work_step.next_command
-    assert work_step.next_command.startswith("aeat app modelo work calculate ")
+    assert work_step.next_command.startswith("cadrumo app modelo work calculate ")
 
 
 def test_ready_for_calculation_true_only_when_every_step_is_done(

@@ -33,7 +33,7 @@ application layer owns the command contract and mutability taxonomy; entrypoint
 adapters own rendering, command-tree traversal, and schema-registry enumeration.
 
 See Also:
-    ``aeat app contract``
+    ``cadrumo app contract``
         Command adapter that emits the :class:`OperatorSurfaceManifest` through
         the CLI envelope.
     :mod:`entrypoints.mcp`

@@ -369,7 +369,7 @@ class AeatSection(_Frozen):
                     "section": "aeat.pre303",
                     "validation_error": str(exc),
                 },
-                suggestion="aeat config repair --help",
+                suggestion="cadrumo config repair --help",
             ) from exc
 
 
@@ -467,7 +467,7 @@ class OutputLanguage(StrEnum):
     """Closed enumeration of CLI / API output language BCP-47 tags.
 
     The four members match the locale catalogues committed under
-    ``src/aeat/locales/``. Adding a new operator-facing language
+    ``src/cadrumo/locales/``. Adding a new operator-facing language
     requires landing the catalogue first and then extending this
     enum so the loader-side gates remain in sync.
     """

@@ -464,7 +464,7 @@ async def _fetch_and_parse(
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     return await _navigate_and_parse(
@@ -544,7 +544,7 @@ async def _navigate_and_parse(
                         "row_count": 0,
                     },
                     suggestion=(
-                        "Re-authenticate (run `aeat config auth status`) and retry; if AEAT is serving a "
+                        "Re-authenticate (run `cadrumo config auth status`) and retry; if AEAT is serving a "
                         "maintenance interstitial, retry later. Do not treat this as an empty inbox."
                     ),
                 )

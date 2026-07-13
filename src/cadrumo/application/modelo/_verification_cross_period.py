@@ -520,7 +520,7 @@ def _cross_period_missing_activity_start_finding(
         ),
         next_action=(
             "Record the operator-declared activity-start date on the taxpayer profile "
-            "(`aeat config profile edit`), then rerun verification. If a prior obligation genuinely "
+            "(`cadrumo config profile edit`), then rerun verification. If a prior obligation genuinely "
             "existed, capture or import its AEAT justificante/CSV/live evidence instead."
         ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
@@ -583,7 +583,7 @@ def _cross_period_modelo_not_applicable_advisory_finding(
         next_action=tr(
             "application.modelo.findings.cross_period_modelo_not_applicable.next_action",
             default=(
-                "Use `aeat app modelo bindings list --missing` to identify the retenciones binding. "
+                "Use `cadrumo app modelo bindings list --missing` to identify the retenciones binding. "
                 "Supply the certificate amount with --binding KEY=VALUE where applicable: put the binding id "
                 "on the left of one equals sign and the amount on the right. Confirm the profile's IRPF "
                 "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
@@ -689,7 +689,7 @@ def _cross_period_clean_state_next_action(
     target_period = verdict.target_period.registry_token
     blockers = set(evidence.blockers)
     target_capture = (
-        "aeat app live filed pull-sources "
+        "cadrumo app live filed pull-sources "
         f"--modelo {verdict.target_modelo} "
         f"--year {verdict.target_filing_year} "
         f"--period {target_period}"
@@ -698,19 +698,19 @@ def _cross_period_clean_state_next_action(
         f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement_period}"
     )
     source_capture = (
-        "aeat app live filed pull-sources "
+        "cadrumo app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
         f"--period {requirement_period}"
     )
     source_justificante_capture = (
-        "aeat app live justificante pull "
+        "cadrumo app live justificante pull "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
         f"--period {requirement_period}"
     )
     import_official_record = (
-        "aeat app modelo filing-record import WORK_UNIT_ID "
+        "cadrumo app modelo filing-record import WORK_UNIT_ID "
         "--evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE"
     )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
@@ -743,7 +743,7 @@ def _cross_period_clean_state_next_action(
     if CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE in blockers:
         return (
             "Reconcile the captured filed observation against the local calculation with "
-            "`aeat app registry verify-filed-state --observation PATH`, then refresh the upstream filing evidence."
+            "`cadrumo app registry verify-filed-state --observation PATH`, then refresh the upstream filing evidence."
         )
     if CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE in blockers:
         return f"Use AEAT evidence for upstream values in {source_hint}. Run `{target_capture}`."
@@ -763,7 +763,7 @@ def _cross_period_clean_state_next_action(
         return (
             f"Capture/import AEAT evidence for {source_hint}. Run `{target_capture}`, "
             f"`{source_justificante_capture}`, `{import_official_record}`, or "
-            "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
+            "`cadrumo app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
         )
     if blockers & {
         CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,

@@ -349,9 +349,9 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
         and purchase.transaction_id in finding.message
         and "deductible VAT" in finding.message
-        and "aeat app ledger evidence add" in (finding.next_action or "")
+        and "cadrumo app ledger evidence add" in (finding.next_action or "")
         and (
-            f"aeat app ledger attach {purchase.transaction_id} --purchase-invoice-evidence-id"
+            f"cadrumo app ledger attach {purchase.transaction_id} --purchase-invoice-evidence-id"
             in (finding.next_action or "")
         )
         for finding in warning
@@ -363,7 +363,7 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
         and finding.next_action is not None
         and "Advisory only" in finding.next_action
         and "no dedicated public CLI path" in finding.next_action
-        and f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
+        and f"cadrumo app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
         for finding in warning
     )
     stored = cr_repo.load().get(revision.calculation_revision_id)
@@ -495,7 +495,7 @@ def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
     assert finding.next_action is not None
     assert "Advisory only" in finding.next_action
     assert "no dedicated public CLI path" in finding.next_action
-    assert f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
+    assert f"cadrumo app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
 
 
 def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_evidence(
@@ -522,7 +522,7 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_eviden
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
     assert exc_info.value.suggestion is not None
-    assert "aeat app ledger evidence add" in exc_info.value.suggestion
+    assert "cadrumo app ledger evidence add" in exc_info.value.suggestion
     assert "--purchase-invoice-evidence-id" in exc_info.value.suggestion
     assert not output_path.exists()
     assert not output_path.with_name(output_path.name + ".tmp").exists()
@@ -552,6 +552,6 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_vat_missing
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
     assert exc_info.value.suggestion is not None
-    assert "aeat app ledger evidence add" in exc_info.value.suggestion
+    assert "cadrumo app ledger evidence add" in exc_info.value.suggestion
     assert "--purchase-invoice-evidence-id" in exc_info.value.suggestion
     assert tuple(filing_repo.load().values()) == ()

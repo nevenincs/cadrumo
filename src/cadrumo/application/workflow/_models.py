@@ -301,7 +301,7 @@ def active_transaction_catalogue_repository(
         raise LedgerNoActiveBucketError(
             translated_message="application.workflow.errors.no_active_profile_bucket",
             context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
-            suggestion="aeat config profile create NAME",
+            suggestion="cadrumo config profile create NAME",
         ) from exc
     return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 

@@ -2,7 +2,7 @@
 
 This module exposes the closed set of AEAT modelo *identifiers* the codebase
 references. Almost every member has a directory under
-``src/aeat/_data/registry/aeat/modelos/`` and is therefore registry-loadable;
+``src/cadrumo/_data/registry/aeat/modelos/`` and is therefore registry-loadable;
 the enum value is the bare three-digit code string (``"036"``, ``"100"``, …) so
 it is directly substitutable for the existing bare-string usage throughout the
 codebase.
@@ -26,7 +26,7 @@ declared on registry data such as
 :attr:`~domain.calculations.registry.ModeloDefinition.capabilities`, not by
 branching on this enum.
 
-A gate test in ``src/aeat/core/tests/test_modelo.py`` binds the registry-backed
+A gate test in ``src/cadrumo/core/tests/test_modelo.py`` binds the registry-backed
 members to :func:`application.modelo.registry_modelo_codes` (enum minus
 :data:`NON_REGISTRY_MODELOS`) so the two cannot drift silently, and pins every
 non-registry member to its deliberately-absent registry definition.

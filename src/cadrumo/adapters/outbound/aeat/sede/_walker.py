@@ -87,7 +87,7 @@ async def _open_browser_page(
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     browser_session = await default_browser_session_factory(settings)

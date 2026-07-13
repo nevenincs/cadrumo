@@ -12,7 +12,7 @@ slim :class:`application.ledger.BusinessOperationInvoice` records into
 the :attr:`core.BindingSourceKind.COLLECTIBLE_INVOICE` and
 :attr:`core.BindingSourceKind.PAYABLE_INVOICE` source kinds. The helper
 :func:`invoice_direction_to_source_kind` is the single direction-to-settlement
-mapping shared with the operator ``aeat app ledger invoice`` surface.
+mapping shared with the operator ``cadrumo app ledger invoice`` surface.
 
 Key exports:
 

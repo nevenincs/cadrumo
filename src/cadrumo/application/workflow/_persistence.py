@@ -263,7 +263,7 @@ class WorkflowStateRepository:
         self,
         *,
         actor: str = "cadrumo.application.workflow",
-        source: str = "aeat config repair reset-progress",
+        source: str = "cadrumo config repair reset-progress",
         reason_class: str | None = None,
     ) -> WorkflowStateResetFingerprint:
         """Delete the workflow-state envelope and emit a reset event.
@@ -396,7 +396,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
 def reset_workflow_state(
     *,
     actor: str = "cadrumo.application.workflow",
-    source: str = "aeat config repair reset-progress",
+    source: str = "cadrumo config repair reset-progress",
     reason_class: str | None = None,
 ) -> WorkflowStateResetFingerprint:
     """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`.

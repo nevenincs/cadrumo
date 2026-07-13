@@ -3,10 +3,10 @@
 The CLI routes every record-list command through ``--filter KEY=VALUE``
 flags. Representative invocations:
 
-- ``aeat app ledger review --filter status=pending --filter period=1T --filter year=2026``
-- ``aeat app ledger review --filter issue=gap --filter period=1T --filter year=2026``
-- ``aeat app ledger review --filter issue=duplicate --filter period=1T --filter year=2026``
-- ``aeat app ledger review --filter import=import_003 --filter period=1T --filter year=2026``
+- ``cadrumo app ledger review --filter status=pending --filter period=1T --filter year=2026``
+- ``cadrumo app ledger review --filter issue=gap --filter period=1T --filter year=2026``
+- ``cadrumo app ledger review --filter issue=duplicate --filter period=1T --filter year=2026``
+- ``cadrumo app ledger review --filter import=import_003 --filter period=1T --filter year=2026``
 - invoice evidence and modelo work-unit queue filters
 - modelo status filters by period and modelo code
 
@@ -128,7 +128,7 @@ def parse_filter_clauses(raw: Iterable[str]) -> tuple[FilterClause, ...]:
 
 
 class LedgerReviewFilterKey(StrEnum):
-    """Closed catalogue of ``aeat app ledger review --filter`` keys.
+    """Closed catalogue of ``cadrumo app ledger review --filter`` keys.
 
     Attributes:
         STATUS: Lifecycle state of the row (``pending`` / ``reviewed``
@@ -326,7 +326,7 @@ def _filter_year_or_raise(clause: FilterClause) -> int:
 
 
 class LedgerReviewFilterSpec(BaseModel):
-    """Typed ``aeat app ledger review --filter`` spec.
+    """Typed ``cadrumo app ledger review --filter`` spec.
 
     Attributes:
         clauses: The raw clauses, in input order. Empty when the

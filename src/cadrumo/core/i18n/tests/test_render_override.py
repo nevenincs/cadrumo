@@ -79,6 +79,19 @@ def test_fallback_language_is_default_output_language() -> None:
     assert result == DEFAULT_OUTPUT_LANGUAGE
 
 
+def test_stale_cli_prefixes_normalise_without_changing_product_prose() -> None:
+    """The renderer keeps Cadrumo branding but always names the ``aeat`` executable."""
+    from .._render import _normalise_cli_executable_references
+
+    rendered = _normalise_cli_executable_references(
+        "Cadrumo prepares the draft; run cadrumo config profile status, cadrumo app modelo work calculate, or cadrumo --help.",
+    )
+
+    assert rendered == (
+        "Cadrumo prepares the draft; run cadrumo config profile status, cadrumo app modelo work calculate, or cadrumo --help."
+    )
+
+
 def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureFixture) -> None:
     """A missing locale file falls back, but leaves a debug traceback."""
 

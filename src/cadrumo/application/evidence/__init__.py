@@ -19,7 +19,7 @@ The persisted manifest is encrypted bucket-local state managed by
 operator-directed plaintext handoff artifact written only to the caller's
 requested path after verification.
 
-Verbs supported by the operator surface (`aeat app modelo audit ...`):
+Verbs supported by the operator surface (`cadrumo app modelo audit ...`):
     show     - render the bundle's manifest and referenced records
     check    - re-verify the bundle's integrity (report-only)
     export   - write a ZIP archive with the manifest emitted last

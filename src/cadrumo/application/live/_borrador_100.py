@@ -156,7 +156,7 @@ class Borrador100SnapshotRepository:
             object_key=borrador_100_snapshot_object_key,
             not_found_factory=lambda snapshot_id: BorradorSnapshotNotFoundError(
                 f"borrador snapshot {snapshot_id!r} not found in bucket {trimmed!r}",
-                suggestion="aeat app live borrador 100 list",
+                suggestion="cadrumo app live borrador 100 list",
             ),
             ambiguous_prefix_factory=lambda snapshot_id, _full_ids: BorradorSnapshotNotFoundError(
                 f"borrador snapshot prefix {snapshot_id!r} is ambiguous",

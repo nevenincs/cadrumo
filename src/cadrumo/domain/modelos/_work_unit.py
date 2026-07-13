@@ -158,7 +158,7 @@ class WorkUnit(BaseModel):
             the discard. ``None`` when no reason was given (or
             when the unit is not discarded).
         censo_stamped_stale_at: Timezone-aware UTC timestamp the
-            stale-cascade walker set when ``aeat config profile edit``
+            stale-cascade walker set when ``cadrumo config profile edit``
             superseded the censo facts the work unit depended
             on. ``None`` while the unit is still censo-current.
             Set/unset together with ``censo_stale_reason``.

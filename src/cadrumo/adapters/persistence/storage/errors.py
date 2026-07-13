@@ -130,7 +130,7 @@ class SessionExpiredError(SecretStoreError):
     The session was opened earlier in the process lifetime but the
     operator did not act before the configured idle-lock window
     elapsed. The session is sealed; the operator must re-activate by
-    running ``aeat config switch NAME`` (or a subsequent
+    running ``cadrumo config switch NAME`` (or a subsequent
     bootstrap-exempt verb that opens a fresh session).
     """
 
@@ -182,7 +182,7 @@ class MasterKeyPassphraseMismatchError(MasterKeyUnavailableError):
 
     Recoverable by re-entering the passphrase. If the passphrase has
     been forgotten, the operator can use
-    ``aeat config recover`` to re-mint the master key
+    ``cadrumo config recover`` to re-mint the master key
     from a recovery-key backup. The CLI's error envelope distinguishes
     this case from :class:`MasterKeyMaterialMissingError` so retries
     do not waste backoff budget on missing-file errors.
@@ -195,8 +195,8 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     Neither the keyring entry nor the file-fallback artefacts
     (``master.key`` / ``master.kdf`` / ``salt``) are present. The
     substrate has not been provisioned. The operator's actionable
-    next step is ``aeat config profile create NAME`` or, if a recovery key
-    is available, ``aeat config recover``.
+    next step is ``cadrumo config profile create NAME`` or, if a recovery key
+    is available, ``cadrumo config recover``.
 
     Raised by canonical read paths to distinguish "not provisioned"
     from "wrong passphrase" without minting key material. Explicit

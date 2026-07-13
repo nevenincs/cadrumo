@@ -397,7 +397,7 @@ def build_work_calculate_input_bundle(
                     f"--binding {raw_key!r} is a date-valued binding sourced from the active "
                     "profile (a taxpayer date fact such as the birth date); it cannot be "
                     "supplied through --binding, which carries only decimal and enum "
-                    "values. Set it as a profile fact (e.g. `aeat config profile create "
+                    "values. Set it as a profile fact (e.g. `cadrumo config profile create "
                     "... --taxpayer-birth-date YYYY-MM-DD`) and recalculate.",
                     context={"key": raw_key},
                     translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
@@ -502,7 +502,7 @@ def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> De
             raise ModeloCalculateDecimalInputError(
                 f"--binding value for {binding.id!r} is a decimal-encoded boolean flag and must "
                 f"be one of: {accepted}. Received {raw_value!r}. Accepted encoding: {mapping}. "
-                "Run `aeat app modelo bindings list <MODELO>` to see each binding's encoding.",
+                "Run `cadrumo app modelo bindings list <MODELO>` to see each binding's encoding.",
                 context={
                     "flag": "--binding",
                     "key": binding.id,
@@ -638,7 +638,7 @@ def _refuse_detail_casilla_override(key: str) -> None:
         f"--casilla {key!r} names a Modelo 180 perceptor/property detail field, not a scalar decimal "
         "casilla input. The local work --casilla channel only accepts scalar decimal casillas; "
         "Modelo 180 perceptor/property detail rows are not supported on the public --row surface yet. "
-        "Use `aeat app modelo aggregate --modelo 180 --retencion-observation ...` for the supported "
+        "Use `cadrumo app modelo aggregate --modelo 180 --retencion-observation ...` for the supported "
         "annual perceptor count/base/retenciones source, and do not supply string fields through --casilla.",
         context={"key": key},
         translated_message="application.modelo.errors.calculate_detail_casilla_unsupported",
@@ -671,7 +671,7 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
             f"modelo {unit.modelo!r} {unit.filing_year} {unit.period.registry_token!r} "
             f"is now {snapshot.revision.id!r}. "
             f"The registry's law-mapping was corrected after this work unit was created. "
-            f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
+            f"Re-create the work unit (discard this one and run `cadrumo app modelo work create`) "
             f"to bind it to the current law-determined revision.",
         )
     return snapshot.revision
@@ -700,7 +700,7 @@ def _validated_binding_input_channel(
         raise ModeloCalculateBindingInputError(
             f"--binding {key!r} does not match any binding id in this revision. "
             f"Accepted binding ids: {accepted}. "
-            "Use `aeat app modelo bindings list <MODELO>` to list valid binding ids.",
+            "Use `cadrumo app modelo bindings list <MODELO>` to list valid binding ids.",
             context={"key": key, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_binding_unknown",
         )
@@ -748,7 +748,7 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
     raise ModeloCalculateCasillaInputError(
         f"--casilla {key!r} is not a canonical casilla.id in this revision. "
         f"Accepted casilla.id values include: {accepted_hint}. "
-        "Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs.",
+        "Use `cadrumo app modelo casillas <MODELO>` to list valid casilla IDs.",
         context={"key": key, "accepted": accepted_hint},
         translated_message="application.modelo.errors.calculate_casilla_unknown",
     )

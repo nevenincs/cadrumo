@@ -73,7 +73,7 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
             business_pct=Decimal("0.50"),
             notes="corrected cash amount",
             actor="operator-B",
-            source_command="aeat app ledger update",
+            source_command="cadrumo app ledger update",
         ),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -120,7 +120,7 @@ def test_update_manual_transaction_records_edit_lineage_entry(secure_objects: Se
     entry = outcome.updated.transaction.edit_lineage[-1]
     assert entry.previous_transaction_id == outcome.created.ref.transaction_id
     assert entry.actor == "operator-B"
-    assert entry.source_command == "aeat app ledger update"
+    assert entry.source_command == "cadrumo app ledger update"
     assert entry.bucket_event_id == outcome.updated.bucket_event_ids[0]
 
 

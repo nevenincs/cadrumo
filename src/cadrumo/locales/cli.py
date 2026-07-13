@@ -124,6 +124,13 @@ def set_value(
     typer.echo(tr("locales.cli.set.updated", locale_file=path.name, key=key))
 
 
+@app.command("canonicalize-cli-executable")
+def canonicalize_cli_executable() -> None:
+    """Normalize stale command prefixes in every runtime locale catalogue."""
+    updated_paths = _default_manager().canonicalize_cli_executable_references()
+    typer.echo(f"canonicalized CLI executable references in {len(updated_paths)} locale catalogue(s)")
+
+
 @app.command("remove")
 def remove_value(
     locale: Annotated[

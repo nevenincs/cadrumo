@@ -732,7 +732,7 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     """Build one ``inspect.Parameter`` per descriptor question.
 
     Each question's ``rich_help_panel`` is the section's translated
-    title so ``aeat config profile create NAME --help`` renders one help panel per
+    title so ``cadrumo config profile create NAME --help`` renders one help panel per
     :class:`WizardSection`.
     """
     parameters: list[inspect.Parameter] = []
@@ -1107,8 +1107,8 @@ def _run_wizard_persistence_path(
     )
 
 
-_DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
-_NON_RESIDENT_IRNR_NEXT_COMMAND = "aeat app modelo describe 210"
+_DEFAULT_PROFILE_NEXT_COMMAND = "cadrumo app modelo work create"
+_NON_RESIDENT_IRNR_NEXT_COMMAND = "cadrumo app modelo describe 210"
 
 
 def _next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:

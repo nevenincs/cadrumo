@@ -76,7 +76,7 @@ def test_create_manual_transaction_links_purchase_invoice_evidence(secure_object
 def test_create_manual_transaction_records_audit_actor_and_command(secure_objects: SecureObjectRepository) -> None:
     outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.created_by == "operator-A"
-    assert outcome.persisted.source_command == "aeat app ledger add"
+    assert outcome.persisted.source_command == "cadrumo app ledger add"
     assert outcome.persisted.created_event_id == outcome.result.bucket_event_ids[0]
 
 
@@ -102,7 +102,7 @@ def test_create_manual_transaction_emits_bucket_event_chain(secure_objects: Secu
     assert first.event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
     assert first.object_type is BucketEventObjectType.LEDGER_TRANSACTION
     assert first.object_id == outcome.result.ref.transaction_id
-    assert first.payload["source_command"] == "aeat app ledger add"
+    assert first.payload["source_command"] == "cadrumo app ledger add"
 
 
 def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
@@ -137,7 +137,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
                 direction=TransactionDirection.OUTGOING,
                 description="inactive bucket",
                 actor="operator-A",
-                source_command="aeat app ledger add",
+                source_command="cadrumo app ledger add",
             ),
             transaction_repository=transaction_repository,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),

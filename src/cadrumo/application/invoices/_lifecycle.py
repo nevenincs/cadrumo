@@ -5,7 +5,7 @@ Reads and mutates the :class:`InvoiceCatalogue` aggregate.
 The reconciliation catalogue gained ``create`` and ``list`` operator verbs but
 no way to inspect or delete a single record. Without a single-record read an
 operator cannot confirm the long content-addressed ``invoice_id`` that
-``aeat app ledger link --invoice-id`` resolves, nor see which transactions a
+``cadrumo app ledger link --invoice-id`` resolves, nor see which transactions a
 catalogue invoice already binds; without a delete a mistaken
 ``catalogue create`` is permanent. These two services close that CRUD gap over
 the same sanctioned :class:`InvoiceCatalogueRepository` write path

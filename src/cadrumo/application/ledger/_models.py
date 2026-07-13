@@ -108,7 +108,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     actor: str = Field(default="operator", min_length=1)
-    source_command: str = Field(default="aeat app ledger add", min_length=1)
+    source_command: str = Field(default="cadrumo app ledger add", min_length=1)
     idempotency_key: str | None = None
     classified_by_override: str | None = None
     source_jurisdiction: str | None = None
@@ -528,7 +528,7 @@ class LedgerSourceImportCommand(BaseModel):
     source: Path | None = None
     period: Period | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
-    source_command: str = Field(default="aeat app ledger import", min_length=1, max_length=128)
+    source_command: str = Field(default="cadrumo app ledger import", min_length=1, max_length=128)
 
     @field_validator("bucket_id", "provider", "actor", "source_command")
     @classmethod
@@ -720,7 +720,7 @@ class LedgerExportCommand(BaseModel):
     # the quarter/year. None exports the whole bucket.
     period: Period | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
-    source_command: str = Field(default="aeat app ledger export", min_length=1, max_length=128)
+    source_command: str = Field(default="cadrumo app ledger export", min_length=1, max_length=128)
 
     @field_validator("bucket_id", "actor", "source_command")
     @classmethod

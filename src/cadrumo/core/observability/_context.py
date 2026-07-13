@@ -57,7 +57,7 @@ class RunContextInfo(BaseModel):
     Attributes:
         run_id: 16-char lowercase hex identifier for this run.
         entrypoint: Stable string identifying the CLI entry point
-            (e.g. ``"cadrumo workflow run"``).
+            (e.g. ``"program workflow run"``).
         started_at: Wall-clock UTC timestamp captured at run-context
             enter.
         arguments: Tuple of :class:`ArgumentRecord` capturing the CLI
@@ -303,7 +303,7 @@ def run_context(
                 _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
     finally:
         # If we were re-entered by ``replay_run``, label the persisted
-        # trace with the original run id so ``cadrumo run show`` can tell a
+    # trace with the original run id so a run-detail view can tell a
         # replay trace apart from a fresh one. Only a legitimately-shaped
         # 16-hex run id is propagated; any other value is ignored.
         replay_of = _resolve_replay_of()

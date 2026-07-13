@@ -141,7 +141,7 @@ def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
     assert recovery.recargo_band.surcharge_pct == Decimal("2.00")
     assert recovery.recargo_band.interest_applies is False
     assert "ley-58-2003" in recovery.legal_ref
-    assert recovery.next_command == "aeat app modelo work --help"
+    assert recovery.next_command == "cadrumo app modelo work --help"
 
 
 def test_load_recargo_bands_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:

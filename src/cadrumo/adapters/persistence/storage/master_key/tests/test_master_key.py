@@ -146,8 +146,8 @@ class TestTornStateGate:
             with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
                 provider.get_master_key()
             msg = str(excinfo.value)
-            assert "aeat config recover --recovery-key" in msg
-            assert "aeat config profile create NAME" in msg
+            assert "cadrumo config recover --recovery-key" in msg
+            assert "cadrumo config profile create NAME" in msg
 
     def test_no_install_refuses_implicit_mint(
         self,

@@ -85,8 +85,8 @@ def load_scenario(path: Path) -> GoldenScenario:
 
 
 def _cli_form(command_key: str) -> str:
-    """Render a registry command key as its ``aeat app ...`` CLI form."""
-    return "aeat app " + command_key.replace(".", " ")
+    """Render a registry command key as its ``cadrumo app ...`` CLI form."""
+    return "cadrumo app " + command_key.replace(".", " ")
 
 
 def _skill_text(skill_name: str) -> str | None:

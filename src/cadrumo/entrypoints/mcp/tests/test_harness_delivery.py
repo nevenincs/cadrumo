@@ -280,7 +280,7 @@ def test_render_whoami_identity_names_the_label_and_readiness() -> None:
             active_profile="Erika",
             tax_id_present=True,
             readiness="ready",
-            next_action="aeat app overview status",
+            next_action="cadrumo app overview status",
         ),
     )
     assert "Erika" in text

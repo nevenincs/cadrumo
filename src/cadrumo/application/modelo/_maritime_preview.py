@@ -1,6 +1,6 @@
 """Application service for active-profile maritime exemption previews.
 
-This module backs the ``aeat app modelo work preview-maritime-exemption`` CLI
+This module backs the ``cadrumo app modelo work preview-maritime-exemption`` CLI
 surface. It reads the active profile's ``maritime_worker.*`` facts, normalises
 them into :class:`cadrumo.domain.renta.MaritimeWorkerFacts`, delegates legal
 pathway selection and typed observation creation to

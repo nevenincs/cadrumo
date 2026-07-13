@@ -75,7 +75,7 @@ class RegistryManualId(StrEnum):
     """Manual identifiers approved for the registry manual operator surface.
 
     These values intentionally narrow the wider :class:`ManualId` domain to the
-    manual families exposed by ``aeat app registry manuals``.
+    manual families exposed by ``cadrumo app registry manuals``.
     """
 
     RENTA = "renta"

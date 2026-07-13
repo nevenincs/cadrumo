@@ -130,7 +130,7 @@ def test_set_locale_value_preserves_multiline_value_roundtrip(tmp_path: Path):
         "Todavía no se ha guardado nada.\n"
         "\n"
         "1. Vuelve a ejecutar el comando:\n"
-        "     aeat config profile create NAME\n"
+        "     cadrumo config profile create NAME\n"
         "\n"
         "2. O usa flags: --quiet --tax-id NIF/CIF/DNI/NIE"
     )

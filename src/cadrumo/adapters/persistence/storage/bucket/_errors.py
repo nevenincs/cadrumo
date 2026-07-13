@@ -102,7 +102,7 @@ class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
     Carries the locked bucket id so the diagnostic can point the
-    operator at ``aeat config switch NAME``.
+    operator at ``cadrumo config switch NAME``.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
@@ -132,7 +132,7 @@ class RecoveryUnavailableError(BucketError):
 class RecoveryVerificationError(BucketError):
     """Raised when the operator-typed recovery code does not decode.
 
-    Fired by ``aeat config recover`` when the 24-word entry does not
+    Fired by ``cadrumo config recover`` when the 24-word entry does not
     unwrap the bucket's recovery envelope.
     """
 

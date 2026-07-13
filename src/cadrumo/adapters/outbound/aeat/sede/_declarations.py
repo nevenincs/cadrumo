@@ -327,7 +327,7 @@ async def _open_register_page(
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            "AeatSession has no persisted auth session; run `cadrumo config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     from .....core import require_active_bucket_id
@@ -451,7 +451,7 @@ async def _drive_search(
         )
         raise SedeNavigationError(
             f"declaraciones register did not load (final URL: {final_url!r}); "
-            "session likely expired — run `aeat config auth test` and retry",
+            "session likely expired — run `cadrumo config auth test` and retry",
             translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=await _declarations_page_shape_context_from_page(
@@ -713,7 +713,7 @@ async def capture_declaration(
             raise SedeNavigationError(
                 f"Ver button for {declaration.expediente_id!r} did not land on a "
                 f"cotejo URL (final URL: {cotejo_url!r}); "
-                "session likely expired mid-walk — run `aeat config auth test` and retry",
+                "session likely expired mid-walk — run `cadrumo config auth test` and retry",
                 translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
             )
 

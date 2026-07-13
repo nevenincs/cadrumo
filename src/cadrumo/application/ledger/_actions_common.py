@@ -397,7 +397,7 @@ def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -
     """Return True when a ``PurchaseInvoiceEvidence`` record with ``evidence_id`` exists in the bucket.
 
     Resolves the bucket-scoped encrypted purchase-invoice evidence store written by
-    ``aeat app ledger evidence add`` (the :class:`PurchaseInvoiceEvidence` namespace),
+    ``cadrumo app ledger evidence add`` (the :class:`PurchaseInvoiceEvidence` namespace),
     distinct from the rich :class:`InvoiceCatalogue` written by invoice-import flows.
     Local imports mirror this module's existing deferred-import style.
     """
@@ -424,18 +424,18 @@ def _verify_purchase_invoice_evidence(
     The ``purchase_invoice_evidence_id`` may name either of two bucket-scoped id
     spaces, checked in order:
 
-    1. A :class:`PurchaseInvoiceEvidence` record minted by ``aeat app ledger
+    1. A :class:`PurchaseInvoiceEvidence` record minted by ``cadrumo app ledger
        evidence add`` (PDF/image evidence registered into the dedicated evidence
        store). This is the path the receipt-OCR/PDF-evidence ADR's acceptance
        criterion requires — an id produced by ``evidence add`` must be accepted by
-       ``aeat app ledger attach`` in the same shell session (ADR
+       ``cadrumo app ledger attach`` in the same shell session (ADR
        ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence``, 2026-05-14
        amendment).
     2. An imported received-invoice id in the rich :class:`InvoiceCatalogue`
        (bucket match plus :attr:`InvoiceKind.RECEIVED`), written only by the
        invoice-import flows.
 
-    Ids minted by ``aeat app ledger invoice add`` (slim operator invoice records)
+    Ids minted by ``cadrumo app ledger invoice add`` (slim operator invoice records)
     are deliberately NOT a valid evidence reference per the ledger-invoice
     unification ADR's store split; they are refused with an instructive message.
     """
@@ -449,8 +449,8 @@ def _verify_purchase_invoice_evidence(
     if invoice is None:
         raise TransactionValidationError(
             "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record "
-            "(register one from a PDF/image with `aeat app ledger evidence add`) or an imported "
-            "received-invoice id from the invoice catalogue; ids minted by `aeat app ledger invoice add` "
+            "(register one from a PDF/image with `cadrumo app ledger evidence add`) or an imported "
+            "received-invoice id from the invoice catalogue; ids minted by `cadrumo app ledger invoice add` "
             "are operator invoice records, not evidence references",
             context={"purchase_invoice_evidence_id": command.purchase_invoice_evidence_id},
         )

@@ -122,7 +122,7 @@ _LOGIN_PROBE = textwrap.dedent(
 def test_login_flow_refuses_fast_without_a_controlling_terminal() -> None:
     """The OAuth login guard must refuse, not hang, when stdin is not a TTY.
 
-    Regression for audit M19: `aeat config google login` blocked forever
+    Regression for audit M19: `cadrumo config google login` blocked forever
     in a non-interactive shell because the loopback consent receiver
     (`run_local_server`) waited for a browser redirect that no operator
     could complete. `require_interactive_terminal` is the gate `run_login_flow`

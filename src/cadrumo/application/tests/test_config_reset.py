@@ -1,4 +1,4 @@
-"""Per-scope tests for ``aeat config reset``."""
+"""Per-scope tests for ``cadrumo config reset``."""
 
 from __future__ import annotations
 

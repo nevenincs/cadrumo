@@ -1,6 +1,6 @@
 """Guided, non-blocking manual-entry path for one catalogue :class:`~domain.invoices.Invoice`.
 
-``aeat app ledger invoice catalogue wizard`` is the fallback entry point for
+``cadrumo app ledger invoice catalogue wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
 unavailable or insufficient: the operator (an autonomous LLM agent that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in

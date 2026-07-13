@@ -8,8 +8,8 @@ not a binding ``BindingSourceKind``; this module is the corpus-catalogue
 verifier, not a registry binding family.
 
 The corpus SOURCE BINARIES (``.pdf`` / ``.xls`` / ``.xlsx`` under ``corpus/``)
-are excluded from the slim ``aeat`` runtime wheel and shipped in an optional
-``aeat_data`` companion distribution. The gate is companion-aware: a binary that
+are excluded from the slim ``cadrumo`` runtime wheel and shipped in an optional
+``cadrumo_data`` companion distribution. The gate is companion-aware: a binary that
 is PRESENT (in the runtime tree or the companion) stays byte-exact hash-enforced
 exactly as before; a companion binary that is ABSENT from both roots yields an
 accumulable, loud advisory naming the missing set and the ``cadrumo[corpus-sources]``
@@ -31,15 +31,15 @@ from ._errors import RegistryValidationError
 from ._schema import SourceReference
 
 CORPUS_SOURCES_INSTALL_HINT = "pip install 'cadrumo[corpus-sources]'"
-"""Operator install command that adds the optional ``aeat_data`` companion.
+"""Operator install command that adds the optional ``cadrumo_data`` companion.
 
 Named in every companion-absent advisory so an operator whose split install
 lacks the corpus source binaries learns exactly how to restore full
-byte-integrity verification and the ``aeat app registry`` verification verbs.
+byte-integrity verification and the ``cadrumo app registry`` verification verbs.
 """
 
-# The slim ``aeat`` wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
-# ``aeat_data`` companion carries exactly those binaries. A companion binary is
+# The slim ``cadrumo`` wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
+# ``cadrumo_data`` companion carries exactly those binaries. A companion binary is
 # therefore classified from catalogue DATA — a corpus-tree file with one of the
 # excluded binary extensions — never a hand-maintained per-source list. Every
 # other corpus surface (extracted ``.txt``, normative ``.html``, ``.xsd``) stays
@@ -49,11 +49,11 @@ _COMPANION_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
 
 
 class CorpusCompanionAdvisory(UserWarning):
-    """Loud, non-fatal advisory that the ``aeat_data`` companion binaries are absent."""
+    """Loud, non-fatal advisory that the ``cadrumo_data`` companion binaries are absent."""
 
 
 def is_companion_corpus_binary(source: SourceReference) -> bool:
-    """Return whether a source is a corpus binary shipped by the ``aeat_data`` companion.
+    """Return whether a source is a corpus binary shipped by the ``cadrumo_data`` companion.
 
     Derived from the catalogue entry alone: a ``corpus/...`` file whose
     extension is one the slim ``aeat`` wheel excludes (``.pdf`` / ``.xls`` /
@@ -70,7 +70,7 @@ def is_companion_corpus_binary(source: SourceReference) -> bool:
 def _companion_absent_advisory(source: SourceReference) -> str:
     return (
         f"source {source.id!r} corpus binary {source.corpus_path!r} is absent from the runtime tree "
-        f"and the aeat_data companion; install the companion to restore verification: "
+        f"and the cadrumo_data companion; install the companion to restore verification: "
         f"{CORPUS_SOURCES_INSTALL_HINT}"
     )
 
@@ -79,7 +79,7 @@ def verify_source_file(root: Path, source: SourceReference) -> str | None:
     """Verify one source reference against the local repository filesystem.
 
     Returns ``None`` when the cited file is PRESENT (in the source tree or the
-    ``aeat_data`` companion) and its byte count and SHA-256 match — the
+    ``cadrumo_data`` companion) and its byte count and SHA-256 match — the
     byte-exact contract, unchanged. When the file is a companion corpus binary
     (``.pdf`` / ``.xls`` / ``.xlsx`` under ``corpus/``) that is ABSENT from both
     roots, returns an accumulable advisory string instead of raising, so the
@@ -139,7 +139,7 @@ def _verify_manual_structure(repo_root: Path, source: SourceReference) -> None:
 
             manuals_dir = repo_root / "corpus" / "manuals"
             if not manuals_dir.is_dir():
-                manuals_dir = repo_root / "src" / "aeat" / "_data" / "corpus" / "manuals"
+                manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
 
             settings = Settings(aeat_manuals_root=manuals_dir)
             load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
@@ -172,8 +172,8 @@ def _corpus_companion_advisory(missing_corpus_paths: list[str]) -> str:
     missing = ", ".join(unique)
     return (
         f"{len(unique)} corpus source binary file(s) declared by the registry are absent from both "
-        f"the runtime tree and the optional aeat_data companion distribution; corpus byte-integrity "
-        f"verification and the aeat app registry verification verbs are degraded until it is "
+        f"the runtime tree and the optional cadrumo_data companion distribution; corpus byte-integrity "
+        f"verification and the cadrumo app registry verification verbs are degraded until it is "
         f"installed. Missing: {missing}. Install the companion to restore full verification: "
         f"{CORPUS_SOURCES_INSTALL_HINT}"
     )

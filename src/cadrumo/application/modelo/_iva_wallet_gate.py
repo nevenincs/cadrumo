@@ -239,7 +239,7 @@ def apply_iva_compensation_decision_binding(
         ):
             raise ModeloIvaWalletReconciliationBlocked(
                 translated_message="application.modelo.errors.iva_wallet_not_seeded",
-                suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+                suggestion="cadrumo app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
             )
         return
 
@@ -331,7 +331,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
     if persisted is None:
         raise ModeloIvaWalletReconciliationBlocked(
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
-            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+            suggestion="cadrumo app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
         )
     if persisted != supplied_decision:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -762,7 +762,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
     if decision is None:
         raise ModeloIvaWalletReconciliationBlocked(
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
-            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+            suggestion="cadrumo app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
         )
     if decision.blocked:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -842,7 +842,7 @@ def iva_wallet_override_suggestion(decision: object) -> str:
     period = getattr(target_period, "registry_token", "PERIOD")
     amount = "0" if _decision_is_missing_local_authority(decision) else "AMOUNT"
     return (
-        "aeat app modelo iva-wallet override "
+        "cadrumo app modelo iva-wallet override "
         f"--filing-year {filing_year} --period {period} --amount {amount} "
         '--reason "external evidence reviewed" --evidence-locator "SOURCE" --confirm'
     )
