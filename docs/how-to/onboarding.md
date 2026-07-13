@@ -31,7 +31,7 @@ walks the commands.
 ## Before you begin
 
 Install `cadrumo` and confirm it runs. See
-[Set up your workstation](../workstation-setup.md) for installation.
+[Install Cadrumo](../workstation-setup.md) for installation.
 
 Every command that touches your data needs your master-key passphrase, which
 protects your encrypted local store. The tool prompts for it the first time in a

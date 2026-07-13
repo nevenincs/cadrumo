@@ -9,7 +9,7 @@ read
 [how records become filing-ready figures](../explanation/from-records-to-figures.md)
 for that boundary.
 
-Start with the [workstation setup](../workstation-setup.md) if the `aeat`
+Start with the [installation guide](../workstation-setup.md) if the `aeat`
 command does not run. For a map of the whole journey from bank records to a
 filed modelo, read [the filing journey](onboarding.md). For terminology, use
 the {doc}`glossary </_generated/glossary>`; for exact options and refusals,
