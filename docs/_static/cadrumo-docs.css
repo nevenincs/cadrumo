@@ -1823,3 +1823,9 @@ details.cadrumo-setup[open] > summary {
     transition: none;
   }
 }
+
+/* Landing-page header image (docs/index.md). */
+img.cadrumo-index-header {
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+}
