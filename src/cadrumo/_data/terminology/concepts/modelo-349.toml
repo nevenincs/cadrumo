@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-349"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:349"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+related = ["iva", "vies", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Declaracion recapitulativa de operaciones intracomunitarias."
+definition = "Declaracion recapitulativa de las entregas y adquisiciones intracomunitarias de bienes y servicios realizadas con operadores de otros Estados miembros."
+
+[language.es.source]
+citation = "Orden EHA/769/2010; Orden HAC/174/2020."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 349"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "operaciones intracomunitarias"
+term_status = "admitted"
+
+[language.en]
+short_description = "Recapitulative statement of intra-community supplies and acquisitions."
+
+[language.ca]
+short_description = "Declaracio recapitulativa d'operacions intracomunitaries."
+
+[language.hu]
+short_description = "Osszesito nyilatkozat a kozossegen beluli ugyletekrol."

@@ -623,14 +623,10 @@
   }
 
   function setupSequence(root) {
-    // The playhead runs over the command and result frames in document order;
-    // setup frames stay as their own collapsed disclosure and are not stepped.
-    var frames = Array.prototype.filter.call(
-      root.querySelectorAll(".cadrumo-frame"),
-      function (frame) {
-        return frame.getAttribute("data-frame-kind") !== "setup";
-      }
-    );
+    // The playhead runs over every frame in document order — setup frames are
+    // ordinary steppable frames (no collapsed disclosure); the position
+    // indicator counts them too.
+    var frames = Array.prototype.slice.call(root.querySelectorAll(".cadrumo-frame"));
     if (frames.length < 2) return; // a single frame is nothing to step through
 
     // The inline payload is the sequence's build-time contract. If it is absent
@@ -726,9 +722,12 @@
       nextBtn.disabled = current === total - 1;
     }
 
+    var stepped = null;
+
     function goTo(index) {
       current = Math.max(0, Math.min(index, total - 1));
       render();
+      if (stepped) stepped(current);
     }
 
     prevBtn.addEventListener("click", function () {
@@ -736,19 +735,6 @@
     });
     nextBtn.addEventListener("click", function () {
       goTo(current + 1);
-    });
-
-    // Arrow-key stepping is scoped to the widget: the listener is on the
-    // sequence root, so it only fires when a control inside it holds focus,
-    // and it never collides with the global Ctrl/Cmd-K palette.
-    root.addEventListener("keydown", function (event) {
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        goTo(current + 1);
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        goTo(current - 1);
-      }
     });
 
     // Place the controls after the final frame so the rundown reads
@@ -761,6 +747,19 @@
     }
     root.classList.add("cadrumo-sequence--enhanced");
     render();
+
+    // The page-level keyboard loop drives this block through the controller;
+    // button-driven steps report back so the loop cursor stays in sync.
+    return {
+      count: total,
+      goTo: goTo,
+      frameAt: function (index) {
+        return frames[Math.max(0, Math.min(index, total - 1))];
+      },
+      onStep: function (callback) {
+        stepped = callback;
+      },
+    };
   }
 
   /* ── Shell switcher ─────────────────────────────────────────────────────
@@ -816,15 +815,12 @@
       });
     }
 
-    // Home the switcher in the playhead's controls row when it exists; otherwise
-    // (a single-frame sequence has no playhead) create a minimal chrome row.
-    var controls = root.querySelector(".cadrumo-sequence-controls");
-    if (!controls) {
-      controls = document.createElement("div");
-      controls.className = "cadrumo-sequence-controls cadrumo-sequence-controls--chrome";
-      root.appendChild(controls);
-    }
-    controls.appendChild(switcher);
+    // Home the switcher in a slim block header bar at the TOP of the sequence,
+    // right-aligned; the bottom controls row keeps only prev/next + position.
+    var bar = document.createElement("div");
+    bar.className = "cadrumo-sequence-bar";
+    bar.appendChild(switcher);
+    root.insertBefore(bar, root.firstChild);
   }
 
   /* ── Copy command ───────────────────────────────────────────────────────
@@ -873,9 +869,8 @@
   function setupCopyButtons(root) {
     var frames = root.querySelectorAll(".cadrumo-frame[data-command-line]");
     Array.prototype.forEach.call(frames, function (frame) {
-      // Setup frames live inside a collapsed disclosure; the copy affordance is
-      // for the visible command and result frames the reader runs.
-      if (frame.getAttribute("data-frame-kind") === "setup") return;
+      // Every frame is a visible command the reader can copy (setup frames are
+      // no longer folded away).
       var button = document.createElement("button");
       button.type = "button";
       button.className = "cadrumo-copy-btn";
@@ -903,11 +898,61 @@
     });
   }
 
+  /* Keyboard navigation spans EVERY sequence on the page as one continuous
+   * loop: ArrowRight/ArrowLeft step through all frames of all blocks in page
+   * order, wrapping from the last frame of the last block back to the first
+   * (and the reverse). Typing surfaces and open dialogs are left alone; the
+   * loop's active frame is scrolled into view as it moves. */
   function initSequences() {
+    var blocks = [];
     document.querySelectorAll("[data-cadrumo-sequence]").forEach(function (root) {
-      setupSequence(root);
+      var controller = setupSequence(root);
       setupShellSwitcher(root);
       setupCopyButtons(root);
+      if (controller) blocks.push(controller);
+    });
+    if (!blocks.length) return;
+
+    var cursor = { block: 0, frame: 0 };
+
+    blocks.forEach(function (block, blockIndex) {
+      block.onStep(function (frameIndex) {
+        cursor = { block: blockIndex, frame: frameIndex };
+      });
+    });
+
+    function stepPage(delta) {
+      var b = cursor.block;
+      var f = cursor.frame + delta;
+      if (f >= blocks[b].count) {
+        b = (b + 1) % blocks.length;
+        f = 0;
+      } else if (f < 0) {
+        b = (b - 1 + blocks.length) % blocks.length;
+        f = blocks[b].count - 1;
+      }
+      blocks[b].goTo(f);
+      cursor = { block: b, frame: f };
+      var frame = blocks[b].frameAt(f);
+      if (frame && frame.scrollIntoView) {
+        frame.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      var target = event.target;
+      if (
+        target &&
+        (target.isContentEditable ||
+          /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName || ""))
+      ) {
+        return;
+      }
+      if (document.querySelector("dialog[open]")) return;
+      event.preventDefault();
+      stepPage(event.key === "ArrowRight" ? 1 : -1);
     });
   }
 

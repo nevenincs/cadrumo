@@ -352,7 +352,7 @@ def _build_split_child_transaction(
         counterparty=child.counterparty if child.counterparty is not None else parent_raw.counterparty,
         description=child.description,
         provenance=RawProvenance(
-            source_path=Path.cwd() / ".aeat-ledger-split",
+            source_path=Path.cwd() / ".cadrumo-ledger-split",
             source_sha256=sha256_hex(f"split:{parent.transaction_id}:{index}".encode()),
             source_row_index=index + 1,
             source_format=SourceFormat.MANUAL,
@@ -572,7 +572,7 @@ def _build_merged_transaction(
         counterparty=parent_raw.counterparty,
         description=parent_raw.description,
         provenance=RawProvenance(
-            source_path=Path.cwd() / ".aeat-ledger-merge",
+            source_path=Path.cwd() / ".cadrumo-ledger-merge",
             source_sha256=sha256_hex(merged_provider_id.encode("utf-8")),
             source_row_index=1,
             source_format=SourceFormat.MANUAL,

@@ -267,7 +267,7 @@ def build_review_package(
         else '{"present": false}'
     )
 
-    with tempfile.TemporaryDirectory(prefix="aeat-review-package-") as staging_name:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-") as staging_name:
         staging_root = Path(staging_name)
         (staging_root / _DRAFT_MEMBER).write_bytes(draft_bytes)
         (staging_root / _REVISION_MEMBER).write_text(

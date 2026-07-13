@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import logging
 import logging.config
+import logging.handlers
 import re
 import sys
 from collections.abc import Mapping
@@ -413,8 +414,10 @@ def configure_logging() -> None:
         configured_handlers["file"] = {
             "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(log_file),
+            "maxBytes": settings.cadrumo_log_file_max_bytes,
+            "backupCount": settings.cadrumo_log_file_backup_count,
             "encoding": "utf-8",
             "filters": ["drop_run_event"],
         }

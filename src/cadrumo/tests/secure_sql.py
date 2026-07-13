@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
+import pytest
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
@@ -482,10 +483,53 @@ def isolated_cli_runtime_profile(
         yield profile
 
 
+@pytest.fixture(autouse=False)
+def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
+    """Canonical isolated storage root for CLI end-to-end tests.
+
+    Unlike :func:`isolated_cli_runtime_profile`, this fixture does not
+    pre-provision a bucket: :func:`isolated_profile_storage_root` leaves the
+    storage root empty so the real ``config profile create`` CLI command can
+    run end to end, which is what most CLI-driven scenarios need.
+
+    Every generated-output directory settings field derives its default from
+    ``cadrumo_local_storage_root`` (the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy
+    in :mod:`core.config`), so isolating the root through
+    :func:`isolated_profile_storage_root` alone relocates the whole family —
+    tokens, drafts, runs, financial catalogues, and every sibling directory —
+    without a per-field override block. ``cadrumo_output_language`` is pinned
+    to English so operator-facing text assertions stay locale-stable across
+    CLI test suites.
+
+    Import this fixture directly into a test module rather than
+    re-declaring the override block locally, e.g.::
+
+        from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+
+    The re-bound name becomes an autouse fixture in the importing module
+    because pytest resolves fixtures by the name bound in the requesting
+    module's namespace, not by the module that originally defined the
+    function; this is the same pattern the entrypoints CLI test suite
+    already uses for its intra-package ``_isolated_cli_backend`` re-export.
+    Add ``@pytest.fixture(autouse=True)`` on re-import only when a caller
+    wants autouse without renaming the parameter it requests explicitly.
+    """
+    dispose_engine()
+    with (
+        override_settings(cadrumo_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+    ):
+        try:
+            yield storage_root
+        finally:
+            dispose_engine()
+
+
 __all__ = [
     "MultiBucketTestRuntime",
     "TestRuntimeProfile",
     "dev_test_database_password",
+    "isolated_cli_backend",
     "isolated_cli_runtime_profile",
     "isolated_ephemeral_secure_sql",
     "isolated_profile_storage_root",

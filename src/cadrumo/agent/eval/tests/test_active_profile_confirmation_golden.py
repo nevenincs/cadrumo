@@ -22,19 +22,16 @@ work-unit commands produced.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.operator_surface import command_classification
-from ....core.config import override_settings
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ProfileConfirmationScenario, check_profile_confirmation_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -62,30 +59,6 @@ _MUTATING_COMMANDS = (
 
 def _valid_commands() -> frozenset[str]:
     return frozenset(ref.command for ref in command_schema_refs())
-
-
-@pytest.fixture
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated real storage root, driven entirely through the live CLI.
-
-    Reconstructed locally rather than imported across the package boundary
-    (`aeat-quality-gates` forbids cross-package private imports), mirroring
-    `test_lifecycle_contradiction_golden.py`'s identical fixture: unlike
-    `isolated_cli_runtime_profile` (used by the sibling category-1/3 golden-eval
-    tests), `isolated_profile_storage_root` does not pre-provision a bucket, so the
-    real `config profile create` CLI command can run end to end - this scenario needs
-    the real profile-bootstrap path, not a hand-written record, because it drives
-    `config profile status`'s own profile-lifecycle read.
-    """
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile() -> None:
@@ -183,7 +156,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
         )
 
 
-def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_backend: None) -> None:
+def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """Real repro: ``config profile status`` genuinely surfaces which profile is active.
 
     Grounds the confirmation step against a live dispatch before it is used as a
@@ -195,7 +168,7 @@ def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_back
     assert active_profile == _PROFILE_ID
 
 
-def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: None) -> None:
+def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """PASS: a real trajectory that confirms the active profile before mutating it passes.
 
     Dispatches the real sequence an onboarding-then-preparer handoff must follow -
@@ -224,7 +197,7 @@ def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: None) 
     assert result.confirmed_before_first_mutation
 
 
-def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backend: None) -> None:
+def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """FAIL-catch (anti-tautology): a real mutating sequence with no prior confirmation MUST fail.
 
     Dispatches the SAME real mutating sequence with the confirmation step omitted -
@@ -255,7 +228,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     )
 
 
-def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolated_cli_backend: None) -> None:
+def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """FAIL-catch: a confirmation dispatched AFTER the first mutating verb does not satisfy the prefix.
 
     A trajectory that eventually confirms - just too late - is the same hazard as never

@@ -51,7 +51,7 @@ import os
 import re
 import shutil
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import chdir, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -90,6 +90,7 @@ __all__ = [
     "SequenceSandbox",
     "SequenceTranscript",
     "default_fixtures_root",
+    "execute_page_sequences",
     "execute_sequence",
     "sequence_sandbox",
 ]
@@ -130,8 +131,9 @@ _EXIT_CODE_PATH: str = "exit_code"
 _LIVE_TOKENS: frozenset[str] = frozenset({"live", "pull"})
 _PULL_VERB_PREFIX: str = "pull-"
 
-#: One json-path segment: a mapping key or a ``[index]`` list address.
-_PATH_SEGMENT_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)|\[([0-9]+)\]")
+#: One json-path segment: a dotted key (an identifier or an all-digit object
+#: key such as a casilla number) or a ``[index]`` list address.
+_PATH_SEGMENT_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*|[0-9]+)|\[([0-9]+)\]")
 
 #: Transient registry-race markers: concurrent modification of the registry
 #: TOML tree during local development produces these transient failures; the
@@ -458,20 +460,32 @@ def _parse_envelope(output: str) -> dict[str, JsonValue] | None:
 
 
 def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
-    """Walk a dotted/bracketed json-path; return ``(found, value)``."""
+    """Walk a dotted/bracketed json-path; return ``(found, value)``.
+
+    Digit-segment resolution rule: an all-digit DOTTED segment (``.03``) is a
+    string OBJECT KEY first — casilla numbers are JSON object keys — and is
+    treated as a list index only when the current node is a list. The bracketed
+    ``[n]`` form is always and only a list index.
+    """
     current: object = document
     for match in _PATH_SEGMENT_RE.finditer(path):
         key, index = match.group(1), match.group(2)
         if key is not None:
-            if not isinstance(current, Mapping):
-                return False, None
-            # Re-key defensively: JSON object keys are always strings, and the
-            # str-keyed view gives the checker a concrete key type to index by.
-            step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
-            if key not in step:
-                return False, None
-            current = step[key]
-            continue
+            if isinstance(current, Mapping):
+                # Re-key defensively: JSON object keys are always strings, and
+                # the str-keyed view gives the checker a concrete key type.
+                step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
+                if key not in step:
+                    return False, None
+                current = step[key]
+                continue
+            if isinstance(current, list) and key.isdigit():
+                position = int(key)
+                if position >= len(current):
+                    return False, None
+                current = current[position]
+                continue
+            return False, None
         if not isinstance(current, list) or int(index) >= len(current):
             return False, None
         current = current[int(index)]
@@ -662,3 +676,78 @@ def _execute_in_root(
         workdir=str(sandbox.workdir),
         frames=frames,
     )
+
+
+def execute_page_sequences(
+    sequences: Sequence[ParsedSequence],
+    *,
+    label: str = "page",
+    sandbox_root: Path | None = None,
+    fixtures_root: Path | None = None,
+) -> tuple[SequenceTranscript, ...]:
+    """Execute a page's sequences cumulatively in ONE hermetic sandbox.
+
+    The page-coherence tier: a reader following an enrolled page top to bottom
+    works in one clean environment, so this mode opens a single sandbox (same
+    substrate as :func:`execute_sequence` — isolated real-crypto storage,
+    frozen clock, injected deterministic profile) and runs every sequence IN
+    PAGE ORDER inside it, state accumulating across sequences by design. This
+    is deliberately NOT the golden contract: goldens stay the per-sequence
+    isolated expectation, and cumulative transcripts must never be compared
+    against them.
+
+    Captures stay sequence-scoped (the parser proves placeholder resolution per
+    sequence); persistent state — the ledger, work units, profile facts — is
+    what carries across. Frame execution keeps its fail-fast guarantees
+    (exit-code enforcement, capture resolution, live-AEAT refusal for every
+    sequence up front), so a mid-page failure aborts the page rather than
+    cascading a corrupted premise into later sequences.
+
+    Args:
+        sequences: The page's structurally valid sequences, in page order.
+        label: A locator label for sandbox-level failure messages (the page
+            docname).
+        sandbox_root: An empty directory to sandbox under; a temporary
+            directory when ``None``.
+        fixtures_root: Optional override of the committed fixtures tree.
+
+    Returns:
+        One :class:`SequenceTranscript` per sequence, in page order.
+    """
+    for sequence in sequences:
+        _refuse_live_frames(sequence)
+    if not sequences:
+        return ()
+    if sandbox_root is not None:
+        return _execute_page_in_root(sequences, label, sandbox_root, fixtures_root)
+    with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
+        return _execute_page_in_root(sequences, label, Path(tmp), fixtures_root)
+
+
+def _execute_page_in_root(
+    sequences: Sequence[ParsedSequence],
+    label: str,
+    sandbox_root: Path,
+    fixtures_root: Path | None,
+) -> tuple[SequenceTranscript, ...]:
+    """Open one sandbox under ``sandbox_root`` and run every sequence in order."""
+    transcripts: list[SequenceTranscript] = []
+    with sequence_sandbox(
+        sequence_id=label,
+        sandbox_root=sandbox_root,
+        fixtures_root=fixtures_root,
+    ) as sandbox:
+        for sequence in sequences:
+            captures: dict[str, CapturedScalar] = {}
+            frames = tuple(_execute_frame(sequence, frame, captures) for frame in sequence.frames)
+            transcripts.append(
+                SequenceTranscript(
+                    sequence_id=sequence.sequence_id,
+                    profile_id=sandbox.profile_id,
+                    frozen_instant=sandbox.frozen_instant,
+                    storage_root=str(sandbox.storage_root),
+                    workdir=str(sandbox.workdir),
+                    frames=frames,
+                ),
+            )
+    return tuple(transcripts)

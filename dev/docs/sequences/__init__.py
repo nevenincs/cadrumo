@@ -20,7 +20,9 @@ and the static live-AEAT enrollment refusal (``refuse_live_frames`` /
 from __future__ import annotations
 
 from .__main__ import (
+    COHERENCE_TIER_PREFIX,
     DiscoveredSequence,
+    check_page_coherence,
     check_sequences,
     default_docs_root,
     discover_sequences,
@@ -80,6 +82,7 @@ from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
 from ._tokeniser import CommandToken, TokenKind, command_path_key, tokenise_command
 
 __all__ = [
+    "COHERENCE_TIER_PREFIX",
     "SANDBOX_INSTANT",
     "SANDBOX_PROFILE_ID",
     "SANDBOX_PROFILE_LABEL",
@@ -108,6 +111,7 @@ __all__ = [
     "TokenKind",
     "assert_transcript_matches_golden",
     "build_golden",
+    "check_page_coherence",
     "check_sequences",
     "check_transcript",
     "command_path_key",
@@ -118,6 +122,7 @@ __all__ = [
     "default_seeds_root",
     "discover_sequences",
     "evaluate_expectations",
+    "execute_page_sequences",
     "execute_sequence",
     "golden_path",
     "live_aeat_tokens",

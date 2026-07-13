@@ -14,6 +14,7 @@ from collections.abc import Iterator
 import pytest
 
 from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
+from ....core import PRODUCT_IDENTITY
 from .._annotations import McpAnnotations
 from .._input_schema import VerbInputSchema
 from .._meta_tools import (
@@ -206,7 +207,7 @@ def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> 
 
 def test_server_uses_the_canonical_cadrumo_identity() -> None:
     server = build_server(())
-    assert server.name == "cadrumo"
+    assert server.name == PRODUCT_IDENTITY.mcp_server
 
 
 def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:

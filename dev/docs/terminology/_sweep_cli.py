@@ -1,4 +1,4 @@
-"""Cadence re-run CLI for the query-vocabulary RAG sweep (ADR D6).
+"""Cadence re-run CLI for the query-vocabulary RAG sweep.
 
 A dev / maintenance CLI, ``python -m dev.docs.terminology.sweep``, mirroring the
 ``apidocs`` / ``preprocess`` precedents. It regenerates the term-to-target
@@ -7,10 +7,10 @@ output is reviewed like any generated-but-committed surface (the registry
 authoring-compiler pattern). The sweep re-runs on cadence -- a registry or docs
 structure change -- and its diff is read on every refresh.
 
-Scope: this verb RUNS the sweep and prints / writes the laundered mapping. The
-sibling landing step commits the relevance data file and adds the drift /
-laundering / licence gates; this verb's ``--out`` writes the JSON the landing
-step consumes, so the seam is clean.
+Scope: this verb RUNS the sweep and prints / writes the laundered mapping. A
+separate committed step lands the relevance data file and adds the drift /
+laundering / licence gates; this verb's ``--out`` writes the JSON that step
+consumes, so the seam is clean.
 """
 
 from __future__ import annotations

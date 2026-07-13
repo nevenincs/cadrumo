@@ -50,7 +50,7 @@
       }
     ]
   },
-  "note": "Baseline held-out miss-rate before the W03 vocabulary widening (ADR 2026-07-13 D3; threshold 0.10). Re-measured over the post-cutover refreshed mapping (hook-fed source-path index).",
+  "note": "Baseline held-out miss-rate before the vocabulary widening (threshold 0.10). Re-measured over the post-cutover refreshed mapping (hook-fed source-path index).",
   "rung2": {
     "decision": "keep-deferred",
     "measured_miss_rate": 0.0,

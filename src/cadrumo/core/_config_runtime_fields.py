@@ -117,6 +117,19 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
         default="DEBUG",
         description="Log level for the file handler installed by ``cadrumo.core.logging``",
     )
+    cadrumo_log_file_max_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        ge=1,
+        description=(
+            "Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; "
+            "default 10 MiB"
+        ),
+    )
+    cadrumo_log_file_backup_count: int = Field(
+        default=5,
+        ge=0,
+        description="Number of rotated cadrumo.log backups retained by the rotating file handler",
+    )
     cadrumo_log_root_level: str = Field(
         default="DEBUG",
         description="Root logger level installed by ``cadrumo.core.logging``",

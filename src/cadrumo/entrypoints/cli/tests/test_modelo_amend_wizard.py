@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import hashlib
 from collections import deque
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,14 +23,12 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
-from ....core.config import override_settings
 from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._modelo_amend_wizard_cli import override_amend_wizard_prompter
 from .._modelo_work_wizard_cli import _ScriptedTextPrompter
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -75,19 +72,6 @@ def _justificante_metadata(*, csv: str, modelo: str, period: str) -> Justificant
         source_pdf_sha256=hashlib.sha256(body).hexdigest(),
         parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
     )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _invoke(args: list[str]):

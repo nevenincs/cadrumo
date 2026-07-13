@@ -11,6 +11,9 @@ Parses a directive body of plain frame lines into a strict
   parsed envelope; later frames interpolate it as ``{name}``.
 - ``@expect <json-path> == <literal>`` -- a semantic assertion on the preceding
   frame.
+- ``@step <imperative sentence>`` -- a narration caption for the NEXT frame
+  (setup, command, or result). Render-side metadata only: never executed,
+  never golden-compared, and free prose (no placeholder scan).
 
 Parsing is two-staged. :func:`parse_frame_lines` is the low-level pass that turns
 raw text into ordered frame builders plus a list of accumulated problem strings,
@@ -45,6 +48,7 @@ from ._schema import (
     ParsedSequence,
     SequenceFrame,
     SequenceId,
+    StepSentence,
     VerifySentence,
 )
 
@@ -75,6 +79,7 @@ _SEQUENCE_ID_CONSTRAINTS = _string_constraints(SequenceId)
 _IDENTIFIER_CONSTRAINTS = _string_constraints(Identifier)
 _JSON_PATH_CONSTRAINTS = _string_constraints(JsonPath)
 _VERIFY_CONSTRAINTS = _string_constraints(VerifySentence)
+_STEP_CONSTRAINTS = _string_constraints(StepSentence)
 
 _SEQUENCE_ID_RE = re.compile(_SEQUENCE_ID_CONSTRAINTS.pattern or "")
 _IDENTIFIER_RE = re.compile(_IDENTIFIER_CONSTRAINTS.pattern or "")
@@ -109,6 +114,8 @@ class _FrameBuilder:
     #: so a duplicate-name diagnostic points at the offending ``@capture`` line
     #: rather than the frame's command line.
     capture_lines: list[int] = field(default_factory=list)
+    #: The ``@step`` narration sentence authored above this frame, if any.
+    step_description: str | None = None
 
     def build(self) -> SequenceFrame:
         return SequenceFrame(
@@ -118,6 +125,7 @@ class _FrameBuilder:
             captures=tuple(self.captures),
             expects=tuple(self.expects),
             placeholder_names=self.placeholder_names,
+            step_description=self.step_description,
             source=self.source,
             line_number=self.line_number,
         )
@@ -268,6 +276,28 @@ def _parse_expect(rest: str, source: str, line_number: int, problems: list[str])
     return ExpectAssertion(json_path=json_path, expected=value)
 
 
+def _parse_step_sentence(rest: str, source: str, line_number: int, problems: list[str]) -> tuple[str, bool]:
+    """Parse an ``@step <imperative sentence>`` annotation body.
+
+    The sentence is narration prose, not a command: it is never argv-decomposed
+    and the ``{name}`` placeholder scan does NOT apply. Only emptiness and the
+    schema's length bound are enforced, parser-side, so a fault accumulates
+    instead of escaping as a raw pydantic ``ValidationError``.
+    """
+    sentence = rest.strip()
+    if not sentence:
+        problems.append(
+            f"{_at(source, line_number)}: @step requires one imperative sentence "
+            "describing the frame below it (e.g. '@step Create the work unit.')",
+        )
+        return "", False
+    maximum = _STEP_CONSTRAINTS.max_length
+    if maximum is not None and len(sentence) > maximum:
+        problems.append(f"{_at(source, line_number)}: the @step sentence must be at most {maximum} characters")
+        return "", False
+    return sentence, True
+
+
 def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], list[str]]:
     """Parse raw directive/seed text into ordered frame builders and problems.
 
@@ -289,6 +319,9 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
     builders: list[_FrameBuilder] = []
     problems: list[str] = []
     current: _FrameBuilder | None = None
+    #: A parsed ``@step`` sentence (with its line, for diagnostics) waiting for
+    #: the NEXT frame line to attach to.
+    pending_step: tuple[str, int] | None = None
 
     for offset, raw_line in enumerate(text.splitlines(), start=1):
         line = raw_line.strip()
@@ -321,7 +354,24 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
                 source=source,
                 line_number=offset,
             )
+            if pending_step is not None:
+                current.step_description = pending_step[0]
+                pending_step = None
             builders.append(current)
+            continue
+
+        if head == "@step":
+            # Narration prose for the NEXT frame — never a command, so no
+            # argv decomposition and no placeholder/brace scan applies.
+            sentence, sentence_ok = _parse_step_sentence(remainder, source, offset, problems)
+            if pending_step is not None:
+                problems.append(
+                    f"{_at(source, offset)}: a frame takes one @step description; this line "
+                    f"follows an unattached @step at {_at(source, pending_step[1])}",
+                )
+                continue
+            if sentence_ok:
+                pending_step = (sentence, offset)
             continue
 
         if head == "@capture":
@@ -345,16 +395,22 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
 
         if head.startswith("@"):
             problems.append(
-                f"{_at(source, offset)}: unknown sigil {head!r}; expected @setup, @result, @capture, or @expect",
+                f"{_at(source, offset)}: unknown sigil {head!r}; expected @setup, @result, @capture, @expect, or @step",
             )
             current = None
             continue
 
         problems.append(
             f"{_at(source, offset)}: unrecognised line {line!r}; "
-            f"expected an '{_EXECUTABLE} ...' command, @setup, @result, @capture, or @expect",
+            f"expected an '{_EXECUTABLE} ...' command, @setup, @result, @capture, @expect, or @step",
         )
         current = None
+
+    if pending_step is not None:
+        problems.append(
+            f"{_at(source, pending_step[1])}: @step must be followed by the frame it "
+            "describes; this trailing @step attaches to nothing",
+        )
 
     return builders, problems
 

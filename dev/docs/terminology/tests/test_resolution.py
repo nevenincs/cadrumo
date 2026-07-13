@@ -1,4 +1,4 @@
-"""Real-behaviour conformance for the chunk-to-target resolution map (ADR D6).
+"""Real-behaviour conformance for the chunk-to-target resolution map.
 
 The resolution map wrangles raw RAG sweep hits (path + line range + score) into
 typed, linkable targets across the five grounding surfaces -- modelo casillas,

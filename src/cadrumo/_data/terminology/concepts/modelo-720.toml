@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-720"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:720"]
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis"]
+related = ["declaracion", "aeat"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Informativa de bienes y derechos en el extranjero."
+definition = "Declaracion informativa anual sobre cuentas, valores e inmuebles situados en el extranjero cuando superan los umbrales establecidos."
+
+[language.es.source]
+citation = "Disposicion adicional 18 de la Ley 58/2003; articulo 42 bis del RD 1065/2007."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 720"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "bienes en el extranjero"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual information return on assets and rights held abroad."
+
+[language.ca]
+short_description = "Informativa de bens i drets a l'estranger."
+
+[language.hu]
+short_description = "Eves informacios bevallas kulfoldon tartott vagyonrol."

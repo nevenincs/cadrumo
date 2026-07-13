@@ -13,8 +13,10 @@ The grammar these records model is a body of plain frame lines where a bare
 ``aeat ...`` line is a visible command frame, ``@setup aeat ...`` an
 executed-but-collapsed setup frame, ``@result aeat ...`` the single terminal
 verification frame, ``@capture <name> <json-path>`` binds a value from the
-preceding frame's parsed envelope, and ``@expect <json-path> == <literal>``
-attaches a semantic assertion to the preceding frame.
+preceding frame's parsed envelope, ``@expect <json-path> == <literal>``
+attaches a semantic assertion to the preceding frame, and ``@step <sentence>``
+attaches a narration caption to the NEXT frame (render-side metadata only,
+never executed).
 """
 
 from __future__ import annotations
@@ -46,21 +48,32 @@ Identifier = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$"),
 ]
-#: A dotted JSON path into a frame's parsed envelope, e.g. ``result.work_unit_id``
-#: or ``result.items[0].id``. The pseudo-path ``exit_code`` (a bare identifier)
-#: is accepted so ``@expect exit_code == <n>`` declares a non-zero expectation.
+#: A dotted JSON path into a frame's parsed envelope, e.g. ``result.work_unit_id``,
+#: ``result.items[0].id``, or ``result.casilla_values.03``. A dotted segment is
+#: an identifier OR an all-digit OBJECT KEY (casilla numbers like ``01``/``03``
+#: are JSON object keys, not list indexes); the bracketed ``[n]`` form remains
+#: the explicit list-index segment. The pseudo-path ``exit_code`` (a bare
+#: identifier) is accepted so ``@expect exit_code == <n>`` declares a non-zero
+#: expectation.
 JsonPath = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
         max_length=256,
-        pattern=r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$",
+        pattern=r"^[A-Za-z_][A-Za-z0-9_]*(\.(?:[A-Za-z_][A-Za-z0-9_]*|[0-9]+)|\[[0-9]+\])*$",
     ),
 ]
 #: One singular imperative verification sentence carried by the ``:verify:``
 #: directive option, rendered as the result frame's caption.
 VerifySentence = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=240),
+]
+#: One singular imperative step-description sentence carried by an ``@step``
+#: annotation, rendered as its frame's narration caption. Same shape as the
+#: ``:verify:`` sentence: free prose, never a command, never executed.
+StepSentence = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=240),
 ]
@@ -119,6 +132,10 @@ class SequenceFrame(BaseModel):
     ``captures`` and ``expects`` are the annotations authored directly beneath
     the frame. ``placeholder_names`` lists every ``{name}`` referenced in
     ``argv``, which the parser has already proven resolves to a prior capture.
+    ``step_description`` is the optional ``@step`` narration sentence authored
+    directly ABOVE the frame — render-side metadata only, never executed truth:
+    the runner, golden store, and comparison ignore it entirely, so authoring or
+    editing an ``@step`` line can never invalidate a committed golden.
     ``source`` and ``line_number`` locate the frame for diagnostics
     (``"body"`` or ``"seed:<name>"``).
     """
@@ -131,6 +148,7 @@ class SequenceFrame(BaseModel):
     captures: tuple[CaptureBinding, ...] = Field(default=())
     expects: tuple[ExpectAssertion, ...] = Field(default=())
     placeholder_names: tuple[Identifier, ...] = Field(default=())
+    step_description: StepSentence | None = None
     source: Annotated[str, StringConstraints(min_length=1)]
     line_number: int = Field(ge=1)
 

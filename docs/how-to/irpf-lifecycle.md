@@ -89,7 +89,7 @@ Verify and export:
 
 ```bash
 aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./m130-2026-1T.boe
+aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
 ```
 
 Verify reports `completeness_status complete` and
@@ -151,7 +151,7 @@ Verify, export, upload, file, and reconcile exactly as in stage 2:
 
 ```bash
 aeat app modelo work verify --modelo 130 --year 2026 --period 2T
-aeat app modelo export --modelo 130 --year 2026 --period 2T --output ./m130-2026-2T.boe
+aeat app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
 aeat app modelo work file --modelo 130 --year 2026 --period 2T
 aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T
 ```
@@ -218,7 +218,7 @@ closed every quarter close the year:
 
 ```bash
 aeat app modelo work verify --modelo 100 --year 2026 --period 0A
-aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./m100-2026.boe
+aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./modelo-100-2026-0A.boe
 aeat app modelo work file --modelo 100 --year 2026 --period 0A
 aeat app modelo reconcile pull --modelo 100 --year 2026 --period 0A
 ```

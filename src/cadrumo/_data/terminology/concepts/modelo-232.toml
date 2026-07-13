@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-232"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:232"]
+legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13"]
+related = ["modelo-200", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Informativa de operaciones vinculadas y paraisos fiscales."
+definition = "Declaracion informativa anual de las operaciones con personas o entidades vinculadas y de las operaciones con paraisos fiscales."
+
+[language.es.source]
+citation = "Articulo 18 de la Ley 27/2014; articulo 13 del RD 634/2015."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 232"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "operaciones vinculadas"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual information return on related-party and tax-haven operations."
+
+[language.ca]
+short_description = "Informativa d'operacions vinculades i paradisos fiscals."
+
+[language.hu]
+short_description = "Kapcsolt ugyletek es adoparadicsomi ugyletek informacios bevallasa."

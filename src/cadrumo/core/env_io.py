@@ -19,13 +19,12 @@ mutate process environment variables.
 The public surface is :func:`read_env_file`, :func:`write_env_var`, and
 :func:`write_env_vars`; each takes a :class:`~pathlib.Path` target. Malformed
 input raises :class:`~core.errors.CoreValidationError`, while writers use
-:func:`_atomic_write_text` so the ``.env`` file is replaced atomically.
+:func:`~cadrumo.core.atomic_write.atomic_write_text` so the ``.env`` file
+is replaced atomically.
 """
 
 from __future__ import annotations
 
-import os
-import tempfile
 from pathlib import Path
 
 from .errors import CoreValidationError
@@ -35,10 +34,8 @@ _log = get_logger(__name__)
 
 
 def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
-    """Atomically write ``text`` to ``path`` via tempfile + :func:`os.replace`.
+    """Atomically write ``text`` to ``path`` via the standard-tier atomic-write helper.
 
-    Mirrors the substrate's atomic-write discipline at
-    :func:`adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
     The plaintext ``env/.env`` payload is operator-controlled
     configuration, not a secret — but the durability story matters:
     :meth:`pathlib.Path.write_text` truncates the existing inode in
@@ -46,63 +43,23 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     truncate and the write completion leaves ``env/.env`` zero-length.
     The operator's certificate path / database URL / live-tests flag /
     storage roots silently revert to defaults, surfacing as an
-    apparently-unprovisioned installation. Writing to a sibling tempfile
-    and then calling :func:`os.replace` guarantees the dirent transition
-    is atomic — a crash leaves either the old or the new file on disk,
-    never a torn write.
+    apparently-unprovisioned installation.
+    :func:`~cadrumo.core.atomic_write.atomic_write_text` guarantees the
+    dirent transition is atomic — a crash leaves either the old or the
+    new file on disk, never a torn write.
 
     Args:
         path: Destination file path.
         text: Full file contents to write.
         encoding: Text encoding (defaults to UTF-8).
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # Initialise tmp_path to None BEFORE the try so the finally
-    # cleanup never hits an UnboundLocalError if NamedTemporaryFile
-    # itself raises. Use try/finally (not try/except OSError) so a
-    # KeyboardInterrupt or any other BaseException mid-write also
-    # unlinks the orphan tempfile — a narrow ``except OSError`` arm
-    # would leak the tempfile on non-OSError exceptions.
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding=encoding,
-            dir=path.parent,
-            prefix=f"{path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp_path, path)
-        # On a successful os.replace the tempfile no longer exists
-        # under tmp_path (it was renamed to ``path``). Clear the
-        # local so the finally cleanup is a no-op.
-        tmp_path = None
-        # Best-effort parent-dir fsync. POSIX-only — the helper
-        # imports lazily to avoid a hard dependency on the storage
-        # substrate when env_io is used outside of a provisioned
-        # install. Suppress every exception: directory fsync is a
-        # durability hardening, not a correctness gate, and the
-        # storage package may be unimportable in minimal install
-        # contexts where env_io still runs.
-        try:  # pragma: no cover - defensive
-            from .locks import fsync_parent_dir
+    # Deferred import: keeps this module's own eager import surface
+    # unchanged for callers that merely import env_io without ever
+    # writing (core.atomic_write transitively imports core.locks, which
+    # imports core.config).
+    from .atomic_write import atomic_write_text
 
-            fsync_parent_dir(path)
-        except Exception as fsync_exc:
-            _log.debug(
-                "env_io atomic_write: parent-dir fsync skipped for %s (%s)",
-                path,
-                fsync_exc,
-                exc_info=True,
-            )
-    finally:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
+    atomic_write_text(path, text, encoding=encoding)
 
 
 def read_env_file(path: Path) -> dict[str, str]:

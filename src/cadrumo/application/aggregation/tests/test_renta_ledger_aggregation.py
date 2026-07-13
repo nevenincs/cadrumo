@@ -246,7 +246,6 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
 
 # ---------------------------------------------------------------------------
 # Typed provenance: SpendingCategory survives the ledger→renta handoff
-# (audit finding F3: cross-domain-handoffs-swarm-audit 2026-05-16)
 # ---------------------------------------------------------------------------
 
 

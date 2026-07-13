@@ -91,7 +91,7 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
     ):
         # cadrumo_log_dir is declared Optional (an explicit CADRUMO_LOG_DIR override
         # could stay None), but this construction leaves it unset, so the
-        # `_resolve_log_dir_under_storage_root` validator always roots it - the
+        # `_resolve_output_dirs_under_storage_root` validator always roots it - the
         # assertion below is real test coverage of that resolution, not just a
         # narrowing hack.
         assert derived is not None

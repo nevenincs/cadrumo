@@ -1,0 +1,99 @@
+"""Retention pruning for per-run trace directories.
+
+The run-trace store keeps one subdirectory per ``run_id`` under
+``cadrumo_runs_dir`` and formerly grew without bound. ``prune_run_traces``
+gives it a declared retention lifecycle: run directories whose modification
+time is older than ``cadrumo_runs_retention_days`` are removed. Age is set here
+with ``os.utime`` on real directories (run traces are plain files with no
+bucket session), and the prune runs under the real clock.
+"""
+
+from __future__ import annotations
+
+import os
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+import pytest
+
+from ...config import override_settings
+from .._store import prune_run_traces
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_FRESH_RUN_ID = "aaaaaaaaaaaaaaaa"
+_STALE_RUN_ID = "bbbbbbbbbbbbbbbb"
+
+
+def _make_run_dir(runs_dir: Path, run_id: str, *, age_days: int, anchor: datetime) -> Path:
+    run_dir = runs_dir / run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "trace.json").write_text("{}", encoding="utf-8")
+    stamp = (anchor - timedelta(days=age_days)).timestamp()
+    os.utime(run_dir, (stamp, stamp))
+    return run_dir
+
+
+def test_prune_removes_run_dirs_older_than_retention_window(tmp_path: Path) -> None:
+    runs_dir = tmp_path / "runs"
+    anchor = datetime.now(UTC)
+    fresh = _make_run_dir(runs_dir, _FRESH_RUN_ID, age_days=1, anchor=anchor)
+    stale = _make_run_dir(runs_dir, _STALE_RUN_ID, age_days=45, anchor=anchor)
+
+    with override_settings(cadrumo_runs_dir=runs_dir):
+        removed = prune_run_traces(retention_days=30)
+
+    assert removed == 1
+    assert fresh.exists()
+    assert not stale.exists()
+
+
+def test_prune_keeps_everything_inside_the_window(tmp_path: Path) -> None:
+    runs_dir = tmp_path / "runs"
+    anchor = datetime.now(UTC)
+    a = _make_run_dir(runs_dir, _FRESH_RUN_ID, age_days=1, anchor=anchor)
+    b = _make_run_dir(runs_dir, _STALE_RUN_ID, age_days=5, anchor=anchor)
+
+    with override_settings(cadrumo_runs_dir=runs_dir):
+        removed = prune_run_traces(retention_days=30)
+
+    assert removed == 0
+    assert a.exists()
+    assert b.exists()
+
+
+def test_prune_ignores_non_run_directories(tmp_path: Path) -> None:
+    runs_dir = tmp_path / "runs"
+    anchor = datetime.now(UTC)
+    _make_run_dir(runs_dir, _STALE_RUN_ID, age_days=45, anchor=anchor)
+    # A stray non-run-id directory, even if old, is out of scope and untouched.
+    stray = runs_dir / "not-a-run-id"
+    stray.mkdir()
+    old = (anchor - timedelta(days=90)).timestamp()
+    os.utime(stray, (old, old))
+
+    with override_settings(cadrumo_runs_dir=runs_dir):
+        removed = prune_run_traces(retention_days=30)
+
+    assert removed == 1
+    assert stray.exists()
+    assert not (runs_dir / _STALE_RUN_ID).exists()
+
+
+def test_prune_missing_runs_directory_is_a_noop(tmp_path: Path) -> None:
+    with override_settings(cadrumo_runs_dir=tmp_path / "does-not-exist"):
+        assert prune_run_traces(retention_days=30) == 0
+
+
+def test_prune_defaults_to_central_retention_setting(tmp_path: Path) -> None:
+    runs_dir = tmp_path / "runs"
+    anchor = datetime.now(UTC)
+    _make_run_dir(runs_dir, _FRESH_RUN_ID, age_days=1, anchor=anchor)
+    _make_run_dir(runs_dir, _STALE_RUN_ID, age_days=400, anchor=anchor)
+
+    with override_settings(cadrumo_runs_dir=runs_dir):
+        removed = prune_run_traces()
+
+    assert removed == 1
+    assert (runs_dir / _FRESH_RUN_ID).exists()
+    assert not (runs_dir / _STALE_RUN_ID).exists()

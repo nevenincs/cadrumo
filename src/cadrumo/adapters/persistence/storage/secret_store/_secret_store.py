@@ -26,8 +26,6 @@ when it is absent.
 from __future__ import annotations
 
 import hmac
-import os
-import tempfile
 from collections.abc import Iterable
 from datetime import datetime
 from hashlib import sha256
@@ -228,41 +226,25 @@ class SecretStore:
     def _write_index(self, index: _SecretIndex) -> None:
         """Atomically write ``index`` to disk.
 
-        Uses tempfile + fsync + :func:`os.replace` + parent-dir fsync
-        so a crashed writer cannot leave a torn JSON for a concurrent
-        reader, and a power loss between :func:`os.replace` and the
+        Delegates to :func:`~cadrumo.core.atomic_write.atomic_write_text`
+        (standard tier: tempfile + fsync + :func:`os.replace` + parent-dir
+        fsync) so a crashed writer cannot leave a torn JSON for a
+        concurrent reader, and a power loss between the replace and the
         directory flush cannot lose the swap. The index is stored
         plaintext; it carries only digests, never plaintext keys or
         values.
         """
-        from .....core.locks import fsync_parent_dir
+        # Deferred import: mirrors this method's existing deferred
+        # `core.locks` import (kept local to avoid widening this module's
+        # eager import surface for a bootstrap-adjacent secret-store path).
+        from .....core.atomic_write import atomic_write_text
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
         target = self._index_path()
         payload = index.model_dump_json(indent=2)
-        tmp_path: Path | None = None
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding=UTF_8_ENCODING,
-                dir=target.parent,
-                prefix=f"{target.stem}.",
-                suffix=".tmp",
-                delete=False,
-            ) as handle:
-                tmp_path = Path(handle.name)
-                handle.write(payload)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(tmp_path, target)
-            fsync_parent_dir(target)
+            atomic_write_text(target, payload, encoding=UTF_8_ENCODING)
         except OSError:
             _log.error("secret_store: atomic index write failed target=%s", target.name, exc_info=True)
-            if tmp_path is not None:
-                try:
-                    tmp_path.unlink(missing_ok=True)
-                except OSError:
-                    _log.warning("secret_store: atomic index cleanup failed target=%s", target.name, exc_info=True)
             raise
 
     def _build_envelope(self, record: SecretRecord) -> Envelope[SecretRecord]:

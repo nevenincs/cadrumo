@@ -6,9 +6,7 @@ rejection, while :data:`LocaleNode` documents the recursive locale-tree shape
 shared by the manager and parity tests.
 """
 
-import os
 import re
-import tempfile
 from collections.abc import Hashable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +14,7 @@ from typing import Any, override
 
 import yaml
 
+from ..core.atomic_write import atomic_write_text
 from ..core.errors import AeatError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
@@ -566,29 +565,13 @@ def _rewrite_locale_mapping(path: Path, data: dict[str, LocaleNode]) -> None:
 
     The locale CLI may be interrupted by an operator or orchestration timeout.
     Writing directly to the catalogue would expose a truncated YAML file between
-    ``open(..., "w")`` and the final flush, so serialize beside the target and
-    replace it only after the bytes are durable.
+    ``open(..., "w")`` and the final flush, so serialize in memory and persist
+    through :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard
+    tier), which also adds a parent-directory fsync this dialect previously
+    lacked.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding=UTF_8_ENCODING,
-            dir=path.parent,
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as file_obj:
-            temporary_path = Path(file_obj.name)
-            yaml.dump(data, file_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
-            file_obj.flush()
-            os.fsync(file_obj.fileno())
-        os.replace(temporary_path, path)
-        temporary_path = None
-    finally:
-        if temporary_path is not None:
-            temporary_path.unlink(missing_ok=True)
+    serialised = yaml.dump(data, allow_unicode=True, sort_keys=True, default_flow_style=False)
+    atomic_write_text(path, serialised, encoding=UTF_8_ENCODING)
 
 
 def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf: bool = False) -> None:

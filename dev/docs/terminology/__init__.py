@@ -3,10 +3,9 @@
 This package is dev build tooling (alongside ``dev/docs/cli_reference.py``
 and ``dev/docs/apidocs``), not shippable ``src/cadrumo`` code: the projected
 records are a build-time artifact consumed by the downstream Pagefind
-injection, never committed (like the generated CLI reference). Per ADR D4
-the casilla records are MACHINE-GENERATED from registry snapshots and
-never hand-curated, distinct from the curated ``dev.docs.terminology_handbook`` concept
-Handbook.
+injection, never committed (like the generated CLI reference). The casilla
+records are MACHINE-GENERATED from registry snapshots and never hand-curated,
+distinct from the curated ``dev.docs.terminology_handbook`` concept Handbook.
 """
 
 from __future__ import annotations

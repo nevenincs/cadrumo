@@ -1,4 +1,4 @@
-"""Strict roundtrip across the PercepcionObservationRepository boundary (#28 P03).
+"""Strict roundtrip across the PercepcionObservationRepository boundary.
 
 Persists per-perceptor-clave :class:`WithholdingObservation` records at
 ``SensitivityClass.FINANCIAL`` keyed by ``(modelo, filing_year, period,
@@ -81,7 +81,7 @@ def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: 
 
 
 def test_corrupt_clave_or_subclave_refused_on_reload() -> None:
-    """Anti-tautology (#29): a persisted observation whose clave/subclave was
+    """Anti-tautology: a persisted observation whose clave/subclave was
     corrupted to an invalid token is REFUSED when reconstituted.
 
     The repository deserialises each stored record through
@@ -132,7 +132,8 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
             ("22222222J", "A", ""),
             ("11111111H", "G", ""),
         }
-        # Distinct percepciones = 3; distinct perceptores = 2 (the #28 vs #6 delta).
+        # Distinct percepciones = 3; distinct perceptores = 2 (the percepciones-count
+        # vs perceptor-count delta).
         assert len({o.perceptor_tax_id for o in loaded}) == 2
 
 

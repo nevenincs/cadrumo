@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from dev.docs.terminology._miss_rate import (
+    DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
+    HeldOutCaseKind,
     MissReason,
     Rung2Decision,
     adjudicate_rung2,
@@ -30,38 +32,60 @@ def test_held_out_query_set_is_a_curated_bundled_corpus() -> None:
     assert all(case.source.strip() for case in query_set.cases)
 
 
-def test_held_out_queries_are_compiled_vocabulary_cases() -> None:
-    """Every held-out query is a real shipped query-vocabulary row."""
+def test_case_kinds_partition_the_vocabulary_honestly() -> None:
+    """Vocabulary cases are real vocabulary rows; out-of-sample cases are NOT.
+
+    The close-review (2026-07-13 audit, SHARP-1) found the original all-
+    vocabulary set made a miss impossible by construction. The kinds now
+    partition honestly: a ``vocabulary`` case must be a shipped query row,
+    and an ``out_of_sample`` case must NOT be one -- otherwise it is not
+    held out and the gate is decorative again.
+    """
     vocabulary = {(query.concept_id, query.query.casefold()) for query in enumerate_query_vocabulary()}
     query_set = load_held_out_query_set()
 
-    missing = [
+    bad_vocab = [
         (case.concept_id, case.query)
         for case in query_set.cases
-        if (case.concept_id, case.query.casefold()) not in vocabulary
+        if case.kind is HeldOutCaseKind.VOCABULARY and (case.concept_id, case.query.casefold()) not in vocabulary
     ]
+    assert not bad_vocab, f"vocabulary case(s) not in the shipped vocabulary: {bad_vocab}"
 
-    assert not missing, f"held-out case(s) not present in the shipped query vocabulary: {missing}"
+    leaked = [
+        (case.concept_id, case.query)
+        for case in query_set.cases
+        if case.kind is HeldOutCaseKind.OUT_OF_SAMPLE and (case.concept_id, case.query.casefold()) in vocabulary
+    ]
+    assert not leaked, f"out-of-sample case(s) leaked into the vocabulary: {leaked}"
+
+    kinds = {case.kind for case in query_set.cases}
+    assert kinds == {HeldOutCaseKind.VOCABULARY, HeldOutCaseKind.OUT_OF_SAMPLE}, (
+        "the held-out corpus must carry BOTH kinds; an all-vocabulary set "
+        "cannot register a miss and an all-out-of-sample set loses the "
+        "wrangling-regression signal"
+    )
 
 
 def test_held_out_miss_rate_measures_the_committed_relevance_mapping() -> None:
-    """The refreshed, non-degraded corpus resolves every held-out query.
+    """The evaluation is structurally sound; misses come only where possible.
 
-    The committed mapping is now a complete, non-degraded sweep: zero failed
-    queries, and every shipped query carries at least its originating concept
-    card plus the RAG-discovered grounding surfaces. So every held-out case
-    resolves -- the worked example ``regla de prorrata`` to its BOE legal
-    article, the catalogued-term cases to their first-class concept card.
+    The close-review removed the zero-miss pinning: the corpus now contains
+    genuine out-of-sample phrasings, so misses are a REAL measurement, never
+    asserted away. What stays pinned is structure: the sweep is non-degraded,
+    every vocabulary case hits (the concept-card seed plus top-five bound
+    make a vocabulary miss a wrangling regression), the prorrata worked
+    example still grounds legally, and any miss belongs to an out-of-sample
+    case.
     """
     evaluation = evaluate_held_out_miss_rate()
+    query_set = load_held_out_query_set()
     by_query = {row.query: row for row in evaluation.rows}
+    kind_by_query = {case.query: case.kind for case in query_set.cases}
 
-    assert evaluation.case_count == len(load_held_out_query_set().cases)
+    assert evaluation.case_count == len(query_set.cases)
     assert evaluation.compiled_query_count == load_committed_relevance().query_count
     # The sweep is non-degraded: no transient retrieval failures were recorded.
     assert evaluation.compiled_failed_query_count == 0
-    # Every shipped query resolved to at least one target (the concept-card seed
-    # guarantees coverage; RAG adds the grounding surfaces).
     assert evaluation.compiled_targeted_query_count == evaluation.compiled_query_count
     # The prorrata worked example resolves to its real BOE legal grounding.
     assert by_query["regla de prorrata"].hit
@@ -70,28 +94,32 @@ def test_held_out_miss_rate_measures_the_committed_relevance_mapping() -> None:
         "legal:ley-37-1992:art-102",
         "concept:prorrata-especial",
     }
-    # No targetless misses remain on the complete corpus.
-    assert evaluation.hit_count == evaluation.case_count
-    assert evaluation.miss_count == 0
-    assert evaluation.miss_rate == pytest.approx(0.0)
+    # A vocabulary-case miss means the wrangler dropped a curated surface.
+    vocabulary_misses = [
+        row for row in evaluation.rows if not row.hit and kind_by_query[row.query] is HeldOutCaseKind.VOCABULARY
+    ]
+    assert not vocabulary_misses, f"vocabulary regression: {[r.query for r in vocabulary_misses]}"
     assert not [row for row in evaluation.rows if row.reason is MissReason.NO_TARGETS]
 
 
-def test_rung2_adjudication_keeps_static_embeddings_deferred() -> None:
-    """A complete, non-degraded sweep keeps the static rung-2 matrix deferred.
+def test_rung2_adjudication_is_consistent_with_the_ratified_gate() -> None:
+    """The adjudication applies the RATIFIED threshold and follows the number.
 
-    With zero failed queries the adjudicator stops demanding a refresh and
-    measures honestly: the held-out miss-rate is within the accepted threshold,
-    so the ~1-3 MB static term-embedding matrix (rung 2) stays deferred. The
-    residual closed-vocabulary queries are served first-class by the concept
-    card and four-language declared aliases (rung 1); rung 2's unique value --
-    live embedding of UNCATALOGUED free text -- is not exercised by any
-    held-out miss.
+    The gate does not pin the verdict (the close-review found the previous
+    version asserted keep-deferred, which made the measurement decorative).
+    It pins consistency: the default threshold IS the ADR D3 ten percent,
+    and the decision is exactly what the measured rate demands on either
+    side of it.
     """
     evaluation = evaluate_held_out_miss_rate()
     adjudication = adjudicate_rung2(evaluation)
 
+    assert adjudication.miss_rate_threshold == DEFAULT_RUNG2_MISS_RATE_THRESHOLD == 0.10
     assert evaluation.compiled_failed_query_count == 0
-    assert evaluation.miss_rate <= adjudication.miss_rate_threshold
-    assert adjudication.decision is Rung2Decision.KEEP_DEFERRED
     assert adjudication.measured_miss_rate == evaluation.miss_rate
+    expected = (
+        Rung2Decision.IMPLEMENT_RUNG2
+        if evaluation.miss_rate > adjudication.miss_rate_threshold
+        else Rung2Decision.KEEP_DEFERRED
+    )
+    assert adjudication.decision is expected

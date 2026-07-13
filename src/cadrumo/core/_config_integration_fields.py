@@ -83,11 +83,22 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
     cadrumo_registry_disk_cache_dir: Path | None = Field(
         default=None,
         description=(
-            "Override for the cross-process registry disk-pickle directory "
-            "(default: the platform temp directory). Set only by test isolation "
-            "to redirect the shared bundled-root cache onto a test-owned "
-            "directory, so a test asserting exclusive pickle state never races "
-            "sibling pytest-xdist workers sharing the real OS temp directory."
+            "Override for the cross-process registry disk-pickle directory. "
+            "When unset, production derives <cadrumo_local_storage_root>/cache/registry "
+            "and pytest runs share the host temp directory for the immutable "
+            "bundled-root pickle. Set only by test isolation to redirect the "
+            "cache onto a test-owned directory, so a test asserting exclusive "
+            "pickle state never races sibling pytest-xdist workers."
+        ),
+    )
+    cadrumo_registry_disk_cache_max_entries: int = Field(
+        default=8,
+        ge=1,
+        description=(
+            "Maximum number of registry disk-cache pickles retained per cache "
+            "directory; after each write the oldest excess pickles are pruned "
+            "(best-effort) so accumulated per-fingerprint pickles cannot grow "
+            "without bound."
         ),
     )
     cadrumo_calc_sheets_recalc_delay_s: float = Field(
@@ -116,17 +127,9 @@ class AeatIntegrationSettings(AeatRuntimeSettings):
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
-    cadrumo_purchase_invoice_evidence_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "purchase-invoice-evidence",
-        description="Root directory for purchase invoice evidence record manifests",
-    )
     cadrumo_usage_ratios_path: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
         description="User-configured per-category usage ratio overrides",
-    )
-    cadrumo_ledgers_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "ledgers",
-        description="Directory for encrypted inventory and amortization ledgers",
     )
 
 

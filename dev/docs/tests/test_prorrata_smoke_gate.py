@@ -1,4 +1,4 @@
-"""End-to-end prorrata smoke gate (ADR D8): the whole pipeline, in a browser.
+"""End-to-end prorrata smoke gate: the whole pipeline, in a browser.
 
 This is the durable end-to-end proof of the documentation-search pipeline:
 Handbook concepts and registry casillas project into unified records, the

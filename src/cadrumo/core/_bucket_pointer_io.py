@@ -23,7 +23,6 @@ while sharing the same pointer precedence.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -154,12 +153,13 @@ def require_active_bucket_id() -> str:
 
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
-    """Atomically write the pointer file via write-then-rename.
+    """Atomically write the pointer file via the standard-tier atomic-write helper.
 
-    The payload is staged at a ``.tmp`` sibling and renamed via
-    :func:`os.replace`; a crashed process therefore leaves either the
-    previous good pointer or the new good pointer on disk, never a torn
-    intermediate. The payload comes from
+    The payload is staged at a tempfile sibling, fsynced, and renamed via
+    :func:`os.replace` (with a best-effort parent-directory fsync) by
+    :func:`~core.atomic_write.atomic_write_text`; a crashed process therefore
+    leaves either the previous good pointer or the new good pointer on disk,
+    never a torn intermediate. The payload comes from
     :meth:`~core._bucket_pointer.BucketPointer.to_toml`, and the Cadrumo root
     is created lazily if absent.
 
@@ -171,11 +171,19 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
         OSError: If the parent directory cannot be created, the temporary file
             cannot be written, or the atomic replacement fails.
     """
+    # Deferred import: this module is read during Settings() bootstrap
+    # (core.config._resolve_database_url_for_active_profile imports
+    # pointer_path/read_pointer from here before Settings exists), and
+    # core.atomic_write transitively imports core.logging.get_logger,
+    # which configures logging via load_settings() -- a module-level
+    # import here would recreate the exact circular-bootstrap failure
+    # pointer_path/read_pointer exist to avoid. Deferring to call time
+    # (after Settings is already constructed in every real invocation)
+    # breaks the cycle without reintroducing it.
+    from .atomic_write import atomic_write_text
+
     target = pointer_path(root)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_suffix(target.suffix + ".tmp")
-    tmp.write_text(pointer.to_toml(), encoding="utf-8")
-    os.replace(tmp, target)
+    atomic_write_text(target, pointer.to_toml(), encoding="utf-8")
 
 
 def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[AeatError]) -> str:

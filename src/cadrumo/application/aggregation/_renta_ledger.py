@@ -270,7 +270,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    # NOT pre-filtered by date range (issue #408 / #599): a transaction's OWN
+    # NOT pre-filtered by date range: a transaction's OWN
     # date can fall outside the requested annual window while its LINKED
     # INVOICE's issue date (the actual ``fact.filing_date`` the classifier
     # below tests) falls inside it, and the reverse — a transaction inside the

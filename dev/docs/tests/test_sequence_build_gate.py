@@ -1,4 +1,4 @@
-"""Build-mode guard for the ``cli-tree.json`` projection emit (W03.P08; ADR D6).
+"""Build-mode guard for the ``cli-tree.json`` projection emit.
 
 The ``cli-tree.json`` projection is a walk of the live ``aeat`` command tree — it
 derives from the CLI surface, never from a docs page — so an incremental

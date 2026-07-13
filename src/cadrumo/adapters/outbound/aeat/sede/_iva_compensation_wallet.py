@@ -13,6 +13,7 @@ and are re-imported here so the public read surface is unchanged.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import quote, urljoin, urlsplit
@@ -21,7 +22,7 @@ from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
 from .....core import Period
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -723,6 +724,50 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
     except OSError as exc:
         log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
     log.info("wallet diagnostic captured label=%s pages=%s dir=%s", label, len(pages), dump_dir)
+    prune_wallet_diagnostic_dumps(dump_dir)
+
+
+def prune_wallet_diagnostic_dumps(
+    dump_dir: Path,
+    *,
+    retention_days: int | None = None,
+    settings: Settings | None = None,
+) -> int:
+    """Delete wallet diagnostic dump files older than the retention window.
+
+    The dump directory is opt-in (``cadrumo_wallet_diagnostic_dump_dir``);
+    callers pass the configured directory in. ``retention_days`` defaults to
+    :attr:`~core.config.Settings.cadrumo_wallet_diagnostic_retention_days`.
+    Invoked automatically after each dump so the opt-in directory carries a
+    declared retention lifecycle instead of accumulating stale summaries once
+    captures stop. Entirely best-effort: an unenumerable directory or an
+    unremovable file is logged and skipped, never raised.
+
+    Returns:
+        Number of dump files removed.
+    """
+    cfg = settings or load_settings()
+    effective_retention_days = (
+        retention_days if retention_days is not None else cfg.cadrumo_wallet_diagnostic_retention_days
+    )
+    cutoff = now() - timedelta(days=effective_retention_days)
+    removed = 0
+    try:
+        entries = tuple(dump_dir.iterdir())
+    except OSError:
+        log.debug("wallet diagnostic: dump dir not enumerable at %s", dump_dir, exc_info=True)
+        return 0
+    for entry in entries:
+        try:
+            if not entry.is_file():
+                continue
+            if datetime.fromtimestamp(entry.stat().st_mtime, tz=UTC) >= cutoff:
+                continue
+            entry.unlink()
+            removed += 1
+        except OSError:
+            log.debug("wallet diagnostic: could not prune dump file %s", entry, exc_info=True)
+    return removed
 
 
 def _assert_read_http(method: str, url: str) -> None:

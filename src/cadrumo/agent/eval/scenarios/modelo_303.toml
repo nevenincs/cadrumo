@@ -7,7 +7,7 @@
 # carry registry legal grounding, and the revision declares an AEAT-grounded
 # verification contract containing this scenario's `expected_computed_casillas`.
 # No numeric casilla value is asserted (the figure-level oracle is a tracked
-# cross-campaign follow-up, plan W03.P07.S56); `expected_computed_casillas` are
+# follow-up); `expected_computed_casillas` are
 # casilla IDS from the registry's AEAT-grounded computed set.
 
 name = "modelo-303-iva-autoliquidacion"

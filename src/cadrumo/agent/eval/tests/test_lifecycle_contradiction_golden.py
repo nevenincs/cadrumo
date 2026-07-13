@@ -36,17 +36,14 @@ profile-preflight, registry engine, and CLI envelope serializer produced.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import build_tool_descriptors
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ContradictionScenario, check_contradiction_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -72,30 +69,6 @@ _MUTATING_COMMANDS = (
     "modelo.work.file",
     "modelo.export",
 )
-
-
-@pytest.fixture
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated real storage root, driven entirely through the live CLI.
-
-    Mirrors ``entrypoints.cli.tests._modelo_work_ux_support._isolated_cli_backend``,
-    reconstructed locally rather than imported across the package boundary (that module
-    is private to ``entrypoints.cli.tests`` - ``aeat-quality-gates`` forbids
-    cross-package private imports). Unlike ``isolated_cli_runtime_profile`` (used by the
-    sibling category-1/3 golden-eval tests), ``isolated_profile_storage_root`` does not
-    pre-provision a bucket, so the real ``config profile create`` CLI command can run end
-    to end - this scenario needs the real profile-bootstrap path, not a hand-written
-    record, because it also drives ``modelo readiness``'s profile-preflight axis.
-    """
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile() -> None:
@@ -186,7 +159,7 @@ def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() ->
 
 
 def test_registry_grounding_closed_the_readiness_verify_contradiction(
-    _isolated_cli_backend: None,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """Closure regression / reinstatement tripwire: readiness no longer says ready.
 

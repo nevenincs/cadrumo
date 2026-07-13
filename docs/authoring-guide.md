@@ -38,9 +38,9 @@ A change to the README or a guide under `docs/` moves through a staged review. E
 1. **Wireframe.** Outline the document as titles and section intents. Assign each page a Diataxis type — Diataxis is a documentation framework that sorts pages into four kinds: tutorial, how-to, reference, or explanation.
 2. **Refinement.** A reviewer with no project context reads only the wireframe and confirms a newcomer would understand what each section delivers. Revise until every section passes.
 3. **Context.** Researchers gather the facts, commands, paths, and source locations each section needs.
-4. **Drafting.** Authors write each section from the gathered context and the prose-style rules (`.claude/skills/vaultspec-documentation/references/prose-style-rules.md`).
+4. **Drafting.** Authors write each section from the gathered context and the project's prose-style rules.
 5. **Technical review.** Reviewers verify every command, flag, path, and class name against the code.
-6. **Editorial review.** A reviewer with no project context checks the writing against the prose-style rules (same reference as step 4).
+6. **Editorial review.** A reviewer with no project context checks the writing against the same prose-style rules.
 7. **Approval.** The change lands once the technical and editorial reviews pass.
 
 ## Keep the roles separate

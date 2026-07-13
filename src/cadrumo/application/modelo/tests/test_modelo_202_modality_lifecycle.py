@@ -340,7 +340,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
                 verification_repository=verification_repo,
                 clock=_CLOCK,
             )
-        export_path = tmp_path / "m202-zero.txt"
+        export_path = tmp_path / "modelo-202-2026-1P.txt"
         with pytest.raises(ModeloRequiredBindingsMissingError, match=_M202_RELATION_BINDING):
             export_modelo_revision(
                 ModeloExportCommand(

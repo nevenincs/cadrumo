@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-111"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:111"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1"]
+related = ["irpf", "modelo-190", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Retenciones del trabajo y de actividades economicas."
+definition = "Autoliquidacion periodica de las retenciones e ingresos a cuenta practicados sobre rendimientos del trabajo y de actividades economicas."
+
+[language.es.source]
+citation = "Articulo 99 de la Ley 35/2006 del IRPF; Orden EHA/586/2011."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 111"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "retenciones del trabajo"
+term_status = "admitted"
+
+[language.en]
+short_description = "Periodic return of withholdings on salaries and professional fees."
+
+[language.ca]
+short_description = "Retencions del treball i d'activitats economiques."
+
+[language.hu]
+short_description = "Beres es vallalkozoi kifizetesek forrasadojanak bevallasa."

@@ -57,6 +57,21 @@ _FORBIDDEN_TEXT = (
 _SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
 _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_bytes",
+        "tempfile.NamedTemporaryFile",
+    ): "shared standard-tier atomic-write primitive; writes caller-supplied bytes only, no data of its own",
+    (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_hardened_bytes",
+        "os.open",
+    ): "shared hardened-tier atomic-write primitive; mirrors the master-key O_EXCL/0o600 pattern",
+    (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_hardened_bytes",
+        "os.write",
+    ): "shared hardened-tier atomic-write primitive; writes caller-supplied bytes through a private fd",
+    (
         "src/cadrumo/adapters/persistence/storage/bucket/_output_language_hint.py",
         "_atomic_write_text",
         "open",
@@ -77,16 +92,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "path.write_text",
     ): "agent-harness eval flywheel; writes promoted eval scenario definitions, no sensitive/user data",
     (
-        "src/cadrumo/adapters/persistence/storage/_rotation.py",
-        "_atomic_write",
-        "tempfile.NamedTemporaryFile",
-    ): "secure storage rotation writes encrypted envelope payloads only",
-    (
-        "src/cadrumo/locales/manager.py",
-        "_rewrite_locale_mapping",
-        "tempfile.NamedTemporaryFile",
-    ): "locale catalogue maintenance rewrites source-tree YAML translations only, no user data",
-    (
         "src/cadrumo/domain/calculations/registry/_validate_evidence.py",
         "_write_disk_cache",
         "tempfile.NamedTemporaryFile",
@@ -96,11 +101,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_load_registry_tree_cached",
         "tempfile.NamedTemporaryFile",
     ): "registry-tree compile cache; writes first-party registry definitions only, no user data",
-    (
-        "src/cadrumo/adapters/persistence/storage/blob_store/_blob_store.py",
-        "_atomic_write_bytes",
-        "tempfile.NamedTemporaryFile",
-    ): "blob storage backend writes CORPUS plaintext only; all non-CORPUS blobs are ciphertext",
     (
         "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
         "_write_bytes_secure_fd",
@@ -117,16 +117,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tarfile.open",
     ): "sealed bucket archive writer emits encrypted archive payloads",
     (
-        "src/cadrumo/adapters/persistence/storage/envelope/_envelope.py",
-        "save_envelope",
-        "tempfile.NamedTemporaryFile",
-    ): "legacy envelope backend is not allowed from governed sensitive surfaces",
-    (
-        "src/cadrumo/adapters/persistence/storage/envelope/_envelope.py",
-        "save_encrypted_envelope",
-        "tempfile.NamedTemporaryFile",
-    ): "legacy encrypted envelope backend is not allowed from governed sensitive surfaces",
-    (
         "src/cadrumo/adapters/persistence/storage/master_key/_master_key_io.py",
         "atomic_write_secure_bytes",
         "os.open",
@@ -137,11 +127,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "master-key backend writes key material through a private fd",
     (
-        "src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py",
-        "_write_index",
-        "tempfile.NamedTemporaryFile",
-    ): "secret-store backend writes encrypted index metadata only",
-    (
         "src/cadrumo/application/auth/_acquisition_lock.py",
         "acquire_auth_acquisition_lock",
         "os.open",
@@ -151,16 +136,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "export_draft",
         "output_path.write_bytes",
     ): "explicit user-directed declaration export",
-    (
-        "src/cadrumo/core/corpus_manifest/__init__.py",
-        "save_corpus_manifest",
-        "tempfile.NamedTemporaryFile",
-    ): "non-user corpus manifest generation",
-    (
-        "src/cadrumo/core/env_io.py",
-        "_atomic_write_text",
-        "tempfile.NamedTemporaryFile",
-    ): "setup configuration writer; sensitive secret payloads are forbidden by separate tests",
     (
         "src/cadrumo/core/locks.py",
         "fsync_parent_dir",
@@ -247,16 +222,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py",
-        "write_manifest",
-        "open",
-    ): "bucket directory manifest is plaintext TOML by design; carries no NIF/financial data",
-    (
-        "src/cadrumo/core/_bucket_pointer_io.py",
-        "write_pointer",
-        "tmp.write_text",
-    ): "active-profile pointer file is plaintext TOML by design; carries only the bucket id",
-    (
         "src/cadrumo/application/user_profile/_profile_repository.py",
         "_restore_pointer_text",
         "target.write_text",
@@ -266,16 +231,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "restore_active_profile_pointer",
         "target.write_text",
     ): "restores the active-profile pointer (plaintext TOML, bucket UUID only) when a cold-start create span fails",
-    (
-        "src/cadrumo/adapters/outbound/storage/_local.py",
-        "put",
-        "tmp_path.write_bytes",
-    ): "local-filesystem storage adapter writes caller-supplied bytes through atomic temp-then-rename",
-    (
-        "src/cadrumo/adapters/outbound/storage/_local.py",
-        "put",
-        "sidecar_path.write_text",
-    ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
     (
         "src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",

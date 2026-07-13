@@ -1,6 +1,6 @@
 """Held-out miss-rate evaluation for the compiled terminology relevance map.
 
-The evaluator is the ADR D6 deferral gate for a possible rung-2 static
+The evaluator is the deferral gate for a possible rung-2 static
 term-embedding matrix. It measures the committed, laundered mapping exactly as
 the offline docs build will consume it. A high miss-rate only justifies rung-2
 work when the input sweep is not already marked degraded; a saturated RAG run
@@ -21,6 +21,8 @@ from ._sweep import SweepResult
 
 __all__ = [
     "DEFAULT_RUNG2_MISS_RATE_THRESHOLD",
+    "TOP_RESULTS_BOUND",
+    "HeldOutCaseKind",
     "HeldOutQueryCase",
     "HeldOutQuerySet",
     "MissRateEvaluation",
@@ -36,7 +38,12 @@ __all__ = [
     "relevance_mapping_path",
 ]
 
-DEFAULT_RUNG2_MISS_RATE_THRESHOLD = 0.20
+# The ratified materiality line (2026-07-13 ADR, D3): implement rung 2 only
+# when MORE THAN ten percent of held-out queries miss the top-five shipped
+# results. The gate default IS the ratified number; never loosen it ad hoc.
+DEFAULT_RUNG2_MISS_RATE_THRESHOLD = 0.10
+#: ADR D3 counts a hit only within the top five shipped results.
+TOP_RESULTS_BOUND = 5
 _UTF_8: Final[str] = "utf-8"
 
 
@@ -57,6 +64,20 @@ class Rung2Decision(StrEnum):
     IMPLEMENT_RUNG2 = "implement-rung-2"
 
 
+class HeldOutCaseKind(StrEnum):
+    """How a held-out case is evaluated against the compiled mapping."""
+
+    #: The query is a shipped vocabulary row; hit iff an expected id is in the
+    #: TOP FIVE targets of exactly that compiled query (ADR D3 bound).
+    VOCABULARY = "vocabulary"
+    #: The query is a real free-text phrasing that is NOT in the vocabulary;
+    #: candidate compiled queries are those whose normalised text appears
+    #: word-bounded inside the case query (mirroring the shipped palette's
+    #: lexical containment over term cards). No candidate at all is a
+    #: query-not-compiled miss -- exactly the class rung 2 would serve.
+    OUT_OF_SAMPLE = "out_of_sample"
+
+
 class HeldOutQueryCase(BaseModel):
     """One real operator query and the record ids that would satisfy it."""
 
@@ -66,6 +87,7 @@ class HeldOutQueryCase(BaseModel):
     concept_id: str = Field(min_length=2, max_length=64)
     expected_record_ids: tuple[str, ...] = Field(min_length=1)
     source: str = Field(min_length=12, max_length=500)
+    kind: HeldOutCaseKind = HeldOutCaseKind.VOCABULARY
 
 
 class HeldOutQuerySet(BaseModel):
@@ -158,6 +180,9 @@ def evaluate_held_out_miss_rate(
 
     rows: list[MissRateRow] = []
     for case in resolved_cases.cases:
+        if case.kind is HeldOutCaseKind.OUT_OF_SAMPLE:
+            rows.append(_evaluate_out_of_sample(case, resolved_relevance))
+            continue
         mapping = by_case_key.get((case.concept_id, _normalise_query(case.query)))
         if mapping is None:
             rows.append(_row_for(case, hit=False, reason=MissReason.QUERY_NOT_COMPILED, target_count=0))
@@ -165,7 +190,8 @@ def evaluate_held_out_miss_rate(
         if not mapping.targets:
             rows.append(_row_for(case, hit=False, reason=MissReason.NO_TARGETS, target_count=0))
             continue
-        target_ids = {target.record_id for target in mapping.targets}
+        top_targets = mapping.targets[:TOP_RESULTS_BOUND]
+        target_ids = {target.record_id for target in top_targets}
         matched = next((record_id for record_id in case.expected_record_ids if record_id in target_ids), None)
         rows.append(
             _row_for(
@@ -173,7 +199,7 @@ def evaluate_held_out_miss_rate(
                 hit=matched is not None,
                 reason=MissReason.HIT if matched is not None else MissReason.TARGET_MISMATCH,
                 matched_record_id=matched,
-                target_count=len(mapping.targets),
+                target_count=len(top_targets),
             ),
         )
 
@@ -189,6 +215,34 @@ def evaluate_held_out_miss_rate(
         compiled_failed_query_count=resolved_relevance.failed_query_count,
         compiled_targeted_query_count=targeted,
         rows=tuple(rows),
+    )
+
+
+def _evaluate_out_of_sample(case: HeldOutQueryCase, relevance: SweepResult) -> MissRateRow:
+    """Evaluate a free-text case against the compiled mapping's lexical reach.
+
+    Mirrors the shipped palette's containment matching over the precompiled
+    tiers only: a compiled query is a candidate when its normalised text
+    occurs word-bounded inside the case query. The full-text Pagefind tier is
+    NOT modelled, so an out-of-sample miss is an UPPER BOUND on the shipped
+    miss -- the honest direction for a gate that triggers paying for rung 2.
+    """
+    case_text = f" {_normalise_query(case.query)} "
+    candidate_targets: list[str] = []
+    for mapping in relevance.mappings:
+        compiled = _normalise_query(mapping.query)
+        if compiled and f" {compiled} " in case_text:
+            candidate_targets.extend(target.record_id for target in mapping.targets[:TOP_RESULTS_BOUND])
+    if not candidate_targets:
+        return _row_for(case, hit=False, reason=MissReason.QUERY_NOT_COMPILED, target_count=0)
+    target_ids = set(candidate_targets)
+    matched = next((record_id for record_id in case.expected_record_ids if record_id in target_ids), None)
+    return _row_for(
+        case,
+        hit=matched is not None,
+        reason=MissReason.HIT if matched is not None else MissReason.TARGET_MISMATCH,
+        matched_record_id=matched,
+        target_count=len(target_ids),
     )
 
 

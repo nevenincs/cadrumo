@@ -364,7 +364,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
 
 
 # ---------------------------------------------------------------------------
-# W04.P09.S32 — progressive-enhancement sequence widget verification
+# Progressive-enhancement sequence widget verification
 #
 # The stepped-player widget (docs/_static/cadrumo-docs.js) enhances the
 # server-rendered `cli-sequence` transcript; the terminal styling lives in
@@ -372,7 +372,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
 # ships zero external requests, it is wired and implemented, and a real
 # nitpicky (-n -W) Sphinx build of a sequence page renders a content-identical
 # no-JS transcript, carries the enhanceable markup, and ships the widget
-# assets. ADR ruling D5.
+# assets.
 # ---------------------------------------------------------------------------
 
 _STATIC = _DOCS / "_static"
@@ -488,7 +488,7 @@ def _build_html(root: Path) -> tuple[str, Path, str]:
 
 
 def test_sequence_widget_assets_make_no_external_requests() -> None:
-    """The vendored widget JS and CSS carry zero external or CDN requests (ADR D5)."""
+    """The vendored widget JS and CSS carry zero external or CDN requests."""
     for asset in (_WIDGET_JS, _WIDGET_CSS):
         text = asset.read_text(encoding="utf-8")
         assert "http://" not in text, f"{asset.name} carries an http:// URL"
@@ -564,6 +564,8 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
         "writeClipboard",
         "execCommand",
         "is-copied",
+        # The switcher now lives in a slim block header bar at the top.
+        "cadrumo-sequence-bar",
     ):
         assert surface in js, f"widget JS is missing the shell/copy surface {surface!r}"
     # aria wiring for both controls (a segmented toggle and a labelled copy button).
@@ -573,6 +575,9 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
     # repeating timer — the no-autoplay invariant stays intact.
     assert "setInterval" not in js
     assert "setTimeout" in js
+    # Setup frames are no longer excluded from the playhead: the setup-kind filter
+    # is gone, so the position indicator steps through every frame.
+    assert '!== "setup"' not in js, "setup frames must join the playhead (filter removed)"
 
     css = _WIDGET_CSS.read_text(encoding="utf-8")
     for surface in (
@@ -584,8 +589,15 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
         ".cadrumo-copy-btn",
         ".cadrumo-copy-btn.is-copied",
         '[data-shell="pwsh"] pre code::before',
+        # The top switcher bar and the per-step header row.
+        ".cadrumo-sequence-bar",
+        ".cadrumo-frame-header",
+        ".cadrumo-frame-step",
+        ".cadrumo-frame-desc",
     ):
         assert surface in css, f"widget CSS is missing the shell/copy surface {surface!r}"
+    # The collapsed-setup disclosure styling is gone (setup frames are unfolded).
+    assert "details.cadrumo-setup" not in css
     # The switcher and copy transitions join the reduced-motion opt-out.
     reduced = css.split("prefers-reduced-motion")[1]
     assert ".cadrumo-shell-btn" in reduced

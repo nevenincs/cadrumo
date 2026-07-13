@@ -1,6 +1,6 @@
 """Registry loader cache isolation under pytest.
 
-The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is keyed by
+The loader's cross-process ``/tmp`` ``cadrumo_registry_*.pkl`` disk pickle is keyed by
 file mtime and SHARED across pytest-xdist worker processes, so a parallel ``-n`` run
 could serve a stale/transient compiled registry from one worker to another, flaking
 tests that depend on a specific registry compile. The loader originally skipped that
@@ -176,9 +176,9 @@ def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> 
 
 
 def _bundled_registry_disk_cache_files(cache_dir: Path | None = None) -> set[Path]:
-    """List every ``aeat_registry_*.pkl`` in ``cache_dir`` (default: the real OS temp dir)."""
+    """List every ``cadrumo_registry_*.pkl`` in ``cache_dir`` (default: the real OS temp dir)."""
     directory = cache_dir if cache_dir is not None else Path(tempfile.gettempdir())
-    return set(directory.glob("aeat_registry_*.pkl"))
+    return set(directory.glob("cadrumo_registry_*.pkl"))
 
 
 def test_bundled_root_disk_cache_is_shared_across_processes(
@@ -277,7 +277,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
 
     Regression proof for a real defect: an earlier version of
     ``_isolate_registry_caches`` (``src/cadrumo/conftest.py``) purged EVERY
-    ``aeat_registry_*.pkl`` unconditionally at session start. Under
+    ``cadrumo_registry_*.pkl`` unconditionally at session start. Under
     pytest-xdist, ``scope="session"`` means "per worker process" -- there is
     no single controlling session spanning all workers -- so every worker's
     own session start deleted the very pickle a sibling worker (or an earlier

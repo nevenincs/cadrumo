@@ -10,6 +10,7 @@ from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.config import load_settings
 from ....core.resources import resolve_companion_binary
 from ._corpus_catalogue import is_companion_corpus_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
@@ -18,6 +19,8 @@ from ._text import normalise_corpus_text
 _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 _LOGGER = logging.getLogger(__name__)
+
+_CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
 
 
 @lru_cache(maxsize=4096)
@@ -28,11 +31,28 @@ def _normalise_required_text(text: str) -> str:
 _DISK_CACHE: dict[str, str] | None = None
 
 
+def _corpus_text_cache_path() -> Path:
+    """Return the settings-derived corpus-text cache file location.
+
+    Defaults under ``<cadrumo_local_storage_root>/cache/corpus-text`` (scoped
+    per user by the storage root), replacing the former shared OS-temp-dir
+    location that any two users or CI containers on one host could clobber.
+    """
+    return load_settings().cadrumo_corpus_text_cache_dir / _CORPUS_TEXT_CACHE_FILENAME
+
+
+def reset_corpus_text_cache() -> None:
+    """Drop the in-process corpus-text cache memos (test isolation only)."""
+    global _DISK_CACHE
+    _DISK_CACHE = None
+    _NORMALISED_SOURCE_TEXT_CACHE.clear()
+
+
 def _load_disk_cache() -> dict[str, str]:
     global _DISK_CACHE
     if _DISK_CACHE is not None:
         return _DISK_CACHE
-    cache_path = Path(tempfile.gettempdir()) / "aeat_corpus_text_cache.json"
+    cache_path = _corpus_text_cache_path()
     if not cache_path.is_file():
         _DISK_CACHE = {}
         return _DISK_CACHE
@@ -42,21 +62,41 @@ def _load_disk_cache() -> dict[str, str]:
             _DISK_CACHE = loaded
             return loaded
     except Exception:
-        _LOGGER.debug("Ignoring unreadable corpus text cache at %s", cache_path, exc_info=True)
+        # Degrade to a cache miss (the entries recompute deterministically),
+        # but surface the anomaly rather than swallowing it silently.
+        _LOGGER.warning("Ignoring unreadable corpus text cache at %s; recomputing", cache_path, exc_info=True)
         _DISK_CACHE = {}
         return _DISK_CACHE
 
 
 def _write_disk_cache(data: dict[str, str]) -> None:
-    cache_path = Path(tempfile.gettempdir()) / "aeat_corpus_text_cache.json"
+    cache_path = _corpus_text_cache_path()
     temp_name = None
     try:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        # Read-merge-before-write narrows the multi-process last-writer-wins
+        # window that the atomic ``os.replace`` alone does not close: fold in
+        # any entries a concurrent writer committed since our in-memory copy
+        # loaded, so a parallel writer's new key is not dropped. The residual
+        # race (two writers merging the same pre-image) can only cost a
+        # recompute, never a wrong value, because every key embeds the source
+        # file's size and mtime -- a stale entry cannot match a changed file.
+        merged: dict[str, str] = {}
+        if cache_path.is_file():
+            try:
+                with open(cache_path, encoding="utf-8") as f:
+                    on_disk = json.load(f)
+                if isinstance(on_disk, dict):
+                    merged.update(on_disk)
+            except Exception:
+                _LOGGER.debug("Ignoring unreadable corpus text cache while merging at %s", cache_path, exc_info=True)
+        merged.update(data)
         with tempfile.NamedTemporaryFile("w", dir=cache_path.parent, delete=False, encoding="utf-8") as tf:
-            json.dump(data, tf, ensure_ascii=False, indent=2)
+            json.dump(merged, tf, ensure_ascii=False, indent=2)
             temp_name = tf.name
         os.replace(temp_name, cache_path)
     except Exception:
-        _LOGGER.debug("Could not write corpus text cache at %s", cache_path, exc_info=True)
+        _LOGGER.warning("Could not write corpus text cache at %s", cache_path, exc_info=True)
         if temp_name is not None:
             try:
                 os.unlink(temp_name)

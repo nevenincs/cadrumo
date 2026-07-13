@@ -1035,7 +1035,7 @@ _RETENCIONES_AGGREGATORS = {
 
 
 class RetencionesAggregationSourceResolver:
-    """Source mesh resolver for the dedicated per-perceptor retención store (RET-1).
+    """Source mesh resolver for the dedicated per-perceptor retención store.
 
     Reads the bucket-scoped per-perceptor retención observations
     (:class:`~._retencion_observations_repository.RetencionObservationRepository`)

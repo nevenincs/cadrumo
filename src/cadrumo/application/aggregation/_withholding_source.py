@@ -1,4 +1,4 @@
-"""Calc-mesh source resolver for the per-perceptor-clave withholding store (#28 P03).
+"""Calc-mesh source resolver for the per-perceptor-clave withholding store.
 
 Reads the dedicated :class:`PercepcionObservationRepository` for the modelo's
 annual window and materialises the Modelo 190 "número total de percepciones" box
@@ -13,10 +13,10 @@ enrolled in ``merge_source_resolutions`` exactly like the other source resolvers
 It reads the withholding bindings declared on the snapshot's :class:`ModeloRevision`
 and returns its result as a :class:`CalculationSourceResolution`.
 
-Empty-store behaviour follows the RET-1 ruling: materialise an explicit ZERO
-count AND surface a non-blocking advisory (NOT a hard refusal) — a legitimate
-nil-percepciones filer must still be able to calculate, and the bound casilla
-requires its fact (``no-silent-under-declaration``: the zero is loud, not silent).
+Empty-store behaviour materialises an explicit ZERO count AND surfaces a
+non-blocking advisory (NOT a hard refusal) — a legitimate nil-percepciones
+filer must still be able to calculate, and the bound casilla requires its
+fact (``no-silent-under-declaration``: the zero is loud, not silent).
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[Calcu
 
 
 class WithholdingSourceResolver:
-    """Source mesh resolver for the dedicated per-perceptor-clave withholding store (#28).
+    """Source mesh resolver for the dedicated per-perceptor-clave withholding store.
 
     Materialises the Modelo 190 "número total de percepciones" box with the
     DISTINCT (perceptor_tax_id, clave, subclave) count (the ``percepcion_count``

@@ -138,7 +138,6 @@ if TYPE_CHECKING:
     from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[agent]'"
-_SERVER_NAME = "cadrumo"
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
 # toolsets. They are advertised alongside the per-verb tools and are never
@@ -654,7 +653,7 @@ def build_server(
         )
         return (envelope, is_error)
 
-    server: Server = Server(_SERVER_NAME)
+    server: Server = Server(PRODUCT_IDENTITY.mcp_server)
 
     async def _run_tool_with_progress(
         descriptor: McpToolDescriptor,

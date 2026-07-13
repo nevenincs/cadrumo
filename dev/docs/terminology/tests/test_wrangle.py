@@ -1,6 +1,6 @@
-"""Real-behaviour conformance for the wrangling corrections layer (ADR D6).
+"""Real-behaviour conformance for the wrangling corrections layer.
 
-ADR D6 requires the raw-hit corrections to be TESTED CODE, not ad-hoc
+The raw-hit corrections are required to be TESTED CODE, not ad-hoc
 filtering. :func:`~dev.docs.terminology._wrangle.wrangle` takes the resolver's
 :class:`~dev.docs.terminology._resolution.ResolutionResult` and applies the four
 documented corrections -- score-floor + TOC-noise filtering, casilla-revision

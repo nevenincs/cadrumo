@@ -1,4 +1,4 @@
-"""Strict roundtrip across the RetencionObservationRepository boundary (RET-1 P01).
+"""Strict roundtrip across the RetencionObservationRepository boundary.
 
 Persists per-perceptor :class:`RetencionObservation` records at
 ``SensitivityClass.FINANCIAL`` keyed by ``(modelo, filing_year, period,
@@ -164,8 +164,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
 
     Set-replace, not additive upsert: a re-pull where the operator dropped a
     perceptor must NOT leave the stale row behind, or the next calculate's distinct
-    count is inflated by a perceptor no longer declared (a silent over-count, the
-    inverse of the RET-1 bug).
+    count is inflated by a perceptor no longer declared (a silent over-count).
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = RetencionObservationRepository()

@@ -1,9 +1,9 @@
-"""Corpus coverage report CLI: ``python -m dev.docs.terminology.coverage`` (ADR D2).
+"""Corpus coverage report CLI: ``python -m dev.docs.terminology.coverage``.
 
 A dev / maintenance CLI mirroring the sibling ``sweep`` verb: a thin Typer app
 that derives the corpus coverage of the committed relevance mapping and writes
 the report as reviewed, committed JSON. ``report`` regenerates
-``coverage-report.json`` -- the ADR D2 widening backlog: every derivable target
+``coverage-report.json`` -- the widening backlog: every derivable target
 (concept card, casilla, CLI surface, legal provision) with no inbound entry in
 the committed mapping.
 
@@ -32,7 +32,7 @@ app = typer.Typer(
 
 @app.callback()
 def main() -> None:
-    """Corpus coverage report CLI (ADR D2)."""
+    """Corpus coverage report CLI."""
 
 
 @app.command("report")

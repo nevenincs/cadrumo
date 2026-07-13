@@ -483,7 +483,7 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
         filing_year=2024,
         period="1T",
     )
-    out = tmp_path / "m111-2024-1T.boe"
+    out = tmp_path / "modelo-111-2024-1T.boe"
 
     result = _invoke(
         [
@@ -518,7 +518,7 @@ def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
 ) -> None:
     _set_emilio_legal_entity_export_profile()
     _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision()
-    out = tmp_path / "m202-2024-1P.boe"
+    out = tmp_path / "modelo-202-2024-1P.boe"
 
     result = _invoke(
         [

@@ -1,4 +1,4 @@
-"""Real-behaviour gates for synonym mining and ratification (ADR D6)."""
+"""Real-behaviour gates for synonym mining and ratification."""
 
 from __future__ import annotations
 

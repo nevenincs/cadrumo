@@ -1,18 +1,17 @@
 """Gates for the upstream vaultspec-rag preprocess-hook adapter.
 
-Three surfaces are locked together (docs-terminology-search next-wave ADR,
-decision D1):
+Three surfaces are locked together:
 
 - the repo-root ``.vaultragpreprocess.toml`` rules — structurally validated
   here without importing the upstream package (CI has no vaultspec-rag; the
   end-to-end ``preprocess check`` / ``run-one`` validation is a dev-box
-  procedure recorded in the exec records);
+  procedure);
 - the ``dev.docs.preprocess.hook`` adapter — its output must satisfy the
   pinned upstream contract shape and stay UTF-8-safe on Windows consoles;
-- the committed extraction sidecars — the product's corpus payload (ADR
-  Update 1) — whose unit texts must PERMANENTLY equal the hook's for the
-  same source (per-kind parity), proving one extraction truth feeds both
-  the shipped payload and the dev index.
+- the committed extraction sidecars — the product's corpus payload — whose
+  unit texts must PERMANENTLY equal the hook's for the same source
+  (per-kind parity), proving one extraction truth feeds both the shipped
+  payload and the dev index.
 """
 
 from __future__ import annotations

@@ -119,8 +119,8 @@ def test_build_reports_the_real_signing_outcome_without_overclaiming(
 def test_manifest_version_matches_the_package_release() -> None:
     """The bundle manifest must move in lockstep with the pyproject version.
 
-    The honesty review found the served plugin pinned a release two minors
-    behind source; this gate keeps at least the in-repo manifest honest.
+    A served plugin can otherwise pin a release several minors behind
+    source; this gate keeps at least the in-repo manifest honest.
     """
     import tomllib
 
