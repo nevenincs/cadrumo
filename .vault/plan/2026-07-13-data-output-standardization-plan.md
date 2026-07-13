@@ -9,15 +9,6 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `data-output-standardization` plan
 
@@ -104,7 +95,7 @@ One shared two-tier atomic-write helper; migrate all four dialects onto it.
 
 - [x] `W05.P08.S23` - Author the shared two-tier atomic-write helper with the hardened master-key pattern as the strong tier; `src/cadrumo/core`.
 - [x] `W05.P08.S24` - Migrate the weak no-fsync atomic-write variants onto the helper; `bucket pointer, outbound local store, bucket manifest, corpus bundle`.
-- [ ] `W05.P08.S25` - Migrate the remaining stem-sibling atomic-write sites onto the helper; `envelope, blob store, secret store, rotation, env_io, corpus manifest, locales`.
+- [x] `W05.P08.S25` - Migrate the remaining stem-sibling atomic-write sites onto the helper; `envelope, blob store, secret store, rotation, env_io, corpus manifest, locales`.
 
 ### Phase `W05.P09` - Test isolation
 
