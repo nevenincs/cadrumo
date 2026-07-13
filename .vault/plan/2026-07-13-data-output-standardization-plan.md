@@ -20,7 +20,7 @@ Finish the state-root decision: derive every output-dir default from cadrumo_loc
 
 Generalise the state-root derivation table so all output-dir defaults derive from the root; delete dormant fields; verify vestigial financial catalogue dirs.
 
-- [ ] `W01.P01.S01` - Extend the state-root derivation so every output-dir Settings field default derives from cadrumo_local_storage_root under the category taxonomy, eliminating PROJECT_ROOT/var defaults; `src/cadrumo/core/config.py`.
+- [x] `W01.P01.S01` - Extend the state-root derivation so every output-dir Settings field default derives from cadrumo_local_storage_root under the category taxonomy, eliminating PROJECT_ROOT/var defaults; `src/cadrumo/core/config.py`.
 - [ ] `W01.P01.S02` - Derive the integration-fields output dirs (financial, parity store, registry cache) from the state root and delete fields verified vestigial; `src/cadrumo/core/_config_integration_fields.py`.
 - [ ] `W01.P01.S03` - Delete the dormant consumer-less browser-trace dir field pair and sweep references; `src/cadrumo/core/config.py`.
 - [ ] `W01.P01.S04` - Verify per-dir live-vs-vestigial write status of the var/financial catalogue dirs and record the verdicts; `.vault/audit`.
@@ -63,7 +63,7 @@ Hard-cut cadrumo naming for temp prefixes, cache filenames, CWD provenance liter
 
 - [x] `W03.P05.S14` - Rename the aeat-prefixed temp work-area and secret prefixes to cadrumo across the five sites; `src/cadrumo temp prefixes`.
 - [x] `W03.P05.S15` - Rename the CWD-anchored dot-aeat ledger provenance literals to cadrumo marker forms; `src/cadrumo/application/ledger`.
-- [ ] `W03.P05.S16` - Fix the export filename schema in the test corpus to modelo-id-year-period with canonical period tokens; `src/cadrumo modelo export tests`.
+- [x] `W03.P05.S16` - Fix the export filename schema in the test corpus to modelo-id-year-period with canonical period tokens; `src/cadrumo modelo export tests`.
 
 ### Phase `W03.P06` - Env-var adjudication
 
