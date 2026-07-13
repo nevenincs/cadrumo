@@ -54,3 +54,11 @@ def test_validate_refuses_a_build_without_bundled_assets(tmp_path: Path) -> None
         bundle.unlink()
     with pytest.raises(SystemExit, match="bundled assets"):
         _validate_site_artifacts(tmp_path)
+
+
+def test_hashed_assets_are_immutable_and_never_invalidated() -> None:
+    """Content-hashed assets carry a forever cache and skip invalidation."""
+    from dev.deploy.frontend_static_site import _ASSET_CACHE_CONTROL, _INVALIDATION_PATHS
+
+    assert "immutable" in _ASSET_CACHE_CONTROL
+    assert "/assets/*" not in _INVALIDATION_PATHS
