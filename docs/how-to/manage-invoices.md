@@ -18,8 +18,7 @@ You need:
   if none is set, the command refuses. See
   [Set up your taxpayer profile](profile-setup.md).
 - A master-key passphrase. The tool prompts for it the first time it opens your
-  encrypted storage in a session; for a non-interactive shell, set
-  `CADRUMO_SECRET_PASSPHRASE`.
+  encrypted storage in a session.
 
 The `aeat` command-line interface (CLI) emits its help and messages in Spanish; the English text on this page
 describes what each step does.

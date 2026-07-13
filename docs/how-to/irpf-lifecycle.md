@@ -26,8 +26,7 @@ explanations in English and quotes real Spanish output where it shows one.
 You need a working `aeat` command (see the
 [Quickstart](quickstart.md) for installation) and a master-key
 passphrase. `aeat` encrypts your data with a passphrase and prompts for it
-the first time each command runs; to run without a prompt, set the
-`CADRUMO_SECRET_PASSPHRASE` environment variable first.
+the first time each command runs.
 
 ## Stage 1: set up the taxpayer
 

@@ -65,9 +65,10 @@ Register `cadrumo-mcp` as a stdio server in your client's MCP configuration:
 }
 ```
 
-The server uses the same local encrypted store and the same active profile as
-the CLI, and prompts for the master-key passphrase the same way. Set
-`CADRUMO_SECRET_PASSPHRASE` in the server's environment to run without a prompt.
+The server uses the same local encrypted store and the same active profile
+as the CLI. A server cannot answer a passphrase prompt, so configure the
+passphrase for unattended runs first - see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 ## What the agent can and cannot do
 

@@ -7,7 +7,7 @@ Store an evidence record for each invoice or receipt and link it to the transact
 You need:
 
 - An active taxpayer profile. Evidence is stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
 - Transactions in your ledger. If your ledger is empty, see [Import and manage transactions](import-bank-statements.md) first.
 - The invoice or receipt as a PDF or image file. Cadrumo copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
 

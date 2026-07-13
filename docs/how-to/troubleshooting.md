@@ -2,7 +2,7 @@
 
 Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
-Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `CADRUMO_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+Every profile-scoped command needs your master-key passphrase; the tool prompts for it. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
 
 ## "This operation requires an active profile"
 
@@ -122,21 +122,9 @@ Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`.
 aeat --language en config profile create --help
 ```
 
-To set the language for a whole shell session, set the environment variable `CADRUMO_OUTPUT_LANGUAGE` before running commands.
-
-In PowerShell:
-
-```powershell
-$env:CADRUMO_OUTPUT_LANGUAGE = 'en'
-```
-
-In bash:
-
-```bash
-export CADRUMO_OUTPUT_LANGUAGE=en
-```
-
-The `--language` flag wins over the environment variable for that command. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
+The `--language` flag applies to that one command. A profile also carries
+a default output language - set it with `--output-language` at profile
+creation, as described in [Set up your taxpayer profile](profile-setup.md).
 
 ## A live read from AEAT refuses
 

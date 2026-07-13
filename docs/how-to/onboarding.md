@@ -34,8 +34,8 @@ Install `cadrumo` and confirm it runs. See
 [Install Cadrumo](../workstation-setup.md) for installation.
 
 Every command that touches your data needs your master-key passphrase, which
-protects your encrypted local store. The tool prompts for it the first time in a
-session, or you set `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
+protects your encrypted local store. The tool prompts for it the first
+time in a session.
 
 The command help, prompts, and messages render in Spanish to match the official
 AEAT forms, even though these guides are in English.

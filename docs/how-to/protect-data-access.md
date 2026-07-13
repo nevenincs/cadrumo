@@ -16,9 +16,9 @@ You need:
 - An active profile - see [set up your taxpayer profile](profile-setup.md). The
   first command below refuses without one (`No se pudo determinar ningún bucket
   activo. Selecciona un perfil y vuelve a intentarlo.`).
-- Your master-key passphrase. These commands open the encrypted store, so they
-  prompt for the passphrase (or read `CADRUMO_SECRET_PASSPHRASE` when set). The
-  recovery and rekey commands below replace which passphrase opens the key.
+- Your master-key passphrase. These commands open the encrypted store, so
+  they prompt for the passphrase. The recovery and rekey commands below
+  replace which passphrase opens the key.
 
 The runtime emits help, prompts, and messages in Spanish.
 
@@ -93,6 +93,17 @@ non-interactive use, pass `--new-passphrase` together with
 If you have neither the passphrase nor the recovery words, the encrypted
 data is permanently unreadable. The only way forward is a reset (below),
 which deletes it.
+
+## Run without a passphrase prompt
+
+Automation cannot answer a prompt - an agent server, a scheduled job, a
+script. For those runs, set the `CADRUMO_SECRET_PASSPHRASE` environment
+variable to your passphrase before the command starts. Treat that value
+like the passphrase itself: set it only in the environment of the process
+that needs it, and never write it into a shared shell profile, a script
+you commit, or a log.
+
+Interactive use never needs this - every command prompts.
 
 ## Lock the session
 

@@ -16,7 +16,7 @@ nothing to Spain's Tax Agency (AEAT).
 You need:
 
 - An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
 - A ledger with transactions in it. See [Import and manage transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
 
 The CLI help and error text render in Spanish, even though this guide is in English. When a step sends you to `--help`, expect Spanish option names.

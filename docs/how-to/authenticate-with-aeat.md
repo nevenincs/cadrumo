@@ -25,8 +25,8 @@ You need:
   one. Create one non-interactively with `aeat config profile create me --quiet
   --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`. A NIF,
   CIF, DNI, or NIE is a Spanish tax identifier.
-- the master-key passphrase that protects your local store. The tool prompts for
-  it, or set `CADRUMO_SECRET_PASSPHRASE` to run without a prompt.
+- the master-key passphrase that protects your local store; the tool
+  prompts for it.
 
 ## See supported providers
 
@@ -106,8 +106,12 @@ Point the tool at the renewed file:
 aeat config auth configure --provider certificate --file ./renewed-certificate.p12
 ```
 
-If the renewed certificate uses a new password, update the
-`AEAT_CERTIFICATE_PASSWORD_SECRET` environment variable before you re-check.
+If the renewed certificate uses a new password, rotate the stored
+passphrase for its source:
+
+```bash
+aeat config auth certificate secret set --name personal
+```
 
 Confirm the new expiry:
 

@@ -14,8 +14,8 @@ Estatal de Administración Tributaria (AEAT).
 ## Before you start
 
 You need an [active taxpayer profile](profile-setup.md#what-the-active-profile-means),
-and Cadrumo needs your master-key passphrase (it prompts for it, or set
-`CADRUMO_SECRET_PASSPHRASE` for non-interactive runs). If you do not have a
+and Cadrumo needs your master-key passphrase (it prompts for it). If you
+do not have a
 profile, create it with [Set up your taxpayer profile](profile-setup.md).
 
 The profile must declare at least one obligation, or these commands refuse with
