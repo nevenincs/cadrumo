@@ -49,6 +49,7 @@ import os
 import socket
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -499,6 +500,58 @@ def _build_env(repo_root: Path) -> dict[str, str]:
     }
 
 
+def _pipe(source: socket.socket, sink: socket.socket) -> None:
+    """Copy bytes one way until EOF, then half-close the sink."""
+    with contextlib.suppress(OSError):
+        while chunk := source.recv(65536):
+            sink.sendall(chunk)
+    with contextlib.suppress(OSError):
+        sink.shutdown(socket.SHUT_WR)
+
+
+def _relay_connection(client: socket.socket, target_port: int) -> None:
+    """Bridge one accepted IPv6 connection to the IPv4 server on ``target_port``."""
+    try:
+        upstream = socket.create_connection(("127.0.0.1", target_port), timeout=_PROBE_TIMEOUT_SECONDS)
+    except OSError:
+        with contextlib.suppress(OSError):
+            client.close()
+        return
+    threading.Thread(target=_pipe, args=(client, upstream), daemon=True).start()
+    threading.Thread(target=_pipe, args=(upstream, client), daemon=True).start()
+
+
+def start_ipv6_relay(port: int) -> socket.socket | None:
+    """Serve ``[::]:port`` by relaying byte streams to the IPv4 listener on ``port``.
+
+    ``sphinx-autobuild``'s server binds IPv4 only, but Windows resolves the
+    machine's own hostname to a link-local IPv6 address first, so a browser
+    pointed at ``http://<hostname>:<port>/`` gets connection-refused while
+    ``127.0.0.1`` works. An IPv6-only listener (``IPV6_V6ONLY`` on, so it
+    coexists with the IPv4 bind on the same port) piping to loopback makes the
+    single canonical port genuinely dual-stack. Returns the listening socket,
+    or ``None`` when IPv6 is unavailable — the server then stays IPv4-only.
+    """
+    try:
+        listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        listener.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+        listener.bind(("::", port))
+        listener.listen(16)
+    except OSError:
+        return None
+
+    def _accept_loop() -> None:
+        while True:
+            try:
+                client, _addr = listener.accept()
+            except OSError:
+                return
+            _relay_connection(client, port)
+
+    threading.Thread(target=_accept_loop, daemon=True, name=f"docs-ipv6-relay-{port}").start()
+    return listener
+
+
 def _launch(
     repo_root: Path,
     *,
@@ -511,8 +564,11 @@ def _launch(
     probe_host = _probe_host(host)
     state_path = _state_path(repo_root)
     print(f"Serving documentation on http://{probe_host}:{port}/ (Ctrl-C to stop).", flush=True)
+    relay = start_ipv6_relay(port) if host in _WILDCARD_PROBE_HOST else None
     if host in _WILDCARD_PROBE_HOST:
-        print(f"Bound to {host}:{port} — reachable from other hosts on the network.", flush=True)
+        stacks = "IPv4+IPv6" if relay is not None else "IPv4"
+        print(f"Bound to {host}:{port} ({stacks}) — reachable from other hosts on the network.", flush=True)
+        print(f"Also reachable as http://{socket.gethostname().lower()}:{port}/ on the LAN.", flush=True)
     print("Watching docs/ and src/aeat/; rebuilding on change.", flush=True)
     process = subprocess.Popen(command, cwd=repo_root, env=_build_env(repo_root))
     write_state(state_path, ServeState(pid=process.pid, host=host, port=port))
@@ -522,6 +578,9 @@ def _launch(
         _terminate(process.pid)
         return 0
     finally:
+        if relay is not None:
+            with contextlib.suppress(OSError):
+                relay.close()
         clear_state(state_path, only_pid=process.pid)
 
 
