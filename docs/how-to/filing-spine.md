@@ -1,4 +1,4 @@
-# The filing workflow: work units and calculation revisions
+# The filing workflow
 
 This page covers the filing workflow's two building blocks - the work unit
 (the saved workspace for one filing target) and the calculation revision
@@ -78,7 +78,7 @@ aeat app modelo work create --modelo 303 --year 2026 --period 1T
 Running the same create command again does not create a duplicate. It returns
 the existing saved work for that filing.
 
-## How the visible target becomes an ID
+## How a filing gets its ID
 
 The tool assigns a unique reference number to each filing workspace. For most
 use you do not need to know or remember it — the tool finds your work
@@ -106,7 +106,7 @@ aeat app modelo work revisions <work-unit-id>
 Prefer the visible target for hand-run commands. Use the reference number when
 Cadrumo reports that more than one filing matches the same modelo, year, and period.
 
-## What a work unit is
+## A work unit is one filing in progress
 
 A work unit is the saved workspace for one filing target. It is the thing that
 connects later commands to the same local filing work.
@@ -133,7 +133,7 @@ aeat app modelo work status --modelo 303 --year 2026 --period 2T
 aeat app modelo work status <another-work-unit-id>
 ```
 
-## What a calculation revision is
+## A calculation revision is one saved result
 
 A calculation revision is one saved calculation result inside a work unit. It
 has its own reference number, the calculation-revision-id, which `calculate`
@@ -241,7 +241,7 @@ aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --out
 
 For the complete option list, see the [CLI reference](../cli/index.rst).
 
-## Rename, discard, or inspect lifecycle history
+## Rename, discard, or review a filing's history
 
 Manage or review the lifecycle of a work unit as it progresses:
 
@@ -267,7 +267,7 @@ Manage or review the lifecycle of a work unit as it progresses:
   
   The `--reason` text is for your own records only. It is not sent to AEAT.
 
-## List and resume interrupted execution flows
+## Resume an interrupted filing
 
 If a command was interrupted halfway through (for example, because your
 connection dropped while the tool was reading live AEAT data), you can check

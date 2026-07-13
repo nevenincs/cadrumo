@@ -203,7 +203,7 @@ through the OSS-specific workflow.
 ## Where to go next
 
 - [Attach invoices and receipts](ledger-evidence.md)
-- [Work with transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [How to prepare a Modelo 303 quarterly filing](modelo-303.md)
 - [CLI reference](../cli/index.rst)

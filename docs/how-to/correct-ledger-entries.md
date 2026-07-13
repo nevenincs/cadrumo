@@ -151,7 +151,7 @@ If a command refuses or fails, check the [troubleshooting guide](troubleshooting
 
 ## Next steps
 
-- [Work with transactions](import-bank-statements.md) - bring in new transactions.
+- [Import and manage transactions](import-bank-statements.md) - bring in new transactions.
 - [Attach evidence to transactions](ledger-evidence.md) - back your corrections with receipts.
 - [Classify transactions](classify-transactions.md) - prepare corrected rows for tax calculations.
 - [CLI reference](../cli/index.rst) - full field detail for every ledger command.

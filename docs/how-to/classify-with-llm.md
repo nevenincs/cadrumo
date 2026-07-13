@@ -18,7 +18,7 @@ You need:
 
 - An active profile - see [set up your taxpayer profile](profile-setup.md) -
   and at least one transaction in its ledger to classify. See
-  [Work with Transactions](import-bank-statements.md).
+  [Import and manage transactions](import-bank-statements.md).
 - Your master-key passphrase. The command opens the encrypted ledger, so it
   prompts for the passphrase (or reads `CADRUMO_SECRET_PASSPHRASE` when set).
 - A provider CLI installed, on `PATH`, and logged in.
@@ -123,7 +123,7 @@ business share through the normal
 After important corrections, re-run
 `aeat app ledger preflight --year 2026 --period 1T`.
 
-## Saturate the tax fields
+## Fill in the tax fields automatically
 
 A plain applied suggestion saves the classification and the expense
 category; it does not fill in the regulated tax fields. Add `--saturate` to
@@ -269,7 +269,7 @@ the safest value:
 | `CADRUMO_LLM_OLLAMA_NUM_CTX` | `8192` | The local model context window |
 | `CADRUMO_LLM_VISION_READ_TIMEOUT_S` | `300` | Seconds to wait for a local vision read |
 
-## Provenance you can audit
+## See how each suggestion was produced
 
 Every applied result records how it was produced, so a later review shows
 the source:
@@ -309,6 +309,6 @@ provider unless your provider setup and privacy policy permit it.
 
 - [Classify transactions](classify-transactions.md)
 - [Attach invoices and receipts](ledger-evidence.md)
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

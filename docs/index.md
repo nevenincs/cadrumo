@@ -104,7 +104,7 @@ AEAT, reconcile - and the per-modelo recipes: 036, 100 (Renta), 130, 303,
 
 ::::
 
-## Go straight to usage and reference
+## Go straight to reference
 
 Already know the workflow? Go straight to the reference you need:
 
@@ -197,7 +197,7 @@ Glossary <_generated/glossary>
 :hidden:
 :caption: How it works
 
-explanation/index
+Overview <explanation/index>
 ```
 
 ```{toctree}

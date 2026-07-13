@@ -1,4 +1,4 @@
-# Understanding the AEAT pipeline
+# How Cadrumo turns your records into a tax file
 
 This cluster explains how Cadrumo, the `aeat` tool, moves your data from your bank records to a finished tax file, and why each step exists. It's written for the everyday self-employed taxpayer in Spain - the *autónomo* who prepares their own filings. AEAT is the *Agencia Estatal de Administración Tributaria*, Spain's tax agency.
 
@@ -46,7 +46,7 @@ A first draft is rarely the last word. You can adjust figures, re-run the calcul
 
 Some forms depend on figures you already filed - an annual summary that draws on the quarters, for example. The tool carries those earlier numbers forward so a later form stays consistent with what came before, and it tells you when an earlier filing isn't ready yet. See [How filings build on earlier ones](building-on-earlier-filings.md).
 
-For the annual Renta declaration specifically - the largest form and the one that gathers the whole year - a dedicated deep dive walks through where every value comes from and how to trace it, commands included: [Deep dive: how the Renta declaration is assembled](renta-and-bindings.md).
+For the annual Renta declaration specifically - the largest form and the one that gathers the whole year - a dedicated deep dive walks through where every value comes from and how to trace it, commands included: [Deep dive: how the Renta declaration is assembled](how-renta-is-assembled.md).
 
 ---
 
@@ -85,7 +85,7 @@ When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). 
 from-records-to-figures
 editing-and-verifying
 building-on-earlier-filings
-renta-and-bindings
+how-renta-is-assembled
 reviewing-and-exporting
 recording-a-filing-and-the-boundary
 ```

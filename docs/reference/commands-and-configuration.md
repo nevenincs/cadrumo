@@ -3,7 +3,7 @@
 ## Command and workflow-stage lookup
 
 The command-line interface (CLI) exposes live help as the command authority.
-The canonical human executable is `cadrumo`. The separate Model Context
+The canonical human executable is `aeat`. The separate Model Context
 Protocol (MCP) executable is `cadrumo-mcp`.
 
 | Command family | Live authority | Structured map |

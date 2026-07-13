@@ -37,7 +37,7 @@ period that is still missing a decision, a category, a tax figure, a split
 reference, or a convertible currency. The check changes nothing; it tells
 you which records are not ready so you fix the raw material before trusting
 any total - see the readiness section of
-[Import bank statements](../how-to/import-bank-statements.md).
+[Import and manage transactions](../how-to/import-bank-statements.md).
 
 ## Which form, and which period
 
@@ -65,5 +65,5 @@ This is the point of the whole design. Spanish tax filing expects you to justify
 
 This page is part of understanding the AEAT pipeline - how your data flows from bank statement to filed form.
 
-- Start at the overview: [Understanding the AEAT pipeline](index.md).
+- Start at the [how-it-works overview](index.md).
 - Continue to the next stage: [Editing and verifying a calculation](editing-and-verifying.md).

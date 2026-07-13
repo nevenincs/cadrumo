@@ -62,7 +62,7 @@ Who the taxpayer is, and the facts that decide what you owe.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Set Up a Profile
+:::{grid-item-card} Set up your taxpayer profile
 :link: profile-setup
 :link-type: doc
 
@@ -76,21 +76,21 @@ Create, inspect, switch, export, import, rename, or delete taxpayer profiles.
 Configure read-only AEAT authentication for live-read workflows.
 :::
 
-:::{grid-item-card} Maintain Modelo 036 Censo Facts
+:::{grid-item-card} Maintain Modelo 036 census facts
 :link: censo-update
 :link-type: doc
 
 Keep AEAT census facts correct in the active profile.
 :::
 
-:::{grid-item-card} Which Modelos Apply to You
+:::{grid-item-card} Find out which modelos apply
 :link: choose-modelo
 :link-type: doc
 
 Ask which modelos apply to you and why, from your saved profile facts.
 :::
 
-:::{grid-item-card} Protect Data Access
+:::{grid-item-card} Protect access to your data
 :link: protect-data-access
 :link-type: doc
 
@@ -106,7 +106,7 @@ What is due, and when.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Filing Calendar
+:::{grid-item-card} Plan your filing calendar
 :link: filing-calendar
 :link-type: doc
 
@@ -114,18 +114,19 @@ See what may be due, when filing windows open and close, and which period
 tokens address them.
 :::
 
-:::{grid-item-card} AEAT Notifications
+:::{grid-item-card} Read AEAT notifications
 :link: check-aeat-notifications
 :link-type: doc
 
 Capture official notifications and read live AEAT data, view-only.
 :::
 
-:::{grid-item-card} Filing Readiness
+:::{grid-item-card} Check that a filing is ready
 :link: filing-readiness
 :link-type: doc
 
-Check readiness, dependencies, lifecycle history, and year-over-year deltas.
+Check readiness, what a filing depends on, its full history, and
+year-over-year changes.
 :::
 
 ::::
@@ -138,21 +139,21 @@ the evidence.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Work with Transactions
+:::{grid-item-card} Import and manage transactions
 :link: import-bank-statements
 :link-type: doc
 
 Import, add, edit, remove, and review ledger rows.
 :::
 
-:::{grid-item-card} Classify Transactions
+:::{grid-item-card} Classify transactions
 :link: classify-transactions
 :link-type: doc
 
 Classify rows manually, in bulk, with allocation, or through the review queue.
 :::
 
-:::{grid-item-card} LLM Classification
+:::{grid-item-card} Classify with an LLM
 :link: classify-with-llm
 :link-type: doc
 
@@ -160,28 +161,28 @@ Set up a provider, preview and apply suggestions, and classify from an
 attached invoice.
 :::
 
-:::{grid-item-card} Attach Invoices and Receipts
+:::{grid-item-card} Attach invoices and receipts
 :link: ledger-evidence
 :link-type: doc
 
 Store invoices and receipts and link them to the transactions they support.
 :::
 
-:::{grid-item-card} Manage Business Invoices
+:::{grid-item-card} Manage business invoices
 :link: manage-invoices
 :link-type: doc
 
 Record issued and received invoices and feed intra-community operations to Modelo 349.
 :::
 
-:::{grid-item-card} Correct Ledger Mistakes
+:::{grid-item-card} Correct mistakes in your ledger
 :link: correct-ledger-entries
 :link-type: doc
 
 Update, remove, split, merge, stash, or archive transactions safely.
 :::
 
-:::{grid-item-card} IVA Prorrata Deductions
+:::{grid-item-card} Apply IVA prorrata deductions
 :link: prorrata
 :link-type: doc
 
@@ -197,7 +198,7 @@ The per-modelo work: prepare, review, verify, export, file, and reconcile.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Filing Workflow
+:::{grid-item-card} The filing workflow
 :link: filing-spine
 :link-type: doc
 
@@ -246,21 +247,21 @@ Declare intra-community operations from your invoice records.
 Prepare the annual IVA summary.
 :::
 
-:::{grid-item-card} Calculation Inputs
+:::{grid-item-card} Review calculation inputs
 :link: review-calculation-values
 :link-type: doc
 
 Review which form boxes were filled, supply missing values, and handle offsets.
 :::
 
-:::{grid-item-card} Google Sheets Review
+:::{grid-item-card} Review with Google Sheets
 :link: review-with-google-sheets
 :link-type: doc
 
 Export, edit, and pull back model calculations using a Google Sheets spreadsheet.
 :::
 
-:::{grid-item-card} Verify a Filing
+:::{grid-item-card} Verify a filing
 :link: verification-reports
 :link-type: doc
 
@@ -274,7 +275,7 @@ Run verification, read the report findings, and fix what blocks export.
 Export the file, upload it at the AEAT portal yourself, record, and reconcile.
 :::
 
-:::{grid-item-card} Reconcile a Filing
+:::{grid-item-card} Reconcile a filing
 :link: reconcile
 :link-type: doc
 
@@ -289,7 +290,7 @@ record.
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Connect an Agent
+:::{grid-item-card} Connect an agent (MCP)
 :link: connect-an-agent
 :link-type: doc
 
@@ -304,10 +305,6 @@ Fix active-profile, storage, registry, and authentication problems.
 :::
 
 ::::
-
-Cadrumo does not submit to AEAT. Exported files are local files. You upload them
-yourself through official AEAT channels and keep the justificante for your
-records.
 
 ```{toctree}
 :hidden:

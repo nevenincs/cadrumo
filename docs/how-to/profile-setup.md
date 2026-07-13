@@ -392,7 +392,7 @@ the issue to the project's issue tracker.
 
 ## Next steps
 
-- [Work with transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Plan your filing calendar](filing-calendar.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

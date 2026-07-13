@@ -212,7 +212,7 @@ aeat app modelo bindings list --modelo 100 --year 2026 --period 0A --missing
 
 How every value arrives, and how to trace any figure to its rule and its
 article of law, is the subject of
-[Deep dive: how the Renta declaration is assembled](../explanation/renta-and-bindings.md).
+[Deep dive: how the Renta declaration is assembled](../explanation/how-renta-is-assembled.md).
 
 Verify, export, upload, file, and reconcile - the same five moves that
 closed every quarter close the year:
@@ -239,5 +239,5 @@ rules that produced it.
 - [Prepare a Modelo 130 IRPF instalment](modelo-130.md) - the
   standalone per-quarter recipe.
 - [Prepare the annual Modelo 100 Renta declaration](modelo-100.md)
-- [Deep dive: how the Renta declaration is assembled](../explanation/renta-and-bindings.md)
+- [Deep dive: how the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
 - [Diagnose and repair your local setup](troubleshooting.md)

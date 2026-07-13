@@ -7,7 +7,7 @@ deterministic engine, and nothing is ever submitted to the Agencia Estatal de
 Administración Tributaria (AEAT): the agent surface exposes the same local,
 gated commands the CLI does.
 
-## What the agent surface is
+## What the agent connection is
 
 Cadrumo ships an MCP (Model Context Protocol) server, `aeat-mcp`, alongside the
 `aeat` command. MCP is an open standard that lets assistants call tools. Any

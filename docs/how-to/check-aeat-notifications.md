@@ -1,4 +1,4 @@
-# Check AEAT notifications and live observations
+# Read AEAT notifications and other live data
 
 This page covers the live read-only AEAT surfaces: official notifications,
 declaration history, filed returns, NIF verification, the portal catalogue,
