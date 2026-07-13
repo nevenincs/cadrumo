@@ -111,7 +111,7 @@ ollama pull qwen2.5vl:3b
 
 Install a cloud LLM provider CLI when you want cloud classification. Put its
 executable on `PATH` and sign in with that provider's own flow. See
-[LLM provider setup](how-to/setup-llm-classification.md).
+[Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider).
 
 Run `just doctor` again after each change to confirm the gap is closed.
 
@@ -145,5 +145,5 @@ you can set them during onboarding. See [Set up a profile](how-to/profile-setup.
 
 - [Quickstart](how-to/quickstart.md)
 - [Set up a profile](how-to/profile-setup.md)
-- [LLM provider setup](how-to/setup-llm-classification.md)
+- [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider)
 - [Troubleshooting](how-to/troubleshooting.md)

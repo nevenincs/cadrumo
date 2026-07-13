@@ -209,21 +209,8 @@ Deduct input IVA under general or especial prorrata and declare differentiated s
 :link: classify-with-llm
 :link-type: doc
 
-Preview, apply, reject, or override local LLM suggestions.
-:::
-
-:::{grid-item-card} Classify from an Invoice
-:link: classify-with-llm-evidence
-:link-type: doc
-
-Read an attached invoice on-host to classify, with the consent and privacy rules.
-:::
-
-:::{grid-item-card} LLM Provider Setup
-:link: setup-llm-classification
-:link-type: doc
-
-Install and authenticate a provider CLI so LLM suggestions work.
+Set up a provider, preview and apply suggestions, and classify from an
+attached invoice.
 :::
 
 :::{grid-item-card} Connect an Agent
@@ -278,8 +265,6 @@ manage-invoices
 correct-ledger-entries
 modelo-036
 classify-with-llm
-classify-with-llm-evidence
-setup-llm-classification
 connect-an-agent
 review-calculation-values
 review-with-google-sheets
