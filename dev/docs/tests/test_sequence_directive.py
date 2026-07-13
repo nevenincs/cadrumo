@@ -27,7 +27,12 @@ from pathlib import Path
 import pytest
 from sphinx.application import Sphinx
 
-from dev.docs.sequence_directive import build_sequence_payload, render_sequence_html
+from dev.docs.sequence_directive import (
+    build_sequence_payload,
+    parse_shells,
+    render_sequence_html,
+    wrap_token_lines,
+)
 from dev.docs.sequences import (
     FrameKind,
     GoldenFrame,
@@ -306,6 +311,13 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_st
     payload = json.loads(match.group(1).replace("<\\/", "</"))
     assert payload["sequence_id"] == _SEQUENCE_ID
     assert [frame["kind"] for frame in payload["frames"]] == ["setup", "command", "command", "result"]
+    # Shell-aware display flows through the real build: the default shell is on the
+    # root, both variants render per frame, and the payload carries the shells.
+    assert 'data-cadrumo-shell="bash"' in html
+    assert 'class="cadrumo-cmd-variant" data-shell="bash"' in html
+    assert 'class="cadrumo-cmd-variant" data-shell="pwsh"' in html
+    assert payload["shells"] == ["bash", "pwsh"]
+    assert "wrapped" in payload["frames"][0]
 
 
 def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _isolated_storage: None) -> None:
@@ -349,4 +361,169 @@ def test_directive_refuses_live_aeat_frame_statically(tmp_path: Path, _isolated_
 
     assert "unenrollable" in warnings
     assert "no committed golden" not in warnings  # refused before the golden lookup
+    assert "cadrumo-sequence" not in html
+
+
+# ---------------------------------------------------------------------------
+# Shell-aware wrapping, shell switcher metadata, and copy affordance
+# ---------------------------------------------------------------------------
+
+
+def test_short_command_is_not_wrapped() -> None:
+    """A command that fits in the width budget renders on a single line."""
+    tokens = ["aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"]
+    lines = wrap_token_lines(tokens)
+    assert lines == [list(range(len(tokens)))]
+
+
+def test_long_command_wraps_at_token_boundaries_and_reassembles() -> None:
+    """Wrapping packs whole tokens; reassembling the lines reproduces the token stream."""
+    tokens = [
+        "aeat", "app", "ledger", "import",
+        "--file", "fixtures/2026-first-quarter-bank-statement.csv",
+        "--provider", "caixabank", "--year", "2026", "--period", "1T", "--verbose",
+    ]
+    lines = wrap_token_lines(tokens)
+    assert len(lines) > 1, "a command past the budget must wrap onto multiple lines"
+    # No token is split, and the flattened line order reproduces the original stream.
+    flattened = [tokens[i] for line in lines for i in line]
+    assert flattened == tokens
+    # Every display line stays within the 88-column content budget (indent + tokens
+    # + inter-token spaces), the packing invariant the markers ride beyond.
+    for line_index, line in enumerate(lines):
+        indent = 0 if line_index == 0 else 2
+        content = indent + sum(len(tokens[i]) for i in line) + (len(line) - 1)
+        assert content <= 88 or len(line) == 1, f"line {line_index} overflows the budget without being a lone token"
+
+
+def test_token_longer_than_budget_renders_alone() -> None:
+    """A single token wider than the budget occupies its own line (never split)."""
+    tokens = ["aeat", "x" * 120, "app"]
+    lines = wrap_token_lines(tokens)
+    assert [1] in lines, "an over-budget token must be alone on its line"
+    # And it is never split into pieces.
+    flattened = [tokens[i] for line in lines for i in line]
+    assert flattened == tokens
+
+
+def _wrapping_golden(sequence_id: str) -> SequenceGolden:
+    """A single-result-frame golden for a long command that wraps."""
+    return SequenceGolden(
+        sequence_id=sequence_id,
+        frames=(
+            GoldenFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "x"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "modelo.work.calculate",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"status": "ok"},
+                },
+                envelope_source="stdout",
+            ),
+        ),
+    )
+
+
+_LONG_BODY = (
+    "@result aeat app ledger import --file fixtures/2026-first-quarter-bank-statement.csv "
+    "--provider caixabank --year 2026 --period 1T --verbose\n"
+    '@expect exit_code == 0'
+)
+
+
+def test_payload_carries_shells_and_per_frame_wrapping() -> None:
+    """The payload carries the ordered shells and per-shell wrapped line groupings."""
+    sequence = parse_sequence(
+        sequence_id="wrap-demo",
+        options={"verify": "Confirm the import."},
+        body=_LONG_BODY,
+    )
+    payload = build_sequence_payload(sequence, _wrapping_golden("wrap-demo"), shells=["bash", "pwsh"])
+    assert payload["shells"] == ["bash", "pwsh"]
+    frame = payload["frames"][0]
+    assert set(frame["wrapped"]) == {"bash", "pwsh"}
+    # The packing is shell-independent, so both shells share the line groupings.
+    assert frame["wrapped"]["bash"] == frame["wrapped"]["pwsh"]
+    # The groupings index into the frame's flat token list and reassemble the argv.
+    texts = [tok["text"] for tok in frame["tokens"]]
+    flattened = [texts[i] for line in frame["wrapped"]["bash"] for i in line]
+    assert flattened == texts
+    assert len(frame["wrapped"]["bash"]) > 1  # this command wraps
+
+
+def test_render_emits_per_shell_variants_with_markers_and_default() -> None:
+    """The HTML renders one command variant per shell, with markers and a default shell."""
+    sequence = parse_sequence(
+        sequence_id="wrap-demo",
+        options={"verify": "Confirm the import."},
+        body=_LONG_BODY,
+    )
+    payload = build_sequence_payload(sequence, _wrapping_golden("wrap-demo"), shells=["bash", "pwsh"])
+    html = render_sequence_html(payload)
+
+    # The sequence root declares the default (first) shell so the correct variant
+    # shows without JavaScript.
+    assert 'data-cadrumo-shell="bash"' in html
+    # One command variant per declared shell.
+    assert 'class="cadrumo-cmd-variant" data-shell="bash"' in html
+    assert 'class="cadrumo-cmd-variant" data-shell="pwsh"' in html
+    # Each shell's continuation marker renders as its own muted span.
+    assert r'<span class="cli-continuation">\</span>' in html  # bash trailing backslash
+    assert '<span class="cli-continuation">`</span>' in html  # pwsh trailing backtick
+    # The frame carries the single-line authored command for the copy control.
+    assert 'data-command-line="aeat app ledger import --file' in html
+
+
+def test_single_shell_renders_one_variant_no_switcher_metadata() -> None:
+    """Declaring one shell renders a single variant and defaults to that shell."""
+    sequence = parse_sequence(
+        sequence_id="one-shell",
+        options={"verify": "Confirm the import."},
+        body=_LONG_BODY,
+    )
+    payload = build_sequence_payload(sequence, _wrapping_golden("one-shell"), shells=["pwsh"])
+    assert payload["shells"] == ["pwsh"]
+    html = render_sequence_html(payload)
+    assert 'data-cadrumo-shell="pwsh"' in html
+    assert html.count('class="cadrumo-cmd-variant"') == 1
+    assert 'data-shell="pwsh"' in html
+    assert 'data-shell="bash"' not in html
+
+
+def test_parse_shells_default_and_validation() -> None:
+    """The :shells: option defaults to bash+pwsh and refuses an unknown shell."""
+    assert parse_shells(None) == ["bash", "pwsh"]
+    assert parse_shells("  ") == ["bash", "pwsh"]
+    assert parse_shells("pwsh bash") == ["pwsh", "bash"]
+    assert parse_shells("bash bash") == ["bash"]  # de-duplicated
+    with pytest.raises(ValueError, match="not a supported shell"):
+        parse_shells("fish")
+
+
+_INDEX_UNKNOWN_SHELL = (
+    "# Bad shell\n\n```{cli-sequence} bad-shell-demo\n"
+    ":verify: Confirm it.\n"
+    ":shells: fish\n"
+    "@result aeat app modelo work verify wu\n"
+    "@expect exit_code == 0\n"
+    "```\n"
+)
+
+
+def test_directive_refuses_unknown_shell(tmp_path: Path, _isolated_storage: None) -> None:
+    """An unknown :shells: value fails the build with the accepted set named."""
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    goldens_root.mkdir()
+    _write_site(site, index_body=_INDEX_UNKNOWN_SHELL, goldens_root=goldens_root)
+
+    html, warnings = _build(site, warningiserror=False)
+
+    assert "not a supported shell" in warnings
+    assert "bash" in warnings and "pwsh" in warnings  # the accepted set is named
     assert "cadrumo-sequence" not in html
