@@ -137,5 +137,5 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert "finish_line\texport verified-complete revision via 'aeat app modelo export'" in text_readiness.output
     assert "readiness_note\tledger_ready only means" in text_readiness.output
     assert (
-        "missing_bindings_command\tcadrumo app modelo bindings list --modelo 100 --year 2025 --period 0A --missing"
+        "missing_bindings_command\taeat app modelo bindings list --modelo 100 --year 2025 --period 0A --missing"
     ) in text_readiness.output

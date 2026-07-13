@@ -210,7 +210,7 @@ def test_config_profile_show_does_not_suggest_retired_activation_for_missing_rec
 
     assert result.exit_code == 2, result.output
     assert "readiness\tmissing_profile_record" in result.output
-    assert "next_action\tcadrumo config repair profile --profile operator" in result.output
+    assert "next_action\taeat config repair profile --profile operator" in result.output
     assert "switch" not in result.output
 
 

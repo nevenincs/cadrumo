@@ -1087,7 +1087,7 @@ def config_status(
                 "readiness\tblocked",
                 f"identity.tax_id\t{'present' if values.get('identity.tax_id') else 'missing'}",
                 f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
-                f"next_action\tcadrumo config profile edit {active_profile}",
+                f"next_action\taeat config profile edit {active_profile}",
             )
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
