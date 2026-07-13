@@ -21,6 +21,10 @@ related:
   - '[[2026-07-13-docs-cli-sequences-W02-P04-S13]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P04-S14]]'
   - '[[2026-07-13-docs-cli-sequences-W02-P04-S15]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P05-S16]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P05-S17]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P05-S18]]'
+  - '[[2026-07-13-docs-cli-sequences-W02-P05-S19]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-07-13-docs-cli-sequences-plan]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
@@ -53,6 +57,10 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-W02-P04-S13` - Implement JSON-frame comparison delegating to the observability primitives with exactly the central GOLDEN_MASK_FIELDS, refusing any per-sequence mask extension
 - `2026-07-13-docs-cli-sequences-W02-P04-S14` - Implement text-frame exact comparison with declared narrow normalisation, per-frame exit-code assertion, and @expect semantic evaluation against live output
 - `2026-07-13-docs-cli-sequences-W02-P04-S15` - Write comparison tests covering JSON match and mismatch diagnostics, text match, exit-code failure, and @expect pass and fail
+- `2026-07-13-docs-cli-sequences-W02-P05-S16` - Implement the refresh CLI mode that re-executes sequences in the sandbox and rewrites the golden files, scoped by --page or --sequence
+- `2026-07-13-docs-cli-sequences-W02-P05-S17` - Implement the check CLI mode that fails with the page, sequence id, frame index, argv, differing_paths or unified diff, and the exact refresh invocation
+- `2026-07-13-docs-cli-sequences-W02-P05-S18` - Implement the executor-level anti-tautology proof that executes one representative sequence twice and asserts the pre-mask differing paths equal the central mask set exactly
+- `2026-07-13-docs-cli-sequences-W02-P05-S19` - Verify the whole engine test suite (parser, runner, comparison, CLI, anti-tautology) passes green with no mocks or skips
 
 ### plan
 
