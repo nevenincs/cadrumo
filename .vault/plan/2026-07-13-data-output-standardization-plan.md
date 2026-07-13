@@ -52,7 +52,7 @@ Give every durable generated artifact family one declared lifecycle (rotation, T
 Rotating log handler and retention prunes for the unbounded artifact families, following the run-telemetry precedent.
 
 - [x] `W02.P03.S09` - Replace the plain FileHandler with a size-capped rotating handler for cadrumo.log; `src/cadrumo/core/logging.py`.
-- [ ] `W02.P03.S10` - Add retention-days pruning to the LLM response cache and usage JSONL following the run-telemetry precedent; `src/cadrumo/adapters/outbound/llm`.
+- [x] `W02.P03.S10` - Add retention-days pruning to the LLM response cache and usage JSONL following the run-telemetry precedent; `src/cadrumo/adapters/outbound/llm`.
 - [ ] `W02.P03.S11` - Add retention pruning for per-run trace directories; `src/cadrumo/core/observability/_store.py`.
 - [ ] `W02.P03.S12` - Add retention pruning for wallet diagnostic dump files; `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
 
