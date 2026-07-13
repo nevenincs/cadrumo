@@ -127,6 +127,33 @@ hand-authored glossary exists or returns; the generated glossary remains the
 D7 projection of the approved-tier Handbook, and the Handbook remains the
 single vocabulary authority feeding sweep, palette, and glossary alike.
 
+## Update 1 (2026-07-13): D1 sidecar retirement rescinded; cutover re-scoped
+
+Execution of the cutover surfaced a fact the decision missed: the committed
+`*.extracted.md` / `*.extracted.json` sidecars are no longer only the dev-RAG
+interim. They are PRODUCT data — the shipped offline corpus search builds its
+lexical index from the bundled `*.html.extracted.json` triples
+(`src/cadrumo/application/corpus_search/_lexical_index.py`), the
+manual-oracle grounding anchors (`raw_evidence_locator`) cite line ranges
+inside `*.extracted.md`, and the wheel content boundary deliberately ships
+the extracted text WHILE EXCLUDING the source binaries, so inside the wheel
+the sidecars are the only corpus text that exists. Deleting the tree would
+break the shipped search and the verification-grounding evidence chain.
+
+D1 is therefore amended: the hook wiring, rule file, parity gates, and the
+strict `preprocess check` gate stand as ratified; the sidecar tree is NOT
+retired. The sidecars remain the committed product corpus payload with their
+freshness gate, and the hook-vs-sidecar parity gate becomes a PERMANENT
+lock (one extraction truth feeding both the product payload and the dev
+index) instead of a transition aid. The dev-index side of the cutover
+becomes: exclude `*.extracted.md` and `*.extracted.json` from the dev
+walker via `.vaultragignore` (the hook now feeds the same text under source
+paths, so indexing both would double-count every corpus document), retarget
+the terminology resolver path rules from sidecar paths to source paths, and
+prove the equal-or-superset sweep target set. The stale
+`dev/docs/preprocess/__init__.py` docstring is corrected to describe the
+dual role. Plan step W02.P02.S07 is re-scoped to match.
+
 ## Rationale
 
 The sibling research grounds every fact: the shipped pipeline inventory, the

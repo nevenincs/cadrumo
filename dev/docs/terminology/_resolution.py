@@ -14,12 +14,13 @@ The five resolution rules (by source path):
 * ``src/cadrumo/_data/registry/.../casillas/*.toml`` -> the modelo's
   :class:`~dev.docs.terminology._search_record.CasillaSearchRecord` set (the
   CASILLA grounding surface).
-* a Disenos de Registro sidecar
-  (``.../disenos_registro/.../*.extracted.md``) -> the modelo's casilla target
-  (the Diseno is the casilla-to-field authority).
-* a normatives sidecar (``.../normatives/.../*.extracted.md``) or a legal
-  catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the legal-grounding
-  target (the BOE permalink + ``#aN`` article anchor, resolved through the
+* a Disenos de Registro source workbook or PDF
+  (``.../disenos_registro/.../*.{xlsx,xls,pdf}``, indexed through the
+  preprocess-hook rules) -> the modelo's casilla target (the Diseno is the
+  casilla-to-field authority).
+* a normatives source page (``.../normatives/.../*.html``, hook-indexed) or a
+  legal catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the
+  legal-grounding target (the BOE permalink + ``#aN`` article anchor, resolved through the
   legal catalogue's ``corpus_ref`` -- the BOE grounding surface).
 * ``src/cadrumo/**/*.py`` -> the generated API stub
   (``docs/api/cadrumo.<dotted.module>.html`` -- the CODEBASE grounding surface).
@@ -162,11 +163,15 @@ _CONCEPT_TOML_RE = re.compile(
 _CASILLA_PATH_RE = re.compile(
     r"^src/cadrumo/_data/registry/aeat/modelos/(?P<modelo>[^/]+)/revisions/[^/]+/casillas/.+\.toml$",
 )
+# Corpus hits arrive under SOURCE file paths: the dev index reads the corpus
+# through the .vaultragpreprocess.toml hook rules, and the extraction sidecars
+# are .vaultragignore-excluded (they remain the committed product payload;
+# docs-terminology-search ADR Update 1).
 _DISENO_PATH_RE = re.compile(
-    r"^src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_(?P<modelo>[^/]+)/.+\.extracted\.md$",
+    r"^src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_(?P<modelo>[^/]+)/.+\.(?:xlsx|xls|pdf)$",
 )
 _NORMATIVES_PATH_RE = re.compile(
-    r"^src/cadrumo/_data/corpus/normatives/.+\.extracted\.md$",
+    r"^src/cadrumo/_data/corpus/normatives/.+\.html$",
 )
 _LEGAL_TOML_RE = re.compile(
     r"^src/cadrumo/_data/registry/aeat/legal/[^/]+\.toml$",
@@ -312,16 +317,15 @@ class TargetResolver:
         return ResolvedTarget(surface=GroundingSurface.CASILLA, record=record, source_hit=hit)
 
     def _resolve_normatives(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
-        # Strip the .extracted.md sidecar suffix to recover the origin html path
-        # relative to src/cadrumo/_data/, then to the corpus/-rooted corpus_ref form.
+        # The hit path IS the origin html source (hook-indexed); reduce it to
+        # the corpus/-rooted corpus_ref form the legal catalogue cites.
         path = hit.posix_path.as_posix()
-        origin = path.removesuffix(".extracted.md")
-        corpus_rel = _to_corpus_relative(origin)
+        corpus_rel = _to_corpus_relative(path)
         if corpus_rel is None:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"normatives sidecar outside the corpus root: {path}",
+                detail=f"normatives source outside the corpus root: {path}",
             )
         legal_id = self._legal_by_corpus_path.get(corpus_rel)
         if legal_id is None:

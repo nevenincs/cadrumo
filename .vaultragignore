@@ -45,3 +45,11 @@ tmp_*/
 temp/
 cache/
 var/
+
+# Extraction sidecars: the committed product corpus payload (shipped search
+# index source, wheel corpus text, manual-oracle evidence anchors). The dev
+# index now reads the same text from the SOURCE files through the
+# .vaultragpreprocess.toml hook rules, so indexing the sidecars too would
+# double-count every corpus document (docs-terminology-search ADR Update 1).
+*.extracted.md
+*.extracted.json
