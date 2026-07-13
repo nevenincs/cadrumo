@@ -5,11 +5,11 @@ and updates. Set one up before you import transactions, calculate a {term}`model
 or export a filing.
 
 A profile is local. Creating, editing, showing, exporting, or importing a
-profile never submits anything to the Agencia Estatal de Administracion
-Tributaria (AEAT). The tool builds and verifies your filing on your machine; you
+profile never submits anything to the Agencia Estatal de Administración
+Tributaria (AEAT). Cadrumo builds and verifies your filing on your machine; you
 upload it yourself.
 
-If you haven't installed and run `aeat` yet, start with the
+If you haven't installed Cadrumo and run the `aeat` command yet, start with the
 [quickstart](quickstart.md), then come back here.
 
 ## What the active profile means
@@ -37,7 +37,7 @@ Switch to another taxpayer before working on it:
 aeat config switch my-other-profile
 ```
 
-Switching changes which local ledger, modelo drafts, and filing markers `aeat
+Switching changes which local ledger, modelo drafts, and filing markers `cadrumo
 app` commands use. The switch verb is `aeat config switch`, not `aeat config
 profile switch`.
 
@@ -61,7 +61,7 @@ rest of setup follows:
   through Modelo 303.
 - **Where the taxpayer is resident.** The autonomous community for a Spanish
   resident, or the country of residence for a non-resident.
-- **Which output language you want.** The language `aeat` uses for its output.
+- **Which output language you want.** The language `cadrumo` uses for its output.
 
 You don't need to memorize flag names. The guided wizard walks you through these
 decisions. For the complete, current list of flags and their accepted values,
@@ -88,10 +88,10 @@ they mirror the AEAT forms; the values you choose are stable command tokens that
 don't change with `--language`.
 
 The wizard prompts for your master-key passphrase before it stores anything. In
-a non-interactive shell, set `AEAT_SECRET_PASSPHRASE` first, or the command
-refuses with `AEAT_SECRET_PASSPHRASE is not set`.
+a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE` first, or the command
+refuses with `CADRUMO_SECRET_PASSPHRASE is not set`.
 
-`aeat` prints its prompts, refusals, and error messages in Spanish. The output
+`cadrumo` prints its prompts, refusals, and error messages in Spanish. The output
 blocks quoted below are English translations of those messages.
 
 Use flags with `--quiet` when you want a repeatable, scriptable setup:
@@ -109,7 +109,7 @@ Refused. This --quiet run is missing required details. Add these flags and run
 the command again: --tax-id.
 ```
 
-Add `--accept-defaults` when you intentionally want `aeat` to fill the questions
+Add `--accept-defaults` when you intentionally want Cadrumo to fill the questions
 you omit from its built-in defaults.
 
 ### Worked example: a natural person with an activity
@@ -320,7 +320,7 @@ aeat config profile duplicate ana-real ana-copy
 ```
 
 Delete a profile only when you mean to remove it. Deletion is local and
-irreversible. If the deleted profile was active, `aeat` clears the active-profile
+irreversible. If the deleted profile was active, Cadrumo clears the active-profile
 pointer:
 
 ```bash
@@ -393,7 +393,7 @@ the issue to the project's issue tracker.
 ## Next steps
 
 - [Work with transactions](import-bank-statements.md)
-- [Link Modelo 036 census information](censo-update.md)
+- [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Plan your filing calendar](filing-calendar.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [CLI reference](../cli/index.rst)

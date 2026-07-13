@@ -7,26 +7,26 @@
 # testimonial gate: a harness change that breaks a cited verb, a trajectory, the
 # provenance grounding, the HITL tiers, or the faithfulness check fails here.
 
-name: Agent Harness Eval
+name: Cadrumo Agent Harness Eval
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - "src/aeat/agent/**"
-      - "src/aeat/entrypoints/mcp/**"
-      - "src/aeat/_data/agent/**"
-      - "src/aeat/application/operator_surface/**"
-      - "src/aeat/entrypoints/cli/_app_contract*.py"
+      - "src/cadrumo/agent/**"
+      - "src/cadrumo/entrypoints/mcp/**"
+      - "src/cadrumo/_data/agent/**"
+      - "src/cadrumo/application/operator_surface/**"
+      - "src/cadrumo/entrypoints/cli/_app_contract*.py"
   pull_request:
     branches: [main]
     paths:
-      - "src/aeat/agent/**"
-      - "src/aeat/entrypoints/mcp/**"
-      - "src/aeat/_data/agent/**"
-      - "src/aeat/application/operator_surface/**"
-      - "src/aeat/entrypoints/cli/_app_contract*.py"
+      - "src/cadrumo/agent/**"
+      - "src/cadrumo/entrypoints/mcp/**"
+      - "src/cadrumo/_data/agent/**"
+      - "src/cadrumo/application/operator_surface/**"
+      - "src/cadrumo/entrypoints/cli/_app_contract*.py"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,7 +37,7 @@ permissions:
 
 jobs:
   agent-harness-eval:
-    name: Ubuntu / Python 3.13 / agent-harness eval
+    name: Ubuntu / Python 3.13 / Cadrumo agent-harness / cadrumo-mcp
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -54,14 +54,14 @@ jobs:
       - name: Sync frozen development environment
         run: uv sync --frozen
 
-      - name: Agent-harness eval surface
+      - name: Cadrumo agent-harness eval surface
         run: >-
           uv run --no-sync pytest
-          src/aeat/agent
-          src/aeat/entrypoints/mcp/tests
-          src/aeat/entrypoints/cli/tests/test_app_contract.py
-          src/aeat/entrypoints/cli/tests/test_app_agent_workspace.py
-          src/aeat/entrypoints/cli/tests/test_operator_surface_contract_drift.py
-          src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py
+          src/cadrumo/agent
+          src/cadrumo/entrypoints/mcp/tests
+          src/cadrumo/entrypoints/cli/tests/test_app_contract.py
+          src/cadrumo/entrypoints/cli/tests/test_app_agent_workspace.py
+          src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py
+          src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py
           -m "integration or not integration"
           -q --no-header

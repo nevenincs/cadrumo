@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from typer.testing import CliRunner
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.terminology._sweep import enumerate_query_vocabulary
 from dev.docs.terminology._synonym_cli import app
 from dev.docs.terminology._synonym_mining import (

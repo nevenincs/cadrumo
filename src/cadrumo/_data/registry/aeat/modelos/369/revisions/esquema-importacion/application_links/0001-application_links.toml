@@ -1,0 +1,85 @@
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-portal"
+surface = "portal"
+consumer = "portal_m369_iva_ioss"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-verification"
+surface = "verification"
+consumer = "cadrumo.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]

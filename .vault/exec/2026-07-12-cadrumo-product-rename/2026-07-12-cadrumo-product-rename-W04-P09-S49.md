@@ -1,0 +1,66 @@
+---
+tags:
+  - '#exec'
+  - '#cadrumo-product-rename'
+date: '2026-07-12'
+modified: '2026-07-12'
+step_id: 'S49'
+related:
+  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S49 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Update generator tests for plugins/cadrumo and pinned Cadrumo launcher output and ## Scope
+
+- `src/cadrumo/agent/tests` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Update generator tests for plugins/cadrumo and pinned Cadrumo launcher output
+
+## Scope
+
+- `src/cadrumo/agent/tests`
+
+## Description
+
+- Retarget plugin and marketplace generator tests to the `cadrumo` plugin identity and `./plugins/cadrumo` source.
+- Pin the emitted MCP launch contract to `uvx --from cadrumo[agent]==<version> cadrumo-mcp` with Cadrumo environment keys.
+- Reject former `plugins/aeat`, `aeat` MCP server, `aeat-cli`, `aeat-mcp`, and former launcher copy in generated output.
+
+## Outcome
+
+The real filesystem materialisers now prove the canonical Cadrumo plugin tree,
+manifest identity, distribution pin, console script, environment interpolation,
+and product copy without accepting former product paths or commands.
+
+## Notes
+
+- Thirteen focused generator tests passed after S48 and its launcher-copy correction landed; Ruff and formatting passed.
+- The checked-in marketplace scaffold parity test is deliberately outside this run because S50 owns regeneration of that generated output.

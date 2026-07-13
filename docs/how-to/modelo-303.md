@@ -7,11 +7,12 @@ or large-company taxpayers use monthly Modelo 303 periods. Voluntary SII
 enrolment alone remains quarterly. The registry's official title is "Modelo 303.
 Impuesto sobre el Valor Anadido. Autoliquidacion."
 
-`aeat` does not submit Modelo 303 to AEAT. Export creates a local file that you
-upload through the official AEAT channel yourself.
+Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
+Tributaria (AEAT). Export creates a local file that you upload through the official
+AEAT channel yourself.
 
 The tool needs a master-key passphrase. It prompts for it interactively, or
-read it from `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+read it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 ## The complete first-quarter chain
 
@@ -66,9 +67,9 @@ be calculated:
   profile. Modelo 303 depends on IVA facts such as `--iva-regime`,
   `--iva-sii-enrolled`, `--iva-redeme-enrolled`, ROI/OSS enrollment, activity
   and residence facts, and the active profile.
-- If you use AEAT census data, [link Modelo 036 census information](censo-update.md)
-  before calculating. Censo facts can affect profile readiness and local
-  classifications.
+- Check your census facts before calculating - see
+  [Maintain Modelo 036 census facts in your profile](censo-update.md). Censo
+  facts can affect profile readiness and local classifications.
 - [Plan your filing calendar](filing-calendar.md) and confirm the period token
   with [Period tokens and dates](filing-calendar.md#period-tokens-and-dates).
   Standard non-exempt
@@ -140,7 +141,7 @@ aeat app modelo work create --modelo 303 --year 2026 --period 1T
 
 The command is idempotent for the same visible target. If a work unit already
 exists for the active profile, Modelo 303, year, period, and resolved registry
-revision, `aeat` returns it instead of creating a duplicate.
+revision, Cadrumo returns it instead of creating a duplicate.
 
 Use the same visible target on the later commands:
 
@@ -181,7 +182,7 @@ and similar issues before a draft is trusted. Regimen simplificado is treated
 differently: those profiles provide the simplificado casillas manually instead
 of satisfying the ordinary IVA ledger aggregation preflight.
 
-`aeat` does not silently choose a quarter from today's date. The work unit's
+Cadrumo does not silently choose a quarter from today's date. The work unit's
 `--year` and `--period` are the target.
 
 ## Calculate the draft
@@ -261,7 +262,7 @@ The report exposes the calculation revision id, completeness status, whether
 verification was granted or blocked, resolved and missing casillas, findings
 with legal/source references where available, and the next action.
 
-On successful verification, `aeat` captures ledger filing snapshot and evidence
+On successful verification, Cadrumo captures ledger filing snapshot and evidence
 over the draft's `source_transaction_ids` and stores it on the verified
 revision. That evidence lets later staleness checks detect whether a
 contributing ledger row changed or disappeared. It is not a general lock on the

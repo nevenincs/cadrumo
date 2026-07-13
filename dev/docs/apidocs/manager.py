@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from aeat.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.external_constants import UTF_8_ENCODING
 
 
 class ApiDocsError(RuntimeError):
@@ -76,14 +76,14 @@ class ApiStubManager:
     - :meth:`audit` — return a human-readable health report.
     """
 
-    def __init__(self, src_aeat: Path, docs_api: Path) -> None:
+    def __init__(self, src_cadrumo: Path, docs_api: Path) -> None:
         """Initialise the manager with the source root and the docs API directory.
 
         Args:
-            src_aeat: Absolute path to ``src/aeat/``.
+            src_cadrumo: Absolute path to ``src/cadrumo/``.
             docs_api: Absolute path to ``docs/api/``.
         """
-        self.src_aeat = src_aeat
+        self.src_cadrumo = src_cadrumo
         self.docs_api = docs_api
 
     # ── Discovery ────────────────────────────────────────────────────────────
@@ -92,12 +92,12 @@ class ApiStubManager:
         """Return True when *path* is outside the documentable module set.
 
         Args:
-            path: An absolute ``Path`` to a Python file under ``src_aeat``.
+            path: An absolute ``Path`` to a Python file under ``src_cadrumo``.
 
         Returns:
             True when the file should be skipped.
         """
-        relative = path.relative_to(self.src_aeat)
+        relative = path.relative_to(self.src_cadrumo)
         parts = relative.parts
 
         filename = path.name
@@ -113,7 +113,7 @@ class ApiStubManager:
         return any(part in _EXCLUDED_PACKAGES for part in parts)
 
     def discover_modules(self) -> list[tuple[str, bool]]:
-        """Walk ``src_aeat`` and collect ``(dotted_module_name, is_package)`` pairs.
+        """Walk ``src_cadrumo`` and collect ``(dotted_module_name, is_package)`` pairs.
 
         Returns:
             Sorted list of ``(dotted_name, is_package)`` tuples.
@@ -121,11 +121,11 @@ class ApiStubManager:
         """
         results: list[tuple[str, bool]] = []
 
-        for py_file in sorted(self.src_aeat.rglob("*.py")):
+        for py_file in sorted(self.src_cadrumo.rglob("*.py")):
             if self._is_excluded(py_file):
                 continue
 
-            relative = py_file.relative_to(self.src_aeat.parent)
+            relative = py_file.relative_to(self.src_cadrumo.parent)
             parts = list(relative.parts)
 
             if parts[-1] == "__init__.py":
@@ -293,7 +293,7 @@ class ApiStubManager:
             all_modules: Optional discovery result to reuse.
 
         Returns:
-            Mapping of ``aeat.some.module.rst`` filenames to their generated RST.
+            Mapping of ``cadrumo.some.module.rst`` filenames to their generated RST.
         """
         modules = self.discover_modules() if all_modules is None else all_modules
         expected: dict[str, str] = {}

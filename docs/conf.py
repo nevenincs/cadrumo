@@ -1,4 +1,4 @@
-"""Sphinx configuration for the aeat documentation set."""
+"""Sphinx configuration for the Cadrumo documentation set."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import warnings
 # CLI help strings are tr() values resolved at import time; the sphinx-click
 # build-time CLI reference renders them, so the language must be fixed for the
 # whole build process here, at the top of conf.py.
-os.environ["AEAT_OUTPUT_LANGUAGE"] = "en"
+os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
@@ -19,8 +19,8 @@ from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.deprecation import RemovedInSphinx90Warning
 
-# Make `aeat` importable for autodoc without installing the wheel.
-_PROJECT_ROOT = Path(os.environ.get("AEAT_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
+# Make `cadrumo` importable for autodoc without installing the wheel.
+_PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
@@ -35,12 +35,14 @@ def _project_metadata() -> dict[str, object]:
 
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
-_DOCS_BASE_URL = os.environ.get("AEAT_DOCS_BASE_URL", "").rstrip("/")
+_DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
+# Cadrumo brand type ramp (Figma / marketing frontend): Instrument Serif for
+# display headings, Hanken Grotesk for text, JetBrains Mono for code.
 _DOCS_FONT_STACK = (
-    '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+    '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
 )
-_DOCS_HEADING_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
-_DOCS_MONO_FONT_STACK = '"Geist Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace'
+_DOCS_HEADING_FONT_STACK = '"Instrument Serif", ui-serif, Georgia, "Times New Roman", serif'
+_DOCS_MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace'
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
 _ISSUES_URL = str(_PROJECT_URLS.get("Issues", ""))
 _RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
@@ -85,7 +87,7 @@ source_suffix = {
     ".md": "markdown",
 }
 
-master_doc = os.environ.get("AEAT_DOCS_MASTER_DOC", "index")
+master_doc = os.environ.get("CADRUMO_DOCS_MASTER_DOC", "index")
 # English is the only documentation language. Additional languages attach
 # here - set `language`, add `locale_dirs` and `gettext_compact`, and a
 # gettext / sphinx-intl build matrix. Documentation translation must not
@@ -103,7 +105,7 @@ exclude_patterns = [
 
 _DOCS_ROOT = Path(__file__).resolve().parent
 _ONLY_SOURCES = {
-    Path(item).as_posix() for item in os.environ.get("AEAT_DOCS_ONLY", "").split(os.pathsep) if item.strip()
+    Path(item).as_posix() for item in os.environ.get("CADRUMO_DOCS_ONLY", "").split(os.pathsep) if item.strip()
 }
 if _ONLY_SOURCES:
     for _source in _DOCS_ROOT.rglob("*"):
@@ -129,7 +131,7 @@ suppress_warnings = [
     "sphinx_autodoc_typehints.forward_reference",
     "sphinx_autodoc_typehints.guarded_import",
 ]
-if os.environ.get("AEAT_DOCS_SINGLE_PAGE"):
+if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
 
@@ -234,24 +236,24 @@ intersphinx_mapping = {
     "typer": ("https://typer.tiangolo.com/", None),
 }
 _SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"
-if os.environ.get("AEAT_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
-    intersphinx_mapping["aeat-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
+if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
+    intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
 
-# Offline-hermetic gate: the docs-check build sets AEAT_DOCS_OFFLINE to keep only
+# Offline-hermetic gate: the docs-check build sets CADRUMO_DOCS_OFFLINE to keep only
 # the vendored local inventories (read from disk) and drop the network-only
 # mappings, so the build resolves stdlib/SQLAlchemy targets deterministically
 # without any network access. The dropped third-party namespaces are covered by
 # nitpick_ignore_regex below.
-if os.environ.get("AEAT_DOCS_OFFLINE"):
+if os.environ.get("CADRUMO_DOCS_OFFLINE"):
     intersphinx_mapping = {
         name: (uri, inv) for name, (uri, inv) in intersphinx_mapping.items() if inv and Path(inv).is_file()
     }
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "Cadrumo Documentation — Local Tax Engine"
-html_short_title = "Cadrumo Docs"
+html_title = "Cadrumo - local Spanish tax preparation"
+html_short_title = "Cadrumo"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
 sitemap_url_scheme = "{link}"
 html_meta = {
@@ -260,118 +262,123 @@ html_meta = {
         "Deterministic calculations. LLM-assisted operation. No filing."
     ),
 }
-html_favicon = "_static/aeat-favicon.svg"
+html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
-html_css_files = ["aeat-docs.css"]
-html_js_files = ["aeat-docs.js"]
+html_css_files = ["cadrumo-docs.css"]
+html_js_files = ["cadrumo-docs.js"]
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
 html_sidebars = {
     "**": [
-        "sidebar/aeat-search.html",
+        "sidebar/cadrumo-search.html",
         "sidebar/scroll-start.html",
         "sidebar/navigation.html",
         "sidebar/scroll-end.html",
     ],
 }
 html_theme_options = {
-    "light_logo": "aeat-mark-light.svg",
-    "dark_logo": "aeat-mark-dark.svg",
+    "light_logo": "cadrumo-mark-light.svg",
+    "dark_logo": "cadrumo-mark-dark.svg",
     "sidebar_hide_name": True,
-    "announcement": "aeat-site-broadcast",
+    "announcement": "cadrumo-site-broadcast",
     "light_css_variables": {
-        # 2026 design-token pass: zinc neutral scale + Geist blue accent
-        # mapped onto Furo's semantic variables.
-        "color-brand-primary": "#18181b",
-        "color-brand-content": "#0068d6",
-        "color-brand-visited": "#0068d6",
-        "color-foreground-primary": "#18181b",
-        "color-foreground-secondary": "#52525b",
-        "color-foreground-muted": "#71717a",
-        "color-foreground-border": "#d4d4d8",
-        "color-background-primary": "#ffffff",
-        "color-background-secondary": "#fafafa",
-        "color-background-hover": "#f4f4f5",
-        "color-background-hover--transparent": "#f4f4f500",
-        "color-background-border": "#e4e4e7",
-        "color-card-border": "#e4e4e7",
-        "color-card-background": "transparent",
-        "color-card-marginals-background": "#fafafa",
-        "color-link": "#0068d6",
-        "color-link--hover": "#0054ad",
-        "color-link--visited": "#0068d6",
-        "color-link--visited--hover": "#0054ad",
+        # Cadrumo brand tokens (Figma / marketing frontend styles.css):
+        # warm paper neutrals — page #faf8f4, surface #f1eee7, border
+        # #e4ded4, ink #1c1a17, secondary #6b655c — with the rust accent
+        # #c4553b (hover #a94931) mapped onto Furo's semantic variables.
+        "color-brand-primary": "#1c1a17",
+        "color-brand-content": "#c4553b",
+        "color-brand-visited": "#c4553b",
+        "color-foreground-primary": "#1c1a17",
+        "color-foreground-secondary": "#6b655c",
+        "color-foreground-muted": "#8a8478",
+        "color-foreground-border": "#d5cec1",
+        "color-background-primary": "#faf8f4",
+        "color-background-secondary": "#f1eee7",
+        "color-background-hover": "#ece8df",
+        "color-background-hover--transparent": "#ece8df00",
+        "color-background-border": "#e4ded4",
+        "color-card-border": "#e4ded4",
+        "color-card-background": "#ffffff",
+        "color-card-marginals-background": "#f1eee7",
+        "color-link": "#c4553b",
+        "color-link--hover": "#a94931",
+        "color-link--visited": "#c4553b",
+        "color-link--visited--hover": "#a94931",
         "color-link-underline": "transparent",
-        "color-link-underline--hover": "#0068d6",
+        "color-link-underline--hover": "#c4553b",
         "color-link-underline--visited": "transparent",
-        "color-link-underline--visited--hover": "#0068d6",
-        "color-inline-code-background": "#f4f4f5",
-        "color-admonition-background": "#fafafa",
-        "color-admonition-title": "#18181b",
+        "color-link-underline--visited--hover": "#c4553b",
+        "color-inline-code-background": "#f1eee7",
+        "color-admonition-background": "#f1eee7",
+        "color-admonition-title": "#1c1a17",
         "color-admonition-title-background": "transparent",
         "color-admonition-title-background--important": "transparent",
-        "color-admonition-title--important": "#18181b",
+        "color-admonition-title--important": "#1c1a17",
         "color-admonition-title-background--warning": "transparent",
-        "color-admonition-title--warning": "#18181b",
+        "color-admonition-title--warning": "#1c1a17",
         "color-sidebar-background": "transparent",
         "color-sidebar-background-border": "transparent",
-        "color-sidebar-link-text": "#52525b",
-        "color-sidebar-link-text--top-level": "#3f3f46",
-        "color-sidebar-item-background--current": "#f4f4f5",
-        "color-sidebar-item-background--hover": "#f4f4f5",
+        "color-sidebar-link-text": "#6b655c",
+        "color-sidebar-link-text--top-level": "#4d483f",
+        "color-sidebar-item-background--current": "#ece8df",
+        "color-sidebar-item-background--hover": "#ece8df",
         "color-toc-background": "transparent",
-        "color-toc-item-text": "#52525b",
-        "color-toc-item-text--hover": "#18181b",
-        "color-toc-item-text--active": "#0068d6",
-        "color-toc-title-text": "#71717a",
+        "color-toc-item-text": "#6b655c",
+        "color-toc-item-text--hover": "#1c1a17",
+        "color-toc-item-text--active": "#c4553b",
+        "color-toc-title-text": "#8a8478",
         "font-stack": _DOCS_FONT_STACK,
         "font-stack--headings": _DOCS_HEADING_FONT_STACK,
         "font-stack--monospace": _DOCS_MONO_FONT_STACK,
     },
     "dark_css_variables": {
-        "color-brand-primary": "#fafafa",
-        "color-brand-content": "#52a8ff",
-        "color-brand-visited": "#52a8ff",
-        "color-foreground-primary": "#ededed",
-        "color-foreground-secondary": "#a1a1aa",
-        "color-foreground-muted": "#8f8f98",
-        "color-foreground-border": "#3f3f46",
-        "color-background-primary": "#0a0a0a",
-        "color-background-secondary": "#121214",
-        "color-background-hover": "#1d1d20",
-        "color-background-hover--transparent": "#1d1d2000",
-        "color-background-border": "#26262a",
-        "color-card-border": "#26262a",
-        "color-card-background": "transparent",
-        "color-card-marginals-background": "#121214",
-        "color-link": "#52a8ff",
-        "color-link--hover": "#7ec0ff",
-        "color-link--visited": "#52a8ff",
-        "color-link--visited--hover": "#7ec0ff",
+        # Dark companion to the brand palette: the same warm hue family
+        # inverted onto the ink #1c1a17, with the rust accent lifted for
+        # contrast on dark surfaces.
+        "color-brand-primary": "#f1eee7",
+        "color-brand-content": "#dd7a5f",
+        "color-brand-visited": "#dd7a5f",
+        "color-foreground-primary": "#f1eee7",
+        "color-foreground-secondary": "#b3ab9d",
+        "color-foreground-muted": "#8f887b",
+        "color-foreground-border": "#4a453c",
+        "color-background-primary": "#1c1a17",
+        "color-background-secondary": "#24211c",
+        "color-background-hover": "#2c2822",
+        "color-background-hover--transparent": "#2c282200",
+        "color-background-border": "#38342c",
+        "color-card-border": "#38342c",
+        "color-card-background": "#24211c",
+        "color-card-marginals-background": "#24211c",
+        "color-link": "#dd7a5f",
+        "color-link--hover": "#e69579",
+        "color-link--visited": "#dd7a5f",
+        "color-link--visited--hover": "#e69579",
         "color-link-underline": "transparent",
-        "color-link-underline--hover": "#52a8ff",
+        "color-link-underline--hover": "#dd7a5f",
         "color-link-underline--visited": "transparent",
-        "color-link-underline--visited--hover": "#52a8ff",
-        "color-inline-code-background": "#1b1b1f",
-        "color-admonition-background": "#121214",
-        "color-admonition-title": "#ededed",
+        "color-link-underline--visited--hover": "#dd7a5f",
+        "color-inline-code-background": "#26231d",
+        "color-admonition-background": "#24211c",
+        "color-admonition-title": "#f1eee7",
         "color-admonition-title-background": "transparent",
         "color-admonition-title-background--important": "transparent",
-        "color-admonition-title--important": "#ededed",
+        "color-admonition-title--important": "#f1eee7",
         "color-admonition-title-background--warning": "transparent",
-        "color-admonition-title--warning": "#ededed",
+        "color-admonition-title--warning": "#f1eee7",
         "color-sidebar-background": "transparent",
         "color-sidebar-background-border": "transparent",
-        "color-sidebar-link-text": "#a1a1aa",
-        "color-sidebar-link-text--top-level": "#d4d4d8",
-        "color-sidebar-item-background--current": "#1d1d20",
-        "color-sidebar-item-background--hover": "#1d1d20",
+        "color-sidebar-link-text": "#b3ab9d",
+        "color-sidebar-link-text--top-level": "#d5cec1",
+        "color-sidebar-item-background--current": "#2c2822",
+        "color-sidebar-item-background--hover": "#2c2822",
         "color-toc-background": "transparent",
-        "color-toc-item-text": "#a1a1aa",
-        "color-toc-item-text--hover": "#ededed",
-        "color-toc-item-text--active": "#52a8ff",
-        "color-toc-title-text": "#8f8f98",
+        "color-toc-item-text": "#b3ab9d",
+        "color-toc-item-text--hover": "#f1eee7",
+        "color-toc-item-text--active": "#dd7a5f",
+        "color-toc-title-text": "#8f887b",
     },
     "source_repository": _REPOSITORY_URL,
     "source_branch": "main",
@@ -380,18 +387,21 @@ html_theme_options = {
 }
 
 html_context = {
-    "aeat_repository_url": _REPOSITORY_URL,
-    "aeat_nav": [
+    "cadrumo_repository_url": _REPOSITORY_URL,
+    "cadrumo_nav": [
         {"label": "Guides", "doc": "how-to/index"},
         {"label": "Tutorial", "doc": "tutorials/index"},
         {"label": "CLI reference", "doc": "cli/index"},
         {"label": "How it works", "doc": "explanation/index"},
-        {"label": "API", "doc": "api/aeat"},
+        {"label": "API", "doc": "api/cadrumo"},
     ],
-    "aeat_broadcasts": [
+    "cadrumo_broadcasts": [
         {
             "label": "Pre-alpha",
-            "message": "Breaking changes are expected. Verify official AEAT deadlines before filing.",
+            "message": (
+                "Breaking changes are expected. Verify Agencia Estatal de Administración "
+                "Tributaria (AEAT) deadlines before filing."
+            ),
             "links": [
                 {"label": "Updates", "doc": "updates"},
                 {"label": "Latest download", "url": _LATEST_RELEASE_URL},
@@ -399,7 +409,7 @@ html_context = {
             ],
         }
     ],
-    "aeat_footer_groups": [
+    "cadrumo_footer_groups": [
         {
             "title": "Stay current",
             "links": [
@@ -425,17 +435,19 @@ html_context = {
             ],
         },
     ],
-    "aeat_footer_note": (
-        "Cadrumo is an independent local tax engine that does not file declarations or represent a public authority."
+    "cadrumo_footer_note": (
+        "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with the "
+        "Agencia Estatal de Administración Tributaria (AEAT), "
+        "and never replaces official AEAT tools or professional review."
     ),
 }
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
-ogp_site_name = "Cadrumo Documentation"
+ogp_site_name = "Cadrumo documentation"
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"
-ogp_image = "_static/aeat-mark-light.svg"
+ogp_image = "_static/cadrumo-mark-light.svg"
 
 # ── Syntax highlighting ─────────────────────────────────────────────────────
 # Bare code fences are overwhelmingly operator command transcripts; lexing them
@@ -471,7 +483,7 @@ mermaid_dark_theme = "dark"
 # unquoted multi-word family names.
 mermaid_init_config = {
     "startOnLoad": False,
-    "fontFamily": "Geist, Segoe UI, system-ui, sans-serif",
+    "fontFamily": "Hanken Grotesk, Segoe UI, system-ui, sans-serif",
 }
 
 # ── Copy buttons ────────────────────────────────────────────────────────────
@@ -599,7 +611,7 @@ nitpick_ignore_regex = [
     # Test modules are excluded from the documented API surface (see
     # ApiStubManager exclusions), so references into them have no stub target.
     (r"py:.*", r".*\btest_[A-Za-z0-9_]*$"),
-    (r"py:.*", r"^aeat\.tests(\..*)?$"),
+    (r"py:.*", r"^cadrumo\.tests(\..*)?$"),
     # Dunder, numeric-literal, and hex-like HTML-id targets that leak out of
     # docstrings as bogus cross-references (``:class:`1``` or AEAT source
     # anchors such as ``89ab``), never real documentable objects.
@@ -625,13 +637,13 @@ nitpick_ignore_regex = [
     # anyway; until a py:mod-aware resolver lands these bare project-module short
     # forms are ignored rather than reded. Scoped to the first-segment project
     # package names so an external / stdlib ``:mod:`` reference is unaffected.
-    # Any ``:mod:`` short reference that is NOT already ``aeat.``-qualified: the
+    # Any ``:mod:`` short reference that is NOT already ``cadrumo.``-qualified: the
     # short-reference resolver maps py:class/func/obj short names but not the
     # py:mod reftype, so a bare project-module reference (``:mod:`domain.iva```,
     # ``:mod:`registry```, ...) has no target. External / stdlib ``:mod:`` refs
     # are covered by the third-party namespace patterns above; a genuine
-    # ``aeat.``-qualified module reference still resolves and is unaffected here.
-    (r"py:mod", r"^(?!aeat\.)[a-z].*"),
+    # ``cadrumo.``-qualified module reference still resolves and is unaffected here.
+    (r"py:mod", r"^(?!cadrumo\.)[a-z].*"),
     # External library types written bare (no vendored inventory offline, so the
     # dotted third-party namespace patterns above do not cover the short forms):
     # the ``cryptography`` elliptic-curve / Edwards key classes
@@ -652,7 +664,7 @@ nitpick_ignore_regex = [
     # ``sha256_file`` / ``save_envelope`` / ``extract_pages_text`` /
     # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
     # last-segment suffix resolver cannot disambiguate by design; and (2) a
-    # project object written by a path that omits the ``aeat.`` root
+    # project object written by a path that omits the ``cadrumo.`` root
     # (``core.telemetry.workspace_hash``,
     # ``application.modelo.emit_collab_workspace_opened_event``,
     # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
@@ -674,12 +686,19 @@ nitpick_ignore_regex = [
         r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
     ),
     # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
-    # ``BindingId``, ... ) are ``NewType``/alias definitions, not documentable
-    # classes, so a ``:class:`` reference to their registry path (with or without
-    # the ``aeat.`` prefix) has no py:class target. Scoped to the registry
-    # namespace + the ``Id`` suffix so real classes are unaffected.
+    # ``BindingId``, ... ) are PEP 695 aliases, not documentable classes, so a
+    # ``:class:`` reference to their registry path has no py:class target. List
+    # the aliases explicitly so a future real ``*Id`` class cannot be hidden.
     # ``ModeloDetailRow`` is a re-exported alias referenced bare.
-    (r"py:.*", r"^(aeat\.)?domain\.calculations\.registry\.\w+Id$"),
+    (
+        r"py:.*",
+        r"^(?:cadrumo\.)?domain\.calculations\.registry\.(?:"
+        r"ApplicationLinkId|BindingId|CasillaId|ConstructId|CrossReferenceId|"
+        r"DeadlineWindowId|DependencyClassificationId|ExportFieldId|ExportLayoutId|"
+        r"ExtractionProfileId|FormulaId|LegalRefId|ModeloId|OracleId|ParameterId|"
+        r"RecordId|RelationId|RevisionId|SourceRefId|SupportRemovalDecisionId|"
+        r"VerificationExpectationId|WorkbookFixtureId|WorkbookOutputId|WorkbookParityRefId)$",
+    ),
     (r"py:.*", r"^ModeloDetailRow$"),
     # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
     # google) types written ``Owner.method`` or ``obj.method``; the owning type
@@ -727,7 +746,7 @@ nitpick_ignore_regex = [
     # The CLI entrypoint subtree is intentionally excluded from the API stub set
     # (its commands are documented in the generated CLI reference under
     # docs/cli/), so module references into it have no autodoc target.
-    (r"py:.*", r"^aeat\.entrypoints\.cli(\..*)?$"),
+    (r"py:.*", r"^cadrumo\.entrypoints\.cli(\..*)?$"),
 ]
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
@@ -765,9 +784,9 @@ def _specific_build_sources() -> list[Path] | None:
 
 def _should_generate_cli_reference() -> bool:
     """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
-    if os.environ.get("AEAT_DOCS_FORCE_CLI_REFERENCE"):
+    if os.environ.get("CADRUMO_DOCS_FORCE_CLI_REFERENCE"):
         return True
-    if os.environ.get("AEAT_DOCS_SKIP_CLI_REFERENCE"):
+    if os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE"):
         return False
     specific_sources = _specific_build_sources()
     if specific_sources is None:
@@ -778,18 +797,18 @@ def _should_generate_cli_reference() -> bool:
 
 def _should_resolve_deferred_models() -> bool:
     """Return whether this Sphinx invocation needs diagnostics model rebuilding."""
-    if os.environ.get("AEAT_DOCS_FORCE_DEFERRED_MODELS"):
+    if os.environ.get("CADRUMO_DOCS_FORCE_DEFERRED_MODELS"):
         return True
-    if os.environ.get("AEAT_DOCS_SKIP_DEFERRED_MODELS"):
+    if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
         return False
     specific_sources = _specific_build_sources()
     if specific_sources is None:
         return True
     docs_root = Path(__file__).resolve().parent
     diagnostic_pages = {
-        (docs_root / "api" / "aeat.application.diagnostics.rst").resolve(),
-        (docs_root / "api" / "aeat.application.auth._diagnostics.rst").resolve(),
-        (docs_root / "api" / "aeat.application.transactions._diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.auth._diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.transactions._diagnostics.rst").resolve(),
     }
     return any(source in diagnostic_pages for source in specific_sources)
 
@@ -824,7 +843,7 @@ def _build_py_suffix_index(env):
     Returns:
         A mapping of bare object name to the list of fully-qualified names that
         end in it (for example ``InboundBorradorObservation`` ->
-        ``["aeat.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
+        ``["cadrumo.adapters.inbound.borrador._schema.InboundBorradorObservation"]``).
     """
     index: dict[str, list[str]] = {}
     for fullname in env.get_domain("py").objects:
@@ -838,7 +857,7 @@ def _resolve_short_reference(app, env, node, contnode):
     Stubs document every symbol exactly once, at its defining ``__module__``
     (``:ignore-module-all:``). Docstrings, however, reference re-exported public
     API either by bare name (``:class:`Name```) or by the public package path it
-    is re-exported under (``:class:`aeat.domain.filing.ModeloDraft```), neither
+    is re-exported under (``:class:`cadrumo.domain.filing.ModeloDraft```), neither
     of which autodoc can resolve to the qualified defining-module target. This
     resolver keys on the reference's final segment: when that bare name maps to
     exactly one documented object it returns a reference to it. Ambiguous names
@@ -870,9 +889,9 @@ def _resolve_short_reference(app, env, node, contnode):
     if not candidates:
         return None
 
-    # A public re-export path (``aeat.domain.iva.verify_catalogue``) maps onto a
+    # A public re-export path (``cadrumo.domain.iva.verify_catalogue``) maps onto a
     # defining-module path that carries extra private segments
-    # (``aeat.domain.iva._catalogue.verify_catalogue``). The public components
+    # (``cadrumo.domain.iva._catalogue.verify_catalogue``). The public components
     # still appear, in order, within the defining path, so disambiguate by
     # keeping the candidates whose dotted components contain the reference's
     # components as an ordered subsequence. This separates same-named symbols
@@ -970,7 +989,7 @@ def setup(app):
         """
         if not _should_resolve_deferred_models():
             return
-        from aeat.application import diagnostics
+        from cadrumo.application import diagnostics
 
         diagnostics._ensure_models_rebuilt()
 

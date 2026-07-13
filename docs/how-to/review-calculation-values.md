@@ -1,16 +1,15 @@
 # Review and supply calculation inputs
 
-Use this guide when aeat tells you a field is missing after you run a
-calculation, or when your form requires a value you must enter by hand — for
-example, a prior-year income figure or a compensation amount from an earlier
-period.
+Use this guide when Cadrumo says a field is missing after a calculation. Also
+use it when your form needs a value you enter by hand, such as a prior-year
+income figure or a compensation amount from an earlier period.
 
 ## Before you start
 
 You need:
 
-- A master-key passphrase. `aeat` prompts for it, or you set
-  `AEAT_SECRET_PASSPHRASE` for a non-interactive run.
+- A master-key passphrase. Cadrumo prompts for it, or you set
+  `CADRUMO_SECRET_PASSPHRASE` for a non-interactive run.
 - An active profile. Create one (the `--quiet` form skips the wizard):
 
   ```bash
@@ -90,7 +89,7 @@ export.
 ## Supply manual casilla values
 
 Use `--casilla` only for a box whose input kind is `manual`. Use the box number
-printed on the official AEAT form — the same number you see on the paper or PDF
+printed on the official Agencia Estatal de Administración Tributaria (AEAT) form — the same number you see on the paper or PDF
 version of the modelo. Run `aeat app modelo casillas 130 --period 1T` to see the
 list, and check the `input` column first.
 
@@ -116,7 +115,7 @@ you know which field you are filling.
 
 ## Supply a missing field value
 
-When aeat cannot fill a field automatically, the missing field appears in the
+When Cadrumo cannot fill a field automatically, the missing field appears in the
 bindings list. Use the list to see which fields need your input, then supply
 the value during calculation.
 
@@ -154,13 +153,13 @@ restates that source in plain language (for example, `ledger source` or `prior
 filed revision`). Use the `source` to decide how to supply the value. The
 `source` is one of:
 
-- **Profile fact** - `aeat` fills it from your taxpayer profile, such as
+- **Profile fact** - Cadrumo fills it from your taxpayer profile, such as
   residence, declaration type, or family composition. Update your profile instead
   of entering the value manually.
-- **Ledger source** - `aeat` computes it by summing your classified transactions
+- **Ledger source** - Cadrumo computes it by summing your classified transactions
   and invoices. You cannot override these; fix the ledger instead.
 - **Prior filed revision** - carried forward from an earlier period you already
-  filed in `aeat`.
+  filed in Cadrumo.
 - **Relation** - folded in from another modelo's earlier figures. Supply it with
   `--relation KEY=VALUE` only when the modelo's help names the relation.
 - **Manual** - this kind always needs you to type a value, with `--binding
@@ -173,20 +172,20 @@ filled for you; correct those at their source rather than typing the value.
 
 If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
-real prior figure only when you have one prepared outside `aeat`.
+real prior figure only when you have one prepared outside Cadrumo.
 
 ### Régimen de atribución de rentas (socios)
 
 If you are a socio, comunero, or partícipe of an entity in the régimen de
 atribución de rentas — a sociedad civil, comunidad de bienes, or herencia
-yacente — the entity files its own Modelo 184 in its own `aeat` workspace. Your
+yacente — the entity files its own Modelo 184 in its own Cadrumo workspace. Your
 personal Modelo 100 does not read across workspaces, so enter the attributed base
 by hand.
 
 Record the received share on your profile as `attribution_received` facts (entity
 NIF, entity name, share percentage, attributed base, and filing year), then fold
 the attributed base into your Modelo 100 régimen-de-atribución box with `--binding
-<box>=<attributed-base>` when you run `aeat app modelo work calculate`. `aeat`
+<box>=<attributed-base>` when you run `aeat app modelo work calculate`. Cadrumo
 warns you at verify time when the two halves disagree — facts recorded but the box
 left empty, or a box value with no facts behind it — so a forgotten transcription
 never files silently.
@@ -257,7 +256,7 @@ Use one of these record types:
 - `contraparte` - a declared counterparty (Modelo 347).
 - `operador` - an intra-community operator (Modelo 349).
 
-`aeat` validates each row against the modelo's rules and refuses an incomplete
+Cadrumo validates each row against the modelo's rules and refuses an incomplete
 set:
 
 - Modelo 184 - the members' `porcentaje` values must sum to 100.

@@ -49,10 +49,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import PRODUCT_IDENTITY
+
 _UTF_8: Final = "utf-8"
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
 _BLOCKER_LABEL: Final = "priority:P0-blocker"
 _GH_TIMEOUT_SECONDS: Final = 15
+_PROJECT_NAME_PATHS: Final = (
+    (Path("pyproject.toml"), PRODUCT_IDENTITY.distribution),
+    (Path("packaging/cadrumo_data_manuals/pyproject.toml"), PRODUCT_IDENTITY.companion_distributions[0]),
+    (Path("packaging/cadrumo_data_official/pyproject.toml"), PRODUCT_IDENTITY.companion_distributions[1]),
+)
 
 
 def _repo_root() -> Path:
@@ -112,8 +119,28 @@ def _read_pyproject_version(repo_root: Path) -> str:
     return str(data["project"]["version"])
 
 
+def _read_project_name(project_file: Path) -> str:
+    data = tomllib.loads(project_file.read_text(encoding=_UTF_8))
+    return str(data["project"]["name"])
+
+
+def check_project_names_are_canonical(repo_root: Path) -> ReadinessCheck:
+    """Require the root and both companion distributions to use the Cadrumo tuple."""
+    observed = tuple(
+        (relative, _read_project_name(repo_root / relative), expected) for relative, expected in _PROJECT_NAME_PATHS
+    )
+    mismatches = tuple((relative, actual, expected) for relative, actual, expected in observed if actual != expected)
+    if mismatches:
+        detail = "; ".join(
+            f"{relative}: found {actual!r}, expected {expected!r}" for relative, actual, expected in mismatches
+        )
+        return ReadinessCheck("project-names-canonical", "blocking", False, detail)
+    names = ", ".join(actual for _relative, actual, _expected in observed)
+    return ReadinessCheck("project-names-canonical", "blocking", True, f"canonical distributions: {names}")
+
+
 def _read_init_version(repo_root: Path) -> str:
-    text = (repo_root / "src" / "aeat" / "__init__.py").read_text(encoding=_UTF_8)
+    text = (repo_root / "src" / "cadrumo" / "__init__.py").read_text(encoding=_UTF_8)
     match = _VERSION_RE.search(text)
     if not match:
         return ""
@@ -161,7 +188,7 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "nevenincs/aeat", gh_executable: str | None = None
+    *, repo_slug: str = "cadrumo/cadrumo", gh_executable: str | None = None
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 
@@ -278,6 +305,7 @@ def build_report(
     """Run every readiness check and return the aggregate report."""
     root = Path(repo_root) if repo_root is not None else _repo_root()
     checks: list[ReadinessCheck] = [
+        check_project_names_are_canonical(root),
         check_version_surfaces_agree(root),
         check_changelog_is_ready(root),
         check_latest_packaging_smoke_evidence(root),

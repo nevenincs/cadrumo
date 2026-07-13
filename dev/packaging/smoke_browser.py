@@ -47,8 +47,8 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
         **os.environ,
         "AEAT_BROWSER_CHANNEL": "chromium",
         "AEAT_BROWSER_HEADLESS": "true",
-        "AEAT_LOCAL_STORAGE_ROOT": str(storage_root),
-        "AEAT_OUTPUT_LANGUAGE": "en",
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_OUTPUT_LANGUAGE": "en",
         "PLAYWRIGHT_BROWSERS_PATH": str(browser_cache),
     }
 
@@ -75,8 +75,8 @@ import asyncio
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
-from aeat.adapters.outbound.aeat.browser import default_browser_session_factory
-from aeat.core.config import load_settings
+from cadrumo.adapters.outbound.aeat.browser import default_browser_session_factory
+from cadrumo.core.config import load_settings
 
 
 class Handler(BaseHTTPRequestHandler):

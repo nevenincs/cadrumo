@@ -1,0 +1,23 @@
+# Ley 35/2006 art. 50.3 — base liquidable general negativa carry-forward.
+# The prior year's end-of-year generated saldo (casilla 1391, semantic_role
+# irpf_anexo_c_base_liq_neg_generado) becomes, in the following year's
+# declaration, the opening pending balance for the immediately-prior
+# origin ejercicio (casilla 1388, "Ejercicio 2023: Pendiente de
+# aplicacion al principio del periodo" in the 2024 revision). This
+# previous_filing copy auto-resolves casilla 1388 from the prior filing
+# so the operator does not re-key the carried saldo. Origin-year-matched:
+# the 2024-revision's 1388 (ejercicio 2023) sources the 2023 filing's
+# 1391, exactly as the 2025-revision's 1388 (ejercicio 2024) sources the
+# 2024 filing's 1391. Art. 48's 25%-limited base-imponible mechanism is
+# distinct and does not ground this base-liquidable carry.
+[[revisions."2024".bindings]]
+id = "renta-2024-base-liquidable-negativa-general-anterior"
+source = "previous_filing"
+selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-modelo-100-procedure", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]

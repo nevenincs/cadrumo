@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.domain.calculations.registry import bundled_authority
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import bundled_authority
 
 from .. import (
     ConceptLifecycle,

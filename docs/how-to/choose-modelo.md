@@ -7,7 +7,7 @@ A modelo is a numbered official AEAT tax form, such as 303 for IVA or 130 for qu
 You need:
 
 - An active profile with your taxpayer type, activity, and regime facts filled in. See the [profile setup guide](profile-setup.md), or the [quickstart](quickstart.md) if you're starting from nothing.
-- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it, or set `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 Check the profile first:
 
@@ -51,7 +51,7 @@ An incomplete verdict usually means the decision depends on facts your profile d
 - **Whether you employ or withhold** - employees on payroll, or withholdings on professional fees, rent, or capital payments.
 - **Informative-declaration thresholds** - facts such as third-party transaction volume or assets held abroad, which gate the informative forms.
 
-Fix the missing facts by hand with the [profile setup guide](profile-setup.md), or sync your censo - your AEAT census record, the registration data AEAT holds about your activities and obligations - with the [censo update guide](censo-update.md). Then re-run `overview explain` and read the new verdict.
+Fix the missing facts by hand with the [profile setup guide](profile-setup.md). For your censo - your AEAT census record, the registration data AEAT holds about your activities and obligations - enter the facts from your Modelo 036 copy with the [censo facts guide](censo-update.md). Then re-run `overview explain` and read the new verdict.
 
 ## Check readiness for one filing
 
@@ -101,7 +101,7 @@ If a verdict looks wrong or a command fails, see the [troubleshooting guide](tro
 
 - [Plan your filing deadlines](filing-calendar.md)
 - [Set up or correct your profile](profile-setup.md)
-- [Sync your official census facts](censo-update.md)
+- [Maintain Modelo 036 census facts in your profile](censo-update.md)
 - [Start from nothing with the quickstart](quickstart.md)
 - [Prepare Modelo 303](modelo-303.md)
 - [Prepare Modelo 390](modelo-390.md)

@@ -3,7 +3,7 @@
 Runs a real nitpicky, warnings-as-errors Sphinx build and asserts it
 succeeds. Every unresolved cross-reference or malformed directive fails the
 build. The test carries the active ``unit`` and ``hex_core`` markers; it builds into a ``tmp_path`` and
-sets ``AEAT_DOCS_OFFLINE`` so intersphinx inventories are not fetched.
+sets ``CADRUMO_DOCS_OFFLINE`` so intersphinx inventories are not fetched.
 """
 
 from __future__ import annotations
@@ -196,7 +196,7 @@ def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: 
     )
 
 
-@pytest.mark.parametrize("generated_page", ["docs/api/aeat.rst", "docs/cli/index.rst"])
+@pytest.mark.parametrize("generated_page", ["docs/api/cadrumo.rst", "docs/cli/index.rst"])
 def test_single_page_rejects_generated_documentation_sources(generated_page: str) -> None:
     """Single-page canonical builds must not regenerate API or CLI source trees."""
     result = subprocess.run(
@@ -265,7 +265,12 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
     """
     docs_source = tmp_path / "docs-source"
     shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
-    env = {**os.environ, "AEAT_DOCS_OFFLINE": "1", "AEAT_DOCS_PROJECT_ROOT": str(_REPO_ROOT)}
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+    }
     result = subprocess.run(
         [
             sys.executable,

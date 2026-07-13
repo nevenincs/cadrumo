@@ -22,7 +22,7 @@ aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
 ```
 
 Every profile-scoped command needs the master-key passphrase. The tool prompts
-for it, or you can set `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+for it, or you can set `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
 
 The CLI emits help, results, and refusals in Spanish.
 
@@ -104,7 +104,7 @@ aeat app modelo work revisions <work-unit-id>
 ```
 
 Prefer the visible target for hand-run commands. Use the reference number when
-aeat reports that more than one filing matches the same modelo, year, and period.
+Cadrumo reports that more than one filing matches the same modelo, year, and period.
 
 ## What a work unit is
 
@@ -139,7 +139,7 @@ A calculation revision is one saved calculation result inside a work unit. It
 has its own reference number, the calculation-revision-id, which `calculate`
 creates and which is separate from the work-unit-id.
 
-When you run calculate, `aeat` saves a draft calculation revision:
+When you run calculate, Cadrumo saves a draft calculation revision:
 
 ```bash
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
@@ -293,8 +293,8 @@ Use modelo, year, and period for all normal work.
 
 Use the exact reference number when:
 
-- aeat tells you that more than one filing matches the same modelo, year,
-  and period (aeat refuses to guess; it prints candidates for you to choose)
+- Cadrumo tells you that more than one filing matches the same modelo, year,
+  and period (Cadrumo refuses to guess; it prints candidates for you to choose)
 - you are replaying or inspecting one specific saved calculation
 - support asks you to share the exact reference number from the command output
 

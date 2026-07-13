@@ -19,8 +19,8 @@ import re
 
 import pytest
 
-from aeat.core import Modelo
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core import Modelo
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.terminology._cli_projection import CliOptionRecord, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

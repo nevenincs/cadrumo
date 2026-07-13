@@ -1,7 +1,7 @@
 """The Terminology Handbook: concept-oriented vocabulary for the docs.
 
 This package owns the committed authoring tree under
-``src/aeat/_data/terminology/`` and the strict loader that compiles it
+``src/cadrumo/_data/terminology/`` and the strict loader that compiles it
 into typed records. The Handbook is the middle layer between registry
 compilation and the shipped documentation search surface: enrolment
 sources (registry, legal catalogue, enums, CLI tree, locales) scaffold
@@ -16,7 +16,7 @@ label borrowings. ``narrower`` is derived by
 never authored on a fragment.
 
 Closed value sets are typed: the four output languages reuse the
-canonical :class:`~aeat.core.external_constants.OutputLanguage`, while
+canonical :class:`~cadrumo.core.external_constants.OutputLanguage`, while
 the Handbook-local axes :class:`ConceptDomain`, :class:`ConceptLifecycle`,
 and :class:`TermStatus` live in this package beside the schema they
 constrain.

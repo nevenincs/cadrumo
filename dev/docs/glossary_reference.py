@@ -26,7 +26,7 @@ to one definition. One concept = one glossary entry (the sphinx-hoverxref
 shared-entry rendering bug forbids many terms sharing one definition block via
 separate entries; the multi-term-line form is the supported way to alias).
 
-Output language: the docs build pins ``AEAT_OUTPUT_LANGUAGE=en`` (conf.py), so
+Output language: the docs build pins ``CADRUMO_OUTPUT_LANGUAGE=en`` (conf.py), so
 the entry body is the English definition (or the English short description
 when no full definition is authored), with the Spanish term as the headword -
 the term a Spanish-tax reader looks up, defined in the docs' English prose.
@@ -40,7 +40,7 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from aeat.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
 
 from .terminology_handbook import load_terminology_handbook
 from .terminology_handbook._enums import ConceptLifecycle, TermStatus

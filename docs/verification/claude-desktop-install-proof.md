@@ -2,12 +2,20 @@
 orphan: true
 ---
 
-# Claude Desktop install proof — aeat plugin
+# Claude Desktop install proof — historical plugin identifier
 
 Live verification record for the claude-ecosystem-packaging campaign
 (plan step W05.P12.S44). Host: Windows 11 with the Claude desktop app
 installed (`%APPDATA%\Claude`, embedded claude-code runtime 2.1.187),
 2026-07-03.
+
+**Historical naming note.** This record preserves evidence from before the
+Cadrumo product rename. It is not current installation guidance. Current
+release material names the plugin `cadrumo` and its Model Context Protocol
+(MCP) server `cadrumo-mcp`. The human-facing `aeat` command-line interface
+(CLI) is unchanged. This record does not establish current public marketplace or
+package availability. Legacy plugin and marketplace identifiers below are quoted
+evidence only.
 
 ## What was proven
 
@@ -29,7 +37,7 @@ installed (`%APPDATA%\Claude`, embedded claude-code runtime 2.1.187),
 ## What remains, and on what
 
 - **Server start via uvx** — identical residual to the Claude Code proof:
-  the plugin's `.mcp.json` launches `uvx --from aeat==0.1.0 aeat-mcp`,
+  the plugin's `.mcp.json` launches `uvx --from cadrumo==0.1.0 cadrumo-mcp`,
   unresolvable until the first PyPI publish (RELEASING.md name-claim
   sequencing; operator-gated). Re-verify after publish.
 - **In-app UI session confirmation** — a human opening the desktop app and

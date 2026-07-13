@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#live-censo-calendar-reconciliation'
-date: '2026-07-04'
+date: '2026-07-10'
 modified: '2026-07-10'
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-W01-P01-S01]]'
@@ -15,6 +15,8 @@ related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S07]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S08]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S09]]'
+  - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S10]]'
+  - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S11]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S12]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W05-P05-S13]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W05-P05-S14]]'
@@ -41,6 +43,8 @@ related:
   - '[[2026-06-12-live-censo-calendar-reconciliation-W05-P05-S26]]'
   - '[[2026-06-12-live-censo-calendar-reconciliation-W05-P05-S27]]'
   - '[[2026-06-12-live-censo-calendar-reconciliation-W05-P05-S29]]'
+  - '[[2026-07-10-live-censo-calendar-reconciliation-audit]]'
+  - '[[2026-07-10-live-censo-calendar-reconciliation-reference]]'
 ---
 
 # `live-censo-calendar-reconciliation` feature index
@@ -56,6 +60,7 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 ### audit
 
 - `2026-06-05-live-censo-calendar-reconciliation-code-review-audit` - `live-censo-calendar-reconciliation` Code Review
+- `2026-07-10-live-censo-calendar-reconciliation-audit` - `live-censo-calendar-reconciliation` audit: `live sweep closeout honesty review`
 
 ### exec
 
@@ -89,6 +94,8 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 - `2026-06-12-live-censo-calendar-reconciliation-W05-P05-S27` - W05.P05.S27 - External evidence requires AEAT acceptance
 - `2026-06-12-live-censo-calendar-reconciliation-W05-P05-S29` - W05.P05.S29 - Live command-tree pull-only drift guard
 - `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates
+- `2026-06-05-live-censo-calendar-reconciliation-W04-P04-S10` - Rerun live Modelo 036 censo pull, compare, apply, expedientes, notifications, filed history, and justificante pulls
+- `2026-06-05-live-censo-calendar-reconciliation-W04-P04-S11` - Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence
 
 ### plan
 
@@ -97,6 +104,7 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 ### reference
 
 - `2026-06-05-live-censo-calendar-reconciliation-reference` - `live-censo-calendar-reconciliation` reference
+- `2026-07-10-live-censo-calendar-reconciliation-reference` - `live-censo-calendar-reconciliation` reference: `live censo G313 launcher blocker`
 
 ### research
 

@@ -1,4 +1,4 @@
-# Machine-validated release-readiness checklist for `cadrumo`.
+# Machine-validated release-readiness checklist for Cadrumo.
 #
 # Read and validated by `dev/release/readiness.py` (schema:
 # `ReleaseChecklist` in that module) before any release proceeds past the
@@ -11,7 +11,7 @@
 schema_version: 1
 
 # Non-hotfix releases soak on a pre-release channel before the human decides
-# to push + publish. There is no separate PyPI "beta" project yet (cadrumo
+# to push + publish. There is no separate PyPI "beta" project yet (Cadrumo
 # is pre-1.0 and has not shipped its first PyPI release) — the soak vehicle
 # today is a local, tagged pre-release build (`vX.Y.Z-rc.N`, built and smoke
 # tested via `just packaging-smoke*`, installed from the built wheel into a
@@ -57,7 +57,7 @@ rollback:
 audit_state_gate:
   description: "Deterministic pre-release invariants checked by `dev/release/readiness.py` before `just release-apply` is trusted."
   checks:
-    - "pyproject.toml, src/aeat/__init__.py, and .release-please-manifest.json report one identical version"
+    - "pyproject.toml, src/cadrumo/__init__.py, and .release-please-manifest.json report one identical version"
     - "CHANGELOG.md is non-empty and carries no unresolved release-please merge markers"
     - "no open GitHub issue carries the priority:P0-blocker label (advisory when gh is unavailable/unauthenticated)"
     - "the most recent packaging-smoke evidence manifest under var/packaging-smoke, if present, reports ok: true"

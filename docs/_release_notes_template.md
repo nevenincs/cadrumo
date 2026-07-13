@@ -3,7 +3,7 @@ orphan: true
 ---
 
 <!--
-Release notes template for cadrumo. Copy this block, fill it in from the
+Release notes template for Cadrumo. Copy this block, fill it in from the
 `just release` dry-run log (conventional-commit groups since the last tag),
 and paste it as the GitHub Release body when the tag is pushed. This is a
 hand-filled template, not generated automatically — release-please writes
@@ -11,7 +11,7 @@ CHANGELOG.md; this template is the longer-form human-readable companion for
 the GitHub Release page.
 -->
 
-# cadrumo vX.Y.Z
+# Cadrumo vX.Y.Z
 
 Released: YYYY-MM-DD
 Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hours)

@@ -8,14 +8,15 @@ decision. Use it after transactions are in the active profile's ledger -
 imported rows have dates and amounts, but they do not yet say how the tax
 calculation should treat them.
 
-Classifying a transaction only changes the record on your computer — nothing is sent to AEAT.
+Classifying a transaction changes only the record on your computer. It sends
+nothing to Spain's Tax Agency (AEAT).
 
 ## Before you start
 
 You need:
 
 - An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `AEAT_SECRET_PASSPHRASE`.
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
 - A ledger with transactions in it. See [Work with Transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
 
 The CLI help and error text render in Spanish, even though this guide is in English. When a step sends you to `--help`, expect Spanish option names.
@@ -45,7 +46,7 @@ Use one of the ledger classification states that command help accepts:
 - `PERSONAL` for a personal transaction that should not feed tax calculations
 - `MIXED` for a transaction that is partly business and partly personal
 
-Use only these three values — others are set automatically by aeat.
+Use only these three values. Cadrumo sets the others automatically.
 
 ## Pick a category for expenses
 
@@ -62,7 +63,8 @@ them:
 aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
-For money you received (income), aeat does not usually need a category — it calculates income totals automatically.
+For money you received (income), Cadrumo does not usually need a category. It
+calculates income totals automatically.
 
 Use `OUTGOING` plus an expense category for supplier purchases and other
 deductible expenses. Use `INCOMING` for issued invoices, client payments, or
@@ -148,11 +150,9 @@ Remove a category ratio you no longer want with
 `aeat app ledger ratios unset <category-id>`.
 
 For home-office expenses, save a ratio for the relevant home-office category
-and allocate as above. If you have linked and applied Modelo 036 censo facts
-with valid home-office area data, `aeat` can seed censo-derived home-office
-ratios for relevant categories. See
-[Link Modelo 036 census information](censo-update.md) before relying on that
-ratio.
+and allocate as above. Home-office ratios follow the manual or saved ratio
+workflow; keep the census facts in your profile correct first - see
+[Maintain Modelo 036 census facts in your profile](censo-update.md).
 
 ## Classify many rows from CSV
 
@@ -222,7 +222,7 @@ classifications you already set by hand.
 
 ## Use an LLM suggestion
 
-aeat can use an AI assistant to suggest how to classify each transaction. The
+Cadrumo can use an AI assistant to suggest how to classify each transaction. The
 suggestion is a starting point — you must confirm or correct it. It does not
 fill in tax amounts such as taxable base, IVA rate, or IRPF category.
 

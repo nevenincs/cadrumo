@@ -24,7 +24,7 @@ explanations in English.
 ## Prerequisites
 
 A working `aeat` command, a master-key passphrase (set
-`AEAT_SECRET_PASSPHRASE` to run without prompts), and the profile and
+`CADRUMO_SECRET_PASSPHRASE` to run without prompts), and the profile and
 first-quarter ledger rows from
 [the income-tax year, stages 1 and 2](irpf-lifecycle.md).
 

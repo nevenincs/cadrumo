@@ -64,7 +64,7 @@ Register `aeat-mcp` as a stdio server in your client's MCP configuration:
 
 The server uses the same local encrypted store and the same active profile as
 the CLI, and prompts for the master-key passphrase the same way. Set
-`AEAT_SECRET_PASSPHRASE` in the server's environment to run without a prompt.
+`CADRUMO_SECRET_PASSPHRASE` in the server's environment to run without a prompt.
 
 ## What the agent can and cannot do
 

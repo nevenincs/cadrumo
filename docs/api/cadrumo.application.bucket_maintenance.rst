@@ -1,0 +1,19 @@
+cadrumo.application.bucket_maintenance package
+==============================================
+
+.. automodule:: cadrumo.application.bucket_maintenance
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.application.bucket_maintenance._contracts
+   cadrumo.application.bucket_maintenance._manifest_digest
+   cadrumo.application.bucket_maintenance._sandbox
+   cadrumo.application.bucket_maintenance._service

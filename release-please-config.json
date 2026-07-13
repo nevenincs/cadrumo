@@ -12,7 +12,7 @@
       "release-type": "python",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        "src/aeat/__init__.py"
+        "src/cadrumo/__init__.py"
       ]
     }
   },

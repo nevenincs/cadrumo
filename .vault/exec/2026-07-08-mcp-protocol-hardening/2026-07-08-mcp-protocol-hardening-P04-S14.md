@@ -1,0 +1,67 @@
+---
+tags:
+  - '#exec'
+  - '#mcp-protocol-hardening'
+date: '2026-07-10'
+modified: '2026-07-10'
+step_id: 'S14'
+related:
+  - "[[2026-07-08-mcp-protocol-hardening-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace mcp-protocol-hardening with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S14 and 2026-07-08-mcp-protocol-hardening-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Add resource templates and read handlers for the bulk payload classes (calculation observations, evidence rows, corpus excerpts) resolved from persisted state and ## Scope
+
+- `src/aeat/entrypoints/mcp/_resources.py` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Add resource templates and read handlers for the bulk payload classes (calculation observations, evidence rows, corpus excerpts) resolved from persisted state
+
+## Scope
+
+- `src/aeat/entrypoints/mcp/_resources.py`
+
+## Description
+
+- Add `OBSERVATIONS` and `EVIDENCE` resource kinds plus their template descriptions to `_resources.py`; both are template-only (`aeat://observations/{name}`, `aeat://evidence/{name}`), never concretely enumerated.
+- Declare the single thinning + resolution authority in the new `_result_thinning.py`: `THINNED_VERBS` (which verbs move which result array, to which kind, keyed by which id) and `BULK_RESOLUTION` (which read verb re-materialises each kind, and its result field).
+- Add the resource read handler in `_server.py` (`_resolve_bulk_resource`): a bucket-scoped resource is resolved by re-running its owning read verb's descriptor through the existing supervised subprocess (`_run_subprocess_tool`) and returning that verb's bulk field as a JSON array; an active-bucket resolver cross-checks the URI id against the resolved `result`.
+- Refuse in-process reads of bucket-scoped kinds in `read_harness_resource` (they carry no active bucket session); expose `parse_resource_uri` and `BUCKET_SCOPED_RESOURCE_KINDS` for the server to route on.
+
+## Outcome
+
+- `aeat://observations/{calculation_revision_id}` resolves via the `modelo.work.observations` verb; `aeat://evidence/{bucket_id}` via `ledger.evidence.list`. Corpus excerpts (the plan's third named class) already shipped as `aeat://corpus/{ref}` under the sibling discovery ADR and are reused unchanged.
+- Table↔surface drift gates in `test_result_thinning.py` bind every declared verb, field, kind, and resolver to the live descriptor surface; `test_bulk_resource_resolution.py` proves the templates are advertised and in-process reads of bucket kinds are refused.
+
+## Notes
+
+- Architectural finding driving the design: the MCP server process holds NO active bucket session (every tool runs as a subprocess that unlocks its own key — confirmed empirically: an in-process catalogue load raises `StorageValidationError: no active bucket session`). Bucket-encrypted observations/evidence therefore CANNOT be read in-process; resolution re-runs the owning read verb as a subprocess so it carries the session. This is why the read handler is a subprocess resolver, not a pure function like the bundled skill/rule/persona/corpus resolvers.
+- Evidence rows resolved are the record METADATA the `ledger.evidence.list` verb already emits (never attachment bytes), so `sensitive-financial-data-secure-storage-only` is preserved.
+- The literal subprocess-session hop is exercised in a live session and by the existing call-runtime/dispatch tests; it is not re-mockable against the in-process ephemeral-key fixtures (a child process cannot see them), so no mock stands in for it.

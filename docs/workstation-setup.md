@@ -1,10 +1,10 @@
 # Set up a fresh workstation
 
-Use this the first time you install `aeat` on a clean machine. It takes you from
+Use this the first time you install Cadrumo on a clean machine. It takes you from
 an empty checkout to a working tool, shows you how to check what is missing, and
 lets you choose which optional services to turn on.
 
-`aeat` works without any optional service. Google export, on-host LLM vision, and
+Cadrumo works without any optional service. Google export, on-host LLM vision, and
 cloud LLM upload are opt-in. The core filing workflow runs with none of them.
 
 ## Install the environment
@@ -37,7 +37,7 @@ Without VS Code, build and run the image directly:
 
 ```bash
 just devcontainer-build
-docker run --rm -it -v "$(pwd)":/workspace aeat-devcontainer bash
+docker run --rm -it -v "$(pwd)":/workspace cadrumo-devcontainer bash
 ```
 
 Verify the image installs cleanly and its toolchain works end to end:

@@ -1,0 +1,275 @@
+[legal."ley-35-2006:da-33"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#datrigesimatercera"
+document_id = "BOE-A-2006-20764"
+article = "da-33"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimatercera"
+published_at = 2006-11-29
+effective_from = 2020-01-01
+consolidated_as_of = 2026-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE consolidated LIRPF corpus audit on 2026-07-01"
+notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and autoliquidation duty when no withholding or payment on account applies."
+required_text = [
+    "Gravamen especial sobre los premios de determinadas loterias y apuestas",
+    "premios cuyo importe integro sea igual o inferior a 40.000 euros",
+    "La base imponible del gravamen especial estara formada por el importe del premio que exceda de la cuantia exenta",
+    "La cuota integra del gravamen especial sera la resultante de aplicar a la base imponible",
+    "tipo del 20 por ciento",
+    "obligados a presentar una autoliquidacion por este gravamen especial",
+]
+
+[legal."orden-hap-70-2013:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a5"
+document_id = "BOE-A-2013-952"
+article = "5"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a5"
+published_at = 2013-01-31
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
+notes = "Articulo 5 approves Modelo 136 and identifies the form title."
+required_text = [
+    "Articulo 5. Aprobacion del modelo 136",
+    "Se aprueba el modelo 136",
+    "Gravamen Especial sobre los Premios de determinadas Loterias y Apuestas",
+]
+
+[legal."orden-hap-70-2013:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a6"
+document_id = "BOE-A-2013-952"
+article = "6"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a6"
+published_at = 2013-01-31
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
+notes = "Articulo 6 defines the taxpayers obliged to file Modelo 136."
+required_text = [
+    "Articulo 6. Obligados a presentar el modelo 136",
+    "obligados a presentar el modelo 136 procediendo por tanto a autoliquidar e ingresar",
+    "cuando tales premios no hubieran sido objeto de la retencion o ingreso a cuenta",
+]
+
+[legal."orden-hap-70-2013:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a7"
+document_id = "BOE-A-2013-952"
+article = "7"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a7"
+published_at = 2013-01-31
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
+notes = "Articulo 7 sets quarterly Modelo 136 filing and payment windows."
+required_text = [
+    "Articulo 7. Plazos de presentacion del modelo 136",
+    "veinte primeros dias naturales de los meses de abril, julio, octubre y enero",
+    "premios cobrados en el trimestre natural inmediato anterior",
+]
+
+[legal."orden-hap-70-2013:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a10"
+document_id = "BOE-A-2013-952"
+article = "10"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a10"
+published_at = 2013-01-31
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
+notes = "Articulo 10 defines general electronic filing conditions for Modelos 230 and 136."
+required_text = [
+    "Articulo 10. Condiciones generales para la presentacion telematica de los modelos 230 y 136",
+    "presentacion telematica estara sujeta a las siguientes condiciones",
+    "cumplimentar y transmitir los datos del formulario",
+]
+
+[legal."orden-hap-70-2013:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a11"
+document_id = "BOE-A-2013-952"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a11"
+published_at = 2013-01-31
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
+notes = "Articulo 11 defines the internet filing procedure, the quarterly period codes, and the positive amount-to-enter condition for Modelo 136."
+required_text = [
+    "Articulo 11. Procedimiento para la presentacion telematica por Internet de los modelos 230 y 136",
+    "Periodo del Modelo 136: 2 caracteres. Trimestrales (1T, 2T, 3T, 4T)",
+    "Tipo de autoliquidacion",
+    "Importe a ingresar",
+]
+
+[legal."orden-hap-70-2013:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-70-2013.html#a12"
+document_id = "BOE-A-2013-952"
+article = "12"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952#a12"
+published_at = 2013-01-31
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
+notes = "Articulo 12 grounds the banking and domiciliation payment fields used by Modelo 136."
+required_text = [
+    "Articulo 12. Pago de las deudas tributarias resultantes de las autoliquidaciones de los modelos 230 o 136 mediante domiciliacion bancaria",
+    "presenten el modelo 136 por via telematica por Internet",
+    "domiciliacion bancaria del modelo 136 podra realizarse desde el dia 1 hasta el dia 15",
+]
+
+[legal."orden-hac-763-2018:art-tercero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-763-2018.html#a3"
+document_id = "BOE-A-2018-10064"
+article = "tercero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064#a3"
+published_at = 2018-07-18
+effective_from = 2018-07-19
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
+notes = "Articulo tercero replaces the Modelo 136 annex in Orden HAP/70/2013 with the current form in Anexo III."
+required_text = [
+    "Articulo tercero. Modificacion de la Orden HAP/70/2013",
+    "Se sustituye el anexo II a que se refiere el articulo 5",
+    "figura como anexo III de la presente orden",
+]
+
+[legal."orden-hac-763-2018:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-763-2018.html#df-unica"
+document_id = "BOE-A-2018-10064"
+section = "disposicion-final-unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064#df-unica"
+published_at = 2018-07-18
+effective_from = 2018-07-19
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
+notes = "Final provision: the new Modelo 136 applies to 2018 Q3 and later autoliquidations."
+required_text = [
+    "Disposicion final unica. Entrada en vigor",
+    "El nuevo modelo 136",
+    "tercer trimestre del ano 2018 y siguientes",
+]
+
+[sources."aeat-modelo-136-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_136/files/modelo-136-procedure.html"
+sha256 = "122f79dff96d2276b6982b1e78019e65570f2859d391034742dfcf1e9987cd59"
+bytes = 21765
+retrieved_at = 2026-07-01
+published_at = 2026-06-09
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH09.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-136-procedure-record"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_136/files/modelo-136-procedure-record.html"
+sha256 = "2b77a36f81be91a92a12abc3f2648a0530746e0630f9a8d635f857a218bad99a"
+bytes = 12134
+retrieved_at = 2026-07-01
+published_at = 2026-06-09
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientos/GH09.shtml"
+review_status = "reviewed"
+
+[sources."boe-lirpf-lottery-prize-special-levy"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/ley-35-2006.html"
+sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
+bytes = 1921157
+retrieved_at = 2026-05-06
+published_at = 2006-11-29
+applies_from = 2020-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#datrigesimatercera"
+review_status = "reviewed"
+
+[sources."boe-modelo-136-base-order"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-70-2013.html"
+sha256 = "0e1191061bb0b527d87e09478012ecd4bc1ba283e11127299ad39202241d8adb"
+bytes = 71216
+retrieved_at = 2026-07-01
+published_at = 2013-01-31
+applies_from = 2013-02-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2013-952"
+review_status = "reviewed"
+
+[sources."boe-modelo-136-2018-amendment-hac-763"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-763-2018.html"
+sha256 = "b4e10ed3f1fb9bc11e12b11192eefd6a37d60c413ebef9e80e02287bdf82f5fb"
+bytes = 48722
+retrieved_at = 2026-07-01
+published_at = 2018-07-18
+applies_from = 2018-07-19
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
+review_status = "reviewed"
+
+[sources."boe-modelo-136-current-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/instructions/modelo_136/files/BOE-A-2018-10064-modelo-136-current-form.txt"
+sha256 = "37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5"
+bytes = 71323
+retrieved_at = 2026-07-01
+published_at = 2018-07-18
+applies_from = 2018-07-19
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
+review_status = "reviewed"
+
+[sources."boe-modelo-136-current-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_136/files/BOE-A-2018-10064-modelo-136-current-form.pdf"
+sha256 = "f289b0072c5cdc71b91f82bee9535abbdcd68c720e6b4cc051e0f228e83036ad"
+bytes = 424777
+retrieved_at = 2026-07-01
+published_at = 2018-07-18
+applies_from = 2018-07-19
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064"
+review_status = "reviewed"

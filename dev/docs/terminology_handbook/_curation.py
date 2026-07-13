@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
-from aeat.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enums import ConceptLifecycle, TermStatus
 from ._errors import TerminologyValidationError
@@ -345,6 +345,6 @@ def _validate_or_refuse(handbook: TerminologyHandbook) -> None:
 def _stamp(today: date | None) -> date:
     if today is not None:
         return today
-    from aeat.core.time import now
+    from cadrumo.core.time import now
 
     return now().date()

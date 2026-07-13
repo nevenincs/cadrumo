@@ -7,7 +7,7 @@ records the obligations that are NOT discharged by package metadata alone.
 
 ## Corpus search: embedding model lineage
 
-The optional semantic half of the bundled-corpus search (the `aeat[search]`
+The optional semantic half of the bundled-corpus search (the `cadrumo[search]`
 extra) uses the **potion-multilingual-128M** static embedding model by the
 Minish Lab, distributed under the **MIT licence**
 (https://huggingface.co/minishlab/potion-multilingual-128M). The model is
@@ -66,7 +66,7 @@ its own package metadata.
 
 ## Bundled AEAT / BOE corpus: reuse of public-sector information
 
-The corpus under `src/aeat/_data/corpus/` (and its companion distributions
+The corpus under `src/cadrumo/_data/corpus/` (and its companion distributions
 `cadrumo-data-manuals` and `cadrumo-data-official`) reproduces official Spanish
 public-sector documents: consolidated legal texts from the Boletín Oficial
 del Estado (BOE) and manuals, diseños de registro, and workbooks published
@@ -87,3 +87,19 @@ by the Agencia Estatal de Administración Tributaria (AEAT).
   and cannot — relicense the underlying official documents, which remain
   governed by the public-sector rules above and remain attributed to their
   publishing bodies.
+
+## Documentation web fonts
+
+The documentation site under `docs/_static/` self-hosts subset `.woff2`
+builds of the following typefaces, each distributed under the
+**SIL Open Font License 1.1** (https://openfontlicense.org):
+
+- **Hanken Grotesk** — Copyright 2020 The Hanken Grotesk Project Authors
+  (https://github.com/marcologous/hanken-grotesk).
+- **Instrument Serif** — Copyright 2022 The Instrument Serif Project Authors
+  (https://github.com/Instrument/instrument-serif).
+- **JetBrains Mono** — Copyright 2020 The JetBrains Mono Project Authors
+  (https://github.com/JetBrains/JetBrainsMono).
+
+The README demo recording uses **Cascadia Mono** (SIL OFL 1.1); its licence
+text ships alongside the font under `assets/readme/fonts/`.

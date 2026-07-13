@@ -1,8 +1,8 @@
 # Quickstart: produce a modelo file
 
-Use this when you are new to `aeat` and want the shortest path from local
+Use this when you are new to Cadrumo and want the shortest path from local
 records to a file you can upload yourself through the Agencia Estatal de
-Administracion Tributaria (AEAT) portal.
+Administración Tributaria (AEAT) portal.
 
 Cadrumo, invoked as the `aeat` command, prepares, checks, and exports local
 files for Spanish tax forms. It does not submit filings to AEAT. You remain responsible for reviewing and filing
@@ -43,7 +43,7 @@ reuses it for the rest of the session. To run without a prompt, set it in the
 environment first:
 
 ```bash
-export AEAT_SECRET_PASSPHRASE="your-passphrase"
+export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
 ```
 
 The CLI emits its help and messages in Spanish. The English text on this page

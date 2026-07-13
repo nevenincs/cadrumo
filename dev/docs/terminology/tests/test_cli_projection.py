@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 from docutils.nodes import make_id
 
-from aeat.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from dev.docs.terminology._cli_projection import CliOptionRecord, CliProjectionStats, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]

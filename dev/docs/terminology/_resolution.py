@@ -11,7 +11,7 @@ half-mapped.
 
 The five resolution rules (by source path):
 
-* ``src/aeat/_data/registry/.../casillas/*.toml`` -> the modelo's
+* ``src/cadrumo/_data/registry/.../casillas/*.toml`` -> the modelo's
   :class:`~dev.docs.terminology._search_record.CasillaSearchRecord` set (the
   CASILLA grounding surface).
 * a Disenos de Registro sidecar
@@ -21,8 +21,8 @@ The five resolution rules (by source path):
   catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the legal-grounding
   target (the BOE permalink + ``#aN`` article anchor, resolved through the
   legal catalogue's ``corpus_ref`` -- the BOE grounding surface).
-* ``src/aeat/**/*.py`` -> the generated API stub
-  (``docs/api/aeat.<dotted.module>.html`` -- the CODEBASE grounding surface).
+* ``src/cadrumo/**/*.py`` -> the generated API stub
+  (``docs/api/cadrumo.<dotted.module>.html`` -- the CODEBASE grounding surface).
 * ``docs/**/*.md`` / ``*.rst`` -> the built page anchor (the DOCS surface).
 * a CLI module path -> the generated CLI-reference page (the CLI surface),
   resolved against the projected CLI records.
@@ -44,8 +44,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
 
 from ._casilla_projection import project_casilla_search_records
 from ._concept_cards import ConceptCardRecord
@@ -157,25 +157,25 @@ class ResolutionResult:
 # ---------------------------------------------------------------------------
 
 _CONCEPT_TOML_RE = re.compile(
-    r"^src/aeat/_data/terminology/concepts/(?P<concept_id>[^/]+)\.toml$",
+    r"^src/cadrumo/_data/terminology/concepts/(?P<concept_id>[^/]+)\.toml$",
 )
 _CASILLA_PATH_RE = re.compile(
-    r"^src/aeat/_data/registry/aeat/modelos/(?P<modelo>[^/]+)/revisions/[^/]+/casillas/.+\.toml$",
+    r"^src/cadrumo/_data/registry/aeat/modelos/(?P<modelo>[^/]+)/revisions/[^/]+/casillas/.+\.toml$",
 )
 _DISENO_PATH_RE = re.compile(
-    r"^src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_(?P<modelo>[^/]+)/.+\.extracted\.md$",
+    r"^src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_(?P<modelo>[^/]+)/.+\.extracted\.md$",
 )
 _NORMATIVES_PATH_RE = re.compile(
-    r"^src/aeat/_data/corpus/normatives/.+\.extracted\.md$",
+    r"^src/cadrumo/_data/corpus/normatives/.+\.extracted\.md$",
 )
 _LEGAL_TOML_RE = re.compile(
-    r"^src/aeat/_data/registry/aeat/legal/[^/]+\.toml$",
+    r"^src/cadrumo/_data/registry/aeat/legal/[^/]+\.toml$",
 )
 _CLI_REFERENCE_RE = re.compile(
     r"^docs/cli/(?P<family>[^/]+)\.rst$",
 )
 _CODE_MODULE_RE = re.compile(
-    r"^src/aeat/.+\.py$",
+    r"^src/cadrumo/.+\.py$",
 )
 _DOCS_PAGE_RE = re.compile(
     r"^docs/(?P<rel>.+)\.(?:md|rst)$",
@@ -313,7 +313,7 @@ class TargetResolver:
 
     def _resolve_normatives(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
         # Strip the .extracted.md sidecar suffix to recover the origin html path
-        # relative to src/aeat/_data/, then to the corpus/-rooted corpus_ref form.
+        # relative to src/cadrumo/_data/, then to the corpus/-rooted corpus_ref form.
         path = hit.posix_path.as_posix()
         origin = path.removesuffix(".extracted.md")
         corpus_rel = _to_corpus_relative(origin)
@@ -488,13 +488,13 @@ def _load_concept_cards() -> tuple[ConceptCardRecord, ...]:
 
 
 def _to_corpus_relative(origin_path: str) -> str | None:
-    """Map a ``src/aeat/_data/<rest>`` path to the ``<rest>`` corpus-ref form.
+    """Map a ``src/cadrumo/_data/<rest>`` path to the ``<rest>`` corpus-ref form.
 
     The legal catalogue's ``corpus_ref`` is rooted at ``corpus/...`` (relative
-    to ``src/aeat/_data/``), so an origin html path under ``_data`` maps by
-    stripping the ``src/aeat/_data/`` prefix.
+    to ``src/cadrumo/_data/``), so an origin html path under ``_data`` maps by
+    stripping the ``src/cadrumo/_data/`` prefix.
     """
-    prefix = "src/aeat/_data/"
+    prefix = "src/cadrumo/_data/"
     if not origin_path.startswith(prefix):
         return None
     return origin_path[len(prefix) :]
@@ -513,7 +513,7 @@ def _declared_legal_ids(project_relpath: str, known_ids: frozenset[str]) -> tupl
     every provision. Returns an empty tuple when the file is unreadable or
     declares no catalogue-known id.
     """
-    from aeat.core.config import PROJECT_ROOT
+    from cadrumo.core.config import PROJECT_ROOT
 
     absolute = PROJECT_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
     try:
@@ -525,13 +525,13 @@ def _declared_legal_ids(project_relpath: str, known_ids: frozenset[str]) -> tupl
 
 
 def _module_to_dotted(path: str) -> str | None:
-    """Map ``src/aeat/foo/bar.py`` (or ``__init__.py``) to its dotted module name.
+    """Map ``src/cadrumo/foo/bar.py`` (or ``__init__.py``) to its dotted module name.
 
     Mirrors the apidocs stub-naming convention: a module file maps to
-    ``aeat.foo.bar`` and a package ``__init__.py`` to ``aeat.foo`` -- the stub
+    ``cadrumo.foo.bar`` and a package ``__init__.py`` to ``cadrumo.foo`` -- the stub
     filename (and built ``docs/api/<dotted>.html`` page) is named from this.
     """
-    if not path.startswith("src/aeat/") or not path.endswith(".py"):
+    if not path.startswith("src/cadrumo/") or not path.endswith(".py"):
         return None
     relative = path[len("src/") :]  # aeat/foo/bar.py
     parts = relative.split("/")

@@ -1,7 +1,7 @@
 """Unit gate for the live-reloading documentation server.
 
 Asserts that :func:`dev.docs.serve.serve_command` watches both documentation
-surfaces (the narrative corpus and the ``src/aeat`` docstring source) and that
+surfaces (the narrative corpus and the ``src/cadrumo`` docstring source) and that
 the self-regenerated trees are excluded from the watch set so a rebuild cannot
 loop on its own output; and that the start-idempotent running-server awareness
 (:func:`dev.docs.serve.resolve_target` and its probe/state helpers) attaches to
@@ -47,13 +47,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_serve_command_watches_docs_and_autodoc_source() -> None:
-    """The command serves docs/ and watches the src/aeat docstring surface."""
+    """The command serves docs/ and watches the src/cadrumo docstring surface."""
     command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False)
     assert command[1:3] == ["-m", "sphinx_autobuild"]
     assert str(_REPO_ROOT / "docs") in command
     assert str(_REPO_ROOT / "docs" / "_build" / "html") in command
     watch_index = command.index("--watch")
-    assert command[watch_index + 1] == str(_REPO_ROOT / "src" / "aeat")
+    assert command[watch_index + 1] == str(_REPO_ROOT / "src" / "cadrumo")
 
 
 def test_serve_command_excludes_self_regenerated_trees() -> None:
@@ -64,7 +64,7 @@ def test_serve_command_excludes_self_regenerated_trees() -> None:
     assert f"*{sep}docs{sep}cli{sep}*" in ignores
     assert any("_build" in pattern for pattern in ignores)
     # The docs/cli ignore must be anchored so it does not also swallow changes
-    # to the unrelated src/aeat/entrypoints/cli source tree.
+    # to the unrelated src/cadrumo/entrypoints/cli source tree.
     assert f"*{sep}cli{sep}*" not in ignores
 
 

@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_workbook_extractor.py -> parents[4] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_DISENOS = _REPO_ROOT / "src" / "aeat" / "_data" / "corpus" / "aeat_official" / "disenos_registro"
+_DISENOS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "aeat_official" / "disenos_registro"
 
 # A real modern .xlsx Modelo 303 design (openpyxl path) and a real legacy
 # .xls Modelo 123 design (xlrd path). Both ship in the corpus.

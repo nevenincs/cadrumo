@@ -23,7 +23,7 @@ import tempfile
 from pathlib import Path
 from typing import TypedDict
 
-from aeat.agent import materialise_plugin
+from cadrumo.agent import materialise_plugin
 
 _CLAUDE = "claude"
 _VALIDATE_ARGS = ("plugin", "validate", "--strict")
@@ -83,8 +83,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--keep", action="store_true", help="Keep the materialised plugin tree on disk.")
     args = parser.parse_args(argv)
 
-    work = Path(tempfile.mkdtemp(prefix="aeat-plugin-smoke-"))
-    plugin_root = work / "aeat-plugin"
+    work = Path(tempfile.mkdtemp(prefix="cadrumo-plugin-smoke-"))
+    plugin_root = work / "cadrumo-plugin"
     try:
         manifest = materialise_plugin(plugin_root)
         summary = _validate(plugin_root, skills=manifest.skills_written, agents=manifest.agents_written)

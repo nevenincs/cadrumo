@@ -1,184 +1,396 @@
-# Releasing `cadrumo`
+# Releasing Cadrumo
 
-Every release is HUMAN-GATED: no automation pushes, no tokens live in the
-repository. Two publish lanes exist, both human-triggered: the local
-`just publish` recipes (token via `UV_PUBLISH_TOKEN`), and the
-operator-approved Trusted Publishing workflow (`.github/workflows/publish.yml`,
-manual `workflow_dispatch` only, PyPI environment `pypi`, registered by the
-operator as the project's pending publisher on 2026-07-03). The release lane joins three surfaces that already exist —
-release-please versioning (`just release` / `just release-apply`), the
-packaging smoke lanes (`just packaging-smoke*`), and the publish recipes
-(`just publish` / `just publish-data`) — plus the Claude plugin/marketplace
-push.
+This runbook is for maintainers who version, publish, verify, or recover a
+Cadrumo release. Every push, publication, yank, and patch decision is manual.
+The publish workflow uses Python Package Index (PyPI) Trusted Publishing through
+OpenID Connect (OIDC). It never uses a repository token.
 
-The project ships as three PyPI distributions built from the one source tree:
+## Current release blockers
 
-- **`cadrumo`** — the product (import package and CLI stay `aeat`): code, extracted legal text, normative html,
-  registry, terminology, and the agent harness. Slim (~40 MB), under PyPI's
-  100 MB default file cap; no size grant needed.
-- **`cadrumo-data-manuals`** and **`cadrumo-data-official`** — the corpus source
-  binaries (official AEAT PDF/XLS/XLSX), split along the corpus directory seam
-  into two sub-cap companions so each wheel stays under the 100 MB cap and NO
-  size grant is required: `cadrumo-data-manuals` ships `corpus/manuals` (~77 MB
-  wheel), `cadrumo-data-official` ships `corpus/aeat_official` + `corpus/normatives`
-  (~62 MB wheel). Both are built from `packaging/aeat_data_manuals/` and
-  `packaging/aeat_data_official/`, contribute subtrees to the same `aeat_data`
-  namespace package, and are consumed together via the `cadrumo[corpus-sources]`
-  extra. Without both installed, the registry integrity gate surfaces a loud
-  advisory and the `aeat app registry` verification verbs refuse with the
-  install hint; every other surface is unaffected.
+Public publication remains blocked by these gates:
 
-## One-time setup (first release only)
+- Issue [#476](https://github.com/cadrumo/cadrumo/issues/476) must contain the
+  complete `W05.P11.S61` external name and repository reservation evidence. It
+  must also record the gate as cleared.
+- The `just release` recipe still targets `nevenincs/cadrumo`. Package metadata,
+  readiness checks, and the S61 evidence must agree on `cadrumo/cadrumo` before
+  you run the preview.
+- `W05.P13.S73` is the release-note command canonicalization gate. It must
+  update and verify `docs/_release_notes_template.md` and `docs/updates.md`
+  before you draft release notes or publish an update.
 
-Create a PyPI account, then an API token. Until the projects exist the token
-is account-scoped; after the first upload, replace it with per-project scoped
-tokens. Put the token in the `UV_PUBLISH_TOKEN` environment variable for the
-publish session only — never in a file, never in the repo.
+Don't dispatch [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
+until the publication gates are clear. Local builds, green tests,
+name-availability searches, and a successful readiness command don't clear
+external gates.
 
-## Name claim sequencing (first release)
+## Release authorities and references
 
-Each name is claimed by its first upload (the operator registered `cadrumo` as
-the Trusted Publishing pending project). Because both data companions are sub-cap
-there is no size grant on the critical path, so the order is simply:
+The committed
+[`cadrumo-product-rename` architecture decision record (ADR)](.vault/adr/2026-07-12-cadrumo-product-rename-adr.md)
+governs product identity and the publication stop. The following sources define
+the remaining release mechanics:
 
-1. Publish the slim `cadrumo` wheel first (`just publish yes-publish-to-pypi`).
-   It is under every default limit; this claims the name and creates the
-   project.
-2. Publish both data companions (`just publish-data yes-publish-to-pypi`, which
-   builds and uploads `cadrumo-data-manuals` and `cadrumo-data-official` in one gated
-   run). Each wheel is under the 100 MB cap, so the first upload of each claims
-   its name and creates its project with no prior placeholder or grant needed.
+- [`docs/_release_checklist.yaml`](docs/_release_checklist.yaml) defines soak,
+  versioning, hotfix timing, rollback triggers, and readiness checks.
+- [`.github/workflows/publish.yml`](.github/workflows/publish.yml) defines the
+  only OIDC publication jobs and artifact guards.
+- [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml)
+  defines the clean Linux artifact checks and retained evidence.
+- [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
+  [`docs/updates.md`](docs/updates.md) become release authorities only after
+  the S73 gate changes their product command to `cadrumo`. Until S73 is
+  complete, stop before drafting release notes or publishing an update from
+  either file.
+- [`SECURITY.md`](SECURITY.md) defines private vulnerability reporting.
 
-The plugin delivery is NOT blocked on the data companions: the plugin's server
-runs from the slim `cadrumo` wheel; the companions only feed the registry
-verification verbs and byte-provenance surfaces.
+The release comprises three version-locked PyPI distributions:
 
-## No file-size grant needed
+| Distribution | Contents | Installed command |
+| --- | --- | --- |
+| `cadrumo` | Core product wheel | `cadrumo` and `cadrumo-mcp`; running `cadrumo-mcp` requires `cadrumo[agent]` |
+| `cadrumo-data-manuals` | Reviewed manual corpus | None |
+| `cadrumo-data-official` | Reviewed official and normative corpus | None |
 
-The earlier plan required a PyPI per-file size grant for a single ~139 MB
-`cadrumo-data` companion. That is retired: the corpus binaries are split along the
-directory seam into two sub-cap companions (`cadrumo-data-manuals` ≈ 77 MB,
-`cadrumo-data-official` ≈ 62 MB), each comfortably under PyPI's 100 MB default cap.
-No `github.com/pypi/support` limit-request issue is filed, and nothing in the
-release schedule waits on a grant. If a companion ever approaches the cap
-(corpus growth), rebalance the seam partition or carve a third companion rather
-than requesting a grant — the CI artifact guard and the distribution gate both
-fail loudly at 100 MB.
+Version and publish all three distributions as one release cohort. The core
+wheel's `corpus-sources` extra pins both companions to the same exact version.
+The workflow builds one wheel per dispatch and refuses artifacts over PyPI's
+100 megabytes (MB) per-file limit. The core wheel must not contain companion
+sources in Portable Document Format (PDF), legacy Microsoft Excel Spreadsheet
+(XLS), or Microsoft Excel Open XML Spreadsheet (XLSX) formats.
 
-## Per-release checklist
+## Publication prerequisites
 
-Run from a clean `main` checkout, in order. Stop at the first failure. The
-full machine-validated checklist data (soak window, versioning discipline,
-hotfix cycle times, rollback triggers) lives at
-`docs/_release_checklist.yaml`; this section is the human-run sequence.
+### External reservation evidence
 
-1. **Audit-state gate** — `just release-readiness` (or
-   `just release-readiness-json` for a machine-readable verdict). Checks
-   version-surface parity, `CHANGELOG.md` sanity, the most recent
-   packaging-smoke evidence, and (best-effort via `gh`) that no open GitHub
-   issue carries `priority:P0-blocker`. Read-only; no outward action. A
-   blocking failure must be resolved before continuing — `just
-   release-apply` runs this gate automatically and refuses to proceed on a
-   blocking failure.
-2. **Version + changelog** — `just release` (dry-run preview), then
-   `just release-apply` and follow its printed checklist: bump
-   `.release-please-manifest.json`, `pyproject.toml`,
-   `src/aeat/__init__.py`, prepend `CHANGELOG.md`, commit
-   `chore(release): vX.Y.Z`, tag `vX.Y.Z`. Also bump the synced version in
-   BOTH `packaging/aeat_data_manuals/pyproject.toml` and
-   `packaging/aeat_data_official/pyproject.toml` (the parity test fails the
-   suite if either drifts).
-3. **Gates** — `just packaging-smoke-dependencies`, `just check-dependencies`,
-   `just packaging-smoke` (full lane on Linux/WSL; includes the split-install
-   lane proving the companion-absent advisory path and the both-companions
-   byte-identical path), and the plugin gate
-   `uv run --no-sync python dev/packaging/smoke_plugin_validate.py`.
-4. **RC soak (non-hotfix releases)** — build a local pre-release
-   (`vX.Y.Z-rc.N`), run the full `just packaging-smoke` matrix against it,
-   and install the built wheel into a scratch venv for a 48-72h review
-   window before pushing the real tag. See "Release-candidate soak" below.
-   Skip this step only for an emergency hotfix (see the cycle times in
-   `docs/_release_checklist.yaml`).
-5. **Push the release commit + tag** — human decision only:
-   `git push origin main --tags`.
-6. **Publish `cadrumo`** — `UV_PUBLISH_TOKEN=... just publish
-   yes-publish-to-pypi`. Verify the version page renders on pypi.org and
-   `uvx --from cadrumo==X.Y.Z aeat --version` resolves on a machine without the checkout.
-7. **Publish the data companions** — `just publish-data yes-publish-to-pypi`
-   (builds and uploads both `cadrumo-data-manuals` and `cadrumo-data-official` in one
-   gated run; no grant needed). Verify `pip install "cadrumo[corpus-sources]"`
-   pulls both and `aeat app registry verify` runs clean.
-8. **Regenerate + push the plugin/marketplace** — materialise the plugin
-   tree pinned to the just-published version
-   (`uv run --no-sync aeat app agent --layout plugin -o <marketplace
-   checkout>/plugins/aeat`), run `claude plugin validate --strict` on it,
-   commit and push the marketplace repository. Installed plugins update on
-   the version bump.
-9. **Announce** — update `docs/updates.md` per its critical-updates
-   contract if the release changes filing behaviour, using
-   `docs/_release_notes_template.md` as the GitHub Release body template.
+Issue #476 must identify the evidence, reviewer, and confirmation date for each
+of these items:
+
+- The PyPI names `cadrumo`, `cadrumo-data-manuals`, and
+  `cadrumo-data-official`.
+- The `cadrumo/cadrumo` repository and organization position.
+- The Cadrumo marketplace identifiers and executable expectations.
+- Relevant domains and the Spanish and European Union trademark position.
+- One PyPI Trusted Publisher for each of the three distributions.
+
+An availability query isn't reservation evidence. If any item is missing,
+ambiguous, expired, or contradicted by current external state, stop.
+
+### Trusted Publisher configuration
+
+Configure each PyPI project or pending project with its own Trusted Publisher.
+All three registrations must use these exact values:
+
+| Setting | Required value |
+| --- | --- |
+| PyPI project | The matching distribution name |
+| GitHub owner | `cadrumo` |
+| GitHub repository | `cadrumo` |
+| Workflow | `publish.yml` |
+| Environment | `pypi` |
+
+The GitHub `pypi` environment must exist and restrict deployment to authorized
+maintainers. The workflow must retain `id-token: write` and `contents: read` on
+the publish job. Trusted Publishing supplies a short-lived OIDC credential.
+Don't create or store a PyPI application programming interface (API) token for
+this release path. Don't add a PyPI token or `UV_PUBLISH_TOKEN` to GitHub, a
+local file, or a maintainer profile.
+
+Before the first public release, confirm all three pending publishers in PyPI.
+After PyPI creates each project, confirm the publisher appears on that
+project's **Publishing** page.
+
+### Workstation and repository
+
+Use a clean `main` checkout with:
+
+- Python 3.13
+- `uv`
+- `just`
+- Git
+- Node.js and `npx`
+- GitHub CLI (`gh`), authenticated to `cadrumo/cadrumo`
+- Permission to push the release tag, dispatch Actions, and approve the
+  `pypi` environment
+
+Run these checks before release work:
+
+```console
+python --version
+uv --version
+just --version
+git --version
+node --version
+gh auth status
+git remote get-url origin
+git status --short
+```
+
+If Python reports a version other than 3.13 or a tool is unavailable, stop. If
+`gh` can't read `cadrumo/cadrumo`, stop. If the remote doesn't match the S61
+evidence or `git status --short` isn't empty, stop.
+
+Don't work around a repository mismatch with a different remote or an ad hoc
+release-please command.
+
+## Hard-cut release state
+
+Cadrumo is a hard cut, not a compatibility release:
+
+- `cadrumo` is the sole human command. Don't publish or document an `aeat`
+  product-command alias.
+- `cadrumo-mcp` is the sole Model Context Protocol (MCP) command.
+- Product imports, environment variables, plugin identifiers, resource schemes,
+  and local state use the Cadrumo identity.
+- Agencia Estatal de Administración Tributaria (AEAT) remains the authority
+  name in official endpoints, credentials, legal evidence, and registry
+  classification.
+- Cadrumo doesn't read, move, re-key, or delete former product state. It starts
+  with new state or refuses detected old state.
+
+Call this cut out in the release notes. Test the published release against a
+fresh local root. Never use a maintainer's real taxpayer profile for release
+verification.
+
+## Prepare and version the release
+
+Run every command from the repository root. If a command fails or reports an
+unexpected advisory, stop.
+
+1. Update `main`, then run the machine-readable readiness gate:
+
+   ```console
+   git switch main
+   git pull --ff-only
+   just release-readiness-json
+   ```
+
+   If the gate reports a blocking failure, stop. A zero exit code isn't enough:
+   unavailable GitHub state and missing packaging evidence are advisories.
+   If GitHub issue state is unavailable, a `priority:P0-blocker` issue is open,
+   or current packaging evidence is absent or failed, stop. Independently
+   confirm that issue #476 records the S61 external reservation gate as cleared.
+
+2. Run the release and packaging checks:
+
+   ```console
+   uv sync --frozen
+   just packaging-smoke-dependencies
+   just check-dependencies
+   just packaging-smoke
+   just packaging-smoke-docker
+   uv run --no-sync python dev/packaging/smoke_plugin_validate.py
+   uv run --no-sync pytest src/cadrumo/tests/test_release_config.py dev/release/tests -q
+   ```
+
+   If a command fails, stop. Review the newest manifests under
+   `var/packaging-smoke/`. If any exercised lane doesn't record success, stop.
+   The Claude validation result must explicitly report `validated`. Treat
+   `skipped`, unavailable tooling, or any indeterminate result as a failure.
+
+3. If the `just release` target and the cleared S61 evidence both name
+   `cadrumo/cadrumo`, preview the release-please proposal:
+
+   ```console
+   just release
+   ```
+
+   If the command fails or targets anything other than the repository cleared
+   by S61, stop. Review `var/release/release-please.log` against the commits
+   since the preceding tag. If S73 is clear, also compare the log with the
+   release-notes template.
+
+4. Set one `X.Y.Z` version in all six release surfaces:
+
+   - `.release-please-manifest.json`
+   - `pyproject.toml`
+   - `packaging/cadrumo_data_manuals/pyproject.toml`
+   - `packaging/cadrumo_data_official/pyproject.toml`
+   - `src/cadrumo/__init__.py`
+   - `CHANGELOG.md`
+
+   Update the exact companion pins in the root `corpus-sources` extra at the
+   same time. Then rerun:
+
+   ```console
+   just release-readiness
+   uv lock
+   uv lock --check
+   uv run --no-sync pytest src/cadrumo/tests/test_release_config.py dev/release/tests -q
+   ```
+
+   If the version, project name, lock, changelog, or tests drift, stop.
+
+5. Commit all release surfaces together:
+
+   ```console
+   git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py CHANGELOG.md uv.lock
+   git commit -m "chore(release): vX.Y.Z"
+   ```
+
+   `uv.lock` is a mandatory release surface. Always regenerate, validate, and
+   stage it. Confirm it resolves the root and both companions at `X.Y.Z`, even
+   if regeneration produces no textual change. Inspect the staged diff before
+   committing. If it contains any unrelated path, stop.
+
+### Optional diagnostic: stale release-apply helper
+
+Run `just release-apply` only as an additional readiness probe. Its printed
+checklist omits the two companion versions and their exact pins. It also omits
+mandatory lockfile regeneration.
+
+The helper doesn't edit, commit, tag, or push. Its success isn't release
+approval.
+
+```console
+just release-apply
+```
 
 ## Release-candidate soak
 
-Every non-hotfix release soaks for 48-72 hours before the tag is pushed and
-published. `cadrumo` is pre-1.0 and has not shipped its first PyPI release
-yet, so there is no separate `cadrumo-beta` PyPI project to soak against
-today; the soak vehicle is a local, tagged pre-release build reviewed before
-the real tag lands:
+Every non-hotfix release soaks locally for 48 to 72 hours. Release-candidate
+(RC) tags remain local. Never push an RC tag.
 
-1. Tag a local pre-release: `git tag -a vX.Y.Z-rc.1 -m "aeat vX.Y.Z-rc.1"`
-   (not pushed).
-2. Run the full packaging-smoke matrix against it (`just packaging-smoke`
-   on Linux/WSL; `just packaging-smoke-docker` for the clean-image lane).
-3. Install the built wheel into a scratch venv
-   (`uv venv /tmp/aeat-rc && uv pip install --python /tmp/aeat-rc/bin/python
-   dist/cadrumo-*.whl`) and exercise the CLI manually against a scratch
-   profile.
-4. Hold for 48-72 hours. Exit gates: the packaging-smoke matrix stays
-   green, no `priority:P0-blocker` issue is opened against the RC build,
-   and the changelog entry is reviewed against the conventional-commit log
-   since the last tag.
-5. If the soak passes, proceed to step 5 of the per-release checklist
-   (push the real tag). If it fails, fix forward and restart the soak with
-   `vX.Y.Z-rc.2`.
+1. Create an annotated local tag:
 
-Once the first stable PyPI release ships and there is a real user base to
-protect, promote this to a real `cadrumo-beta` PyPI project (a genuine
-pre-release channel Kent can opt into) rather than a purely local build.
+   ```console
+   git tag -a vX.Y.Z-rc.1 -m "Cadrumo vX.Y.Z-rc.1"
+   ```
+
+2. Run `just packaging-smoke` and `just packaging-smoke-docker` against that
+   commit. Install the built core wheel into a scratch environment and exercise
+   `cadrumo` with fictional data and fresh Cadrumo state.
+3. Hold the candidate for at least 48 hours. If any packaging lane fails, a
+   `priority:P0-blocker` issue opens, or changelog review finds an omitted
+   user-visible change, stop the soak.
+4. If the soak fails, fix forward, delete only the local RC tag, and restart as
+   `vX.Y.Z-rc.2`. If it passes, create the final tag:
+
+   ```console
+   git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"
+   ```
+
+Emergency hotfixes may skip the soak. Use the cycle times in
+`docs/_release_checklist.yaml` and record why the exception was necessary.
+
+## Publish with Trusted Publishing
+
+Recheck issue #476 immediately before pushing. If S61 isn't still complete,
+stop without pushing or dispatching.
+
+1. Push only the reviewed `main` commit and the one final tag:
+
+   ```console
+   git push origin main
+   git push origin refs/tags/vX.Y.Z
+   ```
+
+   Never use `git push --tags`. Confirm no `vX.Y.Z-rc.N` tag exists on the
+   remote before dispatching publication.
+
+2. Dispatch the core distribution from the final tag:
+
+   ```console
+   gh workflow run publish.yml --repo cadrumo/cadrumo --ref vX.Y.Z -f distribution=cadrumo
+   ```
+
+3. Inspect and approve the `pypi` environment deployment. Confirm the job uses
+   the tagged commit, builds exactly one `cadrumo-*.whl`, passes the artifact
+   guard, and obtains its PyPI credential through OIDC. If anything differs,
+   stop.
+
+4. Verify the core index entry before publishing either companion:
+
+   ```console
+   uvx --refresh --from cadrumo==X.Y.Z aeat --version
+   ```
+
+5. Dispatch and verify each companion as a separate manual job:
+
+   ```console
+   gh workflow run publish.yml --repo cadrumo/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-manuals
+   gh workflow run publish.yml --repo cadrumo/cadrumo --ref vX.Y.Z -f distribution=cadrumo-data-official
+   ```
+
+   Wait for the first companion job to finish before dispatching the second.
+   For each job, confirm the tag, single-wheel name, size guard, OIDC exchange,
+   and PyPI project before continuing.
+
+6. Verify all three index pages show `X.Y.Z` and their uploaded wheel hashes.
+   Then verify dependency resolution and corpus integrity from the public index:
+
+   ```console
+   uvx --refresh --from "cadrumo[corpus-sources]==X.Y.Z" aeat app registry verify
+   ```
+
+   If resolution uses a local path, either companion is missing, versions
+   differ, or registry verification refuses, stop.
+
+7. Generate the Claude plugin from the published version. Run
+   `claude plugin validate --strict`. Publish the marketplace change only after
+   S61 confirms its external identifier. The generated plugin must invoke
+   `cadrumo` or `cadrumo-mcp`, never a former product command. Require an
+   explicit successful validation result. A skipped validator, missing Claude
+   executable, or ambiguous result is a release failure.
+
+8. If S73 hasn't canonicalized and verified `docs/_release_notes_template.md`
+   and `docs/updates.md`, stop. After that gate, create the GitHub Release from
+   the template and update `docs/updates.md` when filing behavior changes.
+
+PyPI distributions are immutable. Never rerun a successful distribution job for
+the same version. If a job's outcome is unclear, inspect PyPI before retrying.
+
+## Report release problems
+
+Use a public GitHub issue for packaging failures, command regressions, index
+resolution failures, and documentation defects. Include the version, operating
+system, Python and `uv` versions, failing command, and redacted output. Include
+the Uniform Resource Locator (URL) for the workflow run. Use fictional data,
+and remove taxpayer identifiers, credentials, and session state.
+
+Treat suspected vulnerabilities, secret exposure, or taxpayer-data exposure as
+private security incidents. Follow `SECURITY.md`; don't disclose technical
+details in a public issue. If private vulnerability reporting is unavailable,
+open only a detail-free request for private contact.
 
 ## Rollback procedure
 
-Trigger a rollback when any of these hold (see `docs/_release_checklist.yaml`
-`rollback.triggers` for the machine-readable list): data loss or corruption,
-a disclosed security vulnerability, a widespread regression, or a
-compatibility mis-computation (a supported Python/OS/dependency combination
-fails after the release).
+Use rollback for data loss or corruption, a security vulnerability, a widespread
+regression, or a supported-environment miscalculation.
 
-`just release-rollback X.Y.Z` prints the full step-by-step procedure for the
-given version (read-only — it never runs a destructive action itself). In
-outline:
+> **Stop: the rollback helper is not authoritative.**
+> `just release-rollback X.Y.Z` currently describes only the root distribution
+> and prints a broad tag push. Don't rely on it until it explicitly covers all
+> three distributions and pushes only named tags. Use the reviewed manual
+> sequence that follows.
 
-1. Revert the release commit and tag on `main`
-   (`git revert --no-commit <sha>`, commit, tag `vX.Y.Z-rollback`, push —
-   every step is human-run).
-2. **Yank** the bad version from PyPI
-   (pypi.org project page → the release → Options → Yank release). Yanking
-   does not delete the artifact; it stops `pip`/`uv` from resolving it by
-   default so new installs and unpinned upgrades skip it, while an operator
-   who explicitly pinned the bad version can still reach it if truly needed.
-3. Publish a corrected patch release following the emergency hotfix cycle
-   time for the trigger category (`docs/_release_checklist.yaml` `hotfix`:
-   24h for security/data-loss, 48h for portal-drift, 72h for other
-   critical issues).
-4. Update `docs/updates.md` per its critical-updates contract and note the
-   rollback plus the corrected version in the GitHub Release notes.
+1. Stop announcements and marketplace promotion. Preserve workflow logs, wheel
+   hashes, and the redacted reproducer.
+2. For a public defect, open or update the public incident issue. For a security
+   defect, keep coordination in the private channel defined by `SECURITY.md`.
+3. Review and record the disposition of `cadrumo`, `cadrumo-data-manuals`, and
+   `cadrumo-data-official`. Yank every affected `X.Y.Z` distribution on PyPI.
+   A yank prevents default resolution but preserves the artifact for explicit
+   pins and investigation. Don't delete artifacts.
+4. Revert the release commit with a new commit if source rollback is required.
+   Create and push only the explicit rollback marker:
 
-## What is deliberately out of scope
+   ```console
+   git revert <release-commit-sha>
+   git tag -a vX.Y.Z-rollback -m "Rollback Cadrumo vX.Y.Z"
+   git push origin main
+   git push origin refs/tags/vX.Y.Z-rollback
+   ```
 
-- **Automatic release triggers** — publish.yml runs on manual dispatch
-  only; tag-push or scheduled publishing stays out.
-- **Live AEAT anything** — releases never touch AEAT services; the
-  application never files live.
-- **Automatic rollback execution** — `just release-rollback` only prints
-  the procedure; every revert, tag, push, and PyPI yank is a deliberate
-  human action.
+   Never rewrite published Git history, delete the public final tag, use
+   `git push --tags`, or push an RC tag.
+5. Prepare a new patch version across all three distributions. Never overwrite
+   or reuse `X.Y.Z`. Apply the hotfix timing from
+   `docs/_release_checklist.yaml`, then repeat readiness, packaging, publishing,
+   and index verification.
+6. Update the GitHub Release and `docs/updates.md` with the yank, affected scope,
+   mitigation, and corrected version. Keep embargoed security details private
+   until coordinated disclosure is approved.
+
+The release tooling never files with AEAT, automatically publishes, executes a
+rollback, yanks a release, or migrates former product state.
