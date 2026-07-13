@@ -7,8 +7,8 @@ adapters:
           pendent al servidor.
       suggestions:
         reject_pending_request: Obre l'app Cl@ve al teu mòbil, rebutja totes les sol·licituds
-          pendents i torna a executar `aeat config auth test` (o espera fins a
-          5 minuts que l'AEAT les caduqui automàticament).
+          pendents i torna a executar `aeat config auth test` (o espera fins a 5 minuts
+          que l'AEAT les caduqui automàticament).
     sede:
       groi:
         suggestions:
@@ -60,7 +60,7 @@ adapters:
           dins del temps configurat.
         metadata_invalid: Les metadades de sessió de Cl@ve Móvil no són vàlides o
           no es poden analitzar.
-        no_persisted_session: No s'ha trobat cap sessio de Cl@ve Movil; executeu `cadrumo
+        no_persisted_session: No s'ha trobat cap sessio de Cl@ve Movil; executeu `aeat
           config auth status` primer.
         page_missing_click: La pagina de Playwright no exposa click(); no es pot operar
           l'entrada de Cl@ve Movil.
@@ -78,17 +78,17 @@ adapters:
         conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
           i contradictòries.
         foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
-          d'aquest perfil Cadrumo.
+          d'aquest perfil CADRUMO.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
         spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
         workbook_snapshot_mismatch: Les metadades del full de Google no coincideixen
           amb la instantània de càlcul.
       suggestions:
-        reexport_then_pull: Torneu a exportar el llibre amb `aeat config google
-          sync calc export` i després torneu-lo a importar.
-        reexport_workbook: Torneu a exportar el llibre amb `aeat config google
-          sync calc export` perquè es renovin les metadades gestionades per l'aplicació.
+        reexport_then_pull: Torneu a exportar el llibre amb `aeat config google sync
+          calc export` i després torneu-lo a importar.
+        reexport_workbook: Torneu a exportar el llibre amb `aeat config google sync
+          calc export` perquè es renovin les metadades gestionades per l'aplicació.
         verify_exported_workbook: Comproveu que el full es va crear originalment amb
           `aeat config google sync calc export` per a aquest perfil.
     oauth_flow:
@@ -112,7 +112,7 @@ adapters:
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
-          Cadrumo seleccionat.
+          CADRUMO seleccionat.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
@@ -123,15 +123,15 @@ adapters:
           orfe i torna-ho a intentar.
         open_consent_url_manually: Obre manualment al navegador l'URL de consentiment
           impresa.
-        repair_profile_state: Executeu `aeat config profile health` i repareu o
-          canvieu el perfil actiu abans de tornar a provar l'ordre de Google.
+        repair_profile_state: Executeu `aeat config profile health` i repareu o canvieu
+          el perfil actiu abans de tornar a provar l'ordre de Google.
         run_from_interactive_terminal: Executa 'aeat config google login' des d'un
           terminal interactiu amb un navegador web disponible.
         use_keyring_or_synthetic: Configura CADRUMO_SECRET_STORE_BACKEND=keyring o
           canvia el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:
       errors:
-        no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google
+        no_active_profile: No hi ha cap perfil CADRUMO actiu enllaçat per a Google
           OAuth.
       suggestions:
         create_profile: Executeu `aeat config profile create NAME --tax-id <NIF>`
@@ -181,8 +181,8 @@ adapters:
           google_auth_import_failed: La dependencia google-auth no es pot importar;
             executa `uv sync` i torna-ho a provar.
           google_client_missing: No hi ha cap client OAuth de Google registrat per
-            al perfil actiu. Executa `aeat config google register --client-json
-            <path>` primer.
+            al perfil actiu. Executa `aeat config google register --client-json <path>`
+            primer.
           google_token_missing: No hi ha cap token OAuth de Google persistit per al
             perfil actiu. Executa `aeat config google login` primer.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta buit.
@@ -204,7 +204,7 @@ adapters:
             de l operador.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
-            de Cadrumo.
+            de CADRUMO.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             es pot importar; executa `uv sync` i torna-ho a provar.
           media_non_bytes: La descarrega de mitjans de Google Drive ha retornat {payload_type}
@@ -450,17 +450,17 @@ application:
     certificate:
       health:
         file_missing: El fitxer de certificat configurat (%{path}) no existeix. Recupera
-          el fitxer o executa 'aeat config auth configure --provider certificate
-          --file CAMI' amb un camí vàlid.
-        path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'cadrumo
-          config auth configure --provider certificate --file CAMI' per indicar-lo.
+          el fitxer o executa 'aeat config auth configure --provider certificate --file
+          CAMI' amb un camí vàlid.
+        path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'aeat config
+          auth configure --provider certificate --file CAMI' per indicar-lo.
         unavailable: L'estat del certificat no està disponible; consulta els registres
           de depuració per als detalls de diagnòstic.
       load:
         password_unset: No hi ha cap contrasenya de certificat configurada. Configura
           la contrasenya del certificat abans de continuar.
-        path_unset: No hi ha cap fitxer de certificat configurat. Executa 'cadrumo
-          config auth configure --provider certificate --file CAMI' per indicar-lo.
+        path_unset: No hi ha cap fitxer de certificat configurat. Executa 'aeat config
+          auth configure --provider certificate --file CAMI' per indicar-lo.
     clave_movil:
       health:
         identity_unset: No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil. Configura'n
@@ -477,8 +477,8 @@ application:
         both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           ni l'identificador fiscal del perfil actiu. Configura tots dos amb el mateix
           DNI/NIE abans de l'autenticació AEAT en directe.
-        both_missing_next_action: Edita el perfil actiu amb 'aeat config profile
-          edit NOM --tax-id DNI/NIE' i configura el mateix DNI/NIE per a Cl@ve Mòbil.
+        both_missing_next_action: Edita el perfil actiu amb 'aeat config profile edit
+          NOM --tax-id DNI/NIE' i configura el mateix DNI/NIE per a Cl@ve Mòbil.
         clave_identity_missing_detail: La identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           no està configurada, de manera que no es pot comparar amb l'identificador
           fiscal del perfil actiu. Configura-la amb el DNI/NIE del perfil actiu.
@@ -505,12 +505,12 @@ application:
           certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
         certificate_source_not_found: L'origen de certificat '%{name}' no està registrat.
           Executeu `aeat config auth certificate list` per veure els orígens registrats,
-          o `aeat config auth certificate register --name %{name} --file RUTA`
-          per registrar-lo.
+          o `aeat config auth certificate register --name %{name} --file RUTA` per
+          registrar-lo.
         dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
           resol a un bucket de perfil registrat. Executa aeat config profile list
-          per inspeccionar els perfils registrats i despres aeat config switch
-          NAME o aeat config profile create NAME.
+          per inspeccionar els perfils registrats i despres aeat config switch NAME
+          o aeat config profile create NAME.
         no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
           create NAME` abans de configurar l'autenticació.
         unreadable_active_profile: El perfil actiu '%{active_profile}' té un manifest
@@ -554,8 +554,8 @@ application:
         no_session: No hi ha cap testimoni de sessió AEAT persistit al disc; executa
           `aeat config auth login` per obtenir-ne un.
         session_expired: Hi ha un testimoni de sessió AEAT persistit al disc però
-          ha superat el seu límit d'inactivitat; executa `aeat config auth login
-          --fresh` per renovar-lo.
+          ha superat el seu límit d'inactivitat; executa `aeat config auth login --fresh`
+          per renovar-lo.
         session_live: Hi ha un testimoni de sessió AEAT persistit al disc i dins del
           seu límit d'inactivitat.
     provider_impact:
@@ -580,14 +580,14 @@ application:
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
         corrupt_session: La sessió d'autenticació guardada està danyada i no es pot
-          llegir. Executa `aeat config auth clear --sessions` i després `cadrumo
-          config auth test`.
-        no_session: No hi ha sessió AEAT activa; executa `aeat config auth test`
-          abans de llegir dades AEAT.
+          llegir. Executa `aeat config auth clear --sessions` i després `aeat config
+          auth test`.
+        no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
+          de llegir dades AEAT.
         profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
           el perfil actiu tingui identity.tax_id.
-        sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `cadrumo
-          config auth test` abans de llegir dades AEAT.
+        sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
+          auth test` abans de llegir dades AEAT.
         session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
           abans de llegir dades AEAT.
         session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
@@ -843,13 +843,12 @@ application:
         de naixement); no es pot aportar mitjancant --binding, que nomes admet valors
         decimals i d'enumeracio. Defineix-lo com a dada del perfil i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
-        revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings
-        list <MODELO>` per llistar els bindings valids.'
+        revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
+        <MODELO>` per llistar els bindings valids.'
       calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és
         un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
-        S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''cadrumo
-        app modelo bindings list <MODELO>'' per veure la codificació decimal de cada
-        binding.'
+        S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
+        modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
         canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
         canònic exacte'
@@ -865,9 +864,8 @@ application:
         detall de perceptor/immoble del Model 180, no una casella decimal escalar.
         El canal local --casilla nomes accepta caselles decimals escalars; les files
         de detall de perceptor/immoble del Model 180 encara no estan suportades a
-        la superficie publica --row. Usa aeat app modelo aggregate --modelo 180
-        --retencion-observation per a la font suportada de nombre de perceptors/base/retencions
-        anual.
+        la superficie publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        per a la font suportada de nombre de perceptors/base/retencions anual.
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
@@ -923,8 +921,8 @@ application:
       export_ledger_evidence_missing: La revisio de calcul %{calculation_revision_id}
         derivada del llibre major no inclou evidencia del llibre major ni una referencia
         resoluble a l'snapshot; verifica la revisio de nou abans d'exportar.
-      export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
-        profile create NAME` abans d'exportar una revisió de modelo.
+      export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
+        create NAME` abans d'exportar una revisió de modelo.
       export_operator_name_missing: 'L''exportacio requereix el nom de l''operador
         al perfil actiu; falten aquestes dades de perfil: %{missing}.'
       export_operator_profile_missing: L'exportacio necessita el nom de l'operador
@@ -984,8 +982,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight
-        --period %{period}` before calculating.'
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
       m210_ledger_manual_agrupacion_rows: El mode de font de llibre major del Model
         210 deriva les files anuals d'agrupació de rendes de les classificacions del
         llibre; no proporcioneu files manuals d'agrupació de rendes.
@@ -1107,7 +1105,7 @@ application:
         la participació rebuda es va registrar al perfil però no es va incorporar
         a la declaració.'
       attribution_received_unfolded_next_action: Incorporeu la base atribuïda a la
-        casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `cadrumo
+        casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat
         app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè
         la renda del règim d'atribució quedi declarada.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
@@ -1141,11 +1139,11 @@ application:
           esta evidenciat localment (app_filing), no per l''AEAT; presenteu cada periode
           a l''AEAT de manera externa.'
         next_action: Exporteu i presenteu cada periode a l'AEAT de manera externa,
-          despres actualitzeu la cadena local amb evidencia oficial; useu `cadrumo
-          app live justificante pull` quan hi hagi acces en viu, o `aeat app modelo
-          filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
-          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
-          WORK_UNIT_ID --file PATH` per a evidencia que ja tingueu.
+          despres actualitzeu la cadena local amb evidencia oficial; useu `aeat app
+          live justificante pull` quan hi hagi acces en viu, o `aeat app modelo filing-record
+          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
+          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
+          --file PATH` per a evidencia que ja tingueu.
       cross_period_operator_declared_suppression: 'dependència entre períodes exclosa
         perquè no hi ha obligació prèvia (abans de l’inici de l’activitat): model=%{modelo}
         exercici=%{year} període=%{period} origen=%{origin}. El període és estrictament
@@ -1309,7 +1307,7 @@ application:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
   portals:
     errors:
-      portal_not_found: El portal AEAT sol·licitat no està registrat. Executeu 'cadrumo
+      portal_not_found: El portal AEAT sol·licitat no està registrat. Executeu 'aeat
         app live portals list' per veure els portals disponibles.
   registry:
     errors:
@@ -1432,8 +1430,8 @@ application:
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
-      profile_already_exists: El perfil '%{profile}' ja existeix; executa cadrumo
-        config switch NAME per activar-lo o aeat config profile delete NAME primer.
+      profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
+        switch NAME per activar-lo o aeat config profile delete NAME primer.
       profile_bucket_directory_removal_failed: No s'ha pogut eliminar el directori
         del perfil.
       profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
@@ -1449,8 +1447,8 @@ application:
         de bucket registrat a %{bucket_dir}.
       profile_manifest_missing: El perfil '%{profile}' no té cap manifest de bucket
         registrat a %{bucket_dir}.
-      profile_not_registered: El perfil '%{profile}' no existeix; executa `cadrumo
-        config profile create NAME` per crear-lo.
+      profile_not_registered: El perfil '%{profile}' no existeix; executa `aeat config
+        profile create NAME` per crear-lo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
         es pot seleccionar.
       repository_profile_record_classification_mismatch: La classificació del registre
@@ -1998,8 +1996,8 @@ cli:
         need_two_years: Cal especificar exactament dos valors --year (p. ex. --year
           2024 --year 2025).
         no_revisions: Les unitats de treball del Model %{modelo} per a l'exercici
-          %{filing_year} no tenen revisions de càlcul. Executa `aeat app modelo
-          work calculate` primer.
+          %{filing_year} no tenen revisions de càlcul. Executa `aeat app modelo work
+          calculate` primer.
         no_usable_revisions: El Model %{modelo} per a l'exercici %{filing_year} no
           té revisions VERIFICADO_COMPLETO ni BORRADOR disponibles per a comparar.
         no_work_units: No s'han trobat unitats de treball del Model %{modelo} per
@@ -2219,8 +2217,8 @@ cli:
         casilla_help: Valor de casilla amb la sintaxi CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
         no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
-          `aeat app modelo work calculate --modelo 130 --year %{year} --period
-          1T` per a cada trimestre primer.
+          `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
+          per a cada trimestre primer.
         no_m130_units: No hi ha unitats de treball M130 per a l'exercici indicat.
           Crea i calcula unitats M130 primer amb `aeat app modelo work create --modelo
           130 --year %{year} --period 1T`.
@@ -2449,8 +2447,8 @@ cli:
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard; llista les
           revisions amb `aeat app modelo work revisions --modelo %{modelo} --year
-          %{year} --period %{period}` i torna a consultar aquesta amb `aeat app
-          modelo work revision %{revision_id}`.'
+          %{year} --period %{period}` i torna a consultar aquesta amb `aeat app modelo
+          work revision %{revision_id}`.'
         calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però
           aquest import declarable no s''assigna a cap casella i no es declara en
           aquesta presentació; revisa''l abans de presentar.'
@@ -2598,8 +2596,8 @@ cli:
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
         list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
-          `aeat app modelo work status` i després crea o recalcula l'esborrany
-          amb `aeat app modelo work calculate`.
+          `aeat app modelo work status` i després crea o recalcula l'esborrany amb
+          `aeat app modelo work calculate`.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -2650,8 +2648,8 @@ cli:
           seva procedència.
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
-          `aeat app modelo bindings list --missing` per veure els bindings que
-          necessita el càlcul.
+          `aeat app modelo bindings list --missing` per veure els bindings que necessita
+          el càlcul.
         period_help: 'Token de periode de la unitat: 0A anual, 1T-4T trimestres, 01-12
           mesos; per a models censals (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no és un token de període vàlid
@@ -2699,8 +2697,8 @@ cli:
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relacio del registre amb sintaxi KEY=VALUE (repetible).
           KEY es un id de relacio del registre, no un id de binding; fes-lo servir
-          per a entrades de relacio entre periodes o entre models. Executa cadrumo
-          app modelo bindings list --missing per veure la guia de relacions de l ambit.
+          per a entrades de relacio entre periodes o entre models. Executa aeat app
+          modelo bindings list --missing per veure la guia de relacions de l ambit.
           Per als pagos fraccionados M202 del Modelo 200, usa els canals de relacio
           mutuament exclusius 40.3 casilla 34 i 40.2 casilla 03, posant 0 a la modalitat
           no usada quan introdueixis valors manuals.
@@ -2769,8 +2767,8 @@ cli:
         row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
           {error}'
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
-          de la més recent a la més antiga. Usa un id d'execució amb `aeat app
-          modelo work resume`. Només local; mai contacta amb AEAT.
+          de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
+          work resume`. Només local; mai contacta amb AEAT.
         sal_beneficio_neto_help: Benefici net de l'exercici de la Societat Laboral
           (SAL/SLL, Llei 44/2015 art. 14). S'aplica el 10% per calcular la dotació
           obligatòria a la reserva especial, limitada al primer cèntim per sobre del
@@ -2803,9 +2801,8 @@ cli:
         state_label_presentado_supersedido: Presentacio substituida
         state_label_verificado_completo: Verificat complet
         status_help: Mostrar les metadades d'una unitat de treball
-        status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo
-          work calculate` i després verifica l'esborrany amb `aeat app modelo work
-          verify`.
+        status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
+          calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
         verify_already_verified_refused: La revisió de càlcul %{calculation_revision_id}
           ja està en estat %{state} i no es pot tornar a verificar. La verificació
           només accepta una revisió en esborrany.
@@ -2828,9 +2825,8 @@ cli:
           restants a ma.
         wizard_saved: 'Desat com a revisio de calcul en esborrany %{revision_id} (estat:
           %{state}). Esta persistit i es pot represendre mes tard; llista les revisions
-          amb `aeat app modelo work revisions --modelo %{modelo} --year %{year}
-          --period %{period}` i torna a consultar-la amb `aeat app modelo work
-          revision %{revision_id}`.'
+          amb `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
+          %{period}` i torna a consultar-la amb `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         workflow_draft_build_refused_next_action: Repareu l'entrada de l'esborrany
@@ -2940,8 +2936,8 @@ cli:
       login_help: Adquirir o verificar una sessió AEAT en viu.
       login_reset_lock_help: Eliminar un bloqueig d'adquisició d'autenticació obsolet
         abans de començar.
-      no_active_bucket: No hi ha un perfil actiu. Executa 'aeat config profile
-        create NAME' abans de configurar l'autenticació.
+      no_active_bucket: No hi ha un perfil actiu. Executa 'aeat config profile create
+        NAME' abans de configurar l'autenticació.
       output_language_help: Idioma del text de sortida (es, en, ca, hu).
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers:
@@ -2989,7 +2985,7 @@ cli:
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        Cadrumo: '
+        CADRUMO: '
       data_loss_warning: Anota ara aquesta clau de recuperacio. AEAT no desa la clau
         de recuperacio en clar i no la pot tornar a mostrar.
       errors:
@@ -2997,11 +2993,11 @@ cli:
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
+      new_passphrase_prompt: 'Nova contrasenya del magatzem secret CADRUMO: '
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
-      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile
-        create NAME --tax-id <NIF>' primer.
+      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
+        NAME --tax-id <NIF>' primer.
       unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
         profile list'' per veure les claus disponibles.'
     get:
@@ -3075,15 +3071,15 @@ cli:
         non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu
           amb navegador web, però aquesta ordre s''ha executat de manera no interactiva:
           {detail}'
-        profile_unbound: No hi ha cap perfil actiu. Executa aeat config switch
-          NAME o indica --profile.
+        profile_unbound: No hi ha cap perfil actiu. Executa aeat config switch NAME
+          o indica --profile.
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
           Executa `aeat config google login` i accepta tots els permisos.
         storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
         token_expired: L'accés a Google ha caducat (els tokens dels projectes en proves
           caduquen al cap de 7 dies). Executa `aeat config google login`.
-        token_revoked: L'accés a Google ha estat revocat. Executa `aeat config
-          google login` per autoritzar-lo de nou.
+        token_revoked: L'accés a Google ha estat revocat. Executa `aeat config google
+          login` per autoritzar-lo de nou.
         unsecured_mode: L'accés a Google està blocat mentre el magatzem de secrets
           funciona en mode no segur per a un perfil amb un NIF real.
         validation: 'Les dades proporcionades per a Google no han superat la validació:
@@ -3098,7 +3094,7 @@ cli:
         existent)
       logout_help: Esborrar el token de refresc i les metadades; conservar el client
         registrat
-      profile_help: Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de
+      profile_help: Perfil CADRUMO a usar (per defecte = perfil actiu de l'estat de
         flux)
       refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
       register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
@@ -3225,8 +3221,8 @@ cli:
         enabled: activat
         help: Activa o desactiva en aquest perfil els serveis externs (pujada al núvol,
           visió LLM, exportació a Google).
-        no_active_profile: No hi ha cap perfil actiu; selecciona'n un amb 'cadrumo
-          config switch <nom>' abans de configurar una capacitat.
+        no_active_profile: No hi ha cap perfil actiu; selecciona'n un amb 'aeat config
+          switch <nom>' abans de configurar una capacitat.
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
         show_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.
@@ -3250,12 +3246,12 @@ cli:
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
-        s'ha esborrat. Executa aeat config switch NAME o aeat config profile
-        create NAME per tornar a treballar.
+        s'ha esborrat. Executa aeat config switch NAME o aeat config profile create
+        NAME per tornar a treballar.
       delete_help: Elimina un perfil i el seu estat local; --yes confirma
       delete_name_help: Nom del perfil que vols eliminar
-      delete_requires_yes: L'eliminació és destructiva. Torna a executar 'cadrumo
-        config profile delete %{name} --yes' per confirmar.
+      delete_requires_yes: L'eliminació és destructiva. Torna a executar 'aeat config
+        profile delete %{name} --yes' per confirmar.
       delete_yes_help: Confirma explícitament l'eliminació
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
@@ -3276,10 +3272,9 @@ cli:
       export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
         no és segur per a correu, sincronització ni transferència.
       export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
-        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import
-        PATH --passphrase ...'. Només conté el paquet estructurat del perfil; usa
-        l'arxiu de recuperació xifrat per a una còpia completa amb evidències adjuntes
-        i auditoria.
+        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import PATH
+        --passphrase ...'. Només conté el paquet estructurat del perfil; usa l'arxiu
+        de recuperació xifrat per a una còpia completa amb evidències adjuntes i auditoria.
       export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
         a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús local/SAR.
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
@@ -3295,8 +3290,8 @@ cli:
         complet, les revisions de càlcul i els registres de presentació. S''ha escrit
         a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
         el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
-        local/SAR. Usa ''aeat config profile export --passphrase ...'' per a un
-        paquet estructurat de transferència xifrat AEAD.'
+        local/SAR. Usa ''aeat config profile export --passphrase ...'' per a un paquet
+        estructurat de transferència xifrat AEAD.'
       export_transport_conflict: Tria --passphrase o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
@@ -3348,8 +3343,8 @@ cli:
         actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError
         fins que executis aeat config switch NAME o obris un terminal nou i tornis
         a seleccionar.
-      no_active_profile: No active profile. Run `aeat config profile create NAME
-        --tax-id <NIF>` first.
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
+        <NIF>` first.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
       preflight_help: Informa quins camps del perfil falten per a un context de presentació
         (model, revisió, exercici, període).
@@ -3547,8 +3542,8 @@ cli:
         els flags requerits sense valor provoquen un error. Suficient per si sol;
         combina amb --accept-defaults per omplir la resta amb els valors per defecte.
       success:
-        next_step: 'Següent pas: executa `aeat app overview status` per revisar
-          l''espai de treball.'
+        next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
+          de treball.'
         saved: Perfil '%{profile_name}' desat.
     show_recovery:
       existing_notice: La clau de recuperacio en clar no es desa i no es pot tornar
@@ -3558,8 +3553,8 @@ cli:
       rotate_help: Rotar l'embolcall de recuperacio i imprimir una nova clau de recuperacio
         d'un sol us.
     status:
-      empty_profile: Cap perfil configurat. Executa `aeat config profile create
-        NAME` per començar.
+      empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
+        per començar.
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
     switch:
@@ -3832,13 +3827,13 @@ cli:
         de l'IRPF (art. 93.5 segregació).
       source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
         perfils de no resident IRNR.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna CADRUMO
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
-        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'cadrumo
-        app ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
+        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
+        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
         <ratio>'. No és text lliure.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
@@ -3852,8 +3847,8 @@ cli:
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
       usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
-        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'cadrumo
-        app ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
+        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
+        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
         <ratio>'. No és text lliure.
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
@@ -3867,8 +3862,8 @@ cli:
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
       help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
-        un id de justificant de factura de compra amb 'aeat app ledger evidence
-        add PATH'.
+        un id de justificant de factura de compra amb 'aeat app ledger evidence add
+        PATH'.
       id_help: Id del moviment del llibre al qual adjuntar evidència
       purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
         el moviment; crea'l amb 'aeat app ledger evidence add PATH'
@@ -3959,8 +3954,8 @@ cli:
         la transaccio; vista previa per defecte, persisteix amb --apply.
       llm_provider_unavailable: 'El proveidor LLM ''{provider}'' no esta disponible:
         el seu CLI no es al PATH. Instal-la el CLI de ''{provider}'' i assegura''t
-        que sigui al PATH, o executa ''aeat app ledger providers'' per llistar
-        els proveidors disponibles.'
+        que sigui al PATH, o executa ''aeat app ledger providers'' per llistar els
+        proveidors disponibles.'
       llm_reason_label: motiu
       llm_rejected_label: rebutjada
       llm_rejected_message: Suggeriment del model rebutjat i registrat. La transacció
@@ -4014,7 +4009,7 @@ cli:
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria. Torna a executar amb --auto-split per separar-les en
         fills de base i IVA declarables de manera independent.
-      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna CADRUMO
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
@@ -4030,9 +4025,9 @@ cli:
       reference_help: Referència de l'enllaç al document.
       refused: 'No es pot descarregar el document de %{source} per a %{reference}%{scope_hint}:
         l''evidència ha de contenir els bytes xifrats del document, i un enllaç mai
-        no es desa tot sol. Descarrega el document i adjunta''l amb ''aeat app
-        ledger attach --attachment-id ...'', o concedeix el permís de Google requerit
-        i torna-ho a provar.'
+        no es desa tot sol. Descarrega el document i adjunta''l amb ''aeat app ledger
+        attach --attachment-id ...'', o concedeix el permís de Google requerit i torna-ho
+        a provar.'
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
@@ -4067,8 +4062,7 @@ cli:
         period=0A --filter year=%{year}.
       unknown_category: --category-id {category!r} no reconegut. Passa un id de categoria
         sense prefix com {example!r}, no una clau composta ni amb prefix de família.
-        Executa `aeat app ledger categories` per veure tots els identificadors
-        reconeguts.
+        Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     exclude:
@@ -4186,12 +4180,12 @@ cli:
         cross_bucket_invoice: La factura pertany a un bucket diferent del perfil actiu.
         invoice_not_found: Aquest id no existeix al catàleg de factures de reconciliació,
           que s'omple amb els fluxos d'importació i reconciliació de factures. Els
-          id generats per 'aeat app ledger invoice add' són registres de factura
-          de l'operador i no es poden vincular aquí. Per crear manualment una factura
+          id generats per 'aeat app ledger invoice add' són registres de factura de
+          l'operador i no es poden vincular aquí. Per crear manualment una factura
           de catàleg vinculable, executa 'aeat app ledger invoice catalogue create'
           i passa aquest invoice_id a --invoice-id. Per adjuntar evidència de factura
-          de compra, executa 'aeat app ledger link <tx> --evidence-id <id>' (o
-          'aeat app ledger attach') amb un id d''aeat app ledger evidence add'.
+          de compra, executa 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
+          app ledger attach') amb un id d''aeat app ledger evidence add'.
         missing_target: Indica almenys un de --invoice-id o --evidence-id.
       evidence_id_help: Id d'evidència de factura de compra generat per 'aeat app
         ledger evidence add', adjuntat al moviment.
@@ -4200,9 +4194,9 @@ cli:
         Local; mai contacta amb AEAT.
       id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id del catàleg de factures enriquit, procedent d'una factura
-        importada, reconciliada o creada amb 'aeat app ledger invoice catalogue
-        create', vinculat bidireccionalment amb el moviment. NO és un id d''cadrumo
-        app ledger invoice add'.
+        importada, reconciliada o creada amb 'aeat app ledger invoice catalogue create',
+        vinculat bidireccionalment amb el moviment. NO és un id d''aeat app ledger
+        invoice add'.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
@@ -4465,8 +4459,8 @@ cli:
         diagnostics_reset_progress: Esborrar progres encallat d'ordres interrompudes.
         first_run_bootstrap: Inicialitzar la configuracio en el primer us.
         first_run_edit: Editar la configuracio inicial.
-        footer: Executeu 'aeat config <ordre> --help' per obtenir mes informacio
-          sobre cada ordre.
+        footer: Executeu 'aeat config <ordre> --help' per obtenir mes informacio sobre
+          cada ordre.
         heading: Configuracio i diagnostic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticacio, llibre) persisteix
           entre sessions.
@@ -4494,9 +4488,9 @@ cli:
         diagnostics_registry_inspect: Inspeccionar el registre de models fiscals.
         diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicacio.
         diagnostics_review_queue: Mostrar la cua de revisio pendent.
-        footer: Executeu 'cadrumo <ordre> --help' per obtenir mes informacio sobre
-          cada ordre.
-        heading: Cadrumo, eina de declaracions fiscals amb l'AEAT.
+        footer: Executeu 'aeat <ordre> --help' per obtenir mes informacio sobre cada
+          ordre.
+        heading: CADRUMO, eina de declaracions fiscals amb l'AEAT.
         ledger_allocate: Assignar transaccions a un periode fiscal.
         ledger_archive: Arxivar entrades del llibre de transaccions.
         ledger_attach: Adjuntar un fitxer d'origen a una entrada del llibre.
@@ -4521,7 +4515,7 @@ cli:
           d'emmagatzematge.
         paragraph_two_roots: 'Dues superficies principals: ''app'' per a operacions
           de declaracio i ''config'' per a configuracio i diagnostic.'
-        paragraph_type_help: Escriviu 'cadrumo <ordre> --help' per obtenir ajuda detallada.
+        paragraph_type_help: Escriviu 'aeat <ordre> --help' per obtenir ajuda detallada.
         section_daily_ledger: Llibre diari de transaccions
         section_diagnostics: Diagnostic
         section_modelo_lifecycle: Cicle de vida del model
@@ -4660,14 +4654,14 @@ cli:
       next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
         csv - importar moviments bancaris.'
       next_landing_command: '  aeat --help - tornar a la guia de comandes.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El
-        Modelo 210 es visible per descobriment IRNR, pero la creacio local de treballs
-        encara no esta suportada; presenta per AEAT Sede G320.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El Modelo
+        210 es visible per descobriment IRNR, pero la creacio local de treballs encara
+        no esta suportada; presenta per AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
-      next_work_calculate_command: '  aeat app modelo work list - reprendre una
-        unitat de treball de model en curs.'
+      next_work_calculate_command: '  aeat app modelo work list - reprendre una unitat
+        de treball de model en curs.'
       next_work_create_command: '  aeat app modelo work create - iniciar una unitat
         de treball per a un altre model.'
       profile_active: Esteu treballant al perfil `%{profile}`.
@@ -4683,12 +4677,11 @@ cli:
       transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
       work_units_empty: Encara no s'ha iniciat cap unitat de treball de models.
       work_units_present: '%{count} unitat(s) de treball de models en curs en aquest
-        emmagatzematge local; la teva feina de models esta desada, repren-la amb `cadrumo
+        emmagatzematge local; la teva feina de models esta desada, repren-la amb `aeat
         app modelo work list`.'
       work_units_present_with_discarded: '%{count} unitat(s) de treball de models
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
-        feina de models activa esta desada, repren-la amb `aeat app modelo work
-        list`.'
+        feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
@@ -4745,7 +4738,7 @@ cli:
       verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}:
         %{messages}'
       verify_help: Verificar la integritat del manual contra el seu contracte
-      verify_missing_manifest: '%{manifest_path} no existeix; executa ''cadrumo manual
+      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual
         fetch'' per materialitzar-lo'
       verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció
         de %{field_name}'
@@ -4864,23 +4857,23 @@ cli:
     format_help: 'Format de sortida: text, json, table, csv.'
     help_help: Mostra l'ajuda.
     landing:
-      headline: Assistent fiscal Cadrumo
-      help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o
-        `aeat app --help`. Els modificadors globals (`--format json`, `--language
-        ca`, `--profile NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS
-        del subcomandament, p. ex. `aeat --format json app ledger list` (no `cadrumo
-        app ledger list --format json`).'
+      headline: Assistent fiscal CADRUMO
+      help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
+        app --help`. Els modificadors globals (`--format json`, `--language ca`, `--profile
+        NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS del subcomandament,
+        p. ex. `aeat --format json app ledger list` (no `aeat app ledger list --format
+        json`).'
       quick_start_heading: Inici rapid
-      quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv>
-        --provider csv` - afegir els moviments bancaris.'
+      quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
+        csv` - afegir els moviments bancaris.'
       quick_start_repair: '  5. `aeat config repair` - diagnosticar configuracio,
         emmagatzematge i salut local.'
-      quick_start_review: '  4. `aeat app ledger review` - revisar i classificar
-        les files importades.'
-      quick_start_setup_done: '  1. `aeat config profile status` - comprovar el
-        perfil actiu abans del treball operatiu.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear
-        primer el perfil fiscal local.'
+      quick_start_review: '  4. `aeat app ledger review` - revisar i classificar les
+        files importades.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil
+        actiu abans del treball operatiu.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primer
+        el perfil fiscal local.'
       quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual
         de l''espai i els diagnostics.'
       section_config: '  config - perfil, autenticacio i diagnostics'
@@ -5115,8 +5108,8 @@ errors:
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
     auth_storage_master_key_passphrase_mismatch: La frase de contrasenya no obre la
-      clau mestra. Torna-la a introduir; si l'has oblidat, executa aeat config
-      recover --recovery-key <WORDS>.
+      clau mestra. Torna-la a introduir; si l'has oblidat, executa aeat config recover
+      --recovery-key <WORDS>.
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
@@ -5731,8 +5724,8 @@ errors:
     auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
       de la sessió d'autenticació sol·licitada.
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja esta completa.
-      Fes servir aeat config switch NAME per activar un perfil existent o cadrumo
-      config profile create NAME per afegir-ne un altre.
+      Fes servir aeat config switch NAME per activar un perfil existent o aeat config
+      profile create NAME per afegir-ne un altre.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
@@ -5791,11 +5784,11 @@ errors:
       una unitat de treball de modelo.
     modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
       pertany a una altra revisio.
-    profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir cadrumo
+    profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir aeat
       config switch NAME per canviar-hi.
     profile_import_collision: L'identificador del perfil importat coincideix amb un
       que ja existeix.
-    profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `cadrumo
+    profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `aeat
       config switch` i torna-ho a provar.
     profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
       nom diferent.
@@ -6166,7 +6159,7 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' ha superat el limit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre Cadrumo equivalent
+      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre CADRUMO equivalent
       en un terminal.'
   elicitation:
     confirm:
@@ -6184,7 +6177,7 @@ mcp:
         presenta pel seu compte.'
       no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
         la funció de preguntes (elicitation). Executa''l des d''un client que pugui
-        fer-te preguntes, o executa l''ordre Cadrumo CLI equivalent directament en
+        fer-te preguntes, o executa l''ordre CADRUMO CLI equivalent directament en
         un terminal.'
   faithfulness:
     advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
@@ -6313,8 +6306,8 @@ some:
 topic:
   authentication:
     body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
-      digital (FNMT / equivalent). Configura un proveïdor amb 'aeat config auth
-      configure --provider certificate' i verifica amb 'aeat config auth test'.
+      digital (FNMT / equivalent). Configura un proveïdor amb 'aeat config auth configure
+      --provider certificate' i verifica amb 'aeat config auth test'.
     title: Autenticació amb l'AEAT
   calendar:
     body: El calendari mostra les obligacions de presentació (models i períodes) dins
@@ -6341,7 +6334,7 @@ topic:
     title: Règim IVA
   modelos:
     body: Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184,
-      etc.). Cada model té el seu calendari, caselles i regles d'aplicabilitat. 'cadrumo
+      etc.). Cada model té el seu calendari, caselles i regles d'aplicabilitat. 'aeat
       app modelo list' enumera els disponibles.
     title: Models tributaris
   pago-fraccionado:
@@ -6424,17 +6417,17 @@ wizard:
     unsupported_console: "L'assistent guiat necessita un terminal interactiu, i aquesta\
       \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
-      \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\
-      \n2. O crea un perfil de persona física resident IRPF en un sol pas indicant\
-      \ les dades obligatòries com a flags:\n     aeat config profile create NAME\
-      \ --quiet --tax-id NIF --entity-type natural_person --irpf-income-categories\
-      \ actividad_economica --tax-residence-ccaa madrid --name NOM --surnames COGNOMS"
+      \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
+      2. O crea un perfil de persona física resident IRPF en un sol pas indicant les\
+      \ dades obligatòries com a flags:\n     aeat config profile create NAME --quiet\
+      \ --tax-id NIF --entity-type natural_person --irpf-income-categories actividad_economica\
+      \ --tax-residence-ccaa madrid --name NOM --surnames COGNOMS"
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
       \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar\
-      \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config\
-      \ profile edit %{profile_name}"
+      \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
+      \ edit %{profile_name}"
   other:
     description: Altres opcions de configuracio
     section:
