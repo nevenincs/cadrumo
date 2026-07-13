@@ -65,3 +65,12 @@ The static conformance floor is honest and non-vacuous, and the vacuity regressi
 ## Notes
 
 The tripwire floor is set well below the observed count and well above zero deliberately — a vacuity tripwire, not a brittle exact assertion, so ordinary doc churn never trips it while a re-broken anchor does.
+
+## Review remediation (PASS-WITH-FINDINGS)
+
+The W01.P01 code review returned PASS-WITH-FINDINGS; two remediations landed.
+
+- Finding 1 (MEDIUM): the "no cadrumo CLI-invocation exists in docs" premise was false. Two how-to pages cited the wrong executable in line-wrapped inline spans — `cadrumo config auth configure` (authenticate-with-aeat) and `cadrumo app` (profile-setup). Both were rewritten to `aeat ...`. The parsed-invocation count stayed at 591 because both corrected citations sit in newline-wrapped inline-code spans that `_INLINE_CODE_RE` (single-line by design) does not individually capture; the same commands are already validated via their single-line occurrences elsewhere in each file. A minor extraction-coverage observation, not a defect: the inline-code extractor does not join a code span wrapped across two source lines.
+- Finding 2 (LOW): a pre-existing parser false positive — the string parser tracked only the four root-global value-consuming options, so a resolved command's own value-consuming option made its value look like a dead subcommand (`aeat app agent --layout plugin` flagged "plugin is not a subcommand"). Fixed by preserving the ordered post-executable token stream on `_CitedCommand` and excluding option values (derived from the resolved command's real params) from the dead-subcommand check. Pinned by `test_value_consuming_option_value_is_not_a_dead_subcommand`, which also confirms a fabricated genuinely-dead subcommand under a live group is still refused.
+
+Scope-enrollment deferral (per reviewer directive): expanding `_TREE_DOC_DIRS` to bind the nested `docs/reference`, `docs/verification`, and `docs/architecture` surfaces (~6 additional invocations) is deferred to the operator decision at W06. This is now ready-once-finding-2-landed: with the value-consuming-option false positive fixed, those surfaces can be enrolled without the parser reddening on legitimate `--option value` invocations.
