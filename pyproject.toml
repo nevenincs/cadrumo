@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 license = "Apache-2.0"
 # Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
 # (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
-# license-file globs (license-posture ADR).
+# license-file globs.
 license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
@@ -75,9 +75,8 @@ dependencies = [
   "rich>=14.2.0,<16",
   # Rust-backed TOML parser for the registry/profile-schema read boundary
   # (`core/_toml.py`). ~2.4x faster than stdlib tomllib on the ~16k-fragment
-  # registry tree with proven byte-identical output (see
-  # `registry-toml-parser` ADR); zero transitive dependencies, MIT license,
-  # prebuilt wheels including win_amd64.
+  # registry tree with proven byte-identical output; zero transitive
+  # dependencies, MIT license, prebuilt wheels including win_amd64.
   "rtoml>=0.13.0,<1",
   # Persistence
   "sqlalchemy>=2.0.36,<3",
@@ -110,11 +109,11 @@ workbook-windows = [
 # Each extra maps to an operator-facing capability/feature. All are lazily
 # imported, so `pip install cadrumo` (no extras) builds and runs the core CLI; the
 # feature refuses with an install hint when its extra is absent (graceful
-# degradation, per `dependency-provisioning` ADR). `cadrumo config check` reports
+# degradation). `cadrumo config check` reports
 # which extras are importable.
 #
 # Google Drive + Sheets export (the `google_export` capability). OAuth Desktop
-# flow (ADR `2026-05-08-google-oauth-adr`): loopback IP + PKCE via
+# flow: loopback IP + PKCE via
 # google-auth-oauthlib's InstalledAppFlow; the storage provider drives Drive v3
 # / Sheets v4 through the discovery client. google-auth-httplib2 is intentionally
 # NOT pinned — transport is satisfied by `requests` (transitive via google-auth).
@@ -136,9 +135,9 @@ anthropic = [
 ]
 # OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
 # parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
-# keeps the CORE dependency closure free of strong copyleft (license-posture
-# ADR). Lazily imported behind `require_optional_extra(OFX_EXTRA)`; an OFX
-# source without the extra refuses with the `pip install cadrumo[ofx]` hint.
+# keeps the CORE dependency closure free of strong copyleft. Lazily imported
+# behind `require_optional_extra(OFX_EXTRA)`; an OFX source without the extra
+# refuses with the `pip install cadrumo[ofx]` hint.
 ofx = [
   "ofxtools>=1.1,<2",
 ]
@@ -147,7 +146,7 @@ ofx = [
 # `src/cadrumo/_data/agent/` and is read with no extra dependency. This extra gates
 # the optional MCP server runtime reached by the `cadrumo-mcp` console script. No
 # model weights or credentials are ever bundled (per the product-packaging and
-# secure-storage ADRs).
+# secure storage).
 agent = [
   "mcp>=1.12,<2",
   # The stdio MCP server (`cadrumo.entrypoints.mcp._server`) imports anyio directly
@@ -183,7 +182,7 @@ search = [
 # registry integrity gate surfaces a loud advisory and the `cadrumo app registry`
 # verification verbs refuse with this extra's install hint. With them installed,
 # source verification is byte-identical to a full checkout. Reviewed data ships
-# as an artifact — never fetched at install or run time (product-packaging ADR).
+# as an artifact — never fetched at install or run time.
 corpus-sources = [
   "cadrumo-data-manuals==0.2.1",
   "cadrumo-data-official==0.2.1",
@@ -211,7 +210,7 @@ packages = ["src/cadrumo"]
 # the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load
 # (the one production-space reference, `envelope/_repository_test_suite.py`,
 # imports the harness function-locally and is exercised only by excluded test
-# modules). The data-budget ADR sheds this payload from the distribution.
+# modules). This payload is shed from the distribution to bound its size.
 exclude = [
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
@@ -686,7 +685,7 @@ convention = "google"
 "src/cadrumo/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
 # OAuth / mTLS / clave-pin fixture authoring uses literal credential
 # shape examples (e.g., the example access_token "ya29.fake-bearer"
-# documented in the AEAT auth ADR); they are not real credentials.
+# documented alongside the AEAT auth adapter); they are not real credentials.
 "src/cadrumo/adapters/outbound/aeat/auth/_fixtures.py" = ["S105", "S106"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
 # with literal short / weak / sentinel passphrases as assertion inputs.
