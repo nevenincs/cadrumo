@@ -25,12 +25,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 50, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 50, 0, tzinfo=UTC)
 _UNSAFE_TEMPFILE_AFFIX_CASES: tuple[tuple[str, str, str, str], ...] = (
-    ("parent-prefix", "../aeat-secret", "", "prefix"),
-    ("backslash-prefix", "aeat\\secret", "", "prefix"),
+    ("parent-prefix", "../cadrumo-secret", "", "prefix"),
+    ("backslash-prefix", "cadrumo\\secret", "", "prefix"),
     ("dot-prefix", ".", "", "prefix"),
-    ("parent-suffix", "aeat-secret", "../secret", "suffix"),
-    ("backslash-suffix", "aeat-secret", "secret\\json", "suffix"),
-    ("dotdot-suffix", "aeat-secret", "..", "suffix"),
+    ("parent-suffix", "cadrumo-secret", "../secret", "suffix"),
+    ("backslash-suffix", "cadrumo-secret", "secret\\json", "suffix"),
+    ("dotdot-suffix", "cadrumo-secret", "..", "suffix"),
 )
 
 
