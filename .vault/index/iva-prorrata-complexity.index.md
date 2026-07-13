@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-prorrata-complexity'
-date: '2026-07-08'
-modified: '2026-07-08'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S01]]'
   - '[[2026-07-07-iva-prorrata-complexity-W01-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
   - '[[2026-07-08-iva-prorrata-complexity-adr]]'
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
+  - '[[2026-07-10-iva-prorrata-complexity-research]]'
 ---
 
 # `iva-prorrata-complexity` feature index
@@ -89,3 +90,7 @@ Auto-generated index of all documents tagged with `#iva-prorrata-complexity`.
 ### plan
 
 - `2026-07-07-iva-prorrata-complexity-plan` - `iva-prorrata-complexity` plan
+
+### research
+
+- `2026-07-10-iva-prorrata-complexity-research` - iva-prorrata-complexity research: warning closeout research grounding

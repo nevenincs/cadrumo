@@ -3,12 +3,11 @@ tags:
   - '#plan'
   - '#gate-drift-reconciliation'
 date: '2026-07-08'
-modified: '2026-07-09'
+modified: '2026-07-10'
 tier: L2
 related:
   - '[[2026-07-08-gate-drift-reconciliation-audit]]'
   - '[[2026-07-07-iva-prorrata-complexity-plan]]'
-  - '[[2026-06-04-docs-sphinx-ux-plan]]'
   - '[[2026-06-09-docstring-google-style-plan]]'
   - '[[2026-07-08-mcp-protocol-hardening-plan]]'
   - '[[2026-07-02-arch-remediation-engine-lifecycle-plan]]'

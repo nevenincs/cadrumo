@@ -3,10 +3,11 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-sectores-diferenciados'
-date: '2026-07-07'
-modified: '2026-07-07'
+date: '2026-07-10'
+modified: '2026-07-10'
 related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
+  - '[[2026-07-10-prorrata-sectores-diferenciados-research]]'
 ---
 
 # `prorrata-sectores-diferenciados` feature index
@@ -18,3 +19,7 @@ Auto-generated index of all documents tagged with `#prorrata-sectores-diferencia
 ### adr
 
 - `2026-07-07-prorrata-sectores-diferenciados-adr` - `prorrata-sectores-diferenciados` adr: `Sectores diferenciados de actividad (LIVA arts 9.1.c/101): sector assignment, per-sector register orchestration and provisional/definitive lifecycle` | (**status:** `proposed`)
+
+### research
+
+- `2026-07-10-prorrata-sectores-diferenciados-research` - prorrata-sectores-diferenciados research: warning closeout research grounding

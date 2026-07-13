@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#google-oauth'
 date: '2026-05-13'
-modified: '2026-07-08'
+modified: '2026-07-12'
 tier: L3
 related:
   - "[[2026-05-08-google-oauth-adr]]"
@@ -19,19 +19,22 @@ related:
   - "[[2026-05-06-google-oauth-research]]"
   - "[[2026-05-06-google-oauth-audit]]"
   - "[[2026-05-06-secure-persistence-enforcement-adr]]"
+  - '[[2026-07-12-google-oauth-audit]]'
+  - '[[2026-07-12-google-oauth-research]]'
+  - '[[2026-07-12-google-oauth-adr]]'
 ---
-
 # `google-oauth` `Google OAuth integration master plan` plan
 
+> **Reconciled 2026-07-12 â€” partially complete.** P01 OAuth authentication and P02 storage-provider abstraction were delivered and are checked from their closeout records. P03-P05 and P08 remain active or require explicit command-surface adjudication; this plan is not closed. Evidence is recorded in `2026-07-12-google-oauth-audit`.
 Replaces the discarded gcloud-CLI Google Workspace stack with a fresh self-hosted OAuth Desktop application, a provider-agnostic storage abstraction, a per-row continuous mirror to Google Drive at the ciphertext layer, an incoming-bucket ingestion path, per-domain export tiers, calculation-to-Sheets visualisation, and a deferred-but-codified two-way sync verdict. Eight ADRs synthesise into eight phases organised under three Waves; each ADR maps to exactly one Phase.
 
 ## Proposed Changes
 
 Eight ADRs (ADR-0 through ADR-7) close the architectural surface. The plan walks the implementation in dependency order across three Waves:
 
-- **`W01` Foundation** — `P01` (auth) + `P02` (storage provider abstraction) + `P06` (per-domain substrate hooks). Everything below the operator-facing surface: OAuth Desktop primitive, the `StorageProvider` Protocol with both backends, the substrate enumeration hooks and reverse-merge services, the canonical `SourceKind` enum, and the per-namespace label-deriver registrations.
-- **`W02` Surface** — `P03` (Drive bucket hierarchy + sync state + coordinator) + `P04` (snapshot encryption + KEK escrow) + `P05` (inbound ingestion) + `P08` (operator-facing CLI edit + CSV-corrections). Every operator-visible CLI verb against the Drive backend; the sync coordinator and its conflict semantics; the encryption boundary with cross-machine restore; the drop-zone ingestion path; the v1 reverse-merge entry points.
-- **`W03` Visualisation** — `P07` (calculation-to-Sheets four-sheet layout). Stand-alone surface depending on both `W01` (provider, substrate hooks) and the Drive write capabilities established by `W02`'s coordinator; the only Wave that consumes Sheets v4 in addition to Drive v3.
+- **`W01` Foundation** â€” `P01` (auth) + `P02` (storage provider abstraction) + `P06` (per-domain substrate hooks). Everything below the operator-facing surface: OAuth Desktop primitive, the `StorageProvider` Protocol with both backends, the substrate enumeration hooks and reverse-merge services, the canonical `SourceKind` enum, and the per-namespace label-deriver registrations.
+- **`W02` Surface** â€” `P03` (Drive bucket hierarchy + sync state + coordinator) + `P04` (snapshot encryption + KEK escrow) + `P05` (inbound ingestion) + `P08` (operator-facing CLI edit + CSV-corrections). Every operator-visible CLI verb against the Drive backend; the sync coordinator and its conflict semantics; the encryption boundary with cross-machine restore; the drop-zone ingestion path; the v1 reverse-merge entry points.
+- **`W03` Visualisation** â€” `P07` (calculation-to-Sheets four-sheet layout). Stand-alone surface depending on both `W01` (provider, substrate hooks) and the Drive write capabilities established by `W02`'s coordinator; the only Wave that consumes Sheets v4 in addition to Drive v3.
 
 Each Wave maps to one stage of the cross-phase step-range sequencing block below. The teardown commit `ab952f74` removed the prior stack with no migration shim. Every code path below is fresh; no backwards compatibility surfaces, no deprecation stubs, no partial implementations. Each phase ships complete or its rows stay open.
 
@@ -45,48 +48,48 @@ Everything below the operator-facing surface. Lands the OAuth Desktop primitive 
 
 Land the OAuth Desktop application surface end-to-end: dependencies, SecureObjectRepository records, CLI commands, refresh lifecycle, typed error hierarchy. The post-teardown `src/aeat/adapters/outbound/google/` scaffold files (`__init__.py`, `_paths.py`, `test_google_auth.py`) are deleted in S00 and replaced by the v1 modules introduced across subsequent steps; no scaffold artifact survives this phase.
 
-- [ ] `P01.S00` - delete the post-teardown scaffold `src/aeat/adapters/outbound/google/__init__.py`, `src/aeat/adapters/outbound/google/_paths.py`, and `src/aeat/adapters/outbound/google/test_google_auth.py`; the package is repopulated by the v1 modules added in S03 (`_records.py`), S05 (`_oauth_flow.py`), S08-S09 (`_refresh.py`), S10 (`_errors.py`), and S14 (`_test_oauth_flow.py`); after S14 a new `__init__.py` exports only the v1 public surface (`OAuthClient`, `OAuthToken`, `OAuthMetadata`, `DriveAppProperties`, `run_login_flow`, `refresh_credentials`, `GoogleAuthError` hierarchy).
-- [ ] `P01.S01` - add `google-auth>=2.50.0`, `google-auth-oauthlib>=1.3.1`, `google-api-python-client>=2.195.0` runtime dependencies; `pyproject.toml`.
-- [ ] `P01.S02` - the top-level `aeat config` Typer sub-app already exists in `src/aeat/entrypoints/cli/_config.py` (mounted by `src/aeat/entrypoints/cli/__init__.py`); this Step registers a new `google` sub-app slot inside `_config.py` so that `aeat config google ...` resolves; the `_google` module that backs it is created in S04 (first command body). The existing `profile` / `auth` / `doctor` / `bucket` / `init` / `reset` surfaces under `_config.py` are not touched.
-- [ ] `P01.S03` - implement `DriveAppProperties` pydantic model in the storage adapter namespace and the OAuth client / token / metadata pydantic models in the auth namespace; `src/aeat/adapters/outbound/google/_records.py`.
-- [ ] `P01.S04` - implement `aeat config google register --client-json <path> --profile <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P01.S05` - implement `aeat config google login [--profile] [--refresh-only]`; loopback IP + PKCE via `InstalledAppFlow.run_local_server(port=0)`; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
-- [ ] `P01.S06` - implement `aeat config google status [--profile] [--format json|text]`; reports profile, account email, granted scopes, last refresh, reauth-required flag.
-- [ ] `P01.S07` - implement `aeat config google logout [--profile]`; clears the `oauth-token` and `oauth-metadata` records; preserves `oauth-client`.
-- [ ] `P01.S08` - implement lazy refresh with 5-minute clock-skew buffer; re-persist refresh token after every refresh; `src/aeat/adapters/outbound/google/_refresh.py`.
-- [ ] `P01.S09` - implement `invalid_grant` detection setting `oauth-metadata.reauth_required=true`; never auto-retry; `src/aeat/adapters/outbound/google/_refresh.py`.
-- [ ] `P01.S10` - implement typed `GoogleAuthError` hierarchy (network, client revoked, refresh revoked, expired, scope insufficient, unsecured-mode refused, keychain locked, loopback bind, browser open, client not registered) with structured remediation hints; `src/aeat/adapters/outbound/google/_errors.py`.
-- [ ] `P01.S11` - register every `GoogleAuthError` subclass in the project error registry; `src/aeat/core/errors/__init__.py`.
-- [ ] `P01.S12` - implement Testing-project 7-day-expiry detection at first refresh and one-time warning; `src/aeat/adapters/outbound/google/_refresh.py`.
-- [ ] `P01.S13` - implement unsecured-mode refusal when `aeat_secret_store_backend=unsecured` AND active profile carries a real NIF; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
-- [ ] `P01.S14` - write colocated unit tests for OAuth records, login flow, refresh, revocation, error rendering; `src/aeat/adapters/outbound/google/_test_oauth_flow.py`.
-- [ ] `P01.S15` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against operator-supplied OAuth client; `src/aeat/adapters/outbound/google/_test_oauth_live.py`.
-- [ ] `P01.S16` - promote `src/aeat/entrypoints/cli/_config.py` from single-module to package: introduce `src/aeat/entrypoints/cli/_config/__init__.py` that re-exports the existing public `app` (and every other public symbol currently in `_config.py`); migrate the `_config.py` body to `_config/_core.py` (or per-subapp modules) and the new `_google.py` file from S04 into `_config/_google.py`; preserve every existing import path (`from . import _config` continues to work); no behaviour change. Sequencing: this Step lands BEFORE S04 in the actual execution order so that the google sub-CLI lands inside the package from the start; the plan keeps the S16 ID for cross-reference stability but the Parallelization block pins the execution order.
-- [ ] `P01.S17` - resolve the active profile at every `aeat config google ...` invocation by reading `workflow_state_repository().load().active_profile` (real surface in `src/aeat/application/workflow/_models.py`); raise `GoogleAuthProfileUnboundError` (subclass of the `GoogleAuthError` hierarchy from S10) if `active_profile` is `None` and no `--profile` override is given; wire the resolver to every OAuth-record load/save path so the per-profile binding in ADR-0 §5 is enforced at one location; `src/aeat/adapters/outbound/google/_profile_binding.py`.
-- [ ] `P01.S18` - write a forbidden-import test asserting `src/aeat/adapters/outbound/google/` contains no module named `_oauth_legacy*`, `_gcloud*`, or anything outside the v1 module list from S00; `tests/import_contract/google/test_no_legacy_modules.py`.
+- [x] `P01.S00` - delete the post-teardown scaffold `src/aeat/adapters/outbound/google/__init__.py`, `src/aeat/adapters/outbound/google/_paths.py`, and `src/aeat/adapters/outbound/google/test_google_auth.py`; the package is repopulated by the v1 modules added in S03 (`_records.py`), S05 (`_oauth_flow.py`), S08-S09 (`_refresh.py`), S10 (`_errors.py`), and S14 (`_test_oauth_flow.py`); after S14 a new `__init__.py` exports only the v1 public surface (`OAuthClient`, `OAuthToken`, `OAuthMetadata`, `DriveAppProperties`, `run_login_flow`, `refresh_credentials`, `GoogleAuthError` hierarchy).
+- [x] `P01.S01` - add `google-auth>=2.50.0`, `google-auth-oauthlib>=1.3.1`, `google-api-python-client>=2.195.0` runtime dependencies; `pyproject.toml`.
+- [x] `P01.S02` - the top-level `aeat config` Typer sub-app already exists in `src/aeat/entrypoints/cli/_config.py` (mounted by `src/aeat/entrypoints/cli/__init__.py`); this Step registers a new `google` sub-app slot inside `_config.py` so that `aeat config google ...` resolves; the `_google` module that backs it is created in S04 (first command body). The existing `profile` / `auth` / `doctor` / `bucket` / `init` / `reset` surfaces under `_config.py` are not touched.
+- [x] `P01.S03` - implement `DriveAppProperties` pydantic model in the storage adapter namespace and the OAuth client / token / metadata pydantic models in the auth namespace; `src/aeat/adapters/outbound/google/_records.py`.
+- [x] `P01.S04` - implement `aeat config google register --client-json <path> --profile <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `P01.S05` - implement `aeat config google login [--profile] [--refresh-only]`; loopback IP + PKCE via `InstalledAppFlow.run_local_server(port=0)`; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
+- [x] `P01.S06` - implement `aeat config google status [--profile] [--format json|text]`; reports profile, account email, granted scopes, last refresh, reauth-required flag.
+- [x] `P01.S07` - implement `aeat config google logout [--profile]`; clears the `oauth-token` and `oauth-metadata` records; preserves `oauth-client`.
+- [x] `P01.S08` - implement lazy refresh with 5-minute clock-skew buffer; re-persist refresh token after every refresh; `src/aeat/adapters/outbound/google/_refresh.py`.
+- [x] `P01.S09` - implement `invalid_grant` detection setting `oauth-metadata.reauth_required=true`; never auto-retry; `src/aeat/adapters/outbound/google/_refresh.py`.
+- [x] `P01.S10` - implement typed `GoogleAuthError` hierarchy (network, client revoked, refresh revoked, expired, scope insufficient, unsecured-mode refused, keychain locked, loopback bind, browser open, client not registered) with structured remediation hints; `src/aeat/adapters/outbound/google/_errors.py`.
+- [x] `P01.S11` - register every `GoogleAuthError` subclass in the project error registry; `src/aeat/core/errors/__init__.py`.
+- [x] `P01.S12` - implement Testing-project 7-day-expiry detection at first refresh and one-time warning; `src/aeat/adapters/outbound/google/_refresh.py`.
+- [x] `P01.S13` - implement unsecured-mode refusal when `aeat_secret_store_backend=unsecured` AND active profile carries a real NIF; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
+- [x] `P01.S14` - write colocated unit tests for OAuth records, login flow, refresh, revocation, error rendering; `src/aeat/adapters/outbound/google/_test_oauth_flow.py`.
+- [x] `P01.S15` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against operator-supplied OAuth client; `src/aeat/adapters/outbound/google/_test_oauth_live.py`.
+- [x] `P01.S16` - promote `src/aeat/entrypoints/cli/_config.py` from single-module to package: introduce `src/aeat/entrypoints/cli/_config/__init__.py` that re-exports the existing public `app` (and every other public symbol currently in `_config.py`); migrate the `_config.py` body to `_config/_core.py` (or per-subapp modules) and the new `_google.py` file from S04 into `_config/_google.py`; preserve every existing import path (`from . import _config` continues to work); no behaviour change. Sequencing: this Step lands BEFORE S04 in the actual execution order so that the google sub-CLI lands inside the package from the start; the plan keeps the S16 ID for cross-reference stability but the Parallelization block pins the execution order.
+- [x] `P01.S17` - resolve the active profile at every `aeat config google ...` invocation by reading `workflow_state_repository().load().active_profile` (real surface in `src/aeat/application/workflow/_models.py`); raise `GoogleAuthProfileUnboundError` (subclass of the `GoogleAuthError` hierarchy from S10) if `active_profile` is `None` and no `--profile` override is given; wire the resolver to every OAuth-record load/save path so the per-profile binding in ADR-0 Â§5 is enforced at one location; `src/aeat/adapters/outbound/google/_profile_binding.py`.
+- [x] `P01.S18` - write a forbidden-import test asserting `src/aeat/adapters/outbound/google/` contains no module named `_oauth_legacy*`, `_gcloud*`, or anything outside the v1 module list from S00; `tests/import_contract/google/test_no_legacy_modules.py`.
 
 #### Phase `P02` - storage provider abstraction (ADR-1)
 
 Define `StorageProvider` Protocol and ship both v1 implementations (`LocalFileSystemProvider`, `GoogleDriveProvider`) plus the in-memory test backend.
 
-- [ ] `P02.S01` - define `StorageProvider` Protocol (put / get / delete / iter_namespaces / iter_objects / probe); `src/aeat/adapters/outbound/storage/_protocol.py`.
-- [ ] `P02.S02` - define `ProviderObjectMetadata` pydantic record; `src/aeat/adapters/outbound/storage/_records.py`.
-- [ ] `P02.S03` - define `ProviderProbeReport` pydantic record with `read_only` mode; `src/aeat/adapters/outbound/storage/_records.py`.
-- [ ] `P02.S04` - implement typed `StorageError` hierarchy under `AeatError` (NotFound / Conflict / Permission / Quota / Network / Integrity / Unavailable); `src/aeat/adapters/outbound/storage/_errors.py`.
-- [ ] `P02.S05` - register every `StorageError` subclass in the project error registry; `src/aeat/core/errors/__init__.py`.
-- [ ] `P02.S06` - implement `LocalFileSystemProvider` against `pathlib`; `src/aeat/adapters/outbound/storage/_local.py`.
-- [ ] `P02.S07` - implement `GoogleDriveProvider` against `google-api-python-client`; `src/aeat/adapters/outbound/storage/_google_drive.py`.
-- [ ] `P02.S08` - implement `InMemoryDriveProvider` real-implementation test backend; `src/aeat/adapters/outbound/storage/_testing.py`.
-- [ ] `P02.S09` - implement `get_storage_provider` factory keyed on `ProviderKind` enum; `src/aeat/adapters/outbound/storage/_factory.py`.
-- [ ] `P02.S10` - implement `iter_namespaces` for both backends; `src/aeat/adapters/outbound/storage/_local.py` and `_google_drive.py`.
-- [ ] `P02.S11` - implement `iter_objects(namespace)` for both backends; `src/aeat/adapters/outbound/storage/_local.py` and `_google_drive.py`.
-- [ ] `P02.S12` - implement `probe(read_only=False)` for both backends with sentinel-file round-trip; `src/aeat/adapters/outbound/storage/_local.py` and `_google_drive.py`.
-- [ ] `P02.S13` - write colocated unit tests using `tmp_path` and the in-memory backend; `src/aeat/adapters/outbound/storage/_test_local.py` and `_test_in_memory.py`.
-- [ ] `P02.S14` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive; `src/aeat/adapters/outbound/storage/_test_google_drive_live.py`.
-- [ ] `P02.S15` - extend `tests/import_contract/test_adr_layout_import_smoke.py` to assert `aeat.adapters.outbound.storage` and its public symbols; `tests/import_contract/test_adr_layout_import_smoke.py`.
-- [ ] `P02.S16` - add `aeat_storage_provider_kind` and `aeat_google_drive_root_folder_id` settings to `core/config.py` (pydantic-settings) with strict validation; both settings are per-profile-overridable; `aeat_storage_provider_kind` accepts only the `ProviderKind` enum values; `aeat_google_drive_root_folder_id` is required when kind is `google_drive`; `src/aeat/core/config.py`.
-- [ ] `P02.S17` - extend `get_storage_provider` factory to read `aeat_storage_provider_kind` + (when applicable) `aeat_google_drive_root_folder_id`, resolve the active `AEAT_PROFILE`, and instantiate the configured backend with credentials threaded through the P01.S17 profile binding; `src/aeat/adapters/outbound/storage/_factory.py`.
-- [ ] `P02.S18` - implement `GoogleDriveProvider` root-folder discovery: create the `aeat-vault/` folder under the operator-configured root folder ID on first probe if absent; reject if the operator-configured root folder ID points to a non-folder file; `src/aeat/adapters/outbound/storage/_google_drive.py`.
+- [x] `P02.S01` - define `StorageProvider` Protocol (put / get / delete / iter_namespaces / iter_objects / probe); `src/aeat/adapters/outbound/storage/_protocol.py`.
+- [x] `P02.S02` - define `ProviderObjectMetadata` pydantic record; `src/aeat/adapters/outbound/storage/_records.py`.
+- [x] `P02.S03` - define `ProviderProbeReport` pydantic record with `read_only` mode; `src/aeat/adapters/outbound/storage/_records.py`.
+- [x] `P02.S04` - implement typed `StorageError` hierarchy under `AeatError` (NotFound / Conflict / Permission / Quota / Network / Integrity / Unavailable); `src/aeat/adapters/outbound/storage/_errors.py`.
+- [x] `P02.S05` - register every `StorageError` subclass in the project error registry; `src/aeat/core/errors/__init__.py`.
+- [x] `P02.S06` - implement `LocalFileSystemProvider` against `pathlib`; `src/aeat/adapters/outbound/storage/_local.py`.
+- [x] `P02.S07` - implement `GoogleDriveProvider` against `google-api-python-client`; `src/aeat/adapters/outbound/storage/_google_drive.py`.
+- [x] `P02.S08` - implement `InMemoryDriveProvider` real-implementation test backend; `src/aeat/adapters/outbound/storage/_testing.py`.
+- [x] `P02.S09` - implement `get_storage_provider` factory keyed on `ProviderKind` enum; `src/aeat/adapters/outbound/storage/_factory.py`.
+- [x] `P02.S10` - implement `iter_namespaces` for both backends; `src/aeat/adapters/outbound/storage/_local.py` and `_google_drive.py`.
+- [x] `P02.S11` - implement `iter_objects(namespace)` for both backends; `src/aeat/adapters/outbound/storage/_local.py` and `_google_drive.py`.
+- [x] `P02.S12` - implement `probe(read_only=False)` for both backends with sentinel-file round-trip; `src/aeat/adapters/outbound/storage/_local.py` and `_google_drive.py`.
+- [x] `P02.S13` - write colocated unit tests using `tmp_path` and the in-memory backend; `src/aeat/adapters/outbound/storage/_test_local.py` and `_test_in_memory.py`.
+- [x] `P02.S14` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive; `src/aeat/adapters/outbound/storage/_test_google_drive_live.py`.
+- [x] `P02.S15` - extend `tests/import_contract/test_adr_layout_import_smoke.py` to assert `aeat.adapters.outbound.storage` and its public symbols; `tests/import_contract/test_adr_layout_import_smoke.py`.
+- [x] `P02.S16` - add `aeat_storage_provider_kind` and `aeat_google_drive_root_folder_id` settings to `core/config.py` (pydantic-settings) with strict validation; both settings are per-profile-overridable; `aeat_storage_provider_kind` accepts only the `ProviderKind` enum values; `aeat_google_drive_root_folder_id` is required when kind is `google_drive`; `src/aeat/core/config.py`.
+- [x] `P02.S17` - extend `get_storage_provider` factory to read `aeat_storage_provider_kind` + (when applicable) `aeat_google_drive_root_folder_id`, resolve the active `AEAT_PROFILE`, and instantiate the configured backend with credentials threaded through the P01.S17 profile binding; `src/aeat/adapters/outbound/storage/_factory.py`.
+- [x] `P02.S18` - implement `GoogleDriveProvider` root-folder discovery: create the `aeat-vault/` folder under the operator-configured root folder ID on first probe if absent; reject if the operator-configured root folder ID points to a non-folder file; `src/aeat/adapters/outbound/storage/_google_drive.py`.
 
 #### Phase `P06` - per-domain substrate hooks (ADR-5)
 
@@ -136,7 +139,7 @@ Every operator-visible CLI verb against the Drive backend. Lands the Drive bucke
 
 Land the operator-facing Drive layout and the local sync-state sidecar table; implement the sync coordinator and the refuse-on-conflict semantics.
 
-- [ ] `P03.S01` - add Alembic migration creating `secure_objects_sync_state` table per ADR-2 §5; `migrations/versions/0005_secure_objects_sync_state.py`.
+- [ ] `P03.S01` - add Alembic migration creating `secure_objects_sync_state` table per ADR-2 Â§5; `migrations/versions/0005_secure_objects_sync_state.py`.
 - [ ] `P03.S02` - define `SyncStateRow` pydantic record + `SyncStateStatus` enum; `src/aeat/application/storage/sync/_records.py`.
 - [ ] `P03.S03` - implement SQLAlchemy ORM mapping and repository for sync-state rows; `src/aeat/adapters/persistence/storage/sql/_sync_state.py`.
 - [ ] `P03.S04` - define `NamespaceLabelDeriver` Protocol; `src/aeat/adapters/outbound/storage/_labels.py`.
@@ -231,16 +234,16 @@ Land the four-sheet visualisation Spreadsheet per (modelo, period); hybrid formu
 
 - [ ] `P07.S01` - define `CalcSheetExportPlan` pydantic record + per-sheet layout descriptors; `src/aeat/application/storage/calc_sheets/_records.py`.
 - [ ] `P07.S02` - implement the Entradas sheet writer with operator-editable cells + data validation; `src/aeat/application/storage/calc_sheets/_entradas.py`.
-- [ ] `P07.S03` - implement the Cálculos sheet writer with hybrid formula translation; `src/aeat/application/storage/calc_sheets/_calculos.py`.
+- [ ] `P07.S03` - implement the CÃ¡lculos sheet writer with hybrid formula translation; `src/aeat/application/storage/calc_sheets/_calculos.py`.
 - [ ] `P07.S04` - implement the Resultado sheet writer; `src/aeat/application/storage/calc_sheets/_resultado.py`.
 - [ ] `P07.S05` - implement the Procedencia sheet writer with per-casilla audit metadata; `src/aeat/application/storage/calc_sheets/_procedencia.py`.
-- [ ] `P07.S06` - implement the Guía de Lectura sheet writer; `src/aeat/application/storage/calc_sheets/_guia.py`.
+- [ ] `P07.S06` - implement the GuÃ­a de Lectura sheet writer; `src/aeat/application/storage/calc_sheets/_guia.py`.
 - [ ] `P07.S07` - implement the hybrid formula translator (mechanical vs static-with-metadata classifier); `src/aeat/application/storage/calc_sheets/_formula_translator.py`.
 - [ ] `P07.S08` - implement hidden `_Tariffs` lookup-sheet emitter for bracketed-rate cases; `src/aeat/application/storage/calc_sheets/_lookup_tables.py`.
 - [ ] `P07.S09` - implement Spanish-language column headers and labels keyed off existing locale resources; `src/aeat/application/storage/calc_sheets/_locale.py`.
 - [ ] `P07.S10` - implement conditional formatting rules (blue input / green calculated / red alert / yellow warning); `src/aeat/application/storage/calc_sheets/_formatting.py`.
 - [ ] `P07.S11` - implement `protectedRanges` batchUpdate emission for non-Entradas sheets; `src/aeat/application/storage/calc_sheets/_protection.py`.
-- [ ] `P07.S12` - implement cell-note (hover-tooltip) emission for Cálculos cells carrying Oracle + Normativa; `src/aeat/application/storage/calc_sheets/_notes.py`.
+- [ ] `P07.S12` - implement cell-note (hover-tooltip) emission for CÃ¡lculos cells carrying Oracle + Normativa; `src/aeat/application/storage/calc_sheets/_notes.py`.
 - [ ] `P07.S13` - implement `aeat config google sync calc export --modelo --period` Typer command (idempotent); `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `P07.S14` - implement `aeat config google sync calc list [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `P07.S15` - implement `aeat config google sync calc delete --modelo --period` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
@@ -253,8 +256,8 @@ Land the four-sheet visualisation Spreadsheet per (modelo, period); hybrid formu
 
 Lands the centerpiece architecture for bidirectional multi-turn modelo round-tripping. The engine is the producer of every `SheetExportPlan` P07 writes; the parity stack is the gate that blocks export of any modelo whose formulas translate incorrectly; the bidirectional pull command is the operator-facing surface that turns Sheets into a writeable input source. Cross-references the new `[[2026-05-14-google-oauth-adr]]` (ADR-8) which formalises every contract below.
 
-- [ ] `P09.S01` - define the engine record set (`SheetExportPlan`, `SheetExportMetadata`, `SheetCellAddress`, `SheetFormulaCell`, `SheetValueCell`, `SheetProvenanceRow`, `SheetTariffTable`, `SheetProtectedRange`, `SheetGuideContent`, `ParityCheckResult`) as frozen strict pydantic v2 records under `src/aeat/application/storage/calc_sheets/_records.py`. Supersedes the partial record list from P07.S01.
-- [ ] `P09.S02` - implement `translate_expression(expr, *, cell_address_index) -> SheetFormulaExpr` closed-form recursion covering all 22 registry DSL ops per the ADR-8 §2 table; `src/aeat/application/storage/calc_sheets/_translator.py`.
+- [ ] `P09.S01` - define the engine record set (`SheetExportPlan`, `SheetExportMetadata`, `SheetCellAddress`, `SheetFormulaCell`, `SheetValueCell`, `SheetProvenanceRow`, `SheetTariffTable`, `SheetProtectedRange`, `SheetGuideContent`, `ParityCheckResult`) as frozen strict pydantic v2 records under `src/aeat/application/storage/calc_sheets/_records.py`; supersedes the partial record list from P07.S01.
+- [ ] `P09.S02` - implement `translate_expression(expr, *, cell_address_index) -> SheetFormulaExpr` closed-form recursion covering all 22 registry DSL ops per the ADR-8 Â§2 table; `src/aeat/application/storage/calc_sheets/_translator.py`.
 - [ ] `P09.S03` - implement `build_export_plan(snapshot, modelo, period, year, inputs, revision) -> SheetExportPlan` orchestrator that walks the `RegistrySnapshot`, derives the 4-sheet layout per ADR-6, and returns a complete pure-data plan; `src/aeat/application/storage/calc_sheets/_engine.py`.
 - [ ] `P09.S04` - implement the per-modelo cell-address layout deriver (casilla -> (sheet, row, column)) consumed by `_translator.py` for cross-cell references and by `_apply.py` for batch writes; `src/aeat/application/storage/calc_sheets/_layout.py`.
 - [ ] `P09.S05` - implement the Tier-1 in-process parity oracle using `formulas` from PyPI; consumes the existing `ParityScenario` records from `src/aeat/domain/calculations/registry/_parity_tapes.py`; `src/aeat/application/storage/calc_sheets/_parity_in_process.py`.
@@ -272,7 +275,7 @@ Lands the centerpiece architecture for bidirectional multi-turn modelo round-tri
 - [ ] `P09.S17` - implement the typed error hierarchy under `_errors.py`: `CalcSheetParityGateError`, `CalcSheetExternallyModifiedError`, `CalcSheetForeignWriteError`, `CalcSheetEngineVersionMismatchError`, `CalcSheetPullValidationError`; register each in the project error registry; `src/aeat/application/storage/calc_sheets/_errors.py`.
 - [ ] `P09.S18` - write a forbidden-import test asserting `src/aeat/application/storage/calc_sheets/` is not consumed outside `src/aeat/entrypoints/cli/_config/_google.py` and its own colocated tests; `src/aeat/application/storage/calc_sheets/test_no_external_consumers.py`.
 - [ ] `P09.S19` - add Spanish CLI localisation strings for every new `aeat config google sync calc pull ...` operator-facing string; locale parity across en/es/ca/hu enforced by `python -m aeat.locales audit`.
-- [ ] `P09.S20` - extend the import-contract smoke test (`src/aeat/tests/test_adr_layout_import_smoke.py`) with `aeat.application.storage.calc_sheets` package import + canonical-symbol assertions for `build_export_plan`, `apply_export_plan`, `pull_operator_edits`, `ParityManifest`.
+- [ ] `P09.S20` - extend the import-contract smoke test with `aeat.application.storage.calc_sheets` package import + canonical-symbol assertions for `build_export_plan`, `apply_export_plan`, `pull_operator_edits`, `ParityManifest`; `src/aeat/tests/test_adr_layout_import_smoke.py`.
 - [ ] `P09.S21` - write colocated unit tests for the engine end-to-end against a synthetic `RegistrySnapshot` covering every 22 DSL op; `src/aeat/application/storage/calc_sheets/test_engine.py`.
 - [ ] `P09.S22` - write Tier-1 + Tier-2 parity tests that run on every commit (Tier-1) and on the nightly schedule (Tier-2) against every `ParityScenario` in `corpus/parity_replays/`; `src/aeat/application/storage/calc_sheets/test_parity_*.py`.
 - [ ] `P09.S23` - write Tier-3 live-Sheets parity tests gated on `AEAT_LIVE_TESTS_ENABLED` consuming the real OAuth credentials + DriveConfig from earlier P01/P02 steps; `src/aeat/application/storage/calc_sheets/test_parity_live.py`.
@@ -283,20 +286,20 @@ Lands the centerpiece architecture for bidirectional multi-turn modelo round-tri
 
 Cross-phase step-level dependencies:
 
-- `P03.S04`-`P03.S06` (`NamespaceLabelDeriver` Protocol + registry + startup verification) — depended on by every `P06.S14`-`P06.S24` (per-namespace label-deriver registration) and by `P06.S29` (bucket-event emitter resolving namespace labels for event payloads).
-- `P06.S01`-`P06.S03b` (substrate enumeration hooks: `iter_namespaces`, `iter_all_records_raw`, per-domain `iter_*` repository APIs) — depended on by `P03.S07` (DriveSync coordinator full-enumeration algorithm) and by `P03.S10`-`P03.S15` (push / pull / status / claim / appProperties / filename surfaces).
-- `P06.S28` (canonical `SourceKind` enum) — depended on by `P05.S19` (prefix router), `P06.S05`-`P06.S08` (reverse-merge services), and `P06.S29` (event emitter).
+- `P03.S04`-`P03.S06` (`NamespaceLabelDeriver` Protocol + registry + startup verification) â€” depended on by every `P06.S14`-`P06.S24` (per-namespace label-deriver registration) and by `P06.S29` (bucket-event emitter resolving namespace labels for event payloads).
+- `P06.S01`-`P06.S03b` (substrate enumeration hooks: `iter_namespaces`, `iter_all_records_raw`, per-domain `iter_*` repository APIs) â€” depended on by `P03.S07` (DriveSync coordinator full-enumeration algorithm) and by `P03.S10`-`P03.S15` (push / pull / status / claim / appProperties / filename surfaces).
+- `P06.S28` (canonical `SourceKind` enum) â€” depended on by `P05.S19` (prefix router), `P06.S05`-`P06.S08` (reverse-merge services), and `P06.S29` (event emitter).
 
 Default sequencing (Step-range granularity, not whole Phases):
 
-1. **`W01.P01`** (alone) — auth foundation, profile binding, `_config/` package promotion. Within P01, the actual execution order is `S00` → `S01` → `S16` (package promotion lands BEFORE any google CLI module so `_google.py` ships into the `_config/` package from the start) → `S02` (registration slot) → `S03`-`S15` (records / commands / refresh / errors / tests) → `S17` (profile binding) → `S18` (forbidden-import test).
-2. **`W01.P02`** ∥ **`W02.P03.S01`-`W02.P03.S06`** ∥ **`W01.P06.S01`-`W01.P06.S03b`** ∥ **`W01.P06.S05`-`W01.P06.S08`** ∥ **`W01.P06.S25`-`W01.P06.S28`** — provider abstraction, sync-state schema + deriver Protocol/registry, substrate enumeration hooks, reverse-merge services, allow-list, `SourceKind` enum. None of these have cross-dependencies on each other.
-3. **`W02.P03.S07`-`W02.P03.S20`** ∥ **`W01.P06.S09`-`W01.P06.S13`** ∥ **`W01.P06.S14`-`W01.P06.S24`** ∥ **`W01.P06.S29`-`W01.P06.S30`** — DriveSync coordinator + CLI + bucket init; filing/deadlines/workflow export hooks; per-namespace label-deriver registrations; bucket-event emitter; `_app/` package skeleton.
-4. **`W02.P04`** ∥ **`W02.P05`** — both depend on `W02.P03.S07`-`W02.P03.S20` finalised. `P04` also depends on `W01.P02` (`probe`) and `W02.P03.S14` (manifest regeneration on push).
-5. **`W03.P07`** — depends on `W01.P02` (Sheets via the dedicated client landed in `P07.S19`) + `W01.P06.S01`-`W01.P06.S03b` (per-modelo enumeration). Can start as soon as Step (3) is closed.
-6. **`W02.P08`** — depends on `W01.P06.S05`-`W01.P06.S08` (reverse-merge services) + `W01.P06.S29` (bucket-event emitter) + `W01.P06.S30` (`_app/` package). Can start as soon as Step (3) is closed; not gated on `W03.P07`.
+1. **`W01.P01`** (alone) â€” auth foundation, profile binding, `_config/` package promotion. Within P01, the actual execution order is `S00` â†’ `S01` â†’ `S16` (package promotion lands BEFORE any google CLI module so `_google.py` ships into the `_config/` package from the start) â†’ `S02` (registration slot) â†’ `S03`-`S15` (records / commands / refresh / errors / tests) â†’ `S17` (profile binding) â†’ `S18` (forbidden-import test).
+2. **`W01.P02`** âˆ¥ **`W02.P03.S01`-`W02.P03.S06`** âˆ¥ **`W01.P06.S01`-`W01.P06.S03b`** âˆ¥ **`W01.P06.S05`-`W01.P06.S08`** âˆ¥ **`W01.P06.S25`-`W01.P06.S28`** â€” provider abstraction, sync-state schema + deriver Protocol/registry, substrate enumeration hooks, reverse-merge services, allow-list, `SourceKind` enum. None of these have cross-dependencies on each other.
+3. **`W02.P03.S07`-`W02.P03.S20`** âˆ¥ **`W01.P06.S09`-`W01.P06.S13`** âˆ¥ **`W01.P06.S14`-`W01.P06.S24`** âˆ¥ **`W01.P06.S29`-`W01.P06.S30`** â€” DriveSync coordinator + CLI + bucket init; filing/deadlines/workflow export hooks; per-namespace label-deriver registrations; bucket-event emitter; `_app/` package skeleton.
+4. **`W02.P04`** âˆ¥ **`W02.P05`** â€” both depend on `W02.P03.S07`-`W02.P03.S20` finalised. `P04` also depends on `W01.P02` (`probe`) and `W02.P03.S14` (manifest regeneration on push).
+5. **`W03.P07`** â€” depends on `W01.P02` (Sheets via the dedicated client landed in `P07.S19`) + `W01.P06.S01`-`W01.P06.S03b` (per-modelo enumeration). Can start as soon as Step (3) is closed.
+6. **`W02.P08`** â€” depends on `W01.P06.S05`-`W01.P06.S08` (reverse-merge services) + `W01.P06.S29` (bucket-event emitter) + `W01.P06.S30` (`_app/` package). Can start as soon as Step (3) is closed; not gated on `W03.P07`.
 
-Within a Step range, Steps are sequenced by file dependency; reviewer judgement on each pair. The Step-level cross-phase contract above replaces any whole-Phase "P03 must finalise before P06" claim — the original phrasing concealed a circular dependency between `P03.S07` and `P06.S01`-`P06.S03b`.
+Within a Step range, Steps are sequenced by file dependency; reviewer judgement on each pair. The Step-level cross-phase contract above replaces any whole-Phase "P03 must finalise before P06" claim â€” the original phrasing concealed a circular dependency between `P03.S07` and `P06.S01`-`P06.S03b`.
 
 ## Drift Amendments
 

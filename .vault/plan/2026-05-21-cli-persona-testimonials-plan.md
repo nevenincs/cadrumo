@@ -1,9 +1,9 @@
 ---
 tags:
   - '#plan'
-  - '#cli-persona-testimonials-legacy'
+  - '#cli-persona-testimonials'
 date: '2026-05-21'
-modified: '2026-07-06'
+modified: '2026-07-10'
 tier: L2
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'

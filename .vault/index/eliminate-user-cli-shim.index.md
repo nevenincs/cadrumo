@@ -3,12 +3,13 @@ generated: true
 tags:
   - '#index'
   - '#eliminate-user-cli-shim'
-date: '2026-06-15'
-modified: '2026-06-15'
+date: '2026-07-12'
+modified: '2026-07-12'
 related:
   - '[[2026-05-10-eliminate-user-cli-shim-adr]]'
   - '[[2026-05-10-eliminate-user-cli-shim-plan]]'
   - '[[2026-06-04-eliminate-user-cli-shim-research]]'
+  - '[[2026-07-12-eliminate-user-cli-shim-audit]]'
 ---
 
 # `eliminate-user-cli-shim` feature index
@@ -19,7 +20,11 @@ Auto-generated index of all documents tagged with `#eliminate-user-cli-shim`.
 
 ### adr
 
-- `2026-05-10-eliminate-user-cli-shim-adr` - ADR: Eliminating `user_cli.py` Architectural Shim
+- `2026-05-10-eliminate-user-cli-shim-adr` - ADR: Eliminating `user_cli.py` Architectural Shim | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-12-eliminate-user-cli-shim-audit` - `eliminate-user-cli-shim` audit: `legacy plan completion reconciliation`
 
 ### plan
 
