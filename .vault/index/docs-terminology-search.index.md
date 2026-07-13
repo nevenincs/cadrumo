@@ -62,6 +62,7 @@ related:
   - '[[2026-07-13-docs-terminology-search-W03-P03-S09]]'
   - '[[2026-07-13-docs-terminology-search-W04-P04-S10]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
+  - '[[2026-07-13-docs-terminology-search-audit]]'
   - '[[2026-07-13-docs-terminology-search-plan]]'
   - '[[2026-07-13-docs-terminology-search-research]]'
 ---
@@ -88,6 +89,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-12-docs-terminology-search-rung2-adjudication-audit` - `docs-terminology-search` audit: `rung-2 adjudication`
 - `2026-06-14-docs-terminology-search-audit` - `docs-terminology-search` audit: `RAG corpus completion and Ctrl-K backend wiring`
 - `2026-06-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `search corpus performance and result-quality drive`
+- `2026-07-13-docs-terminology-search-audit` - `docs-terminology-search` audit: `campaign close honesty review`
 
 ### exec
 
