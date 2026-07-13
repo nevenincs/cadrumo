@@ -63,8 +63,8 @@ the process environment wins over the `.env` file.
 | `AEAT_PROXY_USERNAME` | str | empty | Username for proxy authentication |
 | `AEAT_RATE_LIMIT_DELAY_SECONDS` | float | `2.0` | Minimum delay between AEAT requests in seconds |
 | `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes' — the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
-| `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Overrideable per campaign. |
-| `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Overrideable for campaign drift. |
+| `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Overrideable when AEAT changes the URL shape. |
+| `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Overrideable when AEAT changes the URL shape. |
 | `CADRUMO_ACTIVE_PROFILE` | str | unset | Per-shell override for the active operator profile. When set, wins over the <cadrumo-root>/active-profile pointer file in the active-profile precedence chain. Leave unset for normal installs; the pointer file is the canonical default. |
 | `CADRUMO_ALLOW_UNENCRYPTED` | str | empty | Hostile-named opt-out gate for the unsecured backend. Must be set to the literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to use cadrumo_secret_store_backend=unsecured. The unsecured backend is intended for testing / educational / throwaway scenarios only and provides ZERO confidentiality. The substrate refuses to load an operator profile that carries a real NIF/NIE/CIF while running in unsecured mode. |
 | `CADRUMO_ATTACHMENTS_DIR` | Path | (derived) | Root directory for the attachment byte and manifest store |
@@ -118,7 +118,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_LLM_MODEL` | str | `claude-sonnet-4-6` | Default LLM model identifier |
 | `CADRUMO_LLM_OLLAMA_CHAT_URL` | str | `http://127.0.0.1:11434/api/chat` | Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments |
 | `CADRUMO_LLM_OLLAMA_NUM_CTX` | int | `8192` | Ollama context window (num_ctx) for local requests. The vision read sends the full registry allow-list prompt plus the encoded invoice image, which exceeds Ollama's 4096 default; 8192 fits the prompt + image + output with headroom and still runs on consumer hardware |
-| `CADRUMO_LLM_OLLAMA_VISION_MODEL` | str | `qwen2.5vl:3b` | Local Ollama vision model used to read scanned/image evidence on-host (the default, gestor-allowed posture); must be a multimodal model pulled into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is document/OCR-grade and runs on normal consumer hardware (modest GPU or CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for CPU-only/low-memory (see the consumer-hardware vision-model ADR) |
+| `CADRUMO_LLM_OLLAMA_VISION_MODEL` | str | `qwen2.5vl:3b` | Local Ollama vision model used to read scanned/image evidence on-host (the default, gestor-allowed posture); must be a multimodal model pulled into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is document/OCR-grade and runs on normal consumer hardware (modest GPU or CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for CPU-only/low-memory |
 | `CADRUMO_LLM_OPENAI_API_KEY` | SecretStr | (secret) | OpenAI API key (optional) |
 | `CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL` | str | `https://api.openai.com/v1/chat/completions` | OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies |
 | `CADRUMO_LLM_PROVIDER` | LLMProviderSetting | `ANTHROPIC` | Default LLM provider name |
@@ -133,7 +133,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_LOG_LEVEL` | str | empty | Optional default CLI log level override: quiet, default, verbose, or debug |
 | `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
-| `CADRUMO_M210_ENGINE_LIVE` | bool | `false` | Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo work create --modelo 210` emits the Path-B refusal stub. When True the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen dispatch + representante-fiscal predicate + cuota composition). Flipped to True only after persona-replay acceptance gates pass per the m210-irnr-full-engine ADR section D5. |
+| `CADRUMO_M210_ENGINE_LIVE` | bool | `false` | Gate the M210 IRNR engine. When False (default) `aeat app modelo work create --modelo 210` emits the Path-B refusal stub. When True the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen dispatch + representante-fiscal predicate + cuota composition). Flipped to True only after acceptance testing confirms the engine's output. |
 | `CADRUMO_OUTPUT_LANGUAGE` | OutputLanguage | `es` | Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default. |
 | `CADRUMO_PURCHASE_INVOICE_EVIDENCE_DIR` | Path | (derived) | Root directory for purchase invoice evidence record manifests |
 | `CADRUMO_REGISTRY_DISK_CACHE_DIR` | Path | unset | Override for the cross-process registry disk-pickle directory (default: the platform temp directory). Set only by test isolation to redirect the shared bundled-root cache onto a test-owned directory, so a test asserting exclusive pickle state never races sibling pytest-xdist workers sharing the real OS temp directory. |
