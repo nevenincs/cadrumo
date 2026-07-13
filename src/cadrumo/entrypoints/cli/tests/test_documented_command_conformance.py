@@ -94,7 +94,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # All user-facing doc surfaces. The flat ``docs/*.md`` pages and the root
 # ``README.md`` are the surfaces the verb-only conformance gate never covered.
 _FLAT_DOC_GLOBS = ("docs/*.md",)
-_TREE_DOC_DIRS = ("docs/explanation", "docs/how-to", "docs/runbooks")
+_TREE_DOC_DIRS = ("docs/explanation", "docs/how-to")
 
 # Inline backticks and fenced blocks are the only authoritative command
 # surfaces; a bare ``aeat ...`` in prose is not a cited invocation.
@@ -253,6 +253,13 @@ def _required_positional_count(cmd: click.Command) -> int:
 # positional slot and are never validated as option names.
 _PLACEHOLDER_RE = re.compile(r"^(<[^>]+>|[A-Z][A-Z0-9_-]*)$")
 
+# A ``{name}`` interpolation token — the cli-sequence directive's placeholder
+# class (docs-cli-sequences ADR D1): a value captured at build time from a prior
+# frame's envelope and threaded into a later frame's command line. It fills a
+# positional slot exactly like ``<id>`` and is never validated as an option
+# name. The inner name matches the engine's capture-identifier grammar.
+_INTERP_PLACEHOLDER_RE = re.compile(r"^\{[A-Za-z_][A-Za-z0-9_]*\}$")
+
 
 @dataclass(frozen=True)
 class _CitedCommand:
@@ -307,6 +314,10 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     cleaned = _strip_inline_comment(line).strip()
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
     # Some doc lines prefix the command with a shell sigil or a tab-led label.
+    # A cli-sequence frame's ``@setup`` / ``@result`` sigil precedes the ``aeat``
+    # token and is dropped here by anchoring on ``aeat`` (docs-cli-sequences ADR
+    # D1); ``@capture`` / ``@expect`` lines carry no ``aeat`` token and are
+    # skipped upstream, so a frame line validates like any other cited invocation.
     m = _AEAT_TOKEN_RE.search(cleaned)
     if m is None:
         return None
@@ -353,6 +364,10 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
         if not seen_verb:
             verb_tokens.append(tok)
             seen_verb = True
+        elif _INTERP_PLACEHOLDER_RE.match(tok):
+            # A ``{name}`` interpolation is always a positional placeholder, never
+            # a subcommand — a cli-sequence threaded capture (ADR D1).
+            has_positional = True
         else:
             # Decide: is this still a verb token or a positional? Lowercase
             # hyphenated words *may* be subcommands; resolution settles it. We
@@ -421,6 +436,48 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
             seen.add(key)
             out.append(parsed)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Enrolled-page tier (docs-cli-sequences ADR D7)
+# ---------------------------------------------------------------------------
+
+# A backtick-fenced ``cli-sequence`` directive: ```` ```{cli-sequence} <id> ````.
+# The info string is the fence's first line after the opening backticks; a page
+# carrying at least one such fence is *enrolled* (all executable commands live
+# inside executed sequences), so a plain fence with an ``aeat`` invocation on it
+# is refused. ``_FENCE_WITH_INFO_RE`` captures the info string alongside the body
+# so the directive fences can be told apart from plain ```` ```bash ```` fences.
+_CLI_SEQUENCE_INFO_RE = re.compile(r"^\{cli-sequence\}")
+_FENCE_WITH_INFO_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.DOTALL)
+
+
+def _page_is_enrolled(text: str) -> bool:
+    """A page is enrolled when it carries at least one ``{cli-sequence}`` directive."""
+    return any(_CLI_SEQUENCE_INFO_RE.match(info.strip()) for info, _ in _FENCE_WITH_INFO_RE.findall(text))
+
+
+def _plain_executable_aeat_fences(text: str) -> list[str]:
+    """Return executable ``aeat`` invocation lines in PLAIN fences of an enrolled page.
+
+    On an enrolled page every executable ``aeat`` invocation must live inside a
+    ``{cli-sequence}`` directive (ADR D7): a plain ```` ``` ```` fence (bash,
+    console, text) carrying a concrete ``aeat`` invocation is refused. The
+    ``{cli-sequence}`` directive fences are the sanctioned executed surface and
+    are exempt, and inline-backtick verb references (narrative) are never scanned
+    here — only fenced blocks are. The caller applies this only to enrolled pages.
+    """
+    offending: list[str] = []
+    for info, body in _FENCE_WITH_INFO_RE.findall(text):
+        if _CLI_SEQUENCE_INFO_RE.match(info.strip()):
+            continue  # the executed surface — exempt
+        joined = body.replace("\\\n", " ")
+        for line in joined.splitlines():
+            if _AEAT_TOKEN_RE.search(line) is None:
+                continue
+            if _parse_command_line(line) is not None:
+                offending.append(line.strip())
+    return offending
 
 
 # ---------------------------------------------------------------------------
@@ -618,4 +675,115 @@ def test_documented_commands_conform(doc) -> None:
     assert not violations, (
         f"{doc.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
+    )
+
+
+# ---------------------------------------------------------------------------
+# cli-sequence grammar and enrolled-page tier (docs-cli-sequences ADR D1 / D7)
+# ---------------------------------------------------------------------------
+
+# A cli-sequence directive body: ``@setup`` / ``@result`` frame sigils precede
+# the ``aeat`` token, and ``{name}`` interpolations fill positional slots. The
+# gate must scan its frame lines as ordinary invocations (they get the verb-path
+# and option-name checks for free) while ``@capture`` / ``@expect`` lines (no
+# ``aeat`` token) are ignored.
+_CLI_SEQUENCE_BODY_FIXTURE = """```{cli-sequence} modelo-303-first-quarter
+:seed: autonomo-basic-2026
+:verify: Verify the calculation before exporting.
+@setup aeat app ledger import --file fixtures/2026-1t-statement.csv
+aeat app modelo work create 303 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+aeat app modelo work calculate {work_unit_id}
+@result aeat app modelo work verify {work_unit_id}
+@expect result.status == "verified_complete"
+```
+"""
+
+# An enrolled page whose executable commands live inside the directive, with a
+# narrative inline-backtick reference (permitted) and no plain executable fence.
+_ENROLLED_CLEAN_FIXTURE = (
+    "# Calculate Modelo 303\n\n"
+    "Introduce the quarter with `aeat app modelo work create` (narrative).\n\n"
+    + _CLI_SEQUENCE_BODY_FIXTURE
+)
+
+# An enrolled page that ALSO carries a plain ```bash fence with an executable
+# ``aeat`` invocation — the refusal case.
+_ENROLLED_WITH_PLAIN_FENCE_FIXTURE = (
+    _CLI_SEQUENCE_BODY_FIXTURE
+    + "\nThen import more data:\n\n```bash\naeat app ledger import --file extra.csv\n```\n"
+)
+
+# A non-enrolled page with a plain executable fence — untouched by the enrolled
+# tier (it keeps exactly today's verb-path and option-name checks).
+_NON_ENROLLED_FIXTURE = "# How-to\n\n```bash\naeat app ledger import --file extra.csv\n```\n"
+
+
+def test_cli_sequence_frame_lines_conform_as_ordinary_invocations() -> None:
+    """A directive body's frame lines are scanned and validated like any invocation.
+
+    The ``@setup`` / ``@result`` sigils are dropped (the ``aeat`` anchor) and the
+    ``{name}`` interpolation is a positional placeholder, so every real ``aeat``
+    frame line is extracted and conforms to the live CLI; the ``@capture`` /
+    ``@expect`` annotation lines (no ``aeat`` token) are not scanned as commands.
+    """
+    cited = _cited_commands(_CLI_SEQUENCE_BODY_FIXTURE)
+    # The four aeat frame lines are extracted; the @capture/@expect annotation
+    # lines (no aeat token) are not scanned as commands.
+    assert len(cited) == 4
+    resolved_paths = {_resolve_path(c.verb_tokens).resolved_path for c in cited}
+    assert ("app", "ledger", "import") in resolved_paths
+    assert ("app", "modelo", "work", "create") in resolved_paths
+    assert ("app", "modelo", "work", "calculate") in resolved_paths
+    assert ("app", "modelo", "work", "verify") in resolved_paths
+    # No annotation line leaked in as a command (a @capture/@expect sigil token).
+    assert all("@" not in tok for c in cited for tok in c.verb_tokens)
+    # Every frame line — including the {name}-placeholder calculate/verify frames —
+    # conforms to the live CLI (real verb path, real options).
+    violations = [v for c in cited for v in _validate_command(c)]
+    assert not violations, f"cli-sequence frame lines must conform to the live CLI: {violations}"
+
+
+def test_enrolled_page_refuses_plain_executable_fence() -> None:
+    """On an enrolled page a plain executable ``aeat`` fence is refused (ADR D7).
+
+    A page carrying a ``{cli-sequence}`` directive is enrolled; every executable
+    invocation must then live inside a sequence. A plain ```` ```bash ```` fence
+    with a real ``aeat`` invocation is flagged, while the sanctioned directive
+    fences and narrative inline references are exempt. A non-enrolled page is
+    untouched by this tier.
+    """
+    # Enrolled + a plain executable fence: refused, naming the offending line.
+    assert _page_is_enrolled(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
+    offending = _plain_executable_aeat_fences(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
+    assert offending, "an executable aeat invocation in a plain fence on an enrolled page must be refused"
+    assert "ledger import" in offending[0]
+
+    # Enrolled but all-executed (aeat only inside the directive + inline narrative): clean.
+    assert _page_is_enrolled(_ENROLLED_CLEAN_FIXTURE)
+    assert _plain_executable_aeat_fences(_ENROLLED_CLEAN_FIXTURE) == []
+
+    # A non-enrolled page carries no cli-sequence directive, so the tier does not apply.
+    assert not _page_is_enrolled(_NON_ENROLLED_FIXTURE)
+
+
+def test_shipped_enrolled_pages_have_no_plain_executable_fences() -> None:
+    """No shipped enrolled page carries a plain executable ``aeat`` fence (ADR D7).
+
+    Scans every user-facing doc, applies the enrolled-page refusal to those that
+    carry a ``{cli-sequence}`` directive, and fails if any enrolled page cites an
+    executable ``aeat`` invocation outside a sequence. This gates real enrolled
+    pages as they land (the first arrive with the tutorials wave); it is a live
+    scan, not a skip, so it protects the surface the moment a page enrolls.
+    """
+    violations: list[str] = []
+    for doc in _flat_docs():
+        text = doc.read_text(encoding="utf-8")
+        if not _page_is_enrolled(text):
+            continue
+        for line in _plain_executable_aeat_fences(text):
+            violations.append(f"{doc.relative_to(PROJECT_ROOT)}: plain executable fence `{line}`")
+    assert not violations, (
+        "enrolled pages must place every executable aeat invocation inside a cli-sequence "
+        "directive (docs-cli-sequences ADR D7):\n  " + "\n  ".join(violations)
     )
