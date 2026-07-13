@@ -76,7 +76,7 @@ adapters:
         conflicting_duplicate_metadata: The Google Sheet carries conflicting duplicate
           AEAT metadata.
         foreign_spreadsheet_not_owned: The Google Sheet is not marked as owned by
-          this CADRUMO profile.
+          this Cadrumo profile.
         googleapiclient_not_importable: googleapiclient is not importable; the Google
           adapter cannot reach the API.
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
@@ -106,7 +106,7 @@ adapters:
           needs a controlling terminal, but this command was run non-interactively.'
         oauthlib_not_importable: google-auth-oauthlib is not importable; the OAuth
           flow cannot start.
-        profile_state_unresolved: Google OAuth cannot resolve the selected CADRUMO
+        profile_state_unresolved: Google OAuth cannot resolve the selected Cadrumo
           profile state.
         scope_missing: The Google consent screen returned without granting every required
           scope.
@@ -124,7 +124,7 @@ adapters:
           the active profile to a synthetic test tax identifier.
     profile_binding:
       errors:
-        no_active_profile: No active CADRUMO profile is bound for Google OAuth.
+        no_active_profile: No active Cadrumo profile is bound for Google OAuth.
       suggestions:
         create_profile: Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
           and then retry the Google command.
@@ -187,7 +187,7 @@ adapters:
           folder_not_owned: Drive folder {folder_name} is not marked as owned by this
             app; refusing to write to protect operator data.
           former_vault_folder: Google Drive vault folder {vault_folder_name} belongs
-            to the former product and cannot be used; use the CADRUMO vault instead.
+            to the former product and cannot be used; use the Cadrumo vault instead.
           googleapiclient_import_failed: The google-api-python-client dependency is
             not importable; run `uv sync` and retry.
           media_non_bytes: Google Drive media download returned {payload_type} instead
@@ -2791,14 +2791,14 @@ cli:
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
-      confirm_new_passphrase_prompt: 'Confirm new CADRUMO secret-store passphrase: '
+      confirm_new_passphrase_prompt: 'Confirm new Cadrumo secret-store passphrase: '
       data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
         recovery key and cannot show it again.
       errors:
         missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
-      new_passphrase_prompt: 'New CADRUMO secret-store passphrase: '
+      new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
@@ -2885,7 +2885,7 @@ cli:
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
-      profile_help: CADRUMO profile name override (default = active profile on workflow
+      profile_help: Cadrumo profile name override (default = active profile on workflow
         state)
       refresh_only_help: Skip the consent screen and refresh an existing credential
         only
@@ -4200,7 +4200,7 @@ cli:
         diagnostics_repair: Diagnose local configuration and storage health.
         diagnostics_review_queue: List pending review work.
         footer: Run aeat config --help or aeat app --help for subtree commands.
-        heading: CADRUMO - local-first workflow for Spanish tax work with AEAT
+        heading: Cadrumo - local-first workflow for Spanish tax work with AEAT
         ledger_allocate: Assign business-use or tax allocation metadata.
         ledger_archive: Archive a ledger transaction without deleting history.
         ledger_attach: Attach evidence to a ledger transaction.
@@ -4553,7 +4553,7 @@ cli:
     format_help: 'Output format: text, json, table, csv.'
     help_help: Show help.
     landing:
-      headline: CADRUMO Tax Assistant
+      headline: Cadrumo Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`. Global flags (`--format json`, `--language en`, `--profile NAME`,
         `--quiet`, `--verbose`, `--debug`) must be placed BEFORE the subcommand, e.g.
@@ -5786,7 +5786,7 @@ mcp:
         by design. Export locally; the taxpayer files themselves.'
       no_channel: '''{command}'' needs a human confirmation, and this client does
         not support elicitation. Run it from a client that can ask you questions,
-        or run the equivalent CADRUMO CLI command directly in a terminal.'
+        or run the equivalent Cadrumo CLI command directly in a terminal.'
   faithfulness:
     advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
       that no tool result in this session produced. Verify the figure against a calculate/revision
