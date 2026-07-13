@@ -98,7 +98,6 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
         repository=SubmissionRepository(),
         settings=Settings(
             cadrumo_submissions_dir=tmp_path / "submissions",
-            cadrumo_submission_browser_trace_dir=tmp_path / "traces",
         ),
     )
 
