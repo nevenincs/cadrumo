@@ -351,7 +351,7 @@ class TestBothSurfacesRedOnDivergence:
         golden_path = _refresh_fixture_golden(docs_root, goldens_root)
         _corrupt_golden_exit_code(golden_path)
 
-        # The engine function the S27 gate asserts empty on now reds.
+        # The engine function this gate asserts empty on now reds.
         problems, _advisories = check_sequences(docs_root=docs_root, goldens_root=goldens_root)
         assert problems != ()
         assert any("golden expects 99" in problem for problem in problems), problems

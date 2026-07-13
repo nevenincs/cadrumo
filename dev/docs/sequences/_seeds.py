@@ -1,4 +1,4 @@
-""":seed: recipe loading and inlining for ``cli-sequence`` directives (ADR D6).
+""":seed: recipe loading and inlining for ``cli-sequence`` directives.
 
 A seed recipe is a reusable fragment of ``@setup`` frames stored at
 ``docs/_sequences/seeds/<name>.seq`` -- "create the profile, import the standard

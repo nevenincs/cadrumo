@@ -1,4 +1,4 @@
-"""Build-time command-line tokeniser for ``cli-sequence`` frames (ADR D5).
+"""Build-time command-line tokeniser for ``cli-sequence`` frames.
 
 Highlighting a documented command is correct by construction only if it is
 classified against the real command tree, never by client-side bash guessing.

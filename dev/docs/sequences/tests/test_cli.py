@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the refresh / check CLI modes (W02.P05).
+"""Real-behaviour tests for the refresh / check CLI modes.
 
 Every test drives ``main()`` (the exact ``python -m dev.docs.sequences``
 surface) against a real temp docs tree carrying a genuine backtick-fenced

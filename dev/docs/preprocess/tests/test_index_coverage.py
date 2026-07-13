@@ -28,9 +28,10 @@ from .._reindex import (
 )
 
 # integration-only (NOT docs): this gate reads live index state produced by
-# the resident service, so it runs when the reindex-before-sweep step has made
-# the index current (the W03.P09 sweep entry, or a deliberate manual run) - not
-# in the docs build lane, where a mid-flight reindex would red it spuriously.
+# the resident service, so it runs when a reindex-before-sweep pass has made
+# the index current (whether via the sweep entry point or a deliberate manual
+# run) - not in the docs build lane, where a mid-flight reindex would red it
+# spuriously.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_index_coverage.py -> parents[4] is repo root.

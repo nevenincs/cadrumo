@@ -2,16 +2,17 @@
 
 The ``set`` / ``relate`` / ``retire`` operations mutate one concept
 fragment through the strict schema and the canonical serialiser, then
-RE-VALIDATE the whole tree with the S10 validation gates before writing:
-a mutation that would leave the tree loader-invalid is REFUSED with an
-explanation, never written. Every operation is deterministic and
-idempotent (re-running with the same arguments is a no-op diff).
+RE-VALIDATE the whole tree with the relation-integrity and lifecycle
+validation gates before writing: a mutation that would leave the tree
+loader-invalid is REFUSED with an explanation, never written. Every
+operation is deterministic and idempotent (re-running with the same
+arguments is a no-op diff).
 
 The audit report is read-only: it summarises curation-backlog health
 (draft counts, empty short_descriptions, dangling relations,
 retired-without-replaced_by, seed-provenance coverage) as a structured
-:class:`AuditReport` so the W05.P13 curation-backlog ratchet can consume
-the counts directly rather than re-parsing printed text.
+:class:`AuditReport` so a curation-backlog ratchet can consume the
+counts directly rather than re-parsing printed text.
 """
 
 from __future__ import annotations
@@ -227,7 +228,7 @@ def relate_concepts(
 ) -> Path:
     """Add or remove a ``broader`` / ``related`` edge, refusing an invalid result.
 
-    Dangling targets, self-references, and cycles are rejected by the S10
+    Dangling targets, self-references, and cycles are rejected by the
     relation-integrity and lifecycle validators run before the write.
     """
     if relation not in ("broader", "related"):
@@ -255,8 +256,8 @@ def retire_concept(
     """Retire a concept with a required ``replaced_by``, refusing an invalid result.
 
     Never deletes; stamps ``lifecycle = retired`` + ``replaced_by``. The
-    S10 lifecycle validator rejects a self-reference, a retired
-    successor, or a cycle before the write.
+    lifecycle validator rejects a self-reference, a retired successor,
+    or a cycle before the write.
     """
     handbook, target_dir = _load_with_dir(concepts_dir)
     concept = _require_concept(handbook, concept_id)

@@ -1,11 +1,11 @@
 """Tests for the ``cli-tree.json`` help-projection generator (``dev/docs/cli_tree.py``).
 
 The projection is the build-time help catalogue the ``cli-sequence`` frontend
-widget consumes (ADR ``2026-07-13-docs-cli-sequences-adr`` ruling D5). These
-tests prove it generates, is byte-deterministic across two builds, covers every
-node the live Click tree yields, round-trips through its serialised form, and
-that a documented command path absent from the projection fails loudly with
-nearest-candidate hints — the "free conformance gate" ruling D5 predicts.
+widget consumes. These tests prove it generates, is byte-deterministic across
+two builds, covers every node the live Click tree yields, round-trips through
+its serialised form, and that a documented command path absent from the
+projection fails loudly with nearest-candidate hints — a free conformance gate
+against CLI drift.
 
 The independent tree walk (:func:`_collect_all_path_keys_in_subprocess`) is a
 separate materialisation from the generator's own walk, so the coverage test

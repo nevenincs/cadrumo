@@ -1,11 +1,11 @@
-"""Real-behaviour conformance for the unified SearchRecord funnel (ADR D4/D6).
+"""Real-behaviour conformance for the unified SearchRecord funnel.
 
 The four projected record kinds -- concept cards, casilla projections, CLI
 surface/option records -- funnel through :func:`to_search_record` into one
 homogeneous :class:`SearchRecord` shape (the Pagefind injection payload). These
 gates prove the funnel produces a uniform record for every kind, carries the
 four-language descriptions and grounding provenance, and that the ranking
-weights are normalised onto one comparable cross-kind scale (ADR D5: term cards
+weights are normalised onto one comparable cross-kind scale (term cards
 first, navigation second, full text third).
 
 No live CLI walk: the CLI records are constructed directly (their shape is the
@@ -192,11 +192,11 @@ def test_funnelled_records_are_json_serialisable() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Ranking weight normalisation across kinds (ADR D5)
+# Ranking weight normalisation across kinds
 # ---------------------------------------------------------------------------
 
 
-def test_base_weights_follow_the_d5_tier_ordering() -> None:
+def test_base_weights_follow_the_declared_tier_ordering() -> None:
     """Concept > CLI > casilla > page base weights (term, nav, nav, fulltext)."""
     from dev.docs.terminology._search_record import SearchRecordKind
     from dev.docs.terminology._unified_record import kind_base_weight

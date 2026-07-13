@@ -1,11 +1,11 @@
-"""Real-behaviour conformance for the corpus coverage report (ADR D2).
+"""Real-behaviour conformance for the corpus coverage report.
 
 The coverage compiler derives the four enumerable target surfaces from the same
 bundled authorities the product grounds against -- the approved Handbook
 concept cards, the registry casilla projections (through the validated
 authority, never raw TOML), the CLI projection, and the legal catalogue's
 provision vocabulary -- and joins them against the committed relevance mapping
-to list every uncovered target (the ADR D2 widening backlog).
+to list every uncovered target (the widening backlog).
 
 No mocks: the concept, casilla, and legal surfaces run against the REAL bundled
 authorities. Only the relevance mapping and the (subprocess-costly) CLI surface

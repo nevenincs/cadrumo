@@ -1,4 +1,4 @@
-"""Real-behaviour conformance for the casilla projection compiler (ADR D4).
+"""Real-behaviour conformance for the casilla projection compiler.
 
 The compiler projects every casilla of every modelo revision -- read through
 the validated registry authority (never raw TOML) -- into a strict
@@ -6,9 +6,9 @@ the validated registry authority (never raw TOML) -- into a strict
 deduplicated across revisions by the canonical ``(modelo, casilla.id)``
 identity.
 These gates bind it to the calculation-grounding contract (every casilla
-emitted, ``legal_refs`` / ``source_refs`` carried, none dropped) and to the
-registry-authority-flow rule (the projection reads snapshots through the
-bundled authority, the same authority the calculation engine uses).
+emitted, ``legal_refs`` / ``source_refs`` carried, none dropped) and confirm
+the projection reads snapshots through the bundled authority, the same
+authority the calculation engine uses.
 
 No mocks: the projection runs against the REAL bundled registry. The
 independent oracles are an own count of the registry's casilla rows (the
