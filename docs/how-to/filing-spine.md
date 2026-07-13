@@ -1,7 +1,11 @@
 # The filing workflow: work units and calculation revisions
 
-Use this guide after completing the quickstart if you want to understand how
-the tool organises and stores your filing work between steps.
+This page covers the filing workflow's two building blocks - the work unit
+(the saved workspace for one filing target) and the calculation revision
+(one saved calculation result) - and how create, calculate, verify, file,
+and export choose between them. Use it after completing the quickstart if
+you want to understand how the tool organises and stores your filing work
+between steps.
 
 ## Before you start
 
@@ -141,10 +145,14 @@ When you run calculate, Cadrumo saves a draft calculation revision:
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
-Running calculation again does not overwrite the old result. If your
-transactions or manual values changed, the tool creates a new saved calculation.
-If nothing changed, it reuses the same result. The tool updates your filing
-record to reflect the latest calculated draft.
+Running calculation again does not overwrite the old result. Every saved
+calculation is immutable: earlier revisions stay on disk exactly as they
+were, identified by their exact contents, so you can compare revisions and
+go back. If your transactions or manual values changed, the tool creates a
+new saved calculation alongside the old; if nothing changed, it reuses the
+same result. The tool updates your filing record to reflect the latest
+calculated draft. A saved revision is a record of one attempt, not a verdict
+- its numbers commit to nothing until you verify and file it.
 
 List the saved calculation revisions for a filing:
 
@@ -197,6 +205,11 @@ current verified revision:
 ```bash
 aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
+
+Export refuses a plain draft. The upload file is the artefact that leaves
+the tool for AEAT, so it is built only from a revision that passed the
+completeness check (or one already recorded as filed) - the gate that stops
+an incomplete or inconsistent draft from becoming a filing by accident.
 
 The `.boe` extension is a naming convention. The tool writes the file to the
 `--output` path you choose and always produces a fixed-width fichero-BOE text

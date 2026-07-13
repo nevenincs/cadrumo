@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 import sqlite3
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -105,28 +105,24 @@ class CommandHit(BaseModel):
     score: float
 
 
-class _SpanishStemmer(Protocol):
-    """Minimal runtime contract supplied by the optional snowball package."""
-
-    def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - external package API spelling
-
-
-def _spanish_stemmer() -> _SpanishStemmer | None:
+def _spanish_stemmer() -> object | None:
     try:
         import snowballstemmer
     except ModuleNotFoundError:
         return None
-    # CAST-RATIONALE-SNOWBALL-STEMMER: optional dependency exposes the protocol at runtime without stubs.
-    return cast(_SpanishStemmer, snowballstemmer.stemmer("spanish"))
+    return snowballstemmer.stemmer("spanish")
 
 
-def _stem_terms(stemmer: _SpanishStemmer | None, terms: Sequence[str]) -> list[str]:
+def _stem_terms(stemmer: object | None, terms: Sequence[str]) -> list[str]:
     if stemmer is None or not terms:
         return list(terms)
-    return stemmer.stemWords(list(terms))
+    # TYPE-IGNORE-RATIONALE-STEMMER: the snowball stemmer is a duck-typed optional
+    # dependency (typed `object | None`); `stemWords` resolves at runtime on the
+    # concrete stemmer and cannot be statically attributed on `object`.
+    return list(stemmer.stemWords(list(terms)))  # type: ignore[attr-defined]
 
 
-def _column_text(stemmer: _SpanishStemmer | None, raw: str) -> str:
+def _column_text(stemmer: object | None, raw: str) -> str:
     """Store a tier as raw plus stemmed text so one column matches both forms.
 
     Keeps the raw (diacritics-folded by the tokenizer) text alongside its

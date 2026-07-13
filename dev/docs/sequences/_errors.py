@@ -20,7 +20,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-__all__ = ["SequenceEngineError", "SequenceExecutionError", "SequenceParseError"]
+__all__ = [
+    "SequenceEngineError",
+    "SequenceExecutionError",
+    "SequenceGoldenError",
+    "SequenceGoldenMismatchError",
+    "SequenceParseError",
+]
 
 
 class SequenceEngineError(ValueError):
@@ -42,6 +48,36 @@ class SequenceExecutionError(SequenceEngineError):
         self.sequence_id = sequence_id
         self.detail = detail
         super().__init__(f"cli-sequence {sequence_id!r} failed to execute: {detail}")
+
+
+class SequenceGoldenError(SequenceEngineError):
+    """Raised when a committed golden cannot be located, read, or validated.
+
+    Every message names the remedy — the exact ``refresh`` invocation — because
+    goldens are CLI-owned artifacts: a missing or hand-corrupted golden is fixed
+    by regeneration, never by hand-editing.
+    """
+
+
+class SequenceGoldenMismatchError(SequenceEngineError):
+    """Raised when an executed transcript diverges from its committed golden.
+
+    Accumulating, like :class:`SequenceParseError`: ``problems`` carries every
+    frame divergence found in one comparison pass (each naming the page, the
+    sequence id, the frame index and argv, and the post-mask differing paths or
+    unified text diff), and the message closes with the exact refresh
+    invocation that updates the golden.
+    """
+
+    def __init__(self, sequence_id: str, problems: Sequence[str], *, remedy: str) -> None:
+        self.sequence_id = sequence_id
+        self.problems: tuple[str, ...] = tuple(problems)
+        self.remedy = remedy
+        joined = "\n".join(f"  - {problem}" for problem in self.problems)
+        super().__init__(
+            f"cli-sequence {sequence_id!r} diverged from its committed golden:\n{joined}\n"
+            f"If the new behaviour is intended, refresh the golden with: {remedy}",
+        )
 
 
 class SequenceParseError(SequenceEngineError):

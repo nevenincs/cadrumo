@@ -167,7 +167,7 @@ Before using real data, read the [filing boundary](docs/explanation/recording-a-
 
 The repository remains private during alpha development. If you have access, use these routes to report defects, handle security concerns, set up a workstation, and review changes:
 
-- [Open an issue](https://github.com/cadrumo/cadrumo/issues) for bugs and documentation problems
+- [Open an issue](https://github.com/nevenincs/cadrumo/issues) for bugs and documentation problems
 - Follow [`SECURITY.md`](SECURITY.md) for vulnerability reporting
 - Use the [workstation setup guide](docs/workstation-setup.md) before contributing code
 - Review shipped changes in the [changelog](CHANGELOG.md)

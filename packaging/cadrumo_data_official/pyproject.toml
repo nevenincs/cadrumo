@@ -10,11 +10,16 @@ name = "cadrumo-data-official"
 # two ever drift, so the companion can only ship at the same version as the
 # runtime wheel that resolves it. Bump both (and the sibling
 # `cadrumo-data-manuals`) together on every release.
-version = "0.1.1"
+version = "0.2.0"
 description = "Official AEAT diseños de registro / workbooks and normative PDFs (corpus source binaries) for the cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
+# Explicit so the wheel/sdist always carry the Apache 4(d) attribution chain
+# (dist-info/licenses/{LICENSE,NOTICE}); the NOTICE also scopes the licence
+# to packaging/derived works, never the official AEAT/BOE documents
+# (license-posture ADR).
+license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
 ]
@@ -28,9 +33,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cadrumo/cadrumo"
-Issues = "https://github.com/cadrumo/cadrumo/issues"
-Repository = "https://github.com/cadrumo/cadrumo"
+Homepage = "https://github.com/nevenincs/cadrumo"
+Issues = "https://github.com/nevenincs/cadrumo/issues"
+Repository = "https://github.com/nevenincs/cadrumo"
 
 # This companion ships a subtree of the SAME `cadrumo_data` PEP 420 implicit
 # namespace package as the sibling `cadrumo-data-manuals`: NEITHER wheel ships

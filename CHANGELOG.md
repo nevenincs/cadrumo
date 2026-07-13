@@ -10,19 +10,7 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.1.1] - 2026-07-04
-
-### Fixed
-
-- `corpus-sources` extra now resolves: the published 0.1.0 metadata pinned the
-  never-published single `aeat-data` companion; 0.1.1 pins the two sub-cap
-  companions (`aeat-data-manuals`, `aeat-data-official`) that actually ship.
-
-Run `just release` to preview the next release. Run `just release-apply`
-to land the version bump and CHANGELOG entries on `main` (human-gated,
-no push).
-
-## [0.2.0] - 2026-07-02
+## [0.2.0] - 2026-07-04
 
 Prepared per issue #382. No `v0.1.0` git tag exists on the remote, so this
 section is a hand-curated summary of the work landed on `main` since the
@@ -72,11 +60,21 @@ so there is no upgrade path to document (see `no-legacy-compatibility`).
 - Live AEAT submission remains permanently forbidden; this release only
   extends build / validate / verify / export capability outside the
   application (see `aeat-safety-legal-gates`).
-- Version bump: `pyproject.toml [project].version`, `src/aeat/__init__.py
-  __version__`, and `.release-please-manifest.json` all still read `0.1.0`
-  as of this preparation and are intentionally left untouched here — the
-  bump is part of the human-gated `just release-apply` step per the
-  `2026-04-12-release-please-adr`.
+- Version bump applied at cut time: `pyproject.toml [project].version`,
+  `src/aeat/__init__.py __version__`, and `.release-please-manifest.json`
+  now read `0.2.0` (per the `2026-04-12-release-please-adr` human-gated cut).
+
+## [0.1.1] - 2026-07-04
+
+### Fixed
+
+- `corpus-sources` extra now resolves: the published 0.1.0 metadata pinned the
+  never-published single `aeat-data` companion; 0.1.1 pins the two sub-cap
+  companions (`aeat-data-manuals`, `aeat-data-official`) that actually ship.
+
+Run `just release` to preview the next release. Run `just release-apply`
+to land the version bump and CHANGELOG entries on `main` (human-gated,
+no push).
 
 ## [0.1.0] - 2026-04-12
 

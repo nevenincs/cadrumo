@@ -1,16 +1,20 @@
 [project]
 name = "cadrumo"
-version = "0.1.1"
-description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
+version = "0.2.0"
+description = "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT."
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
+# Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
+# (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
+# license-file globs (license-posture ADR).
+license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
 ]
-keywords = ["aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
+keywords = ["cadrumo", "aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3.13",
@@ -35,10 +39,6 @@ dependencies = [
   "cryptography>=47.0.0,<48",
   # XML parsing.
   "defusedxml>=0.7.1,<1",
-  # In-process Excel-formula evaluator reserved for the schema-to-sheet
-  # parity oracle. The production registry formula runtime does not import
-  # this package directly; the workbook parity gate owns the dependency.
-  "formulas>=1.2.0,<2",
   # HTTP client
   "httpx>=0.28.1,<1",
   # OS-keychain abstraction for the master-key provider (Windows
@@ -46,9 +46,6 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
-  # Financial ingest. ofxtools is the maintained, strict OFX-spec parser
-  # (ships py.typed) that replaces the prior unmaintained OFX library.
-  "ofxtools>=1.1,<2",
   "openpyxl>=3.1.5,<4",
   # PDF parsing for justificantes.
   "pdfplumber>=0.11.9,<1",
@@ -97,9 +94,9 @@ aeat = "cadrumo.entrypoints.cli:main"
 cadrumo-mcp = "cadrumo.entrypoints.mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/cadrumo/cadrumo"
-Issues = "https://github.com/cadrumo/cadrumo/issues"
-Repository = "https://github.com/cadrumo/cadrumo"
+Homepage = "https://github.com/nevenincs/cadrumo"
+Issues = "https://github.com/nevenincs/cadrumo/issues"
+Repository = "https://github.com/nevenincs/cadrumo"
 
 [project.optional-dependencies]
 workbook-windows = [
@@ -132,6 +129,14 @@ browser = [
 # subprocess CLI providers, which need no Python SDK).
 anthropic = [
   "anthropic>=0.74.1,<1",
+]
+# OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
+# parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
+# keeps the CORE dependency closure free of strong copyleft (license-posture
+# ADR). Lazily imported behind `require_optional_extra(OFX_EXTRA)`; an OFX
+# source without the extra refuses with the `pip install cadrumo[ofx]` hint.
+ofx = [
+  "ofxtools>=1.1,<2",
 ]
 # Operator agent-harness runtime. The harness operating layer (rules, personas,
 # skills) ships as reviewed product data in the CORE wheel under
@@ -176,8 +181,8 @@ search = [
 # source verification is byte-identical to a full checkout. Reviewed data ships
 # as an artifact — never fetched at install or run time (product-packaging ADR).
 corpus-sources = [
-  "cadrumo-data-manuals==0.1.1",
-  "cadrumo-data-official==0.1.1",
+  "cadrumo-data-manuals==0.2.0",
+  "cadrumo-data-official==0.2.0",
 ]
 # Convenience aggregate: every optional integration at once. `corpus-sources`
 # is deliberately excluded until the two data companions are published on PyPI
@@ -187,6 +192,7 @@ all = [
   "cadrumo[google]",
   "cadrumo[browser]",
   "cadrumo[anthropic]",
+  "cadrumo[ofx]",
   "cadrumo[agent]",
   "cadrumo[search]",
 ]
@@ -256,7 +262,7 @@ torch = [
 # The two data companions are not yet on PyPI, so the dev resolver builds each
 # from its in-repo project. uv sources never reach the published wheel metadata:
 # an installed `cadrumo[corpus-sources]` still resolves the bare
-# `cadrumo-data-manuals==0.1.1` / `cadrumo-data-official==0.1.1` pins from the index.
+# `cadrumo-data-manuals==0.2.0` / `cadrumo-data-official==0.2.0` pins from the index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
 
@@ -286,6 +292,7 @@ dev = [
   "playwright>=1.58.0",
   "playwright-stealth>=2.0.3,<3",
   "anthropic>=0.74.1,<1",
+  "ofxtools>=1.1,<2",
   "prek>=0.2.0",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
@@ -923,8 +930,7 @@ ignore_decorators = [
 
 # ── Deptry (unused / transitive dependency lint) ─────────────────────────────
 # Suppress the false positives surfaced by deptry's default heuristics.
-# `formulas` is owned by the workbook parity oracle even though production
-# imports do not reference it directly yet. `rich` is the direct version pin for
+# `rich` is the direct version pin for
 # Typer's console rendering. `pydantic_core` is re-exported by pydantic
 # (legitimate transitive use), and `click` ships under typer (typer's CLI
 # surface is built on click). The remaining diagnostics flag genuine drift and
