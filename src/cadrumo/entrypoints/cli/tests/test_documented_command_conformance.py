@@ -789,6 +789,29 @@ def test_shipped_enrolled_pages_have_no_plain_executable_fences() -> None:
     )
 
 
+def test_shipped_enrolled_page_scan_is_not_vacuous() -> None:
+    """At least one shipped page is enrolled, so the enrolled-page scan has a real subject.
+
+    The enrolled-page refusal scan (above) passes vacuously when no shipped page
+    carries a ``{cli-sequence}`` directive — exactly the state before the first
+    tutorials-wave page landed. With ``docs/how-to/first-quarterly-filing.md``
+    now enrolled, the scan exercises a real enrolled instance; this tripwire
+    (the enrolled-page analogue of :func:`test_gate_scans_a_realistic_invocation_count`)
+    fails loudly if the enrolled surface ever silently collapses back to zero, so
+    the refusal tier and the co-located golden gate cannot rot into vacuity behind
+    a green suite.
+    """
+    enrolled = [
+        doc.relative_to(PROJECT_ROOT)
+        for doc in _flat_docs()
+        if _page_is_enrolled(doc.read_text(encoding="utf-8"))
+    ]
+    assert enrolled, (
+        "no shipped page carries a `{cli-sequence}` directive, so the enrolled-page "
+        "refusal scan is vacuous — the enrolled doc surface has collapsed to zero"
+    )
+
+
 # A non-enrolled page whose plain fence cites a genuinely WRONG option. Proves
 # the base verb-path/option-name checks still fire on a non-enrolled page (tier
 # two) — the enrolled refusal must not have displaced them.
