@@ -1,14 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#cadrumo-product-rename'
+  - "#adr"
+  - "#cadrumo-product-rename"
 date: '2026-07-12'
-modified: '2026-07-12'
 related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
+superseded_by: '2026-07-12-cadrumo-cli-executable-adr'
+modified: '2026-07-13'
 ---
-
-# `cadrumo-product-rename` adr: `Canonical Cadrumo product identity and rename boundary` | (**status:** `accepted`)
+# `cadrumo-product-rename` adr: `Canonical Cadrumo product identity and rename boundary` | (**status:** `superseded`)
 
 ## Problem Statement
 
