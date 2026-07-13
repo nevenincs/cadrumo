@@ -117,17 +117,80 @@ Already know the workflow? Go straight to the reference you need:
 ```{toctree}
 :hidden:
 
-how-to/index
-workstation-setup
+Getting started <how-to/index>
+Quickstart <how-to/quickstart>
+The income-tax year <how-to/irpf-lifecycle>
+The IVA year <how-to/iva-lifecycle>
+Set up your workstation <workstation-setup>
+```
+
+```{toctree}
+:hidden:
+:caption: Your profile
+
+Set up a profile <how-to/profile-setup>
+Authenticate with AEAT <how-to/authenticate-with-aeat>
+Maintain census facts <how-to/censo-update>
+Which modelos apply to you <how-to/choose-modelo>
+Protect data access <how-to/protect-data-access>
+```
+
+```{toctree}
+:hidden:
+:caption: Your calendar
+
+Filing calendar <how-to/filing-calendar>
+AEAT notifications <how-to/check-aeat-notifications>
+Filing readiness <how-to/filing-readiness>
+```
+
+```{toctree}
+:hidden:
+:caption: Your ledger
+
+Work with transactions <how-to/import-bank-statements>
+Classify transactions <how-to/classify-transactions>
+Classify with an LLM <how-to/classify-with-llm>
+Attach invoices and receipts <how-to/ledger-evidence>
+Manage business invoices <how-to/manage-invoices>
+Correct mistakes <how-to/correct-ledger-entries>
+IVA prorrata deductions <how-to/prorrata>
+```
+
+```{toctree}
+:hidden:
+:caption: Your filings
+
+The filing workflow <how-to/filing-spine>
+Modelo 036 (censo) <how-to/modelo-036>
+Modelo 100 (Renta) <how-to/modelo-100>
+Modelo 130 (IRPF instalment) <how-to/modelo-130>
+Modelo 303 (IVA) <how-to/modelo-303>
+Modelo 349 (intra-community) <how-to/modelo-349>
+Modelo 390 (IVA summary) <how-to/modelo-390>
+Calculation inputs <how-to/review-calculation-values>
+Google Sheets review <how-to/review-with-google-sheets>
+Verify a filing <how-to/verification-reports>
+File at AEAT <how-to/file-at-aeat>
+Reconcile a filing <how-to/reconcile>
+```
+
+```{toctree}
+:hidden:
+:caption: Help
+
+Troubleshooting <how-to/troubleshooting>
+Connect an agent (MCP) <how-to/connect-an-agent>
+Disclaimer <disclaimer>
 ```
 
 ```{toctree}
 :hidden:
 :caption: Reference
 
-cli/index
-reference/index
-_generated/glossary
+CLI reference <cli/index>
+Cadrumo reference <reference/index>
+Glossary <_generated/glossary>
 ```
 
 ```{toctree}
@@ -139,18 +202,10 @@ explanation/index
 
 ```{toctree}
 :hidden:
-:caption: Help
-
-runbooks/index
-disclaimer
-```
-
-```{toctree}
-:hidden:
 :caption: Project
 
-updates
-architecture/index
-authoring-guide
-api/cadrumo
+Updates and downloads <updates>
+Architecture <architecture/index>
+Authoring guide <authoring-guide>
+API <api/cadrumo>
 ```

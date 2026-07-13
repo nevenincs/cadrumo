@@ -2,8 +2,6 @@
 
 Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
-For a step-by-step recovery procedure for one common scenario - a certificate to renew, a refused live read, an export that verification blocks, unreadable records, or a modelo that is not ready - use the [recovery runbooks](../runbooks/index.md).
-
 Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `CADRUMO_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
 
 ## "This operation requires an active profile"

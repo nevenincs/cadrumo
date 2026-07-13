@@ -303,13 +303,6 @@ Expose the toolset to Claude or any MCP client, with the safety boundary intact.
 Fix active-profile, storage, registry, and authentication problems.
 :::
 
-:::{grid-item-card} Recovery Runbooks
-:link: ../runbooks/index
-:link-type: doc
-
-Step-by-step recovery procedures for common refusals and failures.
-:::
-
 ::::
 
 Cadrumo does not submit to AEAT. Exported files are local files. You upload them
@@ -319,37 +312,5 @@ records.
 ```{toctree}
 :hidden:
 
-irpf-lifecycle
-iva-lifecycle
-quickstart
 onboarding
-profile-setup
-authenticate-with-aeat
-censo-update
-choose-modelo
-protect-data-access
-filing-calendar
-check-aeat-notifications
-filing-readiness
-import-bank-statements
-classify-transactions
-classify-with-llm
-ledger-evidence
-manage-invoices
-correct-ledger-entries
-prorrata
-filing-spine
-modelo-036
-modelo-100
-modelo-130
-modelo-303
-modelo-349
-modelo-390
-review-calculation-values
-review-with-google-sheets
-verification-reports
-file-at-aeat
-reconcile
-connect-an-agent
-troubleshooting
 ```
