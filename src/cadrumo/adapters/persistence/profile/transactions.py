@@ -198,9 +198,9 @@ class TransactionCatalogueRepository:
     behind
     :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`.
 
-    ``_serialized_hash_cache`` is the O3 write-path lever
-    (``2026-07-06-ledger-perf-optimization-adr``): memoizes the stored-envelope
-    SHA-256 of each loaded frozen :class:`~domain.transactions.Transaction`
+    ``_serialized_hash_cache`` is a write-path optimization: it memoizes the
+    stored-envelope SHA-256 of each loaded frozen
+    :class:`~domain.transactions.Transaction`
     instance, populated once per row at :meth:`load` and consulted by
     :meth:`_reconcile` before re-serializing an untouched row.
 
@@ -209,8 +209,8 @@ class TransactionCatalogueRepository:
     because :attr:`~domain.transactions.RawTransaction.raw_fields` is stored as
     a ``mappingproxy`` (unhashable), which rules out a plain
     :class:`~weakref.WeakKeyDictionary` (it hashes the key object itself). A
-    bare ``id()`` integer key alone would risk the GC-recycle hazard the ADR
-    warns against -- a collected instance's address could be reused by an
+    bare ``id()`` integer key alone would risk a GC-recycle hazard -- a
+    collected instance's address could be reused by an
     unrelated object -- so each cache entry is paired with a
     :class:`~weakref.finalize` callback that evicts the ``id()`` entry the
     INSTANT its ``Transaction`` is garbage-collected, before the address could
@@ -326,8 +326,7 @@ class TransactionCatalogueRepository:
                     translated_message="errors.integrity.integrity_storage_envelope_version",
                 )
             transaction = envelope.payload
-            # O3 write-path cache (2026-07-06-ledger-perf-optimization-adr):
-            # memoize the stored envelope's payload hash against this exact
+            # Write-path cache: memoize the stored envelope's payload hash against this exact
             # loaded instance. An untouched row at save time is the SAME
             # object (frozen models never mutate in place), so ``_reconcile``
             # can reuse this hash instead of re-serializing the row.
@@ -441,8 +440,7 @@ class TransactionCatalogueRepository:
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 
-        The O2 period-first partition (``2026-07-05-ledger-latency-budget-adr``):
-        runs a completeness gate against the plaintext
+        The period-first partition runs a completeness gate against the plaintext
         :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
         rows for this bucket -- the index row count and id set must exactly
         match the encrypted membership index -- before trusting the index for
@@ -720,8 +718,7 @@ class TransactionCatalogueRepository:
         An incoming transaction that IS (object identity) an instance this
         same repository loaded reuses the memoized
         ``_serialized_hash_cache`` entry instead of re-serializing and
-        re-hashing the row (O3,
-        ``2026-07-06-ledger-perf-optimization-adr``). The store-side
+        re-hashing the row. The store-side
         comparison (``stored_hashes``) is always fresh; only the
         fresh-serialization side of the diff is skipped for a cache hit.
         """

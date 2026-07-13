@@ -57,8 +57,8 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_compute_from_pull.py",
         "test_document_link_resolver.py",  # follow-up contract: doclink resolver scope-refusal + parse contract
         "test_document_link_resolve_roundtrip.py",  # contract: doclink fetch-and-encrypt-or-refuse over real storage
-        "test_drive_folder_listing.py",  # contract (#262): Drive-folder bulk listing/filter/pagination/refusal
-        "test_drive_folder_bulk_fetch_roundtrip.py",  # contract (#262): folder sweep fetch-and-encrypt-or-refuse
+        "test_drive_folder_listing.py",  # contract: Drive-folder bulk listing/filter/pagination/refusal
+        "test_drive_folder_bulk_fetch_roundtrip.py",  # contract: folder sweep fetch-and-encrypt-or-refuse
         "test_grid_resize.py",
         "test_impersonation.py",  # service-account ADC discovery, IAM refusal, and config validation
         "test_impersonation_live.py",  # live opt-in IAM token minting for provisioned service accounts

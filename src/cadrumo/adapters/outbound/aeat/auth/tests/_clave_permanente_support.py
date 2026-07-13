@@ -15,9 +15,6 @@ See Also:
     :mod:`~adapters.outbound.aeat.auth.tests.test_clave_permanente_live`
         Live Playwright probe that validates the same provider against AEAT's
         real Cl@ve Permanente surface.
-    ``2026-06-04-repo-health-triage-live-auth-split-invariants-audit``
-        Live-auth invariant record for central session gating and encrypted
-        provider metadata persistence.
 """
 
 from __future__ import annotations
