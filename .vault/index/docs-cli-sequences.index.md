@@ -31,7 +31,20 @@ related:
   - '[[2026-07-13-docs-cli-sequences-W03-P07-S23]]'
   - '[[2026-07-13-docs-cli-sequences-W03-P07-S24]]'
   - '[[2026-07-13-docs-cli-sequences-W03-P07-S25]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P08-S26]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P08-S27]]'
+  - '[[2026-07-13-docs-cli-sequences-W03-P08-S28]]'
+  - '[[2026-07-13-docs-cli-sequences-W04-P09-S29]]'
+  - '[[2026-07-13-docs-cli-sequences-W04-P09-S30]]'
+  - '[[2026-07-13-docs-cli-sequences-W04-P09-S31]]'
+  - '[[2026-07-13-docs-cli-sequences-W04-P09-S32]]'
+  - '[[2026-07-13-docs-cli-sequences-W05-P10-S33]]'
+  - '[[2026-07-13-docs-cli-sequences-W05-P10-S34]]'
+  - '[[2026-07-13-docs-cli-sequences-W05-P10-S35]]'
+  - '[[2026-07-13-docs-cli-sequences-W06-P11-S36]]'
+  - '[[2026-07-13-docs-cli-sequences-W06-P11-S38]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
+  - '[[2026-07-13-docs-cli-sequences-audit]]'
   - '[[2026-07-13-docs-cli-sequences-plan]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
 ---
@@ -45,6 +58,10 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 ### adr
 
 - `2026-07-13-docs-cli-sequences-adr` - `docs-cli-sequences` adr: `interactive executed CLI sequence docs` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-13-docs-cli-sequences-audit` - `docs-cli-sequences` audit: `docs-cli-sequences codification candidates and follow-up register`
 
 ### exec
 
@@ -73,6 +90,18 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-W03-P07-S23` - Register the backtick-fenced cli-sequence MyST directive rendering server-side static frames in document order plus one inline application/json payload per sequence
 - `2026-07-13-docs-cli-sequences-W03-P07-S24` - Teach the conformance gate the sequence grammar (strip @setup and @result sigils, treat {name} as a positional placeholder) and add the enrolled-page no-plain-executable-fence tier
 - `2026-07-13-docs-cli-sequences-W03-P07-S25` - Write directive and tokeniser tests asserting the payload shape, token classification, and no-JS static frame HTML
+- `2026-07-13-docs-cli-sequences-W03-P08-S26` - Add the builder-inited hook in docs conf setup running the engine check mode and emitting cli-tree.json into the static output, scoped for the incremental changed-page build
+- `2026-07-13-docs-cli-sequences-W03-P08-S27` - Wire the pytest gate calling the same engine check functions so CI catches golden drift without a full docs build
+- `2026-07-13-docs-cli-sequences-W03-P08-S28` - Verify the docs build check surface and the pytest gate both red on an injected golden divergence and both pass green on clean goldens
+- `2026-07-13-docs-cli-sequences-W04-P09-S29` - Extend the vendored widget to parse the inline JSON payload and add frame visibility toggling, prev/next/play controls, a position indicator, and full keyboard operability
+- `2026-07-13-docs-cli-sequences-W04-P09-S30` - Extend the vendored stylesheet with the terminal-framed visual language, the collapsed setup disclosure, and prefers-reduced-motion handling
+- `2026-07-13-docs-cli-sequences-W04-P09-S31` - Implement the hover and focus help popover keyed into cli-tree.json via one same-origin per-page fetch, opening a verb token's live help by its command-path key
+- `2026-07-13-docs-cli-sequences-W04-P09-S32` - Verify no-JS content-identical degradation, keyboard and reduced-motion accessibility, and the nitpicky offline -n -W gate green on a rendered sequence page
+- `2026-07-13-docs-cli-sequences-W05-P10-S33` - Author the synthetic input fixtures and shared seed recipes for the first tutorials
+- `2026-07-13-docs-cli-sequences-W05-P10-S34` - Author the first greenfield tutorial page with real cli-sequence directives and generate its committed goldens via the refresh CLI
+- `2026-07-13-docs-cli-sequences-W05-P10-S35` - Verify the tutorial sequences execute and match their goldens, the @result @expect asserts success, and the page renders stepped with content-identical no-JS output
+- `2026-07-13-docs-cli-sequences-W06-P11-S36` - Confirm the two-tier enrollment gate refuses a plain executable fence on an enrolled page while non-enrolled pages keep the verb-path and option-name checks
+- `2026-07-13-docs-cli-sequences-W06-P11-S38` - Record the three codification candidates from the ADR as post-cycle rule-promotion notes in the feature close audit
 
 ### plan
 
