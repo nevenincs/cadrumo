@@ -452,6 +452,13 @@ def test_sequence_widget_is_wired_and_implemented() -> None:
     # button, no timer, no reduced-motion autoplay branch may return.
     for banned in ("setInterval", "startPlay", "PLAY_INTERVAL_MS", "prefersReducedMotion", "frame.hidden"):
         assert banned not in js, f"widget JS must not carry the retired autoplay surface {banned!r}"
+    # Per-frame output disclosure: outputs are individually toggleable, the
+    # command line never is (the toggle governs only the output selector set).
+    for surface in ('"cadrumo-output-toggle"', '"is-output-open"', "setOutputOpen"):
+        assert surface in js, f"widget JS is missing the output-disclosure surface {surface}"
+    assert ".cadrumo-frame-command" not in js.split("OUTPUT_SELECTOR =")[1].split(";")[0], (
+        "the output disclosure must never govern the command line itself"
+    )
 
     css = _WIDGET_CSS.read_text(encoding="utf-8")
     for surface in (
@@ -460,6 +467,8 @@ def test_sequence_widget_is_wired_and_implemented() -> None:
         ".cadrumo-sequence-controls",
         ".cadrumo-cli-popover",
         ".cadrumo-frame.is-future",
+        ".cadrumo-output-toggle",
+        ":not(.is-output-open)",
         "--font-stack--monospace",
     ):
         assert surface in css, f"widget CSS is missing {surface!r}"
