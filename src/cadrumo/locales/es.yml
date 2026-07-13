@@ -206,7 +206,7 @@ adapters:
             operador.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertenece al producto anterior y no se puede usar; usa la carpeta vault
-            de Cadrumo.
+            de CADRUMO.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             se puede importar; ejecuta `uv sync` y reintentalo.
           media_non_bytes: La descarga de medios de Google Drive devolvio {payload_type}
@@ -2987,7 +2987,6 @@ cli:
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
-    bucket: null
     check:
       available: disponible
       help: Comprueba la disponibilidad de las dependencias externas y las capacidades
@@ -3601,7 +3600,6 @@ cli:
       help: Cambia a un perfil y conviértelo en el activo.
       name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
         del perfil activo.
-    unlock: null
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -3869,7 +3867,7 @@ cli:
         --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10).
         Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
         en la base del IRNR.
-      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna CADRUMO
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
@@ -4052,7 +4050,7 @@ cli:
       split_recommended_message: La factura adjunta parece contener varias líneas
         de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
         hijos de base e IVA declarables de forma independiente.
-      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna CADRUMO
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Importe de base imponible
@@ -4535,7 +4533,7 @@ cli:
         diagnostics_review_queue: Mostrar la cola de revision pendiente.
         footer: Ejecute 'aeat <comando> --help' para obtener mas informacion sobre
           cada comando.
-        heading: Cadrumo, herramienta de declaraciones fiscales con la AEAT.
+        heading: CADRUMO, herramienta de declaraciones fiscales con la AEAT.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
         ledger_archive: Archivar entradas del libro de transacciones.
         ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
@@ -4907,7 +4905,7 @@ cli:
     format_help: 'Formato de salida: text, json, table, csv.'
     help_help: Mostrar la ayuda.
     landing:
-      headline: Asistente fiscal Cadrumo
+      headline: Asistente fiscal CADRUMO
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
         --help`. Los modificadores globales (`--format json`, `--language es`, `--profile
         NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del subcomando,
@@ -6212,7 +6210,7 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
-      y se cancelo. Reintentalo o ejecuta el comando Cadrumo equivalente directamente
+      y se cancelo. Reintentalo o ejecuta el comando CADRUMO equivalente directamente
       en un terminal.'
   elicitation:
     confirm:
@@ -6230,7 +6228,7 @@ mcp:
         presenta por sí mismo.'
       no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
         la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando Cadrumo CLI equivalente directamente
+        hacerte preguntas, o ejecuta el comando CADRUMO CLI equivalente directamente
         en un terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
@@ -7131,7 +7129,7 @@ wizard:
       choices:
         'yes':
           description: Select this to confirm
-          label: true
+          label: Sí
       help: Example help text for testing
       prompt: Example test question
     main:
