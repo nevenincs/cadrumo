@@ -28,7 +28,8 @@ _log = get_logger(__name__)
 _INITIALISED = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
-_STALE_CLI_EXECUTABLE_RE = re.compile(r"\baeat(?= (?:app|config|--|<))")
+_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
+_STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 # Test-scope flag: when True, _interpolate raises UnmatchedPlaceholderError for
@@ -233,7 +234,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         rendered = _interpolate(translation_key, rendered, interpolation)
-    rendered = _normalise_cli_executable_references(rendered)
+    rendered = _normalise_product_identity_references(rendered)
     if _I18N_STRICT_PLACEHOLDERS.get() and (match := _SURVIVING_PLACEHOLDER_RE.search(rendered)):
         raise UnmatchedPlaceholderError(
             key=translation_key,
@@ -243,15 +244,16 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     return rendered
 
 
-def _normalise_cli_executable_references(rendered: str) -> str:
-    """Replace stale product-name command prefixes with the canonical CLI executable.
+def _normalise_product_identity_references(rendered: str) -> str:
+    """Project the canonical product display and human executable into locale text.
 
-    Cadrumo is both the product name and the sole human command-line executable.
-    Locale catalogues may retain older command examples during a product-copy
-    refresh, so normalize only unambiguous retired command prefixes at the shared
-    rendering boundary. Ordinary prose naming the AEAT authority remains unchanged.
+    Locale catalogues can temporarily lag their per-language migration. Normalize
+    only title-case product prose and unambiguous stale command prefixes at the
+    shared render boundary. Lowercase package and MCP identifiers remain untouched,
+    as does uppercase ``AEAT`` authority prose.
     """
-    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
+    rendered = _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
+    return _STALE_PRODUCT_DISPLAY_RE.sub(PRODUCT_IDENTITY.display_name, rendered)
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))

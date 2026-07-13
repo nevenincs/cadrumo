@@ -9,40 +9,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cadrumo-product-rename with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S62 and 2026-07-12-cadrumo-product-rename-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Change command-help authorities to Cadrumo while preserving AEAT counterparty language and ## Scope
-
-- `src/cadrumo entrypoint help authorities` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Change command-help authorities to Cadrumo while preserving AEAT counterparty language
+# Bind command-help invocations to `aeat` and product copy to CADRUMO while preserving AEAT counterparty language
 
 ## Scope
 
@@ -50,40 +17,41 @@ related:
 
 ## Description
 
-- Adopt the existing CLI/help rename WIP and reject the unapproved executable reversal.
-- Retarget runtime program names, argv detection, suggestions, command citations, module prose, and direct CLI tests to Cadrumo.
-- Preserve AEAT terminology for authority settings, adapters, portals, legal evidence, registry taxonomy, and retired-state refusal.
-- Add referent-aware residue checks and exercise real Cadrumo version/help structures.
+- Normalize stale `cadrumo` command prefixes to the canonical `aeat` executable
+  at both live rendering and locale-maintenance boundaries.
+- Normalize title-case product prose to the canonical `CADRUMO` display name
+  without changing lowercase package and MCP identifiers.
+- Preserve `AEAT` wherever locale prose names the Spanish tax authority.
+- Exercise direct production rendering, folded YAML roundtrips, locale parity,
+  catalogue audits, and isolated live help behavior.
 
 ## Outcome
 
-The Python-owned CLI and help authorities now expose one `cadrumo` executable
-and Cadrumo product identity. Runtime program names, lazy-group ownership,
-installed-script lookup, command suggestions, source-command provenance, and
-structural command parsers use the same spelling. No locale catalogue was
-edited; those translations remain assigned to the following locale steps.
+The shared translation renderer now projects the binding identity while the
+per-language catalogue migration remains open: title-case product copy renders
+as `CADRUMO`, and stale command-leading `cadrumo` tokens render as `aeat`.
+The matcher covers the command forms found in the catalogues, including folded
+line breaks and `manual` guidance, without rewriting the `cadrumo` distribution,
+`cadrumo-mcp`, `cadrumo://`, `CADRUMO_*`, or `AEAT`.
 
-AEAT remains where it denotes the Spanish tax authority, authenticated sessions,
-official portals and evidence, legal corpus and registry identifiers, filing
-counterparty behavior, or historical retired-product state detected for refusal.
+The locale manager and its developer command apply the same referent-aware
+normalization when later Steps update catalogue leaves. No locale catalogue was
+modified in this Step. All 34 focused renderer and parity tests passed, both
+read-only locale catalogue gates reported every language healthy, scoped Ruff
+passed, and an isolated real `aeat --help` rendered `CADRUMO`, retained `AEAT`,
+used `aeat <comando> --help`, and exposed no title-case product name or
+`cadrumo <comando>` guidance.
 
 ## Notes
 
-The user explicitly authorized adopting and cross-committing the broad existing
-CLI WIP. During execution, four tests suffered concurrent whole-file character
-substitution corruption with no meaningful peer diff. Their committed HEAD
-bytes were reconstructed through `apply_patch`, then only intentional S62
-Cadrumo hunks were reapplied. No corrupted bytes remain.
+The English, Spanish, Catalan, and Hungarian catalogue bytes intentionally still
+contain stale product display and command copy. Steps S63 through S66 own those
+mutations through the locale CLI, and S67 owns the resulting scaffold/parity
+regeneration proof.
 
-Ruff formatting and lint, whitespace validation, and focused executable residue
-checks passed. A real in-process `cadrumo --version` returned `cadrumo 0.1.1`.
-Sixteen focused startup, suggestion, lazy-tree, and architecture tests passed;
-one architecture test remains red on an unrelated pre-existing raw-ID regex in
-`_modelo_work_runs_cli.py`. A broader 136-test help run produced 102 passes and
-34 expected dependency failures: localized help still comes from S63-S67-owned
-catalogues, core error-registry suggestions remain outside this Step, and the
-shared virtual environment has not reinstalled the renamed console script.
-Those failures were not hidden with skips, mocks, or weakened thresholds.
-
-Formal review against the committed product-rename ADR found no unresolved
-finding in the owned source diff and confirmed that no locale YAML was changed.
+The first locale CLI probe inherited a local retired-state database and correctly
+refused it; rerunning the same read-only gates with a fresh isolated CADRUMO state
+root passed. The first PowerShell live-help assertion used case-insensitive
+matching and therefore mistook `CADRUMO` for title-case `Cadrumo`; the corrected
+case-sensitive assertion passed against the unchanged live output. No failure
+was hidden or converted to a skip.

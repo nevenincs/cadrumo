@@ -171,8 +171,8 @@ def test_set_locale_value_falls_back_for_multiline_scalar_that_looks_like_a_key(
     assert _leaf(data, "cli", "app", "modelo", "work", "next_action") == "Run aeat app modelo work calculate."
 
 
-def test_set_locale_value_canonicalizes_the_cli_executable(tmp_path: Path):
-    """Locale maintenance rewrites a stale cadrumo command prefix to the aeat CLI."""
+def test_set_locale_value_canonicalizes_product_identity(tmp_path: Path):
+    """Locale maintenance writes the canonical product display and human CLI."""
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()
     locale_path = locales_dir / "en.yml"
@@ -187,29 +187,38 @@ def test_set_locale_value_canonicalizes_the_cli_executable(tmp_path: Path):
 
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "root", "next_action") == (
-        "Cadrumo prepares the draft; run aeat app modelo work calculate."
+        "CADRUMO prepares the draft; run aeat app modelo work calculate."
     )
 
 
-def test_canonicalize_cli_executable_references_updates_each_catalogue_once(tmp_path: Path):
-    """Bulk locale maintenance fixes command prefixes without changing Cadrumo prose."""
+def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_path: Path):
+    """Bulk maintenance normalizes folded help without changing machine or authority names."""
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()
     for locale in ("ca", "en"):
         (locales_dir / f"{locale}.yml").write_text(
-            "cli:\n  root:\n    next_action: Run cadrumo config profile status.\n"
-            "product:\n  heading: Cadrumo prepares tax forms.\n",
+            "cli:\n"
+            "  root:\n"
+            "    next_action: >-\n"
+            "      Cadrumo prepares tax forms for AEAT. Run cadrumo\n"
+            "      app modelo work calculate or cadrumo manual fetch.\n"
+            "product:\n"
+            "  machine_names: Install cadrumo; launch cadrumo-mcp; read cadrumo://status.\n",
             encoding="utf-8",
         )
 
     temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
-    updated = temp_manager.canonicalize_cli_executable_references()
+    updated = temp_manager.canonicalize_product_identity_references()
 
     assert {path.name for path in updated} == {"ca.yml", "en.yml"}
     for locale in ("ca", "en"):
         data = temp_manager.load_locale(locales_dir / f"{locale}.yml")
-        assert _leaf(data, "cli", "root", "next_action") == "Run aeat config profile status."
-        assert _leaf(data, "product", "heading") == "Cadrumo prepares tax forms."
+        assert _leaf(data, "cli", "root", "next_action") == (
+            "CADRUMO prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
+        )
+        assert _leaf(data, "product", "machine_names") == (
+            "Install cadrumo; launch cadrumo-mcp; read cadrumo://status."
+        )
 
 
 def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):

@@ -79,17 +79,31 @@ def test_fallback_language_is_default_output_language() -> None:
     assert result == DEFAULT_OUTPUT_LANGUAGE
 
 
-def test_stale_cli_prefixes_normalise_without_changing_product_prose() -> None:
-    """The renderer keeps Cadrumo branding but always names the ``aeat`` executable."""
-    from .._render import _normalise_cli_executable_references
+def test_stale_product_identity_normalises_without_corrupting_machine_or_authority_names() -> None:
+    """The renderer distinguishes product, command, machine, and authority names."""
+    from .._render import _normalise_product_identity_references
 
-    rendered = _normalise_cli_executable_references(
-        "Cadrumo prepares the draft; run aeat config profile status, aeat app modelo work calculate, or aeat --help.",
+    rendered = _normalise_product_identity_references(
+        "Cadrumo prepares the draft for AEAT; run cadrumo\n"
+        "app modelo work calculate or cadrumo manual fetch. Install cadrumo; "
+        "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE.",
     )
 
     assert rendered == (
-        "Cadrumo prepares the draft; run aeat config profile status, aeat app modelo work calculate, or aeat --help."
+        "CADRUMO prepares the draft for AEAT; run aeat\n"
+        "app modelo work calculate or aeat manual fetch. Install cadrumo; "
+        "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE."
     )
+
+
+def test_live_translation_normalises_stale_root_help_identity() -> None:
+    """Real catalogue lookup projects the binding identity before help consumes it."""
+    heading = _render.tr("cli.operator_surface.help.root.heading", locale="es")
+    command_help = _render.tr("cli.operator_surface.help.root.paragraph_type_help", locale="es")
+
+    assert heading == "CADRUMO, herramienta de declaraciones fiscales con la AEAT."
+    assert "aeat <comando> --help" in command_help
+    assert "cadrumo <comando> --help" not in command_help
 
 
 def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureFixture) -> None:
