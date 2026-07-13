@@ -12,20 +12,20 @@ import textwrap
 from functools import cache
 from hashlib import sha256
 
+from dev.readme.prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 from PIL import Image, ImageDraw, ImageFont
-from prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 
-from aeat.application.filing import build_runtime_schema_provider
-from aeat.core import Period
-from aeat.domain.calculations.registry import parse_export_payload
+from cadrumo.application.filing import build_runtime_schema_provider
+from cadrumo.core import Period
+from cadrumo.domain.calculations.registry import parse_export_payload
 
 OUTPUT_PATH = REPO_ROOT / "assets" / "readme" / "cli-demo.gif"
 FONT_PATH = REPO_ROOT / "assets" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
 FICHERO_PATH = DEMO_ROOT / "m115.boe"
 DISPLAY_COMMAND = (
-    "aeat app quickfile --modelo=115 --year=2026 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
+    "cadrumo app quickfile --modelo=115 --year=2026 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
 )
-_CLI_BOOTSTRAP = "from aeat.entrypoints.cli import main; main()"
+_CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli import main; main()"
 _CLI_ARGUMENTS = (
     "app",
     "quickfile",
@@ -174,7 +174,7 @@ def _draw_frame(command: str, rows: tuple[str, ...]) -> Image.Image:
 
     title_font = _font(16)
     body_font = _font(18)
-    draw.text((132, 39), "aeat · Modelo 115", font=title_font, fill=_MUTED)
+    draw.text((132, 39), "Cadrumo · Modelo 115", font=title_font, fill=_MUTED)
 
     left = 52
     top = 100

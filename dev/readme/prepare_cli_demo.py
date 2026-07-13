@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 VAR_ROOT = REPO_ROOT / "var"
 DEMO_ROOT = VAR_ROOT / "readme-demo"
 DEMO_PASSPHRASE = "readme-demo-only-synthetic-passphrase-2026"  # noqa: S105 - published synthetic value
-_CLI_BOOTSTRAP = "from aeat.entrypoints.cli import main; main()"
+_CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli import main; main()"
 
 
 def _reset_demo_root() -> None:
@@ -41,7 +41,7 @@ def _reset_demo_root() -> None:
 
 
 def demo_environment() -> dict[str, str]:
-    """Return a clean AEAT environment rooted in the disposable demo directory."""
+    """Return a clean Cadrumo environment rooted in the disposable demo directory."""
     environment = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     environment.update(
         {

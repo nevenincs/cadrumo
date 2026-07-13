@@ -820,6 +820,28 @@ entry, and 26 current new or regressed findings owned by the broader live tree.
 Those findings are not accepted into the baseline or hidden by this path
 remediation.
 
+### s76-demo-and-hygiene | resolved | README demo and identity acceptance tests follow the hard cut
+
+Formal review found no unresolved finding in the assigned demo-generator and
+hygiene slice. Both README demo programs import and bootstrap Cadrumo directly,
+display the `cadrumo app quickfile` command, and retain a disposable
+`CADRUMO_*` environment. The real preparation run completed successfully.
+
+The core identity test now follows package-local relative-import discipline.
+The persistence acceptance test reaches the storage and bucket public facades,
+the public domain import error, and the supported settings module instead of
+private outbound-auth, runtime-repository, SQL, or sealed-archive modules. The
+dedicated auth-package test remains the owner of former session-store refusal;
+the cross-boundary acceptance test proves canonical encrypted repository
+custody plus former database, namespace, and bundle refusal without duplicating
+private implementation access. No import-hygiene baseline or allowlist changed.
+
+The recurring unapproved executable detour rewrote this slice twice during
+verification. Work paused for two coordinator-authorized neutralizations; the
+final review and tests use the committed `cadrumo` identity. `W06.P14.S76`
+remains open because this commit closes only the assigned demo and hygiene
+group.
+
 ## Recommendations
 
 1. Keep later configuration and persistence implementation blocked on the wallet diagnostic setting until the principal engineer records one referent decision. Prefer classifying the environment variable by what it controls: if it chooses Cadrumo's local output custody, rename the control to `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT terminology in the captured payload and description. If authority identity is intended to govern the setting name, explicitly amend `S02` and its zero-ambiguity count instead.
