@@ -3,9 +3,10 @@ tags:
   - '#adr'
   - '#m303-refund-election'
 date: '2026-06-24'
-modified: '2026-06-24'
+modified: '2026-07-10'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
+  - '[[2026-07-10-m303-refund-election-research]]'
 ---
 
 # `m303-refund-election` adr: `Non-REDEME last-period refund opt-in election` | (**status:** `accepted`)

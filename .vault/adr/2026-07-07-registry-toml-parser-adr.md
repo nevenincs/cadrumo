@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#registry-toml-parser'
 date: '2026-07-07'
-modified: '2026-07-08'
-related: []
+modified: '2026-07-10'
+related:
+  - '[[2026-07-10-registry-toml-parser-research]]'
 ---
 
 # `registry-toml-parser` adr: `adopt rtoml for the registry TOML parse boundary` | (**status:** `accepted`)

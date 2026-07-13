@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#verifactu-sii-scope-stance'
 date: '2026-07-02'
-modified: '2026-07-02'
+modified: '2026-07-10'
 related:
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
+  - '[[2026-07-10-verifactu-sii-scope-stance-research]]'
 ---
 
 # `verifactu-sii-scope-stance` adr: `Verifactu and SII scope stance` | (**status:** `accepted`)

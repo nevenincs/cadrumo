@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#size-budget-refactor'
 date: '2026-07-09'
-modified: '2026-07-09'
-related: []
+modified: '2026-07-10'
+related:
+  - '[[2026-07-10-size-budget-refactor-research]]'
 ---
 
 # `size-budget-refactor` adr: `Size-budget offender extraction approach` | (**status:** `accepted`)

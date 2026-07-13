@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#importlinter-test-carveout'
 date: '2026-07-08'
-modified: '2026-07-08'
-related: []
+modified: '2026-07-10'
+related:
+  - '[[2026-07-10-importlinter-test-carveout-research]]'
 ---
 
 # `importlinter-test-carveout` adr: `Test-file import-linter carve-out` | (**status:** `accepted`)

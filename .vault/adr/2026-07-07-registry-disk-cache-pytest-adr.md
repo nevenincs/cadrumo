@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#registry-disk-cache-pytest'
 date: '2026-07-07'
-modified: '2026-07-08'
-related: []
+modified: '2026-07-10'
+related:
+  - '[[2026-07-10-registry-disk-cache-pytest-research]]'
 ---
 
 # `registry-disk-cache-pytest` adr: `enable the registry disk cache under pytest for the bundled root only` | (**status:** `accepted`)

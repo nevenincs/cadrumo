@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-07'
-modified: '2026-07-07'
+modified: '2026-07-10'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
+  - '[[2026-07-10-prorrata-art104-tres-exclusions-research]]'
 ---
 
 # `prorrata-art104-tres-exclusions` adr: `Prorrata art 104.Tres denominator exclusions: ledger auto-classification boundary and reconciliation-vs-authority for the annual volume rollup` | (**status:** `proposed`)
