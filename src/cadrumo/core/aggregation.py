@@ -231,8 +231,8 @@ class BindingSourceKind(StrEnum):
     precedent). Do NOT rename a stored token.
 
     This enum is the single canonical source-kind authority across BOTH the
-    registry binding definitions AND the application resolver mesh (phase-2.1
-    taxonomy unification): the counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
+    registry binding definitions AND the application resolver mesh: the
+    counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
     is derived from it, and the two grouping members reuse :class:`RowSetGroupingKind`
     values so the cross-layer aggregation taxonomy stays consistent; see
     :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
@@ -267,8 +267,7 @@ class BindingSourceKind(StrEnum):
     # admits trabajo income (the class the M130 income pipeline excludes), and
     # segregates every foreign-source or jurisdiction-unresolved row as a typed
     # BECKHAM_FOREIGN_SOURCE_SEGREGATED issue (never a silent ES coercion). Feeds
-    # impatriado.base-liquidable-general (ADR
-    # 2026-07-01-modelo-151-beckham-source-scope).
+    # impatriado.base-liquidable-general.
     LEDGER_IMPATRIADO_INCOME_AGGREGATION = "ledger_impatriado_income_aggregation"
     # Modelo 210 IRNR explicit-income projection. It owns the gross-income
     # casilla only after a transaction supplies a persisted M210 classification
@@ -280,8 +279,7 @@ class BindingSourceKind(StrEnum):
     # LEDGER_BINDING_SOURCE_KINDS and NOT carrying the ``ledger_`` prefix) and
     # materialises the Modelo 180/193 "número total de perceptores" count via
     # the validated distinct-NIF primitive (aggregate_retenciones_180.
-    # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
-    # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).
+    # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation.
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
     # Modelo 390 year-end IVA compensation carry partition: reads filed Modelo
     # 303 compensation states and materialises AEAT boxes 97 / 662 together from
@@ -302,16 +300,15 @@ class BindingSourceKind(StrEnum):
     # (prior-year definitive, art. 105.Uno) applied across the year and the
     # current-year definitive percentage (art. 104) over full-year volumes.
     # Registry-declared live mesh source once the provisional-carry store and Q4
-    # regularisation path are proven end to end, per ADR
-    # 2026-07-01-iva-complexity-hardening-scope.
+    # regularisation path are proven end to end.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
     # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill
     # (Modelo100BorradorSourceResolver) and `iva_wallet_decision` carries the M303
     # IVA-wallet compensación decision (IvaWalletDecisionSourceResolver). They are
-    # first-class members of the canonical union (phase-2.1 taxonomy unification)
-    # so the mesh carries `BindingSourceKind` members rather than bare strings;
+    # first-class members of the canonical union, so the mesh carries
+    # `BindingSourceKind` members rather than bare strings;
     # because no registry binding declares them, they are accounted for as
     # mesh-only in the enum↔registry parity gate, not as reserved-undeclared.
     BORRADOR = "borrador"
@@ -378,8 +375,8 @@ type CounterpartSourceKind = Literal[
 ]
 """Canonical source-kind subset accepted by counterpart aggregation.
 
-A derived subset of :class:`BindingSourceKind` (phase-2.1 taxonomy unification):
-the counterpart families settle against a transaction, a purchase-invoice
+A derived subset of :class:`BindingSourceKind`: the counterpart families
+settle against a transaction, a purchase-invoice
 evidence row, or a payable/collectible invoice. Replaces the former
 ``AggregationSourceKind``-derived subset, which was deleted in the same change.
 """

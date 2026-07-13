@@ -1,8 +1,8 @@
 """Multi-year-renta modelo authorization manifest, types, and derivation.
 
 This module owns the type spine of the multi-year-renta authorization
-gate decided in the ``modelo-multiyear-renta`` ADR. The gate's governing
-principle is **default-deny-by-absence**: a modelo's calculation backend
+gate. The gate's governing principle is **default-deny-by-absence**: a
+modelo's calculation backend
 is treated as NON-FUNCTIONAL until its authorization is *derived* from the
 declarative manifest and *verified* by an enrolling end-to-end persona
 test that drove the real backend across at least two distinct renta
@@ -11,8 +11,8 @@ test that drove the real backend across at least two distinct renta
 Four collaborating pieces live here:
 
 - :class:`AuthorizationState` and :class:`EnrollmentEvidenceClass` — the
-  closed value sets, declared as :class:`enum.StrEnum` per the
-  core-authority ADR (``core/`` owns closed enums).
+  closed value sets, declared as :class:`enum.StrEnum` (``core/`` owns
+  closed enums).
 - :class:`ModeloAuthorizationEntry` — the strict pydantic record modelling
   one manifest entry. The ``>=2 distinct renta years`` invariant is
   enforced at the type boundary so a malformed (single-year) enrollment
@@ -28,10 +28,9 @@ Four collaborating pieces live here:
   drift from the manifest.
 
 The manifest is the only writable authorization surface; everything else
-is a derivation of it. This is the same trust-but-verify shape codified
-for fixtures in ``fixture-provenance-declared-in-sidecar``: a declaration
-in data, cross-checked against evidence the declaration cannot fabricate
-(here, the year-set a recorder observes a real test exercising).
+is a derivation of it. A declaration in data is cross-checked against
+evidence the declaration cannot fabricate (here, the year-set a recorder
+observes a real test exercising).
 """
 
 from __future__ import annotations
@@ -66,7 +65,7 @@ AUTHORIZATION_MANIFEST_DIRNAME: Final[str] = "authorization.d"
 #: It is the union of every modelo the registry authority can load today
 #: plus the engine-build modelos whose registry directory carries no
 #: ``manifest.toml`` yet (151 Beckham, 714 Patrimonio, 721 crypto), which
-#: the ADR's engine-build sub-decision keeps in scope. The meta-test pins
+#: remain in scope. The meta-test pins
 #: this tuple against the live registry so a registry change that adds or
 #: drops a modelo surfaces loudly rather than silently moving the
 #: denominator.  Retired identifiers carried by :class:`Modelo` but with no
@@ -95,8 +94,7 @@ class EnrollmentEvidenceClass(StrEnum):
     """Closed set of enrollment-evidence shapes across the modelo fleet.
 
     The owner mandate keeps every modelo in scope, but the *shape* of the
-    cross-year evidence varies by modelo class (see the
-    ``modelo-multiyear-renta`` ADR's cross-modelo-class ruling):
+    cross-year evidence varies by modelo class:
 
     - ``CALCULATION`` — engine plus a cross-year carry (130, 100, 200,
       202, 303, 131, …); the recorder captures two ``filing_year`` values

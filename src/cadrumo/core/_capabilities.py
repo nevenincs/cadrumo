@@ -4,13 +4,12 @@ A *capability* is a per-profile opt-in/opt-out of an external service the app ca
 use. It is operator intent, distinct from (a) the global safety posture (gestor
 mode, the secure-storage invariant) and (b) dependency availability (is Ollama
 running?). The three axes are ANDed at the gate, and a capability may only NARROW
-the global safety floor, never widen it (``service-capabilities`` ADR).
+the global safety floor, never widen it.
 
-The set is declared here in ``core/`` — the innermost hexagonal ring — per
-``aeat-schema-central-config`` and ``aeat-architecture-boundaries`` so the Typer
-boundary renders the accepted-value ``Choice([...])`` from the enum, production
-code routes on members, and the profile schema / resolver / doctor share one
-authority for the capability identifiers.
+The set is declared here in ``core/`` — the innermost hexagonal ring — so the
+Typer boundary renders the accepted-value ``Choice([...])`` from the enum,
+production code routes on members, and the profile schema / resolver / doctor
+share one authority for the capability identifiers.
 
 The :class:`ServiceCapability` members are consumed by
 :func:`~application.user_profile.resolve_capability`,

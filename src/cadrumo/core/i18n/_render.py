@@ -145,7 +145,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
     # prior implementation constructed a full ``Settings`` instance on
     # every ``tr()`` call purely to read four field values; a help-screen
     # render fires ~100 ``tr()`` calls, so that was ~100 Settings builds
-    # (the disaster-ADR Ruling 4 fast-path regression for ``--help``).
+    # and a measurable ``--help`` slowdown.
     # Sampling the raw env vars + the ``.env`` mtime varies the key
     # whenever either input changes, so a cache miss still rebuilds
     # ``Settings`` inside ``_cached_output_language`` with the correct

@@ -14,10 +14,6 @@ See Also:
     :mod:`~application.registry._corpus`
         Registry citation projection service that consumes topic records for
         operator-facing reports.
-    Governing vault records
-        ``2026-05-08-cadrumo-gap-closure-plan`` introduced the conceptual topic
-        catalogue, while ``2026-05-13-cli-workflow-redesign-epic-plan`` moved
-        topic exposure under registry-owned citation services.
 """
 
 from __future__ import annotations
